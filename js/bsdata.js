@@ -1,0 +1,81 @@
+/**
+ * bsdata.js - Fetch Battlescribe data from the BSData/wh40k GitHub repository.
+ *
+ * Files are served as plain XML (.cat) from raw.githubusercontent.com which
+ * supports CORS, so no proxy is needed.  The GitHub tree API (60 req/hr
+ * unauthenticated) is used only once per session to list available files;
+ * the list is cached in sessionStorage to avoid repeat calls.
+ */
+
+window.BSData = (() => {
+
+  const REPO     = 'BSData/wh40k';
+  const API_TREE = `https://api.github.com/repos/${REPO}/git/trees/HEAD?recursive=1`;
+  const RAW_BASE = `https://raw.githubusercontent.com/${REPO}/HEAD`;
+  const CACHE_KEY = 'yaab_bsdata_filelist';
+
+  // ── File list ────────────────────────────────────────────────────────────
+
+  /**
+   * Returns an array of { path, name, type, size } objects for every .cat
+   * and .gst file in the repo, sorted alphabetically by name.
+   * Result is cached in sessionStorage for the lifetime of the tab.
+   */
+  async function fetchFileList() {
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try { return JSON.parse(cached); } catch (_) {}
+    }
+
+    const resp = await fetch(API_TREE);
+    if (!resp.ok) {
+      // Surface rate-limit errors helpfully
+      if (resp.status === 403 || resp.status === 429) {
+        throw new Error('GitHub API rate limit reached. Try again in a minute.');
+      }
+      throw new Error(`GitHub API returned ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    if (!data.tree) throw new Error('Unexpected response from GitHub API');
+
+    const files = data.tree
+      .filter(item => item.type === 'blob' &&
+               (item.path.endsWith('.cat') || item.path.endsWith('.gst')))
+      .map(item => ({
+        path: item.path,
+        name: item.path.replace(/\.(cat|gst)$/, ''),
+        type: item.path.endsWith('.gst') ? 'gamesystem' : 'catalogue',
+        size: item.size,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify(files));
+    return files;
+  }
+
+  // ── File content ─────────────────────────────────────────────────────────
+
+  /**
+   * Fetches the raw XML text of a single file by its repo path.
+   * Files are plain XML despite the .cat extension.
+   */
+  async function fetchFile(path) {
+    // raw.githubusercontent.com doesn't encode spaces the same way
+    const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+    const url = `${RAW_BASE}/${encodedPath}`;
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      throw new Error(`Failed to download "${path}" (HTTP ${resp.status})`);
+    }
+    return resp.text();
+  }
+
+  // ── Cache busting ────────────────────────────────────────────────────────
+
+  function clearCache() {
+    sessionStorage.removeItem(CACHE_KEY);
+  }
+
+  return { fetchFileList, fetchFile, clearCache };
+})();

@@ -30,12 +30,24 @@
 
       <div class="panel-body">
 
+        <!-- BSData Browser -->
+        <div class="bsdata-section">
+          <div class="bsdata-label">
+            <span>BSData Library</span>
+            <span class="bsdata-badge">auto-updated</span>
+          </div>
+          <p class="bsdata-desc">Fetch faction data directly from the community-maintained <strong>BSData/wh40k</strong> repository on GitHub.</p>
+          <button class="btn btn-accent btn-block" id="btn-browse-bsdata">Browse Factions&hellip;</button>
+        </div>
+
+        <div class="panel-divider"><span>or upload manually</span></div>
+
         <!-- Upload Area -->
         <div class="upload-area" id="upload-area">
           <div class="upload-icon">&#128193;</div>
           <div class="upload-text">Drop XML / .cat files here</div>
           <div class="upload-subtext">or</div>
-          <button class="btn btn-accent" id="btn-upload">Choose Files</button>
+          <button class="btn btn-outline" id="btn-upload">Choose Files</button>
           <input type="file" id="file-input" accept=".xml,.cat" multiple hidden />
         </div>
 
@@ -198,10 +210,36 @@
     </div>
   </div>
 
+  <!-- BSData Browser Modal -->
+  <div class="modal-backdrop" id="modal-bsdata" hidden>
+    <div class="modal modal-bsdata">
+      <div class="modal-header">
+        <h3>BSData Faction Library</h3>
+        <button class="modal-close" id="modal-bsdata-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted" style="margin-bottom:10px">
+          Data from <strong>github.com/BSData/wh40k</strong> &mdash; community-maintained Battlescribe files.
+        </p>
+        <div class="bsdata-search-wrap">
+          <input type="text" id="bsdata-search" class="search-input" placeholder="Filter factions&hellip;" />
+          <button class="btn btn-sm btn-outline" id="btn-bsdata-refresh" title="Refresh file list">&#8635;</button>
+        </div>
+        <div id="bsdata-status" class="bsdata-status" hidden></div>
+        <ul class="bsdata-file-list" id="bsdata-file-list">
+          <li class="bsdata-loading" id="bsdata-loading">
+            <span class="spinner"></span> Loading faction list&hellip;
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast notification -->
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts (order matters) -->
+  <script src="js/bsdata.js"></script>
   <script src="js/parser.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/army.js"></script>

@@ -319,18 +319,151 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // ---- BSData browser ----
+    document.getElementById('btn-browse-bsdata').addEventListener('click', openBSDataModal);
+    document.getElementById('modal-bsdata-close').addEventListener('click', closeBSDataModal);
+    document.getElementById('modal-bsdata').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeBSDataModal();
+    });
+    document.getElementById('btn-bsdata-refresh').addEventListener('click', () => {
+      BSData.clearCache();
+      loadBSDataFileList();
+    });
+    document.getElementById('bsdata-search').addEventListener('input', e => {
+      filterBSDataList(e.target.value);
+    });
+
     // ---- Keyboard: Escape closes modals ----
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         UI.hideUnitModal();
         UI.hideLoadModal();
         UI.hideImportModal();
+        closeBSDataModal();
       }
       // Enter in unit modal qty triggers add
       if (e.key === 'Enter' && !document.getElementById('modal-unit').hasAttribute('hidden')) {
         document.getElementById('btn-add-unit-confirm').click();
       }
     });
+  }
+
+  // ── BSData browser ───────────────────────────────────────────────────
+  let _bsdataFiles = [];   // full file list from API
+  let _bsdataLoaded = false;
+
+  function openBSDataModal() {
+    document.getElementById('modal-bsdata').removeAttribute('hidden');
+    document.getElementById('bsdata-search').value = '';
+    if (!_bsdataLoaded) loadBSDataFileList();
+  }
+
+  function closeBSDataModal() {
+    document.getElementById('modal-bsdata').setAttribute('hidden', '');
+  }
+
+  async function loadBSDataFileList() {
+    const listEl   = document.getElementById('bsdata-file-list');
+    const statusEl = document.getElementById('bsdata-status');
+
+    listEl.innerHTML = '<li class="bsdata-loading"><span class="spinner"></span> Loading faction list&hellip;</li>';
+    statusEl.hidden = true;
+
+    try {
+      _bsdataFiles = await BSData.fetchFileList();
+      _bsdataLoaded = true;
+      renderBSDataList(_bsdataFiles);
+    } catch (err) {
+      listEl.innerHTML = '';
+      statusEl.textContent = 'Error: ' + err.message;
+      statusEl.className = 'bsdata-status error';
+      statusEl.hidden = false;
+    }
+  }
+
+  function filterBSDataList(query) {
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? _bsdataFiles.filter(f => f.name.toLowerCase().includes(q))
+      : _bsdataFiles;
+    renderBSDataList(filtered);
+  }
+
+  function renderBSDataList(files) {
+    const listEl = document.getElementById('bsdata-file-list');
+    const loadedNames = new Set(state.factions.map(f => f.factionName));
+    listEl.innerHTML = '';
+
+    if (files.length === 0) {
+      listEl.innerHTML = '<li class="bsdata-loading">No factions match your search.</li>';
+      return;
+    }
+
+    files.forEach(file => {
+      const isLoaded = loadedNames.has(file.name);
+      const sizeKB = file.size ? Math.round(file.size / 1024) + ' KB' : '';
+
+      const li = document.createElement('li');
+      li.className = 'bsdata-file-item' + (isLoaded ? ' loaded' : '');
+      li.dataset.path = file.path;
+      li.innerHTML = `
+        <div class="bsdata-file-info">
+          <div class="bsdata-file-name" title="${escHtml(file.name)}">${escHtml(file.name)}</div>
+          <div class="bsdata-file-meta">
+            ${file.type === 'gamesystem' ? '<span class="tag-gst">game system</span> &middot; ' : ''}
+            ${sizeKB}
+          </div>
+        </div>
+        ${isLoaded
+          ? '<span class="bsdata-loaded-check" title="Already loaded">&#10003; loaded</span>'
+          : `<button class="btn btn-sm btn-accent btn-bsdata-load" data-path="${escHtml(file.path)}" data-name="${escHtml(file.name)}">Load</button>`
+        }
+      `;
+      listEl.appendChild(li);
+    });
+
+    // Event delegation for load buttons
+    listEl.onclick = async e => {
+      const btn = e.target.closest('.btn-bsdata-load');
+      if (!btn) return;
+
+      const path = btn.dataset.path;
+      const name = btn.dataset.name;
+      const li   = btn.closest('.bsdata-file-item');
+
+      btn.textContent = '';
+      btn.innerHTML = '<span class="spinner"></span>';
+      li.classList.add('downloading');
+
+      try {
+        const xml = await BSData.fetchFile(path);
+        const result = WahapediaParser.parse(xml, path);
+
+        if (result.units.length === 0) {
+          UI.toast(`"${name}" had no units — it may be a rules-only file.`, 'warning');
+        } else {
+          state.factions = Storage.addFaction(result);
+          rebuildAllUnits();
+          renderAll();
+          UI.toast(`Loaded "${result.factionName}" (${result.units.length} units)`, 'success');
+          // Mark as loaded in the list
+          btn.closest('.bsdata-file-item').classList.add('loaded');
+          btn.replaceWith(Object.assign(document.createElement('span'), {
+            className: 'bsdata-loaded-check',
+            title: 'Already loaded',
+            innerHTML: '&#10003; loaded',
+          }));
+        }
+      } catch (err) {
+        UI.toast(`Failed to load "${name}": ${err.message}`, 'error', 6000);
+        btn.textContent = 'Retry';
+        li.classList.remove('downloading');
+      }
+    };
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   // ── Start the app ─────────────────────────────────────────────────────
