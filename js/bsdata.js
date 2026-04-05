@@ -146,3 +146,4 @@ window.BSData = (() => {
   }
 
   return { fetchFileList, fetchFile, loadAllFactions, clearCache, clearFactionCache };
+})();
