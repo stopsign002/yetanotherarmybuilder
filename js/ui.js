@@ -114,20 +114,18 @@ window.UI = (() => {
     const keywords = unit.keywords || [];
     const pts      = unit.points   || 0;
 
+    // Pick the most informative stat keys to show on the card (max 6)
+    const CARD_STAT_PREF = ['M','T','SV','W','LD','OC','WS','BS','S','A','Ld','Save'];
+    const cardStats = CARD_STAT_PREF.filter(k => stats[k] != null && stats[k] !== '').slice(0, 6);
+
     card.innerHTML = `
       <div class="unit-card-header">
         <div class="unit-card-name">${escapeHtml(unit.name)}</div>
         <div class="unit-card-pts">${pts > 0 ? pts + ' pts' : '—'}</div>
       </div>
       <div class="unit-card-faction">${escapeHtml(unit._factionName || '')}</div>
-      <div class="unit-card-stats">
-        ${renderStatCell('M',  stats.M  || stats.MOVE              || '—')}
-        ${renderStatCell('T',  stats.T  || stats.TOUGHNESS         || '—')}
-        ${renderStatCell('SV', stats.SV || stats.SAVE              || '—')}
-        ${renderStatCell('W',  stats.W  || stats.WOUNDS            || '—')}
-        ${renderStatCell('LD', stats.LD || stats.LEADERSHIP        || '—')}
-        ${renderStatCell('OC', stats.OC || stats.OBJECTIVE_CONTROL || '—')}
-      </div>
+      <div class="unit-card-stats" style="grid-template-columns:repeat(${cardStats.length || 6},1fr)">
+        ${cardStats.length > 0 ? cardStats.map(k => renderStatCell(k, stats[k])).join('') : renderStatCell('—','—')}</div>
       ${keywords.length > 0 ? `<div class="unit-card-keywords">${
         keywords.slice(0, 4).map(k => `<span class="keyword-tag">${escapeHtml(k)}</span>`).join('')
         }${keywords.length > 4 ? `<span class="keyword-tag">+${keywords.length - 4}</span>` : ''
@@ -187,38 +185,48 @@ window.UI = (() => {
       </div>
     `;
 
-    // Stats table
-    const statKeys = ['M','T','SV','W','LD','OC'];
-    const hasStats = statKeys.some(k => getStatVal(k) !== '—');
-    if (hasStats) {
+    // Stats table — dynamic: works for both 9th ed (M/WS/BS/S/T/W/A/Ld/Save)
+    // and 10th ed (M/T/SV/W/LD/OC) by showing whatever keys are present
+    const STAT_ORDER = ['M','WS','BS','S','T','W','A','Ld','Save','SV','LD','OC'];
+    const presentStats = STAT_ORDER.filter(k => stats[k] != null && stats[k] !== '');
+    // Also catch any other stat keys not in our known list
+    Object.keys(stats).forEach(k => { if (!STAT_ORDER.includes(k) && !presentStats.includes(k)) presentStats.push(k); });
+
+    if (presentStats.length > 0) {
       html += `<div class="detail-section">
         <div class="detail-section-title">Stats</div>
-        <div class="detail-stats-row">
-          ${statKeys.map(k => `<div class="detail-stat-cell"><span class="stat-name">${k}</span><span class="stat-value">${escapeHtml(getStatVal(k))}</span></div>`).join('')}
+        <div class="detail-stats-row" style="grid-template-columns:repeat(${presentStats.length},1fr)">
+          ${presentStats.map(k => `<div class="detail-stat-cell"><span class="stat-name">${escapeHtml(k)}</span><span class="stat-value">${escapeHtml(String(stats[k]))}</span></div>`).join('')}
         </div>
       </div>`;
     }
 
-    // Weapons
+    // Weapons — dynamic columns: collect all characteristic keys present across all weapons
     if (weapons.length > 0) {
+      const WEAPON_COL_ORDER = ['Range','Type','A','BS','WS','S','AP','D','Keywords','Abilities'];
+      const allCols = new Set();
+      weapons.forEach(w => {
+        Object.keys(w).forEach(k => { if (k !== 'name' && k !== '_typeName') allCols.add(k); });
+      });
+      // Sort by preferred order, then append unknown columns
+      const cols = WEAPON_COL_ORDER.filter(c => allCols.has(c));
+      [...allCols].filter(c => !WEAPON_COL_ORDER.includes(c)).sort().forEach(c => cols.push(c));
+
       html += `<div class="detail-section">
         <div class="detail-section-title">Weapons</div>
         <div class="detail-table-wrap">
           <table class="weapons-table">
             <thead><tr>
-              <th>Name</th><th>Range</th><th>A</th><th>BS/WS</th><th>S</th><th>AP</th><th>D</th>
+              <th>Name</th>${cols.map(c => `<th>${escapeHtml(c)}</th>`).join('')}
             </tr></thead>
             <tbody>`;
       weapons.forEach(w => {
-        const isRanged = (w.type || '').toLowerCase().includes('ranged');
+        const tn = (w._typeName || '').toLowerCase();
+        const isMelee = tn.includes('melee') ||
+          (w.Range === 'Melee' || w.Range === 'melee');
         html += `<tr>
-          <td class="${isRanged ? 'weapon-type-ranged' : 'weapon-type-melee'}">${escapeHtml(w.name)}</td>
-          <td>${escapeHtml(String(w.RANGE || w.RANGE_ || '—'))}</td>
-          <td>${escapeHtml(String(w.A || w.ATTACKS || '—'))}</td>
-          <td>${escapeHtml(String(w.BS || w.WS || w['BS/WS'] || '—'))}</td>
-          <td>${escapeHtml(String(w.S || w.STRENGTH || '—'))}</td>
-          <td>${escapeHtml(String(w.AP || '—'))}</td>
-          <td>${escapeHtml(String(w.D || w.DAMAGE || '—'))}</td>
+          <td class="${isMelee ? 'weapon-type-melee' : 'weapon-type-ranged'}">${escapeHtml(w.name)}</td>
+          ${cols.map(c => `<td>${escapeHtml(String(w[c] != null ? w[c] : '—'))}</td>`).join('')}
         </tr>`;
       });
       html += `</tbody></table></div></div>`;
