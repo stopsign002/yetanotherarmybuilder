@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yet Another Army Builder</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="header-icon">&#9876;</span>
+        <h1>Yet Another Army Builder</h1>
+      </div>
+      <div class="header-subtitle">Warhammer 40,000 Army List Composer</div>
+    </div>
+  </header>
+
+  <!-- Main Three-Panel Layout -->
+  <main class="app-main">
+
+    <!-- Left Panel: Data Management -->
+    <aside class="panel panel-left" id="panel-left">
+      <div class="panel-header">
+        <h2>Faction Data</h2>
+      </div>
+
+      <div class="panel-body">
+
+        <!-- Upload Area -->
+        <div class="upload-area" id="upload-area">
+          <div class="upload-icon">&#128193;</div>
+          <div class="upload-text">Drop XML / .cat files here</div>
+          <div class="upload-subtext">or</div>
+          <button class="btn btn-accent" id="btn-upload">Choose Files</button>
+          <input type="file" id="file-input" accept=".xml,.cat" multiple hidden />
+        </div>
+
+        <!-- Faction Filter -->
+        <div class="form-group">
+          <label for="faction-filter" class="form-label">Filter Roster By</label>
+          <select id="faction-filter" class="form-select">
+            <option value="all">All Factions</option>
+          </select>
+        </div>
+
+        <!-- Loaded Factions List -->
+        <div class="section-label">Loaded Factions</div>
+        <ul class="faction-list" id="faction-list">
+          <li class="faction-list-empty">No factions loaded yet.<br/>Upload a Battlescribe .cat or .xml file to get started.</li>
+        </ul>
+
+      </div>
+    </aside>
+
+    <!-- Center Panel: Unit Roster -->
+    <section class="panel panel-center" id="panel-center">
+      <div class="panel-header">
+        <h2>Unit Roster</h2>
+        <div class="roster-controls">
+          <input type="text" id="search-input" class="search-input" placeholder="Search units&#8230;" />
+          <span class="unit-count-badge" id="unit-count-badge">0 units</span>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="unit-grid" id="unit-grid">
+          <div class="roster-empty" id="roster-empty">
+            <div class="roster-empty-icon">&#128737;</div>
+            <p>No units to display.</p>
+            <p class="muted">Upload faction data files using the left panel.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Panel: Army List -->
+    <aside class="panel panel-right" id="panel-right">
+      <div class="panel-header">
+        <h2>Army List</h2>
+      </div>
+
+      <div class="panel-body">
+
+        <!-- Army Meta -->
+        <div class="army-meta">
+          <div class="form-group">
+            <label for="army-name-input" class="form-label">Army Name</label>
+            <input type="text" id="army-name-input" class="form-input" placeholder="My Army" value="My Army" />
+          </div>
+          <div class="form-group">
+            <label for="points-limit-input" class="form-label">Points Limit</label>
+            <input type="number" id="points-limit-input" class="form-input" placeholder="2000" value="2000" min="0" step="50" />
+          </div>
+        </div>
+
+        <!-- Points Summary -->
+        <div class="points-summary">
+          <div class="points-display">
+            <span class="points-current" id="points-current">0</span>
+            <span class="points-separator">/</span>
+            <span class="points-limit" id="points-limit-display">2000</span>
+            <span class="points-label">pts</span>
+          </div>
+          <div class="points-bar-wrap">
+            <div class="points-bar" id="points-bar"></div>
+          </div>
+          <div class="points-bar-labels">
+            <span class="points-bar-pct" id="points-bar-pct">0%</span>
+            <span class="points-bar-remaining" id="points-bar-remaining">2000 pts remaining</span>
+          </div>
+        </div>
+
+        <!-- Army Entry List -->
+        <div class="army-entries-header">
+          <span>Unit</span>
+          <span>Pts</span>
+          <span>Qty</span>
+          <span>Total</span>
+          <span></span>
+        </div>
+        <ul class="army-entry-list" id="army-entry-list">
+          <li class="army-list-empty" id="army-list-empty">
+            No units added yet.<br/>Click a unit card to add it.
+          </li>
+        </ul>
+
+      </div>
+
+      <!-- Bottom Toolbar -->
+      <div class="panel-footer army-toolbar">
+        <button class="btn btn-sm btn-outline" id="btn-new-army" title="Start a new empty army">New</button>
+        <button class="btn btn-sm btn-accent" id="btn-save-army" title="Save army to browser storage">Save</button>
+        <button class="btn btn-sm btn-outline" id="btn-load-army" title="Load a saved army">Load</button>
+        <button class="btn btn-sm btn-outline" id="btn-export-json" title="Export army as JSON">JSON</button>
+        <button class="btn btn-sm btn-outline" id="btn-export-text" title="Export army as plain text">Text</button>
+        <button class="btn btn-sm btn-outline" id="btn-import-json" title="Import army from JSON">Import</button>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- ============================================================
+       MODALS
+  ============================================================ -->
+
+  <!-- Load Army Modal -->
+  <div class="modal-backdrop" id="modal-load" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Load Army</h3>
+        <button class="modal-close" id="modal-load-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <ul class="saved-army-list" id="saved-army-list">
+          <li class="saved-army-empty">No saved armies found.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unit Detail Modal -->
+  <div class="modal-backdrop" id="modal-unit" hidden>
+    <div class="modal modal-unit-detail">
+      <div class="modal-header">
+        <h3 id="unit-modal-name">Unit Name</h3>
+        <button class="modal-close" id="modal-unit-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body" id="unit-modal-body">
+      </div>
+      <div class="modal-footer">
+        <label class="form-label" style="margin-right:8px">Quantity:</label>
+        <input type="number" id="unit-modal-qty" class="form-input" style="width:70px;margin-right:12px" value="1" min="1" max="99" />
+        <button class="btn btn-accent" id="btn-add-unit-confirm">Add to Army</button>
+        <button class="btn btn-outline" id="btn-unit-modal-cancel" style="margin-left:8px">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import JSON Modal -->
+  <div class="modal-backdrop" id="modal-import" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Import Army JSON</h3>
+        <button class="modal-close" id="modal-import-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted" style="margin-bottom:10px">Paste exported army JSON below:</p>
+        <textarea id="import-json-textarea" class="form-input" rows="12" style="width:100%;resize:vertical;font-family:monospace;font-size:12px" placeholder='{"id":"...","name":"My Army",...}'></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-accent" id="btn-import-confirm">Import</button>
+        <button class="btn btn-outline" id="btn-import-cancel" style="margin-left:8px">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts (order matters) -->
+  <script src="js/parser.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/army.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

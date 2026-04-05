@@ -1,0 +1,900 @@
+/* ============================================================
+   Yet Another Army Builder — Dark Warhammer Theme
+   ============================================================ */
+
+/* ── CSS Variables ─────────────────────────────────────────── */
+:root {
+  --bg:           #1a1a1a;
+  --panel-bg:     #242424;
+  --panel-alt:    #2a2a2a;
+  --accent:       #c41e3a;
+  --accent-hover: #e02244;
+  --accent-dark:  #8b1429;
+  --text:         #e0e0e0;
+  --text-muted:   #888888;
+  --border:       #3a3a3a;
+  --border-light: #4a4a4a;
+  --success:      #2ecc71;
+  --warning:      #f39c12;
+  --danger:       #e74c3c;
+  --header-bg:    #111111;
+  --header-height: 60px;
+  --card-bg:      #2f2f2f;
+  --card-hover:   #383838;
+  --radius:       6px;
+  --radius-lg:    10px;
+  --shadow:       0 2px 8px rgba(0,0,0,0.5);
+  --shadow-lg:    0 8px 32px rgba(0,0,0,0.7);
+  --font:         -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  --font-mono:    'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+/* ── Reset / Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+
+ul { list-style: none; }
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--panel-bg); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #666; }
+
+/* ── Header ──────────────────────────────────────────────── */
+.app-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--header-height);
+  background: var(--header-bg);
+  border-bottom: 2px solid var(--accent);
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(196,30,58,0.3);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 20px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-icon {
+  font-size: 24px;
+  color: var(--accent);
+}
+
+.header-title h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(196,30,58,0.5);
+}
+
+.header-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── Main Layout ─────────────────────────────────────────── */
+.app-main {
+  display: grid;
+  grid-template-columns: 280px 1fr 340px;
+  grid-template-rows: 1fr;
+  height: calc(100vh - var(--header-height));
+  margin-top: var(--header-height);
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ── Panels ──────────────────────────────────────────────── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+
+.panel-left  { background: var(--panel-bg); }
+.panel-center { background: var(--bg); border-right: 1px solid var(--border); }
+.panel-right { background: var(--panel-bg); border-right: none; }
+
+.panel-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-alt);
+  flex-shrink: 0;
+}
+
+.panel-header h2 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 12px;
+}
+
+.panel-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--panel-alt);
+  flex-shrink: 0;
+}
+
+/* ── Upload Area ─────────────────────────────────────────── */
+.upload-area {
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius);
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 14px;
+  background: rgba(255,255,255,0.02);
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+  border-color: var(--accent);
+  background: rgba(196,30,58,0.08);
+}
+
+.upload-icon { font-size: 28px; margin-bottom: 6px; }
+.upload-text { font-size: 13px; color: var(--text); margin-bottom: 4px; }
+.upload-subtext { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
+
+/* ── Form Elements ───────────────────────────────────────── */
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: var(--font);
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(196,30,58,0.2);
+}
+
+.form-select option { background: var(--panel-bg); }
+
+/* ── Section Label ───────────────────────────────────────── */
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Faction List ────────────────────────────────────────── */
+.faction-list { display: flex; flex-direction: column; gap: 6px; }
+
+.faction-list-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 12px 0;
+}
+
+.faction-item {
+  display: flex;
+  align-items: center;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  gap: 8px;
+  transition: border-color 0.15s;
+}
+
+.faction-item:hover { border-color: var(--border-light); }
+
+.faction-item-info { flex: 1; min-width: 0; }
+
+.faction-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.faction-item-count {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.faction-item-del {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.faction-item-del:hover { color: var(--danger); background: rgba(231,76,60,0.15); }
+
+/* ── Roster Controls ─────────────────────────────────────── */
+.roster-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.search-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text-muted); }
+
+.unit-count-badge {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Unit Grid ───────────────────────────────────────────── */
+.unit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.roster-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+.roster-empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+.roster-empty p { margin-bottom: 6px; }
+.roster-empty .muted { font-size: 12px; }
+
+/* ── Unit Cards ──────────────────────────────────────────── */
+.unit-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s, box-shadow 0.15s;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+.unit-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.unit-card:hover {
+  border-color: var(--accent);
+  background: var(--card-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.unit-card:hover::before { opacity: 1; }
+.unit-card:active { transform: translateY(0); box-shadow: none; }
+
+.unit-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 6px;
+}
+
+.unit-card-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.unit-card-pts {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.unit-card-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.keyword-tag {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(196,30,58,0.15);
+  border: 1px solid rgba(196,30,58,0.3);
+  color: #cc7788;
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.unit-card-stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.stat-cell {
+  background: rgba(0,0,0,0.3);
+  border-radius: 3px;
+  padding: 3px 2px;
+}
+
+.stat-name {
+  font-size: 8px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  display: block;
+}
+
+.stat-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  display: block;
+}
+
+/* ── Army List ───────────────────────────────────────────── */
+.army-meta {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.points-summary {
+  background: rgba(196,30,58,0.1);
+  border: 1px solid rgba(196,30,58,0.3);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.points-display {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.points-current {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.points-separator { font-size: 20px; color: var(--text-muted); }
+
+.points-limit { font-size: 20px; font-weight: 600; color: var(--text); }
+
+.points-label { font-size: 13px; color: var(--text-muted); margin-left: 4px; }
+
+.points-bar-wrap {
+  height: 6px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.points-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.3s ease, background 0.3s;
+}
+
+.points-bar.over-limit { background: var(--danger); }
+.points-bar.near-limit { background: var(--warning); }
+
+.points-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── Army Entries ────────────────────────────────────────── */
+.army-entries-header {
+  display: grid;
+  grid-template-columns: 1fr 44px 50px 44px 28px;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.army-entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.army-list-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 20px 8px;
+  text-align: center;
+}
+
+.army-entry {
+  display: grid;
+  grid-template-columns: 1fr 44px 50px 44px 28px;
+  align-items: center;
+  gap: 4px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  font-size: 12px;
+  transition: border-color 0.15s;
+}
+
+.army-entry:hover { border-color: var(--border-light); }
+
+.army-entry-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.army-entry-pts {
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.army-entry-qty input {
+  width: 42px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  padding: 2px 4px;
+  font-size: 12px;
+  text-align: center;
+  outline: none;
+}
+
+.army-entry-qty input:focus { border-color: var(--accent); }
+
+.army-entry-total {
+  text-align: right;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.army-entry-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+  text-align: center;
+}
+
+.army-entry-remove:hover {
+  color: var(--danger);
+  background: rgba(231,76,60,0.15);
+}
+
+/* ── Army Toolbar ────────────────────────────────────────── */
+.army-toolbar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  outline: none;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-accent:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border-light);
+}
+
+.btn-outline:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--text-muted);
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+.btn-danger:hover { background: #c0392b; }
+
+/* ── Modals ──────────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.modal-backdrop[hidden] { display: none; }
+
+.modal {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 360px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: modal-in 0.15s ease;
+}
+
+.modal-unit-detail { max-width: 640px; }
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  border-radius: 3px;
+  transition: color 0.15s;
+}
+
+.modal-close:hover { color: var(--text); }
+
+.modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Saved Army List ─────────────────────────────────────── */
+.saved-army-list { display: flex; flex-direction: column; gap: 8px; }
+
+.saved-army-empty { color: var(--text-muted); font-size: 13px; padding: 12px 0; }
+
+.saved-army-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.saved-army-info { flex: 1; min-width: 0; }
+
+.saved-army-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.saved-army-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.saved-army-actions { display: flex; gap: 6px; }
+
+/* ── Unit Detail Modal ───────────────────────────────────── */
+.unit-detail-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.unit-stats-table {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.unit-stats-table .stat-cell {
+  text-align: center;
+  background: rgba(0,0,0,0.4);
+  border-radius: 4px;
+  padding: 8px 4px;
+}
+
+.unit-stats-table .stat-name { font-size: 10px; }
+.unit-stats-table .stat-value { font-size: 16px; }
+
+.weapons-section { margin-top: 14px; }
+
+.weapons-section h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.weapons-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.weapons-table th {
+  text-align: left;
+  padding: 4px 6px;
+  color: var(--text-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.weapons-table td {
+  padding: 5px 6px;
+  border-bottom: 1px solid rgba(58,58,58,0.5);
+}
+
+.weapons-table tr:last-child td { border-bottom: none; }
+
+.weapons-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+.weapon-type-ranged { color: #5ab5e8; }
+.weapon-type-melee  { color: #e8955a; }
+
+/* ── Toast ───────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  animation: toast-in 0.2s ease;
+  max-width: 300px;
+  pointer-events: none;
+}
+
+.toast.toast-success { border-left-color: var(--success); }
+.toast.toast-error   { border-left-color: var(--danger); }
+.toast.toast-warning { border-left-color: var(--warning); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(20px); }
+}
+
+.toast.fade-out { animation: toast-out 0.3s ease forwards; }
+
+/* ── Utility ─────────────────────────────────────────────── */
+.muted { color: var(--text-muted); }
+.text-accent { color: var(--accent); }
+.hidden { display: none !important; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .app-main {
+    grid-template-columns: 240px 1fr 300px;
+  }
+}
+
+@media (max-width: 860px) {
+  html, body { overflow: auto; }
+  .app-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    height: auto;
+    overflow: visible;
+  }
+  .panel { height: auto; min-height: 300px; border-right: none; border-bottom: 1px solid var(--border); }
+  .panel-body { max-height: 400px; overflow-y: auto; }
+}
+
+/* ── Loading Spinner ─────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Points Over Limit ───────────────────────────────────── */
+.points-over .points-current { color: var(--danger); }
