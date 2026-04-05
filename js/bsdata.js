@@ -120,6 +120,12 @@ window.BSData = (() => {
     await Promise.all(Array.from({ length: 6 }, worker));
   }
 
+  // ── Cache busting ────────────────────────────────────────────────────────
+
+  function clearCache() {
+    sessionStorage.removeItem(CACHE_KEY);
+  }
+
   // ── Session cache helpers ────────────────────────────────────────────────
 
   function _getCachedFaction(name) {
