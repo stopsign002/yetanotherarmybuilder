@@ -1,17 +1,13 @@
 /**
- * parser.js - Wahapedia/Battlescribe XML parser
+ * parser.js - BSData/wh40k Battlescribe XML parser (10th edition)
  *
- * BSData/wh40k structure (10th edition):
- *   selectionEntry[type="unit"]
- *     profiles > profile[typeName="Unit"]       ← stats (sometimes)
- *     selectionEntries
- *       selectionEntry[type="model"]
- *         profiles > profile[typeName="Unit"]   ← stats (usually here)
- *         selectionEntries
- *           selectionEntry[type="upgrade"]
- *             profiles > profile[typeName="Ranged Weapons"|"Melee Weapons"]
- *       selectionEntry[type="upgrade"]          ← also direct weapon options
- *         profiles > profile[typeName="Ranged Weapons"|...]
+ * Key structural facts (confirmed from live files):
+ *   - Weapons are in sharedSelectionEntries at catalogue root, referenced
+ *     from units via <entryLinks><entryLink targetId="..."> — NOT inline.
+ *   - Unit stats (typeName="Unit") live on nested model selectionEntries,
+ *     sometimes inside selectionEntryGroups > selectionEntries.
+ *   - Legends units have "[Legends]" in their name.
+ *   - Profile typeName values: "Unit", "Ranged Weapons", "Melee Weapons", "Abilities"
  */
 
 window.WahapediaParser = (() => {
@@ -21,69 +17,117 @@ window.WahapediaParser = (() => {
   }
 
   function parseCharacteristics(profileEl) {
-    const stats = {};
+    const chars = {};
     profileEl.querySelectorAll('characteristic').forEach(c => {
       const key = getAttr(c, 'name').toUpperCase().replace(/\s+/g, '_');
-      stats[key] = c.textContent.trim();
+      chars[key] = c.textContent.trim();
     });
-    return stats;
+    return chars;
   }
 
-  // ── Parse profiles directly on one element (no recursion) ───────────────
-  function parseDirectProfiles(entryEl) {
-    const unitProfile = {};
-    const weapons     = [];
-    const abilities   = [];
+  // ── Build shared-entry index (id → element) ───────────────────────────────
+  // Weapons and other shared entries live here; units reference them by targetId.
+  function buildIndex(root) {
+    const index = new Map();
+    root.querySelectorAll(
+      ':scope > sharedSelectionEntries > selectionEntry, ' +
+      ':scope > sharedSelectionEntryGroups > selectionEntryGroup'
+    ).forEach(el => {
+      const id = el.getAttribute('id');
+      if (id) index.set(id, el);
+    });
+    return index;
+  }
 
-    entryEl.querySelectorAll(':scope > profiles > profile').forEach(profile => {
+  // ── Parse profiles directly on one element ────────────────────────────────
+  function parseDirectProfiles(el) {
+    const stats     = {};
+    const weapons   = [];
+    const abilities = [];
+
+    el.querySelectorAll(':scope > profiles > profile').forEach(profile => {
       const typeName = getAttr(profile, 'typeName', '').toLowerCase();
       const name     = getAttr(profile, 'name');
       const chars    = parseCharacteristics(profile);
 
       if (typeName === 'unit' || typeName === 'model') {
-        Object.assign(unitProfile, chars);
-      } else if (
-        typeName.includes('weapon') ||
-        typeName.includes('ranged') ||
-        typeName.includes('melee')
-      ) {
+        Object.assign(stats, chars);
+      } else if (typeName.includes('ranged') || typeName.includes('melee') || typeName.includes('weapon')) {
         weapons.push({ name, type: typeName, ...chars });
-      } else if (
-        typeName.includes('abilit') ||
-        typeName.includes('psych')  ||
-        typeName.includes('stratagem')
-      ) {
-        const descEl = profile.querySelector(
-          'characteristic[name="Description"], characteristic[name="Effect"], characteristic[name="Ability"]'
-        );
-        abilities.push({ name, description: descEl ? descEl.textContent.trim() : '' });
+      } else if (typeName.includes('abilit') || typeName.includes('psych') || typeName === 'abilities') {
+        const descEl = profile.querySelector('characteristic[name="Description"]');
+        if (name) abilities.push({ name, description: descEl ? descEl.textContent.trim() : '' });
       }
     });
 
-    return { unitProfile, weapons, abilities };
+    return { stats, weapons, abilities };
   }
 
-  // ── Collect weapon profiles from an element and its children (2 levels) ──
-  function collectWeapons(entryEl, depth = 0) {
-    const weapons = [];
-    const { weapons: direct } = parseDirectProfiles(entryEl);
-    weapons.push(...direct);
+  // ── Collect all weapon profiles within a subtree, following entryLinks ─────
+  function collectWeapons(el, index, depth = 0, visited = new Set()) {
+    if (depth > 6) return [];
+    const id = el.getAttribute('id');
+    if (id && visited.has(id)) return [];   // guard against cycles
+    if (id) visited.add(id);
 
-    if (depth < 2) {
-      entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
-        if (getAttr(child, 'hidden', 'false') === 'true') return;
-        weapons.push(...collectWeapons(child, depth + 1));
-      });
-      // Also check selectionEntryGroups → selectionEntries
-      entryEl.querySelectorAll(
-        ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry'
-      ).forEach(child => {
-        if (getAttr(child, 'hidden', 'false') === 'true') return;
-        weapons.push(...collectWeapons(child, depth + 1));
-      });
-    }
+    const weapons = [];
+
+    // Direct profiles on this element
+    weapons.push(...parseDirectProfiles(el).weapons);
+
+    // Inline selectionEntries
+    el.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
+      if (child.getAttribute('hidden') === 'true') return;
+      weapons.push(...collectWeapons(child, index, depth + 1, visited));
+    });
+
+    // entryLinks → look up targets in sharedSelectionEntries
+    el.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
+      if (link.getAttribute('hidden') === 'true') return;
+      const targetId = link.getAttribute('targetId');
+      const target   = targetId && index.get(targetId);
+      if (target) weapons.push(...collectWeapons(target, index, depth + 1, new Set(visited)));
+    });
+
+    // selectionEntryGroups (inline groups containing more weapon options)
+    el.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      weapons.push(...collectWeapons(group, index, depth + 1, visited));
+    });
 
     return weapons;
+  }
+
+  // ── Find unit stat profile anywhere in the subtree (breadth-friendly) ─────
+  // Stats can be on direct profiles OR on nested model selectionEntries (common in 10e)
+  function findUnitStats(entryEl) {
+    // 1. Direct profiles first
+    const { stats } = parseDirectProfiles(entryEl);
+    if (Object.keys(stats).length > 0) return stats;
+
+    // 2. Model children in direct selectionEntries
+    for (const child of entryEl.querySelectorAll(
+      ':scope > selectionEntries > selectionEntry[type="model"], ' +
+      ':scope > selectionEntries > selectionEntry[type="unit"]'
+    )) {
+      const { stats: s } = parseDirectProfiles(child);
+      if (Object.keys(s).length > 0) return s;
+    }
+
+    // 3. Model children nested one level deeper in selectionEntryGroups
+    for (const child of entryEl.querySelectorAll(
+      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="model"], ' +
+      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="unit"]'
+    )) {
+      const { stats: s } = parseDirectProfiles(child);
+      if (Object.keys(s).length > 0) return s;
+    }
+
+    return {};
+  }
+
+  // ── Find abilities in the entry's direct profiles ─────────────────────────
+  function findAbilities(entryEl) {
+    return parseDirectProfiles(entryEl).abilities;
   }
 
   function parseKeywords(entryEl) {
@@ -107,77 +151,41 @@ window.WahapediaParser = (() => {
     return points;
   }
 
-  // ── Parse a unit-level selectionEntry ────────────────────────────────────
-  function parseEntry(entryEl) {
-    const id     = getAttr(entryEl, 'id') || Math.random().toString(36).slice(2, 9);
-    const name   = getAttr(entryEl, 'name', 'Unknown Unit');
-    const type   = getAttr(entryEl, 'type', '');
-    const hidden = getAttr(entryEl, 'hidden', 'false') === 'true';
-    if (hidden) return null;
+  function isLegends(entry) {
+    return entry.getAttribute('name').includes('[Legends]');
+  }
 
-    // 1. Start with profiles directly on the unit entry
-    const { unitProfile, weapons, abilities } = parseDirectProfiles(entryEl);
-
-    // 2. Recurse into child model entries — they often carry the actual stats
-    //    and their own nested weapon upgrades
-    entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
-      if (getAttr(child, 'hidden', 'false') === 'true') return;
-      const childType = getAttr(child, 'type', '');
-      const { unitProfile: childStats, weapons: childWeapons, abilities: childAbilities } =
-        parseDirectProfiles(child);
-
-      if (childType === 'model') {
-        // Prefer model-level stats if we don't already have them
-        if (Object.keys(unitProfile).length === 0) {
-          Object.assign(unitProfile, childStats);
-        }
-        weapons.push(...childWeapons);
-        abilities.push(...childAbilities);
-
-        // Weapons nested inside the model (upgrade children + entry groups)
-        weapons.push(...collectWeapons(child));
-      } else if (childType === 'upgrade') {
-        // Direct upgrade child — grab weapon profiles
-        weapons.push(...childWeapons);
-        weapons.push(...collectWeapons(child));
-      }
-    });
-
-    // 3. Also check selectionEntryGroups directly on the unit entry
-    entryEl.querySelectorAll(
-      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry'
-    ).forEach(child => {
-      if (getAttr(child, 'hidden', 'false') === 'true') return;
-      weapons.push(...collectWeapons(child));
-    });
-
-    // 4. Deduplicate weapons by name
-    const seenW   = new Set();
-    const uniqueW = weapons.filter(w => {
-      if (!w.name || seenW.has(w.name)) return false;
-      seenW.add(w.name);
+  function dedup(arr, key) {
+    const seen = new Set();
+    return arr.filter(item => {
+      const k = item[key];
+      if (!k || seen.has(k)) return false;
+      seen.add(k);
       return true;
     });
+  }
 
-    // 5. Deduplicate abilities by name
-    const seenA   = new Set();
-    const uniqueA = abilities.filter(a => {
-      if (!a.name || seenA.has(a.name)) return false;
-      seenA.add(a.name);
-      return true;
-    });
+  // ── Parse a single unit-level selectionEntry ──────────────────────────────
+  function parseEntry(entryEl, index) {
+    if (getAttr(entryEl, 'hidden', 'false') === 'true') return null;
+    if (isLegends(entryEl)) return null;
 
-    const keywords = parseKeywords(entryEl);
-    const points   = parseCosts(entryEl);
-    const descEl   = entryEl.querySelector(':scope > description');
+    const id   = getAttr(entryEl, 'id') || Math.random().toString(36).slice(2, 9);
+    const name = getAttr(entryEl, 'name', 'Unknown Unit');
+    const type = getAttr(entryEl, 'type', '');
+
+    const stats     = findUnitStats(entryEl);
+    const abilities = findAbilities(entryEl);
+    const weapons   = dedup(collectWeapons(entryEl, index), 'name');
+    const keywords  = parseKeywords(entryEl);
+    const points    = parseCosts(entryEl);
+    const descEl    = entryEl.querySelector(':scope > description');
 
     return {
-      id,
-      name,
-      type,
-      stats:    unitProfile,
-      weapons:  uniqueW,
-      abilities:uniqueA,
+      id, name, type,
+      stats,
+      weapons,
+      abilities,
       keywords,
       points,
       description: descEl ? descEl.textContent.trim() : ''
@@ -187,34 +195,32 @@ window.WahapediaParser = (() => {
   // ── Main parse function ───────────────────────────────────────────────────
   function parse(xmlString, filename) {
     try {
-      const parser = new DOMParser();
-      const doc    = parser.parseFromString(xmlString, 'application/xml');
+      const domParser = new DOMParser();
+      const doc = domParser.parseFromString(xmlString, 'application/xml');
 
       const parseError = doc.querySelector('parsererror');
       if (parseError) {
         throw new Error('XML parse error: ' + parseError.textContent.slice(0, 200));
       }
 
-      const root       = doc.documentElement;
+      const root        = doc.documentElement;
       const factionName = getAttr(root, 'name') ||
         filename.replace(/\.(cat|xml)$/i, '').replace(/[-_]/g, ' ');
 
+      const index   = buildIndex(root);
       const units   = [];
       const seenIds = new Set();
 
-      // Top-level selectionEntries — only "unit" type are real army units.
-      // "upgrade" at catalogue level = weapons/wargear shared library; skip them.
-      // "model" at top level = standalone model entry; include it.
-      const topEntries = root.querySelectorAll(
+      // Only type="unit" and type="model" at the top level are army units.
+      // type="upgrade" entries are weapons/wargear — excluded deliberately.
+      root.querySelectorAll(
         ':scope > selectionEntries > selectionEntry, ' +
         ':scope > sharedSelectionEntries > selectionEntry'
-      );
+      ).forEach(entry => {
+        const t = getAttr(entry, 'type', '');
+        if (t !== 'unit' && t !== 'model') return;
 
-      topEntries.forEach(entry => {
-        const type = getAttr(entry, 'type', '');
-        if (type !== 'unit' && type !== 'model') return; // skip upgrade/mount/etc.
-
-        const unit = parseEntry(entry);
+        const unit = parseEntry(entry, index);
         if (unit && !seenIds.has(unit.id)) {
           seenIds.add(unit.id);
           units.push(unit);
@@ -224,7 +230,7 @@ window.WahapediaParser = (() => {
       return { factionName, filename, unitCount: units.length, units };
 
     } catch (err) {
-      console.error('Parser error:', err);
+      console.error('[Parser] Error:', err);
       throw err;
     }
   }
