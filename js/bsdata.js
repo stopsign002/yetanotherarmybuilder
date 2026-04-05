@@ -73,9 +73,76 @@ window.BSData = (() => {
 
   // ── Cache busting ────────────────────────────────────────────────────────
 
-  function clearCache() {
-    sessionStorage.removeItem(CACHE_KEY);
+  // ── Bulk loader ──────────────────────────────────────────────────────────
+
+  /**
+   * Download and parse every catalogue file in the repo.
+   *
+   * @param {function(done, total, lastName)} onProgress   - called after each file
+   * @param {function(parsedFaction)}         onFactionLoaded - called for each non-empty faction
+   * @param {AbortSignal}                     [signal]     - optional cancellation
+   */
+  async function loadAllFactions(onProgress, onFactionLoaded, signal) {
+    const files = await fetchFileList();
+    const catFiles = files.filter(f => f.type === 'catalogue');
+    const total = catFiles.length;
+    let done = 0;
+    let cursor = 0;
+
+    async function worker() {
+      while (cursor < catFiles.length) {
+        if (signal && signal.aborted) return;
+        const file = catFiles[cursor++];
+        try {
+          // Check sessionStorage cache first
+          const cached = _getCachedFaction(file.name);
+          let faction;
+          if (cached) {
+            faction = cached;
+          } else {
+            const xml = await fetchFile(file.path);
+            if (signal && signal.aborted) return;
+            faction = WahapediaParser.parse(xml, file.path);
+            _cacheFaction(faction);
+          }
+          done++;
+          onProgress(done, total, faction.factionName);
+          if (faction.units.length > 0) onFactionLoaded(faction);
+        } catch (err) {
+          done++;
+          onProgress(done, total, file.name);
+          console.warn(`[BSData] Failed to load "${file.name}":`, err.message);
+        }
+      }
+    }
+
+    // Run 6 concurrent workers
+    await Promise.all(Array.from({ length: 6 }, worker));
   }
 
-  return { fetchFileList, fetchFile, clearCache };
-})();
+  // ── Session cache helpers ────────────────────────────────────────────────
+
+  function _getCachedFaction(name) {
+    try {
+      const raw = sessionStorage.getItem('yaab_bsf_' + name);
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+  }
+
+  function _cacheFaction(faction) {
+    try {
+      sessionStorage.setItem('yaab_bsf_' + faction.factionName, JSON.stringify(faction));
+    } catch (_) { /* sessionStorage full — skip caching */ }
+  }
+
+  function clearFactionCache() {
+    const keys = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k && k.startsWith('yaab_bsf_')) keys.push(k);
+    }
+    keys.forEach(k => sessionStorage.removeItem(k));
+    clearCache(); // also clear the file list cache
+  }
+
+  return { fetchFileList, fetchFile, loadAllFactions, clearCache, clearFactionCache };
