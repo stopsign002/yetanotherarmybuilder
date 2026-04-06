@@ -9,10 +9,11 @@
 
 window.BSData = (() => {
 
-  const REPO     = 'BSData/wh40k';
-  const API_TREE = `https://api.github.com/repos/${REPO}/git/trees/HEAD?recursive=1`;
-  const RAW_BASE = `https://raw.githubusercontent.com/${REPO}/HEAD`;
-  const CACHE_KEY = 'yaab_bsdata_filelist';
+  const REPO     = 'BSData/wh40k-10e';
+  const API_TREE = `https://api.github.com/repos/${REPO}/git/trees/main?recursive=1`;
+  const RAW_BASE = `https://raw.githubusercontent.com/${REPO}/main`;
+  // Include version in cache key so old cached 9th-ed data is ignored
+  const CACHE_KEY = 'yaab_bsdata_filelist_10e_v1';
 
   // ── File list ────────────────────────────────────────────────────────────
 
@@ -128,16 +129,18 @@ window.BSData = (() => {
 
   // ── Session cache helpers ────────────────────────────────────────────────
 
+  const FACTION_CACHE_PREFIX = 'yaab_bsf_10e_v1_';
+
   function _getCachedFaction(name) {
     try {
-      const raw = sessionStorage.getItem('yaab_bsf_' + name);
+      const raw = sessionStorage.getItem(FACTION_CACHE_PREFIX + name);
       return raw ? JSON.parse(raw) : null;
     } catch (_) { return null; }
   }
 
   function _cacheFaction(faction) {
     try {
-      sessionStorage.setItem('yaab_bsf_' + faction.factionName, JSON.stringify(faction));
+      sessionStorage.setItem(FACTION_CACHE_PREFIX + faction.factionName, JSON.stringify(faction));
     } catch (_) { /* sessionStorage full — skip caching */ }
   }
 
@@ -145,10 +148,9 @@ window.BSData = (() => {
     const keys = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const k = sessionStorage.key(i);
-      if (k && k.startsWith('yaab_bsf_')) keys.push(k);
+      if (k && (k.startsWith('yaab_bsf_') || k.startsWith('yaab_bsdata_filelist'))) keys.push(k);
     }
     keys.forEach(k => sessionStorage.removeItem(k));
-    clearCache(); // also clear the file list cache
   }
 
   return { fetchFileList, fetchFile, loadAllFactions, clearCache, clearFactionCache };

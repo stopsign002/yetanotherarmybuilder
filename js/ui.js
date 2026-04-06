@@ -113,6 +113,8 @@ window.UI = (() => {
     const stats    = unit.stats    || {};
     const keywords = unit.keywords || [];
     const pts      = unit.points   || 0;
+    const ptsOpts  = unit.pointsOptions || (pts > 0 ? [pts] : []);
+    const ptsDisplay = ptsOpts.length > 1 ? ptsOpts.join(' / ') + ' pts' : pts > 0 ? pts + ' pts' : '—';
 
     // 10th ed stat keys only — resolve BSData's mixed capitalisation (Sv, Ld, etc.)
     const STAT_ALIASES_10TH = { SV: ['SV','Sv','sv'], LD: ['LD','Ld'], OC: ['OC'] };
@@ -128,7 +130,7 @@ window.UI = (() => {
     card.innerHTML = `
       <div class="unit-card-header">
         <div class="unit-card-name">${escapeHtml(unit.name)}</div>
-        <div class="unit-card-pts">${pts > 0 ? pts + ' pts' : '—'}</div>
+        <div class="unit-card-pts">${ptsDisplay}</div>
       </div>
       <div class="unit-card-faction">${escapeHtml(unit._factionName || '')}</div>
       <div class="unit-card-stats" style="grid-template-columns:repeat(${cardStats.length || 6},1fr)">
@@ -177,7 +179,10 @@ window.UI = (() => {
         <div class="detail-meta">
           ${unit._factionName ? `<span class="detail-faction">${escapeHtml(unit._factionName)}</span>` : ''}
           ${unit.type ? `<span class="detail-type">${escapeHtml(unit.type)}</span>` : ''}
-          ${unit.points ? `<span class="detail-pts">${unit.points} pts</span>` : ''}
+          ${(() => {
+            const opts = unit.pointsOptions || (unit.points ? [unit.points] : []);
+            return opts.length > 0 ? `<span class="detail-pts">${opts.join(' / ')} pts</span>` : '';
+          })()}
         </div>
       </div>
     `;
@@ -207,16 +212,16 @@ window.UI = (() => {
       </div>`;
     }
 
-    // Weapons — dynamic columns: collect all characteristic keys present across all weapons
+    // Weapons — 10th ed columns: Range, A, BS/WS, S, AP, D, Keywords
     if (weapons.length > 0) {
-      const WEAPON_COL_ORDER = ['Range','Type','A','BS','WS','S','AP','D','Keywords','Abilities'];
+      // Preferred column order for 10th ed; 'Keywords' shows comma-separated special rules
+      const WEAPON_COL_ORDER = ['Range','A','BS','WS','S','AP','D','Keywords'];
       const allCols = new Set();
       weapons.forEach(w => {
         Object.keys(w).forEach(k => { if (k !== 'name' && k !== '_typeName') allCols.add(k); });
       });
-      // Sort by preferred order, then append unknown columns
+      // Sort by preferred order; skip 'Abilities' (9th ed) and any other unknown cols
       const cols = WEAPON_COL_ORDER.filter(c => allCols.has(c));
-      [...allCols].filter(c => !WEAPON_COL_ORDER.includes(c)).sort().forEach(c => cols.push(c));
 
       html += `<div class="detail-section">
         <div class="detail-section-title">Weapons</div>

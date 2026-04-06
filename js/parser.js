@@ -198,48 +198,56 @@ window.WahapediaParser = (() => {
     return pts;
   }
 
-  function findCost(entryEl, entriesById) {
-    // 1. Direct cost on the unit entry itself
-    const direct = readCost(entryEl);
-    if (direct > 0) return direct;
+  /**
+   * Returns { points: number, pointsOptions: number[] } for a unit entry.
+   * In 10th ed BSData, the unit entry directly holds pts=90 (base cost).
+   * Modifier elements encode alternative squad-size totals (e.g. 200 pts for 20 models).
+   * pointsOptions is sorted ascending so [90, 200] = [10 models, 20 models].
+   */
+  function findCosts(entryEl, entriesById) {
+    // 1. Direct cost + typeId on the unit entry (10th ed standard location)
+    let basePts = 0;
+    let ptsTypeId = null;
+    entryEl.querySelectorAll(':scope > costs > cost').forEach(cost => {
+      const name = getAttr(cost, 'name', '').toLowerCase().trim();
+      if (name === 'pts' || name === 'points') {
+        basePts = parseFloat(getAttr(cost, 'value', '0')) || 0;
+        ptsTypeId = getAttr(cost, 'typeId') || null;
+      }
+    });
 
-    // 2. Cost on direct child selectionEntries (some units store cost here)
-    for (const child of entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry')) {
-      const c = readCost(child);
-      if (c > 0) return c;
+    const allCosts = new Set();
+    if (basePts > 0) allCosts.add(basePts);
+
+    // 2. Modifier elements with type="set" on the pts field = alternative costs
+    if (ptsTypeId) {
+      entryEl.querySelectorAll(':scope > modifiers > modifier').forEach(mod => {
+        if (getAttr(mod, 'type') === 'set' && getAttr(mod, 'field') === ptsTypeId) {
+          const val = parseFloat(getAttr(mod, 'value', '0'));
+          if (!isNaN(val) && val > 0) allCosts.add(val);
+        }
+      });
     }
 
-    // 3. Costs within selectionEntryGroups (10th ed squad/configuration costs)
-    for (const group of entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup')) {
-      // 3a. Cost directly on the group
-      const gc = readCost(group);
-      if (gc > 0) return gc;
-
-      // 3b. Cost on inline selectionEntries within the group (e.g. "10 Warriors = 90 pts")
-      for (const child of group.querySelectorAll(':scope > selectionEntries > selectionEntry')) {
-        const cc = readCost(child);
-        if (cc > 0) return cc;
-      }
-
-      // 3c. Cost directly on entryLinks (before looking at their targets)
-      for (const link of group.querySelectorAll(':scope > entryLinks > entryLink')) {
-        const lc = readCost(link);
-        if (lc > 0) return lc;
-      }
+    if (allCosts.size > 0) {
+      const sorted = [...allCosts].sort((a, b) => a - b);
+      return { points: sorted[0], pointsOptions: sorted };
     }
 
-    // 4. Fallback: per-model cost from target of first model entryLink
+    // 3. Fallback: entryLink targets in selectionEntryGroups (older patterns)
     for (const link of entryEl.querySelectorAll(
       ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink'
     )) {
+      const lc = readCost(link);
+      if (lc > 0) return { points: lc, pointsOptions: [lc] };
       const target = entriesById.get(getAttr(link, 'targetId'));
       if (target) {
-        const c = readCost(target);
-        if (c > 0) return c;
+        const tc = readCost(target);
+        if (tc > 0) return { points: tc, pointsOptions: [tc] };
       }
     }
 
-    return 0;
+    return { points: 0, pointsOptions: [] };
   }
 
   // ── Keyword / category collection ────────────────────────────────────────
@@ -247,8 +255,10 @@ window.WahapediaParser = (() => {
   function parseKeywords(entryEl) {
     const kws = [];
     entryEl.querySelectorAll(':scope > categoryLinks > categoryLink').forEach(link => {
-      const name = getAttr(link, 'name');
-      if (name) kws.push(name);
+      const name = getAttr(link, 'name', '').trim();
+      // Skip empty names and BattleScribe editor default placeholder names
+      if (!name || /^new\s+category/i.test(name)) return;
+      kws.push(name);
     });
     return kws;
   }
@@ -267,13 +277,6 @@ window.WahapediaParser = (() => {
 
   // ── Parse one army unit entry ─────────────────────────────────────────────
 
-  // 9th edition unit stat blocks contain 'WS' (Weapon Skill on unit line) or 'Save'
-  // (spelled out, vs 10th ed's 'Sv'). Exclude these to keep only 10th ed units.
-  function is9thEdition(stats) {
-    const keys = Object.keys(stats);
-    return keys.includes('WS') || keys.includes('Save');
-  }
-
   function parseEntry(entryEl, entriesById, profilesById) {
     if (getAttr(entryEl, 'hidden', 'false') === 'true') return null;
 
@@ -283,16 +286,12 @@ window.WahapediaParser = (() => {
     const id   = getAttr(entryEl, 'id') || Math.random().toString(36).slice(2, 9);
     const type = getAttr(entryEl, 'type', '');
 
-    const stats     = findStats(entryEl, entriesById, profilesById);
-
-    // Skip 9th edition units — they have WS/Save in the unit stat block
-    if (is9thEdition(stats)) return null;
-
-    const weapons   = dedup(collectWeapons(entryEl, entriesById), 'name');
-    const abilities = dedup(parseDirectProfiles(entryEl).abilities, 'name');
-    const keywords  = parseKeywords(entryEl);
-    const points    = findCost(entryEl, entriesById);
-    const descEl    = entryEl.querySelector(':scope > description');
+    const stats    = findStats(entryEl, entriesById, profilesById);
+    const weapons  = dedup(collectWeapons(entryEl, entriesById), 'name');
+    const abilities= dedup(parseDirectProfiles(entryEl).abilities, 'name');
+    const keywords = parseKeywords(entryEl);
+    const { points, pointsOptions } = findCosts(entryEl, entriesById);
+    const descEl   = entryEl.querySelector(':scope > description');
 
     return {
       id, name, type,
@@ -301,6 +300,7 @@ window.WahapediaParser = (() => {
       abilities,
       keywords,
       points,
+      pointsOptions,
       description: descEl ? descEl.textContent.trim() : ''
     };
   }
