@@ -165,15 +165,13 @@ window.WahapediaParser = (() => {
     const weapons = [];
     weapons.push(...parseDirectProfiles(el).weapons);
 
-    // Inline child selectionEntries
+    // Inline child selectionEntries — include hidden entries (default/non-optional weapons)
     el.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
-      if (child.getAttribute('hidden') === 'true') return;
       weapons.push(...collectWeapons(child, entriesById, depth + 1, visited));
     });
 
-    // entryLinks → resolve from shared index
+    // entryLinks → resolve from shared index — include hidden links (default weapons)
     el.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
-      if (link.getAttribute('hidden') === 'true') return;
       const target = entriesById.get(getAttr(link, 'targetId'));
       if (target) weapons.push(...collectWeapons(target, entriesById, depth + 1, new Set(visited)));
     });
@@ -201,11 +199,36 @@ window.WahapediaParser = (() => {
   }
 
   function findCost(entryEl, entriesById) {
-    // Direct cost
+    // 1. Direct cost on the unit entry itself
     const direct = readCost(entryEl);
     if (direct > 0) return direct;
 
-    // Fall back to first model child cost (e.g. Necron Warriors: pts=0 on unit, 11 on each model)
+    // 2. Cost on direct child selectionEntries (some units store cost here)
+    for (const child of entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry')) {
+      const c = readCost(child);
+      if (c > 0) return c;
+    }
+
+    // 3. Costs within selectionEntryGroups (10th ed squad/configuration costs)
+    for (const group of entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup')) {
+      // 3a. Cost directly on the group
+      const gc = readCost(group);
+      if (gc > 0) return gc;
+
+      // 3b. Cost on inline selectionEntries within the group (e.g. "10 Warriors = 90 pts")
+      for (const child of group.querySelectorAll(':scope > selectionEntries > selectionEntry')) {
+        const cc = readCost(child);
+        if (cc > 0) return cc;
+      }
+
+      // 3c. Cost directly on entryLinks (before looking at their targets)
+      for (const link of group.querySelectorAll(':scope > entryLinks > entryLink')) {
+        const lc = readCost(link);
+        if (lc > 0) return lc;
+      }
+    }
+
+    // 4. Fallback: per-model cost from target of first model entryLink
     for (const link of entryEl.querySelectorAll(
       ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink'
     )) {
@@ -244,6 +267,13 @@ window.WahapediaParser = (() => {
 
   // ── Parse one army unit entry ─────────────────────────────────────────────
 
+  // 9th edition unit stat blocks contain 'WS' (Weapon Skill on unit line) or 'Save'
+  // (spelled out, vs 10th ed's 'Sv'). Exclude these to keep only 10th ed units.
+  function is9thEdition(stats) {
+    const keys = Object.keys(stats);
+    return keys.includes('WS') || keys.includes('Save');
+  }
+
   function parseEntry(entryEl, entriesById, profilesById) {
     if (getAttr(entryEl, 'hidden', 'false') === 'true') return null;
 
@@ -254,6 +284,10 @@ window.WahapediaParser = (() => {
     const type = getAttr(entryEl, 'type', '');
 
     const stats     = findStats(entryEl, entriesById, profilesById);
+
+    // Skip 9th edition units — they have WS/Save in the unit stat block
+    if (is9thEdition(stats)) return null;
+
     const weapons   = dedup(collectWeapons(entryEl, entriesById), 'name');
     const abilities = dedup(parseDirectProfiles(entryEl).abilities, 'name');
     const keywords  = parseKeywords(entryEl);

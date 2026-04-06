@@ -114,9 +114,16 @@ window.UI = (() => {
     const keywords = unit.keywords || [];
     const pts      = unit.points   || 0;
 
-    // Pick the most informative stat keys to show on the card (max 6)
-    const CARD_STAT_PREF = ['M','T','SV','W','LD','OC','WS','BS','S','A','Ld','Save'];
-    const cardStats = CARD_STAT_PREF.filter(k => stats[k] != null && stats[k] !== '').slice(0, 6);
+    // 10th ed stat keys only — resolve BSData's mixed capitalisation (Sv, Ld, etc.)
+    const STAT_ALIASES_10TH = { SV: ['SV','Sv','sv'], LD: ['LD','Ld'], OC: ['OC'] };
+    const resolvedStats = {};
+    ['M','T','W'].forEach(k => { if (stats[k] != null) resolvedStats[k] = stats[k]; });
+    Object.entries(STAT_ALIASES_10TH).forEach(([canonical, aliases]) => {
+      const found = aliases.find(a => stats[a] != null && stats[a] !== '');
+      if (found) resolvedStats[canonical] = stats[found];
+    });
+    const CARD_STAT_PREF = ['M','T','SV','W','LD','OC'];
+    const cardStats = CARD_STAT_PREF.filter(k => resolvedStats[k] != null && resolvedStats[k] !== '').slice(0, 6);
 
     card.innerHTML = `
       <div class="unit-card-header">
@@ -125,7 +132,7 @@ window.UI = (() => {
       </div>
       <div class="unit-card-faction">${escapeHtml(unit._factionName || '')}</div>
       <div class="unit-card-stats" style="grid-template-columns:repeat(${cardStats.length || 6},1fr)">
-        ${cardStats.length > 0 ? cardStats.map(k => renderStatCell(k, stats[k])).join('') : renderStatCell('—','—')}</div>
+        ${cardStats.length > 0 ? cardStats.map(k => renderStatCell(k, resolvedStats[k])).join('') : renderStatCell('—','—')}</div>
       ${keywords.length > 0 ? `<div class="unit-card-keywords">${
         keywords.slice(0, 4).map(k => `<span class="keyword-tag">${escapeHtml(k)}</span>`).join('')
         }${keywords.length > 4 ? `<span class="keyword-tag">+${keywords.length - 4}</span>` : ''
@@ -149,13 +156,14 @@ window.UI = (() => {
     const abilities= unit.abilities|| [];
     const keywords = unit.keywords || [];
 
+    // Aliases handle BSData mixed capitalisation (Sv vs SV, Ld vs LD)
     const statAliases = {
-      M:  ['M','MOVE'],
-      T:  ['T','TOUGHNESS'],
-      SV: ['SV','SAVE'],
-      W:  ['W','WOUNDS'],
-      LD: ['LD','LEADERSHIP'],
-      OC: ['OC','OBJECTIVE_CONTROL'],
+      M:  ['M'],
+      T:  ['T'],
+      SV: ['SV','Sv','sv'],
+      W:  ['W'],
+      LD: ['LD','Ld'],
+      OC: ['OC'],
     };
 
     const getStatVal = key => (statAliases[key] || [key]).map(a => stats[a]).find(v => v) || '—';
@@ -185,18 +193,16 @@ window.UI = (() => {
       </div>
     `;
 
-    // Stats table — dynamic: works for both 9th ed (M/WS/BS/S/T/W/A/Ld/Save)
-    // and 10th ed (M/T/SV/W/LD/OC) by showing whatever keys are present
-    const STAT_ORDER = ['M','WS','BS','S','T','W','A','Ld','Save','SV','LD','OC'];
-    const presentStats = STAT_ORDER.filter(k => stats[k] != null && stats[k] !== '');
-    // Also catch any other stat keys not in our known list
-    Object.keys(stats).forEach(k => { if (!STAT_ORDER.includes(k) && !presentStats.includes(k)) presentStats.push(k); });
+    // Stats table — 10th edition only (M/T/SV/W/LD/OC)
+    // Use canonical names resolved via statAliases to handle Sv/SV, Ld/LD variations
+    const STAT_ORDER = ['M','T','SV','W','LD','OC'];
+    const presentStats = STAT_ORDER.filter(k => getStatVal(k) !== '—');
 
     if (presentStats.length > 0) {
       html += `<div class="detail-section">
         <div class="detail-section-title">Stats</div>
         <div class="detail-stats-row" style="grid-template-columns:repeat(${presentStats.length},1fr)">
-          ${presentStats.map(k => `<div class="detail-stat-cell"><span class="stat-name">${escapeHtml(k)}</span><span class="stat-value">${escapeHtml(String(stats[k]))}</span></div>`).join('')}
+          ${presentStats.map(k => `<div class="detail-stat-cell"><span class="stat-name">${escapeHtml(k)}</span><span class="stat-value">${escapeHtml(String(getStatVal(k)))}</span></div>`).join('')}
         </div>
       </div>`;
     }
