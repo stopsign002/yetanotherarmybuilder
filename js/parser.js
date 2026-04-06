@@ -199,10 +199,11 @@ window.WahapediaParser = (() => {
   }
 
   /**
-   * Returns { points: number, pointsOptions: number[] } for a unit entry.
-   * In 10th ed BSData, the unit entry directly holds pts=90 (base cost).
-   * Modifier elements encode alternative squad-size totals (e.g. 200 pts for 20 models).
-   * pointsOptions is sorted ascending so [90, 200] = [10 models, 20 models].
+   * Returns { points, pointsOptions, squadOptions } for a unit entry.
+   * squadOptions: [{ pts, models }] — models is the model count for that cost tier (or null).
+   * In 10th ed BSData, pts=90 is directly on the unit entry; modifier elements encode
+   * alternative totals (e.g. pts=200 for ≥11 models). Constraints on the first
+   * selectionEntryGroup give the min (base squad) and max (full squad) model counts.
    */
   function findCosts(entryEl, entriesById) {
     // 1. Direct cost + typeId on the unit entry (10th ed standard location)
@@ -216,38 +217,57 @@ window.WahapediaParser = (() => {
       }
     });
 
-    const allCosts = new Set();
-    if (basePts > 0) allCosts.add(basePts);
-
-    // 2. Modifier elements with type="set" on the pts field = alternative costs
-    if (ptsTypeId) {
-      entryEl.querySelectorAll(':scope > modifiers > modifier').forEach(mod => {
-        if (getAttr(mod, 'type') === 'set' && getAttr(mod, 'field') === ptsTypeId) {
-          const val = parseFloat(getAttr(mod, 'value', '0'));
-          if (!isNaN(val) && val > 0) allCosts.add(val);
+    // 2. Model count from first selectionEntryGroup constraints (min=base, max=full)
+    let minModels = null, maxModels = null;
+    const firstGroup = entryEl.querySelector(':scope > selectionEntryGroups > selectionEntryGroup');
+    if (firstGroup) {
+      firstGroup.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+        const val = Math.round(parseFloat(getAttr(c, 'value', '0')));
+        if (!isNaN(val) && val > 0) {
+          if (getAttr(c, 'type') === 'min') minModels = val;
+          if (getAttr(c, 'type') === 'max') maxModels = val;
         }
       });
     }
 
-    if (allCosts.size > 0) {
-      const sorted = [...allCosts].sort((a, b) => a - b);
-      return { points: sorted[0], pointsOptions: sorted };
+    const squadOptions = [];
+    if (basePts > 0) squadOptions.push({ pts: basePts, models: minModels });
+
+    // 3. Modifier elements for alternative squad-size costs
+    if (ptsTypeId) {
+      entryEl.querySelectorAll(':scope > modifiers > modifier').forEach(mod => {
+        if (getAttr(mod, 'type') === 'set' && getAttr(mod, 'field') === ptsTypeId) {
+          const val = parseFloat(getAttr(mod, 'value', '0'));
+          if (!isNaN(val) && val > 0 && val !== basePts) {
+            squadOptions.push({ pts: val, models: maxModels });
+          }
+        }
+      });
     }
 
-    // 3. Fallback: entryLink targets in selectionEntryGroups (older patterns)
+    if (squadOptions.length > 0) {
+      squadOptions.sort((a, b) => a.pts - b.pts);
+      return {
+        points: squadOptions[0].pts,
+        pointsOptions: squadOptions.map(o => o.pts),
+        squadOptions,
+      };
+    }
+
+    // 4. Fallback: entryLink targets in selectionEntryGroups (older patterns)
     for (const link of entryEl.querySelectorAll(
       ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink'
     )) {
       const lc = readCost(link);
-      if (lc > 0) return { points: lc, pointsOptions: [lc] };
+      if (lc > 0) return { points: lc, pointsOptions: [lc], squadOptions: [{ pts: lc, models: null }] };
       const target = entriesById.get(getAttr(link, 'targetId'));
       if (target) {
         const tc = readCost(target);
-        if (tc > 0) return { points: tc, pointsOptions: [tc] };
+        if (tc > 0) return { points: tc, pointsOptions: [tc], squadOptions: [{ pts: tc, models: null }] };
       }
     }
 
-    return { points: 0, pointsOptions: [] };
+    return { points: 0, pointsOptions: [], squadOptions: [] };
   }
 
   // ── Keyword / category collection ────────────────────────────────────────
@@ -290,7 +310,7 @@ window.WahapediaParser = (() => {
     const weapons  = dedup(collectWeapons(entryEl, entriesById), 'name');
     const abilities= dedup(parseDirectProfiles(entryEl).abilities, 'name');
     const keywords = parseKeywords(entryEl);
-    const { points, pointsOptions } = findCosts(entryEl, entriesById);
+    const { points, pointsOptions, squadOptions } = findCosts(entryEl, entriesById);
     const descEl   = entryEl.querySelector(':scope > description');
 
     return {
@@ -301,6 +321,7 @@ window.WahapediaParser = (() => {
       keywords,
       points,
       pointsOptions,
+      squadOptions,
       description: descEl ? descEl.textContent.trim() : ''
     };
   }
@@ -356,7 +377,21 @@ window.WahapediaParser = (() => {
         }
       });
 
-      return { factionName, filename, unitCount: units.length, units };
+      // Extract faction-level abilities / rules from sharedProfiles
+      const factionAbilities = [];
+      root.querySelectorAll(':scope > sharedProfiles > profile').forEach(p => {
+        const typeName = getAttr(p, 'typeName', '').toLowerCase();
+        if (!typeName.includes('abilit') && !typeName.includes('rule')) return;
+        const name = getAttr(p, 'name', '').trim();
+        if (!name || /^new\s/i.test(name)) return;
+        const descEl = p.querySelector('characteristic[name="Description"]');
+        factionAbilities.push({
+          name,
+          description: descEl ? descEl.textContent.trim() : ''
+        });
+      });
+
+      return { factionName, filename, unitCount: units.length, units, factionAbilities };
 
     } catch (err) {
       console.error('[Parser] Error in', filename, err);

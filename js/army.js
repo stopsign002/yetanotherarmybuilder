@@ -13,16 +13,28 @@ window.Army = class Army {
     this.updatedAt = new Date().toISOString();
   }
 
-  addUnit(unitData, count = 1) {
-    const existing = this.entries.find(e => e.unitId === unitData.id);
+  /**
+   * @param {object} unitData
+   * @param {number} count
+   * @param {object|null} squadOption  — { pts, models } from parser squadOptions
+   */
+  addUnit(unitData, count = 1, squadOption = null) {
+    const selectedPts  = squadOption ? squadOption.pts  : (unitData.points || 0);
+    const squadLabel   = squadOption && squadOption.models ? `${squadOption.models} models` : null;
+    // Two entries of the same unit but different squad sizes are kept separate
+    const existing = this.entries.find(
+      e => e.unitId === unitData.id && e.selectedPts === selectedPts
+    );
     if (existing) {
       existing.count += count;
     } else {
       this.entries.push({
         unitId: unitData.id,
         unitName: unitData.name,
-        unitData: unitData,
-        count: count
+        unitData,
+        count,
+        selectedPts,
+        squadLabel,
       });
     }
     this.updatedAt = new Date().toISOString();
@@ -44,7 +56,8 @@ window.Army = class Army {
 
   getTotalPoints() {
     return this.entries.reduce((total, entry) => {
-      return total + (entry.unitData.points || 0) * entry.count;
+      const pts = (entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0));
+      return total + pts * entry.count;
     }, 0);
   }
 

@@ -24,36 +24,62 @@ window.UI = (() => {
     }, duration);
   }
 
-  // ── Loading progress bar (thin bar under header) ──────────────────────
+  // ── Loading progress bar ──────────────────────────────────────────────
+  let _loadCompleteTimer = null;
+
   function setLoadProgress(done, total) {
-    const wrap = document.getElementById('page-progress-wrap');
-    const bar  = document.getElementById('page-progress-bar');
-    const status     = document.getElementById('load-status');
-    const statusText = document.getElementById('load-status-text');
-    const statusCount= document.getElementById('load-status-count');
+    const wrap      = document.getElementById('page-progress-wrap');
+    const bar       = document.getElementById('page-progress-bar');
+    const status    = document.getElementById('load-status');
+    const spinner   = document.getElementById('load-spinner');
+    const statusText= document.getElementById('load-status-text');
+    const statusCount=document.getElementById('load-status-count');
 
     if (total === 0) return;
-
     const pct = Math.round((done / total) * 100);
+
     wrap.hidden = false;
     bar.style.width = pct + '%';
-
     status.hidden = false;
-    statusText.textContent = 'Loading factions';
-    statusCount.textContent = `${done} / ${total}`;
 
     if (done >= total) {
+      // Show completion state
       bar.style.width = '100%';
-      setTimeout(() => {
-        wrap.hidden = true;
-        status.hidden = true;
-      }, 800);
+      if (spinner) spinner.style.display = 'none';
+      statusText.textContent = 'All Factions Loaded';
+      statusCount.textContent = `(${total})`;
+      status.classList.add('load-complete');
+
+      // Fade out after 10 seconds
+      clearTimeout(_loadCompleteTimer);
+      _loadCompleteTimer = setTimeout(() => {
+        wrap.style.transition = 'opacity 1s ease';
+        status.style.transition = 'opacity 1s ease';
+        wrap.style.opacity = '0';
+        status.style.opacity = '0';
+        setTimeout(() => {
+          wrap.hidden = true;
+          status.hidden = true;
+          wrap.style.opacity = '';
+          wrap.style.transition = '';
+          status.style.opacity = '';
+          status.style.transition = '';
+          status.classList.remove('load-complete');
+          if (spinner) spinner.style.display = '';
+        }, 1000);
+      }, 10000);
+    } else {
+      clearTimeout(_loadCompleteTimer);
+      if (spinner) spinner.style.display = '';
+      status.classList.remove('load-complete');
+      statusText.textContent = 'Loading factions';
+      statusCount.textContent = `${done} / ${total}`;
     }
   }
 
-  // ── Faction filter dropdown ───────────────────────────────────────────
+  // ── Faction filter dropdown (army panel) ──────────────────────────────
   function updateFactionFilter(factions) {
-    const filter = document.getElementById('faction-filter');
+    const filter = document.getElementById('army-faction-select');
     const current = filter.value;
     filter.innerHTML = '<option value="all">All Factions</option>';
     if (factions && factions.length > 0) {
@@ -70,7 +96,31 @@ window.UI = (() => {
     }
   }
 
-  // ── Unit roster (left panel) ──────────────────────────────────────────
+  // ── Faction rules in army panel ───────────────────────────────────────
+  function updateFactionRules(faction) {
+    const section  = document.getElementById('army-rules-section');
+    const list     = document.getElementById('army-rules-list');
+    if (!section || !list) return;
+
+    const rules = (faction && faction.factionAbilities) || [];
+    if (rules.length === 0) {
+      section.hidden = true;
+      return;
+    }
+
+    section.hidden = false;
+    list.innerHTML = '';
+    rules.forEach(rule => {
+      const item = document.createElement('div');
+      item.className = 'army-rule-item';
+      item.dataset.ruleName = rule.name;
+      item.dataset.ruleDesc = rule.description || '';
+      item.innerHTML = `<span>${escapeHtml(rule.name)}</span><span class="rule-arrow">&#9656;</span>`;
+      list.appendChild(item);
+    });
+  }
+
+  // ── Unit roster (center panel) ────────────────────────────────────────
   function renderUnitRoster(units, searchTerm, factionFilter, selectedUnitId) {
     const grid  = document.getElementById('unit-grid');
     const badge = document.getElementById('unit-count-badge');
@@ -107,25 +157,28 @@ window.UI = (() => {
   function createUnitCard(unit, isSelected) {
     const card = document.createElement('div');
     card.className = 'unit-card' + (isSelected ? ' selected' : '');
-    card.dataset.unitId     = unit.id;
+    card.dataset.unitId      = unit.id;
     card.dataset.factionName = unit._factionName || '';
 
     const stats    = unit.stats    || {};
     const keywords = unit.keywords || [];
-    const pts      = unit.points   || 0;
-    const ptsOpts  = unit.pointsOptions || (pts > 0 ? [pts] : []);
-    const ptsDisplay = ptsOpts.length > 1 ? ptsOpts.join(' / ') + ' pts' : pts > 0 ? pts + ' pts' : '—';
 
-    // 10th ed stat keys only — resolve BSData's mixed capitalisation (Sv, Ld, etc.)
-    const STAT_ALIASES_10TH = { SV: ['SV','Sv','sv'], LD: ['LD','Ld'], OC: ['OC'] };
+    // Resolve 10th ed stats — handle BSData mixed capitalisation (Sv, Ld, etc.)
+    const STAT_ALIASES = { SV: ['SV','Sv','sv'], LD: ['LD','Ld'], OC: ['OC'] };
     const resolvedStats = {};
     ['M','T','W'].forEach(k => { if (stats[k] != null) resolvedStats[k] = stats[k]; });
-    Object.entries(STAT_ALIASES_10TH).forEach(([canonical, aliases]) => {
+    Object.entries(STAT_ALIASES).forEach(([canonical, aliases]) => {
       const found = aliases.find(a => stats[a] != null && stats[a] !== '');
       if (found) resolvedStats[canonical] = stats[found];
     });
     const CARD_STAT_PREF = ['M','T','SV','W','LD','OC'];
     const cardStats = CARD_STAT_PREF.filter(k => resolvedStats[k] != null && resolvedStats[k] !== '').slice(0, 6);
+
+    // Points display — show all options
+    const ptsOpts   = unit.pointsOptions || (unit.points ? [unit.points] : []);
+    const ptsDisplay = ptsOpts.length > 1
+      ? ptsOpts.join(' / ') + ' pts'
+      : ptsOpts.length === 1 ? ptsOpts[0] + ' pts' : '—';
 
     card.innerHTML = `
       <div class="unit-card-header">
@@ -157,8 +210,9 @@ window.UI = (() => {
     const weapons  = unit.weapons  || [];
     const abilities= unit.abilities|| [];
     const keywords = unit.keywords || [];
+    const squadOptions = unit.squadOptions || (unit.points ? [{ pts: unit.points, models: null }] : []);
 
-    // Aliases handle BSData mixed capitalisation (Sv vs SV, Ld vs LD)
+    // Stat aliases for BSData mixed capitalisation
     const statAliases = {
       M:  ['M'],
       T:  ['T'],
@@ -167,39 +221,43 @@ window.UI = (() => {
       LD: ['LD','Ld'],
       OC: ['OC'],
     };
-
     const getStatVal = key => (statAliases[key] || [key]).map(a => stats[a]).find(v => v) || '—';
 
     let html = `<div class="unit-detail-content">`;
 
     // Header
+    const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     html += `
       <div class="detail-header">
         <div class="detail-name">${escapeHtml(unit.name)}</div>
         <div class="detail-meta">
           ${unit._factionName ? `<span class="detail-faction">${escapeHtml(unit._factionName)}</span>` : ''}
           ${unit.type ? `<span class="detail-type">${escapeHtml(unit.type)}</span>` : ''}
-          ${(() => {
-            const opts = unit.pointsOptions || (unit.points ? [unit.points] : []);
-            return opts.length > 0 ? `<span class="detail-pts">${opts.join(' / ')} pts</span>` : '';
-          })()}
+          ${ptsOpts.length > 0 ? `<span class="detail-pts">${ptsOpts.join(' / ')} pts</span>` : ''}
         </div>
       </div>
     `;
 
-    // Add to army
+    // Add to army — with squad size selector if multiple options
+    const hasSquadChoice = squadOptions.length > 1;
     html += `
       <div class="detail-add-section">
-        <label class="form-label">Quantity</label>
         <div class="detail-add-row">
+          ${hasSquadChoice ? `
+            <select class="form-select detail-squad-select" id="detail-squad-select">
+              ${squadOptions.map((opt, i) => {
+                const label = opt.models ? `${opt.models} models — ${opt.pts} pts` : `${opt.pts} pts`;
+                return `<option value="${i}">${escapeHtml(label)}</option>`;
+              }).join('')}
+            </select>
+          ` : `<span class="detail-pts-label">${squadOptions[0] ? squadOptions[0].pts + ' pts' : '—'}</span>`}
           <input type="number" id="detail-qty" class="form-input detail-qty-input" value="1" min="1" max="99" />
           <button class="btn btn-accent detail-add-btn" id="btn-detail-add">Add to Army</button>
         </div>
       </div>
     `;
 
-    // Stats table — 10th edition only (M/T/SV/W/LD/OC)
-    // Use canonical names resolved via statAliases to handle Sv/SV, Ld/LD variations
+    // Stats table — 10th ed only
     const STAT_ORDER = ['M','T','SV','W','LD','OC'];
     const presentStats = STAT_ORDER.filter(k => getStatVal(k) !== '—');
 
@@ -212,35 +270,51 @@ window.UI = (() => {
       </div>`;
     }
 
-    // Weapons — 10th ed columns: Range, A, BS/WS, S, AP, D, Keywords
+    // Weapons — split into Ranged and Melee sections
     if (weapons.length > 0) {
-      // Preferred column order for 10th ed; 'Keywords' shows comma-separated special rules
-      const WEAPON_COL_ORDER = ['Range','A','BS','WS','S','AP','D','Keywords'];
-      const allCols = new Set();
-      weapons.forEach(w => {
-        Object.keys(w).forEach(k => { if (k !== 'name' && k !== '_typeName') allCols.add(k); });
+      const ranged = weapons.filter(w => {
+        const tn = (w._typeName || '').toLowerCase();
+        return tn.includes('ranged') || (!tn.includes('melee') && w.Range !== 'Melee');
       });
-      // Sort by preferred order; skip 'Abilities' (9th ed) and any other unknown cols
-      const cols = WEAPON_COL_ORDER.filter(c => allCols.has(c));
+      const melee = weapons.filter(w => {
+        const tn = (w._typeName || '').toLowerCase();
+        return tn.includes('melee') || w.Range === 'Melee';
+      });
+
+      const renderWeaponTable = (list, type) => {
+        if (list.length === 0) return '';
+        const COLS = type === 'ranged'
+          ? ['Range','A','BS','S','AP','D','Keywords']
+          : ['Range','A','WS','S','AP','D','Keywords'];
+        const allCols = new Set();
+        list.forEach(w => Object.keys(w).forEach(k => { if (k !== 'name' && k !== '_typeName') allCols.add(k); }));
+        const cols = COLS.filter(c => allCols.has(c));
+
+        const label = type === 'ranged' ? 'Ranged Weapons' : 'Melee Weapons';
+        return `
+          <div class="weapons-subsection">
+            <div class="weapons-subsection-title ${type}">${label}</div>
+            <div class="detail-table-wrap">
+              <table class="weapons-table">
+                <thead><tr>
+                  <th>Name</th>${cols.map(c => `<th>${escapeHtml(c)}</th>`).join('')}
+                </tr></thead>
+                <tbody>
+                  ${list.map(w => `<tr>
+                    <td class="weapon-type-${type}">${escapeHtml(w.name)}</td>
+                    ${cols.map(c => `<td>${escapeHtml(String(w[c] != null ? w[c] : '—'))}</td>`).join('')}
+                  </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>`;
+      };
 
       html += `<div class="detail-section">
         <div class="detail-section-title">Weapons</div>
-        <div class="detail-table-wrap">
-          <table class="weapons-table">
-            <thead><tr>
-              <th>Name</th>${cols.map(c => `<th>${escapeHtml(c)}</th>`).join('')}
-            </tr></thead>
-            <tbody>`;
-      weapons.forEach(w => {
-        const tn = (w._typeName || '').toLowerCase();
-        const isMelee = tn.includes('melee') ||
-          (w.Range === 'Melee' || w.Range === 'melee');
-        html += `<tr>
-          <td class="${isMelee ? 'weapon-type-melee' : 'weapon-type-ranged'}">${escapeHtml(w.name)}</td>
-          ${cols.map(c => `<td>${escapeHtml(String(w[c] != null ? w[c] : '—'))}</td>`).join('')}
-        </tr>`;
-      });
-      html += `</tbody></table></div></div>`;
+        ${renderWeaponTable(ranged, 'ranged')}
+        ${renderWeaponTable(melee, 'melee')}
+      </div>`;
     }
 
     // Abilities
@@ -266,19 +340,17 @@ window.UI = (() => {
       </div>`;
     }
 
-    // Google Images search
+    // Google / Bing image search
     html += `
       <div class="detail-section detail-images-section">
         <div class="detail-section-title">Find Images</div>
-        <p class="detail-images-desc">Search Google Images to see how this unit looks painted and on the battlefield.</p>
+        <p class="detail-images-desc">Search for how this unit looks painted and on the battlefield.</p>
         <div class="detail-images-buttons">
-          <button class="btn btn-outline detail-img-btn" id="btn-google-images"
-            data-unit="${escapeHtml(unit.name)}">
-            &#128269; Google Images
+          <button class="btn btn-outline detail-img-btn" id="btn-google-images" data-unit="${escapeHtml(unit.name)}">
+            &#128269; Google
           </button>
-          <button class="btn btn-outline detail-img-btn" id="btn-bing-images"
-            data-unit="${escapeHtml(unit.name)}">
-            &#128269; Bing Images
+          <button class="btn btn-outline detail-img-btn" id="btn-bing-images" data-unit="${escapeHtml(unit.name)}">
+            &#128269; Bing
           </button>
         </div>
       </div>
@@ -286,7 +358,6 @@ window.UI = (() => {
 
     html += `</div>`; // .unit-detail-content
 
-    // Replace content (keep empty placeholder in DOM but hidden)
     const existing = panel.querySelector('.unit-detail-content');
     if (existing) existing.remove();
     panel.insertAdjacentHTML('beforeend', html);
@@ -294,20 +365,34 @@ window.UI = (() => {
     // Wire image search buttons
     document.getElementById('btn-google-images').addEventListener('click', e => {
       const name = e.currentTarget.dataset.unit;
-      window.open(
-        'https://www.google.com/search?q=' + encodeURIComponent('warhammer 40k ' + name + ' miniature') + '&tbm=isch',
-        'yaab_images',
-        'width=1200,height=800,scrollbars=yes,resizable=yes'
-      );
+      window.open('https://www.google.com/search?q=' + encodeURIComponent('warhammer 40k ' + name + ' miniature') + '&tbm=isch', 'yaab_img');
     });
     document.getElementById('btn-bing-images').addEventListener('click', e => {
       const name = e.currentTarget.dataset.unit;
-      window.open(
-        'https://www.bing.com/images/search?q=' + encodeURIComponent('warhammer 40k ' + name + ' miniature'),
-        'yaab_images',
-        'width=1200,height=800,scrollbars=yes,resizable=yes'
-      );
+      window.open('https://www.bing.com/images/search?q=' + encodeURIComponent('warhammer 40k ' + name + ' miniature'), 'yaab_img');
     });
+  }
+
+  // ── Show a rule/ability in the details panel ──────────────────────────
+  function renderRuleDetail(name, description) {
+    const panel = document.getElementById('unit-detail-panel');
+    const empty = document.getElementById('unit-detail-empty');
+    if (empty) empty.style.display = 'none';
+
+    const existing = panel.querySelector('.unit-detail-content');
+    if (existing) existing.remove();
+
+    panel.insertAdjacentHTML('beforeend', `
+      <div class="unit-detail-content">
+        <div class="detail-header">
+          <div class="detail-name">${escapeHtml(name)}</div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-section-title">Rule</div>
+          <p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${escapeHtml(description || 'No description available.')}</p>
+        </div>
+      </div>
+    `);
   }
 
   function clearUnitDetail() {
@@ -318,7 +403,7 @@ window.UI = (() => {
     if (empty) empty.style.display = '';
   }
 
-  // ── Army list (center panel) ──────────────────────────────────────────
+  // ── Army list (left panel) ────────────────────────────────────────────
   function renderArmyList(army) {
     if (!army) return;
 
@@ -332,9 +417,9 @@ window.UI = (() => {
     const pct       = limit > 0 ? Math.min((total / limit) * 100, 100) : (total > 0 ? 100 : 0);
     const remaining = limit - total;
 
-    document.getElementById('points-current').textContent    = total;
+    document.getElementById('points-current').textContent      = total;
     document.getElementById('points-limit-display').textContent = limit;
-    document.getElementById('points-bar-pct').textContent    = Math.round(pct) + '%';
+    document.getElementById('points-bar-pct').textContent      = Math.round(pct) + '%';
     document.getElementById('points-bar-remaining').textContent =
       remaining >= 0 ? `${remaining} pts remaining` : `${Math.abs(remaining)} pts over limit`;
 
@@ -352,7 +437,7 @@ window.UI = (() => {
       const li = document.createElement('li');
       li.id = 'army-list-empty';
       li.className = 'army-list-empty';
-      li.innerHTML = 'No units added yet.<br/>Click a unit, then &ldquo;Add to Army&rdquo;.';
+      li.innerHTML = 'No units added yet.<br/>Select a unit, then &ldquo;Add to Army&rdquo;.';
       list.appendChild(li);
       return;
     }
@@ -366,9 +451,12 @@ window.UI = (() => {
     const li = document.createElement('li');
     li.className = 'army-entry';
     li.dataset.index = index;
-    const pts = entry.unitData.points || 0;
+    const pts = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
+    const nameDisplay = entry.squadLabel
+      ? `${entry.unitName} <span class="army-entry-squad">(${entry.squadLabel})</span>`
+      : escapeHtml(entry.unitName);
     li.innerHTML = `
-      <div class="army-entry-name" title="${escapeHtml(entry.unitName)}">${escapeHtml(entry.customName || entry.unitName)}</div>
+      <div class="army-entry-name" title="${escapeHtml(entry.unitName)}">${nameDisplay}</div>
       <div class="army-entry-pts">${pts}</div>
       <div class="army-entry-qty">
         <input type="number" value="${entry.count}" min="0" max="99" data-index="${index}" class="army-qty-input" />
@@ -432,34 +520,16 @@ window.UI = (() => {
       .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   }
 
-  function setUploadDragDrop(onFiles) {
-    const panel = document.getElementById('panel-left');
-    const area  = document.getElementById('upload-area');
-
-    function highlight() { panel.classList.add('drag-over'); }
-    function unhighlight(){ panel.classList.remove('drag-over'); }
-
-    panel.addEventListener('dragover',  e => { e.preventDefault(); highlight(); });
-    panel.addEventListener('dragleave', e => { if (!panel.contains(e.relatedTarget)) unhighlight(); });
-    panel.addEventListener('drop', e => {
-      e.preventDefault();
-      unhighlight();
-      const files = [...(e.dataTransfer.files || [])].filter(f =>
-        f.name.endsWith('.xml') || f.name.endsWith('.cat')
-      );
-      if (files.length > 0) onFiles(files);
-      else toast('Please drop .xml or .cat files', 'warning');
-    });
-  }
-
   return {
     init,
     toast,
     setLoadProgress,
     updateFactionFilter,
+    updateFactionRules,
     renderUnitRoster,
     createUnitCard,
     renderUnitDetail,
+    renderRuleDetail,
     clearUnitDetail,
     renderArmyList,
     createArmyEntryEl,
@@ -468,6 +538,5 @@ window.UI = (() => {
     showImportModal,
     hideImportModal,
     escapeHtml,
-    setUploadDragDrop,
   };
 })();

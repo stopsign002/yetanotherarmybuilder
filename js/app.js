@@ -6,11 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Application State ─────────────────────────────────────────────────
   const state = {
-    factions:     [],   // all loaded factions (manual + BSData)
+    factions:     [],   // all loaded factions (from BSData)
     allUnits:     [],   // flat unit array
     currentArmy:  null,
     armyManager:  null,
     selectedUnit: null,
+    factionFilter: 'all',  // controlled from army panel faction select
   };
 
   UI.init(state);
@@ -18,10 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Bootstrap ─────────────────────────────────────────────────────────
   function bootstrap() {
     state.armyManager = new ArmyManager();
-
-    // Load any manually-uploaded factions from localStorage
-    state.factions = Storage.loadFactionData();
-    rebuildAllUnits();
 
     // Create or restore active army
     if (state.armyManager.armies.length > 0) {
@@ -35,10 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     renderAll();
-    UI.setUploadDragDrop(handleFiles);
+    setupResizablePanels();
     wireEvents();
 
-    // Start loading all factions from BSData in the background
+    // Load all factions from BSData in the background
     autoLoadFromBSData();
   }
 
@@ -48,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     UI.renderUnitRoster(
       state.allUnits,
       document.getElementById('search-input').value,
-      document.getElementById('faction-filter').value,
+      state.factionFilter,
       state.selectedUnit ? state.selectedUnit.id : null
     );
     UI.renderArmyList(state.currentArmy);
@@ -69,27 +66,28 @@ document.addEventListener('DOMContentLoaded', () => {
         || null;
   }
 
+  function getCurrentFaction() {
+    if (state.factionFilter === 'all') return null;
+    return state.factions.find(f => f.factionName === state.factionFilter) || null;
+  }
+
   // ── BSData auto-load ──────────────────────────────────────────────────
   async function autoLoadFromBSData() {
     try {
       await BSData.loadAllFactions(
-        // onProgress
-        (done, total, lastName) => {
+        (done, total) => {
           UI.setLoadProgress(done, total);
         },
-        // onFactionLoaded
         faction => {
-          // Only add if we don't already have this faction (manual upload takes priority)
           const exists = state.factions.some(f => f.factionName === faction.factionName);
           if (!exists) {
             state.factions.push(faction);
             rebuildAllUnits();
-            // Incrementally update the filter and roster
             UI.updateFactionFilter(state.factions);
             UI.renderUnitRoster(
               state.allUnits,
               document.getElementById('search-input').value,
-              document.getElementById('faction-filter').value,
+              state.factionFilter,
               state.selectedUnit ? state.selectedUnit.id : null
             );
           }
@@ -101,58 +99,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ── Manual file upload ────────────────────────────────────────────────
-  async function handleFiles(files) {
-    for (const file of files) {
-      try {
-        const text = await readFileAsText(file);
-        const result = WahapediaParser.parse(text, file.name);
-        if (result.units.length === 0) {
-          UI.toast(`No units found in "${file.name}"`, 'warning');
-          continue;
-        }
-        // Manual uploads go to localStorage AND override any BSData version
-        state.factions = Storage.addFaction(result);
-        // Also replace in-memory if BSData had loaded it
-        const bsIdx = state.factions.findIndex(f => f.factionName === result.factionName);
-        if (bsIdx === -1) state.factions.push(result);
-        rebuildAllUnits();
-        renderAll();
-        UI.toast(`Loaded "${result.factionName}" (${result.units.length} units)`, 'success');
-      } catch (err) {
-        UI.toast(`Failed to parse "${file.name}": ${err.message}`, 'error', 5000);
-      }
-    }
-  }
+  // ── Resizable panels ──────────────────────────────────────────────────
+  function setupResizablePanels() {
+    const root = document.documentElement;
 
-  function readFileAsText(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload  = e => resolve(e.target.result);
-      reader.onerror = () => reject(new Error('Could not read file'));
-      reader.readAsText(file, 'UTF-8');
-    });
+    function makeResizable(handleId, cssVar, side) {
+      const handle = document.getElementById(handleId);
+      if (!handle) return;
+      let startX, startWidth;
+
+      handle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        handle.classList.add('dragging');
+        startX = e.clientX;
+        startWidth = parseInt(getComputedStyle(root).getPropertyValue(cssVar)) || 300;
+
+        function onMove(e) {
+          const delta = e.clientX - startX;
+          const newW = side === 'left'
+            ? Math.max(200, Math.min(600, startWidth + delta))
+            : Math.max(250, Math.min(700, startWidth - delta));
+          root.style.setProperty(cssVar, newW + 'px');
+        }
+        function onUp() {
+          handle.classList.remove('dragging');
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup',   onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onUp);
+      });
+    }
+
+    makeResizable('resize-left',  '--col-left',  'left');
+    makeResizable('resize-right', '--col-right', 'right');
   }
 
   // ── Wire up all event listeners ───────────────────────────────────────
   function wireEvents() {
 
-    // ---- Upload button ----
-    const fileInput = document.getElementById('file-input');
-    document.getElementById('btn-upload').addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', e => {
-      if (e.target.files.length > 0) handleFiles([...e.target.files]);
-      e.target.value = '';
-    });
-
-    // ---- Faction filter ----
-    document.getElementById('faction-filter').addEventListener('change', () => {
+    // ---- Army faction selector (drives unit panel filter) ----
+    document.getElementById('army-faction-select').addEventListener('change', e => {
+      state.factionFilter = e.target.value;
       UI.renderUnitRoster(
         state.allUnits,
         document.getElementById('search-input').value,
-        document.getElementById('faction-filter').value,
+        state.factionFilter,
         state.selectedUnit ? state.selectedUnit.id : null
       );
+      // Show faction rules in army panel
+      const faction = getCurrentFaction();
+      UI.updateFactionRules(faction);
+      // Update detachment dropdown for this faction
+      updateDetachmentOptions(faction);
+    });
+
+    // ---- Detachment selector (placeholder — filters units in future) ----
+    document.getElementById('army-detachment-select').addEventListener('change', () => {
+      // Future: filter units by detachment requirements
     });
 
     // ---- Search ----
@@ -160,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
       UI.renderUnitRoster(
         state.allUnits,
         document.getElementById('search-input').value,
-        document.getElementById('faction-filter').value,
+        state.factionFilter,
         state.selectedUnit ? state.selectedUnit.id : null
       );
     });
@@ -172,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const unit = findUnit(card.dataset.unitId, card.dataset.factionName);
       if (!unit) return;
 
-      // Deselect previous card, select new one
       document.querySelectorAll('.unit-card.selected').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
 
@@ -180,14 +183,37 @@ document.addEventListener('DOMContentLoaded', () => {
       UI.renderUnitDetail(unit);
     });
 
-    // ---- Add to Army (right panel detail button) ----
+    // ---- Faction rule click → show rule in details panel ----
+    document.getElementById('army-rules-list').addEventListener('click', e => {
+      const item = e.target.closest('.army-rule-item');
+      if (!item) return;
+      UI.renderRuleDetail(item.dataset.ruleName, item.dataset.ruleDesc);
+    });
+
+    // ---- Add to Army (detail panel button) ----
     document.getElementById('unit-detail-panel').addEventListener('click', e => {
       if (!e.target.closest('#btn-detail-add')) return;
       if (!state.selectedUnit) return;
+
       const qty = parseInt(document.getElementById('detail-qty').value, 10) || 1;
-      state.currentArmy.addUnit(state.selectedUnit, qty);
+      const squadSelect = document.getElementById('detail-squad-select');
+      let squadOption = null;
+      if (squadSelect) {
+        const idx = parseInt(squadSelect.value, 10);
+        const opts = state.selectedUnit.squadOptions || [];
+        squadOption = opts[idx] || null;
+      } else {
+        // Single cost option
+        const opts = state.selectedUnit.squadOptions || [];
+        squadOption = opts[0] || null;
+      }
+
+      state.currentArmy.addUnit(state.selectedUnit, qty, squadOption);
       UI.renderArmyList(state.currentArmy);
-      UI.toast(`Added ${qty}× ${state.selectedUnit.name}`, 'success');
+      const label = squadOption && squadOption.models
+        ? `${qty}× ${state.selectedUnit.name} (${squadOption.models} models)`
+        : `${qty}× ${state.selectedUnit.name}`;
+      UI.toast(`Added ${label}`, 'success');
     });
 
     // ---- Army name ----
@@ -215,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('army-entry-list').addEventListener('click', e => {
       const btn = e.target.closest('.army-entry-remove');
       if (!btn) return;
-      const index    = parseInt(btn.dataset.index, 10);
+      const index     = parseInt(btn.dataset.index, 10);
       const entryName = state.currentArmy.entries[index]?.unitName || 'unit';
       state.currentArmy.removeEntry(index);
       UI.renderArmyList(state.currentArmy);
@@ -317,6 +343,36 @@ document.addEventListener('DOMContentLoaded', () => {
         UI.hideLoadModal();
         UI.hideImportModal();
       }
+    });
+  }
+
+  // ── Detachment options ────────────────────────────────────────────────
+  // Populated from faction data — currently parses rules named like "Detachment:"
+  // from faction abilities; can be enhanced as BSData detachment structure is known.
+  function updateDetachmentOptions(faction) {
+    const select = document.getElementById('army-detachment-select');
+    select.innerHTML = '';
+
+    if (!faction) {
+      select.innerHTML = '<option value="">— Select Faction First —</option>';
+      return;
+    }
+
+    // Look for abilities whose names suggest they are detachment rules
+    const detachments = (faction.factionAbilities || [])
+      .filter(a => /detachment/i.test(a.name))
+      .map(a => ({ name: a.name.replace(/detachment[:\s]*/i, '').trim() || a.name, ability: a }));
+
+    if (detachments.length === 0) {
+      select.innerHTML = '<option value="">— Custom / No Detachment —</option>';
+      return;
+    }
+
+    detachments.forEach((d, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = d.name;
+      select.appendChild(opt);
     });
   }
 

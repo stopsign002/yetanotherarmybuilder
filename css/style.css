@@ -132,9 +132,14 @@ ul { list-style: none; }
 }
 
 /* ── Main Layout ─────────────────────────────────────────── */
+:root {
+  --col-left:  300px;
+  --col-right: 420px;
+}
+
 .app-main {
   display: grid;
-  grid-template-columns: 380px 340px 1fr;
+  grid-template-columns: var(--col-left) 4px 1fr 4px var(--col-right);
   grid-template-rows: 1fr;
   height: calc(100vh - var(--header-height));
   margin-top: var(--header-height);
@@ -142,17 +147,30 @@ ul { list-style: none; }
   overflow: hidden;
 }
 
+/* ── Resize Handles ──────────────────────────────────────── */
+.resize-handle {
+  background: var(--border);
+  cursor: col-resize;
+  transition: background 0.15s;
+  z-index: 10;
+  flex-shrink: 0;
+}
+.resize-handle:hover,
+.resize-handle.dragging {
+  background: var(--accent);
+}
+
 /* ── Panels ──────────────────────────────────────────────── */
 .panel {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-right: 1px solid var(--border);
+  min-width: 180px;
 }
 
-.panel-left  { background: var(--panel-bg); }
-.panel-center { background: var(--bg); border-right: 1px solid var(--border); }
-.panel-right { background: var(--panel-bg); border-right: none; }
+.panel-left   { background: var(--panel-bg); border-right: none; }
+.panel-center { background: var(--bg); }
+.panel-right  { background: var(--panel-bg); border-left: none; }
 
 .panel-header {
   padding: 14px 16px 10px;
@@ -181,6 +199,94 @@ ul { list-style: none; }
   background: var(--panel-alt);
   flex-shrink: 0;
 }
+
+/* ── Army Selection (faction + detachment) ───────────────── */
+.army-selection-section {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.army-selection-section .form-group { margin-bottom: 8px; }
+.army-selection-section .form-group:last-child { margin-bottom: 0; }
+
+/* ── Army Rules Section ──────────────────────────────────── */
+.army-rules-section {
+  margin-bottom: 14px;
+}
+.army-rules-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  padding: 4px 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.army-rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.army-rule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.army-rule-item:hover {
+  border-color: var(--accent);
+  background: var(--card-hover);
+}
+.army-rule-item .rule-arrow {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* ── Squad Size Select (in detail panel) ─────────────────── */
+.detail-squad-select {
+  flex: 1;
+  font-size: 13px;
+}
+
+/* ── Weapons: Ranged / Melee split ───────────────────────── */
+.weapons-subsection {
+  margin-bottom: 14px;
+}
+.weapons-subsection-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  margin-bottom: 6px;
+  display: inline-block;
+}
+.weapons-subsection-title.ranged {
+  color: #5ab5e8;
+  background: rgba(90,181,232,0.1);
+  border: 1px solid rgba(90,181,232,0.25);
+}
+.weapons-subsection-title.melee {
+  color: #e8955a;
+  background: rgba(232,149,90,0.1);
+  border: 1px solid rgba(232,149,90,0.25);
+}
+
+/* ── Load-complete status (green check, then fade) ───────── */
+.load-status.load-complete #load-spinner { display: none; }
+.load-status.load-complete { color: var(--success); }
 
 /* ── Upload Area ─────────────────────────────────────────── */
 .upload-area {
@@ -661,6 +767,20 @@ ul { list-style: none; }
   background: rgba(231,76,60,0.15);
 }
 
+.army-entry-squad {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.detail-pts-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  padding: 0 4px;
+  align-self: center;
+}
+
 /* ── Army Toolbar ────────────────────────────────────────── */
 .army-toolbar {
   display: flex;
@@ -1078,28 +1198,21 @@ ul { list-style: none; }
 .hidden { display: none !important; }
 
 /* ── Responsive ──────────────────────────────────────────── */
-@media (max-width: 1300px) {
-  .app-main {
-    grid-template-columns: 320px 300px 1fr;
-  }
-}
-
-@media (max-width: 1000px) {
-  .app-main {
-    grid-template-columns: 280px 280px 1fr;
-  }
+@media (max-width: 1200px) {
+  :root { --col-left: 260px; --col-right: 360px; }
 }
 
 @media (max-width: 860px) {
   html, body { overflow: auto; }
   .app-main {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto 4px auto 4px auto;
     height: auto;
     overflow: visible;
   }
-  .panel { height: auto; min-height: 300px; border-right: none; border-bottom: 1px solid var(--border); }
-  .panel-body { max-height: 400px; overflow-y: auto; }
+  .resize-handle { height: 4px; width: 100%; cursor: row-resize; }
+  .panel { min-width: 0; height: auto; min-height: 300px; border-right: none; border-bottom: 1px solid var(--border); }
+  .panel-body { max-height: 500px; overflow-y: auto; }
 }
 
 /* ── Loading Spinner ─────────────────────────────────────── */

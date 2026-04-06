@@ -17,7 +17,7 @@
       </div>
       <div class="header-center" id="header-center">
         <div class="load-status" id="load-status" hidden>
-          <span class="spinner"></span>
+          <span class="spinner" id="load-spinner"></span>
           <span id="load-status-text">Loading factions…</span>
           <span id="load-status-count" class="load-status-count"></span>
         </div>
@@ -30,48 +30,13 @@
     </div>
   </header>
 
-  <!-- Main Three-Panel Layout -->
-  <main class="app-main">
+  <!-- Main Three-Panel Layout: Army | [handle] | Units | [handle] | Details -->
+  <main class="app-main" id="app-main">
 
-    <!-- Left Panel: Unit Roster -->
+    <!-- LEFT Panel: Army List -->
     <aside class="panel panel-left" id="panel-left">
       <div class="panel-header">
-        <h2>Units</h2>
-        <span class="unit-count-badge" id="unit-count-badge">0 units</span>
-      </div>
-
-      <div class="panel-controls">
-        <input type="text" id="search-input" class="search-input" placeholder="Search units&#8230;" />
-        <select id="faction-filter" class="form-select faction-select">
-          <option value="all">All Factions</option>
-        </select>
-      </div>
-
-      <div class="panel-body">
-        <div class="unit-grid" id="unit-grid">
-          <div class="roster-empty" id="roster-empty">
-            <div class="roster-empty-icon">&#128737;</div>
-            <p>Loading faction data&hellip;</p>
-            <p class="muted">Fetching from BSData/wh40k</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Upload fallback -->
-      <div class="panel-footer data-footer">
-        <button class="btn btn-sm btn-outline btn-upload-file" id="btn-upload" title="Upload a local .cat or .xml file">
-          &#128193;&nbsp; Upload Local File
-        </button>
-        <input type="file" id="file-input" accept=".xml,.cat" multiple hidden />
-        <!-- Invisible drag-drop target for whole left panel -->
-        <div id="upload-area" style="display:none"></div>
-      </div>
-    </aside>
-
-    <!-- Center Panel: Army List -->
-    <section class="panel panel-center" id="panel-center">
-      <div class="panel-header">
-        <h2>Army List</h2>
+        <h2>Army</h2>
       </div>
 
       <div class="panel-body">
@@ -85,6 +50,22 @@
           <div class="form-group">
             <label for="points-limit-input" class="form-label">Points Limit</label>
             <input type="number" id="points-limit-input" class="form-input" placeholder="2000" value="2000" min="0" step="50" />
+          </div>
+        </div>
+
+        <!-- Faction / Detachment Selection -->
+        <div class="army-selection-section">
+          <div class="form-group">
+            <label for="army-faction-select" class="form-label">Army / Faction</label>
+            <select id="army-faction-select" class="form-select">
+              <option value="all">All Factions</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="army-detachment-select" class="form-label">Detachment</label>
+            <select id="army-detachment-select" class="form-select">
+              <option value="">— Select Faction First —</option>
+            </select>
           </div>
         </div>
 
@@ -105,6 +86,12 @@
           </div>
         </div>
 
+        <!-- Faction / Detachment Rules -->
+        <div class="army-rules-section" id="army-rules-section" hidden>
+          <div class="army-rules-title">Rules &amp; Abilities</div>
+          <div class="army-rules-list" id="army-rules-list"></div>
+        </div>
+
         <!-- Army Entry List -->
         <div class="army-entries-header">
           <span>Unit</span>
@@ -115,7 +102,7 @@
         </div>
         <ul class="army-entry-list" id="army-entry-list">
           <li class="army-list-empty" id="army-list-empty">
-            No units added yet.<br/>Click a unit, then &ldquo;Add to Army&rdquo;.
+            No units added yet.<br/>Select a unit, then &ldquo;Add to Army&rdquo;.
           </li>
         </ul>
 
@@ -123,26 +110,54 @@
 
       <!-- Bottom Toolbar -->
       <div class="panel-footer army-toolbar">
-        <button class="btn btn-sm btn-outline" id="btn-new-army" title="Start a new empty army">New</button>
-        <button class="btn btn-sm btn-accent"  id="btn-save-army" title="Save army to browser storage">Save</button>
-        <button class="btn btn-sm btn-outline" id="btn-load-army" title="Load a saved army">Load</button>
-        <button class="btn btn-sm btn-outline" id="btn-export-json" title="Export army as JSON">JSON</button>
-        <button class="btn btn-sm btn-outline" id="btn-export-text" title="Export army as plain text">Text</button>
-        <button class="btn btn-sm btn-outline" id="btn-import-json" title="Import army from JSON">Import</button>
+        <button class="btn btn-sm btn-outline" id="btn-new-army">New</button>
+        <button class="btn btn-sm btn-accent"  id="btn-save-army">Save</button>
+        <button class="btn btn-sm btn-outline" id="btn-load-army">Load</button>
+        <button class="btn btn-sm btn-outline" id="btn-export-json">JSON</button>
+        <button class="btn btn-sm btn-outline" id="btn-export-text">Text</button>
+        <button class="btn btn-sm btn-outline" id="btn-import-json">Import</button>
+      </div>
+    </aside>
+
+    <!-- Resize handle: left/center -->
+    <div class="resize-handle" id="resize-left" title="Drag to resize"></div>
+
+    <!-- CENTER Panel: Unit Selection -->
+    <section class="panel panel-center" id="panel-center">
+      <div class="panel-header">
+        <h2>Units</h2>
+        <span class="unit-count-badge" id="unit-count-badge">0 units</span>
+      </div>
+
+      <div class="panel-controls">
+        <input type="text" id="search-input" class="search-input" placeholder="Search units&#8230;" />
+      </div>
+
+      <div class="panel-body">
+        <div class="unit-grid" id="unit-grid">
+          <div class="roster-empty" id="roster-empty">
+            <div class="roster-empty-icon">&#128737;</div>
+            <p>Loading faction data&hellip;</p>
+            <p class="muted">Fetching from BSData/wh40k-10e</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Right Panel: Unit Detail -->
+    <!-- Resize handle: center/right -->
+    <div class="resize-handle" id="resize-right" title="Drag to resize"></div>
+
+    <!-- RIGHT Panel: Details -->
     <aside class="panel panel-right" id="panel-right">
       <div class="panel-header">
-        <h2>Unit Details</h2>
+        <h2>Details</h2>
       </div>
 
       <div class="panel-body" id="unit-detail-panel">
         <div class="unit-detail-empty" id="unit-detail-empty">
           <div class="unit-detail-empty-icon">&#9876;</div>
           <p>Select a unit</p>
-          <p class="muted">Click any unit card to view its stats and add it to your army.</p>
+          <p class="muted">Click any unit card to view stats and add to your army.</p>
         </div>
       </div>
     </aside>
