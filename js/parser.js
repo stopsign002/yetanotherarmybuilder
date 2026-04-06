@@ -138,7 +138,17 @@ window.WahapediaParser = (() => {
       if (Object.keys(s).length > 0) return s;
     }
 
-    // 4. entryLinks in selectionEntryGroups → sharedSelectionEntries (e.g. Necron Warriors)
+    // 4. Inline selectionEntry[type=model|unit] inside selectionEntryGroups
+    //    (e.g. Aggressor Squad: model entries with stats sit inside a named group)
+    for (const child of entryEl.querySelectorAll(
+      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="model"], ' +
+      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="unit"]'
+    )) {
+      const s = findStats(child, entriesById, profilesById, depth + 1);
+      if (Object.keys(s).length > 0) return s;
+    }
+
+    // 5. entryLinks in selectionEntryGroups → sharedSelectionEntries (e.g. Necron Warriors)
     for (const link of entryEl.querySelectorAll(
       ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink'
     )) {
@@ -217,18 +227,34 @@ window.WahapediaParser = (() => {
       }
     });
 
-    // 2. Model count from first selectionEntryGroup constraints (min=base, max=full)
+    // 2. Model count — two patterns:
+    //    A) Constraints directly on the selectionEntryGroup (Necron Warriors style: min=10, max=20)
+    //    B) Constraints on each child model selectionEntry inside the group, summed
+    //       (Aggressor Squad style: 2-5 regular + 1 sergeant = 3-6 total)
     let minModels = null, maxModels = null;
-    const firstGroup = entryEl.querySelector(':scope > selectionEntryGroups > selectionEntryGroup');
-    if (firstGroup) {
-      firstGroup.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      // Pattern A: constraints on the group itself
+      group.querySelectorAll(':scope > constraints > constraint').forEach(c => {
         const val = Math.round(parseFloat(getAttr(c, 'value', '0')));
         if (!isNaN(val) && val > 0) {
-          if (getAttr(c, 'type') === 'min') minModels = val;
-          if (getAttr(c, 'type') === 'max') maxModels = val;
+          if (getAttr(c, 'type') === 'min') minModels = (minModels || 0) + val;
+          if (getAttr(c, 'type') === 'max') maxModels = (maxModels || 0) + val;
         }
       });
-    }
+      // Pattern B: constraints on child model entries — sum their min/max
+      group.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(model => {
+        let mMin = null, mMax = null;
+        model.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+          const val = Math.round(parseFloat(getAttr(c, 'value', '0')));
+          if (!isNaN(val) && val > 0) {
+            if (getAttr(c, 'type') === 'min') mMin = val;
+            if (getAttr(c, 'type') === 'max') mMax = val;
+          }
+        });
+        if (mMin !== null) minModels = (minModels || 0) + mMin;
+        if (mMax !== null) maxModels = (maxModels || 0) + mMax;
+      });
+    });
 
     const squadOptions = [];
     if (basePts > 0) squadOptions.push({ pts: basePts, models: minModels });
