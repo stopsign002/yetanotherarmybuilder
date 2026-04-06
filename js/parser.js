@@ -291,13 +291,31 @@ window.WahapediaParser = (() => {
       const units   = [];
       const seenIds = new Set();
 
-      // Only top-level selectionEntries are actual army units.
-      // sharedSelectionEntries are a shared library (models, weapons) — skip as top-level.
+      // Pattern A: units defined directly in selectionEntries (Space Marines style)
       root.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
         const t = getAttr(entry, 'type', '');
         if (t !== 'unit' && t !== 'model') return;
-
         const unit = parseEntry(entry, entriesById, profilesById);
+        if (unit && !seenIds.has(unit.id)) {
+          seenIds.add(unit.id);
+          units.push(unit);
+        }
+      });
+
+      // Pattern B: units defined in sharedSelectionEntries, made selectable via
+      // root-level entryLinks (Necrons style — selectionEntries is empty or absent,
+      // all unit definitions sit in sharedSelectionEntries).
+      // We only follow root entryLinks (NOT entryLinks inside unit entries, which
+      // reference model variants / weapons and must not appear as top-level units).
+      root.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
+        if (getAttr(link, 'hidden', 'false') === 'true') return;
+        const targetId = getAttr(link, 'targetId');
+        if (seenIds.has(targetId)) return;           // already added via Pattern A
+        const target = entriesById.get(targetId);
+        if (!target) return;
+        const t = getAttr(target, 'type', '');
+        if (t !== 'unit' && t !== 'model') return;  // skip weapon/upgrade links
+        const unit = parseEntry(target, entriesById, profilesById);
         if (unit && !seenIds.has(unit.id)) {
           seenIds.add(unit.id);
           units.push(unit);
