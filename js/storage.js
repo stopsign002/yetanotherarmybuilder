@@ -75,6 +75,33 @@ window.Storage = (() => {
     return lines.join('\n');
   }
 
+  function exportArmyToCSV(army) {
+    const rows = [['Unit Name', 'Models', 'Points Each', 'Quantity', 'Total Points']];
+    army.entries.forEach(entry => {
+      const pts = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
+      const models = entry.squadLabel
+        ? entry.squadLabel.replace(/[^\d]/g, '') || ''
+        : (entry.unitData.squadOptions && entry.unitData.squadOptions[0] && entry.unitData.squadOptions[0].models != null
+            ? entry.unitData.squadOptions[0].models
+            : '');
+      rows.push([
+        entry.unitName,
+        models,
+        pts,
+        entry.count,
+        pts * entry.count,
+      ]);
+    });
+    rows.push(['', '', '', 'Total', army.getTotalPoints()]);
+
+    return rows.map(row =>
+      row.map(cell => {
+        const s = String(cell == null ? '' : cell);
+        return /[,"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      }).join(',')
+    ).join('\r\n');
+  }
+
   function downloadFile(content, filename, mimeType) {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -95,6 +122,7 @@ window.Storage = (() => {
     exportArmyToJSON,
     importArmyFromJSON,
     exportArmyToText,
+    exportArmyToCSV,
     downloadFile
   };
 })();

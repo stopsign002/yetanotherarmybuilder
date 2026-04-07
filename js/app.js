@@ -183,11 +183,19 @@ document.addEventListener('DOMContentLoaded', () => {
       UI.renderUnitDetail(unit);
     });
 
-    // ---- Faction rule click → show rule in details panel ----
-    document.getElementById('army-rules-list').addEventListener('click', e => {
+    // ---- Faction rule / stratagem click → show in details panel (delegated on section) ----
+    document.getElementById('army-rules-section').addEventListener('click', e => {
       const item = e.target.closest('.army-rule-item');
       if (!item) return;
-      UI.renderRuleDetail(item.dataset.ruleName, item.dataset.ruleDesc);
+      UI.renderRuleDetail({
+        name:        item.dataset.ruleName,
+        description: item.dataset.ruleDesc,
+        type:        item.dataset.ruleType || 'rule',
+        cp:          item.dataset.ruleCp   || null,
+        when:        item.dataset.ruleWhen || null,
+        target:      item.dataset.ruleTarget || null,
+        effect:      item.dataset.ruleEffect || null,
+      });
     });
 
     // ---- Add to Army (detail panel button) ----
@@ -314,6 +322,13 @@ document.addEventListener('DOMContentLoaded', () => {
       UI.toast('Exported as text', 'success');
     });
 
+    document.getElementById('btn-export-csv').addEventListener('click', () => {
+      const csv  = Storage.exportArmyToCSV(state.currentArmy);
+      const name = (state.currentArmy.name || 'army').replace(/[^a-z0-9_-]/gi, '_');
+      Storage.downloadFile(csv, `${name}.csv`, 'text/csv');
+      UI.toast('Exported as CSV', 'success');
+    });
+
     document.getElementById('btn-import-json').addEventListener('click', UI.showImportModal);
     document.getElementById('modal-import-close').addEventListener('click', UI.hideImportModal);
     document.getElementById('btn-import-cancel').addEventListener('click', UI.hideImportModal);
@@ -358,8 +373,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Look for abilities whose names suggest they are detachment rules
-    const detachments = (faction.factionAbilities || [])
+    // Look for army rules whose names suggest they are detachment rules
+    const allRules = (faction.armyRules || []).concat(faction.stratagems || []);
+    const detachments = allRules
       .filter(a => /detachment/i.test(a.name))
       .map(a => ({ name: a.name.replace(/detachment[:\s]*/i, '').trim() || a.name, ability: a }));
 

@@ -26,14 +26,17 @@ window.UI = (() => {
 
   // ── Loading progress bar ──────────────────────────────────────────────
   let _loadCompleteTimer = null;
+  let _loadingComplete   = false;  // once set, never re-show the loading bar
 
   function setLoadProgress(done, total) {
-    const wrap      = document.getElementById('page-progress-wrap');
-    const bar       = document.getElementById('page-progress-bar');
-    const status    = document.getElementById('load-status');
-    const spinner   = document.getElementById('load-spinner');
-    const statusText= document.getElementById('load-status-text');
-    const statusCount=document.getElementById('load-status-count');
+    if (_loadingComplete) return;
+
+    const wrap       = document.getElementById('page-progress-wrap');
+    const bar        = document.getElementById('page-progress-bar');
+    const status     = document.getElementById('load-status');
+    const spinner    = document.getElementById('load-spinner');
+    const statusText = document.getElementById('load-status-text');
+    const statusCount= document.getElementById('load-status-count');
 
     if (total === 0) return;
     const pct = Math.round((done / total) * 100);
@@ -43,14 +46,14 @@ window.UI = (() => {
     status.hidden = false;
 
     if (done >= total) {
-      // Show completion state
+      _loadingComplete = true;
+
       bar.style.width = '100%';
       if (spinner) spinner.style.display = 'none';
       statusText.textContent = 'All Factions Loaded';
       statusCount.textContent = `(${total})`;
       status.classList.add('load-complete');
 
-      // Fade out after 10 seconds
       clearTimeout(_loadCompleteTimer);
       _loadCompleteTimer = setTimeout(() => {
         wrap.style.transition = 'opacity 1s ease';
@@ -65,7 +68,6 @@ window.UI = (() => {
           status.style.opacity = '';
           status.style.transition = '';
           status.classList.remove('load-complete');
-          if (spinner) spinner.style.display = '';
         }, 1000);
       }, 10000);
     } else {
@@ -96,28 +98,63 @@ window.UI = (() => {
     }
   }
 
-  // ── Faction rules in army panel ───────────────────────────────────────
+  // ── Faction rules in army panel (two sections: Army Rules + Stratagems) ─
   function updateFactionRules(faction) {
-    const section  = document.getElementById('army-rules-section');
-    const list     = document.getElementById('army-rules-list');
-    if (!section || !list) return;
+    const section      = document.getElementById('army-rules-section');
+    const armySubsec   = document.getElementById('army-rules-subsection');
+    const stratSubsec  = document.getElementById('army-stratagem-subsection');
+    const armyList     = document.getElementById('army-rules-list');
+    const stratList    = document.getElementById('army-stratagems-list');
+    if (!section || !armyList || !stratList) return;
 
-    const rules = (faction && faction.factionAbilities) || [];
-    if (rules.length === 0) {
+    const rules      = (faction && faction.armyRules)  || [];
+    const stratagems = (faction && faction.stratagems) || [];
+
+    if (rules.length === 0 && stratagems.length === 0) {
       section.hidden = true;
       return;
     }
 
     section.hidden = false;
-    list.innerHTML = '';
-    rules.forEach(rule => {
-      const item = document.createElement('div');
-      item.className = 'army-rule-item';
-      item.dataset.ruleName = rule.name;
-      item.dataset.ruleDesc = rule.description || '';
-      item.innerHTML = `<span>${escapeHtml(rule.name)}</span><span class="rule-arrow">&#9656;</span>`;
-      list.appendChild(item);
-    });
+
+    // Army Rules sub-section
+    if (rules.length > 0) {
+      armySubsec.hidden = false;
+      armyList.innerHTML = '';
+      rules.forEach(rule => {
+        const item = document.createElement('div');
+        item.className = 'army-rule-item';
+        item.dataset.ruleName = rule.name;
+        item.dataset.ruleDesc = rule.description || '';
+        item.dataset.ruleType = 'rule';
+        item.innerHTML = `<span>${escapeHtml(rule.name)}</span><span class="rule-arrow">&#9656;</span>`;
+        armyList.appendChild(item);
+      });
+    } else {
+      armySubsec.hidden = true;
+    }
+
+    // Stratagems sub-section
+    if (stratagems.length > 0) {
+      stratSubsec.hidden = false;
+      stratList.innerHTML = '';
+      stratagems.forEach(strat => {
+        const item = document.createElement('div');
+        item.className = 'army-rule-item stratagem-item';
+        item.dataset.ruleName = strat.name;
+        item.dataset.ruleDesc = strat.description || '';
+        item.dataset.ruleType = 'stratagem';
+        if (strat.cp)     item.dataset.ruleCp     = strat.cp;
+        if (strat.when)   item.dataset.ruleWhen   = strat.when;
+        if (strat.target) item.dataset.ruleTarget = strat.target;
+        if (strat.effect) item.dataset.ruleEffect = strat.effect;
+        const cpBadge = strat.cp ? `<span class="stratagem-cp-badge">${escapeHtml(strat.cp)} CP</span>` : '';
+        item.innerHTML = `<span>${escapeHtml(strat.name)}</span><span class="rule-item-right">${cpBadge}<span class="rule-arrow">&#9656;</span></span>`;
+        stratList.appendChild(item);
+      });
+    } else {
+      stratSubsec.hidden = true;
+    }
   }
 
   // ── Unit roster (center panel) ────────────────────────────────────────
@@ -206,10 +243,11 @@ window.UI = (() => {
     const empty = document.getElementById('unit-detail-empty');
     if (empty) empty.style.display = 'none';
 
-    const stats    = unit.stats    || {};
-    const weapons  = unit.weapons  || [];
-    const abilities= unit.abilities|| [];
-    const keywords = unit.keywords || [];
+    const stats        = unit.stats        || {};
+    const weapons      = unit.weapons      || [];
+    const abilities    = unit.abilities    || [];
+    const keywords     = unit.keywords     || [];
+    const wargearOpts  = unit.wargearOptions || [];
     const squadOptions = unit.squadOptions || (unit.points ? [{ pts: unit.points, models: null }] : []);
 
     // Stat aliases for BSData mixed capitalisation
@@ -317,14 +355,81 @@ window.UI = (() => {
       </div>`;
     }
 
+    // Separate leader abilities from regular abilities
+    const leaderAbilities  = abilities.filter(a => /can be attached to/i.test(a.description));
+    const regularAbilities = abilities.filter(a => !/can be attached to/i.test(a.description));
+
+    // Leader section — what units this model can lead
+    if (leaderAbilities.length > 0) {
+      html += `<div class="detail-section">
+        <div class="detail-section-title detail-section-title-leader">Leader</div>`;
+      leaderAbilities.forEach(ab => {
+        // Parse the "can be attached to" text, splitting on bullet points
+        const attachText = ab.description.replace(/^.*?can be attached to.*?:/i, '').trim();
+        const unitList = attachText
+          .split(/[■\n●•]+/)
+          .map(s => s.trim())
+          .filter(s => s.length > 0);
+
+        if (unitList.length > 0) {
+          html += `<div class="detail-leader-units">
+            <span class="detail-ability-name">Can lead:</span>
+            <div class="detail-leader-list">
+              ${unitList.map(u => `<span class="leader-unit-tag">${escapeHtml(u)}</span>`).join('')}
+            </div>
+          </div>`;
+        } else {
+          html += `<div class="detail-ability">
+            <span class="detail-ability-name">${escapeHtml(ab.name)}:</span>
+            <span class="detail-ability-desc">${escapeHtml(ab.description || '—')}</span>
+          </div>`;
+        }
+      });
+      html += `</div>`;
+    }
+
+    // "Led By" section — which leaders can be attached to this unit
+    const ledBy = (_state && _state.allUnits || [])
+      .filter(u => (u.keywords || []).includes('Leader'))
+      .filter(u => (u.abilities || []).some(a =>
+        /can be attached to/i.test(a.description) &&
+        a.description.toLowerCase().includes(unit.name.toLowerCase())
+      ))
+      .map(u => ({ name: u.name, factionName: u._factionName }));
+
+    if (ledBy.length > 0) {
+      html += `<div class="detail-section">
+        <div class="detail-section-title detail-section-title-ledbby">Led By</div>
+        <div class="detail-ledby-list">
+          ${ledBy.map(l => `<span class="ledby-tag">${escapeHtml(l.name)}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+
     // Abilities
-    if (abilities.length > 0) {
+    if (regularAbilities.length > 0) {
       html += `<div class="detail-section">
         <div class="detail-section-title">Abilities</div>`;
-      abilities.forEach(ab => {
+      regularAbilities.forEach(ab => {
         html += `<div class="detail-ability">
           <span class="detail-ability-name">${escapeHtml(ab.name)}:</span>
           <span class="detail-ability-desc">${escapeHtml(ab.description || '—')}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Wargear Options
+    if (wargearOpts.length > 0) {
+      html += `<div class="detail-section">
+        <div class="detail-section-title">Wargear Options</div>`;
+      wargearOpts.forEach(opt => {
+        const maxText = opt.max != null ? ` (max ${opt.max})` : '';
+        html += `<div class="detail-wargear-group">
+          <div class="detail-wargear-group-name">${escapeHtml(opt.name)}${escapeHtml(maxText)}</div>
+          <div class="detail-wargear-choices">
+            ${opt.choices.map(c => `<span class="wargear-choice-tag">${escapeHtml(c)}</span>`).join('')}
+          </div>
         </div>`;
       });
       html += `</div>`;
@@ -373,8 +478,8 @@ window.UI = (() => {
     });
   }
 
-  // ── Show a rule/ability in the details panel ──────────────────────────
-  function renderRuleDetail(name, description) {
+  // ── Show a rule/stratagem in the details panel ────────────────────────
+  function renderRuleDetail(data) {
     const panel = document.getElementById('unit-detail-panel');
     const empty = document.getElementById('unit-detail-empty');
     if (empty) empty.style.display = 'none';
@@ -382,14 +487,30 @@ window.UI = (() => {
     const existing = panel.querySelector('.unit-detail-content');
     if (existing) existing.remove();
 
+    const isStratagem = data.type === 'stratagem';
+
+    let body = '';
+    if (isStratagem) {
+      if (data.cp)     body += `<div class="strat-detail-row"><span class="strat-label">CP Cost:</span> <span class="strat-value strat-cp">${escapeHtml(data.cp)}</span></div>`;
+      if (data.when)   body += `<div class="strat-detail-row"><span class="strat-label">When:</span> <span class="strat-value">${escapeHtml(data.when)}</span></div>`;
+      if (data.target) body += `<div class="strat-detail-row"><span class="strat-label">Target:</span> <span class="strat-value">${escapeHtml(data.target)}</span></div>`;
+      if (data.effect) body += `<div class="strat-detail-row"><span class="strat-label">Effect:</span> <span class="strat-value">${escapeHtml(data.effect)}</span></div>`;
+      if (data.description && !data.effect) {
+        body += `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${escapeHtml(data.description)}</p>`;
+      }
+    } else {
+      body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${escapeHtml(data.description || 'No description available.')}</p>`;
+    }
+
     panel.insertAdjacentHTML('beforeend', `
       <div class="unit-detail-content">
         <div class="detail-header">
-          <div class="detail-name">${escapeHtml(name)}</div>
+          <div class="detail-name">${escapeHtml(data.name)}</div>
+          ${isStratagem && data.cp ? `<div class="detail-meta"><span class="detail-pts stratagem-cp-hero">${escapeHtml(data.cp)} CP</span></div>` : ''}
         </div>
         <div class="detail-section">
-          <div class="detail-section-title">Rule</div>
-          <p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${escapeHtml(description || 'No description available.')}</p>
+          <div class="detail-section-title">${isStratagem ? 'Stratagem' : 'Rule'}</div>
+          ${body}
         </div>
       </div>
     `);
@@ -453,7 +574,7 @@ window.UI = (() => {
     li.dataset.index = index;
     const pts = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
     const nameDisplay = entry.squadLabel
-      ? `${entry.unitName} <span class="army-entry-squad">(${entry.squadLabel})</span>`
+      ? `${escapeHtml(entry.unitName)} <span class="army-entry-squad">(${escapeHtml(entry.squadLabel)})</span>`
       : escapeHtml(entry.unitName);
     li.innerHTML = `
       <div class="army-entry-name" title="${escapeHtml(entry.unitName)}">${nameDisplay}</div>

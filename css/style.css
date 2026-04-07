@@ -1232,3 +1232,115 @@ ul { list-style: none; }
 .points-over .points-current { color: var(--danger); }
 
 /* BSData browse modal styles removed — data now auto-loads */
+
+/* ── Army Rules: two sub-sections ───────────────────────── */
+.army-rules-subsection { margin-bottom: 10px; }
+.army-rules-subsection:last-child { margin-bottom: 0; }
+
+.stratagem-cp-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f5c842;
+  background: rgba(245,200,66,0.12);
+  border: 1px solid rgba(245,200,66,0.3);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-right: 4px;
+}
+
+.rule-item-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.stratagem-item { border-left: 2px solid rgba(245,200,66,0.4); }
+
+/* ── Stratagem detail view ───────────────────────────────── */
+.strat-detail-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.strat-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.strat-value { color: var(--text); line-height: 1.5; }
+.strat-cp { color: #f5c842; font-size: 14px; font-weight: 700; }
+.stratagem-cp-hero {
+  color: #f5c842;
+  font-size: 16px;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* ── Leader section ──────────────────────────────────────── */
+.detail-section-title-leader {
+  color: #5ab5e8;
+  border-bottom-color: rgba(90,181,232,0.3);
+}
+.detail-section-title-ledbby {
+  color: #a8e88a;
+  border-bottom-color: rgba(168,232,138,0.3);
+}
+
+.detail-leader-units { margin-bottom: 8px; }
+.detail-leader-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.leader-unit-tag {
+  font-size: 11px;
+  background: rgba(90,181,232,0.1);
+  border: 1px solid rgba(90,181,232,0.3);
+  color: #5ab5e8;
+  border-radius: 3px;
+  padding: 2px 7px;
+}
+
+.detail-ledby-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.ledby-tag {
+  font-size: 11px;
+  background: rgba(168,232,138,0.08);
+  border: 1px solid rgba(168,232,138,0.25);
+  color: #a8e88a;
+  border-radius: 3px;
+  padding: 2px 7px;
+}
+
+/* ── Wargear options ─────────────────────────────────────── */
+.detail-wargear-group { margin-bottom: 10px; }
+.detail-wargear-group-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.detail-wargear-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.wargear-choice-tag {
+  font-size: 11px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-light);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 2px 8px;
+}

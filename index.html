@@ -88,8 +88,16 @@
 
         <!-- Faction / Detachment Rules -->
         <div class="army-rules-section" id="army-rules-section" hidden>
-          <div class="army-rules-title">Rules &amp; Abilities</div>
-          <div class="army-rules-list" id="army-rules-list"></div>
+          <!-- Army Rules sub-section -->
+          <div class="army-rules-subsection" id="army-rules-subsection" hidden>
+            <div class="army-rules-title">Army Rules</div>
+            <div class="army-rules-list" id="army-rules-list"></div>
+          </div>
+          <!-- Stratagems sub-section -->
+          <div class="army-rules-subsection" id="army-stratagem-subsection" hidden>
+            <div class="army-rules-title">Stratagems</div>
+            <div class="army-rules-list" id="army-stratagems-list"></div>
+          </div>
         </div>
 
         <!-- Army Entry List -->
@@ -115,6 +123,7 @@
         <button class="btn btn-sm btn-outline" id="btn-load-army">Load</button>
         <button class="btn btn-sm btn-outline" id="btn-export-json">JSON</button>
         <button class="btn btn-sm btn-outline" id="btn-export-text">Text</button>
+        <button class="btn btn-sm btn-outline" id="btn-export-csv">CSV</button>
         <button class="btn btn-sm btn-outline" id="btn-import-json">Import</button>
       </div>
     </aside>
@@ -130,7 +139,7 @@
       </div>
 
       <div class="panel-controls">
-        <input type="text" id="search-input" class="search-input" placeholder="Search units&#8230;" />
+        <input type="text" id="search-input" class="search-input" placeholder="Search by name or keyword&#8230;" />
       </div>
 
       <div class="panel-body">
