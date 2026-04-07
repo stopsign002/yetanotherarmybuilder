@@ -208,6 +208,10 @@ window.UI = (() => {
       const found = aliases.find(a => stats[a] != null && stats[a] !== '');
       if (found) resolvedStats[canonical] = stats[found];
     });
+    // Combine primary save + invuln into "3+/4+" format
+    if (unit.invulnSave && resolvedStats['SV']) {
+      resolvedStats['SV'] = resolvedStats['SV'] + '/' + unit.invulnSave;
+    }
     const CARD_STAT_PREF = ['M','T','SV','W','LD','OC'];
     const cardStats = CARD_STAT_PREF.filter(k => resolvedStats[k] != null && resolvedStats[k] !== '').slice(0, 6);
 
@@ -300,10 +304,18 @@ window.UI = (() => {
     const presentStats = STAT_ORDER.filter(k => getStatVal(k) !== '—');
 
     if (presentStats.length > 0) {
+      // Combine primary save + invuln save into "3+/4+" display
+      const displayVal = k => {
+        const v = getStatVal(k);
+        if (k === 'SV' && unit.invulnSave && v !== '—') return v + '/' + unit.invulnSave;
+        return v;
+      };
+      const displayLabel = k => k === 'SV' && unit.invulnSave ? 'SV / INV' : k;
+
       html += `<div class="detail-section">
         <div class="detail-section-title">Stats</div>
         <div class="detail-stats-row" style="grid-template-columns:repeat(${presentStats.length},1fr)">
-          ${presentStats.map(k => `<div class="detail-stat-cell"><span class="stat-name">${escapeHtml(k)}</span><span class="stat-value">${escapeHtml(String(getStatVal(k)))}</span></div>`).join('')}
+          ${presentStats.map(k => `<div class="detail-stat-cell"><span class="stat-name">${escapeHtml(displayLabel(k))}</span><span class="stat-value">${escapeHtml(String(displayVal(k)))}</span></div>`).join('')}
         </div>
       </div>`;
     }
@@ -388,13 +400,15 @@ window.UI = (() => {
       html += `</div>`;
     }
 
-    // "Led By" section — which leaders can be attached to this unit
+    // "Led By" section — any unit whose leader ability mentions this unit by name
+    const unitNameLower = unit.name.toLowerCase();
     const ledBy = (_state && _state.allUnits || [])
-      .filter(u => (u.keywords || []).includes('Leader'))
-      .filter(u => (u.abilities || []).some(a =>
-        /can be attached to/i.test(a.description) &&
-        a.description.toLowerCase().includes(unit.name.toLowerCase())
-      ))
+      .filter(u => u.id !== unit.id &&
+        (u.abilities || []).some(a =>
+          /can be attached to/i.test(a.description) &&
+          a.description.toLowerCase().includes(unitNameLower)
+        )
+      )
       .map(u => ({ name: u.name, factionName: u._factionName }));
 
     if (ledBy.length > 0) {
@@ -428,7 +442,16 @@ window.UI = (() => {
         html += `<div class="detail-wargear-group">
           <div class="detail-wargear-group-name">${escapeHtml(opt.name)}${escapeHtml(maxText)}</div>
           <div class="detail-wargear-choices">
-            ${opt.choices.map(c => `<span class="wargear-choice-tag">${escapeHtml(c)}</span>`).join('')}
+            ${opt.choices.map(c => {
+              const name = typeof c === 'object' ? c.name : c;
+              const desc = typeof c === 'object' ? c.description : '';
+              return desc
+                ? `<div class="wargear-choice-item">
+                     <span class="wargear-choice-tag">${escapeHtml(name)}</span>
+                     <span class="wargear-choice-desc">${escapeHtml(desc)}</span>
+                   </div>`
+                : `<span class="wargear-choice-tag">${escapeHtml(name)}</span>`;
+            }).join('')}
           </div>
         </div>`;
       });

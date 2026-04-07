@@ -1,35 +1,50 @@
 /**
- * parser.js - BSData/wh40k Battlescribe XML parser
+ * parser.js - BSData/wh40k-10e Battlescribe XML parser
  *
- * Confirmed structure (from live file inspection):
- *
- * TOP LEVEL (what we show as army units):
- *   catalogue > selectionEntries > selectionEntry[type="unit"|"model"]
- *
- * SHARED LIBRARY (cross-reference targets, NOT shown as top-level units):
- *   catalogue > sharedSelectionEntries > selectionEntry[type="model"|"upgrade"]
- *   catalogue > sharedProfiles > profile  ← unit stat blocks referenced via infoLink
- *
- * UNIT STATS:
- *   - Sometimes directly in the unit entry's profiles (typeName="Unit")
- *   - Often on a model child entry (selectionEntries or selectionEntryGroups > entryLinks)
- *   - Often in sharedProfiles, referenced from the model via infoLink[type="profile"]
- *   - 10th ed keys: M, T, SV, W, LD, OC
- *
- * WEAPON PROFILES:
- *   - In sharedSelectionEntries entries (type="upgrade", typeName="Weapon"|"Ranged Weapons"|"Melee Weapons")
- *   - Referenced from model entries via entryLinks > entryLink[targetId]
- *   - 10th ed characteristics: Range, A, BS, S, AP, D, Keywords
- *
- * FACTION RULES:
- *   - <rules> / <sharedRules> at catalogue root → army-wide named rules
- *   - <sharedProfiles typeName="Stratagems"> → stratagem cards
- *
- * POINTS:
- *   - Unit entry often has pts=0; real cost is on model child entries
+ * Cross-file resolution:
+ *   Call WahapediaParser.addToSharedIndex(xmlString) with the game system .gst
+ *   file before parsing catalogue files.  Shared profiles and rules are merged
+ *   into every subsequent buildIndexes() call as a fallback lookup.
  */
 
 window.WahapediaParser = (() => {
+
+  // ── Shared cross-file index (populated from .gst file) ───────────────────
+  // DOM elements from the game system file are kept in memory; they cannot be
+  // serialised to sessionStorage, so this is rebuilt each page load.
+  const _sharedProfilesById = new Map();
+  const _sharedRulesById    = new Map();
+  const _sharedEntriesById  = new Map();
+
+  /**
+   * Parse a game-system or library XML string and add its shared definitions
+   * to the cross-file index.  Call once before loading catalogues.
+   */
+  function addToSharedIndex(xmlString) {
+    try {
+      const doc  = new DOMParser().parseFromString(xmlString, 'application/xml');
+      if (doc.querySelector('parsererror')) return;
+      const root = doc.documentElement;
+
+      root.querySelectorAll(':scope > sharedProfiles > profile').forEach(p => {
+        const id = p.getAttribute('id');
+        if (id) _sharedProfilesById.set(id, p);
+      });
+      root.querySelectorAll(':scope > sharedRules > rule, :scope > rules > rule').forEach(r => {
+        const id = r.getAttribute('id');
+        if (id) _sharedRulesById.set(id, r);
+      });
+      root.querySelectorAll(
+        ':scope > sharedSelectionEntries > selectionEntry, ' +
+        ':scope > sharedSelectionEntryGroups > selectionEntryGroup'
+      ).forEach(el => {
+        const id = el.getAttribute('id');
+        if (id) _sharedEntriesById.set(id, el);
+      });
+    } catch (_) { /* ignore parse failures for the game system */ }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   function getAttr(el, attr, fallback = '') {
     return el.getAttribute(attr) || fallback;
@@ -38,18 +53,19 @@ window.WahapediaParser = (() => {
   function parseCharacteristics(profileEl) {
     const chars = {};
     profileEl.querySelectorAll('characteristic').forEach(c => {
-      // Keep original capitalisation — field names vary between editions
       const key = getAttr(c, 'name');
       if (key) chars[key] = c.textContent.trim();
     });
     return chars;
   }
 
-  // ── Build lookup indexes ─────────────────────────────────────────────────
+  // ── Build lookup indexes ──────────────────────────────────────────────────
 
   function buildIndexes(root) {
-    const entriesById  = new Map();  // sharedSelectionEntries + sharedSelectionEntryGroups
-    const profilesById = new Map();  // sharedProfiles
+    // Start from shared (game-system) definitions; local catalogue overrides
+    const entriesById  = new Map(_sharedEntriesById);
+    const profilesById = new Map(_sharedProfilesById);
+    const rulesById    = new Map(_sharedRulesById);
 
     root.querySelectorAll(
       ':scope > sharedSelectionEntries > selectionEntry, ' +
@@ -64,19 +80,33 @@ window.WahapediaParser = (() => {
       if (id) profilesById.set(id, p);
     });
 
-    return { entriesById, profilesById };
+    root.querySelectorAll(':scope > sharedRules > rule, :scope > rules > rule').forEach(r => {
+      const id = r.getAttribute('id');
+      if (id) rulesById.set(id, r);
+    });
+
+    return { entriesById, profilesById, rulesById };
   }
 
-  // ── Profile parsing ──────────────────────────────────────────────────────
+  // ── Profile classification ────────────────────────────────────────────────
 
   const WEAPON_TYPES = new Set(['weapon', 'ranged weapons', 'melee weapons', 'ranged', 'melee']);
   const UNIT_TYPES   = new Set(['unit', 'model']);
 
   function classifyProfile(profile) {
     const typeName = getAttr(profile, 'typeName', '').toLowerCase();
-    if (UNIT_TYPES.has(typeName))   return 'stats';
-    if (WEAPON_TYPES.has(typeName)) return 'weapon';
-    if (typeName.includes('abilit') || typeName === 'abilities') return 'ability';
+    if (UNIT_TYPES.has(typeName))    return 'stats';
+    if (WEAPON_TYPES.has(typeName))  return 'weapon';
+    if (typeName === 'stratagems')   return 'stratagem'; // handled separately in parse()
+
+    // Any remaining profile with a Description characteristic is an ability
+    if (profile.querySelector('characteristic[name="Description"]')) return 'ability';
+
+    // Fallback keyword match for profiles that lack a Description
+    if (typeName.includes('abilit') || typeName === 'leader' ||
+        typeName.includes('power') || typeName.includes('trait') ||
+        typeName === 'invulnerable save') return 'ability';
+
     return 'other';
   }
 
@@ -103,9 +133,8 @@ window.WahapediaParser = (() => {
     return { stats, weapons, abilities };
   }
 
-  // ── Stat resolution ──────────────────────────────────────────────────────
+  // ── Stat resolution ───────────────────────────────────────────────────────
 
-  // Resolve infoLinks[type="profile"] on an element to find stat profiles
   function statsFromInfoLinks(el, profilesById) {
     const stats = {};
     el.querySelectorAll(':scope > infoLinks > infoLink').forEach(link => {
@@ -119,19 +148,15 @@ window.WahapediaParser = (() => {
     return stats;
   }
 
-  // Find unit stat block for an entry — checks several locations in priority order
   function findStats(entryEl, entriesById, profilesById, depth = 0) {
     if (depth > 4) return {};
 
-    // 1. Direct profiles on this element
     const direct = parseDirectProfiles(entryEl).stats;
     if (Object.keys(direct).length > 0) return direct;
 
-    // 2. infoLinks → sharedProfiles (common for 9th ed units)
     const linked = statsFromInfoLinks(entryEl, profilesById);
     if (Object.keys(linked).length > 0) return linked;
 
-    // 3. Direct selectionEntry[type=model|unit] children
     for (const child of entryEl.querySelectorAll(
       ':scope > selectionEntries > selectionEntry[type="model"], ' +
       ':scope > selectionEntries > selectionEntry[type="unit"]'
@@ -140,8 +165,6 @@ window.WahapediaParser = (() => {
       if (Object.keys(s).length > 0) return s;
     }
 
-    // 4. Inline selectionEntry[type=model|unit] inside selectionEntryGroups
-    //    (e.g. Aggressor Squad: model entries with stats sit inside a named group)
     for (const child of entryEl.querySelectorAll(
       ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="model"], ' +
       ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="unit"]'
@@ -150,7 +173,6 @@ window.WahapediaParser = (() => {
       if (Object.keys(s).length > 0) return s;
     }
 
-    // 5. entryLinks in selectionEntryGroups → sharedSelectionEntries (e.g. Necron Warriors)
     for (const link of entryEl.querySelectorAll(
       ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink'
     )) {
@@ -164,7 +186,7 @@ window.WahapediaParser = (() => {
     return {};
   }
 
-  // ── Weapon collection ────────────────────────────────────────────────────
+  // ── Weapon collection ─────────────────────────────────────────────────────
 
   function collectWeapons(el, entriesById, depth = 0, visited = new Set()) {
     if (depth > 6) return [];
@@ -177,18 +199,15 @@ window.WahapediaParser = (() => {
     const weapons = [];
     weapons.push(...parseDirectProfiles(el).weapons);
 
-    // Inline child selectionEntries — include hidden entries (default/non-optional weapons)
     el.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
       weapons.push(...collectWeapons(child, entriesById, depth + 1, visited));
     });
 
-    // entryLinks → resolve from shared index — include hidden links (default weapons)
     el.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
       const target = entriesById.get(getAttr(link, 'targetId'));
       if (target) weapons.push(...collectWeapons(target, entriesById, depth + 1, new Set(visited)));
     });
 
-    // selectionEntryGroups (inline)
     el.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
       weapons.push(...collectWeapons(group, entriesById, depth + 1, visited));
     });
@@ -196,13 +215,13 @@ window.WahapediaParser = (() => {
     return weapons;
   }
 
-  // ── Ability collection ───────────────────────────────────────────────────
+  // ── Ability collection ────────────────────────────────────────────────────
 
   /**
-   * Collects all abilities for a unit entry, following infoLinks to sharedProfiles.
-   * This is more comprehensive than parseDirectProfiles().abilities alone.
+   * Collects abilities for a unit entry following both profile and rule infoLinks,
+   * including from child model entries.
    */
-  function collectAbilities(entryEl, entriesById, profilesById, depth = 0, visited = new Set()) {
+  function collectAbilities(entryEl, entriesById, profilesById, rulesById, depth = 0, visited = new Set()) {
     if (depth > 3) return [];
     const id = entryEl.getAttribute('id');
     if (id) {
@@ -212,76 +231,116 @@ window.WahapediaParser = (() => {
 
     const abilities = [];
 
-    // Direct profiles with ability type
+    // 1. Direct profiles
     parseDirectProfiles(entryEl).abilities.forEach(a => abilities.push(a));
 
-    // infoLinks[type="profile"] → sharedProfiles with ability typeName
+    // 2. infoLinks → sharedProfiles (profile type)
     entryEl.querySelectorAll(':scope > infoLinks > infoLink').forEach(link => {
-      if (getAttr(link, 'type') !== 'profile') return;
-      const profile = profilesById.get(getAttr(link, 'targetId'));
-      if (!profile || classifyProfile(profile) !== 'ability') return;
-      const name = getAttr(profile, 'name', '').trim();
-      if (!name || /^new\s/i.test(name)) return;
-      const descEl = profile.querySelector('characteristic[name="Description"]');
-      abilities.push({ name, description: descEl ? descEl.textContent.trim() : '' });
+      const linkType = getAttr(link, 'type');
+      const targetId = getAttr(link, 'targetId');
+
+      if (linkType === 'profile') {
+        const profile = profilesById.get(targetId);
+        if (!profile || classifyProfile(profile) !== 'ability') return;
+        const name = getAttr(profile, 'name', '').trim();
+        if (!name || /^new\s/i.test(name)) return;
+        const descEl = profile.querySelector('characteristic[name="Description"]');
+        abilities.push({ name, description: descEl ? descEl.textContent.trim() : '' });
+
+      } else if (linkType === 'rule') {
+        // Core abilities (e.g. Deep Strike) stored as rules, not profiles
+        const rule = rulesById.get(targetId);
+        if (!rule) return;
+        const name = getAttr(rule, 'name', '').trim();
+        if (!name || /^new\s/i.test(name)) return;
+        const descEl = rule.querySelector(':scope > description');
+        abilities.push({ name, description: descEl ? descEl.textContent.trim() : '' });
+      }
     });
 
-    // Recurse into direct child model entries
+    // 3. Recurse into direct child model entries
     entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(child => {
-      collectAbilities(child, entriesById, profilesById, depth + 1, new Set(visited))
+      collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
         .forEach(a => abilities.push(a));
     });
 
-    // Recurse into model entries inside selectionEntryGroups
+    // 4. Recurse into model entries inside selectionEntryGroups
     entryEl.querySelectorAll(
       ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="model"]'
     ).forEach(child => {
-      collectAbilities(child, entriesById, profilesById, depth + 1, new Set(visited))
+      collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
+        .forEach(a => abilities.push(a));
+    });
+
+    // 5. entryLinks → shared entries (e.g. Necrons pattern)
+    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink').forEach(link => {
+      const target = entriesById.get(getAttr(link, 'targetId'));
+      if (!target) return;
+      collectAbilities(target, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
         .forEach(a => abilities.push(a));
     });
 
     return abilities;
   }
 
-  // ── Wargear options collection ───────────────────────────────────────────
+  // ── Wargear options collection ────────────────────────────────────────────
 
   /**
-   * Collects optional wargear choices for a unit — selectionEntryGroups that
-   * offer equipment/weapon swaps (not squad-size groups).
-   * Returns [{ name, choices: [string], max }]
+   * Collects optional wargear/weapon choices for display as "Wargear Options".
+   * Looks at both unit-level and model-level selectionEntryGroups.
+   * Returns [{ name, choices: [{name, description}], max }]
    */
   function collectWargearOptions(entryEl, entriesById) {
     const options = [];
 
-    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
-      if (getAttr(group, 'hidden', 'false') === 'true') return;
+    function getChoiceDescription(choiceEl) {
+      // Try direct ability profile first
+      for (const profile of choiceEl.querySelectorAll(':scope > profiles > profile')) {
+        if (classifyProfile(profile) === 'ability') {
+          const descEl = profile.querySelector('characteristic[name="Description"]');
+          if (descEl && descEl.textContent.trim()) return descEl.textContent.trim();
+        }
+      }
+      // Try weapon profile description-like fields (Abilities / Keywords column)
+      for (const profile of choiceEl.querySelectorAll(':scope > profiles > profile')) {
+        const k = profile.querySelector('characteristic[name="Keywords"]') ||
+                  profile.querySelector('characteristic[name="Abilities"]');
+        if (k && k.textContent.trim()) return k.textContent.trim();
+      }
+      return '';
+    }
 
+    function processGroup(group, prefix) {
+      if (getAttr(group, 'hidden', 'false') === 'true') return;
       const groupName = getAttr(group, 'name', '').trim();
       if (!groupName || /^new\s/i.test(groupName)) return;
 
-      // Skip squad-size groups (contain model/unit type entries)
+      // Skip squad-size groups (those containing model/unit entries)
       if (group.querySelector(':scope > selectionEntries > selectionEntry[type="model"]') ||
           group.querySelector(':scope > selectionEntries > selectionEntry[type="unit"]')) return;
 
       const choices = [];
 
-      // Inline selectionEntries (non-model upgrades)
+      // Inline selectionEntries
       group.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
         if (getAttr(entry, 'hidden', 'false') === 'true') return;
         const name = getAttr(entry, 'name', '').trim();
-        if (name && !/^new\s/i.test(name)) choices.push(name);
+        if (!name || /^new\s/i.test(name)) return;
+        choices.push({ name, description: getChoiceDescription(entry) });
       });
 
-      // entryLinks → named options
+      // entryLinks → resolve name from shared index
       group.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
         if (getAttr(link, 'hidden', 'false') === 'true') return;
         const name = getAttr(link, 'name', '').trim();
-        if (name && !/^new\s/i.test(name)) choices.push(name);
+        if (!name || /^new\s/i.test(name)) return;
+        const target = entriesById.get(getAttr(link, 'targetId'));
+        const desc = target ? getChoiceDescription(target) : '';
+        choices.push({ name, description: desc });
       });
 
       if (choices.length === 0) return;
 
-      // Get max selections from constraints
       let maxSel = null;
       group.querySelectorAll(':scope > constraints > constraint').forEach(c => {
         if (getAttr(c, 'type') === 'max') {
@@ -290,13 +349,30 @@ window.WahapediaParser = (() => {
         }
       });
 
-      options.push({ name: groupName, choices, max: maxSel });
+      const displayName = prefix ? `${prefix} — ${groupName}` : groupName;
+      options.push({ name: displayName, choices, max: maxSel });
+    }
+
+    // Unit-level groups
+    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      processGroup(group, null);
+    });
+
+    // Model-level groups (one level into inline model entries)
+    entryEl.querySelectorAll(
+      ':scope > selectionEntries > selectionEntry[type="model"], ' +
+      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="model"]'
+    ).forEach(model => {
+      const modelName = getAttr(model, 'name', '').trim();
+      model.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+        processGroup(group, modelName);
+      });
     });
 
     return options;
   }
 
-  // ── Cost resolution ──────────────────────────────────────────────────────
+  // ── Cost resolution ───────────────────────────────────────────────────────
 
   function readCost(el) {
     let pts = 0;
@@ -311,15 +387,11 @@ window.WahapediaParser = (() => {
   }
 
   /**
-   * Returns { points, pointsOptions, squadOptions } for a unit entry.
-   * squadOptions: [{ pts, models }] — models is the model count for that cost tier (or null).
-   *
-   * Model count per group uses Pattern A OR Pattern B (not both):
-   *   Pattern A: group has direct constraints (min/max) → use those
-   *   Pattern B: group has no direct constraints → sum child model entry constraints
+   * Pattern A OR Pattern B per group — not both — to avoid double-counting.
+   * Pattern A: constraints directly on the selectionEntryGroup.
+   * Pattern B: sum child model selectionEntry constraints (used only if Pattern A finds nothing).
    */
   function findCosts(entryEl, entriesById) {
-    // 1. Direct cost + typeId on the unit entry (10th ed standard location)
     let basePts = 0;
     let ptsTypeId = null;
     entryEl.querySelectorAll(':scope > costs > cost').forEach(cost => {
@@ -330,15 +402,11 @@ window.WahapediaParser = (() => {
       }
     });
 
-    // 2. Model count — for each selectionEntryGroup use Pattern A OR Pattern B (not both).
-    //    Pattern A: constraints directly on the group (e.g. Necron Warriors: min=10, max=20)
-    //    Pattern B: only if no group-level constraints — sum child model entry constraints
-    //               (e.g. Aggressors: 2–5 regular + 1 sgt = 3–6 total)
     let minModels = null, maxModels = null;
     entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
       let groupMin = null, groupMax = null;
 
-      // Pattern A: direct constraints on this group
+      // Pattern A
       group.querySelectorAll(':scope > constraints > constraint').forEach(c => {
         const val = Math.round(parseFloat(getAttr(c, 'value', '0')));
         if (!isNaN(val) && val > 0) {
@@ -347,7 +415,7 @@ window.WahapediaParser = (() => {
         }
       });
 
-      // Pattern B: only used if Pattern A found nothing for this group
+      // Pattern B (only if Pattern A found nothing for this group)
       if (groupMin === null && groupMax === null) {
         group.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(model => {
           let mMin = null, mMax = null;
@@ -370,7 +438,6 @@ window.WahapediaParser = (() => {
     const squadOptions = [];
     if (basePts > 0) squadOptions.push({ pts: basePts, models: minModels });
 
-    // 3. Modifier elements for alternative squad-size costs
     if (ptsTypeId) {
       entryEl.querySelectorAll(':scope > modifiers > modifier').forEach(mod => {
         if (getAttr(mod, 'type') === 'set' && getAttr(mod, 'field') === ptsTypeId) {
@@ -384,14 +451,9 @@ window.WahapediaParser = (() => {
 
     if (squadOptions.length > 0) {
       squadOptions.sort((a, b) => a.pts - b.pts);
-      return {
-        points: squadOptions[0].pts,
-        pointsOptions: squadOptions.map(o => o.pts),
-        squadOptions,
-      };
+      return { points: squadOptions[0].pts, pointsOptions: squadOptions.map(o => o.pts), squadOptions };
     }
 
-    // 4. Fallback: entryLink targets in selectionEntryGroups (older patterns)
     for (const link of entryEl.querySelectorAll(
       ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink'
     )) {
@@ -407,20 +469,19 @@ window.WahapediaParser = (() => {
     return { points: 0, pointsOptions: [], squadOptions: [] };
   }
 
-  // ── Keyword / category collection ────────────────────────────────────────
+  // ── Keyword / category collection ─────────────────────────────────────────
 
   function parseKeywords(entryEl) {
     const kws = [];
     entryEl.querySelectorAll(':scope > categoryLinks > categoryLink').forEach(link => {
       const name = getAttr(link, 'name', '').trim();
-      // Skip empty names and BattleScribe editor default placeholder names
       if (!name || /^new\s+category/i.test(name)) return;
       kws.push(name);
     });
     return kws;
   }
 
-  // ── Dedup helper ─────────────────────────────────────────────────────────
+  // ── Dedup ─────────────────────────────────────────────────────────────────
 
   function dedup(arr, key) {
     const seen = new Set();
@@ -432,9 +493,9 @@ window.WahapediaParser = (() => {
     });
   }
 
-  // ── Parse one army unit entry ─────────────────────────────────────────────
+  // ── Parse one unit entry ──────────────────────────────────────────────────
 
-  function parseEntry(entryEl, entriesById, profilesById) {
+  function parseEntry(entryEl, entriesById, profilesById, rulesById) {
     if (getAttr(entryEl, 'hidden', 'false') === 'true') return null;
 
     const name = getAttr(entryEl, 'name', 'Unknown Unit');
@@ -443,17 +504,33 @@ window.WahapediaParser = (() => {
     const id   = getAttr(entryEl, 'id') || Math.random().toString(36).slice(2, 9);
     const type = getAttr(entryEl, 'type', '');
 
-    const stats    = findStats(entryEl, entriesById, profilesById);
-    const weapons  = dedup(collectWeapons(entryEl, entriesById), 'name');
-    const abilities= dedup(collectAbilities(entryEl, entriesById, profilesById), 'name');
-    const keywords = parseKeywords(entryEl);
+    const stats       = findStats(entryEl, entriesById, profilesById);
+    const weapons     = dedup(collectWeapons(entryEl, entriesById), 'name');
+    const allAbilities= dedup(collectAbilities(entryEl, entriesById, profilesById, rulesById), 'name');
+    const keywords    = parseKeywords(entryEl);
     const wargearOptions = collectWargearOptions(entryEl, entriesById);
     const { points, pointsOptions, squadOptions } = findCosts(entryEl, entriesById);
-    const descEl   = entryEl.querySelector(':scope > description');
+    const descEl = entryEl.querySelector(':scope > description');
+
+    // Extract invulnerable save from abilities (or directly from stats)
+    let invulnSave = stats['INV'] || stats['Invulnerable Save'] || null;
+    if (!invulnSave) {
+      const invAb = allAbilities.find(a => /invulnerable\s+save/i.test(a.name));
+      if (invAb) {
+        // Description may be just "4+" or a sentence containing "X+ invulnerable save"
+        const m = invAb.description.match(/(\d\+)/);
+        if (m) invulnSave = m[1];
+        else if (/^\d\+$/.test(invAb.description.trim())) invulnSave = invAb.description.trim();
+      }
+    }
+
+    // Remove invuln save from abilities list (displayed in stat line instead)
+    const abilities = allAbilities.filter(a => !/invulnerable\s+save/i.test(a.name));
 
     return {
       id, name, type,
       stats,
+      invulnSave,
       weapons,
       abilities,
       keywords,
@@ -470,35 +547,31 @@ window.WahapediaParser = (() => {
   function parse(xmlString, filename) {
     try {
       const doc = new DOMParser().parseFromString(xmlString, 'application/xml');
-
-      const parseError = doc.querySelector('parsererror');
-      if (parseError) {
-        throw new Error('XML parse error: ' + parseError.textContent.slice(0, 200));
+      if (doc.querySelector('parsererror')) {
+        throw new Error('XML parse error');
       }
 
       const root        = doc.documentElement;
       const factionName = getAttr(root, 'name') ||
         filename.replace(/\.(cat|xml)$/i, '').replace(/[-_]/g, ' ');
 
-      const { entriesById, profilesById } = buildIndexes(root);
+      const { entriesById, profilesById, rulesById } = buildIndexes(root);
 
       const units   = [];
       const seenIds = new Set();
 
-      // Pattern A: units defined directly in selectionEntries (Space Marines style)
+      // Pattern A: units in selectionEntries
       root.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
         const t = getAttr(entry, 'type', '');
         if (t !== 'unit' && t !== 'model') return;
-        const unit = parseEntry(entry, entriesById, profilesById);
+        const unit = parseEntry(entry, entriesById, profilesById, rulesById);
         if (unit && !seenIds.has(unit.id)) {
           seenIds.add(unit.id);
           units.push(unit);
         }
       });
 
-      // Pattern B: units defined in sharedSelectionEntries, made selectable via
-      // root-level entryLinks (Necrons style — selectionEntries is empty or absent,
-      // all unit definitions sit in sharedSelectionEntries).
+      // Pattern B: units via root entryLinks → sharedSelectionEntries
       root.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
         if (getAttr(link, 'hidden', 'false') === 'true') return;
         const targetId = getAttr(link, 'targetId');
@@ -507,15 +580,14 @@ window.WahapediaParser = (() => {
         if (!target) return;
         const t = getAttr(target, 'type', '');
         if (t !== 'unit' && t !== 'model') return;
-        const unit = parseEntry(target, entriesById, profilesById);
+        const unit = parseEntry(target, entriesById, profilesById, rulesById);
         if (unit && !seenIds.has(unit.id)) {
           seenIds.add(unit.id);
           units.push(unit);
         }
       });
 
-      // ── Army Rules: from <rules> and <sharedRules> at catalogue root ──────
-      // These are faction-wide named rules (e.g. "Oath of Moment")
+      // Army Rules: <rules> and <sharedRules> at root
       const armyRules = [];
       root.querySelectorAll(':scope > rules > rule, :scope > sharedRules > rule').forEach(rule => {
         if (getAttr(rule, 'hidden', 'false') === 'true') return;
@@ -525,11 +597,10 @@ window.WahapediaParser = (() => {
         armyRules.push({ name, description: descEl ? descEl.textContent.trim() : '' });
       });
 
-      // ── Stratagems: sharedProfiles with typeName="Stratagems" ────────────
+      // Stratagems: sharedProfiles with typeName="Stratagems"
       const stratagems = [];
       root.querySelectorAll(':scope > sharedProfiles > profile').forEach(p => {
-        const typeName = getAttr(p, 'typeName', '').toLowerCase();
-        if (typeName !== 'stratagems') return;
+        if (getAttr(p, 'typeName', '').toLowerCase() !== 'stratagems') return;
         const name = getAttr(p, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         const descEl  = p.querySelector('characteristic[name="Description"]');
@@ -556,5 +627,5 @@ window.WahapediaParser = (() => {
     }
   }
 
-  return { parse };
+  return { parse, addToSharedIndex };
 })();

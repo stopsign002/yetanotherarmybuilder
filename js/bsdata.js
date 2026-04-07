@@ -72,19 +72,35 @@ window.BSData = (() => {
     return resp.text();
   }
 
-  // ── Cache busting ────────────────────────────────────────────────────────
-
   // ── Bulk loader ──────────────────────────────────────────────────────────
+
+  const GST_CACHE_PREFIX = 'yaab_gst_10e_v1_';
 
   /**
    * Download and parse every catalogue file in the repo.
-   *
-   * @param {function(done, total, lastName)} onProgress   - called after each file
-   * @param {function(parsedFaction)}         onFactionLoaded - called for each non-empty faction
-   * @param {AbortSignal}                     [signal]     - optional cancellation
+   * Loads game system (.gst) files first to build a cross-file shared index
+   * so unit infoLinks to game-system rules (e.g. Deep Strike) resolve correctly.
    */
   async function loadAllFactions(onProgress, onFactionLoaded, signal) {
     const files = await fetchFileList();
+
+    // ── Phase 1: load game system file(s) into shared parser index ───────────
+    const gstFiles = files.filter(f => f.type === 'gamesystem');
+    for (const gst of gstFiles) {
+      try {
+        let xml = null;
+        try { xml = sessionStorage.getItem(GST_CACHE_PREFIX + gst.name); } catch (_) {}
+        if (!xml) {
+          xml = await fetchFile(gst.path);
+          try { sessionStorage.setItem(GST_CACHE_PREFIX + gst.name, xml); } catch (_) {}
+        }
+        WahapediaParser.addToSharedIndex(xml);
+      } catch (e) {
+        console.warn('[BSData] Failed to load game system "' + gst.name + '":', e.message);
+      }
+    }
+
+    // ── Phase 2: load catalogues ──────────────────────────────────────────────
     const catFiles = files.filter(f => f.type === 'catalogue');
     const total = catFiles.length;
     let done = 0;
@@ -95,7 +111,6 @@ window.BSData = (() => {
         if (signal && signal.aborted) return;
         const file = catFiles[cursor++];
         try {
-          // Check sessionStorage cache first
           const cached = _getCachedFaction(file.name);
           let faction;
           if (cached) {
@@ -117,7 +132,6 @@ window.BSData = (() => {
       }
     }
 
-    // Run 6 concurrent workers
     await Promise.all(Array.from({ length: 6 }, worker));
   }
 
@@ -148,7 +162,7 @@ window.BSData = (() => {
     const keys = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const k = sessionStorage.key(i);
-      if (k && (k.startsWith('yaab_bsf_') || k.startsWith('yaab_bsdata_filelist'))) keys.push(k);
+      if (k && (k.startsWith('yaab_bsf_') || k.startsWith('yaab_bsdata_filelist') || k.startsWith('yaab_gst_'))) keys.push(k);
     }
     keys.forEach(k => sessionStorage.removeItem(k));
   }

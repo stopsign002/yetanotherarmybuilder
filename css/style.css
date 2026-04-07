@@ -104,6 +104,12 @@ ul { list-style: none; }
   height: 3px;
   background: rgba(196,30,58,0.2);
 }
+/* Override [hidden] — CSS display: flex/block has higher specificity than
+   the browser's built-in [hidden]{display:none} rule, so we must be explicit */
+.page-progress-wrap[hidden],
+.load-status[hidden] {
+  display: none !important;
+}
 .page-progress-bar {
   height: 100%;
   background: var(--accent);
@@ -1343,4 +1349,16 @@ ul { list-style: none; }
   color: var(--text);
   border-radius: 3px;
   padding: 2px 8px;
+}
+.wargear-choice-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.wargear-choice-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  padding-left: 4px;
 }
