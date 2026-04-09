@@ -74,7 +74,7 @@ window.BSData = (() => {
 
   // ── Bulk loader ──────────────────────────────────────────────────────────
 
-  const GST_CACHE_PREFIX = 'yaab_gst_10e_v2_';
+  const GST_CACHE_PREFIX = 'yaab_gst_10e_v3_';
 
   /**
    * Download and parse every catalogue file in the repo.
@@ -143,7 +143,7 @@ window.BSData = (() => {
 
   // ── Session cache helpers ────────────────────────────────────────────────
 
-  const FACTION_CACHE_PREFIX = 'yaab_bsf_10e_v2_';
+  const FACTION_CACHE_PREFIX = 'yaab_bsf_10e_v3_';
 
   function _getCachedFaction(name) {
     try {

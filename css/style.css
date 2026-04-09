@@ -7,18 +7,17 @@
   --bg:           #1a1a1a;
   --panel-bg:     #242424;
   --panel-alt:    #2a2a2a;
-  --accent:       #c41e3a;
-  --accent-hover: #e02244;
-  --accent-dark:  #8b1429;
+  --accent:       #ffffff;
+  --accent-hover: #cccccc;
+  --accent-dark:  #aaaaaa;
+  --accent-rgb:   255, 255, 255;
   --text:         #e0e0e0;
-  --text-muted:   #888888;
+  --text-muted:   #a8a8a8;
   --border:       #3a3a3a;
   --border-light: #4a4a4a;
   --success:      #2ecc71;
   --warning:      #f39c12;
   --danger:       #e74c3c;
-  --header-bg:    #111111;
-  --header-height: 60px;
   --card-bg:      #2f2f2f;
   --card-hover:   #383838;
   --radius:       6px;
@@ -52,57 +51,13 @@ ul { list-style: none; }
 ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #666; }
 
-/* ── Header ──────────────────────────────────────────────── */
-.app-header {
+/* ── Page-level loading progress strip (fixed, top of viewport) ─ */
+.page-progress-wrap {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: var(--header-height);
-  background: var(--header-bg);
-  border-bottom: 2px solid var(--accent);
-  z-index: 100;
-  box-shadow: 0 2px 12px rgba(196,30,58,0.3);
-}
-
-.header-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 100%;
-  padding: 0 20px;
-}
-
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-icon {
-  font-size: 24px;
-  color: var(--accent);
-}
-
-.header-title h1 {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: #fff;
-  text-shadow: 0 0 20px rgba(196,30,58,0.5);
-}
-
-.header-subtitle {
-  font-size: 12px;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-/* ── Page-level loading progress bar ────────────────────── */
-.page-progress-wrap {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
   height: 3px;
-  background: rgba(196,30,58,0.2);
+  z-index: 500;
+  background: rgba(var(--accent-rgb), 0.2);
 }
 /* Override [hidden] — CSS display: flex/block has higher specificity than
    the browser's built-in [hidden]{display:none} rule, so we must be explicit */
@@ -115,22 +70,18 @@ ul { list-style: none; }
   background: var(--accent);
   width: 0%;
   transition: width 0.3s ease;
-  box-shadow: 0 0 8px rgba(196,30,58,0.6);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
 }
 
-/* ── Header center / load status ────────────────────────── */
-.header-center {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+/* ── Load status (in center panel header) ────────────────── */
 .load-status {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 11px;
   color: var(--text-muted);
+  flex: 1;
+  justify-content: center;
 }
 .load-status-count {
   color: var(--accent);
@@ -147,8 +98,7 @@ ul { list-style: none; }
   display: grid;
   grid-template-columns: var(--col-left) 4px 1fr 4px var(--col-right);
   grid-template-rows: 1fr;
-  height: calc(100vh - var(--header-height));
-  margin-top: var(--header-height);
+  height: 100vh;
   gap: 0;
   overflow: hidden;
 }
@@ -179,6 +129,9 @@ ul { list-style: none; }
 .panel-right  { background: var(--panel-bg); border-left: none; }
 
 .panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 14px 16px 10px;
   border-bottom: 1px solid var(--border);
   background: var(--panel-alt);
@@ -309,7 +262,7 @@ ul { list-style: none; }
 .upload-area:hover,
 .upload-area.dragover {
   border-color: var(--accent);
-  background: rgba(196,30,58,0.08);
+  background: rgba(var(--accent-rgb),0.08);
 }
 
 .upload-icon { font-size: 28px; margin-bottom: 6px; }
@@ -347,7 +300,7 @@ ul { list-style: none; }
 .form-input:focus,
 .form-select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(196,30,58,0.2);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.2);
 }
 
 .form-select option { background: var(--panel-bg); }
@@ -449,7 +402,7 @@ ul { list-style: none; }
 .panel-left.drag-over {
   outline: 2px dashed var(--accent);
   outline-offset: -4px;
-  background: rgba(196,30,58,0.05);
+  background: rgba(var(--accent-rgb),0.05);
 }
 
 /* ── Roster Controls (legacy, keep for search-input ref) ── */
@@ -535,7 +488,7 @@ ul { list-style: none; }
 .unit-card.selected {
   border-color: var(--accent);
   background: var(--card-hover);
-  box-shadow: 0 0 0 2px rgba(196,30,58,0.3);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.3);
 }
 .unit-card.selected::before { opacity: 1; }
 
@@ -581,8 +534,8 @@ ul { list-style: none; }
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: rgba(196,30,58,0.15);
-  border: 1px solid rgba(196,30,58,0.3);
+  background: rgba(var(--accent-rgb),0.15);
+  border: 1px solid rgba(var(--accent-rgb),0.3);
   color: #cc7788;
   border-radius: 3px;
   padding: 1px 5px;
@@ -624,8 +577,8 @@ ul { list-style: none; }
 }
 
 .points-summary {
-  background: rgba(196,30,58,0.1);
-  border: 1px solid rgba(196,30,58,0.3);
+  background: rgba(var(--accent-rgb),0.1);
+  border: 1px solid rgba(var(--accent-rgb),0.3);
   border-radius: var(--radius);
   padding: 12px 14px;
   margin-bottom: 14px;
@@ -1020,8 +973,8 @@ ul { list-style: none; }
   font-size: 12px;
 }
 .detail-faction {
-  background: rgba(196,30,58,0.12);
-  border: 1px solid rgba(196,30,58,0.25);
+  background: rgba(var(--accent-rgb),0.12);
+  border: 1px solid rgba(var(--accent-rgb),0.25);
   color: #cc7788;
   border-radius: 3px;
   padding: 1px 6px;
@@ -1041,8 +994,8 @@ ul { list-style: none; }
 }
 
 .detail-add-section {
-  background: rgba(196,30,58,0.07);
-  border: 1px solid rgba(196,30,58,0.2);
+  background: rgba(var(--accent-rgb),0.07);
+  border: 1px solid rgba(var(--accent-rgb),0.2);
   border-radius: var(--radius);
   padding: 10px 12px;
   margin-bottom: 14px;
@@ -1132,15 +1085,12 @@ ul { list-style: none; }
 .weapon-kw-tag.has-tooltip {
   cursor: help;
   border-color: rgba(90,181,232,0.4);
-  position: relative;
 }
-.weapon-kw-tag.has-tooltip:hover::after {
-  content: attr(data-kw-tip);
-  position: absolute;
-  z-index: 200;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+
+/* Global tooltip (JS-positioned, position: fixed — never clipped) */
+.global-tooltip {
+  position: fixed;
+  z-index: 9999;
   background: #1e1e1e;
   border: 1px solid var(--border-light);
   border-radius: 4px;
@@ -1148,11 +1098,10 @@ ul { list-style: none; }
   font-size: 11px;
   line-height: 1.5;
   color: var(--text);
-  max-width: 280px;
-  width: max-content;
-  white-space: normal;
+  max-width: 300px;
   pointer-events: none;
   box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  white-space: normal;
 }
 
 /* Wargear options bullet list */

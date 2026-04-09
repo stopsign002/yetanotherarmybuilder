@@ -9,6 +9,17 @@
 
 window.WahapediaParser = (() => {
 
+  // Strip BSData wiki-style markup from text (e.g. **bold**, ^^superscript^^, __underline__)
+  function cleanText(str) {
+    if (!str) return '';
+    return str
+      .replace(/\*\*([^*]*)\*\*/g, '$1')
+      .replace(/\^\^([^^]*)\^\^/g, '$1')
+      .replace(/__([^_]*)__/g, '$1')
+      .replace(/~~([^~]*)~~/g, '$1')
+      .trim();
+  }
+
   // ── Shared cross-file index (populated from .gst file) ───────────────────
   // DOM elements from the game system file are kept in memory; they cannot be
   // serialised to sessionStorage, so this is rebuilt each page load.
@@ -54,7 +65,7 @@ window.WahapediaParser = (() => {
     const chars = {};
     profileEl.querySelectorAll('characteristic').forEach(c => {
       const key = getAttr(c, 'name');
-      if (key) chars[key] = c.textContent.trim();
+      if (key) chars[key] = cleanText(c.textContent);
     });
     return chars;
   }
@@ -126,7 +137,7 @@ window.WahapediaParser = (() => {
         if (name) weapons.push({ name, _typeName: getAttr(profile, 'typeName', ''), ...chars });
       } else if (kind === 'ability') {
         const descEl = profile.querySelector('characteristic[name="Description"]');
-        if (name) abilities.push({ name, description: descEl ? descEl.textContent.trim() : '' });
+        if (name) abilities.push({ name, description: descEl ? cleanText(descEl.textContent) : '' });
       }
     });
 
@@ -245,16 +256,23 @@ window.WahapediaParser = (() => {
         const name = getAttr(profile, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         const descEl = profile.querySelector('characteristic[name="Description"]');
-        abilities.push({ name, description: descEl ? descEl.textContent.trim() : '' });
+        abilities.push({ name, description: descEl ? cleanText(descEl.textContent) : '' });
 
       } else if (linkType === 'rule') {
-        // Core abilities (e.g. Deep Strike) stored as rules, not profiles
+        // Core abilities (e.g. Deep Strike, Deadly Demise) stored as rules
         const rule = rulesById.get(targetId);
         if (!rule) return;
-        const name = getAttr(rule, 'name', '').trim();
+        let name = getAttr(rule, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
+        // Apply name-appending modifiers from the infoLink itself (e.g. dice count on Deadly Demise)
+        link.querySelectorAll(':scope > modifiers > modifier[field="name"]').forEach(mod => {
+          if (getAttr(mod, 'type', '') === 'append') {
+            const val = getAttr(mod, 'value', '').trim();
+            if (val) name = name + ' ' + val;
+          }
+        });
         const descEl = rule.querySelector(':scope > description');
-        abilities.push({ name, description: descEl ? descEl.textContent.trim() : '', isCore: true });
+        abilities.push({ name, description: descEl ? cleanText(descEl.textContent) : '', isCore: true });
       }
     });
 
@@ -625,7 +643,7 @@ window.WahapediaParser = (() => {
       points,
       pointsOptions,
       squadOptions,
-      description: descEl ? descEl.textContent.trim() : ''
+      description: descEl ? cleanText(descEl.textContent) : ''
     };
   }
 
@@ -641,6 +659,13 @@ window.WahapediaParser = (() => {
       const root        = doc.documentElement;
       const factionName = getAttr(root, 'name') ||
         filename.replace(/\.(cat|xml)$/i, '').replace(/[-_]/g, ' ');
+
+      // Linked catalogues (parent factions whose units this faction can use)
+      const linkedCatalogues = [];
+      root.querySelectorAll(':scope > catalogueLinks > catalogueLink[type="catalogue"]').forEach(lnk => {
+        const n = getAttr(lnk, 'name', '').trim();
+        if (n) linkedCatalogues.push(n);
+      });
 
       const { entriesById, profilesById, rulesById } = buildIndexes(root);
 
@@ -681,28 +706,29 @@ window.WahapediaParser = (() => {
         const name = getAttr(rule, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         const descEl = rule.querySelector(':scope > description');
-        armyRules.push({ name, description: descEl ? descEl.textContent.trim() : '' });
+        armyRules.push({ name, description: descEl ? cleanText(descEl.textContent) : '' });
       });
 
-      // Detachments: sharedProfiles whose typeName or name looks like a detachment rule.
-      // BSData 10e stores these with typeNames like "Detachment Rule", "Detachment", etc.
-      const KNOWN_TYPENAMES = new Set([
-        'unit', 'model', 'ranged weapons', 'melee weapons', 'weapon', 'ranged', 'melee',
-        'stratagems', 'abilities', 'ability', 'invulnerable save', 'leader', 'transport',
-      ]);
+      // Detachments: live in sharedSelectionEntryGroups > selectionEntryGroup[name="Detachment"]
       const detachments = [];
-      root.querySelectorAll(':scope > sharedProfiles > profile').forEach(p => {
-        const tn = getAttr(p, 'typeName', '').toLowerCase().trim();
-        if (!tn || KNOWN_TYPENAMES.has(tn) || tn === 'stratagems') return;
-        if (getAttr(p, 'hidden', 'false') === 'true') return;
-        const name = getAttr(p, 'name', '').trim();
-        if (!name || /^new\s/i.test(name)) return;
-        if (/detachment|task\s*force|spearhead|assault\s*force|siege\s*force/i.test(tn) ||
-            /detachment|task\s*force|spearhead/i.test(name)) {
-          const descEl = p.querySelector('characteristic[name="Description"]');
-          detachments.push({ name, description: descEl ? descEl.textContent.trim() : '', typeName: tn });
-        }
-      });
+      const detachGroup = root.querySelector(
+        ':scope > sharedSelectionEntryGroups > selectionEntryGroup[name="Detachment"]'
+      );
+      if (detachGroup) {
+        detachGroup.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
+          if (getAttr(entry, 'hidden', 'false') === 'true') return;
+          const name = getAttr(entry, 'name', '').trim();
+          if (!name || /^new\s/i.test(name)) return;
+          const rules = [];
+          entry.querySelectorAll(':scope > rules > rule').forEach(r => {
+            if (getAttr(r, 'hidden', 'false') === 'true') return;
+            const rName = getAttr(r, 'name', '').trim();
+            const descEl = r.querySelector(':scope > description');
+            if (rName) rules.push({ name: rName, description: descEl ? cleanText(descEl.textContent) : '' });
+          });
+          detachments.push({ name, rules });
+        });
+      }
 
       // Stratagems: sharedProfiles with typeName="Stratagems"
       const stratagems = [];
@@ -718,15 +744,15 @@ window.WahapediaParser = (() => {
         const effectEl= p.querySelector('characteristic[name="Effect"]');
         stratagems.push({
           name,
-          description: descEl ? descEl.textContent.trim() : '',
-          cp: cpEl ? cpEl.textContent.trim() : null,
-          when: whenEl ? whenEl.textContent.trim() : null,
-          target: targetEl ? targetEl.textContent.trim() : null,
-          effect: effectEl ? effectEl.textContent.trim() : null,
+          description: descEl ? cleanText(descEl.textContent) : '',
+          cp: cpEl ? cleanText(cpEl.textContent) : null,
+          when: whenEl ? cleanText(whenEl.textContent) : null,
+          target: targetEl ? cleanText(targetEl.textContent) : null,
+          effect: effectEl ? cleanText(effectEl.textContent) : null,
         });
       });
 
-      return { factionName, filename, unitCount: units.length, units, armyRules, stratagems, detachments };
+      return { factionName, filename, unitCount: units.length, units, armyRules, stratagems, detachments, linkedCatalogues };
 
     } catch (err) {
       console.error('[Parser] Error in', filename, err);

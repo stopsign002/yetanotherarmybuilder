@@ -6,15 +6,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Application State ─────────────────────────────────────────────────
   const state = {
-    factions:     [],   // all loaded factions (from BSData)
-    allUnits:     [],   // flat unit array
-    currentArmy:  null,
-    armyManager:  null,
-    selectedUnit: null,
-    factionFilter: 'all',  // controlled from army panel faction select
+    factions:       [],   // all loaded factions (from BSData)
+    allUnits:       [],   // flat unit array
+    currentArmy:    null,
+    armyManager:    null,
+    selectedUnit:   null,
+    factionFilter:  'all',  // controlled from army panel faction select
+    selectedChapter: null,  // selected chapter/supplement within a faction
+    chaptersMap:    {},     // parentFactionName → [childFactionName, ...]
+    chapterFactions: new Set(), // all factions that are children of another
   };
 
   UI.init(state);
+
+  // ── Faction accent colors ─────────────────────────────────────────────
+  // [accent, hover, dark, rgb]
+  const FACTION_COLORS = {
+    'Space Marines':       ['#0062ae', '#1e82d0', '#004d8a', '0, 98, 174'],
+    'Blood Angels':        ['#9b0000', '#be1a1a', '#6e0000', '155, 0, 0'],
+    'Dark Angels':         ['#1a5c1a', '#267a26', '#124012', '26, 92, 26'],
+    'Grey Knights':        ['#8888b8', '#a0a0d0', '#6060a0', '136, 136, 184'],
+    'Space Wolves':        ['#4a6fa5', '#6088be', '#30508a', '74, 111, 165'],
+    'Imperial Fists':      ['#c8a400', '#e0bc00', '#9b8000', '200, 164, 0'],
+    'Black Templars':      ['#d0d0d0', '#eeeeee', '#a0a0a0', '208, 208, 208'],
+    'Iron Hands':          ['#708090', '#909eb0', '#506070', '112, 128, 144'],
+    'Salamanders':         ['#1a6b2a', '#268a38', '#104a1a', '26, 107, 42'],
+    'Ultramarines':        ['#0062ae', '#1e82d0', '#004d8a', '0, 98, 174'],
+    'White Scars':         ['#d8d8d8', '#f0f0f0', '#b0b0b0', '216, 216, 216'],
+    'Raven Guard':         ['#909090', '#b0b0b0', '#686868', '144, 144, 144'],
+    'Chaos Space Marines': ['#9b1a00', '#be3210', '#6e1000', '155, 26, 0'],
+    'Death Guard':         ['#5a6e3a', '#728c4a', '#3e4e28', '90, 110, 58'],
+    'Thousand Sons':       ['#1a4a9b', '#2a62c8', '#0e3070', '26, 74, 155'],
+    'World Eaters':        ['#aa1a00', '#cc2a10', '#7a1000', '170, 26, 0'],
+    "Emperor's Children":  ['#9b1a9b', '#c028c0', '#6e1070', '155, 26, 155'],
+    'Necrons':             ['#00cc00', '#20ee20', '#009800', '0, 204, 0'],
+    "T'au Empire":         ['#00a0b0', '#10c0d2', '#007888', '0, 160, 176'],
+    'Tyranids':            ['#8b0070', '#b0009a', '#600050', '139, 0, 112'],
+    'Orks':                ['#5a8700', '#70a800', '#406000', '90, 135, 0'],
+    'Aeldari':             ['#0080c8', '#10a0ee', '#005898', '0, 128, 200'],
+    'Drukhari':            ['#7b00b8', '#9c10e0', '#580088', '123, 0, 184'],
+    'Harlequins':          ['#d44000', '#f05010', '#a02800', '212, 64, 0'],
+    'Adeptus Mechanicus':  ['#cc3300', '#ee4a10', '#982200', '204, 51, 0'],
+    'Astra Militarum':     ['#6b6b3a', '#8a8a4a', '#4a4a28', '107, 107, 58'],
+    'Adepta Sororitas':    ['#8b0020', '#ae1030', '#620010', '139, 0, 32'],
+    'Adeptus Custodes':    ['#c8a000', '#e0bc00', '#9b8000', '200, 160, 0'],
+    'Deathwatch':          ['#7080a0', '#8898c0', '#505870', '112, 128, 160'],
+    'Genestealer Cults':   ['#7b00a8', '#9c10d0', '#580078', '123, 0, 168'],
+    'Leagues of Votann':   ['#8b6b3a', '#aa844a', '#664e28', '139, 107, 58'],
+    'Chaos Daemons':       ['#9b1a4a', '#c02860', '#6e1030', '155, 26, 74'],
+    'Chaos Knights':       ['#6b2a9b', '#8a40c0', '#4a1870', '107, 42, 155'],
+    'Imperial Knights':    ['#c8a000', '#e0bc00', '#9b8000', '200, 160, 0'],
+  };
+  const DEFAULT_ACCENT = ['#ffffff', '#cccccc', '#aaaaaa', '255, 255, 255'];
+
+  function applyFactionColor(factionName) {
+    const root = document.documentElement;
+    // Try last segment of qualified name (e.g. "Blood Angels" from "Imperium - Adeptus Astartes - Blood Angels")
+    const shortName = factionName && factionName.includes(' - ')
+      ? factionName.split(' - ').pop().trim()
+      : (factionName || '');
+    const colors = FACTION_COLORS[shortName] || FACTION_COLORS[factionName] || DEFAULT_ACCENT;
+    const [accent, hover, dark, rgb] = colors;
+    root.style.setProperty('--accent',       accent);
+    root.style.setProperty('--accent-hover', hover);
+    root.style.setProperty('--accent-dark',  dark);
+    root.style.setProperty('--accent-rgb',   rgb);
+  }
 
   // ── Bootstrap ─────────────────────────────────────────────────────────
   function bootstrap() {
@@ -31,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
       state.currentArmy = state.armyManager.newArmy();
     }
 
+    applyFactionColor(null); // default white
     renderAll();
     setupResizablePanels();
     wireEvents();
@@ -41,14 +99,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Render helpers ────────────────────────────────────────────────────
   function renderAll() {
-    UI.updateFactionFilter(state.factions);
+    UI.updateFactionFilter(state.factions, state.chapterFactions);
+    const { factionFilter, linkedFactions } = getEffectiveFilter();
     UI.renderUnitRoster(
       state.allUnits,
       document.getElementById('search-input').value,
-      state.factionFilter,
-      state.selectedUnit ? state.selectedUnit.id : null
+      factionFilter,
+      state.selectedUnit ? state.selectedUnit.id : null,
+      linkedFactions
     );
     UI.renderArmyList(state.currentArmy);
+  }
+
+  function renderUnitRosterWithContext() {
+    const { factionFilter, linkedFactions } = getEffectiveFilter();
+    UI.renderUnitRoster(
+      state.allUnits,
+      document.getElementById('search-input').value,
+      factionFilter,
+      state.selectedUnit ? state.selectedUnit.id : null,
+      linkedFactions
+    );
   }
 
   function rebuildAllUnits() {
@@ -60,6 +131,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function buildChaptersMap() {
+    state.chaptersMap = {};
+    state.factions.forEach(f => {
+      (f.linkedCatalogues || []).forEach(parentName => {
+        if (state.factions.some(p => p.factionName === parentName)) {
+          if (!state.chaptersMap[parentName]) state.chaptersMap[parentName] = [];
+          if (!state.chaptersMap[parentName].includes(f.factionName)) {
+            state.chaptersMap[parentName].push(f.factionName);
+          }
+        }
+      });
+    });
+    state.chapterFactions = new Set(Object.values(state.chaptersMap).flat());
+  }
+
+  function getEffectiveFilter() {
+    if (state.selectedChapter) {
+      const chapterFaction = state.factions.find(f => f.factionName === state.selectedChapter);
+      const parents = (chapterFaction && chapterFaction.linkedCatalogues) || [];
+      return { factionFilter: state.selectedChapter, linkedFactions: parents };
+    }
+    if (state.factionFilter !== 'all') {
+      const chapters = state.chaptersMap[state.factionFilter] || [];
+      return { factionFilter: state.factionFilter, linkedFactions: chapters };
+    }
+    return { factionFilter: 'all', linkedFactions: [] };
+  }
+
   function findUnit(unitId, factionName) {
     return state.allUnits.find(u => u.id === unitId && u._factionName === factionName)
         || state.allUnits.find(u => u.id === unitId)
@@ -67,8 +166,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getCurrentFaction() {
-    if (state.factionFilter === 'all') return null;
-    return state.factions.find(f => f.factionName === state.factionFilter) || null;
+    const name = state.selectedChapter || (state.factionFilter !== 'all' ? state.factionFilter : null);
+    if (!name) return null;
+    return state.factions.find(f => f.factionName === name) || null;
   }
 
   // ── BSData auto-load ──────────────────────────────────────────────────
@@ -83,13 +183,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!exists) {
             state.factions.push(faction);
             rebuildAllUnits();
-            UI.updateFactionFilter(state.factions);
-            UI.renderUnitRoster(
-              state.allUnits,
-              document.getElementById('search-input').value,
-              state.factionFilter,
-              state.selectedUnit ? state.selectedUnit.id : null
-            );
+            buildChaptersMap();
+            UI.updateFactionFilter(state.factions, state.chapterFactions);
+            renderUnitRosterWithContext();
           }
         }
       );
@@ -138,35 +234,36 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Wire up all event listeners ───────────────────────────────────────
   function wireEvents() {
 
-    // ---- Army faction selector (drives unit panel filter) ----
+    // ---- Army faction selector ----
     document.getElementById('army-faction-select').addEventListener('change', e => {
       state.factionFilter = e.target.value;
-      UI.renderUnitRoster(
-        state.allUnits,
-        document.getElementById('search-input').value,
-        state.factionFilter,
-        state.selectedUnit ? state.selectedUnit.id : null
-      );
-      // Show faction rules in army panel
+      state.selectedChapter = null;
+      applyFactionColor(state.factionFilter === 'all' ? null : state.factionFilter);
+      updateChapterDropdown(state.factionFilter);
+      renderUnitRosterWithContext();
       const faction = getCurrentFaction();
       UI.updateFactionRules(faction);
-      // Update detachment dropdown for this faction
       updateDetachmentOptions(faction);
     });
 
-    // ---- Detachment selector (placeholder — filters units in future) ----
+    // ---- Chapter / Supplement selector ----
+    document.getElementById('army-chapter-select').addEventListener('change', e => {
+      state.selectedChapter = e.target.value || null;
+      applyFactionColor(state.selectedChapter || state.factionFilter);
+      renderUnitRosterWithContext();
+      const faction = getCurrentFaction();
+      UI.updateFactionRules(faction);
+      updateDetachmentOptions(faction);
+    });
+
+    // ---- Detachment selector ----
     document.getElementById('army-detachment-select').addEventListener('change', () => {
       // Future: filter units by detachment requirements
     });
 
     // ---- Search ----
     document.getElementById('search-input').addEventListener('input', () => {
-      UI.renderUnitRoster(
-        state.allUnits,
-        document.getElementById('search-input').value,
-        state.factionFilter,
-        state.selectedUnit ? state.selectedUnit.id : null
-      );
+      renderUnitRosterWithContext();
     });
 
     // ---- Unit card click → show detail in right panel ----
@@ -183,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
       UI.renderUnitDetail(unit);
     });
 
-    // ---- Faction rule / stratagem click → show in details panel (delegated on section) ----
+    // ---- Faction rule / stratagem click → show in details panel ----
     document.getElementById('army-rules-section').addEventListener('click', e => {
       const item = e.target.closest('.army-rule-item');
       if (!item) return;
@@ -211,7 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const opts = state.selectedUnit.squadOptions || [];
         squadOption = opts[idx] || null;
       } else {
-        // Single cost option
         const opts = state.selectedUnit.squadOptions || [];
         squadOption = opts[0] || null;
       }
@@ -366,6 +462,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── Chapter dropdown ──────────────────────────────────────────────────
+  function updateChapterDropdown(factionName) {
+    const group  = document.getElementById('army-chapter-group');
+    const select = document.getElementById('army-chapter-select');
+    state.selectedChapter = null;
+    const chapters = (factionName && factionName !== 'all')
+      ? (state.chaptersMap[factionName] || [])
+      : [];
+    if (chapters.length === 0) {
+      group.hidden = true;
+      select.innerHTML = '<option value="">— All —</option>';
+      return;
+    }
+    group.hidden = false;
+    select.innerHTML = '<option value="">— All —</option>' +
+      chapters
+        .sort()
+        .map(c => {
+          const label = c.includes(' - ') ? c.split(' - ').pop() : c;
+          return `<option value="${c}">${label}</option>`;
+        })
+        .join('');
+  }
+
   // ── Detachment options ────────────────────────────────────────────────
   function updateDetachmentOptions(faction) {
     const select = document.getElementById('army-detachment-select');
@@ -376,8 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Prefer explicitly-extracted detachments from the parser; fall back to
-    // armyRules whose names contain detachment-related keywords.
+    // Use explicitly-extracted detachments; fall back to armyRules with detachment keywords
     let detachments = (faction.detachments || []).slice();
     if (detachments.length === 0) {
       detachments = (faction.armyRules || []).filter(r =>

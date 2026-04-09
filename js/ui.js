@@ -8,6 +8,31 @@ window.UI = (() => {
 
   function init(state) {
     _state = state;
+    initTooltip();
+  }
+
+  // ── Global tooltip (fixed-position, never clipped) ────────────────────
+  function initTooltip() {
+    const tip = document.getElementById('global-tooltip');
+    if (!tip) return;
+    document.addEventListener('mouseover', e => {
+      const el = e.target.closest('[data-tooltip]');
+      if (!el) { tip.hidden = true; return; }
+      tip.textContent = el.dataset.tooltip;
+      tip.hidden = false;
+      const r  = el.getBoundingClientRect();
+      const tw = tip.offsetWidth;
+      const th = tip.offsetHeight;
+      let top  = r.top - th - 8;
+      let left = r.left + r.width / 2 - tw / 2;
+      if (top < 4) top = r.bottom + 8;
+      left = Math.max(4, Math.min(left, window.innerWidth - tw - 4));
+      tip.style.top  = top  + 'px';
+      tip.style.left = left + 'px';
+    });
+    document.addEventListener('mouseout', e => {
+      if (!e.relatedTarget || !e.relatedTarget.closest('[data-tooltip]')) tip.hidden = true;
+    });
   }
 
   // ── Toast notifications ───────────────────────────────────────────────
@@ -80,12 +105,14 @@ window.UI = (() => {
   }
 
   // ── Faction filter dropdown (army panel) ──────────────────────────────
-  function updateFactionFilter(factions) {
+  function updateFactionFilter(factions, chapterFactions = new Set()) {
     const filter = document.getElementById('army-faction-select');
     const current = filter.value;
     filter.innerHTML = '<option value="all">All Factions</option>';
     if (factions && factions.length > 0) {
-      const sorted = [...factions].sort((a, b) => a.factionName.localeCompare(b.factionName));
+      const sorted = [...factions]
+        .filter(f => !chapterFactions.has(f.factionName))
+        .sort((a, b) => a.factionName.localeCompare(b.factionName));
       sorted.forEach(f => {
         const opt = document.createElement('option');
         opt.value = f.factionName;
@@ -158,14 +185,16 @@ window.UI = (() => {
   }
 
   // ── Unit roster (center panel) ────────────────────────────────────────
-  function renderUnitRoster(units, searchTerm, factionFilter, selectedUnitId) {
+  function renderUnitRoster(units, searchTerm, factionFilter, selectedUnitId, linkedFactions = []) {
     const grid  = document.getElementById('unit-grid');
     const badge = document.getElementById('unit-count-badge');
     const empty = document.getElementById('roster-empty');
 
     let filtered = units || [];
     if (factionFilter && factionFilter !== 'all') {
-      filtered = filtered.filter(u => u._factionName === factionFilter);
+      filtered = filtered.filter(u =>
+        u._factionName === factionFilter || linkedFactions.includes(u._factionName)
+      );
     }
     if (searchTerm) {
       const s = searchTerm.toLowerCase();
@@ -367,7 +396,7 @@ window.UI = (() => {
                         const kws = String(w[c]).split(',').map(k => k.trim()).filter(Boolean);
                         return `<td class="weapon-keywords-cell">${kws.map(k => {
                           const d = w._keywordDefs && w._keywordDefs[k];
-                          return `<span class="weapon-kw-tag${d ? ' has-tooltip' : ''}"${d ? ` data-kw-tip="${escapeHtml(d)}"` : ''}>${escapeHtml(k)}</span>`;
+                          return `<span class="weapon-kw-tag${d ? ' has-tooltip' : ''}"${d ? ` data-tooltip="${escapeHtml(d)}"` : ''}>${escapeHtml(k)}</span>`;
                         }).join('')}</td>`;
                       }
                       return `<td>${escapeHtml(String(w[c] != null ? w[c] : '—'))}</td>`;
@@ -396,7 +425,7 @@ window.UI = (() => {
       html += `<div class="detail-section">
         <div class="detail-section-title">Core Abilities</div>
         <div class="core-abilities-list">
-          ${coreAbilities.map(a => `<span class="core-ability-tag">${escapeHtml(a.name)}</span>`).join('')}
+          ${coreAbilities.map(a => `<span class="core-ability-tag"${a.description ? ` data-tooltip="${escapeHtml(a.description)}"` : ''}>${escapeHtml(a.name)}</span>`).join('')}
         </div>
       </div>`;
     }

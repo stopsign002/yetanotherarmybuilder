@@ -8,27 +8,10 @@
 </head>
 <body>
 
-  <!-- Header -->
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="header-title">
-        <span class="header-icon">&#9876;</span>
-        <h1>Yet Another Army Builder</h1>
-      </div>
-      <div class="header-center" id="header-center">
-        <div class="load-status" id="load-status" hidden>
-          <span class="spinner" id="load-spinner"></span>
-          <span id="load-status-text">Loading factions…</span>
-          <span id="load-status-count" class="load-status-count"></span>
-        </div>
-      </div>
-      <div class="header-subtitle">Warhammer 40,000</div>
-    </div>
-    <!-- Thin progress bar under header -->
-    <div class="page-progress-wrap" id="page-progress-wrap" hidden>
-      <div class="page-progress-bar" id="page-progress-bar"></div>
-    </div>
-  </header>
+  <!-- Slim loading progress strip at top of viewport -->
+  <div class="page-progress-wrap" id="page-progress-wrap" hidden>
+    <div class="page-progress-bar" id="page-progress-bar"></div>
+  </div>
 
   <!-- Main Three-Panel Layout: Army | [handle] | Units | [handle] | Details -->
   <main class="app-main" id="app-main">
@@ -53,12 +36,18 @@
           </div>
         </div>
 
-        <!-- Faction / Detachment Selection -->
+        <!-- Faction / Chapter / Detachment Selection -->
         <div class="army-selection-section">
           <div class="form-group">
             <label for="army-faction-select" class="form-label">Army / Faction</label>
             <select id="army-faction-select" class="form-select">
               <option value="all">All Factions</option>
+            </select>
+          </div>
+          <div class="form-group" id="army-chapter-group" hidden>
+            <label for="army-chapter-select" class="form-label">Chapter / Supplement</label>
+            <select id="army-chapter-select" class="form-select">
+              <option value="">— All —</option>
             </select>
           </div>
           <div class="form-group">
@@ -135,6 +124,11 @@
     <section class="panel panel-center" id="panel-center">
       <div class="panel-header">
         <h2>Units</h2>
+        <div class="load-status" id="load-status" hidden>
+          <span class="spinner" id="load-spinner"></span>
+          <span id="load-status-text">Loading&hellip;</span>
+          <span id="load-status-count" class="load-status-count"></span>
+        </div>
         <span class="unit-count-badge" id="unit-count-badge">0 units</span>
       </div>
 
@@ -214,6 +208,9 @@
 
   <!-- Toast notifications -->
   <div class="toast-container" id="toast-container"></div>
+
+  <!-- Global tooltip (JS-positioned) -->
+  <div id="global-tooltip" class="global-tooltip" hidden></div>
 
   <!-- Scripts (order matters) -->
   <script src="js/bsdata.js"></script>
