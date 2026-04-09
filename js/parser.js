@@ -254,7 +254,7 @@ window.WahapediaParser = (() => {
         const name = getAttr(rule, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         const descEl = rule.querySelector(':scope > description');
-        abilities.push({ name, description: descEl ? descEl.textContent.trim() : '' });
+        abilities.push({ name, description: descEl ? descEl.textContent.trim() : '', isCore: true });
       }
     });
 
@@ -287,46 +287,40 @@ window.WahapediaParser = (() => {
 
   /**
    * Collects optional wargear/weapon choices for display as "Wargear Options".
-   * Looks at both unit-level and model-level selectionEntryGroups.
-   * Returns [{ name, choices: [{name, description}], max }]
+   * The selectionEntryGroup name IS the human-readable option sentence (e.g.
+   * "For every 5 models in this unit, 1 storm bolter can be replaced with one of the following:").
+   * Children of that group are the individual choices.
+   * Returns [{ name, choices: [{name}], max }]
    */
   function collectWargearOptions(entryEl, entriesById) {
     const options = [];
+    const seenGroupIds = new Set();
 
-    function getChoiceDescription(choiceEl) {
-      // Try direct ability profile first
-      for (const profile of choiceEl.querySelectorAll(':scope > profiles > profile')) {
-        if (classifyProfile(profile) === 'ability') {
-          const descEl = profile.querySelector('characteristic[name="Description"]');
-          if (descEl && descEl.textContent.trim()) return descEl.textContent.trim();
-        }
-      }
-      // Try weapon profile description-like fields (Abilities / Keywords column)
-      for (const profile of choiceEl.querySelectorAll(':scope > profiles > profile')) {
-        const k = profile.querySelector('characteristic[name="Keywords"]') ||
-                  profile.querySelector('characteristic[name="Abilities"]');
-        if (k && k.textContent.trim()) return k.textContent.trim();
-      }
-      return '';
-    }
-
-    function processGroup(group, prefix) {
+    function processGroup(group) {
       if (getAttr(group, 'hidden', 'false') === 'true') return;
+      const groupId = group.getAttribute('id');
+      if (groupId && seenGroupIds.has(groupId)) return;
+      if (groupId) seenGroupIds.add(groupId);
+
       const groupName = getAttr(group, 'name', '').trim();
       if (!groupName || /^new\s/i.test(groupName)) return;
 
-      // Skip squad-size groups (those containing model/unit entries)
-      if (group.querySelector(':scope > selectionEntries > selectionEntry[type="model"]') ||
-          group.querySelector(':scope > selectionEntries > selectionEntry[type="unit"]')) return;
+      // Skip squad-size selectors: groups with BOTH model/unit children AND size constraints
+      const hasModelOrUnit = group.querySelector(':scope > selectionEntries > selectionEntry[type="model"]') ||
+                             group.querySelector(':scope > selectionEntries > selectionEntry[type="unit"]');
+      const hasSizeConstraint = group.querySelector(':scope > constraints > constraint[type="min"], :scope > constraints > constraint[type="max"]');
+      if (hasModelOrUnit && hasSizeConstraint) return;
 
       const choices = [];
 
-      // Inline selectionEntries
+      // Inline selectionEntries (skip model/unit type — only equipment/upgrade/etc.)
       group.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
         if (getAttr(entry, 'hidden', 'false') === 'true') return;
+        const t = getAttr(entry, 'type', '');
+        if (t === 'model' || t === 'unit') return;
         const name = getAttr(entry, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
-        choices.push({ name, description: getChoiceDescription(entry) });
+        choices.push({ name });
       });
 
       // entryLinks → resolve name from shared index
@@ -334,9 +328,7 @@ window.WahapediaParser = (() => {
         if (getAttr(link, 'hidden', 'false') === 'true') return;
         const name = getAttr(link, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
-        const target = entriesById.get(getAttr(link, 'targetId'));
-        const desc = target ? getChoiceDescription(target) : '';
-        choices.push({ name, description: desc });
+        choices.push({ name });
       });
 
       if (choices.length === 0) return;
@@ -349,23 +341,32 @@ window.WahapediaParser = (() => {
         }
       });
 
-      const displayName = prefix ? `${prefix} — ${groupName}` : groupName;
-      options.push({ name: displayName, choices, max: maxSel });
+      options.push({ name: groupName, choices, max: maxSel });
     }
 
     // Unit-level groups
     entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
-      processGroup(group, null);
+      processGroup(group);
     });
 
-    // Model-level groups (one level into inline model entries)
+    // Inline model-level groups
     entryEl.querySelectorAll(
       ':scope > selectionEntries > selectionEntry[type="model"], ' +
       ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="model"]'
     ).forEach(model => {
-      const modelName = getAttr(model, 'name', '').trim();
       model.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
-        processGroup(group, modelName);
+        processGroup(group);
+      });
+    });
+
+    // EntryLink-referenced model/unit entries (e.g. Necrons, SM patterns)
+    entryEl.querySelectorAll(
+      ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink'
+    ).forEach(link => {
+      const target = entriesById.get(getAttr(link, 'targetId'));
+      if (!target) return;
+      target.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+        processGroup(group);
       });
     });
 
@@ -434,6 +435,33 @@ window.WahapediaParser = (() => {
       if (groupMin !== null) minModels = (minModels || 0) + groupMin;
       if (groupMax !== null) maxModels = (maxModels || 0) + groupMax;
     });
+
+    // Pattern C: flat constraints directly on the selectionEntry itself
+    if (minModels === null && maxModels === null) {
+      entryEl.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+        const val = Math.round(parseFloat(getAttr(c, 'value', '0')));
+        if (!isNaN(val) && val > 0) {
+          if (getAttr(c, 'type') === 'min') minModels = val;
+          if (getAttr(c, 'type') === 'max') maxModels = val;
+        }
+      });
+    }
+
+    // Pattern D: sum ungrouped child model entry constraints
+    if (minModels === null && maxModels === null) {
+      entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(model => {
+        let mMin = null, mMax = null;
+        model.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+          const val = Math.round(parseFloat(getAttr(c, 'value', '0')));
+          if (!isNaN(val) && val > 0) {
+            if (getAttr(c, 'type') === 'min') mMin = val;
+            if (getAttr(c, 'type') === 'max') mMax = val;
+          }
+        });
+        if (mMin !== null) minModels = (minModels || 0) + mMin;
+        if (mMax !== null) maxModels = (maxModels || 0) + mMax;
+      });
+    }
 
     const squadOptions = [];
     if (basePts > 0) squadOptions.push({ pts: basePts, models: minModels });
@@ -512,6 +540,33 @@ window.WahapediaParser = (() => {
     const { points, pointsOptions, squadOptions } = findCosts(entryEl, entriesById);
     const descEl = entryEl.querySelector(':scope > description');
 
+    // Build name→description lookup for weapon keyword tooltips
+    const rulesByName = new Map();
+    for (const rule of rulesById.values()) {
+      const n    = getAttr(rule, 'name', '').trim();
+      const desc = rule.querySelector(':scope > description')?.textContent?.trim() || '';
+      if (n) rulesByName.set(n.toLowerCase(), desc);
+    }
+    // Attach keyword descriptions to each weapon for tooltip display
+    weapons.forEach(w => {
+      if (!w.Keywords) return;
+      const defs = {};
+      String(w.Keywords).split(',').map(k => k.trim()).filter(Boolean).forEach(k => {
+        const desc = rulesByName.get(k.toLowerCase());
+        if (desc) defs[k] = desc;
+      });
+      if (Object.keys(defs).length) w._keywordDefs = defs;
+    });
+
+    // Weapon keyword names — used to filter these out of core abilities
+    const weaponKeywordNames = new Set();
+    weapons.forEach(w => {
+      if (w.Keywords) {
+        String(w.Keywords).split(',').map(k => k.trim()).filter(Boolean)
+          .forEach(k => weaponKeywordNames.add(k.toLowerCase()));
+      }
+    });
+
     // Extract invulnerable save from abilities (or directly from stats)
     let invulnSave = stats['INV'] || stats['Invulnerable Save'] || null;
     if (!invulnSave) {
@@ -524,8 +579,10 @@ window.WahapediaParser = (() => {
       }
     }
 
-    // Remove invuln save from abilities list (displayed in stat line instead)
-    const abilities = allAbilities.filter(a => !/invulnerable\s+save/i.test(a.name));
+    // Remove invuln save from abilities list; also filter weapon keywords out of core abilities
+    const abilities = allAbilities
+      .filter(a => !/invulnerable\s+save/i.test(a.name))
+      .filter(a => !a.isCore || !weaponKeywordNames.has(a.name.toLowerCase()));
 
     return {
       id, name, type,

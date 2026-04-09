@@ -982,10 +982,30 @@ ul { list-style: none; }
 .unit-detail-content { display: flex; flex-direction: column; gap: 0; }
 
 .detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 14px;
 }
+.detail-header-main { flex: 1; min-width: 0; }
+.btn-google-search {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.15s, border-color 0.15s;
+  margin-top: 2px;
+}
+.btn-google-search:hover { opacity: 1; border-color: var(--border-light); }
 .detail-name {
   font-size: 20px;
   font-weight: 700;
@@ -1068,29 +1088,91 @@ ul { list-style: none; }
 
 .detail-ability {
   font-size: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   line-height: 1.5;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
 }
 .detail-ability-name { font-weight: 700; margin-right: 4px; }
 .detail-ability-desc { color: var(--text-muted); }
 
-.detail-images-section {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px;
-}
-.detail-images-desc {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-  line-height: 1.5;
-}
-.detail-images-buttons {
+/* Core abilities — system-wide rules displayed as name plaques */
+.core-abilities-list {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
-.detail-img-btn { flex: 1; font-size: 12px; }
+.core-ability-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  color: #a8d8a8;
+  background: rgba(168,216,168,0.08);
+  border: 1px solid rgba(168,216,168,0.25);
+  display: inline-block;
+}
+
+/* Weapon keyword tags in weapons table */
+.weapon-keywords-cell { white-space: normal; }
+.weapon-kw-tag {
+  display: inline-block;
+  font-size: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin: 1px 2px;
+  white-space: nowrap;
+}
+.weapon-kw-tag.has-tooltip {
+  cursor: help;
+  border-color: rgba(90,181,232,0.4);
+  position: relative;
+}
+.weapon-kw-tag.has-tooltip:hover::after {
+  content: attr(data-kw-tip);
+  position: absolute;
+  z-index: 200;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e1e1e;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 7px 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text);
+  max-width: 280px;
+  width: max-content;
+  white-space: normal;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+}
+
+/* Wargear options bullet list */
+.wargear-option-list {
+  list-style: disc;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.wargear-option-item {
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.wargear-choice-list {
+  list-style: circle;
+  padding-left: 20px;
+  margin-top: 3px;
+  color: var(--text-muted);
+}
+
 
 /* ── Unit Detail Modal (legacy — keep weapons-table styles) ─ */
 .unit-detail-meta {
@@ -1327,38 +1409,4 @@ ul { list-style: none; }
   padding: 2px 7px;
 }
 
-/* ── Wargear options ─────────────────────────────────────── */
-.detail-wargear-group { margin-bottom: 10px; }
-.detail-wargear-group-name {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: 5px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.detail-wargear-choices {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.wargear-choice-tag {
-  font-size: 11px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border-light);
-  color: var(--text);
-  border-radius: 3px;
-  padding: 2px 8px;
-}
-.wargear-choice-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 4px;
-}
-.wargear-choice-desc {
-  font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.4;
-  padding-left: 4px;
-}
+/* ── Wargear options (bullet list) ─────────────────────────── */

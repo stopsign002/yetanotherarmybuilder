@@ -271,12 +271,22 @@ window.UI = (() => {
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     html += `
       <div class="detail-header">
-        <div class="detail-name">${escapeHtml(unit.name)}</div>
-        <div class="detail-meta">
-          ${unit._factionName ? `<span class="detail-faction">${escapeHtml(unit._factionName)}</span>` : ''}
-          ${unit.type ? `<span class="detail-type">${escapeHtml(unit.type)}</span>` : ''}
-          ${ptsOpts.length > 0 ? `<span class="detail-pts">${ptsOpts.join(' / ')} pts</span>` : ''}
+        <div class="detail-header-main">
+          <div class="detail-name">${escapeHtml(unit.name)}</div>
+          <div class="detail-meta">
+            ${unit._factionName ? `<span class="detail-faction">${escapeHtml(unit._factionName)}</span>` : ''}
+            ${unit.type ? `<span class="detail-type">${escapeHtml(unit.type)}</span>` : ''}
+            ${ptsOpts.length > 0 ? `<span class="detail-pts">${ptsOpts.join(' / ')} pts</span>` : ''}
+          </div>
         </div>
+        <button class="btn-google-search" id="btn-google-images" data-unit="${escapeHtml(unit.name)}" title="Search Google Images">
+          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+        </button>
       </div>
     `;
 
@@ -337,7 +347,7 @@ window.UI = (() => {
           ? ['Range','A','BS','S','AP','D','Keywords']
           : ['Range','A','WS','S','AP','D','Keywords'];
         const allCols = new Set();
-        list.forEach(w => Object.keys(w).forEach(k => { if (k !== 'name' && k !== '_typeName') allCols.add(k); }));
+        list.forEach(w => Object.keys(w).forEach(k => { if (k !== 'name' && k !== '_typeName' && k !== '_keywordDefs') allCols.add(k); }));
         const cols = COLS.filter(c => allCols.has(c));
 
         const label = type === 'ranged' ? 'Ranged Weapons' : 'Melee Weapons';
@@ -352,7 +362,16 @@ window.UI = (() => {
                 <tbody>
                   ${list.map(w => `<tr>
                     <td class="weapon-type-${type}">${escapeHtml(w.name)}</td>
-                    ${cols.map(c => `<td>${escapeHtml(String(w[c] != null ? w[c] : '—'))}</td>`).join('')}
+                    ${cols.map(c => {
+                      if (c === 'Keywords' && w[c]) {
+                        const kws = String(w[c]).split(',').map(k => k.trim()).filter(Boolean);
+                        return `<td class="weapon-keywords-cell">${kws.map(k => {
+                          const d = w._keywordDefs && w._keywordDefs[k];
+                          return `<span class="weapon-kw-tag${d ? ' has-tooltip' : ''}"${d ? ` data-kw-tip="${escapeHtml(d)}"` : ''}>${escapeHtml(k)}</span>`;
+                        }).join('')}</td>`;
+                      }
+                      return `<td>${escapeHtml(String(w[c] != null ? w[c] : '—'))}</td>`;
+                    }).join('')}
                   </tr>`).join('')}
                 </tbody>
               </table>
@@ -367,9 +386,20 @@ window.UI = (() => {
       </div>`;
     }
 
-    // Separate leader abilities from regular abilities
-    const leaderAbilities  = abilities.filter(a => /can be attached to/i.test(a.description));
-    const regularAbilities = abilities.filter(a => !/can be attached to/i.test(a.description));
+    // Separate abilities into core (system rules) / leader / regular
+    const coreAbilities    = abilities.filter(a => a.isCore);
+    const leaderAbilities  = abilities.filter(a => !a.isCore && /can be attached to/i.test(a.description));
+    const regularAbilities = abilities.filter(a => !a.isCore && !/can be attached to/i.test(a.description));
+
+    // Core Abilities section — system-wide rules like Deep Strike, Fights First
+    if (coreAbilities.length > 0) {
+      html += `<div class="detail-section">
+        <div class="detail-section-title">Core Abilities</div>
+        <div class="core-abilities-list">
+          ${coreAbilities.map(a => `<span class="core-ability-tag">${escapeHtml(a.name)}</span>`).join('')}
+        </div>
+      </div>`;
+    }
 
     // Leader section — what units this model can lead
     if (leaderAbilities.length > 0) {
@@ -433,29 +463,26 @@ window.UI = (() => {
       html += `</div>`;
     }
 
-    // Wargear Options
+    // Wargear Options — bullet list matching real card format
     if (wargearOpts.length > 0) {
       html += `<div class="detail-section">
-        <div class="detail-section-title">Wargear Options</div>`;
+        <div class="detail-section-title">Wargear Options</div>
+        <ul class="wargear-option-list">`;
       wargearOpts.forEach(opt => {
-        const maxText = opt.max != null ? ` (max ${opt.max})` : '';
-        html += `<div class="detail-wargear-group">
-          <div class="detail-wargear-group-name">${escapeHtml(opt.name)}${escapeHtml(maxText)}</div>
-          <div class="detail-wargear-choices">
-            ${opt.choices.map(c => {
-              const name = typeof c === 'object' ? c.name : c;
-              const desc = typeof c === 'object' ? c.description : '';
-              return desc
-                ? `<div class="wargear-choice-item">
-                     <span class="wargear-choice-tag">${escapeHtml(name)}</span>
-                     <span class="wargear-choice-desc">${escapeHtml(desc)}</span>
-                   </div>`
-                : `<span class="wargear-choice-tag">${escapeHtml(name)}</span>`;
-            }).join('')}
-          </div>
-        </div>`;
+        const name = typeof opt === 'object' ? opt.name : opt;
+        const choices = (typeof opt === 'object' && opt.choices) ? opt.choices : [];
+        html += `<li class="wargear-option-item">${escapeHtml(name)}`;
+        if (choices.length > 0) {
+          html += `<ul class="wargear-choice-list">${
+            choices.map(c => {
+              const cn = typeof c === 'object' ? c.name : c;
+              return `<li>${escapeHtml(cn)}</li>`;
+            }).join('')
+          }</ul>`;
+        }
+        html += `</li>`;
       });
-      html += `</div>`;
+      html += `</ul></div>`;
     }
 
     // Keywords
@@ -468,36 +495,16 @@ window.UI = (() => {
       </div>`;
     }
 
-    // Google / Bing image search
-    html += `
-      <div class="detail-section detail-images-section">
-        <div class="detail-section-title">Find Images</div>
-        <p class="detail-images-desc">Search for how this unit looks painted and on the battlefield.</p>
-        <div class="detail-images-buttons">
-          <button class="btn btn-outline detail-img-btn" id="btn-google-images" data-unit="${escapeHtml(unit.name)}">
-            &#128269; Google
-          </button>
-          <button class="btn btn-outline detail-img-btn" id="btn-bing-images" data-unit="${escapeHtml(unit.name)}">
-            &#128269; Bing
-          </button>
-        </div>
-      </div>
-    `;
-
     html += `</div>`; // .unit-detail-content
 
     const existing = panel.querySelector('.unit-detail-content');
     if (existing) existing.remove();
     panel.insertAdjacentHTML('beforeend', html);
 
-    // Wire image search buttons
+    // Wire Google image search button (header top-right)
     document.getElementById('btn-google-images').addEventListener('click', e => {
       const name = e.currentTarget.dataset.unit;
       window.open('https://www.google.com/search?q=' + encodeURIComponent('warhammer 40k ' + name + ' miniature') + '&tbm=isch', 'yaab_img');
-    });
-    document.getElementById('btn-bing-images').addEventListener('click', e => {
-      const name = e.currentTarget.dataset.unit;
-      window.open('https://www.bing.com/images/search?q=' + encodeURIComponent('warhammer 40k ' + name + ' miniature'), 'yaab_img');
     });
   }
 
