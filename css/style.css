@@ -1172,6 +1172,37 @@ ul { list-style: none; }
   margin-top: 3px;
   color: var(--text-muted);
 }
+.wargear-model-ctx {
+  list-style: none;
+  margin-bottom: 8px;
+}
+.wargear-model-name {
+  font-weight: 600;
+  color: var(--accent);
+}
+.wargear-suboption-list {
+  list-style: none;
+  padding-left: 14px;
+  margin-top: 4px;
+}
+.wargear-suboption-header {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+.wargear-choice-item {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.wargear-choice-item::before {
+  content: '• ';
+  color: var(--accent);
+  opacity: 0.6;
+}
 
 
 /* ── Unit Detail Modal (legacy — keep weapons-table styles) ─ */

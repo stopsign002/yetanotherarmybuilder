@@ -65,9 +65,6 @@ window.Storage = (() => {
     entries.forEach(entry => {
       const pts = (entry.unitData.points || 0) * entry.count;
       lines.push(`${entry.count}x ${entry.unitName} [${pts} pts]`);
-      if (entry.unitData.keywords && entry.unitData.keywords.length > 0) {
-        lines.push(`  Keywords: ${entry.unitData.keywords.join(', ')}`);
-      }
     });
 
     lines.push('');

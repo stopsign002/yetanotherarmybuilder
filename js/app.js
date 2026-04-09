@@ -315,11 +315,16 @@ document.addEventListener('DOMContentLoaded', () => {
       UI.toast('Exported as JSON', 'success');
     });
 
-    document.getElementById('btn-export-text').addEventListener('click', () => {
+    document.getElementById('btn-export-text').addEventListener('click', async () => {
       const text = Storage.exportArmyToText(state.currentArmy);
-      const name = (state.currentArmy.name || 'army').replace(/[^a-z0-9_-]/gi, '_');
-      Storage.downloadFile(text, `${name}.txt`, 'text/plain');
-      UI.toast('Exported as text', 'success');
+      try {
+        await navigator.clipboard.writeText(text);
+        UI.toast('Army list copied to clipboard', 'success');
+      } catch (_) {
+        const name = (state.currentArmy.name || 'army').replace(/[^a-z0-9_-]/gi, '_');
+        Storage.downloadFile(text, `${name}.txt`, 'text/plain');
+        UI.toast('Clipboard unavailable — downloaded instead', 'info');
+      }
     });
 
     document.getElementById('btn-export-csv').addEventListener('click', () => {
@@ -362,8 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Detachment options ────────────────────────────────────────────────
-  // Populated from faction data — currently parses rules named like "Detachment:"
-  // from faction abilities; can be enhanced as BSData detachment structure is known.
   function updateDetachmentOptions(faction) {
     const select = document.getElementById('army-detachment-select');
     select.innerHTML = '';
@@ -373,14 +376,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Look for army rules whose names suggest they are detachment rules
-    const allRules = (faction.armyRules || []).concat(faction.stratagems || []);
-    const detachments = allRules
-      .filter(a => /detachment/i.test(a.name))
-      .map(a => ({ name: a.name.replace(/detachment[:\s]*/i, '').trim() || a.name, ability: a }));
+    // Prefer explicitly-extracted detachments from the parser; fall back to
+    // armyRules whose names contain detachment-related keywords.
+    let detachments = (faction.detachments || []).slice();
+    if (detachments.length === 0) {
+      detachments = (faction.armyRules || []).filter(r =>
+        /detachment|task\s*force|spearhead|assault\s*force|siege\s*force/i.test(r.name)
+      );
+    }
 
     if (detachments.length === 0) {
-      select.innerHTML = '<option value="">— Custom / No Detachment —</option>';
+      select.innerHTML = '<option value="">— No Detachments Found —</option>';
       return;
     }
 

@@ -286,34 +286,19 @@ window.WahapediaParser = (() => {
   // ── Wargear options collection ────────────────────────────────────────────
 
   /**
-   * Collects optional wargear/weapon choices for display as "Wargear Options".
-   * The selectionEntryGroup name IS the human-readable option sentence (e.g.
-   * "For every 5 models in this unit, 1 storm bolter can be replaced with one of the following:").
-   * Children of that group are the individual choices.
-   * Returns [{ name, choices: [{name}], max }]
+   * Collects wargear options for display.
+   * Returns two types of entries:
+   *   { type:'model', modelName, modelMax, subOptions:[{name, choices}] }
+   *     — a model variant within the squad that carries specific weapon options
+   *   { type:'choice', name, choices:[{name}], max }
+   *     — a direct equipment-choice group at the unit level
    */
   function collectWargearOptions(entryEl, entriesById) {
     const options = [];
-    const seenGroupIds = new Set();
+    const seenIds = new Set();
 
-    function processGroup(group) {
-      if (getAttr(group, 'hidden', 'false') === 'true') return;
-      const groupId = group.getAttribute('id');
-      if (groupId && seenGroupIds.has(groupId)) return;
-      if (groupId) seenGroupIds.add(groupId);
-
-      const groupName = getAttr(group, 'name', '').trim();
-      if (!groupName || /^new\s/i.test(groupName)) return;
-
-      // Skip squad-size selectors: groups with BOTH model/unit children AND size constraints
-      const hasModelOrUnit = group.querySelector(':scope > selectionEntries > selectionEntry[type="model"]') ||
-                             group.querySelector(':scope > selectionEntries > selectionEntry[type="unit"]');
-      const hasSizeConstraint = group.querySelector(':scope > constraints > constraint[type="min"], :scope > constraints > constraint[type="max"]');
-      if (hasModelOrUnit && hasSizeConstraint) return;
-
+    function getChoices(group) {
       const choices = [];
-
-      // Inline selectionEntries (skip model/unit type — only equipment/upgrade/etc.)
       group.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
         if (getAttr(entry, 'hidden', 'false') === 'true') return;
         const t = getAttr(entry, 'type', '');
@@ -322,52 +307,97 @@ window.WahapediaParser = (() => {
         if (!name || /^new\s/i.test(name)) return;
         choices.push({ name });
       });
-
-      // entryLinks → resolve name from shared index
       group.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
         if (getAttr(link, 'hidden', 'false') === 'true') return;
         const name = getAttr(link, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         choices.push({ name });
       });
-
-      if (choices.length === 0) return;
-
-      let maxSel = null;
-      group.querySelectorAll(':scope > constraints > constraint').forEach(c => {
-        if (getAttr(c, 'type') === 'max') {
-          const v = Math.round(parseFloat(getAttr(c, 'value', '0')));
-          if (!isNaN(v) && v > 0) maxSel = v;
-        }
-      });
-
-      options.push({ name: groupName, choices, max: maxSel });
+      return choices;
     }
 
-    // Unit-level groups
-    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
-      processGroup(group);
-    });
-
-    // Inline model-level groups
-    entryEl.querySelectorAll(
-      ':scope > selectionEntries > selectionEntry[type="model"], ' +
-      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="model"]'
-    ).forEach(model => {
-      model.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
-        processGroup(group);
+    function getMaxConstraint(el) {
+      let maxVal = null;
+      el.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+        if (getAttr(c, 'type') === 'max') {
+          const v = Math.round(parseFloat(getAttr(c, 'value', '0')));
+          if (!isNaN(v) && v > 0) maxVal = v;
+        }
       });
+      return maxVal;
+    }
+
+    // ── Category B: direct equipment-choice groups at unit level ─────────────
+    function processDirectGroup(group) {
+      if (getAttr(group, 'hidden', 'false') === 'true') return;
+      const groupId = group.getAttribute('id');
+      if (groupId && seenIds.has(groupId)) return;
+
+      const groupName = getAttr(group, 'name', '').trim();
+      if (!groupName || /^new\s/i.test(groupName)) return;
+
+      // Skip squad-size selectors: have model/unit children AND size constraints
+      const hasModelOrUnit = group.querySelector(':scope > selectionEntries > selectionEntry[type="model"]') ||
+                             group.querySelector(':scope > selectionEntries > selectionEntry[type="unit"]');
+      const hasSizeConstraint = group.querySelector(':scope > constraints > constraint[type="min"], :scope > constraints > constraint[type="max"]');
+      if (hasModelOrUnit && hasSizeConstraint) return;
+      if (groupId) seenIds.add(groupId);
+
+      const choices = getChoices(group);
+      if (choices.length === 0) return;
+      options.push({ type: 'choice', name: groupName, choices, max: getMaxConstraint(group) });
+    }
+
+    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      processDirectGroup(group);
     });
 
-    // EntryLink-referenced model/unit entries (e.g. Necrons, SM patterns)
+    // ── Category A: model variants inside squad groups ────────────────────────
+    function processModelEntry(modelEl) {
+      const modelId = modelEl.getAttribute('id');
+      if (modelId && seenIds.has(modelId)) return;
+
+      const modelName = getAttr(modelEl, 'name', '').trim();
+      if (!modelName || /^new\s/i.test(modelName)) return;
+
+      const subOptions = [];
+      modelEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+        if (getAttr(group, 'hidden', 'false') === 'true') return;
+        const gName = getAttr(group, 'name', '').trim();
+        if (!gName || /^new\s/i.test(gName)) return;
+        const choices = getChoices(group);
+        if (choices.length === 0) return;
+        subOptions.push({ name: gName, choices });
+      });
+
+      if (subOptions.length === 0) return;
+      if (modelId) seenIds.add(modelId);
+
+      const modelMax = getMaxConstraint(modelEl);
+      options.push({ type: 'model', modelName, modelMax, subOptions });
+    }
+
+    // Walk squad-size groups to find model variants
+    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      const hasModelOrUnit = group.querySelector(':scope > selectionEntries > selectionEntry[type="model"]') ||
+                             group.querySelector(':scope > selectionEntries > selectionEntry[type="unit"]');
+      const hasSizeConstraint = group.querySelector(':scope > constraints > constraint[type="min"], :scope > constraints > constraint[type="max"]');
+      if (!hasModelOrUnit || !hasSizeConstraint) return;
+      // This is a squad-size group — collect model variants within it
+      group.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"], ' +
+                             ':scope > selectionEntries > selectionEntry[type="unit"]').forEach(processModelEntry);
+    });
+
+    // Also handle inline ungrouped model entries
+    entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(processModelEntry);
+
+    // EntryLink-referenced entries
     entryEl.querySelectorAll(
       ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink'
     ).forEach(link => {
       const target = entriesById.get(getAttr(link, 'targetId'));
       if (!target) return;
-      target.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
-        processGroup(group);
-      });
+      processModelEntry(target);
     });
 
     return options;
@@ -654,6 +684,26 @@ window.WahapediaParser = (() => {
         armyRules.push({ name, description: descEl ? descEl.textContent.trim() : '' });
       });
 
+      // Detachments: sharedProfiles whose typeName or name looks like a detachment rule.
+      // BSData 10e stores these with typeNames like "Detachment Rule", "Detachment", etc.
+      const KNOWN_TYPENAMES = new Set([
+        'unit', 'model', 'ranged weapons', 'melee weapons', 'weapon', 'ranged', 'melee',
+        'stratagems', 'abilities', 'ability', 'invulnerable save', 'leader', 'transport',
+      ]);
+      const detachments = [];
+      root.querySelectorAll(':scope > sharedProfiles > profile').forEach(p => {
+        const tn = getAttr(p, 'typeName', '').toLowerCase().trim();
+        if (!tn || KNOWN_TYPENAMES.has(tn) || tn === 'stratagems') return;
+        if (getAttr(p, 'hidden', 'false') === 'true') return;
+        const name = getAttr(p, 'name', '').trim();
+        if (!name || /^new\s/i.test(name)) return;
+        if (/detachment|task\s*force|spearhead|assault\s*force|siege\s*force/i.test(tn) ||
+            /detachment|task\s*force|spearhead/i.test(name)) {
+          const descEl = p.querySelector('characteristic[name="Description"]');
+          detachments.push({ name, description: descEl ? descEl.textContent.trim() : '', typeName: tn });
+        }
+      });
+
       // Stratagems: sharedProfiles with typeName="Stratagems"
       const stratagems = [];
       root.querySelectorAll(':scope > sharedProfiles > profile').forEach(p => {
@@ -676,7 +726,7 @@ window.WahapediaParser = (() => {
         });
       });
 
-      return { factionName, filename, unitCount: units.length, units, armyRules, stratagems };
+      return { factionName, filename, unitCount: units.length, units, armyRules, stratagems, detachments };
 
     } catch (err) {
       console.error('[Parser] Error in', filename, err);

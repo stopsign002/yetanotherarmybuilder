@@ -430,14 +430,20 @@ window.UI = (() => {
       html += `</div>`;
     }
 
-    // "Led By" section — any unit whose leader ability mentions this unit by name
+    // "Led By" section — leaders whose ability exactly lists this unit by name
     const unitNameLower = unit.name.toLowerCase();
     const ledBy = (_state && _state.allUnits || [])
       .filter(u => u.id !== unit.id &&
-        (u.abilities || []).some(a =>
-          /can be attached to/i.test(a.description) &&
-          a.description.toLowerCase().includes(unitNameLower)
-        )
+        (u.abilities || []).some(a => {
+          if (!/can be attached to/i.test(a.description)) return false;
+          // Parse the bullet/comma-separated list of unit names and require exact match
+          const attachText = a.description.replace(/^.*?can be attached to[^:]*:/i, '').trim();
+          const unitList = attachText
+            .split(/[,■\n●•]+/)
+            .map(s => s.trim().toLowerCase())
+            .filter(s => s.length > 0);
+          return unitList.some(n => n === unitNameLower);
+        })
       )
       .map(u => ({ name: u.name, factionName: u._factionName }));
 
@@ -463,24 +469,47 @@ window.UI = (() => {
       html += `</div>`;
     }
 
-    // Wargear Options — bullet list matching real card format
+    // Wargear Options — two-type structure from parser
     if (wargearOpts.length > 0) {
       html += `<div class="detail-section">
         <div class="detail-section-title">Wargear Options</div>
         <ul class="wargear-option-list">`;
       wargearOpts.forEach(opt => {
-        const name = typeof opt === 'object' ? opt.name : opt;
-        const choices = (typeof opt === 'object' && opt.choices) ? opt.choices : [];
-        html += `<li class="wargear-option-item">${escapeHtml(name)}`;
-        if (choices.length > 0) {
-          html += `<ul class="wargear-choice-list">${
-            choices.map(c => {
-              const cn = typeof c === 'object' ? c.name : c;
-              return `<li>${escapeHtml(cn)}</li>`;
-            }).join('')
-          }</ul>`;
+        if (opt.type === 'model') {
+          // Model-context entry: "Up to X ModelName can be equipped with:"
+          const maxStr = opt.modelMax != null ? `Up to ${opt.modelMax} ` : '';
+          html += `<li class="wargear-option-item wargear-model-ctx">
+            <span class="wargear-model-name">${escapeHtml(maxStr + opt.modelName)}</span> can be equipped with:`;
+          if (opt.subOptions && opt.subOptions.length > 0) {
+            opt.subOptions.forEach(sub => {
+              html += `<ul class="wargear-suboption-list">`;
+              if (sub.name) {
+                html += `<li class="wargear-suboption-header">${escapeHtml(sub.name)}:</li>`;
+              }
+              (sub.choices || []).forEach(c => {
+                const cn = typeof c === 'object' ? c.name : c;
+                html += `<li class="wargear-choice-item">${escapeHtml(cn)}</li>`;
+              });
+              html += `</ul>`;
+            });
+          }
+          html += `</li>`;
+        } else {
+          // Direct choice entry
+          const name = typeof opt === 'object' ? (opt.name || '') : opt;
+          const choices = (typeof opt === 'object' && opt.choices) ? opt.choices : [];
+          const maxStr = (typeof opt === 'object' && opt.max != null) ? ` (max ${opt.max})` : '';
+          html += `<li class="wargear-option-item">${escapeHtml(name)}${escapeHtml(maxStr)}`;
+          if (choices.length > 0) {
+            html += `<ul class="wargear-choice-list">${
+              choices.map(c => {
+                const cn = typeof c === 'object' ? c.name : c;
+                return `<li>${escapeHtml(cn)}</li>`;
+              }).join('')
+            }</ul>`;
+          }
+          html += `</li>`;
         }
-        html += `</li>`;
       });
       html += `</ul></div>`;
     }
