@@ -105,23 +105,29 @@ window.UI = (() => {
   }
 
   // ── Faction filter dropdown (army panel) ──────────────────────────────
-  function updateFactionFilter(factions, chapterFactions = new Set()) {
+  // Options: { hide: Set<string>, extras: string[] } — hide names that should
+  // not appear (e.g. child chapters) and extras are virtual parent names to add.
+  function updateFactionFilter(factions, options = {}) {
+    const hide   = options.hide   || new Set();
+    const extras = options.extras || [];
     const filter = document.getElementById('army-faction-select');
     const current = filter.value;
     filter.innerHTML = '<option value="all">All Factions</option>';
-    if (factions && factions.length > 0) {
-      const sorted = [...factions]
-        .filter(f => !chapterFactions.has(f.factionName))
-        .sort((a, b) => a.factionName.localeCompare(b.factionName));
-      sorted.forEach(f => {
+    const names = new Set();
+    (factions || []).forEach(f => {
+      if (!hide.has(f.factionName)) names.add(f.factionName);
+    });
+    extras.forEach(n => names.add(n));
+    [...names]
+      .sort((a, b) => a.localeCompare(b))
+      .forEach(name => {
         const opt = document.createElement('option');
-        opt.value = f.factionName;
-        opt.textContent = f.factionName;
+        opt.value = name;
+        opt.textContent = name;
         filter.appendChild(opt);
       });
-      if ([...filter.options].some(o => o.value === current)) {
-        filter.value = current;
-      }
+    if ([...filter.options].some(o => o.value === current)) {
+      filter.value = current;
     }
   }
 

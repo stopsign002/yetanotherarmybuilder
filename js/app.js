@@ -13,15 +13,30 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedUnit:   null,
     factionFilter:  'all',  // controlled from army panel faction select
     selectedChapter: null,  // selected chapter/supplement within a faction
-    chaptersMap:    {},     // parentFactionName → [childFactionName, ...]
-    chapterFactions: new Set(), // all factions that are children of another
+    chaptersMap:    {},     // virtualParentName → [childFactionName, ...]
+    chapterFactions: new Set(), // all factions hidden as children of a virtual parent
+    virtualBase:    {},     // virtualParentName → base chapter factionName (for rules fallback)
   };
+
+  // ── Virtual parent factions ───────────────────────────────────────────
+  // These are hardcoded groupings that collapse related sub-factions under a
+  // single dropdown entry. Any loaded faction whose name starts with
+  // `<parent.name> - ` becomes a hidden child of that virtual parent, selectable
+  // via the chapter sub-dropdown. `baseChapter` is the sibling whose rules and
+  // generic units should always be shown alongside a specific chapter.
+  const VIRTUAL_PARENTS = [
+    {
+      name: 'Imperium - Adeptus Astartes',
+      baseChapter: 'Imperium - Adeptus Astartes - Space Marines',
+    },
+  ];
 
   UI.init(state);
 
   // ── Faction accent colors ─────────────────────────────────────────────
   // [accent, hover, dark, rgb]
   const FACTION_COLORS = {
+    'Adeptus Astartes':    ['#0062ae', '#1e82d0', '#004d8a', '0, 98, 174'],
     'Space Marines':       ['#0062ae', '#1e82d0', '#004d8a', '0, 98, 174'],
     'Blood Angels':        ['#9b0000', '#be1a1a', '#6e0000', '155, 0, 0'],
     'Dark Angels':         ['#1a5c1a', '#267a26', '#124012', '26, 92, 26'],
@@ -104,7 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Render helpers ────────────────────────────────────────────────────
   function renderAll() {
-    UI.updateFactionFilter(state.factions);
+    UI.updateFactionFilter(state.factions, {
+      hide:   state.chapterFactions,
+      extras: Object.keys(state.chaptersMap),
+    });
     const { factionFilter, linkedFactions } = getEffectiveFilter();
     UI.renderUnitRoster(
       state.allUnits,
@@ -138,39 +156,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function buildChaptersMap() {
     state.chaptersMap = {};
-    state.factions.forEach(f => {
-      const fParts = f.factionName.split(' - ').length;
-      (f.linkedCatalogues || []).forEach(parentName => {
-        const parent = state.factions.find(p => p.factionName === parentName);
-        if (!parent) return;
-        // Only treat f as a chapter of parent if f's name is MORE qualified (more parts)
-        // e.g. "Imperium - Adeptus Astartes - Blood Angels" (3) → parent "Imperium - Space Marines" (2)
-        // This prevents shared catalogues like "Agents of the Imperium" from being treated as parents
-        const pParts = parentName.split(' - ').length;
-        if (fParts <= pParts) return;
-        if (!state.chaptersMap[parentName]) state.chaptersMap[parentName] = [];
-        if (!state.chaptersMap[parentName].includes(f.factionName)) {
-          state.chaptersMap[parentName].push(f.factionName);
-        }
-      });
+    state.virtualBase = {};
+    state.chapterFactions = new Set();
+    // For each virtual parent, find all loaded factions whose name starts with
+    // "<parent> - " and collect them as hidden children.
+    VIRTUAL_PARENTS.forEach(vp => {
+      const prefix = vp.name + ' - ';
+      const children = state.factions
+        .filter(f => f.factionName.startsWith(prefix))
+        .map(f => f.factionName);
+      if (children.length === 0) return;
+      state.chaptersMap[vp.name] = children;
+      state.virtualBase[vp.name] = vp.baseChapter;
+      children.forEach(c => state.chapterFactions.add(c));
     });
-    state.chapterFactions = new Set(Object.values(state.chaptersMap).flat());
+  }
+
+  function getVirtualParentOf(chapterName) {
+    for (const [vp, children] of Object.entries(state.chaptersMap)) {
+      if (children.includes(chapterName)) return vp;
+    }
+    return null;
   }
 
   function getEffectiveFilter() {
+    // Case 1: a specific chapter is selected from the sub-dropdown.
+    // Show its own units plus the sibling "base" chapter (e.g. Space Marines)
+    // so generic units from the base are always available.
     if (state.selectedChapter) {
-      const chapterFaction = state.factions.find(f => f.factionName === state.selectedChapter);
-      const parents = (chapterFaction && chapterFaction.linkedCatalogues) || [];
-      return { factionFilter: state.selectedChapter, linkedFactions: parents };
+      const linked = [];
+      const vp = getVirtualParentOf(state.selectedChapter);
+      if (vp && state.virtualBase[vp] && state.virtualBase[vp] !== state.selectedChapter) {
+        linked.push(state.virtualBase[vp]);
+      }
+      return { factionFilter: state.selectedChapter, linkedFactions: linked };
     }
+    // Case 2: the virtual parent itself is selected — show all its children combined.
+    if (state.factionFilter !== 'all' && state.chaptersMap[state.factionFilter]) {
+      return {
+        factionFilter: state.factionFilter,
+        linkedFactions: state.chaptersMap[state.factionFilter],
+      };
+    }
+    // Case 3: a regular (non-virtual) faction is selected.
     if (state.factionFilter !== 'all') {
-      // Include both child chapters AND parent linked catalogues so selecting any
-      // faction (whether parent or sub-faction) shows the full combined unit pool
-      const chapters = state.chaptersMap[state.factionFilter] || [];
-      const selected = state.factions.find(f => f.factionName === state.factionFilter);
-      const parents  = (selected && selected.linkedCatalogues) || [];
-      const linked   = [...new Set([...chapters, ...parents])];
-      return { factionFilter: state.factionFilter, linkedFactions: linked };
+      return { factionFilter: state.factionFilter, linkedFactions: [] };
     }
     return { factionFilter: 'all', linkedFactions: [] };
   }
@@ -184,7 +214,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function getCurrentFaction() {
     const name = state.selectedChapter || (state.factionFilter !== 'all' ? state.factionFilter : null);
     if (!name) return null;
-    return state.factions.find(f => f.factionName === name) || null;
+    const direct = state.factions.find(f => f.factionName === name);
+    if (direct) return direct;
+    // Virtual parent: fall back to its base chapter's data for rules/detachments
+    if (state.virtualBase && state.virtualBase[name]) {
+      return state.factions.find(f => f.factionName === state.virtualBase[name]) || null;
+    }
+    return null;
   }
 
   // ── BSData auto-load ──────────────────────────────────────────────────
@@ -200,7 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
             state.factions.push(faction);
             rebuildAllUnits();
             buildChaptersMap();
-            UI.updateFactionFilter(state.factions);
+            UI.updateFactionFilter(state.factions, {
+              hide:   state.chapterFactions,
+              extras: Object.keys(state.chaptersMap),
+            });
             renderUnitRosterWithContext();
           }
         }
@@ -492,14 +531,20 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     group.hidden = false;
-    select.innerHTML = '<option value="">— All —</option>' +
-      chapters
-        .sort()
-        .map(c => {
-          const label = c.includes(' - ') ? c.split(' - ').pop() : c;
-          return `<option value="${c}">${label}</option>`;
-        })
-        .join('');
+    // Strip the virtual parent prefix so labels read e.g. "Blood Angels"
+    // instead of "Imperium - Adeptus Astartes - Blood Angels".
+    const prefix = factionName + ' - ';
+    select.innerHTML = '<option value="">— All Chapters —</option>';
+    chapters
+      .slice()
+      .sort()
+      .forEach(c => {
+        const label = c.startsWith(prefix) ? c.slice(prefix.length) : c;
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = label;
+        select.appendChild(opt);
+      });
   }
 
   // ── Detachment options ────────────────────────────────────────────────
