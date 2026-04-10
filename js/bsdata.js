@@ -104,6 +104,26 @@ window.BSData = (() => {
     const catFiles = files.filter(f => f.type === 'catalogue');
     const total = catFiles.length;
     let done = 0;
+
+    // ── Phase 1.5: load library catalogues into shared index ─────────────────
+    // Library catalogues (e.g. "Library - Tyranids.cat") contain shared unit
+    // definitions referenced by entryLink from main catalogues. Loading them into
+    // the shared index makes their sharedSelectionEntries resolvable during parse.
+    const libFiles = catFiles.filter(f => /^library[\s-]/i.test(f.name));
+    for (const lib of libFiles) {
+      try {
+        let xml = null;
+        try { xml = sessionStorage.getItem(GST_CACHE_PREFIX + lib.name); } catch (_) {}
+        if (!xml) {
+          xml = await fetchFile(lib.path);
+          try { sessionStorage.setItem(GST_CACHE_PREFIX + lib.name, xml); } catch (_) {}
+        }
+        WahapediaParser.addToSharedIndex(xml);
+      } catch (e) {
+        console.warn('[BSData] Failed to load library "' + lib.name + '":', e.message);
+      }
+    }
+
     let cursor = 0;
 
     async function worker() {
@@ -143,7 +163,7 @@ window.BSData = (() => {
 
   // ── Session cache helpers ────────────────────────────────────────────────
 
-  const FACTION_CACHE_PREFIX = 'yaab_bsf_10e_v3_';
+  const FACTION_CACHE_PREFIX = 'yaab_bsf_10e_v4_';
 
   function _getCachedFaction(name) {
     try {

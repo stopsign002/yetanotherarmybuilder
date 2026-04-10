@@ -131,19 +131,22 @@ window.UI = (() => {
     }
   }
 
-  // ── Faction rules in army panel (two sections: Army Rules + Stratagems) ─
-  function updateFactionRules(faction) {
+  // ── Faction rules in army panel (Army Rules + Detachment Rule + Stratagems) ─
+  function updateFactionRules(faction, detachment = null) {
     const section      = document.getElementById('army-rules-section');
     const armySubsec   = document.getElementById('army-rules-subsection');
+    const detSubsec    = document.getElementById('army-detachment-subsection');
     const stratSubsec  = document.getElementById('army-stratagem-subsection');
     const armyList     = document.getElementById('army-rules-list');
+    const detList      = document.getElementById('army-detachment-rules-list');
     const stratList    = document.getElementById('army-stratagems-list');
     if (!section || !armyList || !stratList) return;
 
     const rules      = (faction && faction.armyRules)  || [];
     const stratagems = (faction && faction.stratagems) || [];
+    const detRules   = (detachment && detachment.rules) || [];
 
-    if (rules.length === 0 && stratagems.length === 0) {
+    if (rules.length === 0 && stratagems.length === 0 && detRules.length === 0) {
       section.hidden = true;
       return;
     }
@@ -165,6 +168,25 @@ window.UI = (() => {
       });
     } else {
       armySubsec.hidden = true;
+    }
+
+    // Detachment Rule sub-section
+    if (detSubsec && detList) {
+      if (detRules.length > 0) {
+        detSubsec.hidden = false;
+        detList.innerHTML = '';
+        detRules.forEach(rule => {
+          const item = document.createElement('div');
+          item.className = 'army-rule-item';
+          item.dataset.ruleName = rule.name;
+          item.dataset.ruleDesc = rule.description || '';
+          item.dataset.ruleType = 'rule';
+          item.innerHTML = `<span>${escapeHtml(rule.name)}</span><span class="rule-arrow">&#9656;</span>`;
+          detList.appendChild(item);
+        });
+      } else {
+        detSubsec.hidden = true;
+      }
     }
 
     // Stratagems sub-section

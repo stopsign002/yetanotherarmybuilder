@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     chaptersMap:    {},     // virtualParentName → [childFactionName, ...]
     chapterFactions: new Set(), // all factions hidden as children of a virtual parent
     virtualBase:    {},     // virtualParentName → base chapter factionName (for rules fallback)
+    selectedDetachment: null,   // { name, rules[] } — currently selected detachment object
+    detachmentFaction:  null,   // faction object whose .detachments[] we're displaying
   };
 
   // ── Virtual parent factions ───────────────────────────────────────────
@@ -223,6 +225,20 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
+  function getDetachmentFaction() {
+    const faction = getCurrentFaction();
+    if (!faction) return null;
+    if (faction.detachments && faction.detachments.length > 0) return faction;
+    // Chapter sub-faction: fall back to the virtual parent's base chapter
+    const vp = state.selectedChapter
+      ? getVirtualParentOf(state.selectedChapter)
+      : (state.factionFilter !== 'all' ? getVirtualParentOf(state.factionFilter) : null);
+    if (vp && state.virtualBase[vp]) {
+      return state.factions.find(f => f.factionName === state.virtualBase[vp]) || faction;
+    }
+    return faction;
+  }
+
   // ── BSData auto-load ──────────────────────────────────────────────────
   async function autoLoadFromBSData() {
     try {
@@ -293,6 +309,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('army-faction-select').addEventListener('change', e => {
       state.factionFilter = e.target.value;
       state.selectedChapter = null;
+      state.selectedDetachment = null;
+      state.detachmentFaction  = null;
+      document.getElementById('army-detachment-select').value = '';
       applyFactionColor(state.factionFilter === 'all' ? null : state.factionFilter);
       updateChapterDropdown(state.factionFilter);
       renderUnitRosterWithContext();
@@ -304,6 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- Chapter / Supplement selector ----
     document.getElementById('army-chapter-select').addEventListener('change', e => {
       state.selectedChapter = e.target.value || null;
+      state.selectedDetachment = null;
+      state.detachmentFaction  = null;
+      document.getElementById('army-detachment-select').value = '';
       applyFactionColor(state.selectedChapter || state.factionFilter);
       renderUnitRosterWithContext();
       const faction = getCurrentFaction();
@@ -312,8 +334,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---- Detachment selector ----
-    document.getElementById('army-detachment-select').addEventListener('change', () => {
-      // Future: filter units by detachment requirements
+    document.getElementById('army-detachment-select').addEventListener('change', e => {
+      const detName = e.target.value;
+      const dets = (state.detachmentFaction && state.detachmentFaction.detachments) || [];
+      state.selectedDetachment = detName ? (dets.find(d => d.name === detName) || null) : null;
+      UI.updateFactionRules(getCurrentFaction(), state.selectedDetachment);
     });
 
     // ---- Search ----
@@ -548,31 +573,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Detachment options ────────────────────────────────────────────────
-  function updateDetachmentOptions(faction) {
+  function updateDetachmentOptions(_faction) {   // param kept for signature compat, ignored
     const select = document.getElementById('army-detachment-select');
-    select.innerHTML = '';
+    const detFaction = getDetachmentFaction();
+    state.detachmentFaction = detFaction;
 
-    if (!faction) {
+    if (!detFaction) {
       select.innerHTML = '<option value="">— Select Faction First —</option>';
       return;
     }
 
-    // Use explicitly-extracted detachments; fall back to armyRules with detachment keywords
-    let detachments = (faction.detachments || []).slice();
-    if (detachments.length === 0) {
-      detachments = (faction.armyRules || []).filter(r =>
-        /detachment|task\s*force|spearhead|assault\s*force|siege\s*force/i.test(r.name)
-      );
-    }
-
+    const detachments = (detFaction.detachments || []);
     if (detachments.length === 0) {
       select.innerHTML = '<option value="">— No Detachments Found —</option>';
       return;
     }
 
-    detachments.forEach((d, i) => {
+    select.innerHTML = '<option value="">— Select Detachment —</option>';
+    detachments.forEach(d => {
       const opt = document.createElement('option');
-      opt.value = i;
+      opt.value = d.name;
       opt.textContent = d.name;
       select.appendChild(opt);
     });

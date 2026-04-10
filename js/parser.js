@@ -216,10 +216,16 @@ window.WahapediaParser = (() => {
 
     el.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
       const target = entriesById.get(getAttr(link, 'targetId'));
-      if (target) weapons.push(...collectWeapons(target, entriesById, depth + 1, new Set(visited)));
+      if (!target) return;
+      const tName = getAttr(target, 'name', '');
+      if (/crusade|battle\s+honour|battle\s+scar/i.test(tName)) return;
+      weapons.push(...collectWeapons(target, entriesById, depth + 1, new Set(visited)));
     });
 
     el.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      // Skip Crusade, Battle Honour, Battle Scar, and similar non-standard-loadout groups
+      const gName = getAttr(group, 'name', '');
+      if (/crusade|battle\s+honour|battle\s+scar|^enhancement|psychic\s+tradition/i.test(gName)) return;
       weapons.push(...collectWeapons(group, entriesById, depth + 1, visited));
     });
 
@@ -753,7 +759,7 @@ window.WahapediaParser = (() => {
       // Stratagems: sharedProfiles with typeName="Stratagems"
       const stratagems = [];
       root.querySelectorAll(':scope > sharedProfiles > profile').forEach(p => {
-        if (getAttr(p, 'typeName', '').toLowerCase() !== 'stratagems') return;
+        if (!getAttr(p, 'typeName', '').toLowerCase().includes('stratagem')) return;
         const name = getAttr(p, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         const descEl  = p.querySelector('characteristic[name="Description"]');
