@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Render helpers ────────────────────────────────────────────────────
   function renderAll() {
-    UI.updateFactionFilter(state.factions, state.chapterFactions);
+    UI.updateFactionFilter(state.factions);
     const { factionFilter, linkedFactions } = getEffectiveFilter();
     UI.renderUnitRoster(
       state.allUnits,
@@ -164,8 +164,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return { factionFilter: state.selectedChapter, linkedFactions: parents };
     }
     if (state.factionFilter !== 'all') {
+      // Include both child chapters AND parent linked catalogues so selecting any
+      // faction (whether parent or sub-faction) shows the full combined unit pool
       const chapters = state.chaptersMap[state.factionFilter] || [];
-      return { factionFilter: state.factionFilter, linkedFactions: chapters };
+      const selected = state.factions.find(f => f.factionName === state.factionFilter);
+      const parents  = (selected && selected.linkedCatalogues) || [];
+      const linked   = [...new Set([...chapters, ...parents])];
+      return { factionFilter: state.factionFilter, linkedFactions: linked };
     }
     return { factionFilter: 'all', linkedFactions: [] };
   }
@@ -195,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.factions.push(faction);
             rebuildAllUnits();
             buildChaptersMap();
-            UI.updateFactionFilter(state.factions, state.chapterFactions);
+            UI.updateFactionFilter(state.factions);
             renderUnitRosterWithContext();
           }
         }
