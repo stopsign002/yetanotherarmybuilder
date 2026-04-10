@@ -505,10 +505,17 @@ window.UI = (() => {
         <ul class="wargear-option-list">`;
       wargearOpts.forEach(opt => {
         if (opt.type === 'model') {
-          // Model-context entry: "Up to X ModelName can be equipped with:"
-          const maxStr = opt.modelMax != null ? `Up to ${opt.modelMax} ` : '';
+          // Model-context entry: "1 per N models" or "Up to X ModelName can be equipped with:"
+          let modelLabel;
+          if (opt.perModels && opt.perModels > 1) {
+            modelLabel = `1 per ${opt.perModels} models \u2014 ${opt.modelName}`;
+          } else if (opt.modelMax != null) {
+            modelLabel = `Up to ${opt.modelMax} ${opt.modelName}`;
+          } else {
+            modelLabel = opt.modelName;
+          }
           html += `<li class="wargear-option-item wargear-model-ctx">
-            <span class="wargear-model-name">${escapeHtml(maxStr + opt.modelName)}</span> can be equipped with:`;
+            <span class="wargear-model-name">${escapeHtml(modelLabel)}</span> can be equipped with:`;
           if (opt.subOptions && opt.subOptions.length > 0) {
             opt.subOptions.forEach(sub => {
               html += `<ul class="wargear-suboption-list">`;

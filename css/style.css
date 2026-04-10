@@ -11,6 +11,7 @@
   --accent-hover: #cccccc;
   --accent-dark:  #aaaaaa;
   --accent-rgb:   255, 255, 255;
+  --accent-on:    #111111;
   --text:         #e0e0e0;
   --text-muted:   #a8a8a8;
   --border:       #3a3a3a;
@@ -536,7 +537,7 @@ ul { list-style: none; }
   letter-spacing: 0.5px;
   background: rgba(var(--accent-rgb),0.15);
   border: 1px solid rgba(var(--accent-rgb),0.3);
-  color: #cc7788;
+  color: var(--accent);
   border-radius: 3px;
   padding: 1px 5px;
 }
@@ -769,7 +770,7 @@ ul { list-style: none; }
 
 .btn-accent {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-on);
   border-color: var(--accent);
 }
 
@@ -975,7 +976,7 @@ ul { list-style: none; }
 .detail-faction {
   background: rgba(var(--accent-rgb),0.12);
   border: 1px solid rgba(var(--accent-rgb),0.25);
-  color: #cc7788;
+  color: var(--accent);
   border-radius: 3px;
   padding: 1px 6px;
   font-size: 11px;

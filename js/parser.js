@@ -370,8 +370,20 @@ window.WahapediaParser = (() => {
       processDirectGroup(group);
     });
 
+    // Extract the minimum squad size from a squad-size group's constraints
+    function getGroupMin(group) {
+      let minVal = null;
+      group.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+        if (getAttr(c, 'type') === 'min') {
+          const v = Math.round(parseFloat(getAttr(c, 'value', '0')));
+          if (!isNaN(v) && v > 0) minVal = v;
+        }
+      });
+      return minVal;
+    }
+
     // ── Category A: model variants inside squad groups ────────────────────────
-    function processModelEntry(modelEl) {
+    function processModelEntry(modelEl, squadGroupMin) {
       const modelId = modelEl.getAttribute('id');
       if (modelId && seenIds.has(modelId)) return;
 
@@ -392,7 +404,12 @@ window.WahapediaParser = (() => {
       if (modelId) seenIds.add(modelId);
 
       const modelMax = getMaxConstraint(modelEl);
-      options.push({ type: 'model', modelName, modelMax, subOptions });
+      // Compute "1 per N models" ratio from squad group minimum
+      let perModels = null;
+      if (modelMax && squadGroupMin && squadGroupMin > modelMax) {
+        perModels = Math.round(squadGroupMin / modelMax);
+      }
+      options.push({ type: 'model', modelName, modelMax, perModels, subOptions });
     }
 
     // Walk squad-size groups to find model variants
@@ -401,9 +418,12 @@ window.WahapediaParser = (() => {
                              group.querySelector(':scope > selectionEntries > selectionEntry[type="unit"]');
       const hasSizeConstraint = group.querySelector(':scope > constraints > constraint[type="min"], :scope > constraints > constraint[type="max"]');
       if (!hasModelOrUnit || !hasSizeConstraint) return;
+      const groupMin = getGroupMin(group);
       // This is a squad-size group — collect model variants within it
       group.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"], ' +
-                             ':scope > selectionEntries > selectionEntry[type="unit"]').forEach(processModelEntry);
+                             ':scope > selectionEntries > selectionEntry[type="unit"]').forEach(modelEl => {
+        processModelEntry(modelEl, groupMin);
+      });
     });
 
     // Also handle inline ungrouped model entries

@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function applyFactionColor(factionName) {
     const root = document.documentElement;
-    // Try last segment of qualified name (e.g. "Blood Angels" from "Imperium - Adeptus Astartes - Blood Angels")
     const shortName = factionName && factionName.includes(' - ')
       ? factionName.split(' - ').pop().trim()
       : (factionName || '');
@@ -71,6 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
     root.style.setProperty('--accent-hover', hover);
     root.style.setProperty('--accent-dark',  dark);
     root.style.setProperty('--accent-rgb',   rgb);
+    // Compute a contrasting foreground color for elements that have accent as background
+    const r = parseInt(accent.slice(1,3), 16);
+    const g = parseInt(accent.slice(3,5), 16);
+    const b = parseInt(accent.slice(5,7), 16);
+    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    root.style.setProperty('--accent-on', luminance > 0.35 ? '#111111' : '#ffffff');
   }
 
   // ── Bootstrap ─────────────────────────────────────────────────────────
@@ -134,12 +139,18 @@ document.addEventListener('DOMContentLoaded', () => {
   function buildChaptersMap() {
     state.chaptersMap = {};
     state.factions.forEach(f => {
+      const fParts = f.factionName.split(' - ').length;
       (f.linkedCatalogues || []).forEach(parentName => {
-        if (state.factions.some(p => p.factionName === parentName)) {
-          if (!state.chaptersMap[parentName]) state.chaptersMap[parentName] = [];
-          if (!state.chaptersMap[parentName].includes(f.factionName)) {
-            state.chaptersMap[parentName].push(f.factionName);
-          }
+        const parent = state.factions.find(p => p.factionName === parentName);
+        if (!parent) return;
+        // Only treat f as a chapter of parent if f's name is MORE qualified (more parts)
+        // e.g. "Imperium - Adeptus Astartes - Blood Angels" (3) → parent "Imperium - Space Marines" (2)
+        // This prevents shared catalogues like "Agents of the Imperium" from being treated as parents
+        const pParts = parentName.split(' - ').length;
+        if (fParts <= pParts) return;
+        if (!state.chaptersMap[parentName]) state.chaptersMap[parentName] = [];
+        if (!state.chaptersMap[parentName].includes(f.factionName)) {
+          state.chaptersMap[parentName].push(f.factionName);
         }
       });
     });
