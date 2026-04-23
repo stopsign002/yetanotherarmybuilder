@@ -746,59 +746,83 @@ window.WahapediaParser = (() => {
         }
       });
 
-      // Army Rules: <rules> and <sharedRules> at root
+      // ── Detachments ──────────────────────────────────────────────────────
+      // Detachments live in a selectionEntryGroup named "Detachment" which may
+      // be at root (Space Marines pattern) or nested inside a configuration
+      // selectionEntry (Necrons pattern). Each detachment selectionEntry can
+      // declare its rule(s) inline via <rules> (SM pattern) or reference them
+      // from root <sharedRules> via <infoLinks type="rule"> (Necrons pattern).
+      const detachments = [];
+      const detachmentRuleIds = new Set();   // rule IDs owned by detachments
+      const detachmentRuleNames = new Set(); // fallback for inline rules without stable IDs
+
+      root.querySelectorAll('selectionEntryGroup[name="Detachment"]').forEach(detachGroup => {
+        detachGroup.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
+          if (getAttr(entry, 'hidden', 'false') === 'true') return;
+          const name = getAttr(entry, 'name', '').trim();
+          if (!name || /^new\s/i.test(name)) return;
+          if (isCrusadeSection(name)) return;
+
+          const rules = [];
+          const seenRuleIds = new Set();
+
+          // Inline rules (SM pattern)
+          entry.querySelectorAll(':scope > rules > rule').forEach(r => {
+            if (getAttr(r, 'hidden', 'false') === 'true') return;
+            const rName = getAttr(r, 'name', '').trim();
+            if (!rName) return;
+            const rId = getAttr(r, 'id', '');
+            if (rId && seenRuleIds.has(rId)) return;
+            if (rId) seenRuleIds.add(rId);
+            const descEl = r.querySelector(':scope > description');
+            rules.push({ name: rName, description: descEl ? cleanText(descEl.textContent) : '' });
+            if (rId) detachmentRuleIds.add(rId);
+            detachmentRuleNames.add(rName.toLowerCase());
+          });
+
+          // infoLinks → shared rules (Necrons pattern)
+          entry.querySelectorAll(':scope > infoLinks > infoLink[type="rule"]').forEach(link => {
+            if (getAttr(link, 'hidden', 'false') === 'true') return;
+            const targetId = getAttr(link, 'targetId', '');
+            if (!targetId) return;
+            if (seenRuleIds.has(targetId)) return;
+            seenRuleIds.add(targetId);
+            const rule = rulesById.get(targetId);
+            if (!rule) return;
+            const rName = getAttr(rule, 'name', '').trim();
+            if (!rName) return;
+            const descEl = rule.querySelector(':scope > description');
+            rules.push({ name: rName, description: descEl ? cleanText(descEl.textContent) : '' });
+            detachmentRuleIds.add(targetId);
+            detachmentRuleNames.add(rName.toLowerCase());
+          });
+
+          detachments.push({ name, rules });
+        });
+      });
+
+      // ── Army Rules ───────────────────────────────────────────────────────
+      // Root-level <rules> and <sharedRules>, minus any rule owned by a
+      // detachment (those belong in the Detachment Rule panel, not Army Rules).
       const armyRules = [];
+      const seenArmyRuleIds = new Set();
       root.querySelectorAll(':scope > rules > rule, :scope > sharedRules > rule').forEach(rule => {
         if (getAttr(rule, 'hidden', 'false') === 'true') return;
         const name = getAttr(rule, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         if (isCrusadeSection(name)) return;
+        const id = getAttr(rule, 'id', '');
+        if (id && detachmentRuleIds.has(id)) return;
+        if (detachmentRuleNames.has(name.toLowerCase())) return;
+        if (id && seenArmyRuleIds.has(id)) return;
+        if (id) seenArmyRuleIds.add(id);
         const descEl = rule.querySelector(':scope > description');
         armyRules.push({ name, description: descEl ? cleanText(descEl.textContent) : '' });
       });
 
-      // Detachments: live in sharedSelectionEntryGroups > selectionEntryGroup[name="Detachment"]
-      const detachments = [];
-      const detachGroup = root.querySelector(
-        ':scope > sharedSelectionEntryGroups > selectionEntryGroup[name="Detachment"]'
-      );
-      if (detachGroup) {
-        detachGroup.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
-          if (getAttr(entry, 'hidden', 'false') === 'true') return;
-          const name = getAttr(entry, 'name', '').trim();
-          if (!name || /^new\s/i.test(name)) return;
-          const rules = [];
-          entry.querySelectorAll(':scope > rules > rule').forEach(r => {
-            if (getAttr(r, 'hidden', 'false') === 'true') return;
-            const rName = getAttr(r, 'name', '').trim();
-            const descEl = r.querySelector(':scope > description');
-            if (rName) rules.push({ name: rName, description: descEl ? cleanText(descEl.textContent) : '' });
-          });
-          detachments.push({ name, rules });
-        });
-      }
-
-      // Stratagems: sharedProfiles with typeName="Stratagems"
+      // Stratagems are not present in BSData wh40k-10e — return an empty array
+      // so the UI's Stratagems section stays hidden.
       const stratagems = [];
-      root.querySelectorAll(':scope > sharedProfiles > profile').forEach(p => {
-        if (!getAttr(p, 'typeName', '').toLowerCase().includes('stratagem')) return;
-        const name = getAttr(p, 'name', '').trim();
-        if (!name || /^new\s/i.test(name)) return;
-        const descEl  = p.querySelector('characteristic[name="Description"]');
-        const cpEl    = p.querySelector('characteristic[name="CP Cost"]') ||
-                        p.querySelector('characteristic[name="Cost"]');
-        const whenEl  = p.querySelector('characteristic[name="When"]');
-        const targetEl= p.querySelector('characteristic[name="Target"]');
-        const effectEl= p.querySelector('characteristic[name="Effect"]');
-        stratagems.push({
-          name,
-          description: descEl ? cleanText(descEl.textContent) : '',
-          cp: cpEl ? cleanText(cpEl.textContent) : null,
-          when: whenEl ? cleanText(whenEl.textContent) : null,
-          target: targetEl ? cleanText(targetEl.textContent) : null,
-          effect: effectEl ? cleanText(effectEl.textContent) : null,
-        });
-      });
 
       return { factionName, filename, unitCount: units.length, units, armyRules, stratagems, detachments, linkedCatalogues };
 
