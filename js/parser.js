@@ -20,6 +20,15 @@ window.WahapediaParser = (() => {
       .trim();
   }
 
+  // Identifies Crusade-only content that should be filtered out of standard 10e data.
+  // Matches section/entry names like "Crusade Relics", "Battle Honours", "Battle Scars",
+  // "Battle Traits", "Enhancements" (wargear context), and "Psychic Traditions".
+  const CRUSADE_RE = /crusade|battle\s+honour|battle\s+scar|battle\s+trait|^enhancement|psychic\s+tradition/i;
+  function isCrusadeSection(name) {
+    if (!name) return false;
+    return CRUSADE_RE.test(name);
+  }
+
   // ── Shared cross-file index (populated from .gst file) ───────────────────
   // DOM elements from the game system file are kept in memory; they cannot be
   // serialised to sessionStorage, so this is rebuilt each page load.
@@ -63,7 +72,7 @@ window.WahapediaParser = (() => {
 
   function parseCharacteristics(profileEl) {
     const chars = {};
-    profileEl.querySelectorAll('characteristic').forEach(c => {
+    profileEl.querySelectorAll(':scope > characteristics > characteristic').forEach(c => {
       const key = getAttr(c, 'name');
       if (key) chars[key] = cleanText(c.textContent);
     });
@@ -211,21 +220,19 @@ window.WahapediaParser = (() => {
     weapons.push(...parseDirectProfiles(el).weapons);
 
     el.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
+      if (isCrusadeSection(getAttr(child, 'name', ''))) return;
       weapons.push(...collectWeapons(child, entriesById, depth + 1, visited));
     });
 
     el.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
       const target = entriesById.get(getAttr(link, 'targetId'));
       if (!target) return;
-      const tName = getAttr(target, 'name', '');
-      if (/crusade|battle\s+honour|battle\s+scar/i.test(tName)) return;
+      if (isCrusadeSection(getAttr(target, 'name', ''))) return;
       weapons.push(...collectWeapons(target, entriesById, depth + 1, new Set(visited)));
     });
 
     el.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
-      // Skip Crusade, Battle Honour, Battle Scar, and similar non-standard-loadout groups
-      const gName = getAttr(group, 'name', '');
-      if (/crusade|battle\s+honour|battle\s+scar|^enhancement|psychic\s+tradition/i.test(gName)) return;
+      if (isCrusadeSection(getAttr(group, 'name', ''))) return;
       weapons.push(...collectWeapons(group, entriesById, depth + 1, visited));
     });
 
@@ -261,6 +268,7 @@ window.WahapediaParser = (() => {
         if (!profile || classifyProfile(profile) !== 'ability') return;
         const name = getAttr(profile, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
+        if (isCrusadeSection(name)) return;
         const descEl = profile.querySelector('characteristic[name="Description"]');
         abilities.push({ name, description: descEl ? cleanText(descEl.textContent) : '' });
 
@@ -270,6 +278,7 @@ window.WahapediaParser = (() => {
         if (!rule) return;
         let name = getAttr(rule, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
+        if (isCrusadeSection(name)) return;
         // Apply name-appending modifiers from the infoLink itself (e.g. dice count on Deadly Demise)
         link.querySelectorAll(':scope > modifiers > modifier[field="name"]').forEach(mod => {
           if (getAttr(mod, 'type', '') === 'append') {
@@ -284,24 +293,27 @@ window.WahapediaParser = (() => {
 
     // 3. Recurse into direct child model entries
     entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(child => {
+      if (isCrusadeSection(getAttr(child, 'name', ''))) return;
       collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
         .forEach(a => abilities.push(a));
     });
 
-    // 4. Recurse into model entries inside selectionEntryGroups
-    entryEl.querySelectorAll(
-      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="model"]'
-    ).forEach(child => {
-      collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
-        .forEach(a => abilities.push(a));
-    });
-
-    // 5. entryLinks → shared entries (e.g. Necrons pattern)
-    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink').forEach(link => {
-      const target = entriesById.get(getAttr(link, 'targetId'));
-      if (!target) return;
-      collectAbilities(target, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
-        .forEach(a => abilities.push(a));
+    // 4. Recurse into model entries inside selectionEntryGroups (skipping Crusade groups)
+    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      if (isCrusadeSection(getAttr(group, 'name', ''))) return;
+      group.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(child => {
+        if (isCrusadeSection(getAttr(child, 'name', ''))) return;
+        collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
+          .forEach(a => abilities.push(a));
+      });
+      // entryLinks → shared entries (e.g. Necrons pattern)
+      group.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
+        const target = entriesById.get(getAttr(link, 'targetId'));
+        if (!target) return;
+        if (isCrusadeSection(getAttr(target, 'name', ''))) return;
+        collectAbilities(target, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
+          .forEach(a => abilities.push(a));
+      });
     });
 
     return abilities;
@@ -329,12 +341,14 @@ window.WahapediaParser = (() => {
         if (t === 'model' || t === 'unit') return;
         const name = getAttr(entry, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
+        if (isCrusadeSection(name)) return;
         choices.push({ name });
       });
       group.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
         if (getAttr(link, 'hidden', 'false') === 'true') return;
         const name = getAttr(link, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
+        if (isCrusadeSection(name)) return;
         choices.push({ name });
       });
       return choices;
@@ -359,6 +373,7 @@ window.WahapediaParser = (() => {
 
       const groupName = getAttr(group, 'name', '').trim();
       if (!groupName || /^new\s/i.test(groupName)) return;
+      if (isCrusadeSection(groupName)) return;
 
       // Skip squad-size selectors: have model/unit children AND size constraints
       const hasModelOrUnit = group.querySelector(':scope > selectionEntries > selectionEntry[type="model"]') ||
@@ -395,12 +410,14 @@ window.WahapediaParser = (() => {
 
       const modelName = getAttr(modelEl, 'name', '').trim();
       if (!modelName || /^new\s/i.test(modelName)) return;
+      if (isCrusadeSection(modelName)) return;
 
       const subOptions = [];
       modelEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
         if (getAttr(group, 'hidden', 'false') === 'true') return;
         const gName = getAttr(group, 'name', '').trim();
         if (!gName || /^new\s/i.test(gName)) return;
+        if (isCrusadeSection(gName)) return;
         const choices = getChoices(group);
         if (choices.length === 0) return;
         subOptions.push({ name: gName, choices });
@@ -420,6 +437,7 @@ window.WahapediaParser = (() => {
 
     // Walk squad-size groups to find model variants
     entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      if (isCrusadeSection(getAttr(group, 'name', ''))) return;
       const hasModelOrUnit = group.querySelector(':scope > selectionEntries > selectionEntry[type="model"]') ||
                              group.querySelector(':scope > selectionEntries > selectionEntry[type="unit"]');
       const hasSizeConstraint = group.querySelector(':scope > constraints > constraint[type="min"], :scope > constraints > constraint[type="max"]');
@@ -702,6 +720,7 @@ window.WahapediaParser = (() => {
       root.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
         const t = getAttr(entry, 'type', '');
         if (t !== 'unit' && t !== 'model') return;
+        if (isCrusadeSection(getAttr(entry, 'name', ''))) return;
         const unit = parseEntry(entry, entriesById, profilesById, rulesById);
         if (unit && !seenIds.has(unit.id)) {
           seenIds.add(unit.id);
@@ -718,6 +737,8 @@ window.WahapediaParser = (() => {
         if (!target) return;
         const t = getAttr(target, 'type', '');
         if (t !== 'unit' && t !== 'model') return;
+        if (isCrusadeSection(getAttr(target, 'name', '')) ||
+            isCrusadeSection(getAttr(link,   'name', ''))) return;
         const unit = parseEntry(target, entriesById, profilesById, rulesById);
         if (unit && !seenIds.has(unit.id)) {
           seenIds.add(unit.id);
@@ -731,6 +752,7 @@ window.WahapediaParser = (() => {
         if (getAttr(rule, 'hidden', 'false') === 'true') return;
         const name = getAttr(rule, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
+        if (isCrusadeSection(name)) return;
         const descEl = rule.querySelector(':scope > description');
         armyRules.push({ name, description: descEl ? cleanText(descEl.textContent) : '' });
       });
