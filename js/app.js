@@ -368,10 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         name:        item.dataset.ruleName,
         description: item.dataset.ruleDesc,
         type:        item.dataset.ruleType || 'rule',
-        cp:          item.dataset.ruleCp   || null,
-        when:        item.dataset.ruleWhen || null,
-        target:      item.dataset.ruleTarget || null,
-        effect:      item.dataset.ruleEffect || null,
+        pts:         item.dataset.rulePts  ? parseInt(item.dataset.rulePts) : null,
       });
     });
 

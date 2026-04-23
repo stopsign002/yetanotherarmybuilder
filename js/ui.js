@@ -131,22 +131,22 @@ window.UI = (() => {
     }
   }
 
-  // ── Faction rules in army panel (Army Rules + Detachment Rule + Stratagems) ─
+  // ── Faction rules in army panel (Army Rules + Detachment Rule + Enhancements) ─
   function updateFactionRules(faction, detachment = null) {
     const section      = document.getElementById('army-rules-section');
     const armySubsec   = document.getElementById('army-rules-subsection');
     const detSubsec    = document.getElementById('army-detachment-subsection');
-    const stratSubsec  = document.getElementById('army-stratagem-subsection');
+    const enhSubsec    = document.getElementById('army-stratagem-subsection');
     const armyList     = document.getElementById('army-rules-list');
     const detList      = document.getElementById('army-detachment-rules-list');
-    const stratList    = document.getElementById('army-stratagems-list');
-    if (!section || !armyList || !stratList) return;
+    const enhList      = document.getElementById('army-stratagems-list');
+    if (!section || !armyList || !enhList) return;
 
-    const rules      = (faction && faction.armyRules)  || [];
-    const stratagems = (faction && faction.stratagems) || [];
-    const detRules   = (detachment && detachment.rules) || [];
+    const rules        = (faction && faction.armyRules)  || [];
+    const detRules     = (detachment && detachment.rules) || [];
+    const enhancements = (detachment && detachment.enhancements) || [];
 
-    if (rules.length === 0 && stratagems.length === 0 && detRules.length === 0) {
+    if (rules.length === 0 && detRules.length === 0 && enhancements.length === 0) {
       section.hidden = true;
       return;
     }
@@ -189,26 +189,25 @@ window.UI = (() => {
       }
     }
 
-    // Stratagems sub-section
-    if (stratagems.length > 0) {
-      stratSubsec.hidden = false;
-      stratList.innerHTML = '';
-      stratagems.forEach(strat => {
-        const item = document.createElement('div');
-        item.className = 'army-rule-item stratagem-item';
-        item.dataset.ruleName = strat.name;
-        item.dataset.ruleDesc = strat.description || '';
-        item.dataset.ruleType = 'stratagem';
-        if (strat.cp)     item.dataset.ruleCp     = strat.cp;
-        if (strat.when)   item.dataset.ruleWhen   = strat.when;
-        if (strat.target) item.dataset.ruleTarget = strat.target;
-        if (strat.effect) item.dataset.ruleEffect = strat.effect;
-        const cpBadge = strat.cp ? `<span class="stratagem-cp-badge">${escapeHtml(strat.cp)} CP</span>` : '';
-        item.innerHTML = `<span>${escapeHtml(strat.name)}</span><span class="rule-item-right">${cpBadge}<span class="rule-arrow">&#9656;</span></span>`;
-        stratList.appendChild(item);
-      });
-    } else {
-      stratSubsec.hidden = true;
+    // Enhancements sub-section (per detachment character upgrades)
+    if (enhSubsec && enhList) {
+      if (enhancements.length > 0) {
+        enhSubsec.hidden = false;
+        enhList.innerHTML = '';
+        enhancements.forEach(enh => {
+          const item = document.createElement('div');
+          item.className = 'army-rule-item enhancement-item';
+          item.dataset.ruleName = enh.name;
+          item.dataset.ruleDesc = enh.description || '';
+          item.dataset.ruleType = 'enhancement';
+          item.dataset.rulePts  = enh.pts || 0;
+          const ptsBadge = enh.pts ? `<span class="enhancement-pts-badge">${enh.pts} pts</span>` : '';
+          item.innerHTML = `<span>${escapeHtml(enh.name)}</span><span class="rule-item-right">${ptsBadge}<span class="rule-arrow">&#9656;</span></span>`;
+          enhList.appendChild(item);
+        });
+      } else {
+        enhSubsec.hidden = true;
+      }
     }
   }
 
@@ -610,29 +609,18 @@ window.UI = (() => {
     const existing = panel.querySelector('.unit-detail-content');
     if (existing) existing.remove();
 
-    const isStratagem = data.type === 'stratagem';
+    const isEnhancement = data.type === 'enhancement';
 
-    let body = '';
-    if (isStratagem) {
-      if (data.cp)     body += `<div class="strat-detail-row"><span class="strat-label">CP Cost:</span> <span class="strat-value strat-cp">${escapeHtml(data.cp)}</span></div>`;
-      if (data.when)   body += `<div class="strat-detail-row"><span class="strat-label">When:</span> <span class="strat-value">${escapeHtml(data.when)}</span></div>`;
-      if (data.target) body += `<div class="strat-detail-row"><span class="strat-label">Target:</span> <span class="strat-value">${escapeHtml(data.target)}</span></div>`;
-      if (data.effect) body += `<div class="strat-detail-row"><span class="strat-label">Effect:</span> <span class="strat-value">${escapeHtml(data.effect)}</span></div>`;
-      if (data.description && !data.effect) {
-        body += `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${escapeHtml(data.description)}</p>`;
-      }
-    } else {
-      body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${escapeHtml(data.description || 'No description available.')}</p>`;
-    }
+    let body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${escapeHtml(data.description || 'No description available.')}</p>`;
 
     panel.insertAdjacentHTML('beforeend', `
       <div class="unit-detail-content">
         <div class="detail-header">
           <div class="detail-name">${escapeHtml(data.name)}</div>
-          ${isStratagem && data.cp ? `<div class="detail-meta"><span class="detail-pts stratagem-cp-hero">${escapeHtml(data.cp)} CP</span></div>` : ''}
+          ${isEnhancement && data.pts ? `<div class="detail-meta"><span class="detail-pts">${escapeHtml(String(data.pts))} pts</span></div>` : ''}
         </div>
         <div class="detail-section">
-          <div class="detail-section-title">${isStratagem ? 'Stratagem' : 'Rule'}</div>
+          <div class="detail-section-title">${isEnhancement ? 'Enhancement' : 'Rule'}</div>
           ${body}
         </div>
       </div>

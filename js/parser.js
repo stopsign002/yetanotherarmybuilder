@@ -117,7 +117,7 @@ window.WahapediaParser = (() => {
     const typeName = getAttr(profile, 'typeName', '').toLowerCase();
     if (UNIT_TYPES.has(typeName))    return 'stats';
     if (WEAPON_TYPES.has(typeName))  return 'weapon';
-    if (typeName === 'stratagems')   return 'stratagem'; // handled separately in parse()
+
 
     // Any remaining profile with a Description characteristic is an ability
     if (profile.querySelector('characteristic[name="Description"]')) return 'ability';
@@ -801,6 +801,37 @@ window.WahapediaParser = (() => {
         });
       });
 
+      // ── Enhancements (per detachment) ────────────────────────────────────
+      // Stored under sharedSelectionEntryGroups > selectionEntryGroup[name="Enhancements"]
+      //   > selectionEntryGroups > selectionEntryGroup[name="{Detachment} Enhancements"]
+      const enhancementsByDetachment = {};
+      const enhGroup = root.querySelector('selectionEntryGroup[name="Enhancements"]');
+      if (enhGroup) {
+        enhGroup.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(subGroup => {
+          const groupName = getAttr(subGroup, 'name', '').trim();
+          if (!/\s+Enhancements$/i.test(groupName)) return;
+          const detName = groupName.replace(/\s+Enhancements$/i, '').trim();
+          const enhancements = [];
+          subGroup.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
+            if (getAttr(entry, 'hidden', 'false') === 'true') return;
+            const name = getAttr(entry, 'name', '').trim();
+            if (!name || /^new\s/i.test(name)) return;
+            if (isCrusadeSection(name)) return;
+            const costEl = entry.querySelector(':scope > costs > cost[name="pts"]');
+            const pts = costEl ? Math.round(parseFloat(getAttr(costEl, 'value', '0'))) : 0;
+            let description = '';
+            const profile = entry.querySelector(':scope > profiles > profile[typeName="Abilities"]');
+            if (profile) {
+              const descEl = profile.querySelector(':scope > characteristics > characteristic');
+              if (descEl) description = cleanText(descEl.textContent);
+            }
+            enhancements.push({ name, pts, description });
+          });
+          if (enhancements.length > 0) enhancementsByDetachment[detName] = enhancements;
+        });
+      }
+      detachments.forEach(d => { d.enhancements = enhancementsByDetachment[d.name] || []; });
+
       // ── Army Rules ───────────────────────────────────────────────────────
       // Root-level <rules> and <sharedRules>, minus any rule owned by a
       // detachment (those belong in the Detachment Rule panel, not Army Rules).
@@ -820,11 +851,7 @@ window.WahapediaParser = (() => {
         armyRules.push({ name, description: descEl ? cleanText(descEl.textContent) : '' });
       });
 
-      // Stratagems are not present in BSData wh40k-10e — return an empty array
-      // so the UI's Stratagems section stays hidden.
-      const stratagems = [];
-
-      return { factionName, filename, unitCount: units.length, units, armyRules, stratagems, detachments, linkedCatalogues };
+      return { factionName, filename, unitCount: units.length, units, armyRules, detachments, linkedCatalogues };
 
     } catch (err) {
       console.error('[Parser] Error in', filename, err);
