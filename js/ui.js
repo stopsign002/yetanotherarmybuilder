@@ -298,7 +298,7 @@ window.UI = (() => {
   }
 
   // ── Unit detail panel (right panel) ──────────────────────────────────
-  function renderUnitDetail(unit) {
+  function renderUnitDetail(unit, detachmentEnhancements = [], selectedEnhancements = []) {
     const panel = document.getElementById('unit-detail-panel');
     const empty = document.getElementById('unit-detail-empty');
     if (empty) empty.style.display = 'none';
@@ -587,6 +587,29 @@ window.UI = (() => {
       </div>`;
     }
 
+    // Enhancements section (available for this detachment, checkable per unit)
+    if (detachmentEnhancements && detachmentEnhancements.length > 0) {
+      const selectedNames = new Set((selectedEnhancements || []).map(e => e.name));
+      html += `<div class="detail-section" id="detail-enhancements-section">
+        <div class="detail-section-title">Enhancements</div>
+        <div class="detail-enhancements-list">`;
+      detachmentEnhancements.forEach(enh => {
+        const checked = selectedNames.has(enh.name) ? ' checked' : '';
+        html += `<label class="enhancement-cb-item">
+          <input type="checkbox" class="enhancement-cb" value="${escapeHtml(enh.name)}"${checked}
+            data-enh-pts="${enh.pts || 0}" data-enh-name="${escapeHtml(enh.name)}" data-enh-desc="${escapeHtml(enh.description || '')}"/>
+          <span class="enh-cb-body">
+            <span class="enh-cb-header">
+              <span class="enh-cb-name">${escapeHtml(enh.name)}</span>
+              <span class="enh-cb-pts">${enh.pts ? enh.pts + ' pts' : ''}</span>
+            </span>
+            <span class="enh-cb-desc">${escapeHtml(enh.description || '')}</span>
+          </span>
+        </label>`;
+      });
+      html += `</div></div>`;
+    }
+
     html += `</div>`; // .unit-detail-content
 
     const existing = panel.querySelector('.unit-detail-content');
@@ -683,17 +706,22 @@ window.UI = (() => {
     const li = document.createElement('li');
     li.className = 'army-entry';
     li.dataset.index = index;
-    const pts = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
+    const pts    = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
+    const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
+    const total  = pts * entry.count + enhPts;
     const nameDisplay = entry.squadLabel
       ? `${escapeHtml(entry.unitName)} <span class="army-entry-squad">(${escapeHtml(entry.squadLabel)})</span>`
       : escapeHtml(entry.unitName);
+    const enhBadges = (entry.enhancements || []).map(e =>
+      `<span class="army-enh-badge" title="${escapeHtml(e.description || '')}">${escapeHtml(e.name)}</span>`
+    ).join('');
     li.innerHTML = `
-      <div class="army-entry-name" title="${escapeHtml(entry.unitName)}">${nameDisplay}</div>
-      <div class="army-entry-pts">${pts}</div>
+      <div class="army-entry-name" title="${escapeHtml(entry.unitName)}">${nameDisplay}${enhBadges ? `<div class="army-enh-badges">${enhBadges}</div>` : ''}</div>
+      <div class="army-entry-pts">${pts}${enhPts ? `<span class="army-enh-pts">+${enhPts}</span>` : ''}</div>
       <div class="army-entry-qty">
         <input type="number" value="${entry.count}" min="0" max="99" data-index="${index}" class="army-qty-input" />
       </div>
-      <div class="army-entry-total">${pts * entry.count}</div>
+      <div class="army-entry-total">${total}</div>
       <button class="army-entry-remove" data-index="${index}" title="Remove">&times;</button>
     `;
     return li;

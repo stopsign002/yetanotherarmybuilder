@@ -17,13 +17,14 @@ window.Army = class Army {
    * @param {object} unitData
    * @param {number} count
    * @param {object|null} squadOption  — { pts, models } from parser squadOptions
+   * @param {Array} enhancements       — [{name, pts, description}] selected enhancements
    */
-  addUnit(unitData, count = 1, squadOption = null) {
+  addUnit(unitData, count = 1, squadOption = null, enhancements = []) {
     const selectedPts  = squadOption ? squadOption.pts  : (unitData.points || 0);
     const squadLabel   = squadOption && squadOption.models ? `${squadOption.models} models` : null;
-    // Two entries of the same unit but different squad sizes are kept separate
-    const existing = this.entries.find(
-      e => e.unitId === unitData.id && e.selectedPts === selectedPts
+    // Entries with enhancements are always separate; plain entries can stack
+    const existing = !enhancements.length && this.entries.find(
+      e => e.unitId === unitData.id && e.selectedPts === selectedPts && !(e.enhancements && e.enhancements.length)
     );
     if (existing) {
       existing.count += count;
@@ -35,9 +36,17 @@ window.Army = class Army {
         count,
         selectedPts,
         squadLabel,
+        enhancements: enhancements || [],
       });
     }
     this.updatedAt = new Date().toISOString();
+  }
+
+  setEnhancements(index, enhancements) {
+    if (this.entries[index]) {
+      this.entries[index].enhancements = enhancements || [];
+      this.updatedAt = new Date().toISOString();
+    }
   }
 
   removeEntry(index) {
@@ -56,8 +65,9 @@ window.Army = class Army {
 
   getTotalPoints() {
     return this.entries.reduce((total, entry) => {
-      const pts = (entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0));
-      return total + pts * entry.count;
+      const pts    = (entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0));
+      const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
+      return total + pts * entry.count + enhPts;
     }, 0);
   }
 

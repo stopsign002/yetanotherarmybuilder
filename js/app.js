@@ -16,8 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
     chaptersMap:    {},     // virtualParentName → [childFactionName, ...]
     chapterFactions: new Set(), // all factions hidden as children of a virtual parent
     virtualBase:    {},     // virtualParentName → base chapter factionName (for rules fallback)
-    selectedDetachment: null,   // { name, rules[] } — currently selected detachment object
+    selectedDetachment: null,   // { name, rules[], enhancements[] } — currently selected detachment object
     detachmentFaction:  null,   // faction object whose .detachments[] we're displaying
+    selectedArmyEntryIndex: null, // index into currentArmy.entries when editing an existing entry
   };
 
   // ── Virtual parent factions ───────────────────────────────────────────
@@ -311,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
       state.selectedChapter = null;
       state.selectedDetachment = null;
       state.detachmentFaction  = null;
+      state.selectedArmyEntryIndex = null;
       document.getElementById('army-detachment-select').value = '';
       applyFactionColor(state.factionFilter === 'all' ? null : state.factionFilter);
       updateChapterDropdown(state.factionFilter);
@@ -325,6 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       state.selectedChapter = e.target.value || null;
       state.selectedDetachment = null;
       state.detachmentFaction  = null;
+      state.selectedArmyEntryIndex = null;
       document.getElementById('army-detachment-select').value = '';
       applyFactionColor(state.selectedChapter || state.factionFilter);
       renderUnitRosterWithContext();
@@ -357,7 +360,9 @@ document.addEventListener('DOMContentLoaded', () => {
       card.classList.add('selected');
 
       state.selectedUnit = unit;
-      UI.renderUnitDetail(unit);
+      state.selectedArmyEntryIndex = null;
+      const detEnhancements = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
+      UI.renderUnitDetail(unit, detEnhancements, []);
     });
 
     // ---- Faction rule / stratagem click → show in details panel ----
@@ -370,6 +375,27 @@ document.addEventListener('DOMContentLoaded', () => {
         type:        item.dataset.ruleType || 'rule',
         pts:         item.dataset.rulePts  ? parseInt(item.dataset.rulePts) : null,
       });
+    });
+
+    // ---- Enhancement checkbox change (detail panel) ----
+    document.getElementById('unit-detail-panel').addEventListener('change', e => {
+      const cb = e.target.closest('.enhancement-cb');
+      if (!cb) return;
+      if (state.selectedArmyEntryIndex == null) return; // editing new unit — read at add-time instead
+      const entry = state.currentArmy.entries[state.selectedArmyEntryIndex];
+      if (!entry) return;
+      const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
+      const enh = detEnhs.find(e => e.name === cb.value);
+      if (!enh) return;
+      const enhs = [...(entry.enhancements || [])];
+      if (cb.checked) {
+        if (!enhs.some(e => e.name === enh.name)) enhs.push(enh);
+      } else {
+        const i = enhs.findIndex(e => e.name === enh.name);
+        if (i >= 0) enhs.splice(i, 1);
+      }
+      state.currentArmy.setEnhancements(state.selectedArmyEntryIndex, enhs);
+      UI.renderArmyList(state.currentArmy);
     });
 
     // ---- Add to Army (detail panel button) ----
@@ -389,7 +415,13 @@ document.addEventListener('DOMContentLoaded', () => {
         squadOption = opts[0] || null;
       }
 
-      state.currentArmy.addUnit(state.selectedUnit, qty, squadOption);
+      // Collect checked enhancements
+      const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
+      const selectedEnhancements = Array.from(
+        document.querySelectorAll('#detail-enhancements-section .enhancement-cb:checked')
+      ).map(cb => detEnhs.find(e => e.name === cb.value)).filter(Boolean);
+
+      state.currentArmy.addUnit(state.selectedUnit, qty, squadOption, selectedEnhancements);
       UI.renderArmyList(state.currentArmy);
       const label = squadOption && squadOption.models
         ? `${qty}× ${state.selectedUnit.name} (${squadOption.models} models)`
@@ -421,12 +453,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('army-entry-list').addEventListener('click', e => {
       const btn = e.target.closest('.army-entry-remove');
-      if (!btn) return;
-      const index     = parseInt(btn.dataset.index, 10);
-      const entryName = state.currentArmy.entries[index]?.unitName || 'unit';
-      state.currentArmy.removeEntry(index);
-      UI.renderArmyList(state.currentArmy);
-      UI.toast(`Removed ${entryName}`, 'info');
+      if (btn) {
+        const index     = parseInt(btn.dataset.index, 10);
+        const entryName = state.currentArmy.entries[index]?.unitName || 'unit';
+        state.currentArmy.removeEntry(index);
+        if (state.selectedArmyEntryIndex === index) {
+          state.selectedArmyEntryIndex = null;
+          UI.clearUnitDetail();
+        }
+        UI.renderArmyList(state.currentArmy);
+        UI.toast(`Removed ${entryName}`, 'info');
+        return;
+      }
+      // Click on entry row → show its unit detail with current enhancements
+      const li = e.target.closest('.army-entry');
+      if (!li) return;
+      const index = parseInt(li.dataset.index, 10);
+      const entry = state.currentArmy.entries[index];
+      if (!entry) return;
+      state.selectedArmyEntryIndex = index;
+      state.selectedUnit = null;
+      document.querySelectorAll('.unit-card.selected').forEach(c => c.classList.remove('selected'));
+      const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
+      UI.renderUnitDetail(entry.unitData, detEnhs, entry.enhancements || []);
     });
 
     // ---- Army toolbar ----
