@@ -54,3 +54,16 @@ body.build-mode-enhanced #app-main > .build-hero {
 .panel-right { min-height: 0; }
 .panel-right .panel-body { display: flex; flex-direction: column; min-height: 0; }
 #unit-detail-panel { flex: 1 1 auto; min-height: 0; }
+
+/* === Hero header pushed panels off-screen ===
+   .app-main has hard `height: 100vh` (style.css:111). When the hero
+   row is added above it inside #build-mode grid, the app-main still
+   tries to take 100vh — total = hero + 100vh > viewport — pushing
+   the bottom of every panel (composition warning, save status, etc.)
+   below the visible fold.
+   Fix: when build-mode is enhanced, app-main fills the 1fr grid row
+   instead of forcing 100vh. */
+body.build-mode-enhanced #app-main {
+  height: 100% !important;
+  min-height: 0 !important;
+}
