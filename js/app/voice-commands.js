@@ -239,9 +239,15 @@
   let active = false;
   let manualStop = false;
 
+  // Detect Safari (where WebSpeech actually works on-device + reliably).
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
   function buildRecognition() {
     const r = new SR();
-    r.continuous = true;
+    // Single-shot mode avoids many Chrome 'network' false-fail loops by not
+    // forcing the recognizer to maintain a persistent cloud connection.
+    // We re-start on onend instead. Safari handles continuous fine.
+    r.continuous = isSafari;
     r.interimResults = true;
     r.lang = (navigator.language || 'en-US');
 
@@ -284,10 +290,16 @@
         return;
       }
       if (code === 'network') {
-        // WebSpeech in Chrome calls Google's cloud recognizer; without
-        // network access it fails on every onend-restart loop, spamming
-        // the user. Show one toast and deactivate.
-        if (window.UI && UI.toast) UI.toast('Voice recognition unavailable (needs internet). Disabled.', 'warning', 4000);
+        // WebSpeech in Chrome routes to Google's cloud recognizer, which
+        // throttles unauthenticated calls — so 'network' fires even when
+        // the user has working internet. Safari uses an on-device
+        // recognizer and is far more reliable.
+        if (window.UI && UI.toast) {
+          const tip = isSafari
+            ? 'Voice recognition failed. Check microphone permissions in Safari Settings.'
+            : 'Voice recognition unreliable in Chrome (uses Google\'s rate-limited API). Try Safari for best results, or use Cmd/Ctrl+K instead. Disabled.';
+          UI.toast(tip, 'warning', 7000);
+        }
         deactivate();
         return;
       }
