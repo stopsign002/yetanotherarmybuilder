@@ -53,18 +53,23 @@ window.Storage = (() => {
     return Army.fromJSON(data);
   }
 
-  function exportArmyToText(army) {
+  function exportArmyToText(army, { detachmentName } = {}) {
     const lines = [];
     lines.push(`=== ${army.name} ===`);
     if (army.factionName) lines.push(`Faction: ${army.factionName}`);
+    if (detachmentName)   lines.push(`Detachment: ${detachmentName}`);
     lines.push(`Points Limit: ${army.pointsLimit}`);
     lines.push('');
 
-    // Group by keywords if possible
-    const entries = army.entries;
-    entries.forEach(entry => {
-      const pts = (entry.unitData.points || 0) * entry.count;
-      lines.push(`${entry.count}x ${entry.unitName} [${pts} pts]`);
+    army.entries.forEach(entry => {
+      const pts    = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
+      const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
+      const total  = pts * entry.count + enhPts;
+      const squad  = entry.squadLabel ? ` (${entry.squadLabel})` : '';
+      lines.push(`${entry.count}x ${entry.unitName}${squad} [${total} pts]`);
+      (entry.enhancements || []).forEach(enh => {
+        lines.push(`  + ${enh.name} [${enh.pts} pts]`);
+      });
     });
 
     lines.push('');

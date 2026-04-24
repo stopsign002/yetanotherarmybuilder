@@ -29,6 +29,27 @@ window.WahapediaParser = (() => {
     return CRUSADE_RE.test(name);
   }
 
+  // Look up a weapon keyword description, handling parameterized keywords like
+  // "Sustained Hits 2", "Melta 2", "Anti-Titanic 4+" whose rule names in BSData
+  // are the base form: "Sustained Hits", "Melta", "Anti-".
+  function findWeaponKeywordDesc(keyword, rulesByName) {
+    const lower = keyword.toLowerCase();
+    // 1. Exact match
+    let d = rulesByName.get(lower);
+    if (d !== undefined) return d;
+    // 2. Strip trailing numeric parameter ("Sustained Hits 2" → "Sustained Hits")
+    const stripped = lower.replace(/\s+\d+\+?$/, '').trim();
+    if (stripped !== lower) {
+      d = rulesByName.get(stripped);
+      if (d !== undefined) return d;
+    }
+    // 3. Prefix match for "Anti-X 4+" style (rule stored as "Anti-")
+    for (const [name, desc] of rulesByName) {
+      if (name.endsWith('-') && lower.startsWith(name)) return desc;
+    }
+    return undefined;
+  }
+
   // ── Shared cross-file index (populated from .gst file) ───────────────────
   // DOM elements from the game system file are kept in memory; they cannot be
   // serialised to sessionStorage, so this is rebuilt each page load.
@@ -644,7 +665,7 @@ window.WahapediaParser = (() => {
       if (!w.Keywords) return;
       const defs = {};
       String(w.Keywords).split(',').map(k => k.trim()).filter(Boolean).forEach(k => {
-        const desc = rulesByName.get(k.toLowerCase());
+        const desc = findWeaponKeywordDesc(k, rulesByName);
         if (desc) defs[k] = desc;
       });
       if (Object.keys(defs).length) w._keywordDefs = defs;

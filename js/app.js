@@ -538,7 +538,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btn-export-text').addEventListener('click', async () => {
-      const text = Storage.exportArmyToText(state.currentArmy);
+      const text = Storage.exportArmyToText(state.currentArmy, {
+        detachmentName: state.selectedDetachment ? state.selectedDetachment.name : null,
+      });
       try {
         await navigator.clipboard.writeText(text);
         UI.toast('Army list copied to clipboard', 'success');
