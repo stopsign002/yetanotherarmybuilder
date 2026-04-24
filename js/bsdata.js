@@ -153,6 +153,11 @@ window.BSData = (() => {
     }
 
     await Promise.all(Array.from({ length: 6 }, worker));
+
+    // Release the shared DOM-node index. Each retained element kept its entire
+    // parsed XML document alive via ownerDocument; clearing these Maps lets
+    // those multi-MB trees be garbage collected.
+    try { WahapediaParser.releaseSharedIndex(); } catch (_) {}
   }
 
   // ── Cache busting ────────────────────────────────────────────────────────
