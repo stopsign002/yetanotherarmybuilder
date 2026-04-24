@@ -90,10 +90,26 @@
     const subtitleParts = [];
     if (unit._factionName) subtitleParts.push(`<span class="detail-faction">${esc(unit._factionName)}</span>`);
     if (unit.type)         subtitleParts.push(`<span class="detail-type">${esc(unit.type)}</span>`);
+
+    // Render unit-flavor blurb when unit.description is empty and a matching
+    // App.UNIT_FLAVOR entry exists (case-insensitive substring match on name).
+    let flavorHtml = '';
+    if (!unit.description && window.App && App.UNIT_FLAVOR) {
+      const lcName = String(unit.name || '').toLowerCase();
+      let flavor = null;
+      for (const key in App.UNIT_FLAVOR) {
+        if (lcName.indexOf(key) !== -1) { flavor = App.UNIT_FLAVOR[key]; break; }
+      }
+      if (flavor) {
+        flavorHtml = `<div class="detail-flavor" style="font-style:italic;font-size:12px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(flavor)}</div>`;
+      }
+    }
+
     html += `
       <div class="detail-header detail-banner">
         <div class="detail-header-main">
           <div class="detail-name">${esc(unit.name)}</div>
+          ${flavorHtml}
           <div class="detail-meta detail-banner-subtitle">
             ${subtitleParts.join('')}
           </div>

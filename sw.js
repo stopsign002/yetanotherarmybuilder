@@ -1,5 +1,5 @@
 // sw.js - App-shell service worker; precaches HTML/CSS/JS, passes BSData fetches through.
-const SHELL = 'yaab-shell-v16';
+const SHELL = 'yaab-shell-v18';
 
 const PRECACHE = [
   '/',
@@ -38,6 +38,10 @@ const PRECACHE = [
   '/css/datasheet-style.css',
   '/css/hero-state.css',
   '/css/atmosphere.css',
+  '/css/topbar.css',
+  '/css/action-center.css',
+  '/css/voice-coach.css',
+  '/css/cold-start.css',
   '/js/vendor/fonts/cinzel-400.woff2',
   '/js/vendor/fonts/cinzel-600.woff2',
   '/js/vendor/html2pdf.bundle.min.js',
@@ -108,6 +112,7 @@ const PRECACHE = [
   '/js/app/qr-share.js',
   '/js/app/collection.js',
   '/js/ui/synergy.js',
+  '/js/data/stratagems-data.js',
   '/js/app/stratagems.js',
   '/js/app/crusade.js',
   '/js/app/kill-team.js',
@@ -119,6 +124,13 @@ const PRECACHE = [
   '/js/ui/scanline.js',
   '/js/ui/save-pulse.js',
   '/js/ui/animated-crest.js',
+  '/js/ui/cold-start.js',
+  '/js/ui/action-center.js',
+  '/js/app/topbar.js',
+  '/js/app/lazy-modules.js',
+  '/js/app/voice-commands.js',
+  '/js/app/sound-fx.js',
+  '/js/ui/list-coach.js',
   '/js/app/sw-register.js',
   '/js/app/index.js',
 ];

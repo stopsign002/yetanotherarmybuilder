@@ -41,6 +41,10 @@
   <link rel="stylesheet" href="css/design-pass.css" />
   <link rel="stylesheet" href="css/hero-state.css" />
   <link rel="stylesheet" href="css/atmosphere.css" />
+  <link rel="stylesheet" href="css/topbar.css" />
+  <link rel="stylesheet" href="css/action-center.css" />
+  <link rel="stylesheet" href="css/voice-coach.css" />
+  <link rel="stylesheet" href="css/cold-start.css" />
 </head>
 <body>
 
@@ -48,6 +52,70 @@
   <div class="page-progress-wrap" id="page-progress-wrap" hidden>
     <div class="page-progress-bar" id="page-progress-bar"></div>
   </div>
+
+  <!-- ============================================================
+       TOP APP BAR — persistent navigation across the whole app.
+       Brand | Faction chip group | Command bar | Icon shelf
+  ============================================================ -->
+  <header class="topbar" id="topbar" role="banner">
+    <div class="topbar-inner">
+      <a class="topbar-brand" href="#" id="topbar-brand" aria-label="YAAB home">
+        <span class="topbar-brand-glyph" aria-hidden="true">&#9876;</span>
+        <span class="topbar-brand-mark">YAAB</span>
+      </a>
+
+      <button class="topbar-mobile-menu" id="topbar-mobile-menu" type="button"
+              aria-label="Open navigation" hidden>
+        <span class="topbar-mobile-bars" aria-hidden="true"></span>
+      </button>
+
+      <div class="topbar-faction-chip" id="topbar-faction-chip" role="group"
+           aria-label="Selected faction and detachment">
+        <button class="topbar-chip-segment" id="topbar-chip-faction" type="button"
+                aria-label="Change faction">
+          <span class="topbar-chip-label">Faction</span>
+          <span class="topbar-chip-value" id="topbar-chip-faction-value">All Factions</span>
+          <span class="topbar-chip-caret" aria-hidden="true">&#9662;</span>
+        </button>
+        <button class="topbar-chip-segment topbar-chip-chapter" id="topbar-chip-chapter"
+                type="button" aria-label="Change chapter" hidden>
+          <span class="topbar-chip-label">Chapter</span>
+          <span class="topbar-chip-value" id="topbar-chip-chapter-value">&mdash;</span>
+          <span class="topbar-chip-caret" aria-hidden="true">&#9662;</span>
+        </button>
+        <button class="topbar-chip-segment" id="topbar-chip-detachment" type="button"
+                aria-label="Change detachment">
+          <span class="topbar-chip-label">Detachment</span>
+          <span class="topbar-chip-value" id="topbar-chip-detachment-value">&mdash;</span>
+          <span class="topbar-chip-caret" aria-hidden="true">&#9662;</span>
+        </button>
+      </div>
+
+      <button class="topbar-search" id="topbar-search" type="button"
+              aria-label="Open command palette">
+        <span class="topbar-search-glyph" aria-hidden="true">&#9906;</span>
+        <span class="topbar-search-placeholder">Find anything&hellip;</span>
+        <kbd class="topbar-search-kbd">&#8984;K</kbd>
+      </button>
+
+      <div class="topbar-actions">
+        <div class="topbar-icons" id="topbar-icons"></div>
+        <button class="topbar-icon-btn" id="topbar-cmdk" type="button"
+                aria-label="Command palette" title="Command palette (Cmd/Ctrl+K)">
+          <span aria-hidden="true">&#8984;K</span>
+        </button>
+        <button class="topbar-icon-btn topbar-icon-action-center" id="topbar-action-center"
+                type="button" aria-label="Action center" title="Action center"
+                aria-expanded="false" aria-controls="action-center-root">
+          <span aria-hidden="true">&#9776;</span>
+        </button>
+        <button class="topbar-icon-btn" id="topbar-help" type="button"
+                aria-label="Keyboard help" title="Keyboard shortcuts &amp; replay tour">
+          <span aria-hidden="true">?</span>
+        </button>
+      </div>
+    </div>
+  </header>
 
   <!-- Main Three-Panel Layout: Army | [handle] | Units | [handle] | Details -->
   <main class="app-main" id="app-main">
@@ -146,18 +214,20 @@
 
       </div>
 
-      <!-- Bottom Toolbar — three-row layout. Row 1: primary army ops +
-           compact icon shelf. Row 2: I/O + Tools/More dropdowns.
-           Feature modules register into regions via App.hooks. -->
+      <!-- Bottom Toolbar — single status row + single button row. Tools/More
+           dropdowns are gone; their items live in the Action Center.
+           Hidden compat containers (#tools-menu, #more-menu, #toolbar-extras
+           etc.) remain in the DOM so existing toolbar registrations and
+           module references keep working without modification. -->
       <div class="panel-footer army-toolbar">
-        <div class="toolbar-row toolbar-primary">
+        <div class="toolbar-status-row" id="toolbar-status-row">
+          <span class="toolbar-status" id="toolbar-status">Ready</span>
+        </div>
+        <div class="toolbar-row toolbar-actions-row">
           <button class="btn btn-sm btn-outline" id="btn-new-army" title="Start a new army">New</button>
           <button class="btn btn-sm btn-accent"  id="btn-save-army" title="Save this army">Save</button>
           <button class="btn btn-sm btn-outline" id="btn-load-army" title="Load a saved army">Load</button>
-          <span class="toolbar-spacer"></span>
-          <div class="toolbar-icons" id="toolbar-icons"></div>
-        </div>
-        <div class="toolbar-row toolbar-secondary">
+          <span class="toolbar-divider" aria-hidden="true"></span>
           <button class="btn btn-sm btn-outline" id="btn-import-string" title="Import an army code">Import</button>
           <div class="dropdown" id="export-dropdown">
             <button class="btn btn-sm btn-outline dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false" title="Export this army">Export <span class="caret">&#9662;</span></button>
@@ -165,27 +235,35 @@
               <button type="button" role="menuitem" id="btn-export-string">Copy army code</button>
               <button type="button" role="menuitem" id="btn-export-text">Copy as text</button>
               <button type="button" role="menuitem" id="btn-export-csv">Download CSV</button>
+              <button type="button" role="menuitem" id="btn-print-army" title="Print datasheets for every unit in your army">Print datasheets</button>
               <!-- Hook-registered 'export-menu' items mount here -->
               <div id="export-extras" class="export-extras"></div>
             </div>
           </div>
+          <span class="toolbar-divider" aria-hidden="true"></span>
+          <div class="toolbar-icons-inline" id="toolbar-undo-redo"></div>
+          <span class="toolbar-spacer"></span>
+        </div>
+        <!-- Backwards-compat: hidden containers that old hook code still
+             references. Action Center router moves their would-be content
+             elsewhere; these stay so direct DOM lookups don't crash. -->
+        <div class="toolbar-compat-shelf" hidden aria-hidden="true">
+          <div id="toolbar-extras" class="toolbar-extras"></div>
+          <div id="toolbar-icons" class="toolbar-icons"></div>
           <div class="dropdown" id="tools-dropdown">
-            <button class="btn btn-sm btn-outline dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false" title="Analysis &amp; game-day tools">Tools <span class="caret">&#9662;</span></button>
-            <div class="dropdown-menu dropdown-menu-grouped" role="menu" id="tools-dropdown-menu">
+            <button class="dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false" tabindex="-1">Tools</button>
+            <div class="dropdown-menu" role="menu" id="tools-dropdown-menu">
               <div id="tools-menu" class="tools-menu"></div>
               <div class="dropdown-empty" id="tools-menu-empty">No tools registered.</div>
             </div>
           </div>
-          <button class="btn btn-sm btn-outline" id="btn-print-army" title="Print datasheets for every unit in your army">Print</button>
           <div class="dropdown" id="more-dropdown">
-            <button class="btn btn-sm btn-outline dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false" title="More options">More <span class="caret">&#9662;</span></button>
+            <button class="dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false" tabindex="-1">More</button>
             <div class="dropdown-menu" role="menu" id="more-dropdown-menu">
               <div id="more-menu" class="more-menu"></div>
               <div class="dropdown-empty" id="more-menu-empty">No extras available.</div>
             </div>
           </div>
-          <!-- Hook-registered 'primary' items that opt-in via priority:'visible' mount here -->
-          <div id="toolbar-extras" class="toolbar-extras"></div>
         </div>
       </div>
     </aside>
@@ -301,6 +379,33 @@
     </div>
   </div>
 
+  <!-- ============================================================
+       ACTION CENTER — slide-in sheet, replaces Tools/More menus.
+       Populated by App.mountArmyToolbarActions via UI.actionCenter.
+  ============================================================ -->
+  <div class="action-center-root" id="action-center-root" hidden>
+    <div class="action-center-scrim" id="action-center-scrim" tabindex="-1"></div>
+    <aside class="action-center-sheet" id="action-center-sheet"
+           role="dialog" aria-modal="true" aria-labelledby="action-center-title">
+      <header class="action-center-header">
+        <div class="action-center-titlebar">
+          <h2 class="action-center-title" id="action-center-title">Action Center</h2>
+          <button class="action-center-close" id="action-center-close"
+                  type="button" aria-label="Close action center">&times;</button>
+        </div>
+        <div class="action-center-search-wrap">
+          <input type="search" class="action-center-search" id="action-center-search"
+                 placeholder="Filter actions&hellip;" aria-label="Filter actions" />
+        </div>
+      </header>
+      <div class="action-center-body" id="action-center-body">
+        <div class="action-center-empty" id="action-center-empty" hidden>
+          No actions match your filter.
+        </div>
+      </div>
+    </aside>
+  </div>
+
   <!-- Toast notifications -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -343,6 +448,7 @@
   <script src="js/vendor/qrcode.min.js" defer></script>
   <script src="js/ui/datasheet.js"></script>
   <script src="js/ui/dropdown.js"></script>
+  <script src="js/ui/action-center.js"></script>
 
   <!-- App: state first, hooks second (feature modules register via App.hooks),
        bootstrap index.js last (DOMContentLoaded). -->
@@ -355,7 +461,11 @@
   <script src="js/app/selections.js"></script>
   <script src="js/app/events.js"></script>
 
-  <!-- Feature modules (all extend via App.hooks; safe to reorder within block). -->
+  <!-- Feature modules (all extend via App.hooks; safe to reorder within block).
+       Lazy-loaded modules (Match Mode, Damage Calc, Tournament Export, Crusade,
+       Kill Team, Deployment Planner, Synergy, Lore, Analytics, Opponent/Matchup,
+       History/army-diff, Community Feed, Activity Log) are NOT listed here —
+       they're injected on first user trigger by js/app/lazy-modules.js. -->
   <!-- FEATURE-MODULES-START -->
   <script src="js/parser/report.js"></script>
   <script src="js/app/history.js"></script>
@@ -365,41 +475,38 @@
   <script src="js/app/pwa-install.js"></script>
   <script src="js/ui/celebrations.js"></script>
   <script src="js/app/command-palette.js"></script>
-  <script src="js/ui/analytics.js"></script>
   <script src="js/app/starter-lists.js"></script>
   <script src="js/app/flavor.js"></script>
   <script src="js/app/ork-math.js"></script>
   <script src="js/app/nickname.js"></script>
   <script src="js/ui/dice-roller.js"></script>
   <script src="js/app/legends-toggle.js"></script>
-  <script src="js/app/match-mode.js"></script>
-  <script src="js/ui/damage-calc.js"></script>
-  <script src="js/app/opponent.js"></script>
-  <script src="js/ui/matchup.js"></script>
-  <script src="js/app/army-diff.js"></script>
   <script src="js/app/favorites.js"></script>
-  <script src="js/ui/tournament-export.js"></script>
-  <script src="js/ui/deployment-planner.js"></script>
-  <script src="js/data/lore-data.js"></script>
-  <script src="js/app/lore.js"></script>
   <script src="js/app/points-override.js"></script>
   <script src="js/app/bug-report.js"></script>
   <script src="js/app/qr-share.js"></script>
   <script src="js/app/collection.js"></script>
-  <script src="js/ui/synergy.js"></script>
+  <script src="js/data/stratagems-data.js"></script>
   <script src="js/app/stratagems.js"></script>
-  <script src="js/app/crusade.js"></script>
-  <script src="js/app/kill-team.js"></script>
-  <script src="js/app/activity-log.js"></script>
-  <script src="js/app/community-feed.js"></script>
   <script src="js/app/hero-state.js"></script>
   <script src="js/app/first-time-tour.js"></script>
   <script src="js/ui/scanline.js"></script>
   <script src="js/ui/save-pulse.js"></script>
   <script src="js/ui/animated-crest.js"></script>
+  <script src="js/ui/cold-start.js"></script>
+  <script src="js/app/voice-commands.js"></script>
+  <script src="js/app/sound-fx.js"></script>
+  <script src="js/ui/list-coach.js"></script>
   <!-- FEATURE-MODULES-END -->
 
+  <!-- Lazy-loader: registers placeholder toolbar/detail actions and
+       defers heavy feature modules until their trigger fires. Must run
+       before app/index.js so its placeholders are in App.hooks before
+       mountArmyToolbarActions iterates them. -->
+  <script src="js/app/lazy-modules.js"></script>
+
   <script src="js/app/index.js"></script>
+  <script src="js/app/topbar.js"></script>
   <script src="js/app/sw-register.js"></script>
 </body>
 </html>

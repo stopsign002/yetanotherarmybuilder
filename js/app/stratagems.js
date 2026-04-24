@@ -114,6 +114,26 @@
       ? faction.factionStratagems.slice() : [];
     const coreList = CORE_STRATAGEMS.slice();
 
+    // Merge in sample stratagems from App.STRATAGEMS_DATA when available.
+    // These are clearly tagged "sample" so users know they're not from BSData.
+    const sampleData = App.STRATAGEMS_DATA;
+    if (sampleData) {
+      const factionName = faction ? faction.factionName : null;
+      if (factionName && sampleData.factions) {
+        const fSamples = sampleData.factions[factionName];
+        if (Array.isArray(fSamples)) {
+          fSamples.forEach(s => factionList.push(Object.assign({ type: 'sample' }, s)));
+        }
+      }
+      const detName = det ? det.name : null;
+      if (detName && sampleData.detachments) {
+        const dSamples = sampleData.detachments[detName];
+        if (Array.isArray(dSamples)) {
+          dSamples.forEach(s => detList.push(Object.assign({ type: 'sample' }, s)));
+        }
+      }
+    }
+
     return {
       detachmentName: det ? det.name : null,
       factionName: faction ? faction.factionName : null,

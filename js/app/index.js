@@ -28,57 +28,122 @@
   });
 
   // ── Toolbar routing config ────────────────────────────────────────────
-  // Buttons in this allowlist stay in the always-visible primary row.
-  // Everything else registered with region:'primary' is funneled into
-  // the Tools ▾ dropdown. Action objects can override either way by
-  // setting priority: 'visible' | 'menu'.
-  const PRIMARY_VISIBLE_IDS = new Set([
-    // (intentionally empty — Print, New, Save, Load, Import, Export are
-    // hardcoded static buttons in index.html. All hook-registered
-    // primary actions now route to the Tools menu by default. To
-    // promote one back to the row, add its id here OR set
-    // priority:'visible' on the action.)
-  ]);
+  // The new surfaces are:
+  //   1. Top app bar icon shelf  (#topbar-icons)             — region:'icon'
+  //   2. Bottom-toolbar undo/redo (#toolbar-undo-redo)        — undo/redo only
+  //   3. Static Export ▾ dropdown (#export-extras)            — region:'export-menu'
+  //   4. Action Center sheet      (UI.actionCenter sections)  — everything else
+  //
+  // The old #toolbar-extras / #toolbar-icons / #tools-menu / #more-menu
+  // containers still exist (hidden, in .toolbar-compat-shelf) so any
+  // module that does `document.getElementById('tools-menu')` after we
+  // mount won't crash.
 
-  // Icon shelf: small allowlist that stays visible inline. Anything else
-  // registered with region:'icon' moves into the More ▾ menu.
-  const ICON_VISIBLE_IDS = new Set([
-    'yaab-btn-undo',
-    'yaab-btn-redo',
-    'yaab-btn-cmdp',
-  ]);
+  // Icons that live inline in the bottom toolbar (undo/redo only).
+  const BOTTOM_INLINE_ICON_IDS = new Set(['yaab-btn-undo', 'yaab-btn-redo']);
 
-  // Default category guess for known primary actions (used when an action
-  // doesn't specify category:). Future modules should set category
-  // explicitly. Falls back to 'other'.
-  const DEFAULT_CATEGORY_BY_ID = {
-    'yaab-btn-analytics':       'analysis',
-    'yaab-btn-dmgcalc':         'analysis',
-    'yaab-btn-matchup':         'analysis',
-    'yaab-btn-tournament':      'analysis',
-    'yaab-btn-match':           'game',
-    'yaab-btn-opponent':        'game',
-    'yaab-btn-history':         'data',
-    'yaab-btn-collection':      'data',
-    'yaab-btn-points-override': 'data',
-    'yaab-btn-starter-lists':   'data',
+  // Map known toolbar action IDs to Action Center sections.
+  // Sections: 'game-day' | 'analyze' | 'export' | 'browse' | 'collection' | 'settings'
+  const ID_TO_SECTION = {
+    // Game Day
+    'yaab-btn-match':            'game-day',
+    'yaab-btn-dmgcalc':          'game-day',
+    'yaab-btn-opponent':         'game-day',
+    'yaab-btn-matchup':          'game-day',
+    'yaab-btn-stratagems':       'game-day',
+    'yaab-btn-deploy':           'game-day',
+    // Analyze
+    'yaab-btn-analytics':        'analyze',
+    'yaab-btn-synergy':          'analyze',
+    'yaab-btn-history':          'analyze',
+    // Print & Export
+    'yaab-btn-tournament':       'export',
+    'yaab-btn-share':            'export',
+    'yaab-btn-qr-share':         'export',
+    // Browse
+    'yaab-btn-lore':             'browse',
+    'yaab-btn-starter-lists':    'browse',
+    'yaab-btn-community-feed':   'browse',
+    'yaab-btn-replay-tour':      'browse',
+    // Collection
+    'yaab-btn-collection':       'collection',
+    'yaab-btn-crusade':          'collection',
+    'yaab-btn-kill-team':        'collection',
+    'yaab-btn-activity-log':     'collection',
+    // Settings
+    'yaab-btn-points-override':  'settings',
+    'yaab-btn-legends':          'settings',
+    'yaab-btn-bug-report':       'settings',
+    'yaab-btn-pwa-install':      'settings',
+    'yaab-btn-ork-math':         'settings',
   };
 
-  const CATEGORY_LABEL = {
-    analysis: 'Analysis',
-    game:     'Game day',
-    export:   'Export',
-    data:     'Data & lists',
-    other:    'Other',
+  // Some hook entries don't set an id (e.g. deployment planner). Match
+  // by label as a fallback so they still route correctly.
+  const LABEL_TO_SECTION = {
+    'deploy':           'game-day',
+    'deployment':       'game-day',
+    'stratagems':       'game-day',
+    'tournament':       'export',
+    'replay tour':      'browse',
+    'starter lists':    'browse',
   };
-  const CATEGORY_ORDER = ['analysis', 'game', 'data', 'export', 'other'];
 
-  // Build a styled menu item button for a hook action.
-  function buildMenuButton(a) {
+  // Short, intent-driven descriptions for known actions. Falls back to
+  // the action's `title` (then label) when the id is unknown.
+  const ID_TO_DESC = {
+    'yaab-btn-match':            'Track turns, command points, and damage live during a game.',
+    'yaab-btn-dmgcalc':          'Simulate attacks and roll for damage.',
+    'yaab-btn-opponent':         'Paste your opponent’s list to compare.',
+    'yaab-btn-matchup':          'Side-by-side matchup against the loaded opponent.',
+    'yaab-btn-stratagems':       'Browse stratagems for your detachment.',
+    'yaab-btn-deploy':           'Drag your units onto a battlefield.',
+    'yaab-btn-analytics':        'Charts: roles, points, keywords, breakdowns.',
+    'yaab-btn-synergy':          'Detect interactions between units in your list.',
+    'yaab-btn-history':          'Browse and diff past versions of this army.',
+    'yaab-btn-tournament':       'Generate a tournament prep PDF bundle.',
+    'yaab-btn-share':            'Copy a shareable URL for this army.',
+    'yaab-btn-qr-share':         'Show a QR code so a teammate can grab the list.',
+    'yaab-btn-lore':             'Browse faction lore and background.',
+    'yaab-btn-starter-lists':    'Curated starter armies and a randomizer.',
+    'yaab-btn-community-feed':   'Browse community army lists.',
+    'yaab-btn-replay-tour':      'Restart the first-time walkthrough.',
+    'yaab-btn-collection':       'Track owned models and painting progress.',
+    'yaab-btn-crusade':          'Crusade campaign tracker.',
+    'yaab-btn-kill-team':        'Switch to small-format Kill Team mode.',
+    'yaab-btn-activity-log':     'View a log of recent edits.',
+    'yaab-btn-points-override':  'Override unit points for dataslates.',
+    'yaab-btn-legends':          'Show or hide Legends-only units.',
+    'yaab-btn-bug-report':       'Report an issue or attach diagnostic data.',
+    'yaab-btn-pwa-install':      'Install the app to your home screen.',
+    'yaab-btn-ork-math':         'Toggle Ork numerals (TEEF mode).',
+  };
+
+  function resolveSection(a) {
+    if (a.section) return a.section;
+    if (a.id && ID_TO_SECTION[a.id]) return ID_TO_SECTION[a.id];
+    if (a.category) {
+      // Legacy category → section mapping.
+      switch (a.category) {
+        case 'game':     return 'game-day';
+        case 'analysis': return 'analyze';
+        case 'export':   return 'export';
+        case 'data':     return 'collection';
+        default:         return 'settings';
+      }
+    }
+    const lbl = String(a.label || '').toLowerCase();
+    for (const k in LABEL_TO_SECTION) {
+      if (lbl.indexOf(k) !== -1) return LABEL_TO_SECTION[k];
+    }
+    return 'settings';
+  }
+
+  // Build the inline icon button for the top bar / undo-redo shelf.
+  function buildIconButton(a) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.setAttribute('role', 'menuitem');
-    btn.className = 'menu-item';
+    btn.className = a.className || 'topbar-icon-btn';
     btn.textContent = a.label || '';
     if (a.title)     btn.title = a.title;
     if (a.ariaLabel) btn.setAttribute('aria-label', a.ariaLabel);
@@ -87,131 +152,78 @@
     return btn;
   }
 
-  // Build the inline button (primary row or icon shelf) for an action.
-  function buildInlineButton(a, region) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = a.className || (
-      region === 'icon' ? 'btn btn-sm btn-outline btn-icon' :
-      'btn btn-sm btn-outline'
-    );
-    btn.textContent = a.label || '';
-    if (a.title)     btn.title = a.title;
-    if (a.ariaLabel) btn.setAttribute('aria-label', a.ariaLabel);
-    if (a.id)        btn.id = a.id;
-    if (typeof a.onClick === 'function') btn.addEventListener('click', a.onClick);
-    return btn;
+  function buildExportMenuButton(a) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'menuitem');
+    b.className = a.className || '';
+    b.textContent = a.label || '';
+    if (a.title)     b.title = a.title;
+    if (a.ariaLabel) b.setAttribute('aria-label', a.ariaLabel);
+    if (a.id)        b.id = a.id;
+    if (typeof a.onClick === 'function') b.addEventListener('click', a.onClick);
+    return b;
   }
 
-  // Renders hook-registered buttons into named toolbar regions.
-  // Action shape:
-  //   { region:   'primary' | 'icon' | 'export-menu' | 'tools-menu' | 'more-menu',
-  //     priority: 'visible' | 'menu',     // optional override for primary/icon routing
-  //     category: 'analysis' | 'game' | 'export' | 'data' | 'other',
-  //     id, label, title, ariaLabel, onClick, className }
-  // Default region is 'primary'. Default routing: see allowlists above.
-  App.mountArmyToolbarActions = function () {
-    const actions = (App.hooks && App.hooks.armyToolbarActions) || [];
-    const targets = {
-      primary:       document.getElementById('toolbar-extras'),
-      icon:          document.getElementById('toolbar-icons'),
-      'export-menu': document.getElementById('export-extras'),
-      'tools-menu':  document.getElementById('tools-menu'),
-      'more-menu':   document.getElementById('more-menu'),
+  function adaptForActionCenter(a) {
+    return {
+      id:          a.id,
+      label:       a.label,
+      title:       a.title,
+      ariaLabel:   a.ariaLabel,
+      description: a.description || ID_TO_DESC[a.id] || a.title || '',
+      onClick:     a.onClick,
     };
+  }
 
-    // Bucket actions per resolved region. We collect tools-menu items first
-    // so we can group them by category at render time.
-    const toolsBucket = []; // { action, category }
-    const moreBucket  = []; // action
+  // Renders hook-registered buttons into the new surfaces.
+  // Action shape (unchanged for compatibility):
+  //   { region:   'primary' | 'icon' | 'export-menu' | 'tools-menu' | 'more-menu',
+  //     section?: 'game-day' | 'analyze' | 'export' | 'browse' | 'collection' | 'settings',
+  //     id, label, title, ariaLabel, onClick, className, category? }
+  App.mountArmyToolbarActions = function () {
+    const actions   = (App.hooks && App.hooks.armyToolbarActions) || [];
+    const topIcons  = document.getElementById('topbar-icons');
+    const undoRedo  = document.getElementById('toolbar-undo-redo');
+    const exportTgt = document.getElementById('export-extras');
+
+    // Reset all targets on each mount so re-mounting (e.g. after lazy
+    // module load) doesn't duplicate buttons.
+    if (window.UI && UI.actionCenter) UI.actionCenter.clearActions();
+    if (topIcons)  topIcons.replaceChildren();
+    if (undoRedo)  undoRedo.replaceChildren();
+    if (exportTgt) exportTgt.replaceChildren();
 
     actions.forEach(a => {
       const region = a.region || 'primary';
 
+      // Export dropdown stays as a static menu in the bottom toolbar.
       if (region === 'export-menu') {
-        if (targets['export-menu']) {
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.setAttribute('role', 'menuitem');
-          b.className = a.className || '';
-          b.textContent = a.label || '';
-          if (a.title)     b.title = a.title;
-          if (a.ariaLabel) b.setAttribute('aria-label', a.ariaLabel);
-          if (a.id)        b.id = a.id;
-          if (typeof a.onClick === 'function') b.addEventListener('click', a.onClick);
-          targets['export-menu'].appendChild(b);
-        }
+        if (exportTgt) exportTgt.appendChild(buildExportMenuButton(a));
         return;
       }
 
-      if (region === 'tools-menu') {
-        toolsBucket.push({ action: a, category: a.category || 'other' });
-        return;
-      }
-      if (region === 'more-menu') {
-        moreBucket.push(a);
-        return;
-      }
-
-      if (region === 'primary') {
-        const visible = a.priority === 'visible'
-          || (a.priority !== 'menu' && PRIMARY_VISIBLE_IDS.has(a.id));
-        if (visible && targets.primary) {
-          targets.primary.appendChild(buildInlineButton(a, 'primary'));
-        } else if (targets['tools-menu']) {
-          toolsBucket.push({
-            action: a,
-            category: a.category || DEFAULT_CATEGORY_BY_ID[a.id] || 'other',
-          });
-        }
-        return;
-      }
-
+      // Icons: undo/redo dock in the bottom toolbar; everything else goes
+      // to the top bar's icon shelf.
       if (region === 'icon') {
-        const visible = a.priority === 'visible'
-          || (a.priority !== 'menu' && ICON_VISIBLE_IDS.has(a.id));
-        if (visible && targets.icon) {
-          targets.icon.appendChild(buildInlineButton(a, 'icon'));
-        } else if (targets['more-menu']) {
-          moreBucket.push(a);
+        if (BOTTOM_INLINE_ICON_IDS.has(a.id) && undoRedo) {
+          undoRedo.appendChild(buildIconButton({ ...a, className: 'btn btn-sm btn-outline btn-icon' }));
+        } else if (topIcons) {
+          topIcons.appendChild(buildIconButton(a));
         }
         return;
       }
 
-      // Unknown region — fall through to primary container.
-      if (targets.primary) {
-        targets.primary.appendChild(buildInlineButton(a, 'primary'));
+      // 'more-menu' → top bar icon shelf (these are flat, secondary icons).
+      if (region === 'more-menu') {
+        if (topIcons) topIcons.appendChild(buildIconButton(a));
+        return;
+      }
+
+      // 'tools-menu' and 'primary' both route to the Action Center now.
+      if (window.UI && UI.actionCenter) {
+        UI.actionCenter.registerAction(adaptForActionCenter(a), resolveSection(a));
       }
     });
-
-    // Render Tools menu, grouped by category.
-    if (targets['tools-menu']) {
-      const groups = {};
-      toolsBucket.forEach(({ action, category }) => {
-        const key = CATEGORY_LABEL[category] ? category : 'other';
-        (groups[key] = groups[key] || []).push(action);
-      });
-      const keys = CATEGORY_ORDER.filter(k => groups[k] && groups[k].length);
-      keys.forEach(key => {
-        const header = document.createElement('div');
-        header.className = 'menu-section-header';
-        header.textContent = CATEGORY_LABEL[key];
-        targets['tools-menu'].appendChild(header);
-        groups[key].forEach(a => targets['tools-menu'].appendChild(buildMenuButton(a)));
-      });
-      const empty = document.getElementById('tools-menu-empty');
-      if (empty) empty.style.display = keys.length ? 'none' : '';
-      const trigger = document.querySelector('#tools-dropdown .dropdown-trigger');
-      if (trigger && !keys.length) trigger.setAttribute('disabled', '');
-    }
-
-    // Render More menu (flat).
-    if (targets['more-menu']) {
-      moreBucket.forEach(a => targets['more-menu'].appendChild(buildMenuButton(a)));
-      const empty = document.getElementById('more-menu-empty');
-      if (empty) empty.style.display = moreBucket.length ? 'none' : '';
-      const trigger = document.querySelector('#more-dropdown .dropdown-trigger');
-      if (trigger && !moreBucket.length) trigger.setAttribute('disabled', '');
-    }
   };
 })();
