@@ -22,6 +22,26 @@
     App.renderAll();
     App.setupResizablePanels();
     App.wireEvents();
+    App.mountArmyToolbarActions();
+    App.fireBootstrap(state);
     App.autoLoadFromBSData();
   });
+
+  // Renders hook-registered buttons into the army-panel toolbar (bottom
+  // of the left panel). Called once at bootstrap.
+  App.mountArmyToolbarActions = function () {
+    const actions = (App.hooks && App.hooks.armyToolbarActions) || [];
+    if (actions.length === 0) return;
+    const toolbar = document.querySelector('.army-toolbar');
+    if (!toolbar) return;
+    actions.forEach(a => {
+      const btn = document.createElement('button');
+      btn.className = a.className || 'btn btn-sm btn-outline';
+      btn.textContent = a.label || '';
+      if (a.title) btn.title = a.title;
+      if (a.id)    btn.id = a.id;
+      if (typeof a.onClick === 'function') btn.addEventListener('click', a.onClick);
+      toolbar.appendChild(btn);
+    });
+  };
 })();

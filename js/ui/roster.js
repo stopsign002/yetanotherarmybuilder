@@ -18,16 +18,70 @@
     scrollContainer: null,
     scrollHandler: null,
     scrollRaf: 0,
+    // Active filter-chip keyword set (lowercased). Empty = no chip filter.
+    activeChips: Object.create(null),
+    // Marker so we don't register the chip predicate more than once.
+    _chipPredicateRegistered: false,
   };
+
+  // Chips: label shown to the user -> keyword matched against unit.keywords.
+  const ROLE_CHIPS = [
+    { label: 'Battleline', kw: 'battleline' },
+    { label: 'Character',  kw: 'character'  },
+    { label: 'Infantry',   kw: 'infantry'   },
+    { label: 'Vehicle',    kw: 'vehicle'    },
+    { label: 'Monster',    kw: 'monster'    },
+    { label: 'Psyker',     kw: 'psyker'     },
+  ];
 
   UI.renderStatCell = function (label, value) {
     return `<div class="stat-cell"><span class="stat-name">${label}</span><span class="stat-value">${UI.escapeHtml(String(value))}</span></div>`;
   };
 
-  UI.createUnitCard = function (unit, isSelected) {
+  // Subsequence match — tests whether every character in `needle` appears
+  // in `haystack` in order (not necessarily contiguous). Both lowercased.
+  // Returns false for empty needle.
+  function isSubsequence(needle, haystack) {
+    if (!needle) return false;
+    let i = 0, j = 0;
+    while (i < needle.length && j < haystack.length) {
+      if (needle.charCodeAt(i) === haystack.charCodeAt(j)) i++;
+      j++;
+    }
+    return i === needle.length;
+  }
+
+  // Fuzzy match: split search into whitespace tokens; every token must match
+  // the unit (AND). A single token matches if it's a substring of name,
+  // any keyword, or the faction name — or a subsequence of unit.name.
+  function fuzzyMatch(unit, tokens) {
+    const name     = (unit.name || '').toLowerCase();
+    const fac      = (unit._factionName || '').toLowerCase();
+    const keywords = (unit.keywords || []).map(k => k.toLowerCase());
+    for (let t = 0; t < tokens.length; t++) {
+      const tok = tokens[t];
+      if (!tok) continue;
+      const hit =
+        name.indexOf(tok) !== -1 ||
+        fac.indexOf(tok)  !== -1 ||
+        keywords.some(k => k.indexOf(tok) !== -1) ||
+        isSubsequence(tok, name);
+      if (!hit) return false;
+    }
+    return true;
+  }
+
+  UI.createUnitCard = function (unit, isSelected, opts) {
     const esc = UI.escapeHtml;
     const card = document.createElement('div');
-    card.className = 'unit-card' + (isSelected ? ' selected' : '');
+    const extraClasses = (window.App && App.hooks && App.hooks.cardClassContributors || [])
+      .map(fn => { try { return fn(unit); } catch (_) { return null; } })
+      .filter(Boolean).join(' ');
+    const hideFaction = !!(opts && opts.hideFaction);
+    card.className = 'unit-card'
+      + (isSelected ? ' selected' : '')
+      + (hideFaction ? ' faction-hidden' : '')
+      + (extraClasses ? ' ' + extraClasses : '');
     card.dataset.unitId      = unit.id;
     card.dataset.factionName = unit._factionName || '';
 
@@ -87,7 +141,7 @@
     const frag = document.createDocumentFragment();
     for (let i = R.rendered; i < end; i++) {
       const unit = R.filtered[i];
-      frag.appendChild(UI.createUnitCard(unit, unit.id === R.selectedId));
+      frag.appendChild(UI.createUnitCard(unit, unit.id === R.selectedId, { hideFaction: R.hideFaction }));
     }
     grid.appendChild(frag);
     R.rendered = end;
@@ -115,7 +169,87 @@
     sc.addEventListener('scroll', R.scrollHandler, { passive: true });
   }
 
+  // Inject chip row once, as the first child of the center panel's .panel-body.
+  // Idempotent: subsequent calls just return the existing node.
+  function ensureChipBar() {
+    let bar = document.getElementById('roster-filter-chips');
+    if (bar) return bar;
+    const controls = document.querySelector('#panel-center .panel-controls')
+                  || document.querySelector('.panel-controls');
+    if (!controls) return null;
+    bar = document.createElement('div');
+    bar.id = 'roster-filter-chips';
+    bar.className = 'filter-chips';
+    ROLE_CHIPS.forEach(c => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'filter-chip';
+      btn.dataset.chipKw = c.kw;
+      btn.textContent = c.label;
+      btn.addEventListener('click', () => {
+        if (R.activeChips[c.kw]) delete R.activeChips[c.kw];
+        else R.activeChips[c.kw] = true;
+        btn.classList.toggle('active');
+        syncClearVisibility();
+        if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
+          App.renderUnitRosterWithContext();
+        }
+      });
+      bar.appendChild(btn);
+    });
+    const clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'filter-chips-clear';
+    clear.textContent = '×';
+    clear.title = 'Clear role filters';
+    clear.addEventListener('click', () => {
+      Object.keys(R.activeChips).forEach(k => delete R.activeChips[k]);
+      bar.querySelectorAll('.filter-chip.active').forEach(el => el.classList.remove('active'));
+      syncClearVisibility();
+      if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
+        App.renderUnitRosterWithContext();
+      }
+    });
+    bar.appendChild(clear);
+    // Insert chip bar after the search input (still within .panel-controls).
+    controls.appendChild(bar);
+    syncClearVisibility();
+    return bar;
+  }
+
+  function syncClearVisibility() {
+    const bar = document.getElementById('roster-filter-chips');
+    if (!bar) return;
+    const clear = bar.querySelector('.filter-chips-clear');
+    if (!clear) return;
+    clear.style.display = Object.keys(R.activeChips).length > 0 ? '' : 'none';
+  }
+
+  // Register a single chip predicate on App.hooks.rosterFilters (dedupe-safe).
+  function ensureChipPredicate() {
+    if (R._chipPredicateRegistered) return;
+    if (!(window.App && App.hooks && Array.isArray(App.hooks.rosterFilters))) return;
+    const pred = function chipFilterPredicate(unit) {
+      const keys = Object.keys(R.activeChips);
+      if (keys.length === 0) return true;
+      const kws = (unit.keywords || []).map(k => k.toLowerCase());
+      // All active chips must be present (AND) — matches typical "Character + Infantry" intent.
+      for (let i = 0; i < keys.length; i++) {
+        if (kws.indexOf(keys[i]) === -1) return false;
+      }
+      return true;
+    };
+    pred._isChipPredicate = true;
+    // Defensive dedupe if a previous bootstrap already pushed one.
+    App.hooks.rosterFilters = App.hooks.rosterFilters.filter(fn => !fn._isChipPredicate);
+    App.hooks.rosterFilters.push(pred);
+    R._chipPredicateRegistered = true;
+  }
+
   UI.renderUnitRoster = function (units, searchTerm, factionFilter, selectedUnitId, linkedFactions = []) {
+    ensureChipBar();
+    ensureChipPredicate();
+
     const grid  = document.getElementById('unit-grid');
     const badge = document.getElementById('unit-count-badge');
     const empty = document.getElementById('roster-empty');
@@ -127,12 +261,16 @@
       );
     }
     if (searchTerm) {
-      const s = searchTerm.toLowerCase();
-      filtered = filtered.filter(u =>
-        u.name.toLowerCase().includes(s) ||
-        (u.keywords || []).some(k => k.toLowerCase().includes(s)) ||
-        (u._factionName || '').toLowerCase().includes(s)
-      );
+      const tokens = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+      if (tokens.length > 0) filtered = filtered.filter(u => fuzzyMatch(u, tokens));
+    }
+
+    // Hook-registered extra filters (e.g. role/keyword chips).
+    const extraFilters = (window.App && App.hooks && App.hooks.rosterFilters) || [];
+    if (extraFilters.length > 0) {
+      filtered = filtered.filter(u => extraFilters.every(fn => {
+        try { return fn(u); } catch (_) { return true; }
+      }));
     }
 
     badge.textContent = `${filtered.length} unit${filtered.length !== 1 ? 's' : ''}`;
@@ -143,6 +281,9 @@
     R.filtered   = filtered;
     R.rendered   = 0;
     R.selectedId = selectedUnitId || null;
+    // When a specific faction/chapter is selected, suppress the faction line
+    // on cards — it would just repeat the filter.
+    R.hideFaction = !!(factionFilter && factionFilter !== 'all');
 
     if (filtered.length === 0) {
       if (empty) empty.style.display = '';

@@ -29,6 +29,7 @@
   };
 
   UI.renderArmyList = function (army) {
+    if (window.App && typeof App.fireArmyChange === 'function') App.fireArmyChange('render');
     if (!army) return;
 
     const nameInput  = document.getElementById('army-name-input');

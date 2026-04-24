@@ -74,8 +74,6 @@ window.BSData = (() => {
 
   // ── Bulk loader ──────────────────────────────────────────────────────────
 
-  const GST_CACHE_PREFIX = 'yaab_gst_10e_v3_';
-
   /**
    * Download and parse every catalogue file in the repo.
    * Loads game system (.gst) files first to build a cross-file shared index
@@ -89,10 +87,10 @@ window.BSData = (() => {
     for (const gst of gstFiles) {
       try {
         let xml = null;
-        try { xml = sessionStorage.getItem(GST_CACHE_PREFIX + gst.name); } catch (_) {}
+        try { xml = await YaabDB.getGst(gst.name); } catch (_) {}
         if (!xml) {
           xml = await fetchFile(gst.path);
-          try { sessionStorage.setItem(GST_CACHE_PREFIX + gst.name, xml); } catch (_) {}
+          try { await YaabDB.putGst(gst.name, xml); } catch (_) {}
         }
         WahapediaParser.addToSharedIndex(xml);
       } catch (e) {
@@ -113,10 +111,10 @@ window.BSData = (() => {
     for (const lib of libFiles) {
       try {
         let xml = null;
-        try { xml = sessionStorage.getItem(GST_CACHE_PREFIX + lib.name); } catch (_) {}
+        try { xml = await YaabDB.getGst(lib.name); } catch (_) {}
         if (!xml) {
           xml = await fetchFile(lib.path);
-          try { sessionStorage.setItem(GST_CACHE_PREFIX + lib.name, xml); } catch (_) {}
+          try { await YaabDB.putGst(lib.name, xml); } catch (_) {}
         }
         WahapediaParser.addToSharedIndex(xml);
       } catch (e) {
@@ -131,7 +129,7 @@ window.BSData = (() => {
         if (signal && signal.aborted) return;
         const file = catFiles[cursor++];
         try {
-          const cached = _getCachedFaction(file.name);
+          const cached = await _getCachedFaction(file.name);
           let faction;
           if (cached) {
             faction = cached;
@@ -139,7 +137,7 @@ window.BSData = (() => {
             const xml = await fetchFile(file.path);
             if (signal && signal.aborted) return;
             faction = WahapediaParser.parse(xml, file.path);
-            _cacheFaction(faction);
+            await _cacheFaction(faction);
           }
           done++;
           onProgress(done, total, faction.factionName);
@@ -166,30 +164,30 @@ window.BSData = (() => {
     sessionStorage.removeItem(CACHE_KEY);
   }
 
-  // ── Session cache helpers ────────────────────────────────────────────────
+  // ── Persistent cache helpers (IndexedDB via YaabDB) ──────────────────────
 
-  const FACTION_CACHE_PREFIX = 'yaab_bsf_10e_v7_';
-
-  function _getCachedFaction(name) {
-    try {
-      const raw = sessionStorage.getItem(FACTION_CACHE_PREFIX + name);
-      return raw ? JSON.parse(raw) : null;
-    } catch (_) { return null; }
+  async function _getCachedFaction(name) {
+    try { return await YaabDB.getFaction(name); }
+    catch (_) { return null; }
   }
 
-  function _cacheFaction(faction) {
-    try {
-      sessionStorage.setItem(FACTION_CACHE_PREFIX + faction.factionName, JSON.stringify(faction));
-    } catch (_) { /* sessionStorage full — skip caching */ }
+  async function _cacheFaction(faction) {
+    try { await YaabDB.putFaction(faction); } catch (_) {}
   }
 
-  function clearFactionCache() {
+  async function clearFactionCache() {
+    // Clear legacy sessionStorage keys (for users upgrading from the old cache)
+    // as well as the filelist, then wipe the IndexedDB stores.
     const keys = [];
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const k = sessionStorage.key(i);
-      if (k && (k.startsWith('yaab_bsf_') || k.startsWith('yaab_bsdata_filelist') || k.startsWith('yaab_gst_'))) keys.push(k);
-    }
-    keys.forEach(k => sessionStorage.removeItem(k));
+    try {
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const k = sessionStorage.key(i);
+        if (k && (k.startsWith('yaab_bsf_') || k.startsWith('yaab_bsdata_filelist') || k.startsWith('yaab_gst_'))) keys.push(k);
+      }
+      keys.forEach(k => sessionStorage.removeItem(k));
+    } catch (_) {}
+    try { await YaabDB.clearFactions(); } catch (_) {}
+    try { await YaabDB.clearGst(); } catch (_) {}
   }
 
   return { fetchFileList, fetchFile, loadAllFactions, clearCache, clearFactionCache };

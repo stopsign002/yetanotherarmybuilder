@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Yet Another Army Builder</title>
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/validation.css" />
+  <link rel="stylesheet" href="css/datasheet.css" />
 </head>
 <body>
 
@@ -240,6 +243,7 @@
   <div id="global-tooltip" class="global-tooltip" hidden></div>
 
   <!-- Scripts (order matters — see docs/ARCHITECTURE.md) -->
+  <script src="js/db.js"></script>
   <script src="js/bsdata.js"></script>
 
   <!-- Parser: shared-index + classify seed internals; leaf helpers; entry; catalogue; public API last. -->
@@ -270,15 +274,30 @@
   <script src="js/ui/detail.js"></script>
   <script src="js/ui/army-list.js"></script>
   <script src="js/ui/modals.js"></script>
+  <script src="js/ui/datasheet.js"></script>
 
-  <!-- App: state first, bootstrap index.js last (DOMContentLoaded). -->
+  <!-- App: state first, hooks second (feature modules register via App.hooks),
+       bootstrap index.js last (DOMContentLoaded). -->
   <script src="js/app/state.js"></script>
+  <script src="js/app/hooks.js"></script>
   <script src="js/app/filters.js"></script>
   <script src="js/app/render.js"></script>
   <script src="js/app/bsdata-load.js"></script>
   <script src="js/app/resize.js"></script>
   <script src="js/app/selections.js"></script>
   <script src="js/app/events.js"></script>
+
+  <!-- Feature modules (all extend via App.hooks; safe to reorder within block). -->
+  <!-- FEATURE-MODULES-START -->
+  <script src="js/app/theme.js"></script>
+  <script src="js/parser/report.js"></script>
+  <script src="js/app/history.js"></script>
+  <script src="js/app/url-share.js"></script>
+  <script src="js/app/validation.js"></script>
+  <script src="js/app/keyboard.js"></script>
+  <!-- FEATURE-MODULES-END -->
+
   <script src="js/app/index.js"></script>
+  <script src="js/app/sw-register.js"></script>
 </body>
 </html>

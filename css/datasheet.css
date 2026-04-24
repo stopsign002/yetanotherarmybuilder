@@ -1,0 +1,350 @@
+/* datasheet.css — datasheet layout (screen preview) + @media print rules. */
+
+/* Page: A4 is the international default; most home printers handle it cleanly. */
+@page { size: A4; margin: 12mm; }
+
+/* --- print-root: hidden on screen, the ONLY visible thing when printing --- */
+.print-root { display: none; }
+
+.datasheet,
+.datasheet * {
+  box-sizing: border-box;
+}
+
+.datasheet {
+  --ds-fg: #111;
+  --ds-muted: #555;
+  --ds-border: #bbb;
+  --ds-banner-bg: #1a1a1a;
+  --ds-banner-fg: #fff;
+  --ds-accent: #8a1f1f;
+  --ds-zebra: #f4f4f4;
+  --ds-chip-bg: #f0f0f0;
+  --ds-chip-border: #bbb;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+               Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+  font-size: 11pt;
+  line-height: 1.35;
+  color: var(--ds-fg);
+  background: #fff;
+  padding: 10mm;
+  margin: 0 0 8mm 0;
+  border: 1px solid var(--ds-border);
+  border-radius: 4px;
+}
+
+/* Banner */
+.datasheet .ds-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--ds-banner-bg);
+  color: var(--ds-banner-fg);
+  padding: 8px 14px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+.datasheet .ds-name {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  font-size: 20pt;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+.datasheet .ds-subtitle {
+  font-size: 10pt;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+.datasheet .ds-subtitle > span + span::before {
+  content: "\00a0\2022\00a0";
+  opacity: 0.6;
+}
+.datasheet .ds-pts {
+  font-weight: 700;
+  font-size: 14pt;
+  background: var(--ds-accent);
+  padding: 4px 10px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* Stat strip */
+.datasheet .ds-stats {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.datasheet .ds-stat {
+  border: 1px solid var(--ds-border);
+  border-radius: 3px;
+  padding: 4px 2px;
+  text-align: center;
+  background: #fafafa;
+}
+.datasheet .ds-stat-label {
+  font-size: 8.5pt;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--ds-muted);
+  text-transform: uppercase;
+}
+.datasheet .ds-stat-value {
+  font-size: 15pt;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.datasheet .ds-footnote {
+  font-size: 9pt;
+  color: var(--ds-muted);
+  margin-bottom: 8px;
+}
+
+/* Two-column body */
+.datasheet .ds-body {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .datasheet .ds-body { grid-template-columns: 1fr; }
+}
+.datasheet .ds-col { min-width: 0; }
+
+.datasheet .ds-block,
+.datasheet .ds-weapons-block {
+  margin-bottom: 10px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.datasheet .ds-subheading {
+  font-size: 10pt;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ds-banner-fg);
+  background: var(--ds-banner-bg);
+  padding: 3px 8px;
+  border-radius: 2px;
+  margin-bottom: 4px;
+}
+.datasheet .ds-subheading-ranged { background: #203a5a; }
+.datasheet .ds-subheading-melee  { background: #5a2020; }
+
+/* Weapon tables */
+.datasheet .ds-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+  table-layout: auto;
+}
+.datasheet .ds-table th,
+.datasheet .ds-table td {
+  border: 1px solid var(--ds-border);
+  padding: 3px 5px;
+  text-align: center;
+  vertical-align: top;
+}
+.datasheet .ds-table th {
+  background: #ececec;
+  font-weight: 700;
+  color: #222;
+}
+.datasheet .ds-table tbody tr:nth-child(even) td {
+  background: var(--ds-zebra);
+}
+.datasheet .ds-w-name {
+  text-align: left;
+  font-weight: 600;
+}
+.datasheet .ds-w-keywords {
+  text-align: left;
+}
+
+/* Chips (keywords, core abilities) */
+.datasheet .ds-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  margin: 1px 3px 1px 0;
+  border-radius: 3px;
+  border: 1px solid var(--ds-chip-border);
+  background: var(--ds-chip-bg);
+  font-size: 8.5pt;
+  line-height: 1.4;
+  color: var(--ds-fg);
+  white-space: nowrap;
+}
+.datasheet .ds-chip-core {
+  background: #e7eef7;
+  border-color: #a8bdd6;
+}
+.datasheet .ds-chip-keyword {
+  background: #fff;
+}
+.datasheet .ds-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+/* Abilities */
+.datasheet .ds-ability {
+  margin: 4px 0;
+  font-size: 9.5pt;
+  line-height: 1.4;
+}
+.datasheet .ds-ability-name {
+  font-weight: 700;
+}
+.datasheet .ds-ability-desc {
+  color: var(--ds-fg);
+}
+.datasheet .ds-leader {
+  margin: 4px 0;
+}
+
+/* Wargear */
+.datasheet .ds-wargear-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 9.5pt;
+}
+.datasheet .ds-wargear-item {
+  margin-bottom: 3px;
+}
+.datasheet .ds-wargear-model {
+  font-weight: 700;
+}
+.datasheet .ds-wargear-sub {
+  margin: 2px 0 4px;
+  padding-left: 18px;
+}
+.datasheet .ds-wargear-sub-head {
+  font-weight: 600;
+  list-style: none;
+  margin-left: -12px;
+}
+
+/* Bottom keywords row */
+.datasheet .ds-keywords {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 2px solid var(--ds-banner-bg);
+  font-size: 9pt;
+}
+.datasheet .ds-keywords-label {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+.datasheet .ds-keywords-list {
+  display: inline;
+}
+
+/* Cover page */
+.datasheet-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240mm;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  color: #111;
+  background: #fff;
+  break-after: page;
+  page-break-after: always;
+}
+.datasheet-cover .ds-cover-kicker {
+  font-size: 11pt;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #777;
+  margin-bottom: 18px;
+}
+.datasheet-cover .ds-cover-title {
+  font-size: 32pt;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  margin-bottom: 14px;
+}
+.datasheet-cover .ds-cover-line {
+  font-size: 13pt;
+  color: #333;
+  margin: 4px 0;
+}
+.datasheet-cover .ds-cover-pts {
+  margin-top: 22px;
+  font-size: 18pt;
+  font-weight: 700;
+  color: #8a1f1f;
+}
+
+/* Each datasheet in a multi-unit print starts on a new page. */
+.datasheet-page {
+  break-before: page;
+  page-break-before: always;
+}
+
+/* ============================================================
+ * Print media: hide the app shell, show only the print root.
+ * Force light colors regardless of app's dark theme.
+ * ============================================================ */
+@media print {
+  body > *:not(.print-root) {
+    display: none !important;
+  }
+  .print-root {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .datasheet {
+    color: #000 !important;
+    background: #fff !important;
+    border: 1px solid #666 !important;
+    margin: 0 0 6mm 0 !important;
+    padding: 6mm !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .datasheet .ds-banner {
+    background: #111 !important;
+    color: #fff !important;
+  }
+  .datasheet .ds-pts {
+    background: #8a1f1f !important;
+    color: #fff !important;
+  }
+  .datasheet .ds-subheading {
+    background: #111 !important;
+    color: #fff !important;
+  }
+  .datasheet .ds-subheading-ranged { background: #203a5a !important; }
+  .datasheet .ds-subheading-melee  { background: #5a2020 !important; }
+  .datasheet .ds-stat { background: #fafafa !important; }
+  .datasheet .ds-table th { background: #ececec !important; color: #000 !important; }
+  .datasheet .ds-table tbody tr:nth-child(even) td { background: #f4f4f4 !important; }
+  .datasheet .ds-chip { background: #f0f0f0 !important; color: #000 !important; border-color: #bbb !important; }
+  .datasheet .ds-chip-core { background: #e7eef7 !important; }
+  .datasheet .ds-chip-keyword { background: #fff !important; }
+  /* Cover page prints on its own sheet. */
+  .datasheet-cover { background: #fff !important; color: #111 !important; }
+  /* Don't split weapon rows or ability blocks mid-page. */
+  .datasheet .ds-weapons-block,
+  .datasheet .ds-block,
+  .datasheet .ds-ability,
+  .datasheet .ds-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

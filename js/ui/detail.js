@@ -7,6 +7,25 @@
   let _ledByCache = null;
   let _ledByVersion = -1;
 
+  // Weapon-keyword color class resolver. Matches by lowercase prefix or
+  // exact lowercase name. Falls through to default (no class = neutral gray).
+  function weaponKwClass(raw) {
+    const kw = (raw || '').trim().toLowerCase();
+    if (!kw) return '';
+    if (kw.startsWith('anti-'))       return 'weapon-kw-red';
+    if (kw === 'lethal hits')         return 'weapon-kw-red';
+    if (kw === 'devastating wounds')  return 'weapon-kw-red';
+    if (kw.startsWith('sustained hits')) return 'weapon-kw-orange';
+    if (kw === 'melta' || kw.startsWith('melta '))  return 'weapon-kw-orange';
+    if (kw === 'assault')             return 'weapon-kw-blue';
+    if (kw === 'pistol')              return 'weapon-kw-blue';
+    if (kw.startsWith('rapid fire'))  return 'weapon-kw-blue';
+    if (kw === 'heavy')               return 'weapon-kw-blue';
+    if (kw === 'twin-linked' || kw === 'twin linked') return 'weapon-kw-purple';
+    if (kw === 'torrent')             return 'weapon-kw-purple';
+    return '';
+  }
+
   function buildLedByIndex(allUnits) {
     const idx = new Map();
     for (let i = 0; i < allUnits.length; i++) {
@@ -78,14 +97,19 @@
             ${ptsOpts.length > 0 ? `<span class="detail-pts">${ptsOpts.join(' / ')} pts</span>` : ''}
           </div>
         </div>
-        <button class="btn-google-search" id="btn-google-images" data-unit="${esc(unit.name)}" title="Search Google Images">
-          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-        </button>
+        <div class="detail-header-actions">
+          ${(window.App && App.hooks && App.hooks.detailActions || []).map(a =>
+            `<button class="detail-action-btn" data-action-id="${esc(a.id)}" title="${esc(a.title || '')}">${a.html || esc(a.label || '')}</button>`
+          ).join('')}
+          <button class="btn-google-search" id="btn-google-images" data-unit="${esc(unit.name)}" title="Search Google Images">
+            <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+          </button>
+        </div>
       </div>
     `;
 
@@ -162,7 +186,11 @@
                         const kws = String(w[c]).split(',').map(k => k.trim()).filter(Boolean);
                         return `<td class="weapon-keywords-cell">${kws.map(k => {
                           const d = w._keywordDefs && w._keywordDefs[k];
-                          return `<span class="weapon-kw-tag${d ? ' has-tooltip' : ''}"${d ? ` data-tooltip="${esc(d)}"` : ''}>${esc(k)}</span>`;
+                          const colorClass = weaponKwClass(k);
+                          const classes = 'weapon-kw-tag'
+                            + (d ? ' has-tooltip' : '')
+                            + (colorClass ? ' ' + colorClass : '');
+                          return `<span class="${classes}"${d ? ` data-tooltip="${esc(d)}"` : ''}>${esc(k)}</span>`;
                         }).join('')}</td>`;
                       }
                       return `<td>${esc(String(w[c] != null ? w[c] : '—'))}</td>`;
@@ -221,13 +249,17 @@
       html += `</div>`;
     }
 
-    // "Led By" uses the memoized reverse-index.
+    // "Led By" uses the memoized reverse-index. Collapsed by default: first
+    // 3 leaders visible + "+N more" pill; click section header or pill to expand.
     const ledBy = getLedByFor(unit);
     if (ledBy.length > 0) {
-      html += `<div class="detail-section">
-        <div class="detail-section-title detail-section-title-ledbby">Led By</div>
-        <div class="detail-ledby-list">
+      const extra = ledBy.length - 3;
+      const collapsed = ledBy.length > 3;
+      html += `<div class="detail-section detail-ledby-section">
+        <div class="detail-section-title detail-section-title-ledbby detail-ledby-title"${collapsed ? ' role="button" tabindex="0"' : ''}>Led By</div>
+        <div class="detail-ledby-list${collapsed ? ' collapsed' : ''}">
           ${ledBy.map(l => `<span class="ledby-tag">${esc(l.name)}</span>`).join('')}
+          ${collapsed ? `<span class="ledby-more-pill" role="button" tabindex="0">+${extra} more</span>` : ''}
         </div>
       </div>`;
     }
@@ -304,12 +336,17 @@
 
     if (detachmentEnhancements && detachmentEnhancements.length > 0) {
       const selectedNames = new Set((selectedEnhancements || []).map(e => e.name));
+      // 10e rule: enhancements require the Character keyword on the recipient.
+      // Conservative: only mark ineligible when the keyword is clearly missing;
+      // never hide (users may want to see what exists in the detachment).
+      const isCharacter = (unit.keywords || []).some(k => String(k).toLowerCase() === 'character');
       html += `<div class="detail-section" id="detail-enhancements-section">
         <div class="detail-section-title">Enhancements</div>
         <div class="detail-enhancements-list">`;
       detachmentEnhancements.forEach(enh => {
         const checked = selectedNames.has(enh.name) ? ' checked' : '';
-        html += `<label class="enhancement-cb-item">
+        const ineligClass = isCharacter ? '' : ' enhancement-ineligible';
+        html += `<label class="enhancement-cb-item${ineligClass}"${!isCharacter ? ' title="Character-only"' : ''}>
           <input type="checkbox" class="enhancement-cb" value="${esc(enh.name)}"${checked}
             data-enh-pts="${enh.pts || 0}" data-enh-name="${esc(enh.name)}" data-enh-desc="${esc(enh.description || '')}"/>
           <span class="enh-cb-body">
@@ -318,6 +355,7 @@
               <span class="enh-cb-pts">${enh.pts ? enh.pts + ' pts' : ''}</span>
             </span>
             <span class="enh-cb-desc">${esc(enh.description || '')}</span>
+            ${!isCharacter ? '<span class="enh-cb-ineligible-note">Character-only</span>' : ''}
           </span>
         </label>`;
       });
@@ -334,6 +372,37 @@
       const name = e.currentTarget.dataset.unit;
       window.open('https://www.google.com/search?q=' + encodeURIComponent('warhammer 40k ' + name + ' miniature') + '&tbm=isch', 'yaab_img');
     });
+
+    // Wire hook-registered detail action buttons.
+    const actions = (window.App && App.hooks && App.hooks.detailActions) || [];
+    panel.querySelectorAll('.detail-action-btn').forEach(btn => {
+      const id = btn.dataset.actionId;
+      const action = actions.find(a => a.id === id);
+      if (action && typeof action.onClick === 'function') {
+        btn.addEventListener('click', () => action.onClick(unit));
+      }
+    });
+
+    // Led-By: clicking the section title or "+N more" pill toggles collapse.
+    const ledbyList = panel.querySelector('.detail-ledby-list');
+    if (ledbyList) {
+      const expand = () => ledbyList.classList.remove('collapsed');
+      const toggle = () => ledbyList.classList.toggle('collapsed');
+      const title = panel.querySelector('.detail-ledby-title');
+      if (title) {
+        title.addEventListener('click', toggle);
+        title.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+        });
+      }
+      const pill = panel.querySelector('.ledby-more-pill');
+      if (pill) {
+        pill.addEventListener('click', e => { e.stopPropagation(); expand(); });
+        pill.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); expand(); }
+        });
+      }
+    }
   };
 
   UI.renderRuleDetail = function (data) {

@@ -1,0 +1,30 @@
+/* theme.css — light theme overrides. Accent vars are untouched (faction colour). */
+
+html[data-theme="light"] {
+  --bg:           #f5f5f5;
+  --panel-bg:     #ffffff;
+  --panel-alt:    #ececec;
+  --text:         #1a1a1a;
+  --text-muted:   #555555;
+  --border:       #cfcfcf;
+  --border-light: #b8b8b8;
+  --card-bg:      #ffffff;
+  --card-hover:   #f0f0f0;
+  --shadow:       0 2px 8px rgba(0,0,0,0.12);
+  --shadow-lg:    0 8px 32px rgba(0,0,0,0.18);
+}
+
+html[data-theme="light"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+html[data-theme="light"] ::-webkit-scrollbar-track {
+  background: var(--panel-bg);
+}
+html[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+}
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}

@@ -29,5 +29,6 @@
       state.selectedUnit ? state.selectedUnit.id : null,
       linkedFactions
     );
+    if (typeof App.fireSelectionChange === 'function') App.fireSelectionChange();
   };
 })();
