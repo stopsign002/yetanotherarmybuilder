@@ -1,0 +1,300 @@
+/* hero-state.css — empty-army hero CTA, search Cmd+K hint, faction recents chip row, first-time tour. */
+
+/* ============================================================
+   1. Hero CTA — replaces the small "No units added yet" placeholder
+   ============================================================ */
+.yaab-hero-cta {
+  list-style: none;
+  margin: 18px 0 8px;
+  padding: 22px 18px 18px;
+  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.22);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg,
+      rgba(var(--accent-rgb, 200, 200, 200), 0.06) 0%,
+      rgba(var(--accent-rgb, 200, 200, 200), 0.02) 100%);
+  text-align: left;
+  position: relative;
+}
+
+.yaab-hero-headline {
+  font-family: var(--font-display, "Cinzel", "Trajan Pro", "Optima",
+    Georgia, "Times New Roman", serif);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text, #f0f0f0);
+  margin: 0 0 6px;
+  line-height: 1.15;
+}
+
+.yaab-hero-sub {
+  font-size: 13px;
+  color: var(--text-muted, #aaa);
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.yaab-hero-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.yaab-hero-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.28);
+  border-radius: 8px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+.yaab-hero-btn:hover {
+  background: rgba(var(--accent-rgb, 200, 200, 200), 0.10);
+  border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.55);
+}
+.yaab-hero-btn:active { transform: translateY(1px); }
+.yaab-hero-btn:focus-visible {
+  outline: 2px solid var(--accent, #c8c8c8);
+  outline-offset: 2px;
+}
+
+.yaab-hero-btn-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text, #f0f0f0);
+}
+.yaab-hero-btn-sub {
+  font-size: 11px;
+  color: var(--text-muted, #aaa);
+  line-height: 1.3;
+}
+
+/* Mini variant — when a faction is selected but army still empty */
+.yaab-hero-cta-mini {
+  padding: 14px 14px;
+}
+.yaab-hero-mini-headline {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text, #f0f0f0);
+  margin-bottom: 4px;
+}
+.yaab-hero-mini-sub {
+  font-size: 12px;
+  color: var(--text-muted, #aaa);
+  line-height: 1.4;
+}
+
+/* ============================================================
+   2. Cmd+K search hint badge
+   ============================================================ */
+.yaab-search-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.yaab-search-wrap > .search-input {
+  width: 100%;
+  /* leave room for the badge */
+  padding-right: 56px;
+}
+
+.yaab-kbd-hint {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 20px;
+  padding: 0 6px;
+  font: 600 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  color: var(--text-muted, #aaa);
+  background: rgba(var(--accent-rgb, 200, 200, 200), 0.12);
+  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.30);
+  border-radius: 4px;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.yaab-kbd-hint:hover {
+  background: rgba(var(--accent-rgb, 200, 200, 200), 0.22);
+  color: var(--text, #f0f0f0);
+}
+.yaab-kbd-hint-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(0.92);
+}
+
+/* ============================================================
+   3. Faction switcher chip row (recents)
+   ============================================================ */
+.yaab-faction-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.yaab-faction-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text, #f0f0f0);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.25);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 100ms ease, border-color 100ms ease;
+  font-family: inherit;
+  max-width: 160px;
+}
+.yaab-faction-chip:hover {
+  background: rgba(var(--accent-rgb, 200, 200, 200), 0.14);
+  border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.55);
+}
+.yaab-faction-chip:focus-visible {
+  outline: 2px solid var(--accent, #c8c8c8);
+  outline-offset: 2px;
+}
+.yaab-faction-chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 8px;
+  display: inline-block;
+}
+.yaab-faction-chip-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   4. First-time tour overlay
+   ============================================================ */
+.yaab-tour-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  background: rgba(0, 0, 0, 0.55);
+  /* Allow the highlight cutout to show through via box-shadow trickery: */
+  pointer-events: auto;
+}
+.yaab-tour-backdrop[hidden] { display: none; }
+
+.yaab-tour-highlight {
+  position: fixed;
+  border-radius: 10px;
+  pointer-events: none;
+  /* Cut a "hole" in the dim by overlaying a viewport-sized shadow ring. */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  /* Subtract the backdrop's own dim where the highlight sits. */
+  background: transparent;
+  outline: 2px solid rgba(var(--accent-rgb, 200, 200, 200), 0.85);
+  outline-offset: 2px;
+  transition: all 180ms ease;
+}
+
+.yaab-tour-tooltip {
+  position: fixed;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  padding: 16px 18px 14px;
+  background: var(--panel-bg, #1a1a1a);
+  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.45);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  color: var(--text, #f0f0f0);
+  font-size: 13px;
+  line-height: 1.45;
+  transition: left 180ms ease, top 180ms ease;
+}
+
+.yaab-tour-step {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted, #aaa);
+  margin-bottom: 4px;
+}
+.yaab-tour-title {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 6px;
+  color: var(--text, #f0f0f0);
+}
+.yaab-tour-body {
+  color: var(--text, #f0f0f0);
+  margin-bottom: 14px;
+}
+
+.yaab-tour-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.yaab-tour-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 100ms ease, border-color 100ms ease;
+}
+.yaab-tour-skip {
+  background: transparent;
+  color: var(--text-muted, #aaa);
+  border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.25);
+}
+.yaab-tour-skip:hover {
+  color: var(--text, #f0f0f0);
+  border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.55);
+}
+.yaab-tour-next {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  border-color: var(--accent, #c8c8c8);
+}
+.yaab-tour-next:hover {
+  background: var(--accent-hover, #e0e0e0);
+  border-color: var(--accent-hover, #e0e0e0);
+}
+.yaab-tour-btn:focus-visible {
+  outline: 2px solid var(--accent, #c8c8c8);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .yaab-tour-highlight,
+  .yaab-tour-tooltip,
+  .yaab-hero-btn,
+  .yaab-faction-chip,
+  .yaab-kbd-hint,
+  .yaab-tour-btn {
+    transition: none !important;
+  }
+}

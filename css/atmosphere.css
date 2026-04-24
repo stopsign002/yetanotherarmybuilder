@@ -1,0 +1,161 @@
+/* css/atmosphere.css — atmospheric polish: hex grid, accent stripe, scanline, save pulse, animated crest. */
+
+/* ──────────────────────────────────────────────────────────────────────
+   1. Hex-grid background — should be a *whisper* not a graphic.
+   Applied to .panel-body so panel headers stay clean. ~3.5% opacity
+   strokes against the existing panel backgrounds.
+   ────────────────────────────────────────────────────────────────────── */
+.panel-body {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='49' viewBox='0 0 56 49'><g fill='none' stroke='%23ffffff' stroke-opacity='0.035' stroke-width='1'><path d='M14 0.5 L42 0.5 L56 24.5 L42 48.5 L14 48.5 L0 24.5 Z'/><path d='M42 0.5 L70 0.5 L84 24.5 L70 48.5 L42 48.5'/><path d='M-14 24.5 L0 24.5'/><path d='M56 24.5 L70 24.5'/></g></svg>");
+  background-size: 56px 49px;
+  background-repeat: repeat;
+  background-attachment: local;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   2. Active panel-header accent stripe — 2px bar along the top edge of
+   whichever panel currently holds the user's focus. Driven by body
+   classes set in js/ui/scanline.js.
+   ────────────────────────────────────────────────────────────────────── */
+.panel-header { position: relative; }
+
+.panel-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.55);
+  opacity: 0;
+  transform: scaleX(0.6);
+  transform-origin: left center;
+  transition: opacity 220ms ease, transform 220ms ease;
+  pointer-events: none;
+}
+
+body.has-selected-faction .panel-left .panel-header::before,
+body.has-selected-unit    .panel-right .panel-header::before {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   3. Faction-color scanline sweep
+   ────────────────────────────────────────────────────────────────────── */
+.atmosphere-scanline {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  z-index: 9999;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--accent-rgb), 0) 0%,
+    rgba(var(--accent-rgb), 0.35) 20%,
+    rgba(var(--accent-rgb), 0.55) 50%,
+    rgba(var(--accent-rgb), 0.35) 80%,
+    rgba(var(--accent-rgb), 0) 100%
+  );
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.45);
+  will-change: transform, opacity;
+  animation: atmosphere-scanline-sweep 700ms ease-out forwards;
+}
+
+@keyframes atmosphere-scanline-sweep {
+  0%   { transform: translate3d(0, -4px, 0);    opacity: 0; }
+  15%  {                                        opacity: 1; }
+  85%  {                                        opacity: 1; }
+  100% { transform: translate3d(0, 100vh, 0);   opacity: 0; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   4. Save-button pulse — accent shadow ring at 2-second intervals when
+   the army has unsaved mutations.
+   ────────────────────────────────────────────────────────────────────── */
+#btn-save-army.has-unsaved {
+  animation: atmosphere-save-pulse 2s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+@keyframes atmosphere-save-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.55);
+  }
+  35% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 6px rgba(var(--accent-rgb), 0.0);
+  }
+  60% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.0);
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   5. Animated crest — drops into the empty unit-detail panel when a
+   faction is selected. The SVG itself is injected by
+   js/ui/animated-crest.js; styling lives here.
+   ────────────────────────────────────────────────────────────────────── */
+.atmosphere-crest-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 18px auto 8px;
+  user-select: none;
+}
+
+.atmosphere-crest {
+  width: 80px;
+  height: 80px;
+  display: block;
+  color: var(--accent);
+  filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.35));
+  will-change: transform, opacity;
+}
+
+.atmosphere-crest-rotor {
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+  animation: atmosphere-crest-spin 30s linear infinite;
+}
+
+.atmosphere-crest-pulse {
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+  animation: atmosphere-crest-pulse 4.5s ease-in-out infinite;
+}
+
+.atmosphere-crest-tagline {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.6px;
+  text-align: center;
+}
+
+@keyframes atmosphere-crest-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes atmosphere-crest-pulse {
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 1; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Reduced-motion: kill animations across the board.
+   ────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .atmosphere-scanline,
+  #btn-save-army.has-unsaved,
+  .atmosphere-crest-rotor,
+  .atmosphere-crest-pulse {
+    animation: none !important;
+  }
+  .atmosphere-scanline { display: none; }
+}
