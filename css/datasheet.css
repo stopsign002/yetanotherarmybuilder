@@ -364,12 +364,14 @@ body.print-preview-open .datasheet-cover {
   display: inline;
 }
 
-/* Cover page */
+/* Cover page — sized to fit inside landscape A4 printable area (~194mm tall
+   with 8mm margins). Previously 240mm which FORCED a second page by itself
+   and broke subsequent .datasheet-page break-before handling in Chromium. */
 .datasheet-cover {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 240mm;
+  min-height: 180mm;
   text-align: center;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
                "Helvetica Neue", Arial, sans-serif;
@@ -437,6 +439,13 @@ body.print-preview-open .datasheet-cover {
     color: #000 !important;
     padding: 0 !important;
     top: auto !important;
+  }
+  /* Defensive: if the preview-open class is still on <body> at print time,
+     neutralize its overflow:hidden + backgrounds so Chromium doesn't clip
+     pages beyond the viewport. */
+  body.print-preview-open {
+    overflow: visible !important;
+    background: #fff !important;
   }
   body.print-preview-open .print-root {
     padding: 0 !important;

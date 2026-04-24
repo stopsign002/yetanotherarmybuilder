@@ -316,8 +316,20 @@
     `;
     document.body.appendChild(bar);
     bar.querySelector('#print-preview-confirm').addEventListener('click', () => {
+      // Drop preview-open class during window.print() so the overlay's
+      // overflow:hidden + fixed backgrounds can't interfere with Chromium's
+      // page-break logic. Restore it on afterprint so the preview stays
+      // open for the user to close or save as PDF.
+      const wasOpen = document.body.classList.contains('print-preview-open');
+      if (wasOpen) document.body.classList.remove('print-preview-open');
+      const restore = () => {
+        if (wasOpen) document.body.classList.add('print-preview-open');
+        window.removeEventListener('afterprint', restore);
+      };
+      window.addEventListener('afterprint', restore);
+      setTimeout(restore, 2000);  // fallback — some browsers don't fire afterprint
       try { window.print(); }
-      catch (e) { console.warn('[datasheet.print]', e); closePreview(); }
+      catch (e) { console.warn('[datasheet.print]', e); restore(); closePreview(); }
     });
     bar.querySelector('#print-preview-pdf').addEventListener('click', onSaveAsPdfClick);
     bar.querySelector('#print-preview-close').addEventListener('click', closePreview);
@@ -347,8 +359,10 @@
     })();
 
     // html2pdf wraps html2canvas + jsPDF. Landscape A4 matches the print CSS.
-    // pagebreak.mode 'css' lets our existing break-before rules drive splits;
-    // 'avoid-all' makes html2canvas respect break-inside:avoid on child blocks.
+    // Forcing a page break BEFORE each .datasheet-page and AFTER the cover
+    // guarantees one datasheet per PDF page (mode:'css' alone doesn't
+    // always honor break-before when html2canvas renders the whole thing
+    // as a single tall image first).
     window.html2pdf()
       .set({
         margin:      [8, 8, 8, 8],                     // mm
@@ -356,7 +370,12 @@
         image:       { type: 'jpeg', quality: 0.96 },
         html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false },
         jsPDF:       { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
-        pagebreak:   { mode: ['css', 'legacy'], avoid: ['.ds-weapons-block', '.ds-block', '.ds-ability', 'tr'] },
+        pagebreak:   {
+          mode:   ['css', 'legacy'],
+          before: '.datasheet-page',
+          after:  '.datasheet-cover',
+          avoid:  ['.ds-weapons-block', '.ds-block', '.ds-ability', '.ds-leader', 'tr'],
+        },
       })
       .from(root)
       .save()
