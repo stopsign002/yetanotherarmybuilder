@@ -1,0 +1,542 @@
+/* datasheet.css — datasheet layout, in-app preview, @media print rules. */
+
+/* Landscape by default — 40k datasheets have wide weapon tables (up to 7
+   columns) that don't fit portrait comfortably. Users can still override
+   orientation in their printer dialog. `size: landscape` (no paper name)
+   lets the browser pick A4 or Letter to match user settings. */
+@page { size: landscape; margin: 10mm; }
+
+/* Hidden by default; the preview overlay or @media print reveals it. */
+.print-root { display: none; }
+
+/* --- In-app preview overlay ---
+   Triggered by body.print-preview-open. Users see EXACTLY what will print
+   before committing, with explicit Print / Close buttons.
+
+   Base CSS sets `html, body { height:100%; overflow:hidden }` to lock the
+   three-panel app inside the viewport — we must undo BOTH of those while
+   preview is open so the datasheet stack is scrollable. The fixed preview
+   bar stays pinned regardless. JS adds .print-preview-open to both <html>
+   and <body> so we can target them without needing :has(). */
+html.print-preview-open,
+body.print-preview-open {
+  height: auto !important;
+  overflow: auto !important;
+}
+body.print-preview-open .app-main,
+body.print-preview-open .toast-container,
+body.print-preview-open #global-tooltip,
+body.print-preview-open .page-progress-wrap {
+  display: none !important;
+}
+/* Preview mode keeps print-root in NORMAL DOCUMENT FLOW on purpose:
+   position:fixed on a print-target causes some browsers to print only the
+   visible viewport (one page). Normal flow + scrolling body gives us a
+   working multi-page print without special-casing @media print. */
+body.print-preview-open .print-root {
+  display: block;
+  background: #2a2a2a;
+  padding: 72px 20px 40px;  /* 72px: clear the fixed preview bar */
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+body.print-preview-open {
+  background: #2a2a2a;
+}
+.print-preview-bar {
+  display: none;
+}
+body.print-preview-open .print-preview-bar {
+  display: flex;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #1a1a1a;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  z-index: 1001;
+}
+.print-preview-bar .print-preview-title {
+  font-weight: 600;
+  color: #e8e8e8;
+  font-size: 14px;
+}
+.print-preview-bar .print-preview-actions {
+  display: flex;
+  gap: 8px;
+}
+.print-preview-bar button {
+  padding: 7px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+}
+.print-preview-bar .btn-print,
+.print-preview-bar .btn-pdf {
+  background: var(--accent, #a8bde6);
+  color: var(--accent-on, #111);
+  border-color: var(--accent, #a8bde6);
+}
+.print-preview-bar .btn-pdf {
+  background: transparent;
+  color: #e8e8e8;
+  border-color: rgba(255,255,255,0.25);
+}
+.print-preview-bar .btn-pdf:hover:not(:disabled) {
+  background: rgba(255,255,255,0.06);
+}
+.print-preview-bar .btn-pdf:disabled,
+.print-preview-bar .btn-print:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.print-preview-bar .btn-close {
+  background: transparent;
+  color: #e8e8e8;
+  border-color: rgba(255,255,255,0.18);
+}
+.print-preview-bar .btn-close:hover {
+  background: rgba(255,255,255,0.06);
+}
+.print-preview-bar .print-preview-hint {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  font-weight: 400;
+}
+/* During preview, give datasheets a page-like frame so the on-screen
+   view mirrors what the printer will produce. Landscape aspect ratio. */
+body.print-preview-open .datasheet {
+  max-width: 1100px;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+body.print-preview-open .datasheet-cover {
+  max-width: 1100px;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.datasheet,
+.datasheet * {
+  box-sizing: border-box;
+}
+
+.datasheet {
+  --ds-fg: #111;
+  --ds-muted: #555;
+  --ds-border: #bbb;
+  --ds-banner-bg: #1a1a1a;
+  --ds-banner-fg: #fff;
+  --ds-accent: #8a1f1f;
+  --ds-zebra: #f4f4f4;
+  --ds-chip-bg: #f0f0f0;
+  --ds-chip-border: #bbb;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+               Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+  font-size: 11pt;
+  line-height: 1.35;
+  color: var(--ds-fg);
+  background: #fff;
+  padding: 10mm;
+  margin: 0 0 8mm 0;
+  border: 1px solid var(--ds-border);
+  border-radius: 4px;
+}
+
+/* Banner */
+.datasheet .ds-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--ds-banner-bg);
+  color: var(--ds-banner-fg);
+  padding: 8px 14px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+.datasheet .ds-name {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  font-size: 20pt;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+.datasheet .ds-subtitle {
+  font-size: 10pt;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+.datasheet .ds-subtitle > span + span::before {
+  content: "\00a0\2022\00a0";
+  opacity: 0.6;
+}
+.datasheet .ds-pts {
+  font-weight: 700;
+  font-size: 14pt;
+  background: var(--ds-accent);
+  padding: 4px 10px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* Stat strip */
+.datasheet .ds-stats {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.datasheet .ds-stat {
+  border: 1px solid var(--ds-border);
+  border-radius: 3px;
+  padding: 4px 2px;
+  text-align: center;
+  background: #fafafa;
+}
+.datasheet .ds-stat-label {
+  font-size: 8.5pt;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--ds-muted);
+  text-transform: uppercase;
+}
+.datasheet .ds-stat-value {
+  font-size: 15pt;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.datasheet .ds-footnote {
+  font-size: 9pt;
+  color: var(--ds-muted);
+  margin-bottom: 8px;
+}
+
+/* Two-column body */
+.datasheet .ds-body {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .datasheet .ds-body { grid-template-columns: 1fr; }
+}
+.datasheet .ds-col { min-width: 0; }
+
+.datasheet .ds-block,
+.datasheet .ds-weapons-block {
+  margin-bottom: 10px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.datasheet .ds-subheading {
+  font-size: 10pt;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ds-banner-fg);
+  background: var(--ds-banner-bg);
+  padding: 3px 8px;
+  border-radius: 2px;
+  margin-bottom: 4px;
+}
+.datasheet .ds-subheading-ranged { background: #203a5a; }
+.datasheet .ds-subheading-melee  { background: #5a2020; }
+
+/* Weapon tables */
+.datasheet .ds-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+  table-layout: auto;
+}
+.datasheet .ds-table th,
+.datasheet .ds-table td {
+  border: 1px solid var(--ds-border);
+  padding: 3px 5px;
+  text-align: center;
+  vertical-align: top;
+}
+.datasheet .ds-table th {
+  background: #ececec;
+  font-weight: 700;
+  color: #222;
+}
+.datasheet .ds-table tbody tr:nth-child(even) td {
+  background: var(--ds-zebra);
+}
+.datasheet .ds-w-name {
+  text-align: left;
+  font-weight: 600;
+}
+.datasheet .ds-w-keywords {
+  text-align: left;
+}
+
+/* Chips (keywords, core abilities) */
+.datasheet .ds-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  margin: 1px 3px 1px 0;
+  border-radius: 3px;
+  border: 1px solid var(--ds-chip-border);
+  background: var(--ds-chip-bg);
+  font-size: 8.5pt;
+  line-height: 1.4;
+  color: var(--ds-fg);
+  white-space: nowrap;
+}
+.datasheet .ds-chip-core {
+  background: #e7eef7;
+  border-color: #a8bdd6;
+}
+.datasheet .ds-chip-keyword {
+  background: #fff;
+}
+.datasheet .ds-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+/* Abilities */
+.datasheet .ds-ability {
+  margin: 4px 0;
+  font-size: 9.5pt;
+  line-height: 1.4;
+}
+.datasheet .ds-ability-name {
+  font-weight: 700;
+}
+.datasheet .ds-ability-desc {
+  color: var(--ds-fg);
+}
+.datasheet .ds-leader {
+  margin: 4px 0;
+}
+/* Leader unit names can be long (e.g. "Chaos Space Marine Terminator Squad").
+   Override the chip's default nowrap so the chip wraps at word boundaries
+   rather than overflowing the column. */
+.datasheet .ds-leader .ds-chip {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+  line-height: 1.3;
+}
+
+/* Wargear */
+.datasheet .ds-wargear-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 9.5pt;
+}
+.datasheet .ds-wargear-item {
+  margin-bottom: 3px;
+}
+.datasheet .ds-wargear-model {
+  font-weight: 700;
+}
+.datasheet .ds-wargear-sub {
+  margin: 2px 0 4px;
+  padding-left: 18px;
+}
+.datasheet .ds-wargear-sub-head {
+  font-weight: 600;
+  list-style: none;
+  margin-left: -12px;
+}
+
+/* Bottom keywords row */
+.datasheet .ds-keywords {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 2px solid var(--ds-banner-bg);
+  font-size: 9pt;
+}
+.datasheet .ds-keywords-label {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+.datasheet .ds-keywords-list {
+  display: inline;
+}
+
+/* Cover page — sized to fit inside landscape A4 printable area (~194mm tall
+   with 8mm margins). No break-after here: the very next element is a
+   .datasheet-page which already has break-before, and stacking both
+   creates a blank page between them in Chromium + html2pdf. */
+.datasheet-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180mm;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  color: #111;
+  background: #fff;
+}
+.datasheet-cover .ds-cover-kicker {
+  font-size: 11pt;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #777;
+  margin-bottom: 18px;
+}
+.datasheet-cover .ds-cover-title {
+  font-size: 32pt;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  margin-bottom: 14px;
+}
+.datasheet-cover .ds-cover-line {
+  font-size: 13pt;
+  color: #333;
+  margin: 4px 0;
+}
+.datasheet-cover .ds-cover-pts {
+  margin-top: 22px;
+  font-size: 18pt;
+  font-weight: 700;
+  color: #8a1f1f;
+}
+
+/* Each datasheet in a multi-unit print starts on a new page. */
+.datasheet-page {
+  break-before: page;
+  page-break-before: always;
+}
+
+/* --- Compact rendering for PDF export ---
+   Applied by datasheet.js immediately before html2pdf runs, removed in the
+   .finally. Shrinks font sizes + padding ~15-20% so most datasheets fit
+   inside one landscape A4 page (~194mm ≈ 733px at 96dpi). */
+.datasheet.pdf-export {
+  font-size: 9pt;
+  padding: 5mm;
+  line-height: 1.25;
+  max-width: 277mm;
+  margin: 0 auto;
+}
+.datasheet.pdf-export .ds-name         { font-size: 15pt; }
+.datasheet.pdf-export .ds-pts          { font-size: 11pt; padding: 3px 8px; }
+.datasheet.pdf-export .ds-subtitle     { font-size: 9pt; }
+.datasheet.pdf-export .ds-stat-value   { font-size: 12pt; }
+.datasheet.pdf-export .ds-stat-label   { font-size: 7.5pt; }
+.datasheet.pdf-export .ds-subheading   { font-size: 9pt; padding: 2px 6px; }
+.datasheet.pdf-export .ds-table        { font-size: 8pt; }
+.datasheet.pdf-export .ds-table th,
+.datasheet.pdf-export .ds-table td     { padding: 2px 4px; }
+.datasheet.pdf-export .ds-chip         { font-size: 7.5pt; padding: 0 5px; }
+.datasheet.pdf-export .ds-ability      { font-size: 8.5pt; margin: 2px 0; }
+.datasheet.pdf-export .ds-wargear-list { font-size: 8.5pt; }
+.datasheet.pdf-export .ds-body         { gap: 8px; }
+.datasheet.pdf-export .ds-block,
+.datasheet.pdf-export .ds-weapons-block { margin-bottom: 6px; }
+.datasheet-cover.pdf-export {
+  min-height: 160mm;
+  padding: 20mm;
+}
+.datasheet-cover.pdf-export .ds-cover-title { font-size: 26pt; }
+.datasheet-cover.pdf-export .ds-cover-line  { font-size: 12pt; }
+.datasheet-cover.pdf-export .ds-cover-pts   { font-size: 16pt; }
+
+/* ============================================================
+ * Print media: hide the app shell, show only the print root.
+ * Force light colors regardless of app's dark theme.
+ * ============================================================ */
+@media print {
+  /* Force background colors to print (Chrome/Safari default is to strip them). */
+  html, body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: #fff !important;
+  }
+  body > *:not(.print-root) {
+    display: none !important;
+  }
+  .print-preview-bar {
+    display: none !important;
+  }
+  .print-root {
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+    top: auto !important;
+  }
+  /* Defensive: if the preview-open class is still on <body> at print time,
+     neutralize its overflow:hidden + backgrounds so Chromium doesn't clip
+     pages beyond the viewport. */
+  body.print-preview-open {
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body.print-preview-open .print-root {
+    padding: 0 !important;
+    background: #fff !important;
+    min-height: 0 !important;
+  }
+  body.print-preview-open .datasheet,
+  body.print-preview-open .datasheet-cover {
+    max-width: none !important;
+    margin: 0 0 6mm 0 !important;
+    box-shadow: none !important;
+  }
+  .datasheet {
+    color: #000 !important;
+    background: #fff !important;
+    border: 1px solid #666 !important;
+    margin: 0 0 6mm 0 !important;
+    padding: 6mm !important;
+    /* Don't avoid breaks at the top level — long datasheets (characters
+       with many abilities) must be allowed to span pages. Inner blocks
+       keep break-inside:avoid so weapon tables/abilities stay coherent. */
+  }
+  .datasheet .ds-banner {
+    background: #111 !important;
+    color: #fff !important;
+  }
+  .datasheet .ds-pts {
+    background: #8a1f1f !important;
+    color: #fff !important;
+  }
+  .datasheet .ds-subheading {
+    background: #111 !important;
+    color: #fff !important;
+  }
+  .datasheet .ds-subheading-ranged { background: #203a5a !important; }
+  .datasheet .ds-subheading-melee  { background: #5a2020 !important; }
+  .datasheet .ds-stat { background: #fafafa !important; }
+  .datasheet .ds-table th { background: #ececec !important; color: #000 !important; }
+  .datasheet .ds-table tbody tr:nth-child(even) td { background: #f4f4f4 !important; }
+  .datasheet .ds-chip { background: #f0f0f0 !important; color: #000 !important; border-color: #bbb !important; }
+  .datasheet .ds-chip-core { background: #e7eef7 !important; }
+  .datasheet .ds-chip-keyword { background: #fff !important; }
+  /* Cover page prints on its own sheet. */
+  .datasheet-cover { background: #fff !important; color: #111 !important; }
+  /* Don't split weapon rows or ability blocks mid-page. */
+  .datasheet .ds-weapons-block,
+  .datasheet .ds-block,
+  .datasheet .ds-ability,
+  .datasheet .ds-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

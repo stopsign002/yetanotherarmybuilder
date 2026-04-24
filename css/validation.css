@@ -1,0 +1,36 @@
+/* validation.css — composition warnings banner in the left panel. */
+
+.validation-banner {
+  margin: 0 12px 8px;
+  padding: 8px 10px;
+  background: rgba(243, 156, 18, 0.10);
+  border: 1px solid rgba(243, 156, 18, 0.45);
+  border-left: 3px solid var(--warning, #f39c12);
+  border-radius: var(--radius, 6px);
+  color: var(--text, #e0e0e0);
+  font-size: 12px;
+}
+
+.validation-banner[hidden] {
+  display: none !important;
+}
+
+.validation-banner-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 10px;
+  color: var(--warning, #f39c12);
+  margin-bottom: 4px;
+}
+
+.validation-banner-list {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.validation-banner-list li {
+  margin: 2px 0;
+  line-height: 1.35;
+}

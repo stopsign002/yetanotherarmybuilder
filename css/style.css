@@ -1495,3 +1495,253 @@ ul { list-style: none; }
 }
 
 /* ── Wargear options (bullet list) ─────────────────────────── */
+
+/* === Phase-2 UX additions === */
+
+/* Filter chips row (rendered inside #panel-center .panel-controls, after search) */
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+.filter-chip {
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted, #bbb);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.filter-chip:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text, #eee);
+}
+.filter-chip.active {
+  background: rgba(168,232,138,0.18);
+  border-color: rgba(168,232,138,0.55);
+  color: #d4f5bb;
+}
+.filter-chips-clear {
+  font-size: 14px;
+  line-height: 1;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: 2px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, #aaa);
+  cursor: pointer;
+  opacity: 0.7;
+}
+.filter-chips-clear:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.08);
+  color: var(--text, #eee);
+}
+
+/* Unit card: hide the faction line when a specific faction/chapter is selected. */
+.unit-card.faction-hidden .unit-card-faction { display: none; }
+
+/* Led-By collapse: hide leaders past the 3rd when collapsed. */
+.detail-ledby-list.collapsed > *:nth-child(n+4) { display: none; }
+.detail-ledby-list.collapsed > .ledby-more-pill { display: inline-flex; }
+.detail-ledby-title { cursor: pointer; user-select: none; }
+.ledby-more-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px dashed rgba(168,232,138,0.35);
+  background: rgba(168,232,138,0.04);
+  color: #a8e88a;
+  cursor: pointer;
+}
+.ledby-more-pill:hover {
+  background: rgba(168,232,138,0.12);
+  border-style: solid;
+}
+
+/* Enhancement ineligibility (unit lacks Character keyword). */
+.enhancement-cb-item.enhancement-ineligible {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.enhancement-cb-item.enhancement-ineligible .enhancement-cb {
+  pointer-events: none;
+}
+.enh-cb-ineligible-note {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 10px;
+  font-style: italic;
+  color: #e2a04a;
+}
+
+/* Weapon keyword tag color coding. Background tints with readable text. */
+.weapon-kw-tag.weapon-kw-red {
+  background: rgba(220, 74, 74, 0.18);
+  border-color: rgba(220, 74, 74, 0.45);
+  color: #f2b2b2;
+}
+.weapon-kw-tag.weapon-kw-orange {
+  background: rgba(230, 150, 50, 0.18);
+  border-color: rgba(230, 150, 50, 0.45);
+  color: #f3cc93;
+}
+.weapon-kw-tag.weapon-kw-blue {
+  background: rgba(80, 150, 230, 0.18);
+  border-color: rgba(80, 150, 230, 0.45);
+  color: #b8d6f5;
+}
+.weapon-kw-tag.weapon-kw-purple {
+  background: rgba(170, 110, 220, 0.18);
+  border-color: rgba(170, 110, 220, 0.45);
+  color: #dcc1f2;
+}
+
+/* === Toolbar redesign (two rows + Export dropdown) === */
+.army-toolbar {
+  flex-direction: column;
+  gap: 6px;
+}
+.army-toolbar .toolbar-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+/* Undo our generic .btn-sm { flex:1 } inside the toolbar — we want buttons
+   to size to content so the layout doesn't stretch awkwardly. */
+.army-toolbar .btn-sm {
+  flex: 0 1 auto;
+}
+.army-toolbar .toolbar-spacer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.army-toolbar .toolbar-icons {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.army-toolbar .toolbar-extras {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.army-toolbar .toolbar-extras:empty,
+.army-toolbar .toolbar-icons:empty {
+  display: none;
+}
+
+/* Compact icon button: square-ish, larger glyph, no wide horizontal padding. */
+.btn.btn-icon {
+  padding: 4px 8px;
+  min-width: 30px;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 500;
+}
+
+/* Dropdown menu — used by Export group in army toolbar. */
+.dropdown {
+  position: relative;
+  display: inline-block;
+  flex: 0 1 auto;
+}
+.dropdown-trigger .caret {
+  font-size: 10px;
+  margin-left: 3px;
+  opacity: 0.7;
+}
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  min-width: 180px;
+  background: var(--surface, #1a1a1a);
+  border: 1px solid var(--border-light, rgba(255,255,255,0.12));
+  border-radius: var(--radius, 4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 4px;
+  z-index: 100;
+}
+.dropdown.open > .dropdown-menu {
+  display: block;
+}
+.dropdown-menu > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text, #e8e8e8);
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: calc(var(--radius, 4px) - 1px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dropdown-menu > button:hover,
+.dropdown-menu > button:focus {
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+.dropdown-menu .export-extras:empty {
+  display: none;
+}
+.dropdown-menu .export-extras > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text, #e8e8e8);
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: calc(var(--radius, 4px) - 1px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dropdown-menu .export-extras > button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* === Toolbar overflow guards (narrow panel widths) === */
+.panel-footer {
+  min-width: 0;
+  /* NO overflow:hidden — the Export dropdown menu is absolutely
+     positioned above the trigger (`bottom: calc(100% + 6px)`) and any
+     hidden overflow on an ancestor clips the upper menu items. Button
+     text is already clamped by max-width + ellipsis below, which is
+     what actually prevents toolbar overflow. */
+}
+.army-toolbar,
+.army-toolbar .toolbar-row {
+  min-width: 0;
+}
+/* Ellipsize overly long labels instead of pushing off the panel. */
+.army-toolbar .btn-sm {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Don't let the dropdown menu demand more than the panel width. */
+.dropdown-menu {
+  max-width: calc(var(--col-left, 300px) - 20px);
+  min-width: min(180px, calc(var(--col-left, 300px) - 20px));
+}

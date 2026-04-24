@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Yet Another Army Builder</title>
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/validation.css" />
+  <link rel="stylesheet" href="css/datasheet.css" />
 </head>
 <body>
 
@@ -110,15 +112,32 @@
 
       </div>
 
-      <!-- Bottom Toolbar -->
+      <!-- Bottom Toolbar — two rows: primary army ops + compact icons above,
+           I/O below. Feature modules register into regions via App.hooks. -->
       <div class="panel-footer army-toolbar">
-        <button class="btn btn-sm btn-outline" id="btn-new-army">New</button>
-        <button class="btn btn-sm btn-accent"  id="btn-save-army">Save</button>
-        <button class="btn btn-sm btn-outline" id="btn-load-army">Load</button>
-        <button class="btn btn-sm btn-outline" id="btn-export-string">Export</button>
-        <button class="btn btn-sm btn-outline" id="btn-import-string">Import</button>
-        <button class="btn btn-sm btn-outline" id="btn-export-text">Copy</button>
-        <button class="btn btn-sm btn-outline" id="btn-export-csv">CSV</button>
+        <div class="toolbar-row toolbar-primary">
+          <button class="btn btn-sm btn-outline" id="btn-new-army">New</button>
+          <button class="btn btn-sm btn-accent"  id="btn-save-army">Save</button>
+          <button class="btn btn-sm btn-outline" id="btn-load-army">Load</button>
+          <span class="toolbar-spacer"></span>
+          <div class="toolbar-icons" id="toolbar-icons"></div>
+        </div>
+        <div class="toolbar-row toolbar-secondary">
+          <button class="btn btn-sm btn-outline" id="btn-import-string">Import</button>
+          <div class="dropdown" id="export-dropdown">
+            <button class="btn btn-sm btn-outline dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false">Export <span class="caret">&#9662;</span></button>
+            <div class="dropdown-menu" role="menu" id="export-dropdown-menu">
+              <button type="button" role="menuitem" id="btn-export-string">Copy army code</button>
+              <button type="button" role="menuitem" id="btn-export-text">Copy as text</button>
+              <button type="button" role="menuitem" id="btn-export-csv">Download CSV</button>
+              <!-- Hook-registered 'export-menu' items mount here -->
+              <div id="export-extras" class="export-extras"></div>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline" id="btn-print-army" title="Print datasheets for every unit in your army">Print</button>
+          <!-- Hook-registered 'primary' items mount here -->
+          <div id="toolbar-extras" class="toolbar-extras"></div>
+        </div>
       </div>
     </aside>
 
@@ -239,12 +258,63 @@
   <!-- Global tooltip (JS-positioned) -->
   <div id="global-tooltip" class="global-tooltip" hidden></div>
 
-  <!-- Scripts (order matters) -->
+  <!-- Scripts (order matters — see docs/ARCHITECTURE.md) -->
+  <script src="js/db.js"></script>
   <script src="js/bsdata.js"></script>
-  <script src="js/parser.js"></script>
+
+  <!-- Parser: shared-index + classify seed internals; leaf helpers; entry; catalogue; public API last. -->
+  <script src="js/parser/shared-index.js"></script>
+  <script src="js/parser/classify.js"></script>
+  <script src="js/parser/stats.js"></script>
+  <script src="js/parser/weapons.js"></script>
+  <script src="js/parser/abilities.js"></script>
+  <script src="js/parser/wargear.js"></script>
+  <script src="js/parser/costs.js"></script>
+  <script src="js/parser/keywords.js"></script>
+  <script src="js/parser/entry.js"></script>
+  <script src="js/parser/catalogue.js"></script>
+  <script src="js/parser/index.js"></script>
+
   <script src="js/storage.js"></script>
   <script src="js/army.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/app.js"></script>
+
+  <!-- UI: namespace stub first, then feature modules. -->
+  <script src="js/ui/index.js"></script>
+  <script src="js/ui/helpers.js"></script>
+  <script src="js/ui/tooltip.js"></script>
+  <script src="js/ui/toast.js"></script>
+  <script src="js/ui/progress.js"></script>
+  <script src="js/ui/faction-filter.js"></script>
+  <script src="js/ui/faction-rules.js"></script>
+  <script src="js/ui/roster.js"></script>
+  <script src="js/ui/detail.js"></script>
+  <script src="js/ui/army-list.js"></script>
+  <script src="js/ui/modals.js"></script>
+  <script src="js/vendor/html2pdf.bundle.min.js" defer></script>
+  <script src="js/ui/datasheet.js"></script>
+  <script src="js/ui/dropdown.js"></script>
+
+  <!-- App: state first, hooks second (feature modules register via App.hooks),
+       bootstrap index.js last (DOMContentLoaded). -->
+  <script src="js/app/state.js"></script>
+  <script src="js/app/hooks.js"></script>
+  <script src="js/app/filters.js"></script>
+  <script src="js/app/render.js"></script>
+  <script src="js/app/bsdata-load.js"></script>
+  <script src="js/app/resize.js"></script>
+  <script src="js/app/selections.js"></script>
+  <script src="js/app/events.js"></script>
+
+  <!-- Feature modules (all extend via App.hooks; safe to reorder within block). -->
+  <!-- FEATURE-MODULES-START -->
+  <script src="js/parser/report.js"></script>
+  <script src="js/app/history.js"></script>
+  <script src="js/app/url-share.js"></script>
+  <script src="js/app/validation.js"></script>
+  <script src="js/app/keyboard.js"></script>
+  <!-- FEATURE-MODULES-END -->
+
+  <script src="js/app/index.js"></script>
+  <script src="js/app/sw-register.js"></script>
 </body>
 </html>
