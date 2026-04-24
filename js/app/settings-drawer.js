@@ -113,12 +113,12 @@
       key:   'yaab_sound_enabled',
       label: 'Sound effects',
       help:  'Subtle clicks and chimes during edits and saves.',
-      defaultOn: false,
+      defaultOn: true,
       onChange(checked) {
         if (clickToolbarBtn('yaab-btn-sound')) return;
         lsWrite('yaab_sound_enabled', checked ? '1' : '0');
       },
-      isOn() { return lsBool('yaab_sound_enabled', false); },
+      isOn() { return lsBool('yaab_sound_enabled', true); },
     },
     {
       key:   'yaab_voice_enabled',

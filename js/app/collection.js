@@ -4,6 +4,7 @@
   if (!App.hooks) return;
 
   const LS_KEY = 'yaab_collection';
+  const LS_SHOW_BADGES_IN_BUILD = 'yaab_show_collection_badges';
 
   const STATUSES = ['none', 'unpainted', 'primed', 'painting', 'done'];
   const STATUS_LABELS = {
@@ -30,6 +31,50 @@
   let _dashboardEl         = null;
   let _dashFactionFilter   = 'all';
   let _dashStatusFilter    = 'all';
+
+  // ────────────────────────────────────────────────────────────────────
+  // mode gating
+  // ────────────────────────────────────────────────────────────────────
+  //
+  // Collection UI bleeds into BUILD-mode DOM by default because this module
+  // injects its chips/notes/progress bar into elements that live inside
+  // #build-mode (#panel-center, #panel-left, #unit-grid). Gate those by mode
+  // so BUILD stays clean and COLLECT mode owns the tracker surface.
+  //
+  // Mode-aware decisions are split between:
+  //   - JS gating (skip chip injection, skip ownership-hint rendering, make
+  //     the rosterFilters predicate a no-op when not in COLLECT).
+  //   - CSS gating (`body[data-mode="build"] …`) for visual elements that
+  //     have already been injected (card status dots, chips that may already
+  //     be in the DOM from an older mount). See css/collection.css.
+
+  function getMode() {
+    if (window.App && typeof App.getMode === 'function') return App.getMode();
+    if (document.body && document.body.getAttribute) {
+      return document.body.getAttribute('data-mode') || 'build';
+    }
+    return 'build';
+  }
+  function isBuildMode() { return getMode() === 'build'; }
+
+  // Per spec: painting status DOTS are hidden in BUILD by default. The user
+  // can re-enable via Settings drawer's "Show painting status badges" toggle
+  // (yaab_show_collection_badges). Treat a missing/null LS value as OFF so
+  // BUILD starts clean for users who never touched the toggle.
+  function showBadgesInBuild() {
+    try {
+      return localStorage.getItem(LS_SHOW_BADGES_IN_BUILD) === '1';
+    } catch (_) { return false; }
+  }
+
+  // Reflect the build-badge opt-in as a body class so CSS can override the
+  // default-hide rule without re-rendering cards.
+  function applyBuildBadgesBodyClass() {
+    if (!document.body) return;
+    const want = showBadgesInBuild();
+    const has  = document.body.classList.contains('yaab-build-badges-on');
+    if (want !== has) document.body.classList.toggle('yaab-build-badges-on', want);
+  }
 
   // ────────────────────────────────────────────────────────────────────
   // persistence
@@ -210,6 +255,10 @@
     if (_predicateRegistered) return;
     if (!Array.isArray(App.hooks.rosterFilters)) return;
     const pred = function collectionStatusPredicate(unit) {
+      // Collection chips only filter the BUILD-mode roster when the user is
+      // actually in COLLECT mode. In BUILD this predicate is a no-op so an
+      // accidentally-active chip can't silently hide build-mode units.
+      if (isBuildMode()) return true;
       if (!_chipOwnedActive && !_chipNeedsActive && !_chipPaintedActive) return true;
       const status = getStatus(unit && unit.id);
       if (_chipOwnedActive   && status === 'none') return false;
@@ -225,6 +274,14 @@
 
   function injectChips(bar) {
     if (!bar) return;
+    // Suppress collection chips in BUILD mode — they belong in the COLLECT
+    // surface. The roster-filter-chips bar lives inside #panel-center which
+    // is a BUILD-mode-only element today; removing/re-adding here also
+    // cleans up if the user toggles to BUILD with chips already mounted.
+    if (isBuildMode()) {
+      removeInjectedChips(bar);
+      return;
+    }
     if (bar.querySelector('.collection-chip')) {
       _chipsInjected = true;
       return;
@@ -257,6 +314,16 @@
     syncChipActiveClasses(bar);
   }
 
+  function removeInjectedChips(bar) {
+    if (!bar) return;
+    const existing = bar.querySelectorAll('.filter-chip.collection-chip');
+    existing.forEach(el => el.parentNode && el.parentNode.removeChild(el));
+    // Also reset any active-state flags so a stale active chip doesn't hide
+    // BUILD units when re-entering COLLECT.
+    _chipOwnedActive = _chipNeedsActive = _chipPaintedActive = false;
+    _chipsInjected = false;
+  }
+
   function syncChipActiveClasses(bar) {
     if (!bar) bar = document.getElementById('roster-filter-chips');
     if (!bar) return;
@@ -271,13 +338,24 @@
   function installChipObserver() {
     if (_chipObserver) { _chipObserver.disconnect(); _chipObserver = null; }
     const existing = document.getElementById('roster-filter-chips');
-    if (existing) { injectChips(existing); return; }
+    if (existing) {
+      injectChips(existing);
+      // If we're in BUILD now, leave the observer wiring alone; the
+      // modeChange handler re-runs injectChips on entry to COLLECT.
+      if (_chipsInjected) return;
+    }
     const center = document.getElementById('panel-center') || document.body;
     _chipObserver = new MutationObserver(() => {
       const bar = document.getElementById('roster-filter-chips');
       if (bar) {
         injectChips(bar);
-        if (_chipObserver) { _chipObserver.disconnect(); _chipObserver = null; }
+        // Only disconnect once chips were actually injected (i.e. we were
+        // in COLLECT). In BUILD, leave the observer running so a later
+        // mode flip + DOM rebuild still gets the chips.
+        if (_chipsInjected && _chipObserver) {
+          _chipObserver.disconnect();
+          _chipObserver = null;
+        }
       }
     });
     _chipObserver.observe(center, { childList: true, subtree: true });
@@ -343,6 +421,14 @@
   }
 
   function refreshArmyProgress() {
+    // Painted-progress bar belongs to COLLECT mode. Don't inject it into
+    // BUILD's left panel, and clean up any stale node on mode change.
+    if (isBuildMode()) {
+      const panelBody = document.querySelector('#panel-left .panel-body');
+      const stale = panelBody && panelBody.querySelector('.collection-progress');
+      if (stale) stale.remove();
+      return;
+    }
     const node = ensureArmyProgressNode();
     if (!node) return;
     const army = App.state && App.state.currentArmy;
@@ -389,6 +475,14 @@
   }
 
   function refreshSelectionBacklog() {
+    // "You own X of Y units in this faction" is collection telemetry — only
+    // surface it in COLLECT mode. In BUILD, suppress (and tear down any
+    // existing node) so the roster header stays clean.
+    if (isBuildMode()) {
+      const existing = document.getElementById('collection-backlog-note');
+      if (existing) existing.remove();
+      return;
+    }
     const note = ensureBacklogNode();
     if (!note) return;
     const state = App.state || {};
@@ -655,6 +749,7 @@
 
   App.hooks.bootstrap.push(function (/* state */) {
     loadPersisted();
+    applyBuildBadgesBodyClass();
     ensurePredicate();
     installChipObserver();
     installDetailObserver();
@@ -662,6 +757,40 @@
     refreshArmyProgress();
     refreshSelectionBacklog();
   });
+
+  // Mode change: re-evaluate every gated surface so toggling between modes
+  // adds/removes chips, the ownership hint, and the painted-progress bar.
+  // mode-shell.js loads after collection.js — initialize the array here if
+  // it's not yet present so we still register cleanly.
+  if (!Array.isArray(App.hooks.modeChange)) App.hooks.modeChange = [];
+  App.hooks.modeChange.push(function (/* mode */) {
+    applyBuildBadgesBodyClass();
+    // Chip bar may need to gain or lose chips depending on the new mode.
+    const bar = document.getElementById('roster-filter-chips');
+    if (bar) injectChips(bar);
+    refreshArmyProgress();
+    refreshSelectionBacklog();
+    // Re-render roster so the predicate result (now mode-aware) takes effect.
+    if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
+      App.renderUnitRosterWithContext();
+    }
+  });
+
+  // The Settings drawer flips `yaab_show_collection_badges` in localStorage
+  // from another tab/path; mirror it into a body class so CSS picks up the
+  // change without a page reload.
+  window.addEventListener('storage', function (e) {
+    if (e && e.key === LS_SHOW_BADGES_IN_BUILD) applyBuildBadgesBodyClass();
+  });
+
+  // Same-tab updates: the Settings drawer writes its own body class
+  // `hide-collection-badges` whenever its toggle changes. Mirror that signal
+  // into our `yaab-build-badges-on` class so a click in the drawer reflects
+  // immediately in BUILD without needing a `storage` event.
+  if (typeof MutationObserver === 'function' && document.body) {
+    new MutationObserver(applyBuildBadgesBodyClass)
+      .observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
 
   App.hooks.armyChange.push(function () {
     refreshArmyProgress();

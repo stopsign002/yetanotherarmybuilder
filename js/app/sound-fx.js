@@ -9,8 +9,14 @@
   const STORAGE_KEY = 'yaab_sound_enabled';
   const PEAK = 0.08; // hard cap on per-tone gain — must NOT be obnoxious
 
-  let enabled = false;
-  try { enabled = localStorage.getItem(STORAGE_KEY) === '1'; } catch (_) { enabled = false; }
+  // Default ON: if the user has never visited (key missing) we treat sound
+  // as enabled. Only an explicit '0' (the user toggled it off) keeps it off.
+  let enabled = true;
+  try {
+    const v = localStorage.getItem(STORAGE_KEY);
+    if (v === null) enabled = true;
+    else enabled = (v === '1');
+  } catch (_) { enabled = true; }
 
   let ctx = null;
 

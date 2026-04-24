@@ -3,8 +3,14 @@
   const App = window.App = window.App || {};
   if (!App.hooks) return;
 
+  // Capability check — registering the toggle when the API is missing creates
+  // a button that does nothing. Bail out early and surface to console.
+  const SR_SUPPORTED = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return; // browser unsupported — don't register the toolbar button at all
+  if (!SR_SUPPORTED || !SR) {
+    console.warn('[voice-commands] SpeechRecognition unsupported in this browser; toggle hidden.');
+    return;
+  }
 
   const STORAGE_KEY = 'yaab_voice_enabled';
 
@@ -259,9 +265,27 @@
     };
 
     r.onerror = function (e) {
-      if (e && (e.error === 'not-allowed' || e.error === 'service-not-allowed')) {
-        if (window.UI && UI.toast) UI.toast('Microphone permission denied', 'error');
+      const code = e && e.error;
+      console.warn('[voice-commands] recognition error:', code, e && e.message);
+      if (code === 'not-allowed' || code === 'service-not-allowed') {
+        if (window.UI && UI.toast) {
+          UI.toast(
+            'Microphone access required for voice commands. Click the toolbar mic button after granting permission.',
+            'error',
+            5000
+          );
+        }
         deactivate();
+        return;
+      }
+      if (code === 'audio-capture') {
+        if (window.UI && UI.toast) UI.toast('No microphone detected', 'error', 4000);
+        deactivate();
+        return;
+      }
+      if (code === 'network') {
+        if (window.UI && UI.toast) UI.toast('Voice recognition needs a network connection', 'warning', 3000);
+        return;
       }
       // 'no-speech' / 'aborted' — ignore; onend will restart if still active.
     };
@@ -275,13 +299,60 @@
     return r;
   }
 
-  function activate() {
+  // Explicitly probe microphone permission via getUserMedia. This produces a
+  // clearer browser-level prompt than the implicit one SpeechRecognition.start()
+  // emits, and it lets us show a friendly toast on rejection rather than the
+  // recognizer silently never producing results.
+  async function ensureMicPermission() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      // No gUM available (e.g. http: origin). SpeechRecognition may still work
+      // on its own; let the recognizer's onerror surface failures.
+      return true;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // We don't actually need the stream — SpeechRecognition opens its own.
+      // Closing the tracks immediately keeps the OS mic light from staying on.
+      stream.getTracks().forEach(t => { try { t.stop(); } catch (_) {} });
+      return true;
+    } catch (err) {
+      console.warn('[voice-commands] mic permission denied:', err && err.name, err && err.message);
+      if (window.UI && UI.toast) {
+        UI.toast(
+          'Microphone access required for voice commands. Click the toolbar mic button after granting permission.',
+          'error',
+          5000
+        );
+      }
+      return false;
+    }
+  }
+
+  async function activate() {
     ensureStyles();
+    // Request mic permission explicitly. start() must be in a user-gesture stack;
+    // since toggle() is wired to the button click handler we're still inside one.
+    const ok = await ensureMicPermission();
+    if (!ok) {
+      // Don't flip on the indicator if we never got permission.
+      try { localStorage.setItem(STORAGE_KEY, '0'); } catch (_) {}
+      return;
+    }
     showIndicator();
     if (!recognition) recognition = buildRecognition();
+    // Defensive: confirm continuous + interimResults are set even if a future
+    // edit forgets — the symptom would be "voice fires once then stops".
+    try {
+      recognition.continuous = true;
+      recognition.interimResults = true;
+    } catch (_) {}
     active = true;
     manualStop = false;
-    try { recognition.start(); } catch (_) { /* already running */ }
+    try { recognition.start(); }
+    catch (e) {
+      console.warn('[voice-commands] start() threw:', e && e.message);
+      // Some browsers throw "already started" — that's fine.
+    }
     try { localStorage.setItem(STORAGE_KEY, '1'); } catch (_) {}
     if (window.UI && UI.toast) UI.toast('Voice control on. Say "stop listening" to disable.', 'info', 2400);
   }
@@ -298,7 +369,12 @@
   }
 
   function toggle() {
-    if (active) deactivate(); else activate();
+    if (active) deactivate();
+    else {
+      // activate is async (mic permission probe); ignore the returned promise —
+      // any failure shows its own toast.
+      activate().catch(err => console.warn('[voice-commands] activate failed:', err));
+    }
   }
 
   // ---------------------------------------------------------------------------

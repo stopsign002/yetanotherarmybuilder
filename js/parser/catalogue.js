@@ -165,16 +165,29 @@
 
       // Tyranids-style: top-level selectionEntry name="Detachment" wraps an entryLink
       // whose targetId points into a library catalogue's shared group.
-      function walkDetachmentEntryLinks(scopeEl) {
+      //
+      // Defensive guards: a malformed (or library-cycle) entryLink chain
+      // could otherwise recurse forever — track visited targetIds AND
+      // cap depth, so the parser can never wedge a worker.
+      const MAX_DETACH_DEPTH = 8;
+      const visitedDetachLinks = new Set();
+      function walkDetachmentEntryLinks(scopeEl, depth) {
+        if ((depth | 0) > MAX_DETACH_DEPTH) {
+          console.warn('[Parser] walkDetachmentEntryLinks: max depth exceeded; aborting recursion');
+          return;
+        }
         scopeEl.querySelectorAll(':scope > entryLinks > entryLink[name="Detachment"]').forEach(link => {
-          const resolved = entriesById.get(I.getAttr(link, 'targetId'));
+          const targetId = I.getAttr(link, 'targetId');
+          if (!targetId || visitedDetachLinks.has(targetId)) return;
+          visitedDetachLinks.add(targetId);
+          const resolved = entriesById.get(targetId);
           if (!resolved) return;
           if (resolved.tagName === 'selectionEntryGroup') addDetachGroup(resolved);
-          else walkDetachmentEntryLinks(resolved);
+          else walkDetachmentEntryLinks(resolved, (depth | 0) + 1);
         });
       }
-      walkDetachmentEntryLinks(root);
-      root.querySelectorAll(':scope > selectionEntries > selectionEntry[name="Detachment"]').forEach(walkDetachmentEntryLinks);
+      walkDetachmentEntryLinks(root, 0);
+      root.querySelectorAll(':scope > selectionEntries > selectionEntry[name="Detachment"]').forEach(el => walkDetachmentEntryLinks(el, 0));
 
       detachGroups.forEach(detachGroup => {
         detachGroup.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {

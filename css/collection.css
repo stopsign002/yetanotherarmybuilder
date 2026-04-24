@@ -33,6 +33,30 @@
 .unit-card.collection-painting::after  { background: var(--coll-painting);  }
 .unit-card.collection-done::after      { background: var(--coll-done);      }
 
+/* ── BUILD-mode cleanup ─────────────────────────────────────────────
+   Hide collection-only UI in BUILD mode. The user opts back into the
+   card status dots via Settings → "Show painting status badges on
+   cards" (which sets body.yaab-build-badges-on via collection.js).
+   COLLECT mode is a separate <section> so these rules never apply
+   there. The detail-panel widget (.collection-detail-widget) is
+   intentionally excluded — it's only visible per selected unit and
+   is useful while building. */
+body[data-mode="build"]:not(.yaab-build-badges-on) .unit-card.collection-unpainted::after,
+body[data-mode="build"]:not(.yaab-build-badges-on) .unit-card.collection-primed::after,
+body[data-mode="build"]:not(.yaab-build-badges-on) .unit-card.collection-painting::after,
+body[data-mode="build"]:not(.yaab-build-badges-on) .unit-card.collection-done::after {
+  content: none;
+}
+
+/* Belt-and-suspenders for chips/notes/progress — collection.js also
+   skips creating these in BUILD, but if a stale node is mid-tear-down
+   (or if a future code path mounts them), CSS keeps BUILD clean. */
+body[data-mode="build"] .filter-chip.collection-chip,
+body[data-mode="build"] .collection-progress,
+body[data-mode="build"] #collection-backlog-note {
+  display: none !important;
+}
+
 /* ── detail panel: status widget ────────────────────────────────────── */
 .collection-detail-widget {
   margin: 10px 0 14px;

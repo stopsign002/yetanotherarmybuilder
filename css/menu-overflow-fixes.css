@@ -1,0 +1,207 @@
+/* menu-overflow-fixes.css
+ *
+ * Consolidated overflow / cutoff fixes for menus, the top bar, the
+ * settings drawer, and the army-panel toolbar.
+ *
+ * Each rule below cites the specific overflow it addresses. Layout is
+ * never changed beyond what's required to stop content from being
+ * clipped or pushed off-screen.
+ *
+ * Loaded LAST in index.html so that these rules win cascade ties with
+ * the per-feature stylesheets.
+ */
+
+/* ─────────────────────────────────────────────────────────────────────
+ * 1. TOP BAR — graceful collapse from desktop → tablet → mobile
+ * ───────────────────────────────────────────────────────────────────── */
+
+/* The topbar-inner row must be allowed to shrink its children rather
+ * than push the action group off the right edge. */
+.topbar-inner {
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.topbar-left { min-width: 0; }
+.topbar-actions { min-width: 0; }
+
+/* Mode tabs use full labels by default. Hidden short-label variants are
+ * revealed at narrow widths. Markup may inject `.topbar-mode-tab-short`
+ * via JS, but we also offer this attribute-based fallback so the tab
+ * button text element stays the simple word. */
+.topbar-mode-tab .topbar-mode-tab-short { display: none; }
+
+/* ─── Tablet (≤960px) — already in topbar.css; we tighten gaps so the
+ * search bar doesn't visually butt against the brand+modes. */
+@media (max-width: 960px) {
+  /* Prevent the brand block from forcing the modes off-row. */
+  .topbar-left { gap: 12px; }
+  .topbar-inner { gap: 10px; }
+}
+
+/* ─── Intermediate (≤820px) — the band where the original layout
+ * starts dropping items off the right edge. Hide the brand wordmark
+ * here (kept the glyph), shrink mode-tab horizontal padding, and clamp
+ * search width so Settings + Help stay visible. */
+@media (max-width: 820px) {
+  /* Hide the wordmark; the rune glyph alone is enough to mark home. */
+  .topbar-brand-mark { display: none; }
+  /* Smaller search target so action buttons are never pushed off. */
+  .topbar-search { max-width: 220px; }
+  /* Hide the help label early — the "?" glyph is universally legible. */
+  .topbar-action-label-help { display: none; }
+}
+
+/* ─── Mobile (≤720px) — full collapse. topbar.css already hides the
+ * action labels and shrinks the search to an icon button; we add the
+ * mode-tab "B / C / P" short-label switch and ensure the brand glyph
+ * never disappears. */
+@media (max-width: 720px) {
+  /* Reveal short labels, hide long ones. The visible mode-tab text node
+   * is the tab button's direct text, so we use a swap: shrink the
+   * existing label via overflow + tighten padding. */
+  .topbar-mode-tab {
+    padding: 0 6px;
+    font-size: 10px;
+    letter-spacing: 0.6px;
+    /* Clamp width so 3 tabs always fit alongside icon search + actions. */
+    min-width: 28px;
+    max-width: 56px;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+  /* Brand glyph must stay visible even when the wordmark is hidden. */
+  .topbar-brand { padding: 4px 4px; }
+  .topbar-brand-glyph { display: inline-flex; }
+
+  /* Action buttons collapse to icon-only; ensure the gear glyph isn't
+   * crammed against the help glyph. */
+  .topbar-action-btn { padding: 0 8px; min-width: 32px; }
+}
+
+/* ─── Very narrow (≤380px) — phones in portrait. The mode tab group
+ * was the last thing fighting for room; ensure it stays inline rather
+ * than wrapping under the brand. */
+@media (max-width: 380px) {
+  .topbar-inner { gap: 6px; padding: 0 8px; }
+  .topbar-modes { padding: 2px; gap: 1px; }
+  .topbar-mode-tab { padding: 0 4px; font-size: 9px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ * 2. SETTINGS DRAWER — long help text + mobile scroll fixes
+ * ───────────────────────────────────────────────────────────────────── */
+
+/* Body already declares `overflow-y: auto`; the issue is that on short
+ * viewports the drawer-in animation can leave the scrollable region
+ * with momentum-scroll disabled on iOS. Add iOS-friendly scrolling and
+ * make sure the body can never become 0-height (drawer is column flex,
+ * but if a future header gets taller it can squeeze the body). */
+.settings-drawer-body {
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;          /* allow flex child to actually scroll */
+  overscroll-behavior: contain;
+}
+
+/* Long toggle labels and help text must wrap rather than overflow the
+ * row, which previously could push the switch knob off-screen. */
+.settings-toggle-text {
+  overflow: hidden;
+  word-break: break-word;
+}
+.settings-toggle-label,
+.settings-toggle-help {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Action button label should ellipsize if it ever exceeds the row
+ * (e.g. the localized "Wipe all saved armies (irreversible)" label on
+ * narrow drawers). The arrow stays glued to the right. */
+.settings-action-row { min-width: 0; }
+.settings-action-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-action-arrow { flex: 0 0 auto; }
+
+/* Mobile: drawer is full-screen. Make sure the body can scroll all the
+ * way to the danger button at the bottom — previously the implicit
+ * flex behavior left ~32px of bottom padding inside an unscrollable
+ * region on shorter phones. */
+@media (max-width: 720px) {
+  .settings-drawer {
+    /* Use stable viewport units where supported so the iOS dynamic URL
+     * bar doesn't crop off the bottom danger button. */
+    height: 100dvh;
+    height: 100svh;
+  }
+  .settings-drawer-body {
+    /* Extra bottom padding so the last (often-danger) action sits
+     * comfortably above the home indicator on iOS. */
+    padding-bottom: max(48px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ * 3. ARMY TOOLBAR — narrow-panel overflow polish
+ * ───────────────────────────────────────────────────────────────────── */
+
+/* Already partially handled in style.css line 1739+. We add:
+ *  - sensible button min-width so labels don't ellipsize to nothing
+ *  - clean wrap behaviour with consistent gap */
+.army-toolbar .toolbar-row {
+  row-gap: 6px;
+}
+.army-toolbar .btn-sm {
+  min-width: 44px;
+}
+/* The Export ▾ dropdown trigger is a `.btn-sm` with a caret — keep the
+ * caret visible if the label ellipsizes by reserving room for it. */
+.army-toolbar .dropdown-trigger {
+  padding-right: 8px;
+}
+
+/* When the toolbar wraps to a second row, the icons group should not
+ * end up half-clipped against the right edge of the panel. */
+.army-toolbar .toolbar-icons {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ * 4. DROPDOWN / POPOVER CLIP GUARDS
+ * ───────────────────────────────────────────────────────────────────── */
+
+/* The action-center / export menus are absolutely positioned but their
+ * ancestors (panel-footer, panel-body) sometimes use `overflow: hidden`
+ * for layout, which clips a popover that overflows the panel.
+ *
+ * panel-footer was already exempted in style.css. Here we make sure
+ * the footer's stacking context lets popovers escape upward, and that
+ * any `.has-popover-open` ancestor temporarily lifts overflow. */
+.panel-footer { overflow: visible; }
+
+/* Optional escape hatch: when JS opens a dropdown it can add this class
+ * to the nearest ancestor whose overflow:hidden would clip the menu. */
+.allow-popover-overflow,
+.allow-popover-overflow * { overflow: visible !important; }
+
+/* ─────────────────────────────────────────────────────────────────────
+ * 5. REDUCED-MOTION RESPECT
+ * ───────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Nothing here animates by default — but if a future addition uses a
+   * transition for the responsive collapse, kill it under reduced
+   * motion so the layout snaps rather than jitters. */
+  .topbar-mode-tab,
+  .topbar-action-btn,
+  .army-toolbar .btn-sm { transition: none !important; }
+}
+body.reduce-motion .topbar-mode-tab,
+body.reduce-motion .topbar-action-btn,
+body.reduce-motion .army-toolbar .btn-sm { transition: none !important; }

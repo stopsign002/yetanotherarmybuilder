@@ -40,8 +40,15 @@
   function fireHooks(mode) {
     const hooks = App.hooks.modeChange || [];
     for (let i = 0; i < hooks.length; i++) {
-      try { hooks[i](mode); } catch (e) { /* one bad hook shouldn't break others */ }
+      try { hooks[i](mode); } catch (e) {
+        console.warn('[mode-shell] modeChange hook threw:', e && e.message);
+      }
     }
+    // Belt-and-braces: also dispatch a DOM event so non-hook listeners
+    // (or modules that loaded before App.hooks existed) can react.
+    try {
+      document.dispatchEvent(new CustomEvent('yaab:mode-change', { detail: { mode } }));
+    } catch (_) {}
   }
 
   function applyMode(mode, opts) {

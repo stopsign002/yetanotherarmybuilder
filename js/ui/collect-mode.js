@@ -3,6 +3,16 @@
   const App = window.App = window.App || {};
   if (!App.hooks) return;
 
+  // Optional debug logging toggle — `localStorage.yaab_collect_debug = '1'`
+  // turns on verbose console output for tracking down the "Collect is empty"
+  // bug class.
+  function dbg() {
+    try {
+      if (localStorage.getItem('yaab_collect_debug') !== '1') return;
+    } catch (_) { return; }
+    try { console.log.apply(console, ['[collect-mode]'].concat([].slice.call(arguments))); } catch (_) {}
+  }
+
   const LS_COLL    = 'yaab_collection';
   const LS_CRUSADE = 'yaab_crusade_rosters';
   const LS_KT      = 'yaab_kt_mode';
@@ -805,7 +815,12 @@
   // Lazy-render on first activation; reuse the DOM thereafter.
   function activate() {
     const root = ensureRoot();
-    if (!root) return;
+    if (!root) {
+      dbg('activate: no #collect-mode host element found');
+      return;
+    }
+    dbg('activate, rendered=', _rendered, 'activeTab=', _activeTab,
+        'factions=', (App.state && App.state.factions && App.state.factions.length) | 0);
     if (!_rendered) {
       _rendered = true;
       renderTabs();
@@ -816,6 +831,32 @@
       renderActiveTab();
     }
   }
+
+  // Trigger activate when the body data-mode attribute switches to "collect".
+  // This is a belt-and-braces backup for App.hooks.modeChange — if some other
+  // code path calls applyMode without firing hooks (or hooks isn't initialised
+  // when this module loads), the body attribute MutationObserver still catches it.
+  function watchBodyDataMode() {
+    if (!document.body) return;
+    try {
+      const obs = new MutationObserver(() => {
+        if (document.body.getAttribute('data-mode') === 'collect') {
+          dbg('body[data-mode=collect] observed');
+          activate();
+        }
+      });
+      obs.observe(document.body, { attributes: true, attributeFilter: ['data-mode'] });
+    } catch (e) {
+      console.warn('[collect-mode] MutationObserver attach failed:', e && e.message);
+    }
+  }
+
+  // Also expose a custom DOM event for any future trigger pathway.
+  document.addEventListener('yaab:mode-change', function (e) {
+    const mode = e && e.detail && e.detail.mode;
+    dbg('yaab:mode-change event', mode);
+    if (mode === 'collect') activate();
+  });
 
   // Install a poll for crusade modal close so our inline view refreshes.
   // The Crusade modal sets a `crusade-modal-backdrop` element; when it goes
@@ -838,6 +879,7 @@
   // it may not exist yet, so we add it defensively.
   if (!Array.isArray(App.hooks.modeChange)) App.hooks.modeChange = [];
   App.hooks.modeChange.push(function (mode) {
+    dbg('App.hooks.modeChange fired:', mode);
     if (mode === 'collect') activate();
   });
 
@@ -857,13 +899,17 @@
   }
 
   App.hooks.bootstrap.push(function () {
+    dbg('bootstrap');
     // If the page already started in collect mode (deep-link future-proofing),
     // render now. Otherwise wait for modeChange.
     const host = document.getElementById('collect-mode');
-    if (host && host.classList.contains('mode-active') && !host.hidden) {
+    if (host && (host.classList.contains('mode-active') ||
+                 (document.body && document.body.getAttribute('data-mode') === 'collect'))
+              && !host.hidden) {
       activate();
     }
     watchCrusadeModal();
+    watchBodyDataMode();
   });
 
   // Public surface (debugging / manual refresh).
