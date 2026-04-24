@@ -1,0 +1,266 @@
+/* utilities.css — styles for points-override, bug-report, and qr-share modules. */
+
+/* ── points override ───────────────────────────────────────────────────── */
+
+.points-override-modal {
+  max-width: 820px;
+  width: 100%;
+}
+
+.points-override-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.points-override-help {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.points-override-search {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid var(--border-light, #333);
+  background: var(--panel-bg-2, #1a1a1a);
+  color: var(--text, #eee);
+  font-size: 13px;
+  outline: none;
+}
+.points-override-search:focus { border-color: var(--accent); }
+
+.points-override-list {
+  max-height: 56vh;
+  overflow-y: auto;
+  border: 1px solid var(--border-light, #333);
+  border-radius: var(--radius-md, 6px);
+  background: var(--panel-bg, #141414);
+}
+
+.points-override-row {
+  display: grid;
+  grid-template-columns: 1fr auto 90px 28px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light, #2a2a2a);
+}
+.points-override-row:last-child { border-bottom: 0; }
+
+.points-override-row-main { min-width: 0; }
+.points-override-row-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.points-override-row-fac {
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.points-override-row-orig {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, #999);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.points-override-input {
+  width: 86px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border-light, #333);
+  background: var(--panel-bg-2, #1a1a1a);
+  color: var(--text, #eee);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  outline: none;
+}
+.points-override-input:focus { border-color: var(--accent); }
+
+.points-override-clear {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border-light, #333);
+  background: transparent;
+  color: var(--text-muted, #999);
+  cursor: pointer;
+  line-height: 1;
+  font-size: 14px;
+  padding: 0;
+}
+.points-override-clear:hover {
+  color: var(--text, #eee);
+  border-color: var(--accent);
+}
+
+.points-override-empty {
+  padding: 30px 16px;
+  text-align: center;
+  color: var(--text-muted, #999);
+}
+
+/* Banner injected into #panel-center .panel-controls */
+.points-override-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: var(--accent-on, #111);
+  background: var(--accent, #c8c8c8);
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--accent-dark, #909090);
+}
+.points-override-banner[hidden] { display: none; }
+.points-override-banner-text { flex: 1; font-weight: 600; }
+.points-override-banner-reset {
+  padding: 2px 10px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+.points-override-banner-reset:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* ── bug report ───────────────────────────────────────────────────────── */
+
+.bug-report-modal {
+  max-width: 720px;
+  width: 100%;
+}
+
+.bug-report-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bug-report-help {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.bug-report-diag {
+  width: 100%;
+  min-height: 240px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.4;
+  padding: 10px 12px;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid var(--border-light, #333);
+  background: var(--panel-bg-2, #1a1a1a);
+  color: var(--text, #eee);
+  outline: none;
+  white-space: pre;
+  word-break: normal;
+}
+.bug-report-diag:focus { border-color: var(--accent); }
+
+.bug-report-warn {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid #c08a2a;
+  background: rgba(192, 138, 42, 0.12);
+  color: #e8c072;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* ── qr share ─────────────────────────────────────────────────────────── */
+
+.qr-share-modal {
+  max-width: 440px;
+  width: 100%;
+}
+
+.qr-share-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.qr-share-canvas {
+  width: 320px;
+  height: 320px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid var(--border-light, #333);
+  padding: 8px;
+  box-sizing: border-box;
+}
+.qr-share-canvas svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.qr-share-loading {
+  font-size: 12px;
+  color: #888;
+}
+
+.qr-share-url-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted, #999);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: -4px;
+}
+
+.qr-share-url {
+  width: 100%;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.4;
+  padding: 8px 10px;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid var(--border-light, #333);
+  background: var(--panel-bg-2, #1a1a1a);
+  color: var(--text, #eee);
+  outline: none;
+  word-break: break-all;
+}
+.qr-share-url:focus { border-color: var(--accent); }
+
+.qr-share-warn {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid #c08a2a;
+  background: rgba(192, 138, 42, 0.12);
+  color: #e8c072;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* ── reduced motion respect ───────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .points-override-modal,
+  .bug-report-modal,
+  .qr-share-modal,
+  .points-override-banner,
+  .points-override-row,
+  .points-override-clear {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -1,0 +1,456 @@
+/* tournament-export.css — Tournament Prep config modal + off-screen PDF pages. */
+
+/* ── Config modal ────────────────────────────────────────────────── */
+.tp-modal {
+  max-width: 520px;
+  width: 100%;
+}
+
+.tp-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.tp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tp-field-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted, #888);
+  font-weight: 600;
+}
+
+.tp-field-hint {
+  font-size: 11px;
+  color: var(--muted, #888);
+}
+
+.tp-field input[type="text"],
+.tp-field input[type="number"] {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border-light, #333);
+  background: var(--panel-bg, #111);
+  color: var(--text, #eee);
+  font-size: 13px;
+  outline: none;
+}
+
+.tp-field input[type="text"]:focus,
+.tp-field input[type="number"]:focus {
+  border-color: var(--accent, #b33);
+}
+
+.tp-radio-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tp-radio-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text, #eee);
+  cursor: pointer;
+}
+
+.tp-checks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+}
+
+.tp-checks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text, #eee);
+  cursor: pointer;
+}
+
+/* Collapsible opponents block */
+.tp-opponents {
+  border: 1px solid var(--border-light, #333);
+  border-radius: var(--radius-md, 6px);
+  background: var(--panel-bg-2, #1a1a1a);
+  overflow: hidden;
+}
+
+.tp-opponents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tp-opponents-header .tp-caret {
+  transition: transform 0.15s ease;
+  color: var(--muted, #888);
+}
+
+.tp-opponents.open .tp-caret {
+  transform: rotate(90deg);
+}
+
+.tp-opponents-body {
+  display: none;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-light, #333);
+  gap: 10px;
+  flex-direction: column;
+}
+
+.tp-opponents.open .tp-opponents-body {
+  display: flex;
+}
+
+.tp-opp-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 8px;
+  background: var(--panel-bg, #111);
+  border: 1px solid var(--border-light, #333);
+  border-radius: var(--radius-sm, 4px);
+}
+
+.tp-opp-row-title {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted, #888);
+  font-weight: 600;
+}
+
+.tp-opp-row input[type="text"] {
+  padding: 4px 6px;
+  font-size: 12px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border-light, #333);
+  background: var(--panel-bg-2, #1a1a1a);
+  color: var(--text, #eee);
+}
+
+.tp-opp-notes {
+  grid-column: 1 / -1;
+}
+
+/* Summary + actions */
+.tp-summary {
+  padding: 10px 12px;
+  background: var(--panel-bg-2, #1a1a1a);
+  border: 1px solid var(--border-light, #333);
+  border-radius: var(--radius-md, 6px);
+  font-size: 12px;
+  color: var(--muted, #bbb);
+  line-height: 1.5;
+}
+
+.tp-summary strong { color: var(--text, #eee); }
+
+.tp-generate {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tp-progress {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted, #bbb);
+}
+
+.tp-progress.is-active { display: inline-flex; }
+
+.tp-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border-light, #333);
+  border-top-color: var(--accent, #b33);
+  border-radius: 50%;
+  animation: tp-spin 0.9s linear infinite;
+}
+
+@keyframes tp-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Off-screen PDF stage ────────────────────────────────────────── */
+/*
+ * Hidden render container. Positioned way off-screen so html2pdf can
+ * rasterize real layout (visibility:hidden would skip it). Each direct
+ * child is a full landscape page — html2pdf forces a break before every
+ * .tp-page (plus the vendored .datasheet-page rule handled by datasheet.js).
+ */
+.tp-stage {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 297mm;
+  background: #ffffff;
+  color: #111111;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.tp-page {
+  width: 297mm;
+  min-height: 200mm;
+  box-sizing: border-box;
+  padding: 12mm 14mm;
+  background: #ffffff;
+  color: #111111;
+  page-break-after: always;
+  break-after: page;
+  overflow: hidden;
+}
+
+.tp-page:last-child {
+  page-break-after: auto;
+  break-after: auto;
+}
+
+.tp-page h1,
+.tp-page h2,
+.tp-page h3 {
+  margin: 0 0 8pt 0;
+  color: #111111;
+  font-weight: 700;
+}
+
+.tp-page h1 { font-size: 22pt; letter-spacing: 0.5px; }
+.tp-page h2 { font-size: 14pt; border-bottom: 1pt solid #333; padding-bottom: 3pt; }
+.tp-page h3 { font-size: 11pt; }
+
+.tp-kicker {
+  font-size: 9pt;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #666;
+  margin-bottom: 6pt;
+}
+
+/* Cover */
+.tp-cover {
+  text-align: center;
+}
+.tp-cover .tp-cover-title {
+  font-size: 30pt;
+  font-weight: 800;
+  margin: 10mm 0 4mm;
+  line-height: 1.1;
+}
+.tp-cover .tp-cover-meta {
+  font-size: 12pt;
+  margin: 2mm 0;
+  color: #333;
+}
+.tp-cover .tp-cover-pts {
+  font-size: 16pt;
+  font-weight: 700;
+  margin: 4mm 0 8mm;
+}
+.tp-cover .tp-cover-field {
+  display: inline-block;
+  margin: 2mm 4mm;
+  font-size: 11pt;
+  color: #333;
+  border-bottom: 1pt solid #333;
+  min-width: 60mm;
+  padding-bottom: 1mm;
+}
+.tp-rounds-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3mm;
+  margin-top: 8mm;
+}
+.tp-rounds-grid .tp-round-cell {
+  border: 1pt solid #333;
+  padding: 4mm;
+  min-height: 22mm;
+  text-align: left;
+  font-size: 9pt;
+  color: #333;
+}
+.tp-rounds-grid .tp-round-cell .tp-round-cell-title {
+  font-weight: 700;
+  font-size: 10pt;
+  margin-bottom: 2mm;
+}
+
+/* Quick-ref army list */
+.tp-quicklist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10pt;
+  margin-top: 4mm;
+}
+.tp-quicklist-table th,
+.tp-quicklist-table td {
+  border: 0.5pt solid #999;
+  padding: 3pt 6pt;
+  text-align: left;
+  vertical-align: top;
+}
+.tp-quicklist-table th {
+  background: #eee;
+  font-weight: 700;
+  font-size: 9pt;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.tp-quicklist-table td.tp-num,
+.tp-quicklist-table th.tp-num {
+  text-align: right;
+  width: 14mm;
+}
+.tp-quicklist-table tfoot td {
+  font-weight: 700;
+  background: #f5f5f5;
+}
+
+/* Generic forms / grids (CP, secondaries, battle log) */
+.tp-grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+  margin-top: 3mm;
+}
+.tp-grid-table th,
+.tp-grid-table td {
+  border: 0.5pt solid #666;
+  padding: 4pt 5pt;
+  vertical-align: top;
+  height: 14mm;
+}
+.tp-grid-table th {
+  background: #eee;
+  font-weight: 700;
+  font-size: 9pt;
+  text-align: left;
+  height: auto;
+}
+.tp-grid-table .tp-rownum {
+  width: 20mm;
+  background: #f5f5f5;
+  font-weight: 700;
+}
+
+.tp-reference-box {
+  margin-top: 5mm;
+  padding: 3mm 4mm;
+  border: 0.5pt solid #999;
+  background: #f9f9f9;
+  font-size: 8.5pt;
+  line-height: 1.45;
+  color: #222;
+}
+.tp-reference-box h3 {
+  font-size: 10pt;
+  margin: 0 0 2mm 0;
+}
+.tp-reference-box ul {
+  margin: 0;
+  padding-left: 14pt;
+  columns: 2;
+  column-gap: 8mm;
+}
+
+/* Opponent note page */
+.tp-notes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4mm;
+  margin-bottom: 4mm;
+}
+.tp-notes-meta {
+  font-size: 10pt;
+  color: #333;
+}
+.tp-notes-vp {
+  font-size: 11pt;
+  font-weight: 700;
+}
+.tp-notes-section {
+  margin: 3mm 0;
+}
+.tp-notes-section .tp-notes-title {
+  font-size: 10pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #333;
+  margin-bottom: 1mm;
+}
+.tp-notes-lines {
+  border: 0.5pt solid #bbb;
+  padding: 2mm;
+  min-height: 28mm;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 6.5mm,
+      #ddd 6.5mm,
+      #ddd 6.6mm
+    );
+}
+
+/* Battle log / scoring pad */
+.tp-battle-log {
+  margin-top: 3mm;
+}
+.tp-battle-log table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+}
+.tp-battle-log th,
+.tp-battle-log td {
+  border: 0.5pt solid #666;
+  padding: 3pt 4pt;
+  height: 16mm;
+  text-align: center;
+  vertical-align: top;
+}
+.tp-battle-log th {
+  background: #eee;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 8pt;
+  height: auto;
+}
+.tp-battle-log .tp-turn-col {
+  width: 16mm;
+  background: #f5f5f5;
+  font-weight: 700;
+}
+.tp-battle-log .tp-total-col {
+  background: #fafafa;
+  font-weight: 700;
+}
