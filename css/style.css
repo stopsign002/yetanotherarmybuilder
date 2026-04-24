@@ -1720,3 +1720,24 @@ ul { list-style: none; }
 .dropdown-menu .export-extras > button:hover {
   background: rgba(255, 255, 255, 0.06);
 }
+
+/* === Toolbar overflow guards (narrow panel widths) === */
+.panel-footer {
+  min-width: 0;
+  overflow: hidden;  /* clip anything that escapes on very narrow viewports */
+}
+.army-toolbar,
+.army-toolbar .toolbar-row {
+  min-width: 0;
+}
+/* Ellipsize overly long labels instead of pushing off the panel. */
+.army-toolbar .btn-sm {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Don't let the dropdown menu demand more than the panel width. */
+.dropdown-menu {
+  max-width: calc(var(--col-left, 300px) - 20px);
+  min-width: min(180px, calc(var(--col-left, 300px) - 20px));
+}

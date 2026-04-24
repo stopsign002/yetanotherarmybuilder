@@ -32,14 +32,47 @@
     entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
       let groupMin = null, groupMax = null;
 
-      // Pattern A
-      group.querySelectorAll(':scope > constraints > constraint').forEach(c => {
-        const val = Math.round(parseFloat(I.getAttr(c, 'value', '0')));
-        if (!isNaN(val) && val > 0) {
-          if (I.getAttr(c, 'type') === 'min') groupMin = val;
-          if (I.getAttr(c, 'type') === 'max') groupMax = val;
+      // Pattern F (composition picks): group contains upgrade entries that each
+      // represent a "unit comp" choice whose entryLinks target model/unit entries
+      // and carry the real per-option min/max. Squighog Boyz / Gretchin pattern.
+      const compEntries = group.querySelectorAll(':scope > selectionEntries > selectionEntry[type="upgrade"]');
+      if (compEntries.length > 0) {
+        const compSizes = [];
+        compEntries.forEach(opt => {
+          let oMin = null, oMax = null;
+          opt.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
+            const tgt = entriesById.get(I.getAttr(link, 'targetId'));
+            if (!tgt) return;
+            const tt = I.getAttr(tgt, 'type', '');
+            if (tt !== 'model' && tt !== 'unit') return;
+            link.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+              const val = Math.round(parseFloat(I.getAttr(c, 'value', '0')));
+              if (!isNaN(val) && val > 0) {
+                if (I.getAttr(c, 'type') === 'min') oMin = (oMin || 0) + val;
+                if (I.getAttr(c, 'type') === 'max') oMax = (oMax || 0) + val;
+              }
+            });
+          });
+          if (oMin !== null || oMax !== null) compSizes.push({ min: oMin, max: oMax });
+        });
+        if (compSizes.length > 0) {
+          const mins = compSizes.map(s => s.min).filter(v => v !== null);
+          const maxs = compSizes.map(s => s.max).filter(v => v !== null);
+          if (mins.length) groupMin = Math.min(...mins);
+          if (maxs.length) groupMax = Math.max(...maxs);
         }
-      });
+      }
+
+      // Pattern A
+      if (groupMin === null && groupMax === null) {
+        group.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+          const val = Math.round(parseFloat(I.getAttr(c, 'value', '0')));
+          if (!isNaN(val) && val > 0) {
+            if (I.getAttr(c, 'type') === 'min') groupMin = val;
+            if (I.getAttr(c, 'type') === 'max') groupMax = val;
+          }
+        });
+      }
 
       // Pattern B
       if (groupMin === null && groupMax === null) {
@@ -105,6 +138,29 @@
     if (squadOptions.length > 0) {
       squadOptions.sort((a, b) => a.pts - b.pts);
       return { points: squadOptions[0].pts, pointsOptions: squadOptions.map(o => o.pts), squadOptions };
+    }
+
+    // Fallback E: unit entry has 0 pts but a child model entry carries the cost.
+    // Collect model-level pts from direct or grouped model/unit children, then scale
+    // by min/max model counts. Covers Biovores, Beast of Nurgle, Sydonian Dragoons, Mek Gunz.
+    const modelCosts = [];
+    entryEl.querySelectorAll(
+      ':scope > selectionEntries > selectionEntry[type="model"], ' +
+      ':scope > selectionEntries > selectionEntry[type="unit"], ' +
+      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="model"], ' +
+      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="unit"]'
+    ).forEach(m => {
+      const c = readCost(m);
+      if (c > 0) modelCosts.push(c);
+    });
+    if (modelCosts.length > 0) {
+      const perModel = Math.min(...modelCosts);
+      const opts = [];
+      if (minModels) opts.push({ pts: perModel * minModels, models: minModels });
+      if (maxModels && maxModels !== minModels) opts.push({ pts: perModel * maxModels, models: maxModels });
+      if (opts.length === 0) opts.push({ pts: perModel, models: null });
+      opts.sort((a, b) => a.pts - b.pts);
+      return { points: opts[0].pts, pointsOptions: opts.map(o => o.pts), squadOptions: opts };
     }
 
     for (const link of entryEl.querySelectorAll(

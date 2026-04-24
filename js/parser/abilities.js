@@ -67,6 +67,14 @@
         collectAbilities(target, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
           .forEach(a => abilities.push(a));
       });
+      // Composition-pick pattern: entryLinks nested inside upgrade children (Squighog Boyz).
+      group.querySelectorAll(':scope > selectionEntries > selectionEntry > entryLinks > entryLink').forEach(link => {
+        const target = entriesById.get(I.getAttr(link, 'targetId'));
+        if (!target) return;
+        if (I.isCrusadeSection(I.getAttr(target, 'name', ''))) return;
+        collectAbilities(target, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
+          .forEach(a => abilities.push(a));
+      });
     });
 
     return abilities;

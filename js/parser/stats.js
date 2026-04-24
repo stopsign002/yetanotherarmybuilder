@@ -75,7 +75,10 @@
     }
 
     for (const link of entryEl.querySelectorAll(
-      ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink'
+      ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink, ' +
+      // Composition-pick pattern (Squighog Boyz): entryLinks live inside upgrade entries
+      // that sit in the squad-size group, not directly under the group.
+      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry > entryLinks > entryLink'
     )) {
       const target = entriesById.get(I.getAttr(link, 'targetId'));
       if (target) {

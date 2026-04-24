@@ -1,10 +1,100 @@
-/* datasheet.css — datasheet layout (screen preview) + @media print rules. */
+/* datasheet.css — datasheet layout, in-app preview, @media print rules. */
 
-/* Page: A4 is the international default; most home printers handle it cleanly. */
-@page { size: A4; margin: 12mm; }
+/* Landscape by default — 40k datasheets have wide weapon tables (up to 7
+   columns) that don't fit portrait comfortably. Users can still override
+   orientation in their printer dialog. `size: landscape` (no paper name)
+   lets the browser pick A4 or Letter to match user settings. */
+@page { size: landscape; margin: 10mm; }
 
-/* --- print-root: hidden on screen, the ONLY visible thing when printing --- */
+/* Hidden by default; the preview overlay or @media print reveals it. */
 .print-root { display: none; }
+
+/* --- In-app preview overlay ---
+   Triggered by body.print-preview-open. Users see EXACTLY what will print
+   before committing, with explicit Print / Close buttons. */
+body.print-preview-open {
+  overflow: hidden;
+}
+body.print-preview-open .app-main,
+body.print-preview-open .toast-container,
+body.print-preview-open #global-tooltip,
+body.print-preview-open .page-progress-wrap {
+  display: none !important;
+}
+body.print-preview-open .print-root {
+  display: block;
+  position: fixed;
+  inset: 0;
+  top: 52px;
+  overflow: auto;
+  background: #2a2a2a;
+  padding: 20px;
+  z-index: 1000;
+}
+.print-preview-bar {
+  display: none;
+}
+body.print-preview-open .print-preview-bar {
+  display: flex;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #1a1a1a;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  z-index: 1001;
+}
+.print-preview-bar .print-preview-title {
+  font-weight: 600;
+  color: #e8e8e8;
+  font-size: 14px;
+}
+.print-preview-bar .print-preview-actions {
+  display: flex;
+  gap: 8px;
+}
+.print-preview-bar button {
+  padding: 7px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+}
+.print-preview-bar .btn-print {
+  background: var(--accent, #a8bde6);
+  color: var(--accent-on, #111);
+  border-color: var(--accent, #a8bde6);
+}
+.print-preview-bar .btn-close {
+  background: transparent;
+  color: #e8e8e8;
+  border-color: rgba(255,255,255,0.18);
+}
+.print-preview-bar .btn-close:hover {
+  background: rgba(255,255,255,0.06);
+}
+.print-preview-bar .print-preview-hint {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  font-weight: 400;
+}
+/* During preview, give datasheets a page-like frame so the on-screen
+   view mirrors what the printer will produce. Landscape aspect ratio. */
+body.print-preview-open .datasheet {
+  max-width: 1100px;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+body.print-preview-open .datasheet-cover {
+  max-width: 1100px;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
 
 .datasheet,
 .datasheet * {
@@ -296,17 +386,35 @@
  * Force light colors regardless of app's dark theme.
  * ============================================================ */
 @media print {
+  /* Force background colors to print (Chrome/Safari default is to strip them). */
+  html, body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: #fff !important;
+  }
   body > *:not(.print-root) {
+    display: none !important;
+  }
+  .print-preview-bar {
     display: none !important;
   }
   .print-root {
     display: block !important;
     position: static !important;
+    inset: auto !important;
     width: auto !important;
     height: auto !important;
     overflow: visible !important;
     background: #fff !important;
     color: #000 !important;
+    padding: 0 !important;
+    top: auto !important;
+  }
+  body.print-preview-open .datasheet,
+  body.print-preview-open .datasheet-cover {
+    max-width: none !important;
+    margin: 0 0 6mm 0 !important;
+    box-shadow: none !important;
   }
   .datasheet {
     color: #000 !important;

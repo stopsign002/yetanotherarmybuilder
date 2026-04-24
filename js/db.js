@@ -2,7 +2,9 @@
 window.YaabDB = (() => {
 
   const DB_NAME    = 'yaab';
-  const DB_VERSION = 1;
+  // Bumped to v2 after parser fixes: detachments/enhancements surface for Tyranids,
+  // points + model counts corrected for several faction units.
+  const DB_VERSION = 2;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
 
@@ -22,12 +24,11 @@ window.YaabDB = (() => {
       catch (_) { _disabled = true; resolve(null); return; }
       req.onupgradeneeded = () => {
         const db = req.result;
-        if (!db.objectStoreNames.contains(STORE_FACTIONS)) {
-          db.createObjectStore(STORE_FACTIONS, { keyPath: 'factionName' });
-        }
-        if (!db.objectStoreNames.contains(STORE_GST)) {
-          db.createObjectStore(STORE_GST, { keyPath: 'name' });
-        }
+        // Drop existing stores on any version bump so stale parsed shapes don't leak across releases.
+        if (db.objectStoreNames.contains(STORE_FACTIONS)) db.deleteObjectStore(STORE_FACTIONS);
+        if (db.objectStoreNames.contains(STORE_GST))      db.deleteObjectStore(STORE_GST);
+        db.createObjectStore(STORE_FACTIONS, { keyPath: 'factionName' });
+        db.createObjectStore(STORE_GST,      { keyPath: 'name' });
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror   = () => { _disabled = true; resolve(null); };

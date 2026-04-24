@@ -1,11 +1,10 @@
 // sw.js - App-shell service worker; precaches HTML/CSS/JS, passes BSData fetches through.
-const SHELL = 'yaab-shell-v3';
+const SHELL = 'yaab-shell-v4';
 
 const PRECACHE = [
   '/',
   '/index.html',
   '/css/style.css',
-  '/css/theme.css',
   '/css/validation.css',
   '/css/datasheet.css',
   '/js/db.js',
@@ -45,7 +44,6 @@ const PRECACHE = [
   '/js/app/resize.js',
   '/js/app/events.js',
   '/js/app/bsdata-load.js',
-  '/js/app/theme.js',
   '/js/app/history.js',
   '/js/app/url-share.js',
   '/js/app/validation.js',

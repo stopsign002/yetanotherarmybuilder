@@ -74,8 +74,11 @@
         if (!target) return;
         const t = I.getAttr(target, 'type', '');
         if (t !== 'unit' && t !== 'model') return;
-        if (I.isCrusadeSection(I.getAttr(target, 'name', '')) ||
-            I.isCrusadeSection(I.getAttr(link,   'name', ''))) return;
+        const linkName   = I.getAttr(link,   'name', '');
+        const targetName = I.getAttr(target, 'name', '');
+        if (I.isCrusadeSection(targetName) || I.isCrusadeSection(linkName)) return;
+        // Legends-link fallback: entryLink name often carries "[Legends]" even when target does not.
+        if (linkName.includes('[Legends]') || targetName.includes('[Legends]')) return;
         const unit = I.parseEntry(target, entriesById, profilesById, rulesById);
         if (unit && !seenIds.has(unit.id)) {
           seenIds.add(unit.id);
@@ -88,7 +91,33 @@
       const detachmentRuleIds = new Set();
       const detachmentRuleNames = new Set();
 
-      root.querySelectorAll('selectionEntryGroup[name="Detachment"]').forEach(detachGroup => {
+      // Collect Detachment selectionEntryGroups from: local groups, and root-level
+      // entryLinks named "Detachment" whose target is a shared group or upgrade wrapper.
+      const detachGroups = [];
+      const seenDetachGroups = new Set();
+      function addDetachGroup(g) {
+        if (!g) return;
+        const gid = g.getAttribute('id');
+        if (gid && seenDetachGroups.has(gid)) return;
+        if (gid) seenDetachGroups.add(gid);
+        detachGroups.push(g);
+      }
+      root.querySelectorAll('selectionEntryGroup[name="Detachment"]').forEach(addDetachGroup);
+
+      // Tyranids-style: top-level selectionEntry name="Detachment" wraps an entryLink
+      // whose targetId points into a library catalogue's shared group.
+      function walkDetachmentEntryLinks(scopeEl) {
+        scopeEl.querySelectorAll(':scope > entryLinks > entryLink[name="Detachment"]').forEach(link => {
+          const resolved = entriesById.get(I.getAttr(link, 'targetId'));
+          if (!resolved) return;
+          if (resolved.tagName === 'selectionEntryGroup') addDetachGroup(resolved);
+          else walkDetachmentEntryLinks(resolved);
+        });
+      }
+      walkDetachmentEntryLinks(root);
+      root.querySelectorAll(':scope > selectionEntries > selectionEntry[name="Detachment"]').forEach(walkDetachmentEntryLinks);
+
+      detachGroups.forEach(detachGroup => {
         detachGroup.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
           if (I.getAttr(entry, 'hidden', 'false') === 'true') return;
           const name = I.getAttr(entry, 'name', '').trim();
@@ -135,18 +164,36 @@
 
       // ── Enhancements (per detachment) ──
       const enhancementsByDetachment = {};
-      const enhGroup = root.querySelector('selectionEntryGroup[name="Enhancements"]');
-      if (enhGroup) {
+      const enhGroups = [];
+      const seenEnhGroups = new Set();
+      function addEnhGroup(g) {
+        if (!g) return;
+        const gid = g.getAttribute('id');
+        if (gid && seenEnhGroups.has(gid)) return;
+        if (gid) seenEnhGroups.add(gid);
+        enhGroups.push(g);
+      }
+      root.querySelectorAll('selectionEntryGroup[name="Enhancements"]').forEach(addEnhGroup);
+      // Tyranid-style: Enhancements group lives in the library catalogue behind an entryLink.
+      root.querySelectorAll('entryLink[name="Enhancements"]').forEach(link => {
+        const resolved = entriesById.get(I.getAttr(link, 'targetId'));
+        if (resolved && resolved.tagName === 'selectionEntryGroup') addEnhGroup(resolved);
+      });
+
+      enhGroups.forEach(enhGroup => {
         enhGroup.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(subGroup => {
           const groupName = I.getAttr(subGroup, 'name', '').trim();
           if (!/\s+Enhancements$/i.test(groupName)) return;
           const detName = groupName.replace(/\s+Enhancements$/i, '').trim();
-          const enhancements = [];
+          const enhancements = enhancementsByDetachment[detName] || [];
+          const seenEnhNames = new Set(enhancements.map(e => e.name));
           subGroup.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
             if (I.getAttr(entry, 'hidden', 'false') === 'true') return;
             const name = I.getAttr(entry, 'name', '').trim();
             if (!name || /^new\s/i.test(name)) return;
             if (I.isCrusadeSection(name)) return;
+            if (seenEnhNames.has(name)) return;
+            seenEnhNames.add(name);
             const costEl = entry.querySelector(':scope > costs > cost[name="pts"]');
             const pts = costEl ? Math.round(parseFloat(I.getAttr(costEl, 'value', '0'))) : 0;
             let description = '';
@@ -159,7 +206,7 @@
           });
           if (enhancements.length > 0) enhancementsByDetachment[detName] = enhancements;
         });
-      }
+      });
       detachments.forEach(d => { d.enhancements = enhancementsByDetachment[d.name] || []; });
 
       // ── Army Rules ──

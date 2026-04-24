@@ -47,7 +47,6 @@ Then open `http://localhost:8000/`. Cannot be opened via `file://` — the BSDat
 | Undo / redo | `js/app/history.js` | Cmd/Ctrl+Z / Shift+Cmd/Ctrl+Z; 50-snapshot cap; toolbar buttons |
 | URL-shareable armies | `js/app/url-share.js` | `?a=YAAB1:...` loads on boot; "Share Link" toolbar button |
 | Keyboard nav | `js/app/keyboard.js` | `/` focus search, arrows / Enter / `a` for roster |
-| Light/dark theme | `js/app/theme.js` + `css/theme.css` | Toolbar toggle, persists to localStorage |
 | Composition validation | `js/app/validation.js` + `css/validation.css` | Advisory warnings (Rule of Three, no warlord) |
 | Parse coverage dev report | `js/parser/report.js` | `localStorage.yaab_parse_debug=1` to enable console logs |
 | IndexedDB faction cache | `js/db.js` | Persists factions across tabs/reloads; boots instantly on repeat visits |
@@ -73,5 +72,4 @@ Then open `http://localhost:8000/`. Cannot be opened via `file://` — the BSDat
 | `yaab` DB / `gst` store | IndexedDB | Raw XML for `.gst` + `Library *.cat` | Same as above |
 | `yaab_bsdata_filelist_10e_v1` | sessionStorage | GitHub tree listing | Bump `v1` → `v2` in `bsdata.js` on repo/tree shape changes |
 | `yaab_armies` | localStorage | Saved armies (array of `Army.toJSON()`) | User-facing; don't break compatibility without a migration |
-| `yaab_theme` | localStorage | User's theme preference (`dark` or `light`) | User-facing |
-| `yaab-shell-v2` | Cache API | Service worker app shell | Bump `SHELL` in `sw.js` when any precached asset changes |
+| `yaab-shell-v4` | Cache API | Service worker app shell | Bump `SHELL` in `sw.js` when any precached asset changes |

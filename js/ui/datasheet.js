@@ -297,38 +297,62 @@
     return root;
   }
 
-  function clearPrintRoot() {
-    const root = document.getElementById('print-root');
-    if (root) root.innerHTML = '';
+  function ensurePreviewBar() {
+    let bar = document.getElementById('print-preview-bar');
+    if (bar) return bar;
+    bar = document.createElement('div');
+    bar.id = 'print-preview-bar';
+    bar.className = 'print-preview-bar';
+    bar.innerHTML = `
+      <div>
+        <span class="print-preview-title">Print Preview</span>
+        <span class="print-preview-hint"> &nbsp;&mdash;&nbsp; preview on screen before printing. Use your printer dialog to switch paper size or orientation.</span>
+      </div>
+      <div class="print-preview-actions">
+        <button type="button" class="btn-print" id="print-preview-confirm">Print / Save as PDF</button>
+        <button type="button" class="btn-close" id="print-preview-close">Close</button>
+      </div>
+    `;
+    document.body.appendChild(bar);
+    bar.querySelector('#print-preview-confirm').addEventListener('click', () => {
+      try { window.print(); }
+      catch (e) { console.warn('[datasheet.print]', e); closePreview(); }
+    });
+    bar.querySelector('#print-preview-close').addEventListener('click', closePreview);
+    return bar;
   }
 
-  function triggerPrint() {
-    const cleanup = () => {
-      clearPrintRoot();
-      window.removeEventListener('afterprint', cleanup);
-    };
-    window.addEventListener('afterprint', cleanup);
-    // Defensive fallback: some browsers never fire afterprint reliably.
-    setTimeout(() => { /* noop — keeps the stack alive; afterprint fires async */ }, 0);
-    try { window.print(); }
-    catch (e) { console.warn('[datasheet.print]', e); cleanup(); }
+  function closePreview() {
+    document.body.classList.remove('print-preview-open');
+    const root = document.getElementById('print-root');
+    if (root) root.innerHTML = '';
+    document.removeEventListener('keydown', onPreviewKeydown);
+    window.removeEventListener('afterprint', closePreview);
+  }
+
+  function onPreviewKeydown(e) {
+    if (e.key === 'Escape') closePreview();
+  }
+
+  function openPreview(content) {
+    const root = ensurePrintRoot();
+    root.innerHTML = '';
+    root.appendChild(content);
+    ensurePreviewBar();
+    document.body.classList.add('print-preview-open');
+    document.addEventListener('keydown', onPreviewKeydown);
+    window.addEventListener('afterprint', closePreview);
+    root.scrollTop = 0;
   }
 
   UI.printUnitDatasheet = function (unit) {
     if (!unit) return;
-    const root = ensurePrintRoot();
-    root.innerHTML = '';
-    const ds = UI.renderDatasheet(unit);
-    root.appendChild(ds);
-    triggerPrint();
+    openPreview(UI.renderDatasheet(unit));
   };
 
   UI.printArmyDatasheets = function (army) {
     if (!army) return;
-    const root = ensurePrintRoot();
-    root.innerHTML = '';
-    root.appendChild(UI.renderArmyDatasheets(army));
-    triggerPrint();
+    openPreview(UI.renderArmyDatasheets(army));
   };
 
   // Register hook-driven buttons.
