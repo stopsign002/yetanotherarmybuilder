@@ -43,7 +43,12 @@ window.Storage = (() => {
 
   // ── Compact string export/import ──────────────────────────────────────
   // Format: `YAAB1:<base64url(deflate-raw(JSON))>`
-  // Using the native CompressionStream API (Chrome 103+, FF 113+, Safari 16.4+).
+  // The JSON is a compact v2 object that stores only selections:
+  //   { v:2, n:name, f:factionName, c:chapter?, p:pointsLimit, d:detachment?,
+  //     e:[[unitId, count, selectedPts?, [[enhName, enhPts], ...]?], ...] }
+  // Unit data is rehydrated from the live faction catalogue at import time.
+  // Raw JSON ({...) and pre-v2 YAAB1: codes (full serialized Army) are still
+  // accepted by importArmyFromString for backward compatibility.
   const EXPORT_PREFIX = 'YAAB1:';
 
   function _bytesToBase64Url(bytes) {
@@ -64,24 +69,110 @@ window.Storage = (() => {
     return bytes;
   }
 
-  async function exportArmyToString(army) {
-    const json = JSON.stringify(army.toJSON());
-    const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'));
-    const buf = await new Response(stream).arrayBuffer();
-    return EXPORT_PREFIX + _bytesToBase64Url(new Uint8Array(buf));
+  async function _deflate(str) {
+    const stream = new Blob([str]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
   }
 
-  async function importArmyFromString(input) {
+  async function _inflate(bytes) {
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return new TextDecoder().decode(await new Response(stream).arrayBuffer());
+  }
+
+  function _toCompact(army, { factionName, chapter, detachmentName } = {}) {
+    const data = {
+      v: 2,
+      n: army.name,
+      p: army.pointsLimit,
+    };
+    if (factionName)    data.f = factionName;
+    if (chapter)        data.c = chapter;
+    if (detachmentName) data.d = detachmentName;
+    data.e = (army.entries || []).map(entry => {
+      const tuple = [entry.unitId, entry.count];
+      const enhs = (entry.enhancements || []).map(e => [e.name, e.pts || 0]);
+      const hasEnh = enhs.length > 0;
+      const hasPts = entry.selectedPts != null;
+      if (hasPts || hasEnh) tuple.push(hasPts ? entry.selectedPts : null);
+      if (hasEnh)           tuple.push(enhs);
+      return tuple;
+    });
+    return data;
+  }
+
+  function _findUnit(factions, preferredNames, unitId) {
+    // Prefer a declared faction (chapter, then parent); fall back to any
+    // loaded faction (mirrors findUnit's linked-catalogue policy in app.js).
+    for (const name of preferredNames) {
+      if (!name) continue;
+      const f = factions.find(f => f.factionName === name);
+      if (!f) continue;
+      const u = (f.units || []).find(u => u.id === unitId);
+      if (u) return u;
+    }
+    for (const f of factions) {
+      const u = (f.units || []).find(u => u.id === unitId);
+      if (u) return u;
+    }
+    return null;
+  }
+
+  function _fromCompact(data, { factions = [] } = {}) {
+    const factionName = data.f || '';
+    const chapter     = data.c || '';
+    const lookupOrder = [chapter, factionName];
+    const displayFaction = chapter || factionName || '(unknown)';
+    const entries = (data.e || []).map(tuple => {
+      const [unitId, count = 1, selectedPts = null, enhPairs = null] = tuple;
+      const unitData = _findUnit(factions, lookupOrder, unitId);
+      if (!unitData) {
+        throw new Error(`Unit "${unitId}" from "${displayFaction}" is not loaded yet. Wait for background loading to finish, then try again.`);
+      }
+      const resolvedPts = (selectedPts == null) ? (unitData.points || 0) : selectedPts;
+      let squadLabel = null;
+      const squadOpt = (unitData.squadOptions || []).find(o => o.pts === resolvedPts);
+      if (squadOpt && squadOpt.models) squadLabel = `${squadOpt.models} models`;
+      const enhancements = Array.isArray(enhPairs)
+        ? enhPairs.map(p => Array.isArray(p)
+            ? { name: p[0], pts: p[1] || 0, description: '' }
+            : { name: String(p), pts: 0, description: '' })
+        : [];
+      return {
+        unitId,
+        unitName: unitData.name,
+        unitData,
+        count,
+        selectedPts: resolvedPts,
+        squadLabel,
+        enhancements,
+      };
+    });
+    const army = new Army({
+      name: data.n || 'Imported Army',
+      factionName,
+      pointsLimit: data.p || 2000,
+      entries,
+    });
+    return { army, chapter: data.c || null, detachment: data.d || null };
+  }
+
+  async function exportArmyToString(army, opts = {}) {
+    const json = JSON.stringify(_toCompact(army, opts));
+    const bytes = await _deflate(json);
+    return EXPORT_PREFIX + _bytesToBase64Url(bytes);
+  }
+
+  async function importArmyFromString(input, opts = {}) {
     const raw = (input || '').trim();
     if (!raw) throw new Error('Empty input');
 
-    // Backward-compat: allow pasting raw JSON.
+    // Legacy raw-JSON paste (old .json file exports).
     if (raw.startsWith('{')) {
       const data = JSON.parse(raw);
       if (!data.name || !Array.isArray(data.entries)) {
         throw new Error('Invalid army data');
       }
-      return Army.fromJSON(data);
+      return { army: Army.fromJSON(data), chapter: null, detachment: null };
     }
 
     if (!raw.startsWith(EXPORT_PREFIX)) {
@@ -89,14 +180,18 @@ window.Storage = (() => {
     }
     const payload = raw.slice(EXPORT_PREFIX.length).replace(/\s+/g, '');
     const bytes = _base64UrlToBytes(payload);
-    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-    const buf = await new Response(stream).arrayBuffer();
-    const json = new TextDecoder().decode(buf);
+    const json = await _inflate(bytes);
     const data = JSON.parse(json);
-    if (!data.name || !Array.isArray(data.entries)) {
-      throw new Error('Invalid army data');
+
+    if (data && data.v === 2) {
+      return _fromCompact(data, opts);
     }
-    return Army.fromJSON(data);
+
+    // Pre-v2 YAAB1 codes contained the full serialized Army.
+    if (data && data.name && Array.isArray(data.entries)) {
+      return { army: Army.fromJSON(data), chapter: null, detachment: null };
+    }
+    throw new Error('Unknown army code format');
   }
 
   function exportArmyToText(army, { detachmentName } = {}) {
