@@ -1,0 +1,350 @@
+/* css/damage-calc.css — 10e attack simulator modal. */
+
+.yaab-dc-modal {
+  max-width: 560px;
+  width: 100%;
+  max-height: 80vh;
+}
+
+.yaab-dc-body {
+  padding: 14px 18px 18px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Sections ─────────────────────────────────────────── */
+
+.yaab-dc-section {
+  background: var(--panel-bg-alt, rgba(255,255,255,0.02));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.yaab-dc-sec-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+
+.yaab-dc-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.yaab-dc-lbl {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 72px;
+  font-weight: 600;
+}
+
+.yaab-dc-row select,
+.yaab-dc-row input {
+  flex: 1;
+  background: var(--input-bg, #1a1a1a);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 5px 7px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.yaab-dc-grid5,
+.yaab-dc-grid4 {
+  display: grid;
+  gap: 8px;
+}
+.yaab-dc-grid5 { grid-template-columns: 1fr 1fr 1fr 1fr 1fr; }
+.yaab-dc-grid4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.yaab-dc-grid5 > div,
+.yaab-dc-grid4 > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.yaab-dc-grid5 label,
+.yaab-dc-grid4 label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.yaab-dc-grid5 input,
+.yaab-dc-grid4 input {
+  background: var(--input-bg, #1a1a1a);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 5px 6px;
+  font-size: 13px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Presets ──────────────────────────────────────────── */
+
+.yaab-dc-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.yaab-dc-preset {
+  background: var(--input-bg, #1a1a1a);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.yaab-dc-preset:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.yaab-dc-preset.active {
+  background: var(--accent);
+  color: var(--accent-on, #111);
+  border-color: var(--accent);
+}
+
+/* ── Checkbox row ─────────────────────────────────────── */
+
+.yaab-dc-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.yaab-dc-mult-row {
+  justify-content: space-between;
+}
+
+.yaab-dc-effatk {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.yaab-dc-effatk b {
+  color: var(--accent);
+}
+
+/* ── Actions ──────────────────────────────────────────── */
+
+.yaab-dc-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.yaab-dc-actions .yaab-dc-go {
+  flex: 1;
+  min-width: 160px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 12px;
+}
+
+/* ── Results output ───────────────────────────────────── */
+
+.yaab-dc-out-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.yaab-dc-out-grid > div {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.yaab-dc-expected-big,
+.yaab-dc-rolled-big {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.yaab-dc-expected-lbl,
+.yaab-dc-rolled-lbl {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+  margin-bottom: 8px;
+}
+
+.yaab-dc-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.yaab-dc-stages b {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.yaab-dc-targets {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.yaab-dc-kwbadges {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.yaab-dc-kwb {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: rgba(var(--accent-rgb, 200, 200, 200), 0.15);
+  color: var(--accent);
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* ── Collapsible per-roll details ─────────────────────── */
+
+.yaab-dc-details {
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.yaab-dc-details summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 2px 0;
+  user-select: none;
+}
+
+.yaab-dc-details[open] summary { color: var(--accent); }
+
+.yaab-dc-brk {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.yaab-dc-brk span {
+  display: inline-block;
+  min-width: 90px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: none;
+}
+
+/* ── Distribution / histogram ─────────────────────────── */
+
+.yaab-dc-dist {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+.yaab-dc-dist-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.yaab-dc-dist-stats b {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.yaab-dc-n {
+  margin-left: auto;
+  font-style: italic;
+}
+
+.yaab-dc-hist {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+  padding: 0 2px;
+}
+
+.yaab-dc-hist-col {
+  flex: 1;
+  min-width: 12px;
+  max-width: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.yaab-dc-hist-bar {
+  width: 100%;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+  transition: height 0.2s;
+}
+
+.yaab-dc-hist-lbl {
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+/* ── Opponent row ─────────────────────────────────────── */
+
+.yaab-dc-opp-row select {
+  font-size: 12px;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+
+@media (max-width: 620px) {
+  .yaab-dc-grid5 { grid-template-columns: 1fr 1fr 1fr; }
+  .yaab-dc-grid4 { grid-template-columns: 1fr 1fr; }
+  .yaab-dc-out-grid { grid-template-columns: 1fr; }
+}

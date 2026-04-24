@@ -1,0 +1,290 @@
+/* army-diff.css — version-history modal styling for the army-diff feature. */
+
+.diff-modal {
+  max-width: 880px;
+  width: 100%;
+}
+
+.diff-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.diff-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.diff-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--muted, #888);
+  font-size: 13px;
+  background: var(--panel-bg-2, #1a1a1a);
+  border: 1px dashed var(--border-light, #333);
+  border-radius: var(--radius-md, 6px);
+}
+
+/* ── Picker (From / To) ─────────────────────────────────────────── */
+.diff-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel-bg-2, #1a1a1a);
+  border: 1px solid var(--border-light, #333);
+  border-radius: var(--radius-md, 6px);
+  padding: 10px 12px;
+}
+
+.diff-picker-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.diff-picker-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted, #888);
+}
+
+.diff-select {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border-light, #333);
+  background: var(--panel-bg, #111);
+  color: var(--text, #eee);
+  font-size: 13px;
+  outline: none;
+}
+
+.diff-select:focus {
+  border-color: var(--accent, #b33);
+}
+
+.diff-picker-arrow {
+  color: var(--muted, #888);
+  font-size: 18px;
+  padding: 0 4px;
+  align-self: flex-end;
+  padding-bottom: 6px;
+}
+
+/* ── Totals strip ───────────────────────────────────────────────── */
+.diff-totals {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 10px 12px;
+  background: var(--panel-bg-2, #1a1a1a);
+  border: 1px solid var(--border-light, #333);
+  border-radius: var(--radius-md, 6px);
+  font-size: 13px;
+}
+
+.diff-total {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.diff-total-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted, #888);
+}
+
+.diff-total-arrow {
+  color: var(--muted, #888);
+}
+
+.diff-delta {
+  margin-left: auto;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--panel-bg, #111);
+  border: 1px solid var(--border-light, #333);
+}
+
+.diff-delta.pos  { color: #f26a6a; border-color: #5a2b2b; }
+.diff-delta.neg  { color: #6ad17a; border-color: #2b5a31; }
+.diff-delta.zero { color: var(--muted, #888); }
+
+/* ── Diff list (flat rows with left-margin icon) ────────────────── */
+.diff-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--border-light, #333);
+  border-radius: var(--radius-md, 6px);
+  background: var(--panel-bg-2, #1a1a1a);
+  overflow: hidden;
+}
+
+.diff-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light, #333);
+  font-size: 13px;
+  color: var(--text, #eee);
+}
+
+.diff-row:last-child {
+  border-bottom: none;
+}
+
+.diff-icon {
+  flex: 0 0 20px;
+  width: 20px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--muted, #888);
+}
+
+.diff-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.diff-meta-label {
+  color: var(--muted, #888);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+}
+
+.diff-pts {
+  flex: 0 0 auto;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--panel-bg, #111);
+  border: 1px solid var(--border-light, #333);
+}
+
+.diff-pts.pos  { color: #f26a6a; border-color: #5a2b2b; }
+.diff-pts.neg  { color: #6ad17a; border-color: #2b5a31; }
+.diff-pts.zero { color: var(--muted, #888); }
+
+.diff-row-none {
+  justify-content: center;
+  color: var(--muted, #888);
+  font-style: italic;
+}
+
+/* kind-specific color accents on left-gutter icon + (for removed) strike-through */
+.diff-row.diff-removed     .diff-icon { color: #f26a6a; }
+.diff-row.diff-removed     .diff-text { text-decoration: line-through; color: #c99; }
+
+.diff-row.diff-added       .diff-icon { color: #6ad17a; }
+.diff-row.diff-added       .diff-text { color: #a8e2b3; }
+
+.diff-row.diff-count       .diff-icon { color: #e0b96a; }
+
+.diff-row.diff-enh-removed .diff-icon { color: #f26a6a; }
+.diff-row.diff-enh-added   .diff-icon { color: #6ad17a; }
+
+.diff-row.diff-meta        .diff-icon { color: #8ab8f5; }
+
+/* ── Section title between diff and snapshot list ───────────────── */
+.diff-section-title {
+  margin: 4px 0 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted, #888);
+  font-weight: 600;
+}
+
+/* ── Snapshot list (all versions + actions) ─────────────────────── */
+.diff-snap-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.diff-snap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: var(--panel-bg-2, #1a1a1a);
+  border: 1px solid var(--border-light, #333);
+  border-radius: var(--radius-md, 6px);
+}
+
+.diff-snap-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.diff-snap-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #eee);
+  word-break: break-word;
+}
+
+.diff-snap-date {
+  font-size: 11px;
+  color: var(--muted, #888);
+}
+
+.diff-snap-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.diff-snap-actions .btn {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+@media (max-width: 600px) {
+  .diff-picker {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .diff-picker-arrow {
+    transform: rotate(90deg);
+    align-self: center;
+    padding-bottom: 0;
+  }
+  .diff-totals {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .diff-delta {
+    margin-left: 0;
+  }
+  .diff-snap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

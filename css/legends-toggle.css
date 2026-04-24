@@ -1,0 +1,52 @@
+/* legends-toggle.css — styling for Legends opt-in visibility toggle. */
+
+/* Corner badge on roster unit cards for Legends units.
+   Uses ::after because .unit-card::before is already the selection accent. */
+.unit-card.unit-card-legends::after {
+  content: "LEGENDS";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 8pt;
+  letter-spacing: 0.1em;
+  color: #d9b566;
+  font-weight: 700;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Subtle amber tint on the card itself so Legends entries read as "casual". */
+.unit-card.unit-card-legends {
+  border-color: rgba(217, 181, 102, 0.35);
+  background: linear-gradient(
+    to bottom,
+    rgba(217, 181, 102, 0.05),
+    transparent 60%
+  ), var(--card-bg);
+}
+
+/* Toolbar icon: active (amber-glow) state. Generic .is-on rule so any
+   icon button can opt-in to the same visual treatment. */
+.toolbar-icons button.is-on {
+  border-color: #d9b566;
+  color: #f0d79a;
+  background: rgba(217, 181, 102, 0.12);
+  box-shadow: 0 0 0 1px rgba(217, 181, 102, 0.45),
+              0 0 8px rgba(217, 181, 102, 0.25);
+}
+
+/* Detail-panel tag: lives next to .detail-name when selected unit is Legends. */
+.detail-legends-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 7px;
+  font-size: 9pt;
+  letter-spacing: 0.08em;
+  color: #d9b566;
+  border: 1px solid rgba(217, 181, 102, 0.55);
+  border-radius: 3px;
+  background: rgba(217, 181, 102, 0.08);
+  font-weight: 600;
+  vertical-align: middle;
+  white-space: nowrap;
+}

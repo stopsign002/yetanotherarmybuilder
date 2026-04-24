@@ -78,9 +78,12 @@
         const targetName = I.getAttr(target, 'name', '');
         if (I.isCrusadeSection(targetName) || I.isCrusadeSection(linkName)) return;
         // Legends-link fallback: entryLink name often carries "[Legends]" even when target does not.
-        if (linkName.includes('[Legends]') || targetName.includes('[Legends]')) return;
+        // Previously filtered out entirely; now let the flag flow through so the Legends toggle works.
+        // if (linkName.includes('[Legends]') || targetName.includes('[Legends]')) return;
+        const linkIsLegends = linkName.includes('[Legends]') || targetName.includes('[Legends]');
         const unit = I.parseEntry(target, entriesById, profilesById, rulesById);
         if (unit && !seenIds.has(unit.id)) {
+          if (linkIsLegends) unit.isLegends = true;
           seenIds.add(unit.id);
           units.push(unit);
         }
