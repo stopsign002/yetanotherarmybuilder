@@ -300,5 +300,11 @@
         UI.hideExportModal();
       }
     });
+
+    // Static Print button (datasheet module exposes the handler).
+    const printBtn = document.getElementById('btn-print-army');
+    if (printBtn && typeof UI.printCurrentArmy === 'function') {
+      printBtn.addEventListener('click', UI.printCurrentArmy);
+    }
   };
 })();

@@ -342,19 +342,15 @@
       onClick: (unit) => UI.printUnitDatasheet(unit),
     });
 
-    App.hooks.armyToolbarActions.push({
-      id: 'btn-print-army',
-      label: 'Print',
-      title: 'Print datasheets for every unit in your army',
-      className: 'btn btn-sm btn-outline',
-      onClick: () => {
-        const army = window.App && App.state && App.state.currentArmy;
-        if (!army || !army.entries || !army.entries.length) {
-          if (UI.toast) UI.toast('Add units first', 'warning');
-          return;
-        }
-        UI.printArmyDatasheets(army);
-      },
-    });
   }
+
+  // Exposed so events.js can wire the static #btn-print-army button.
+  UI.printCurrentArmy = function () {
+    const army = window.App && App.state && App.state.currentArmy;
+    if (!army || !army.entries || !army.entries.length) {
+      if (UI.toast) UI.toast('Add units first', 'warning');
+      return;
+    }
+    UI.printArmyDatasheets(army);
+  };
 })();

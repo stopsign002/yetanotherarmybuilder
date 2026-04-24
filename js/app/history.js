@@ -81,16 +81,18 @@
 
   App.hooks.armyToolbarActions.push({
     id: 'yaab-btn-undo',
-    label: '↶ Undo',
+    region: 'icon',
+    label: '↶',
+    ariaLabel: 'Undo',
     title: 'Undo (Cmd/Ctrl+Z)',
-    className: 'btn btn-sm btn-outline',
     onClick: doUndo,
   });
   App.hooks.armyToolbarActions.push({
     id: 'yaab-btn-redo',
-    label: '↷ Redo',
+    region: 'icon',
+    label: '↷',
+    ariaLabel: 'Redo',
     title: 'Redo (Cmd/Ctrl+Shift+Z)',
-    className: 'btn btn-sm btn-outline',
     onClick: doRedo,
   });
 

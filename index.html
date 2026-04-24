@@ -113,15 +113,32 @@
 
       </div>
 
-      <!-- Bottom Toolbar -->
+      <!-- Bottom Toolbar — two rows: primary army ops + compact icons above,
+           I/O below. Feature modules register into regions via App.hooks. -->
       <div class="panel-footer army-toolbar">
-        <button class="btn btn-sm btn-outline" id="btn-new-army">New</button>
-        <button class="btn btn-sm btn-accent"  id="btn-save-army">Save</button>
-        <button class="btn btn-sm btn-outline" id="btn-load-army">Load</button>
-        <button class="btn btn-sm btn-outline" id="btn-export-string">Export</button>
-        <button class="btn btn-sm btn-outline" id="btn-import-string">Import</button>
-        <button class="btn btn-sm btn-outline" id="btn-export-text">Copy</button>
-        <button class="btn btn-sm btn-outline" id="btn-export-csv">CSV</button>
+        <div class="toolbar-row toolbar-primary">
+          <button class="btn btn-sm btn-outline" id="btn-new-army">New</button>
+          <button class="btn btn-sm btn-accent"  id="btn-save-army">Save</button>
+          <button class="btn btn-sm btn-outline" id="btn-load-army">Load</button>
+          <span class="toolbar-spacer"></span>
+          <div class="toolbar-icons" id="toolbar-icons"></div>
+        </div>
+        <div class="toolbar-row toolbar-secondary">
+          <button class="btn btn-sm btn-outline" id="btn-import-string">Import</button>
+          <div class="dropdown" id="export-dropdown">
+            <button class="btn btn-sm btn-outline dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false">Export <span class="caret">&#9662;</span></button>
+            <div class="dropdown-menu" role="menu" id="export-dropdown-menu">
+              <button type="button" role="menuitem" id="btn-export-string">Copy army code</button>
+              <button type="button" role="menuitem" id="btn-export-text">Copy as text</button>
+              <button type="button" role="menuitem" id="btn-export-csv">Download CSV</button>
+              <!-- Hook-registered 'export-menu' items mount here -->
+              <div id="export-extras" class="export-extras"></div>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline" id="btn-print-army" title="Print datasheets for every unit in your army">Print</button>
+          <!-- Hook-registered 'primary' items mount here -->
+          <div id="toolbar-extras" class="toolbar-extras"></div>
+        </div>
       </div>
     </aside>
 
@@ -275,6 +292,7 @@
   <script src="js/ui/army-list.js"></script>
   <script src="js/ui/modals.js"></script>
   <script src="js/ui/datasheet.js"></script>
+  <script src="js/ui/dropdown.js"></script>
 
   <!-- App: state first, hooks second (feature modules register via App.hooks),
        bootstrap index.js last (DOMContentLoaded). -->

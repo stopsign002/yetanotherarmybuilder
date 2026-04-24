@@ -86,9 +86,9 @@
 
   App.hooks.armyToolbarActions.push({
     id: 'yaab-btn-share',
-    label: 'Share Link',
+    region: 'export-menu',
+    label: 'Copy share link',
     title: 'Copy a shareable URL for this army',
-    className: 'btn btn-sm btn-outline',
     onClick: onShareClick,
   });
 })();

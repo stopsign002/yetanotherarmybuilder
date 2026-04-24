@@ -1609,3 +1609,114 @@ ul { list-style: none; }
   border-color: rgba(170, 110, 220, 0.45);
   color: #dcc1f2;
 }
+
+/* === Toolbar redesign (two rows + Export dropdown) === */
+.army-toolbar {
+  flex-direction: column;
+  gap: 6px;
+}
+.army-toolbar .toolbar-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+/* Undo our generic .btn-sm { flex:1 } inside the toolbar — we want buttons
+   to size to content so the layout doesn't stretch awkwardly. */
+.army-toolbar .btn-sm {
+  flex: 0 1 auto;
+}
+.army-toolbar .toolbar-spacer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.army-toolbar .toolbar-icons {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.army-toolbar .toolbar-extras {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.army-toolbar .toolbar-extras:empty,
+.army-toolbar .toolbar-icons:empty {
+  display: none;
+}
+
+/* Compact icon button: square-ish, larger glyph, no wide horizontal padding. */
+.btn.btn-icon {
+  padding: 4px 8px;
+  min-width: 30px;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 500;
+}
+
+/* Dropdown menu — used by Export group in army toolbar. */
+.dropdown {
+  position: relative;
+  display: inline-block;
+  flex: 0 1 auto;
+}
+.dropdown-trigger .caret {
+  font-size: 10px;
+  margin-left: 3px;
+  opacity: 0.7;
+}
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  min-width: 180px;
+  background: var(--surface, #1a1a1a);
+  border: 1px solid var(--border-light, rgba(255,255,255,0.12));
+  border-radius: var(--radius, 4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 4px;
+  z-index: 100;
+}
+.dropdown.open > .dropdown-menu {
+  display: block;
+}
+.dropdown-menu > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text, #e8e8e8);
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: calc(var(--radius, 4px) - 1px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dropdown-menu > button:hover,
+.dropdown-menu > button:focus {
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+.dropdown-menu .export-extras:empty {
+  display: none;
+}
+.dropdown-menu .export-extras > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text, #e8e8e8);
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: calc(var(--radius, 4px) - 1px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dropdown-menu .export-extras > button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}

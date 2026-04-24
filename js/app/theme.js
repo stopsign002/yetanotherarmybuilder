@@ -23,7 +23,9 @@
     const btn = document.getElementById('yaab-btn-theme');
     if (!btn) return;
     const cur = read();
-    btn.textContent = cur === 'light' ? 'Theme: Light' : 'Theme: Dark';
+    // Moon glyph for dark mode, sun glyph for light. Title explains on hover.
+    btn.textContent = cur === 'light' ? '☀' : '☾';
+    btn.title = cur === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
   }
 
   function cycle() {
@@ -43,9 +45,10 @@
 
   App.hooks.armyToolbarActions.push({
     id: 'yaab-btn-theme',
-    label: 'Theme',
+    region: 'icon',
+    label: '☾',
+    ariaLabel: 'Toggle theme',
     title: 'Toggle light/dark theme',
-    className: 'btn btn-sm btn-outline',
     onClick: cycle,
   });
 })();
