@@ -532,7 +532,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-export-string').addEventListener('click', async () => {
       try {
-        const code = await Storage.exportArmyToString(state.currentArmy);
+        const code = await Storage.exportArmyToString(state.currentArmy, {
+          factionName: state.factionFilter !== 'all' ? state.factionFilter : '',
+          chapter: state.selectedChapter,
+          detachmentName: state.selectedDetachment ? state.selectedDetachment.name : null,
+        });
         UI.showExportModal(code);
       } catch (err) {
         UI.toast('Export failed: ' + err.message, 'error', 5000);
@@ -589,10 +593,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const raw = document.getElementById('import-json-textarea').value.trim();
       if (!raw) { UI.toast('Paste an army code first', 'warning'); return; }
       try {
-        const army = await Storage.importArmyFromString(raw);
+        const { army, chapter, detachment } = await Storage.importArmyFromString(raw, {
+          factions: state.factions,
+        });
         state.armyManager.saveArmy(army);
         state.currentArmy = army;
         state.armyManager.currentArmy = army;
+        applyImportedSelections(army.factionName, chapter, detachment);
         UI.hideImportModal();
         UI.renderArmyList(state.currentArmy);
         UI.toast(`Imported "${army.name}"`, 'success');
@@ -665,6 +672,38 @@ document.addEventListener('DOMContentLoaded', () => {
       opt.textContent = d.name;
       select.appendChild(opt);
     });
+  }
+
+  // ── Apply faction/chapter/detachment selections after import ──────────
+  function applyImportedSelections(factionName, chapter, detachment) {
+    const factionSelect    = document.getElementById('army-faction-select');
+    const chapterSelect    = document.getElementById('army-chapter-select');
+    const detachmentSelect = document.getElementById('army-detachment-select');
+
+    // Top-level dropdown is the chapter's virtual parent, or the faction itself.
+    let topLevel = chapter ? (getVirtualParentOf(chapter) || factionName) : factionName;
+    if (!topLevel) topLevel = 'all';
+    const topLevelExists = topLevel === 'all'
+      || state.factions.some(f => f.factionName === topLevel)
+      || !!state.chaptersMap[topLevel];
+    if (!topLevelExists) topLevel = 'all';
+
+    factionSelect.value = topLevel;
+    factionSelect.dispatchEvent(new Event('change'));
+
+    if (chapter && [...chapterSelect.options].some(o => o.value === chapter)) {
+      chapterSelect.value = chapter;
+      chapterSelect.dispatchEvent(new Event('change'));
+    }
+
+    if (detachment && [...detachmentSelect.options].some(o => o.value === detachment)) {
+      detachmentSelect.value = detachment;
+      detachmentSelect.dispatchEvent(new Event('change'));
+    }
+
+    // Sync the name/points inputs with the imported army
+    document.getElementById('army-name-input').value   = state.currentArmy.name || '';
+    document.getElementById('points-limit-input').value = state.currentArmy.pointsLimit || '';
   }
 
   // ── Start the app ─────────────────────────────────────────────────────
