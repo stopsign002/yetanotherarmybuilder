@@ -163,7 +163,7 @@ window.BSData = (() => {
 
   // ── Session cache helpers ────────────────────────────────────────────────
 
-  const FACTION_CACHE_PREFIX = 'yaab_bsf_10e_v6_';
+  const FACTION_CACHE_PREFIX = 'yaab_bsf_10e_v7_';
 
   function _getCachedFaction(name) {
     try {
