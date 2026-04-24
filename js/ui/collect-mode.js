@@ -124,6 +124,10 @@
   function ensureRoot() {
     const host = document.getElementById('collect-mode');
     if (!host) return null;
+    // Strip the static "Collection mode loading…" placeholder added by the
+    // shell agent in index.html. Without this, the placeholder sat as a
+    // sibling of our root and the user saw a stuck "loading" message.
+    host.querySelectorAll('.mode-placeholder').forEach(el => el.remove());
     let root = host.querySelector('.collect-root');
     if (!root) {
       root = document.createElement('div');

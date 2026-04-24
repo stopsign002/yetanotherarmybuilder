@@ -190,6 +190,19 @@ window.BSData = (() => {
           } else {
             const xml = await fetchFile(file.path);
             if (signal && signal.aborted) { inFlight.delete(file.name); return; }
+            // Some catalogues (e.g. "Unaligned Forces") aren't named "Library …"
+            // but still mark themselves as `library="true"` in XML and contain
+            // only sharedSelectionEntries/Groups. Parsing them as normal
+            // catalogues yields zero units and (more importantly) made the
+            // loader appear to hang on certain BSData versions. Detect via
+            // the root element attribute and route to the shared index.
+            if (/<catalogue\b[^>]*\blibrary\s*=\s*"true"/i.test(xml.slice(0, 1024))) {
+              try { WahapediaParser.addToSharedIndex(xml); } catch (_) {}
+              done++;
+              inFlight.delete(file.name);
+              onProgress(done, total, file.name);
+              continue;
+            }
             faction = WahapediaParser.parse(xml, file.path);
             await _cacheFaction(faction);
           }

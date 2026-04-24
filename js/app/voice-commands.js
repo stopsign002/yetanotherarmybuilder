@@ -284,7 +284,11 @@
         return;
       }
       if (code === 'network') {
-        if (window.UI && UI.toast) UI.toast('Voice recognition needs a network connection', 'warning', 3000);
+        // WebSpeech in Chrome calls Google's cloud recognizer; without
+        // network access it fails on every onend-restart loop, spamming
+        // the user. Show one toast and deactivate.
+        if (window.UI && UI.toast) UI.toast('Voice recognition unavailable (needs internet). Disabled.', 'warning', 4000);
+        deactivate();
         return;
       }
       // 'no-speech' / 'aborted' — ignore; onend will restart if still active.

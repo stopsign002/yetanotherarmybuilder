@@ -27,3 +27,30 @@
 .faction-item { min-width: 0; }
 .faction-item-info { min-width: 0; flex: 1 1 auto; }
 .faction-item-del { flex: 0 0 auto; }
+
+/* === Wave-7.5 cutoff fixes === */
+
+/* Left panel: panel-body must shrink so panel-footer (toolbar + status row)
+   stays fully visible even when the army list is long. min-height:0 lets
+   flex children shrink below their content size. */
+.panel-left .panel-body { min-height: 0; }
+
+/* Toolbar status row + buttons must NOT be clipped by parent overflow. */
+.panel-left .panel-footer {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+/* Build mode: hero header in build-mode shouldn't be clipped vertically. */
+body.build-mode-enhanced #build-mode > .build-hero,
+body.build-mode-enhanced #app-main > .build-hero {
+  overflow: visible !important;
+}
+
+/* Right panel: details panel must fill the full mode-page height. The
+   build-mode tab strip (Unit Detail / Rules) was wrapping the rules
+   pinboard in a way that left empty space below — this enforces full
+   vertical fill via flex column inheritance. */
+.panel-right { min-height: 0; }
+.panel-right .panel-body { display: flex; flex-direction: column; min-height: 0; }
+#unit-detail-panel { flex: 1 1 auto; min-height: 0; }
