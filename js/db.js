@@ -2,9 +2,9 @@
 window.YaabDB = (() => {
 
   const DB_NAME    = 'yaab';
-  // Bumped to v3 after parser now surfaces [Legends] units with an isLegends flag
-  // instead of dropping them (powers the Legends/Crusade visibility toggle).
-  const DB_VERSION = 3;
+  // Bumped to v4 after parser added detachment.stratagems + factionStratagems
+  // arrays (powers the Stratagem Browser modal).
+  const DB_VERSION = 4;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
 

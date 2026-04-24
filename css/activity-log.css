@@ -1,0 +1,202 @@
+/* activity-log.css — session activity log modal styling. */
+
+.activity-modal {
+  max-width: 720px;
+  width: 100%;
+}
+
+.activity-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 75vh;
+  overflow: hidden;
+}
+
+/* ── tabs ─────────────────────────────────────────────────────────── */
+.al-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-light, #333);
+}
+
+.al-tab {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted, #888);
+  cursor: pointer;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.al-tab:hover {
+  color: var(--text, #ddd);
+}
+
+.al-tab.is-active {
+  color: var(--accent, #c8c8c8);
+  border-bottom-color: var(--accent, #c8c8c8);
+}
+
+/* ── filter row ───────────────────────────────────────────────────── */
+.al-filter-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.al-filter {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+/* ── content / scroll area ────────────────────────────────────────── */
+.al-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.al-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--muted, #888);
+  font-size: 13px;
+  background: var(--panel-bg-2, #1a1a1a);
+  border: 1px dashed var(--border-light, #333);
+  border-radius: var(--radius-md, 6px);
+}
+
+/* ── list rows ────────────────────────────────────────────────────── */
+.al-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.al-row {
+  display: grid;
+  grid-template-columns: 28px 72px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-faint, rgba(255, 255, 255, 0.04));
+}
+
+.al-row:last-child { border-bottom: 0; }
+
+.al-row:hover {
+  background: var(--panel-bg-2, #1a1a1a);
+}
+
+.al-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  background: var(--panel-bg-2, #1a1a1a);
+  color: var(--muted, #888);
+  border: 1px solid var(--border-light, #333);
+}
+
+.al-time {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 11px;
+  color: var(--muted, #888);
+  letter-spacing: 0.2px;
+}
+
+.al-summary {
+  color: var(--text, #ddd);
+  word-break: break-word;
+}
+
+/* per-kind color hints applied to the icon badge */
+.al-row-add    .al-icon { background: rgba(80, 200, 120, 0.15); color: #6ee29a;  border-color: rgba(80, 200, 120, 0.4); }
+.al-row-remove .al-icon { background: rgba(220, 80, 80, 0.15);  color: #ed7a7a;  border-color: rgba(220, 80, 80, 0.4); }
+.al-row-qty    .al-icon { background: rgba(230, 180, 60, 0.15); color: #f0c562;  border-color: rgba(230, 180, 60, 0.4); }
+.al-row-faction .al-icon,
+.al-row-detachment .al-icon { background: rgba(var(--accent-rgb, 200, 200, 200), 0.18); color: var(--accent, #c8c8c8); border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.45); }
+.al-row-load   .al-icon { background: rgba(120, 160, 230, 0.15); color: #8eb1ed; border-color: rgba(120, 160, 230, 0.4); }
+.al-row-save   .al-icon,
+.al-row-export .al-icon,
+.al-row-import .al-icon { background: rgba(120, 160, 230, 0.15); color: #8eb1ed; border-color: rgba(120, 160, 230, 0.4); }
+.al-row-print  .al-icon,
+.al-row-undo   .al-icon,
+.al-row-redo   .al-icon { background: rgba(160, 160, 160, 0.15); color: #b5b5b5; border-color: rgba(160, 160, 160, 0.4); }
+
+/* ── history (per-day) ────────────────────────────────────────────── */
+.al-day {
+  border: 1px solid var(--border-light, #333);
+  border-radius: var(--radius-md, 6px);
+  background: var(--panel-bg-2, #1a1a1a);
+  overflow: hidden;
+}
+
+.al-day + .al-day { margin-top: 0; }
+
+.al-day-summary {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  list-style: none;
+  user-select: none;
+}
+
+.al-day-summary::-webkit-details-marker { display: none; }
+.al-day-summary::marker { content: ''; }
+
+.al-day[open] .al-day-summary {
+  border-bottom: 1px solid var(--border-light, #333);
+  background: var(--panel-bg-3, #202020);
+}
+
+.al-day-title {
+  font-weight: 600;
+  color: var(--text, #ddd);
+}
+
+.al-day-count {
+  font-size: 11px;
+  color: var(--muted, #888);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.al-day-stats {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--muted, #888);
+  line-height: 1.4;
+}
+
+.al-day .al-list {
+  padding: 4px 6px;
+}
+
+/* Light theme tweaks (mirrors how other modules accept the light overrides). */
+@media (prefers-color-scheme: light) {
+  .al-row { border-bottom-color: rgba(0, 0, 0, 0.06); }
+}

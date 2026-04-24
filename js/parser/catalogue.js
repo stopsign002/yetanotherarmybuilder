@@ -1,9 +1,65 @@
 /* catalogue.js — top-level parse(): builds indexes, iterates units, extracts
- * detachments + enhancements + army rules. */
+ * detachments + enhancements + army rules + (best-effort) stratagems. */
 
 (function () {
   const P = window.WahapediaParser;
   const I = P._internal;
+
+  // ── Stratagem heuristics ──────────────────────────────────────────────────
+  // BSData wh40k-10e does NOT typically carry stratagem definitions in its
+  // public XML (they sit behind a paywall). We still scan defensively: if any
+  // <rule> entry inside or alongside a detachment looks stratagem-shaped
+  // (CP cost in description, "/CP" suffix, "Battle Tactic", etc.) we surface
+  // it. When nothing matches, the array stays empty — UI degrades gracefully.
+
+  // Detect a CP cost like "1CP", "2 CP", "(1CP)" — defaults to 1 if missing.
+  function parseCpCost(desc) {
+    if (!desc) return 1;
+    // Skip "0CP" embedded mid-sentence ("for 0CP") — that usually means an
+    // ability lets a unit USE a stratagem at 0CP, not that the stratagem
+    // itself is 0CP. Prefer a leading "X CP" pattern.
+    const m = desc.match(/(?:^|\s|\()(\d)\s*CP\b/);
+    return m ? parseInt(m[1], 10) : 1;
+  }
+
+  function detectPhase(text) {
+    const t = (text || '').toLowerCase();
+    if (/command\s+phase/.test(t))  return 'Command';
+    if (/movement\s+phase/.test(t)) return 'Movement';
+    if (/shooting\s+phase/.test(t)) return 'Shooting';
+    if (/charge\s+phase/.test(t))   return 'Charge';
+    if (/fight\s+phase/.test(t))    return 'Fight';
+    if (/morale\s+phase/.test(t))   return 'Morale';
+    return 'Any';
+  }
+
+  // Stratagem-shaped rule? Look for clear CP markers. Conservative — false
+  // positives (like a detachment rule mentioning a stratagem in passing)
+  // would crowd out the actual detachment rule we already extract.
+  function looksLikeStratagem(name, desc) {
+    if (!desc) return false;
+    const txt = String(desc);
+    // Strong signals first: "1CP", "2 CP", "/CP", "WHEN: ...", "TARGET: ...".
+    if (/\b\d\s*CP\b/.test(txt) && /\bStratagem\b/i.test(txt)) return true;
+    if (/\bWHEN:\s/i.test(txt) && /\bTARGET:\s/i.test(txt))    return true;
+    if (/\bBattle\s+Tactic\b/i.test(txt) && /\b\d\s*CP\b/.test(txt)) return true;
+    return false;
+  }
+
+  function buildStratagem(ruleEl, type) {
+    const name = I.getAttr(ruleEl, 'name', '').trim();
+    const descEl = ruleEl.querySelector(':scope > description');
+    const description = descEl ? I.cleanText(descEl.textContent) : '';
+    if (!name || !description) return null;
+    if (!looksLikeStratagem(name, description)) return null;
+    return {
+      name,
+      description,
+      cp: parseCpCost(description),
+      phase: detectPhase(description),
+      type: type || 'detachment',
+    };
+  }
 
   function buildIndexes(root) {
     const entriesById  = new Map(I.sharedEntriesById);
@@ -161,7 +217,38 @@
             detachmentRuleNames.add(rName.toLowerCase());
           });
 
-          detachments.push({ name, rules });
+          // Stratagems (best-effort): scan inline <rules>/<rule> children of
+          // the detachment selectionEntry that we did NOT count as the
+          // detachment's main rule. BSData usually omits stratagems entirely
+          // — if so, the array ends up empty and the UI degrades gracefully.
+          const stratagems = [];
+          const seenStratNames = new Set();
+          entry.querySelectorAll(':scope > rules > rule').forEach(r => {
+            if (I.getAttr(r, 'hidden', 'false') === 'true') return;
+            const rId = I.getAttr(r, 'id', '');
+            // Skip the rules we already classified as the detachment rule.
+            if (rId && seenRuleIds.has(rId)) return;
+            const strat = buildStratagem(r, 'detachment');
+            if (!strat) return;
+            if (seenStratNames.has(strat.name.toLowerCase())) return;
+            seenStratNames.add(strat.name.toLowerCase());
+            stratagems.push(strat);
+          });
+          // Also scan infoLink → shared rule pointers that aren't the detachment rule.
+          entry.querySelectorAll(':scope > infoLinks > infoLink[type="rule"]').forEach(link => {
+            if (I.getAttr(link, 'hidden', 'false') === 'true') return;
+            const targetId = I.getAttr(link, 'targetId', '');
+            if (!targetId || seenRuleIds.has(targetId)) return;
+            const rule = rulesById.get(targetId);
+            if (!rule) return;
+            const strat = buildStratagem(rule, 'detachment');
+            if (!strat) return;
+            if (seenStratNames.has(strat.name.toLowerCase())) return;
+            seenStratNames.add(strat.name.toLowerCase());
+            stratagems.push(strat);
+          });
+
+          detachments.push({ name, rules, stratagems });
         });
       });
 
@@ -229,7 +316,28 @@
         armyRules.push({ name, description: descEl ? I.cleanText(descEl.textContent) : '' });
       });
 
-      return { factionName, filename, unitCount: units.length, units, armyRules, detachments, linkedCatalogues };
+      // ── Faction-wide stratagems (best-effort) ──
+      // Scan top-level <sharedRules> and <rules> for stratagem-shaped
+      // entries. Skip anything we already attributed to a detachment.
+      const factionStratagems = [];
+      const seenFactionStratNames = new Set();
+      detachments.forEach(d => {
+        (d.stratagems || []).forEach(s =>
+          seenFactionStratNames.add(s.name.toLowerCase())
+        );
+      });
+      root.querySelectorAll(':scope > sharedRules > rule, :scope > rules > rule').forEach(rule => {
+        if (I.getAttr(rule, 'hidden', 'false') === 'true') return;
+        const id = I.getAttr(rule, 'id', '');
+        if (id && detachmentRuleIds.has(id)) return;
+        const strat = buildStratagem(rule, 'faction');
+        if (!strat) return;
+        if (seenFactionStratNames.has(strat.name.toLowerCase())) return;
+        seenFactionStratNames.add(strat.name.toLowerCase());
+        factionStratagems.push(strat);
+      });
+
+      return { factionName, filename, unitCount: units.length, units, armyRules, detachments, factionStratagems, linkedCatalogues };
 
     } catch (err) {
       console.error('[Parser] Error in', filename, err);

@@ -1,0 +1,655 @@
+/* crusade.css — Crusade campaign mode: dashboard, roster detail, unit panel, battle log. */
+
+/* ── rank palette ────────────────────────────────────────────────── */
+:root {
+  --crus-rank-battle-ready:    #b6b6b6;
+  --crus-rank-blooded:         #e6a8a8;
+  --crus-rank-battle-hardened: #e6c7a8;
+  --crus-rank-heroic:          #a8d6e6;
+  --crus-rank-legendary:       #e6d68a;
+  --crus-verdict-win:          #a8e6b7;
+  --crus-verdict-loss:         #e6a8a8;
+}
+
+/* ── modal frame ─────────────────────────────────────────────────── */
+.crusade-modal {
+  max-width: 880px;
+  width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+.crusade-modal-body {
+  overflow-y: auto;
+  padding: 14px 18px;
+}
+.crusade-modal-footer {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.crusade-spacer { flex: 1 1 auto; }
+
+/* ── intro / empty states ───────────────────────────────────────── */
+.crusade-intro {
+  font-size: 13px;
+  color: var(--text-muted, #bbb);
+  margin-bottom: 12px;
+  line-height: 1.45;
+}
+.crusade-empty {
+  padding: 20px 12px;
+  text-align: center;
+  color: var(--text-muted, #aaa);
+  font-style: italic;
+  border: 1px dashed var(--border, rgba(255,255,255,0.12));
+  border-radius: 6px;
+  margin: 6px 0 14px;
+}
+.crusade-empty p { margin: 4px 0; }
+
+/* ── roster card list (list view) ───────────────────────────────── */
+.crusade-roster-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+.crusade-roster-card {
+  border: 1px solid var(--border, rgba(255,255,255,0.12));
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.12s, background 0.12s;
+}
+.crusade-roster-card:hover {
+  border-color: var(--accent, #c8c8c8);
+  background: rgba(255,255,255,0.04);
+}
+.crusade-roster-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.crusade-roster-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text, #eee);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crusade-roster-card-faction {
+  font-size: 11px;
+  text-align: right;
+}
+.crusade-roster-card-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 10px;
+  font-size: 12px;
+  color: var(--text-muted, #bbb);
+}
+.crusade-roster-card-stats strong {
+  color: var(--text, #eee);
+}
+.crusade-roster-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.crusade-roster-card-actions .btn { flex: 1 1 auto; }
+
+/* ── roster detail header ───────────────────────────────────────── */
+.crusade-detail-head {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,0.1));
+}
+.crusade-detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.crusade-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1 1 160px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #9a9a9a);
+}
+.crusade-field-narrow { flex: 0 1 110px; }
+.crusade-field-grow   { flex: 1 1 100%; }
+.crusade-field input[type="text"],
+.crusade-field input[type="number"],
+.crusade-field input[type="date"],
+.crusade-field select,
+.crusade-field textarea {
+  background: var(--bg-alt, #1a1a1a);
+  color: var(--text, #ddd);
+  border: 1px solid var(--border, rgba(255,255,255,0.18));
+  border-radius: 4px;
+  padding: 5px 7px;
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: inherit;
+  resize: vertical;
+}
+.crusade-field input:focus,
+.crusade-field select:focus,
+.crusade-field textarea:focus {
+  outline: 1px solid var(--accent, #c8c8c8);
+  border-color: var(--accent, #c8c8c8);
+}
+
+.crusade-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.crusade-stat {
+  padding: 8px 10px;
+  border: 1px solid var(--border, rgba(255,255,255,0.12));
+  border-radius: 6px;
+  background: rgba(255,255,255,0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: help;
+}
+.crusade-stat-num {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text, #eee);
+}
+.crusade-stat-lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #9a9a9a);
+}
+
+/* ── section blocks ─────────────────────────────────────────────── */
+.crusade-section {
+  margin-bottom: 16px;
+}
+.crusade-section h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #9a9a9a);
+}
+.crusade-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.crusade-section-head h4 { margin: 0; }
+.crusade-section-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── unit list rows ─────────────────────────────────────────────── */
+.crusade-unit-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.crusade-unit-row {
+  padding: 8px 10px;
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: 6px;
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+.crusade-unit-row:hover {
+  border-color: var(--accent, #c8c8c8);
+  background: rgba(255,255,255,0.04);
+}
+.crusade-unit-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.crusade-unit-name {
+  font-weight: 600;
+  color: var(--text, #eee);
+}
+.crusade-unit-label {
+  font-style: italic;
+  color: var(--text-muted, #bbb);
+  font-size: 12px;
+}
+.crusade-unit-rank {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border, rgba(255,255,255,0.18));
+  color: var(--text, #ddd);
+  cursor: help;
+}
+.crusade-unit-rank.crusade-rank-battle-ready    { color: var(--crus-rank-battle-ready); border-color: var(--crus-rank-battle-ready); }
+.crusade-unit-rank.crusade-rank-blooded         { color: var(--crus-rank-blooded);      border-color: var(--crus-rank-blooded); }
+.crusade-unit-rank.crusade-rank-battle-hardened { color: var(--crus-rank-battle-hardened); border-color: var(--crus-rank-battle-hardened); }
+.crusade-unit-rank.crusade-rank-heroic          { color: var(--crus-rank-heroic);       border-color: var(--crus-rank-heroic); }
+.crusade-unit-rank.crusade-rank-legendary       { color: var(--crus-rank-legendary);    border-color: var(--crus-rank-legendary); }
+
+.crusade-unit-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-muted, #bbb);
+  margin-bottom: 6px;
+}
+.crusade-unit-scars { color: var(--crus-verdict-loss); }
+
+/* XP bar */
+.crusade-xp-bar-wrap {
+  position: relative;
+  height: 14px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.crusade-xp-bar {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  background: linear-gradient(90deg, var(--crus-rank-blooded), var(--crus-rank-legendary));
+  transition: width 0.25s ease;
+}
+.crusade-xp-text {
+  position: relative;
+  display: block;
+  text-align: center;
+  font-size: 10px;
+  line-height: 14px;
+  color: #111;
+  font-weight: 600;
+  text-shadow: 0 1px 1px rgba(255,255,255,0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 6px;
+}
+.crusade-xp-bar-wrap.crusade-xp-big {
+  height: 20px;
+}
+.crusade-xp-bar-wrap.crusade-xp-big .crusade-xp-text {
+  line-height: 20px;
+  font-size: 11px;
+}
+
+/* ── XP controls (unit panel) ───────────────────────────────────── */
+.crusade-xp-controls,
+.crusade-xp-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.crusade-xp-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  align-items: center;
+}
+.crusade-xp-presets .muted {
+  font-size: 11px;
+}
+
+/* big rank display in unit panel */
+.crusade-rank-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.02);
+  margin-bottom: 6px;
+  cursor: help;
+}
+.crusade-rank-display .crusade-rank-name {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.crusade-rank-display .crusade-rank-xp {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, #bbb);
+}
+.crusade-rank-display.crusade-rank-battle-ready    { border-color: var(--crus-rank-battle-ready);    color: var(--crus-rank-battle-ready); }
+.crusade-rank-display.crusade-rank-blooded         { border-color: var(--crus-rank-blooded);         color: var(--crus-rank-blooded); }
+.crusade-rank-display.crusade-rank-battle-hardened { border-color: var(--crus-rank-battle-hardened); color: var(--crus-rank-battle-hardened); }
+.crusade-rank-display.crusade-rank-heroic          { border-color: var(--crus-rank-heroic);          color: var(--crus-rank-heroic); }
+.crusade-rank-display.crusade-rank-legendary       { border-color: var(--crus-rank-legendary);       color: var(--crus-rank-legendary); }
+
+/* ── honours / scars lists ──────────────────────────────────────── */
+.crusade-honour-list,
+.crusade-scar-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.crusade-honour-row,
+.crusade-scar-row {
+  padding: 7px 10px;
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: 5px;
+  background: rgba(255,255,255,0.02);
+}
+.crusade-scar-row {
+  border-color: rgba(230,168,168,0.3);
+}
+.crusade-honour-head,
+.crusade-scar-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.crusade-honour-name,
+.crusade-scar-name {
+  font-weight: 600;
+  color: var(--text, #eee);
+  flex: 1 1 auto;
+}
+.crusade-honour-pts {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.crusade-honour-desc,
+.crusade-scar-desc {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.crusade-row-remove {
+  background: transparent;
+  border: 1px solid var(--border, rgba(255,255,255,0.18));
+  color: var(--text-muted, #aaa);
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.12s, border-color 0.12s;
+}
+.crusade-row-remove:hover {
+  color: var(--crus-verdict-loss);
+  border-color: var(--crus-verdict-loss);
+}
+
+.crusade-add-honour,
+.crusade-add-scar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.crusade-add-honour .crusade-field,
+.crusade-add-scar .crusade-field {
+  flex: 1 1 200px;
+}
+
+/* ── stat list (career stats) ───────────────────────────────────── */
+.crusade-stat-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 6px;
+}
+.crusade-stat-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border: 1px solid var(--border, rgba(255,255,255,0.08));
+  border-radius: 4px;
+  font-size: 12px;
+}
+.crusade-stat-list strong {
+  color: var(--text, #eee);
+}
+.crusade-row-actions {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── battle log ─────────────────────────────────────────────────── */
+.crusade-battle-log {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.crusade-battle-row {
+  display: grid;
+  grid-template-columns: 90px 1.4fr 1fr 1fr 70px 78px;
+  gap: 8px;
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 12px;
+  align-items: baseline;
+}
+.crusade-battle-date {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, #9a9a9a);
+}
+.crusade-battle-vs strong { color: var(--text, #eee); }
+.crusade-battle-score {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.crusade-battle-verdict {
+  text-align: right;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+.crusade-verdict-win  { color: var(--crus-verdict-win); }
+.crusade-verdict-loss { color: var(--crus-verdict-loss); }
+
+/* ── log-battle: per-unit XP grid ───────────────────────────────── */
+.crusade-xp-grid {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.crusade-xp-grid-row {
+  display: grid;
+  grid-template-columns: 1.4fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 8px;
+  border: 1px solid var(--border, rgba(255,255,255,0.08));
+  border-radius: 4px;
+  background: rgba(255,255,255,0.015);
+}
+.crusade-xp-grid-name {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.crusade-xp-grid-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.crusade-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted, #bbb);
+}
+.crusade-inline input[type="number"] {
+  width: 56px;
+  padding: 3px 5px;
+  background: var(--bg-alt, #1a1a1a);
+  color: var(--text, #ddd);
+  border: 1px solid var(--border, rgba(255,255,255,0.18));
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+/* ── add-unit picker ────────────────────────────────────────────── */
+.crusade-picker p { margin: 0 0 8px; }
+.crusade-picker-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.crusade-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: 5px;
+}
+.crusade-picker-head {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+.crusade-picker-name {
+  font-weight: 600;
+  color: var(--text, #eee);
+}
+
+/* ── rank reference legend ──────────────────────────────────────── */
+.crusade-rank-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.crusade-rank-legend-row {
+  display: grid;
+  grid-template-columns: 14px 130px 70px 1fr;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: help;
+}
+.crusade-rank-legend-row:hover {
+  background: rgba(255,255,255,0.03);
+}
+.crusade-rank-pip {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.crusade-rank-pip.crusade-rank-battle-ready    { color: var(--crus-rank-battle-ready); }
+.crusade-rank-pip.crusade-rank-blooded         { color: var(--crus-rank-blooded); }
+.crusade-rank-pip.crusade-rank-battle-hardened { color: var(--crus-rank-battle-hardened); }
+.crusade-rank-pip.crusade-rank-heroic          { color: var(--crus-rank-heroic); }
+.crusade-rank-pip.crusade-rank-legendary       { color: var(--crus-rank-legendary); }
+.crusade-rank-name {
+  font-weight: 600;
+  color: var(--text, #eee);
+}
+.crusade-rank-thresh {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+}
+.crusade-rank-blurb {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* ── danger styling on outline buttons ──────────────────────────── */
+.btn.crusade-danger {
+  border-color: rgba(230,168,168,0.55);
+  color: var(--crus-verdict-loss);
+}
+.btn.crusade-danger:hover {
+  background: rgba(230,168,168,0.12);
+}
+
+/* ── responsive tightening ──────────────────────────────────────── */
+@media (max-width: 700px) {
+  .crusade-battle-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
+  }
+  .crusade-rank-legend-row {
+    grid-template-columns: 14px 110px 60px;
+  }
+  .crusade-rank-legend-row .crusade-rank-blurb {
+    grid-column: 1 / -1;
+    margin-left: 22px;
+  }
+  .crusade-detail-row { gap: 8px; }
+  .crusade-xp-grid-row { grid-template-columns: 1fr; }
+}
+
+/* ── reduced motion ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .crusade-roster-card,
+  .crusade-unit-row,
+  .crusade-xp-bar,
+  .crusade-row-remove,
+  .modal {
+    transition: none !important;
+    animation: none !important;
+  }
+}

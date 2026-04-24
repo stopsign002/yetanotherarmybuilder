@@ -29,6 +29,12 @@
   <link rel="stylesheet" href="css/utilities.css" />
   <link rel="stylesheet" href="css/collection.css" />
   <link rel="stylesheet" href="css/synergy.css" />
+  <link rel="stylesheet" href="css/stratagems.css" />
+  <link rel="stylesheet" href="css/crusade.css" />
+  <link rel="stylesheet" href="css/kill-team.css" />
+  <link rel="stylesheet" href="css/activity-log.css" />
+  <link rel="stylesheet" href="css/community-feed.css" />
+  <link rel="stylesheet" href="css/design-pass.css" />
 </head>
 <body>
 
@@ -134,20 +140,21 @@
 
       </div>
 
-      <!-- Bottom Toolbar — two rows: primary army ops + compact icons above,
-           I/O below. Feature modules register into regions via App.hooks. -->
+      <!-- Bottom Toolbar — three-row layout. Row 1: primary army ops +
+           compact icon shelf. Row 2: I/O + Tools/More dropdowns.
+           Feature modules register into regions via App.hooks. -->
       <div class="panel-footer army-toolbar">
         <div class="toolbar-row toolbar-primary">
-          <button class="btn btn-sm btn-outline" id="btn-new-army">New</button>
-          <button class="btn btn-sm btn-accent"  id="btn-save-army">Save</button>
-          <button class="btn btn-sm btn-outline" id="btn-load-army">Load</button>
+          <button class="btn btn-sm btn-outline" id="btn-new-army" title="Start a new army">New</button>
+          <button class="btn btn-sm btn-accent"  id="btn-save-army" title="Save this army">Save</button>
+          <button class="btn btn-sm btn-outline" id="btn-load-army" title="Load a saved army">Load</button>
           <span class="toolbar-spacer"></span>
           <div class="toolbar-icons" id="toolbar-icons"></div>
         </div>
         <div class="toolbar-row toolbar-secondary">
-          <button class="btn btn-sm btn-outline" id="btn-import-string">Import</button>
+          <button class="btn btn-sm btn-outline" id="btn-import-string" title="Import an army code">Import</button>
           <div class="dropdown" id="export-dropdown">
-            <button class="btn btn-sm btn-outline dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false">Export <span class="caret">&#9662;</span></button>
+            <button class="btn btn-sm btn-outline dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false" title="Export this army">Export <span class="caret">&#9662;</span></button>
             <div class="dropdown-menu" role="menu" id="export-dropdown-menu">
               <button type="button" role="menuitem" id="btn-export-string">Copy army code</button>
               <button type="button" role="menuitem" id="btn-export-text">Copy as text</button>
@@ -156,8 +163,22 @@
               <div id="export-extras" class="export-extras"></div>
             </div>
           </div>
+          <div class="dropdown" id="tools-dropdown">
+            <button class="btn btn-sm btn-outline dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false" title="Analysis &amp; game-day tools">Tools <span class="caret">&#9662;</span></button>
+            <div class="dropdown-menu dropdown-menu-grouped" role="menu" id="tools-dropdown-menu">
+              <div id="tools-menu" class="tools-menu"></div>
+              <div class="dropdown-empty" id="tools-menu-empty">No tools registered.</div>
+            </div>
+          </div>
           <button class="btn btn-sm btn-outline" id="btn-print-army" title="Print datasheets for every unit in your army">Print</button>
-          <!-- Hook-registered 'primary' items mount here -->
+          <div class="dropdown" id="more-dropdown">
+            <button class="btn btn-sm btn-outline dropdown-trigger" type="button" aria-haspopup="menu" aria-expanded="false" title="More options">More <span class="caret">&#9662;</span></button>
+            <div class="dropdown-menu" role="menu" id="more-dropdown-menu">
+              <div id="more-menu" class="more-menu"></div>
+              <div class="dropdown-empty" id="more-menu-empty">No extras available.</div>
+            </div>
+          </div>
+          <!-- Hook-registered 'primary' items that opt-in via priority:'visible' mount here -->
           <div id="toolbar-extras" class="toolbar-extras"></div>
         </div>
       </div>
@@ -360,6 +381,11 @@
   <script src="js/app/qr-share.js"></script>
   <script src="js/app/collection.js"></script>
   <script src="js/ui/synergy.js"></script>
+  <script src="js/app/stratagems.js"></script>
+  <script src="js/app/crusade.js"></script>
+  <script src="js/app/kill-team.js"></script>
+  <script src="js/app/activity-log.js"></script>
+  <script src="js/app/community-feed.js"></script>
   <!-- FEATURE-MODULES-END -->
 
   <script src="js/app/index.js"></script>
