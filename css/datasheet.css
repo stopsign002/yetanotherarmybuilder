@@ -11,10 +11,10 @@
 
 /* --- In-app preview overlay ---
    Triggered by body.print-preview-open. Users see EXACTLY what will print
-   before committing, with explicit Print / Close buttons. */
-body.print-preview-open {
-  overflow: hidden;
-}
+   before committing, with explicit Print / Close buttons.
+   Body scrolls naturally — we do NOT set overflow:hidden because the
+   datasheet stack commonly extends below the viewport. The fixed
+   preview bar stays pinned regardless of scroll. */
 body.print-preview-open .app-main,
 body.print-preview-open .toast-container,
 body.print-preview-open #global-tooltip,
@@ -410,6 +410,40 @@ body.print-preview-open .datasheet-cover {
   break-before: page;
   page-break-before: always;
 }
+
+/* --- Compact rendering for PDF export ---
+   Applied by datasheet.js immediately before html2pdf runs, removed in the
+   .finally. Shrinks font sizes + padding ~15-20% so most datasheets fit
+   inside one landscape A4 page (~194mm ≈ 733px at 96dpi). */
+.datasheet.pdf-export {
+  font-size: 9pt;
+  padding: 5mm;
+  line-height: 1.25;
+  max-width: 277mm;
+  margin: 0 auto;
+}
+.datasheet.pdf-export .ds-name         { font-size: 15pt; }
+.datasheet.pdf-export .ds-pts          { font-size: 11pt; padding: 3px 8px; }
+.datasheet.pdf-export .ds-subtitle     { font-size: 9pt; }
+.datasheet.pdf-export .ds-stat-value   { font-size: 12pt; }
+.datasheet.pdf-export .ds-stat-label   { font-size: 7.5pt; }
+.datasheet.pdf-export .ds-subheading   { font-size: 9pt; padding: 2px 6px; }
+.datasheet.pdf-export .ds-table        { font-size: 8pt; }
+.datasheet.pdf-export .ds-table th,
+.datasheet.pdf-export .ds-table td     { padding: 2px 4px; }
+.datasheet.pdf-export .ds-chip         { font-size: 7.5pt; padding: 0 5px; }
+.datasheet.pdf-export .ds-ability      { font-size: 8.5pt; margin: 2px 0; }
+.datasheet.pdf-export .ds-wargear-list { font-size: 8.5pt; }
+.datasheet.pdf-export .ds-body         { gap: 8px; }
+.datasheet.pdf-export .ds-block,
+.datasheet.pdf-export .ds-weapons-block { margin-bottom: 6px; }
+.datasheet-cover.pdf-export {
+  min-height: 160mm;
+  padding: 20mm;
+}
+.datasheet-cover.pdf-export .ds-cover-title { font-size: 26pt; }
+.datasheet-cover.pdf-export .ds-cover-line  { font-size: 12pt; }
+.datasheet-cover.pdf-export .ds-cover-pts   { font-size: 16pt; }
 
 /* ============================================================
  * Print media: hide the app shell, show only the print root.

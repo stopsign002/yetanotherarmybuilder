@@ -316,20 +316,13 @@
     `;
     document.body.appendChild(bar);
     bar.querySelector('#print-preview-confirm').addEventListener('click', () => {
-      // Drop preview-open class during window.print() so the overlay's
-      // overflow:hidden + fixed backgrounds can't interfere with Chromium's
-      // page-break logic. Restore it on afterprint so the preview stays
-      // open for the user to close or save as PDF.
-      const wasOpen = document.body.classList.contains('print-preview-open');
-      if (wasOpen) document.body.classList.remove('print-preview-open');
-      const restore = () => {
-        if (wasOpen) document.body.classList.add('print-preview-open');
-        window.removeEventListener('afterprint', restore);
-      };
-      window.addEventListener('afterprint', restore);
-      setTimeout(restore, 2000);  // fallback — some browsers don't fire afterprint
+      // Don't mutate preview-open during print — the prior class-swap +
+      // setTimeout fallback was firing during Chromium's preview dialog
+      // and re-applying the overlay styles mid-capture, producing blank
+      // prints. @media print rules (further down this file) neutralize
+      // the overlay's overflow/background/padding at print time.
       try { window.print(); }
-      catch (e) { console.warn('[datasheet.print]', e); restore(); closePreview(); }
+      catch (e) { console.warn('[datasheet.print]', e); closePreview(); }
     });
     bar.querySelector('#print-preview-pdf').addEventListener('click', onSaveAsPdfClick);
     bar.querySelector('#print-preview-close').addEventListener('click', closePreview);
@@ -345,9 +338,16 @@
     const root = document.getElementById('print-root');
     if (!root || !root.firstChild) return;
 
+    // Every direct page-sized element: cover (if any) + each datasheet.
+    const pages = Array.from(root.querySelectorAll('.datasheet-cover, .datasheet'));
+    if (!pages.length) return;
+
     const original = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Generating PDF…';
+
+    // Apply compact CSS so each page tends to fit A4 landscape naturally.
+    pages.forEach(el => el.classList.add('pdf-export'));
 
     const filename = (function () {
       const army = window.App && App.state && App.state.currentArmy;
@@ -358,32 +358,40 @@
       return base.replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '') + '.pdf';
     })();
 
-    // html2pdf wraps html2canvas + jsPDF. Landscape A4 matches the print CSS.
-    // Forcing a page break BEFORE each .datasheet-page and AFTER the cover
-    // guarantees one datasheet per PDF page (mode:'css' alone doesn't
-    // always honor break-before when html2canvas renders the whole thing
-    // as a single tall image first).
-    window.html2pdf()
-      .set({
-        margin:      [8, 8, 8, 8],                     // mm
-        filename:    filename,
-        image:       { type: 'jpeg', quality: 0.96 },
-        html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false },
-        jsPDF:       { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
-        pagebreak:   {
-          mode:   ['css', 'legacy'],
-          before: '.datasheet-page',
-          after:  '.datasheet-cover',
-          avoid:  ['.ds-weapons-block', '.ds-block', '.ds-ability', '.ds-leader', 'tr'],
-        },
-      })
-      .from(root)
-      .save()
+    const opts = {
+      margin:      [8, 8, 8, 8],
+      image:       { type: 'jpeg', quality: 0.96 },
+      html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false },
+      jsPDF:       { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
+      // Fit-to-page: if a single page's rendered canvas is still taller
+      // than the PDF page, html2pdf will scale it down to fit rather than
+      // splitting. 'avoid-all' respects break-inside:avoid on child blocks.
+      pagebreak:   { mode: ['avoid-all', 'css', 'legacy'], avoid: '.ds-weapons-block, .ds-block, .ds-ability, .ds-leader, tr' },
+    };
+
+    // Build the PDF one element at a time so we get exactly one datasheet
+    // per PDF page, regardless of how tall individual datasheets are.
+    let worker = window.html2pdf().set(opts).from(pages[0]).toPdf();
+    for (let i = 1; i < pages.length; i++) {
+      const el = pages[i];
+      worker = worker
+        .get('pdf')
+        .then(pdf => { pdf.addPage(); })
+        .set(opts)
+        .from(el)
+        .toContainer()
+        .toCanvas()
+        .toPdf();
+    }
+
+    worker
+      .save(filename)
       .catch(err => {
         console.warn('[datasheet.pdf]', err);
         if (UI.toast) UI.toast('PDF export failed: ' + (err && err.message ? err.message : 'unknown'), 'error', 6000);
       })
       .finally(() => {
+        pages.forEach(el => el.classList.remove('pdf-export'));
         btn.disabled = false;
         btn.textContent = original;
       });

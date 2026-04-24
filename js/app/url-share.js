@@ -51,8 +51,12 @@
   App.hooks.bootstrap.push(function (state) {
     const raw = readParam();
     if (!raw) return;
-    if (tryImport(raw)) return;
 
+    // tryImport returns a Promise; the previous `if (tryImport(raw)) return;`
+    // was treating the Promise as truthy and skipping the polling retry, so
+    // when factions hadn't loaded yet (the common case at bootstrap) the
+    // import was never retried. Always start the poll; it self-terminates
+    // once `imported` flips true or after 60s.
     const started = Date.now();
     const timer = setInterval(() => {
       if (imported || Date.now() - started > 60000) {
@@ -61,6 +65,8 @@
       }
       tryImport(raw).then(ok => { if (ok) clearInterval(timer); });
     }, 500);
+    // Fire the first attempt immediately instead of waiting 500ms.
+    tryImport(raw).then(ok => { if (ok) clearInterval(timer); });
   });
 
   async function onShareClick() {
