@@ -360,32 +360,26 @@
 
     const opts = {
       margin:      [8, 8, 8, 8],
+      filename:    filename,
       image:       { type: 'jpeg', quality: 0.96 },
       html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false },
       jsPDF:       { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
-      // Fit-to-page: if a single page's rendered canvas is still taller
-      // than the PDF page, html2pdf will scale it down to fit rather than
-      // splitting. 'avoid-all' respects break-inside:avoid on child blocks.
-      pagebreak:   { mode: ['avoid-all', 'css', 'legacy'], avoid: '.ds-weapons-block, .ds-block, .ds-ability, .ds-leader, tr' },
+      // pagebreak.before forces a new PDF page before each .datasheet-page.
+      // avoid-all respects break-inside:avoid on inner blocks. We do NOT
+      // use .after on the cover because the very next element is a
+      // datasheet-page whose .before already fires — double breaks cause
+      // blank pages.
+      pagebreak:   {
+        mode:   ['avoid-all', 'css', 'legacy'],
+        before: '.datasheet-page',
+        avoid:  '.ds-weapons-block, .ds-block, .ds-ability, .ds-leader, tr',
+      },
     };
 
-    // Build the PDF one element at a time so we get exactly one datasheet
-    // per PDF page, regardless of how tall individual datasheets are.
-    let worker = window.html2pdf().set(opts).from(pages[0]).toPdf();
-    for (let i = 1; i < pages.length; i++) {
-      const el = pages[i];
-      worker = worker
-        .get('pdf')
-        .then(pdf => { pdf.addPage(); })
-        .set(opts)
-        .from(el)
-        .toContainer()
-        .toCanvas()
-        .toPdf();
-    }
-
-    worker
-      .save(filename)
+    window.html2pdf()
+      .set(opts)
+      .from(root)
+      .save()
       .catch(err => {
         console.warn('[datasheet.pdf]', err);
         if (UI.toast) UI.toast('PDF export failed: ' + (err && err.message ? err.message : 'unknown'), 'error', 6000);
@@ -399,6 +393,7 @@
 
   function closePreview() {
     document.body.classList.remove('print-preview-open');
+    document.documentElement.classList.remove('print-preview-open');
     const root = document.getElementById('print-root');
     if (root) root.innerHTML = '';
     document.removeEventListener('keydown', onPreviewKeydown);
@@ -414,10 +409,13 @@
     root.innerHTML = '';
     root.appendChild(content);
     ensurePreviewBar();
+    // Apply class to BOTH html and body so we can override the base
+    // `html, body { overflow: hidden }` that locks the app to viewport.
     document.body.classList.add('print-preview-open');
+    document.documentElement.classList.add('print-preview-open');
     document.addEventListener('keydown', onPreviewKeydown);
     window.addEventListener('afterprint', closePreview);
-    root.scrollTop = 0;
+    window.scrollTo(0, 0);
   }
 
   UI.printUnitDatasheet = function (unit) {

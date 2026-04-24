@@ -12,9 +12,17 @@
 /* --- In-app preview overlay ---
    Triggered by body.print-preview-open. Users see EXACTLY what will print
    before committing, with explicit Print / Close buttons.
-   Body scrolls naturally — we do NOT set overflow:hidden because the
-   datasheet stack commonly extends below the viewport. The fixed
-   preview bar stays pinned regardless of scroll. */
+
+   Base CSS sets `html, body { height:100%; overflow:hidden }` to lock the
+   three-panel app inside the viewport — we must undo BOTH of those while
+   preview is open so the datasheet stack is scrollable. The fixed preview
+   bar stays pinned regardless. JS adds .print-preview-open to both <html>
+   and <body> so we can target them without needing :has(). */
+html.print-preview-open,
+body.print-preview-open {
+  height: auto !important;
+  overflow: auto !important;
+}
 body.print-preview-open .app-main,
 body.print-preview-open .toast-container,
 body.print-preview-open #global-tooltip,
@@ -365,8 +373,9 @@ body.print-preview-open .datasheet-cover {
 }
 
 /* Cover page — sized to fit inside landscape A4 printable area (~194mm tall
-   with 8mm margins). Previously 240mm which FORCED a second page by itself
-   and broke subsequent .datasheet-page break-before handling in Chromium. */
+   with 8mm margins). No break-after here: the very next element is a
+   .datasheet-page which already has break-before, and stacking both
+   creates a blank page between them in Chromium + html2pdf. */
 .datasheet-cover {
   display: flex;
   align-items: center;
@@ -377,8 +386,6 @@ body.print-preview-open .datasheet-cover {
                "Helvetica Neue", Arial, sans-serif;
   color: #111;
   background: #fff;
-  break-after: page;
-  page-break-after: always;
 }
 .datasheet-cover .ds-cover-kicker {
   font-size: 11pt;
