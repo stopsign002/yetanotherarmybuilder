@@ -42,9 +42,15 @@
   <link rel="stylesheet" href="css/hero-state.css" />
   <link rel="stylesheet" href="css/atmosphere.css" />
   <link rel="stylesheet" href="css/topbar.css" />
-  <link rel="stylesheet" href="css/action-center.css" />
+  <link rel="stylesheet" href="css/mode-shell.css" />
+  <link rel="stylesheet" href="css/settings-drawer.css" />
   <link rel="stylesheet" href="css/voice-coach.css" />
   <link rel="stylesheet" href="css/cold-start.css" />
+  <link rel="stylesheet" href="css/build-mode.css" />
+  <link rel="stylesheet" href="css/collect-mode.css" />
+  <link rel="stylesheet" href="css/play-mode.css" />
+  <link rel="stylesheet" href="css/card-chassis.css" />
+  <link rel="stylesheet" href="css/bugfix-pass.css" />
 </head>
 <body>
 
@@ -55,67 +61,68 @@
 
   <!-- ============================================================
        TOP APP BAR — persistent navigation across the whole app.
-       Brand | Faction chip group | Command bar | Icon shelf
+       Brand + mode tabs | Search | Settings + Help
   ============================================================ -->
   <header class="topbar" id="topbar" role="banner">
     <div class="topbar-inner">
-      <a class="topbar-brand" href="#" id="topbar-brand" aria-label="YAAB home">
-        <span class="topbar-brand-glyph" aria-hidden="true">&#9876;</span>
-        <span class="topbar-brand-mark">YAAB</span>
-      </a>
 
-      <button class="topbar-mobile-menu" id="topbar-mobile-menu" type="button"
-              aria-label="Open navigation" hidden>
-        <span class="topbar-mobile-bars" aria-hidden="true"></span>
-      </button>
+      <!-- Left group: brand + mode tabs ------------------------- -->
+      <div class="topbar-left">
+        <a class="topbar-brand" href="#" id="topbar-brand" aria-label="YAAB home">
+          <span class="topbar-brand-glyph" aria-hidden="true">&#9876;</span>
+          <span class="topbar-brand-mark">YAAB</span>
+        </a>
 
-      <div class="topbar-faction-chip" id="topbar-faction-chip" role="group"
-           aria-label="Selected faction and detachment">
-        <button class="topbar-chip-segment" id="topbar-chip-faction" type="button"
-                aria-label="Change faction">
-          <span class="topbar-chip-label">Faction</span>
-          <span class="topbar-chip-value" id="topbar-chip-faction-value">All Factions</span>
-          <span class="topbar-chip-caret" aria-hidden="true">&#9662;</span>
-        </button>
-        <button class="topbar-chip-segment topbar-chip-chapter" id="topbar-chip-chapter"
-                type="button" aria-label="Change chapter" hidden>
-          <span class="topbar-chip-label">Chapter</span>
-          <span class="topbar-chip-value" id="topbar-chip-chapter-value">&mdash;</span>
-          <span class="topbar-chip-caret" aria-hidden="true">&#9662;</span>
-        </button>
-        <button class="topbar-chip-segment" id="topbar-chip-detachment" type="button"
-                aria-label="Change detachment">
-          <span class="topbar-chip-label">Detachment</span>
-          <span class="topbar-chip-value" id="topbar-chip-detachment-value">&mdash;</span>
-          <span class="topbar-chip-caret" aria-hidden="true">&#9662;</span>
-        </button>
+        <nav class="topbar-modes" role="tablist" aria-label="App mode">
+          <button class="topbar-mode-tab" id="topbar-mode-build"
+                  type="button" role="tab" data-mode="build"
+                  aria-selected="true" aria-controls="build-mode">
+            Build
+          </button>
+          <button class="topbar-mode-tab" id="topbar-mode-collect"
+                  type="button" role="tab" data-mode="collect"
+                  aria-selected="false" aria-controls="collect-mode">
+            Collect
+          </button>
+          <button class="topbar-mode-tab" id="topbar-mode-play"
+                  type="button" role="tab" data-mode="play"
+                  aria-selected="false" aria-controls="play-mode">
+            Play
+          </button>
+        </nav>
       </div>
 
+      <!-- Center: command/search bar ---------------------------- -->
       <button class="topbar-search" id="topbar-search" type="button"
-              aria-label="Open command palette">
-        <span class="topbar-search-glyph" aria-hidden="true">&#9906;</span>
+              aria-label="Find anything (Cmd/Ctrl+K)">
+        <span class="topbar-search-glyph" aria-hidden="true">&#8982;</span>
         <span class="topbar-search-placeholder">Find anything&hellip;</span>
         <kbd class="topbar-search-kbd">&#8984;K</kbd>
       </button>
 
+      <!-- Right: Settings + Help -------------------------------- -->
       <div class="topbar-actions">
-        <div class="topbar-icons" id="topbar-icons"></div>
-        <button class="topbar-icon-btn" id="topbar-cmdk" type="button"
-                aria-label="Command palette" title="Command palette (Cmd/Ctrl+K)">
-          <span aria-hidden="true">&#8984;K</span>
+        <button class="topbar-action-btn" id="topbar-settings" type="button"
+                aria-label="Settings" title="Settings"
+                aria-expanded="false" aria-controls="settings-drawer-root">
+          <span class="topbar-action-glyph" aria-hidden="true">&#9881;</span>
+          <span class="topbar-action-label">Settings</span>
         </button>
-        <button class="topbar-icon-btn topbar-icon-action-center" id="topbar-action-center"
-                type="button" aria-label="Action center" title="Action center"
-                aria-expanded="false" aria-controls="action-center-root">
-          <span aria-hidden="true">&#9776;</span>
-        </button>
-        <button class="topbar-icon-btn" id="topbar-help" type="button"
-                aria-label="Keyboard help" title="Keyboard shortcuts &amp; replay tour">
-          <span aria-hidden="true">?</span>
+        <button class="topbar-action-btn" id="topbar-help" type="button"
+                aria-label="Help" title="Keyboard shortcuts &amp; help">
+          <span class="topbar-action-glyph" aria-hidden="true">?</span>
+          <span class="topbar-action-label topbar-action-label-help">Help</span>
         </button>
       </div>
     </div>
   </header>
+
+  <!-- ============================================================
+       MODE PAGES — Build / Collect / Play. Only one is visible at a
+       time; mode-shell.js toggles the `mode-active` class + `hidden`
+       attribute. Other agents fill in the Collect/Play interiors.
+  ============================================================ -->
+  <section id="build-mode" class="mode-page mode-active" data-mode="build">
 
   <!-- Main Three-Panel Layout: Army | [handle] | Units | [handle] | Details -->
   <main class="app-main" id="app-main">
@@ -318,6 +325,24 @@
 
   </main>
 
+  </section><!-- /#build-mode -->
+
+  <section id="collect-mode" class="mode-page" data-mode="collect" hidden>
+    <!-- COLLECT mode content — owned by another agent. -->
+    <div class="mode-placeholder">
+      <h2>Collection</h2>
+      <p class="muted">Collection mode loading&hellip;</p>
+    </div>
+  </section>
+
+  <section id="play-mode" class="mode-page" data-mode="play" hidden>
+    <!-- PLAY mode content — owned by another agent. -->
+    <div class="mode-placeholder">
+      <h2>Play</h2>
+      <p class="muted">Play mode loading&hellip;</p>
+    </div>
+  </section>
+
   <!-- ============================================================
        MODALS
   ============================================================ -->
@@ -380,28 +405,20 @@
   </div>
 
   <!-- ============================================================
-       ACTION CENTER — slide-in sheet, replaces Tools/More menus.
-       Populated by App.mountArmyToolbarActions via UI.actionCenter.
+       SETTINGS DRAWER — right-side slide-in sheet. Opens from the
+       gear icon in the top bar. Populated by settings-drawer.js.
   ============================================================ -->
-  <div class="action-center-root" id="action-center-root" hidden>
-    <div class="action-center-scrim" id="action-center-scrim" tabindex="-1"></div>
-    <aside class="action-center-sheet" id="action-center-sheet"
-           role="dialog" aria-modal="true" aria-labelledby="action-center-title">
-      <header class="action-center-header">
-        <div class="action-center-titlebar">
-          <h2 class="action-center-title" id="action-center-title">Action Center</h2>
-          <button class="action-center-close" id="action-center-close"
-                  type="button" aria-label="Close action center">&times;</button>
-        </div>
-        <div class="action-center-search-wrap">
-          <input type="search" class="action-center-search" id="action-center-search"
-                 placeholder="Filter actions&hellip;" aria-label="Filter actions" />
-        </div>
+  <div class="settings-drawer-root" id="settings-drawer-root" hidden>
+    <div class="settings-drawer-scrim" id="settings-drawer-scrim" tabindex="-1"></div>
+    <aside class="settings-drawer" id="settings-drawer"
+           role="dialog" aria-modal="true" aria-labelledby="settings-drawer-title">
+      <header class="settings-drawer-header">
+        <h2 class="settings-drawer-title" id="settings-drawer-title">Settings</h2>
+        <button class="settings-drawer-close" id="settings-drawer-close"
+                type="button" aria-label="Close settings">&times;</button>
       </header>
-      <div class="action-center-body" id="action-center-body">
-        <div class="action-center-empty" id="action-center-empty" hidden>
-          No actions match your filter.
-        </div>
+      <div class="settings-drawer-body" id="settings-drawer-body">
+        <!-- populated by js/app/settings-drawer.js -->
       </div>
     </aside>
   </div>
@@ -448,7 +465,6 @@
   <script src="js/vendor/qrcode.min.js" defer></script>
   <script src="js/ui/datasheet.js"></script>
   <script src="js/ui/dropdown.js"></script>
-  <script src="js/ui/action-center.js"></script>
 
   <!-- App: state first, hooks second (feature modules register via App.hooks),
        bootstrap index.js last (DOMContentLoaded). -->
@@ -497,6 +513,10 @@
   <script src="js/app/voice-commands.js"></script>
   <script src="js/app/sound-fx.js"></script>
   <script src="js/ui/list-coach.js"></script>
+  <script src="js/ui/build-mode.js"></script>
+  <script src="js/ui/collect-mode.js"></script>
+  <script src="js/ui/play-mode.js"></script>
+  <script src="js/ui/flip-animations.js"></script>
   <!-- FEATURE-MODULES-END -->
 
   <!-- Lazy-loader: registers placeholder toolbar/detail actions and
@@ -507,6 +527,8 @@
 
   <script src="js/app/index.js"></script>
   <script src="js/app/topbar.js"></script>
+  <script src="js/app/mode-shell.js"></script>
+  <script src="js/app/settings-drawer.js"></script>
   <script src="js/app/sw-register.js"></script>
 </body>
 </html>

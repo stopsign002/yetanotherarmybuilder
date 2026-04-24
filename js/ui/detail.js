@@ -84,7 +84,7 @@
 
     const getStatVal = key => (UI._STAT_ALIASES[key] || [key]).map(a => stats[a]).find(v => v) || '—';
 
-    let html = `<div class="unit-detail-content">`;
+    let html = `<div class="unit-detail-content unit-detail-datasheet" data-detail-kind="unit">`;
 
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     const subtitleParts = [];
@@ -445,10 +445,15 @@
     const body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${esc(data.description || 'No description available.')}</p>`;
 
     panel.insertAdjacentHTML('beforeend', `
-      <div class="unit-detail-content">
-        <div class="detail-header">
-          <div class="detail-name">${esc(data.name)}</div>
-          ${isEnhancement && data.pts ? `<div class="detail-meta"><span class="detail-pts">${esc(String(data.pts))} pts</span></div>` : ''}
+      <div class="unit-detail-content unit-detail-rule" data-detail-kind="rule">
+        <div class="detail-header detail-banner detail-banner-rule">
+          <div class="detail-header-main">
+            <div class="detail-name">${esc(data.name)}</div>
+            <div class="detail-meta detail-banner-subtitle">
+              <span class="detail-rule-kind">${isEnhancement ? 'Enhancement' : 'Army Rule'}</span>
+            </div>
+          </div>
+          ${isEnhancement && data.pts ? `<div class="detail-header-actions detail-banner-actions"><span class="detail-pts detail-banner-pts">${esc(String(data.pts))} pts</span></div>` : ''}
         </div>
         <div class="detail-section">
           <div class="detail-section-title">${isEnhancement ? 'Enhancement' : 'Rule'}</div>

@@ -1,5 +1,5 @@
 // sw.js - App-shell service worker; precaches HTML/CSS/JS, passes BSData fetches through.
-const SHELL = 'yaab-shell-v18';
+const SHELL = 'yaab-shell-v20';
 
 const PRECACHE = [
   '/',
@@ -39,9 +39,16 @@ const PRECACHE = [
   '/css/hero-state.css',
   '/css/atmosphere.css',
   '/css/topbar.css',
+  '/css/mode-shell.css',
+  '/css/settings-drawer.css',
   '/css/action-center.css',
   '/css/voice-coach.css',
   '/css/cold-start.css',
+  '/css/build-mode.css',
+  '/css/collect-mode.css',
+  '/css/play-mode.css',
+  '/css/card-chassis.css',
+  '/css/bugfix-pass.css',
   '/js/vendor/fonts/cinzel-400.woff2',
   '/js/vendor/fonts/cinzel-600.woff2',
   '/js/vendor/html2pdf.bundle.min.js',
@@ -127,10 +134,16 @@ const PRECACHE = [
   '/js/ui/cold-start.js',
   '/js/ui/action-center.js',
   '/js/app/topbar.js',
+  '/js/app/mode-shell.js',
+  '/js/app/settings-drawer.js',
   '/js/app/lazy-modules.js',
   '/js/app/voice-commands.js',
   '/js/app/sound-fx.js',
   '/js/ui/list-coach.js',
+  '/js/ui/build-mode.js',
+  '/js/ui/collect-mode.js',
+  '/js/ui/play-mode.js',
+  '/js/ui/flip-animations.js',
   '/js/app/sw-register.js',
   '/js/app/index.js',
 ];

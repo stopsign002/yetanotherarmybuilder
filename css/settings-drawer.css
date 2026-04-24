@@ -1,0 +1,264 @@
+/* settings-drawer.css — right-side slide-in Settings sheet. */
+
+.settings-drawer-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  pointer-events: none;
+}
+.settings-drawer-root[hidden] { display: none; }
+
+.settings-drawer-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+  animation: settings-scrim-in 200ms ease-out;
+}
+
+@keyframes settings-scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.settings-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 360px;
+  max-width: 100vw;
+  height: 100%;
+  background: var(--panel-bg, #1c1c20);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 28px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  animation: settings-drawer-in 220ms ease-out;
+}
+
+@keyframes settings-drawer-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.settings-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.settings-drawer-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.settings-drawer-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.settings-drawer-close:hover { color: var(--text); }
+.settings-drawer-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.settings-drawer-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 16px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Section headings ─────────────────────────────────────── */
+.settings-section-heading {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 14px 0 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-section-heading:first-child { margin-top: 0; }
+
+/* ── Toggle row ───────────────────────────────────────────── */
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.settings-toggle-row:hover { background: rgba(var(--accent-rgb), 0.05); }
+
+.settings-toggle-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.settings-toggle-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.settings-toggle-help {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+/* Switch styling — visually-hidden checkbox + custom knob. */
+.settings-toggle-switch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--border);
+  border: 1px solid var(--border-light);
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.settings-toggle-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+}
+.settings-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text);
+  transition: transform 0.18s ease, background 0.18s ease;
+  pointer-events: none;
+}
+.settings-toggle-input:checked ~ .settings-toggle-knob {
+  transform: translateX(16px);
+  background: var(--accent-on, #111);
+}
+.settings-toggle-switch:has(.settings-toggle-input:checked) {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.settings-toggle-input:focus-visible ~ .settings-toggle-knob {
+  box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(var(--accent-rgb), 0.25);
+}
+
+/* ── Action row ───────────────────────────────────────────── */
+.settings-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.settings-action-row:hover {
+  background: rgba(var(--accent-rgb), 0.08);
+  border-color: rgba(var(--accent-rgb), 0.4);
+  color: var(--accent);
+}
+.settings-action-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.settings-action-row.is-danger:hover {
+  background: rgba(220, 50, 50, 0.10);
+  border-color: rgba(220, 50, 50, 0.5);
+  color: #ff7070;
+}
+.settings-action-arrow {
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ── About inline panel ───────────────────────────────────── */
+.settings-about-card {
+  margin-top: 12px;
+  padding: 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.5;
+}
+.settings-about-card h3 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.settings-about-card p { margin-bottom: 6px; }
+.settings-about-card .muted { color: var(--text-muted); }
+.settings-about-card a { color: var(--accent); }
+
+/* ── Mobile: full-screen drawer ───────────────────────────── */
+@media (max-width: 720px) {
+  .settings-drawer {
+    width: 100vw;
+    max-width: 100vw;
+    border-left: none;
+  }
+  @keyframes settings-drawer-in {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
+body.reduce-motion .settings-drawer,
+body.reduce-motion .settings-drawer-scrim,
+body.reduce-motion .settings-toggle-switch,
+body.reduce-motion .settings-toggle-knob,
+body.reduce-motion .settings-action-row { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .settings-drawer,
+  .settings-drawer-scrim { animation: none !important; }
+  .settings-toggle-switch,
+  .settings-toggle-knob,
+  .settings-action-row { transition: none !important; }
+}
+
+/* ── Body class while drawer is open: prevent scroll bleed ── */
+body.settings-drawer-open { overflow: hidden; }

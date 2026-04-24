@@ -5,25 +5,55 @@
   UI.createArmyEntryEl = function (entry, index) {
     const esc = UI.escapeHtml;
     const li = document.createElement('li');
-    li.className = 'army-entry';
+    li.className = 'army-entry army-entry-card';
     li.dataset.index = index;
     const pts    = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
     const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
     const total  = pts * entry.count + enhPts;
-    const nameDisplay = entry.squadLabel
-      ? `${esc(entry.unitName)} <span class="army-entry-squad">(${esc(entry.squadLabel)})</span>`
-      : esc(entry.unitName);
+    const squadHtml = entry.squadLabel
+      ? `<span class="army-entry-squad">(${esc(entry.squadLabel)})</span>` : '';
     const enhBadges = (entry.enhancements || []).map(e =>
       `<span class="army-enh-badge" title="${esc(e.description || '')}">${esc(e.name)}</span>`
     ).join('');
+    // New richer markup. Preserves the original element classes + data-* attrs
+    // that events.js delegates on (.army-entry, .army-qty-input,
+    // .army-entry-remove, data-index). The grid is replaced by a flex layout
+    // styled in build-mode.css; the legacy column-grid CSS still targets the
+    // sub-elements via class name when build-mode.css is absent.
     li.innerHTML = `
-      <div class="army-entry-name" title="${esc(entry.unitName)}">${nameDisplay}${enhBadges ? `<div class="army-enh-badges">${enhBadges}</div>` : ''}</div>
-      <div class="army-entry-pts">${pts}${enhPts ? `<span class="army-enh-pts">+${enhPts}</span>` : ''}</div>
-      <div class="army-entry-qty">
-        <input type="number" value="${entry.count}" min="0" max="99" data-index="${index}" class="army-qty-input" />
+      <span class="army-entry-stripe" aria-hidden="true"></span>
+      <span class="army-entry-handle" aria-hidden="true" title="Drag to reorder">
+        <span class="army-entry-handle-dot"></span>
+        <span class="army-entry-handle-dot"></span>
+        <span class="army-entry-handle-dot"></span>
+        <span class="army-entry-handle-dot"></span>
+        <span class="army-entry-handle-dot"></span>
+        <span class="army-entry-handle-dot"></span>
+      </span>
+      <div class="army-entry-body">
+        <div class="army-entry-name" title="${esc(entry.unitName)}">
+          <span class="army-entry-title">${esc(entry.unitName)}</span>
+          ${squadHtml}
+        </div>
+        ${enhBadges ? `<div class="army-enh-badges">${enhBadges}</div>` : ''}
+        <div class="army-entry-stats">
+          <span class="army-entry-stat army-entry-stat-pts">
+            <span class="army-entry-stat-label">Pts</span>
+            <span class="army-entry-pts">${pts}${enhPts ? `<span class="army-enh-pts">+${enhPts}</span>` : ''}</span>
+          </span>
+          <span class="army-entry-stat army-entry-stat-qty">
+            <span class="army-entry-stat-label">Qty</span>
+            <span class="army-entry-qty">
+              <input type="number" value="${entry.count}" min="0" max="99" data-index="${index}" class="army-qty-input" />
+            </span>
+          </span>
+          <span class="army-entry-stat army-entry-stat-total">
+            <span class="army-entry-stat-label">Total</span>
+            <span class="army-entry-total">${total}</span>
+          </span>
+        </div>
       </div>
-      <div class="army-entry-total">${total}</div>
-      <button class="army-entry-remove" data-index="${index}" title="Remove">&times;</button>
+      <button class="army-entry-remove" data-index="${index}" title="Remove" aria-label="Remove unit">&times;</button>
     `;
     return li;
   };

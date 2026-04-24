@@ -1,0 +1,29 @@
+/* bugfix-pass.css — overflow guards for flex containers whose children lacked min-width:0. */
+
+/* Modal header: long titles should ellipsize, not push the close button off-screen. */
+.modal-header { min-width: 0; gap: 8px; }
+.modal-header h3 {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.modal-close { flex: 0 0 auto; }
+
+/* Detail banner: ensure the actions group (pts pill + buttons) never collapses
+ * to zero, and the title column always allows ellipsis fallback if word-break
+ * can't help (e.g. a single very long token). */
+.unit-detail-content .detail-banner { min-width: 0; }
+.unit-detail-content .detail-banner .detail-header-main { min-width: 0; flex: 1 1 auto; }
+.unit-detail-content .detail-banner-actions { flex-shrink: 0; }
+
+/* Saved-army items: name should ellipsize even when the actions group widens. */
+.saved-army-item { min-width: 0; }
+.saved-army-info { min-width: 0; flex: 1 1 auto; }
+.saved-army-actions { flex: 0 0 auto; }
+
+/* Faction-list rows: same pattern — info column shrinks, delete stays put. */
+.faction-item { min-width: 0; }
+.faction-item-info { min-width: 0; flex: 1 1 auto; }
+.faction-item-del { flex: 0 0 auto; }

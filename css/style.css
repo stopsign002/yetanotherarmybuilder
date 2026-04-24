@@ -517,13 +517,18 @@ ul { list-style: none; }
   align-items: flex-start;
   margin-bottom: 8px;
   gap: 6px;
+  min-width: 0;
 }
 
 .unit-card-name {
   font-size: 13px;
   font-weight: 700;
   line-height: 1.3;
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .unit-card-pts {
@@ -531,6 +536,7 @@ ul { list-style: none; }
   font-weight: 700;
   color: var(--accent);
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .unit-card-keywords {
