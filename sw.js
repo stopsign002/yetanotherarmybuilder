@@ -1,12 +1,21 @@
 // sw.js - App-shell service worker; precaches HTML/CSS/JS, passes BSData fetches through.
-const SHELL = 'yaab-shell-v10';
+const SHELL = 'yaab-shell-v12';
 
 const PRECACHE = [
   '/',
   '/index.html',
+  '/manifest.json',
+  '/img/icon-192.svg',
+  '/img/icon-512.svg',
   '/css/style.css',
   '/css/validation.css',
   '/css/datasheet.css',
+  '/css/mobile.css',
+  '/css/celebrations.css',
+  '/css/command-palette.css',
+  '/css/analytics.css',
+  '/css/starter-lists.css',
+  '/css/quirky.css',
   '/js/vendor/html2pdf.bundle.min.js',
   '/js/db.js',
   '/js/bsdata.js',
@@ -49,6 +58,15 @@ const PRECACHE = [
   '/js/app/url-share.js',
   '/js/app/validation.js',
   '/js/app/keyboard.js',
+  '/js/app/pwa-install.js',
+  '/js/app/command-palette.js',
+  '/js/app/starter-lists.js',
+  '/js/app/flavor.js',
+  '/js/app/ork-math.js',
+  '/js/app/nickname.js',
+  '/js/ui/celebrations.js',
+  '/js/ui/analytics.js',
+  '/js/ui/dice-roller.js',
   '/js/app/sw-register.js',
   '/js/app/index.js',
 ];

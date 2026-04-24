@@ -1,0 +1,451 @@
+/* css/analytics.css — army analytics dashboard modal. */
+
+.yaab-an-modal {
+  max-width: 960px;
+  width: 100%;
+  max-height: 88vh;
+}
+
+.yaab-an-body {
+  padding: 16px 20px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.yaab-an-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 48px 20px;
+  font-size: 14px;
+}
+
+.yaab-an-empty-inline {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+
+.yaab-an-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.yaab-an-header-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+  min-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yaab-an-header-stats {
+  display: flex;
+  gap: 18px;
+}
+
+.yaab-an-header-stat {
+  text-align: right;
+}
+
+.yaab-an-header-stat-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.yaab-an-header-stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Grid ───────────────────────────────────────────── */
+
+.yaab-an-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.yaab-an-cell {
+  min-width: 0;
+}
+
+.yaab-an-cell-wide {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+  .yaab-an-grid { grid-template-columns: 1fr; }
+  .yaab-an-cell-wide { grid-column: auto; }
+}
+
+/* ── Sections ───────────────────────────────────────── */
+
+.yaab-an-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.yaab-an-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.yaab-an-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--border-light);
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: help;
+  text-transform: none;
+}
+
+/* ── Role breakdown ─────────────────────────────────── */
+
+.yaab-an-role-bar {
+  display: flex;
+  width: 100%;
+  height: 22px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
+
+.yaab-an-role-seg {
+  height: 100%;
+  transition: flex-basis 0.2s ease;
+}
+
+.yaab-an-legend {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px 12px;
+}
+
+.yaab-an-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.yaab-an-legend-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.yaab-an-legend-role { flex: 1; min-width: 0; }
+.yaab-an-legend-pts { color: var(--text-muted); font-size: 11px; }
+.yaab-an-legend-pct { color: var(--text-muted); font-size: 11px; width: 36px; text-align: right; }
+
+.yaab-an-swatch-ranged { background: var(--accent); }
+.yaab-an-swatch-melee  { background: #e07a7a; }
+
+/* ── Damage profile ─────────────────────────────────── */
+
+.yaab-an-dmg-legend {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+
+.yaab-an-dmg-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.yaab-an-dmg-row {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.yaab-an-dmg-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+
+.yaab-an-dmg-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.yaab-an-dmg-barline {
+  position: relative;
+  background: var(--bg);
+  border-radius: 3px;
+  height: 16px;
+  overflow: hidden;
+}
+
+.yaab-an-dmg-bar {
+  height: 100%;
+  transition: width 0.2s ease;
+  min-width: 2px;
+}
+
+.yaab-an-dmg-bar-ranged { background: var(--accent); opacity: 0.85; }
+.yaab-an-dmg-bar-melee  { background: #e07a7a; opacity: 0.85; }
+
+.yaab-an-dmg-val {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg);
+  pointer-events: none;
+}
+
+/* ── Threat ranges ──────────────────────────────────── */
+
+.yaab-an-threat-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 160px;
+  padding-top: 8px;
+}
+
+.yaab-an-threat-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+}
+
+.yaab-an-threat-val {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.yaab-an-threat-bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.yaab-an-threat-bar {
+  width: 100%;
+  background: var(--accent);
+  opacity: 0.85;
+  transition: height 0.2s ease;
+  min-height: 2px;
+}
+
+.yaab-an-threat-label {
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 600;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Durability ─────────────────────────────────────── */
+
+.yaab-an-durability {
+  text-align: center;
+  padding: 8px 0 12px;
+}
+
+.yaab-an-durability-score {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.yaab-an-durability-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+.yaab-an-top-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  counter-reset: top;
+}
+
+.yaab-an-top-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+  counter-increment: top;
+}
+
+.yaab-an-top-list li::before {
+  content: counter(top) ".";
+  color: var(--text-muted);
+  font-weight: 700;
+  min-width: 14px;
+  font-size: 11px;
+}
+
+.yaab-an-top-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yaab-an-top-score {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ── Keyword chips ──────────────────────────────────── */
+
+.yaab-an-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.yaab-an-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.yaab-an-chip-zero {
+  opacity: 0.35;
+}
+
+.yaab-an-chip-label { font-weight: 500; }
+
+.yaab-an-chip-count {
+  background: var(--accent);
+  color: var(--accent-on);
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  min-width: 14px;
+  text-align: center;
+}
+
+.yaab-an-chip-zero .yaab-an-chip-count {
+  background: var(--border-light);
+  color: var(--text-muted);
+}
+
+/* ── Efficiency ─────────────────────────────────────── */
+
+.yaab-an-eff-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.yaab-an-eff-big {
+  flex: 0 0 auto;
+  text-align: left;
+}
+
+.yaab-an-eff-big-num {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.yaab-an-eff-big-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+.yaab-an-eff-secondary {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+}
+
+.yaab-an-eff-sec-item { min-width: 80px; }
+
+.yaab-an-eff-sec-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.yaab-an-eff-sec-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}

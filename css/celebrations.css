@@ -1,0 +1,163 @@
+/* celebrations.css — GPU-friendly polish: accent morph, shimmer, celebrate, pulse. */
+
+/* ── 1. Faction-accent morph ─────────────────────────────────────────── */
+a,
+a:hover,
+.btn-accent,
+.btn-accent:hover,
+.unit-card,
+.unit-card:hover,
+.unit-card::before,
+.unit-card.selected,
+.unit-card-role,
+.upload-area,
+.upload-area:hover,
+.upload-area.dragover,
+.search-input,
+.search-input:focus,
+.form-input,
+.form-input:focus,
+.form-select,
+.form-select:focus,
+.points-bar,
+.points-current,
+.army-entry-qty input,
+.army-entry-qty input:focus,
+.army-enh-badge,
+.enhancement-item,
+.detail-pts,
+.detail-faction,
+.chip,
+.chip.active,
+.role-chip,
+.role-chip.active,
+.keyword-chip,
+.weapon-kw,
+.text-accent,
+.page-progress-bar,
+.spinner,
+.toolbar-icon,
+.toolbar-icon:hover {
+  transition:
+    background-color 300ms ease,
+    border-color     300ms ease,
+    color            300ms ease,
+    box-shadow       300ms ease,
+    outline-color    300ms ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* ── 2. Unit-card hover lift + selected shimmer ───────────────────── */
+  .unit-card {
+    will-change: transform;
+  }
+  .unit-card:hover:not(.selected) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(var(--accent-rgb), 0.25);
+  }
+
+  .unit-card.selected {
+    position: relative;
+  }
+  .unit-card.selected.just-selected::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    background: linear-gradient(
+      110deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0) 35%,
+      rgba(255, 255, 255, 0.35) 50%,
+      rgba(255, 255, 255, 0) 65%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 250% 100%;
+    background-position: 150% 0;
+    mix-blend-mode: screen;
+    animation: yaab-shimmer 650ms ease-out 1;
+    border-radius: inherit;
+  }
+  @keyframes yaab-shimmer {
+    0%   { background-position: 150% 0; opacity: 0; }
+    20%  { opacity: 1; }
+    100% { background-position: -150% 0; opacity: 0; }
+  }
+
+  /* ── 3. Points bar celebrate / shake ──────────────────────────────── */
+  .points-bar-celebrate {
+    animation: yaab-bar-pop 900ms cubic-bezier(0.2, 0.9, 0.3, 1.3) 1;
+    box-shadow:
+      0 0 14px rgba(var(--accent-rgb), 0.85),
+      0 0 2px rgba(var(--accent-rgb), 1);
+  }
+  @keyframes yaab-bar-pop {
+    0%   { transform: scaleY(1); }
+    30%  { transform: scaleY(1.55); }
+    60%  { transform: scaleY(0.9); }
+    100% { transform: scaleY(1); }
+  }
+  .points-bar { transform-origin: left center; }
+
+  .points-summary.points-shake {
+    animation: yaab-shake 380ms cubic-bezier(0.36, 0.07, 0.19, 0.97) 1;
+  }
+  @keyframes yaab-shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+    40%, 60% { transform: translate3d(3px, 0, 0); }
+  }
+
+  /* ── 4. Rolling-number subtle highlight (opacity only, GPU) ───────── */
+  .points-current.tweening {
+    opacity: 0.92;
+    text-shadow: 0 0 6px rgba(var(--accent-rgb), 0.4);
+  }
+
+  /* ── 6. Points landing pulse ──────────────────────────────────────── */
+  .points-summary.points-landed {
+    animation: yaab-landed-pulse 1500ms ease-out 1;
+    border-radius: 6px;
+  }
+  @keyframes yaab-landed-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.0); }
+    25%  { box-shadow: 0 0 24px 4px rgba(var(--accent-rgb), 0.75); }
+    60%  { box-shadow: 0 0 16px 2px rgba(var(--accent-rgb), 0.45); }
+    100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.0); }
+  }
+
+  /* ── Toast entrance for celebration ───────────────────────────────── */
+  .toast.toast-celebrate {
+    animation: yaab-toast-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1.2) 1;
+    border: 1px solid rgba(var(--accent-rgb), 0.6);
+    box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.35);
+  }
+  @keyframes yaab-toast-in {
+    0%   { transform: translate3d(0, 18px, 0) scale(0.92); opacity: 0; }
+    100% { transform: translate3d(0, 0, 0) scale(1);       opacity: 1; }
+  }
+}
+
+/* ── Confetti canvas (always declared, no motion) ───────────────────── */
+#yaab-confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 900;
+}
+
+/* ── Reduced-motion fallback: keep color transitions, drop anims ────── */
+@media (prefers-reduced-motion: reduce) {
+  .points-bar-celebrate,
+  .points-summary.points-shake,
+  .points-summary.points-landed,
+  .unit-card.selected.just-selected::after,
+  .toast.toast-celebrate {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- YAAB app icon 192 — abstract monochrome crest/chevron on dark. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" fill="#0d0d0d"/>
+  <path d="M96 27 L155 51 L155 102 Q155 140 96 167 Q37 140 37 102 L37 51 Z"
+        fill="none" stroke="#e8c86a" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M96 60 L126 81 L114 120 L78 120 L66 81 Z"
+        fill="#e8c86a"/>
+  <path d="M96 60 L96 152" stroke="#0d0d0d" stroke-width="4"/>
+</svg>

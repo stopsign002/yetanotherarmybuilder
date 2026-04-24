@@ -1,0 +1,62 @@
+/* quirky.css — flavor quotes, dice badges, teef button. */
+
+/* Flavor quote on the empty-army state. */
+.flavor-quote {
+  margin-top: 14px;
+  font-style: italic;
+  font-size: 12px;
+  opacity: 0.75;
+  max-width: 240px;
+  line-height: 1.4;
+  color: var(--accent, #c8c8c8);
+}
+
+/* TEEF toggle button — faint pulse when active. */
+#yaab-btn-teef {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+#yaab-btn-teef.is-active {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  border-color: var(--accent-dark, #909090);
+}
+
+/* Dice roll badge floating above a stat cell. */
+.detail-stat-cell,
+.stat-cell {
+  cursor: pointer;
+}
+.dice-badge {
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  border: 1px solid var(--accent-dark, #909090);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 50;
+  animation: dice-pop 1.5s ease-out forwards;
+}
+
+@keyframes dice-pop {
+  0%   { transform: translateY(4px) scale(0.7); opacity: 0; }
+  15%  { transform: translateY(0)  scale(1.05); opacity: 1; }
+  30%  { transform: translateY(-2px) scale(1); opacity: 1; }
+  80%  { transform: translateY(-10px) scale(1); opacity: 0.95; }
+  100% { transform: translateY(-18px) scale(1); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-badge {
+    animation: none;
+    opacity: 1;
+  }
+}
