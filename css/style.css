@@ -1724,7 +1724,11 @@ ul { list-style: none; }
 /* === Toolbar overflow guards (narrow panel widths) === */
 .panel-footer {
   min-width: 0;
-  overflow: hidden;  /* clip anything that escapes on very narrow viewports */
+  /* NO overflow:hidden — the Export dropdown menu is absolutely
+     positioned above the trigger (`bottom: calc(100% + 6px)`) and any
+     hidden overflow on an ancestor clips the upper menu items. Button
+     text is already clamped by max-width + ellipsis below, which is
+     what actually prevents toolbar overflow. */
 }
 .army-toolbar,
 .army-toolbar .toolbar-row {
