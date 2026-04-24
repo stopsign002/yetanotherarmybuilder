@@ -296,6 +296,16 @@ body.print-preview-open .datasheet-cover {
 .datasheet .ds-leader {
   margin: 4px 0;
 }
+/* Leader unit names can be long (e.g. "Chaos Space Marine Terminator Squad").
+   Override the chip's default nowrap so the chip wraps at word boundaries
+   rather than overflowing the column. */
+.datasheet .ds-leader .ds-chip {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+  line-height: 1.3;
+}
 
 /* Wargear */
 .datasheet .ds-wargear-list {
