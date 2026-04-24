@@ -306,10 +306,11 @@
     bar.innerHTML = `
       <div>
         <span class="print-preview-title">Print Preview</span>
-        <span class="print-preview-hint"> &nbsp;&mdash;&nbsp; preview on screen before printing. Use your printer dialog to switch paper size or orientation.</span>
+        <span class="print-preview-hint"> &nbsp;&mdash;&nbsp; check the layout, then Print or download as a PDF.</span>
       </div>
       <div class="print-preview-actions">
-        <button type="button" class="btn-print" id="print-preview-confirm">Print / Save as PDF</button>
+        <button type="button" class="btn-pdf"   id="print-preview-pdf">Save as PDF</button>
+        <button type="button" class="btn-print" id="print-preview-confirm">Print</button>
         <button type="button" class="btn-close" id="print-preview-close">Close</button>
       </div>
     `;
@@ -318,8 +319,55 @@
       try { window.print(); }
       catch (e) { console.warn('[datasheet.print]', e); closePreview(); }
     });
+    bar.querySelector('#print-preview-pdf').addEventListener('click', onSaveAsPdfClick);
     bar.querySelector('#print-preview-close').addEventListener('click', closePreview);
     return bar;
+  }
+
+  function onSaveAsPdfClick(e) {
+    const btn = e.currentTarget;
+    if (typeof window.html2pdf !== 'function') {
+      if (UI.toast) UI.toast('PDF library still loading — try again in a second', 'warning', 4000);
+      return;
+    }
+    const root = document.getElementById('print-root');
+    if (!root || !root.firstChild) return;
+
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Generating PDF…';
+
+    const filename = (function () {
+      const army = window.App && App.state && App.state.currentArmy;
+      const base = (root.querySelector('.datasheet-cover .ds-cover-title')?.textContent
+                    || root.querySelector('.datasheet .ds-name')?.textContent
+                    || (army && army.name)
+                    || 'datasheet').trim();
+      return base.replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '') + '.pdf';
+    })();
+
+    // html2pdf wraps html2canvas + jsPDF. Landscape A4 matches the print CSS.
+    // pagebreak.mode 'css' lets our existing break-before rules drive splits;
+    // 'avoid-all' makes html2canvas respect break-inside:avoid on child blocks.
+    window.html2pdf()
+      .set({
+        margin:      [8, 8, 8, 8],                     // mm
+        filename:    filename,
+        image:       { type: 'jpeg', quality: 0.96 },
+        html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false },
+        jsPDF:       { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
+        pagebreak:   { mode: ['css', 'legacy'], avoid: ['.ds-weapons-block', '.ds-block', '.ds-ability', 'tr'] },
+      })
+      .from(root)
+      .save()
+      .catch(err => {
+        console.warn('[datasheet.pdf]', err);
+        if (UI.toast) UI.toast('PDF export failed: ' + (err && err.message ? err.message : 'unknown'), 'error', 6000);
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.textContent = original;
+      });
   }
 
   function closePreview() {

@@ -21,15 +21,19 @@ body.print-preview-open #global-tooltip,
 body.print-preview-open .page-progress-wrap {
   display: none !important;
 }
+/* Preview mode keeps print-root in NORMAL DOCUMENT FLOW on purpose:
+   position:fixed on a print-target causes some browsers to print only the
+   visible viewport (one page). Normal flow + scrolling body gives us a
+   working multi-page print without special-casing @media print. */
 body.print-preview-open .print-root {
   display: block;
-  position: fixed;
-  inset: 0;
-  top: 52px;
-  overflow: auto;
   background: #2a2a2a;
-  padding: 20px;
-  z-index: 1000;
+  padding: 72px 20px 40px;  /* 72px: clear the fixed preview bar */
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+body.print-preview-open {
+  background: #2a2a2a;
 }
 .print-preview-bar {
   display: none;
@@ -65,10 +69,24 @@ body.print-preview-open .print-preview-bar {
   border: 1px solid transparent;
   font-family: inherit;
 }
-.print-preview-bar .btn-print {
+.print-preview-bar .btn-print,
+.print-preview-bar .btn-pdf {
   background: var(--accent, #a8bde6);
   color: var(--accent-on, #111);
   border-color: var(--accent, #a8bde6);
+}
+.print-preview-bar .btn-pdf {
+  background: transparent;
+  color: #e8e8e8;
+  border-color: rgba(255,255,255,0.25);
+}
+.print-preview-bar .btn-pdf:hover:not(:disabled) {
+  background: rgba(255,255,255,0.06);
+}
+.print-preview-bar .btn-pdf:disabled,
+.print-preview-bar .btn-print:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 .print-preview-bar .btn-close {
   background: transparent;
@@ -420,6 +438,11 @@ body.print-preview-open .datasheet-cover {
     padding: 0 !important;
     top: auto !important;
   }
+  body.print-preview-open .print-root {
+    padding: 0 !important;
+    background: #fff !important;
+    min-height: 0 !important;
+  }
   body.print-preview-open .datasheet,
   body.print-preview-open .datasheet-cover {
     max-width: none !important;
@@ -432,8 +455,9 @@ body.print-preview-open .datasheet-cover {
     border: 1px solid #666 !important;
     margin: 0 0 6mm 0 !important;
     padding: 6mm !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    /* Don't avoid breaks at the top level — long datasheets (characters
+       with many abilities) must be allowed to span pages. Inner blocks
+       keep break-inside:avoid so weapon tables/abilities stay coherent. */
   }
   .datasheet .ds-banner {
     background: #111 !important;

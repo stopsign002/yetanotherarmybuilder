@@ -1,5 +1,5 @@
 // sw.js - App-shell service worker; precaches HTML/CSS/JS, passes BSData fetches through.
-const SHELL = 'yaab-shell-v5';
+const SHELL = 'yaab-shell-v6';
 
 const PRECACHE = [
   '/',
@@ -7,6 +7,7 @@ const PRECACHE = [
   '/css/style.css',
   '/css/validation.css',
   '/css/datasheet.css',
+  '/js/vendor/html2pdf.bundle.min.js',
   '/js/db.js',
   '/js/bsdata.js',
   '/js/storage.js',
