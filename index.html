@@ -115,10 +115,10 @@
         <button class="btn btn-sm btn-outline" id="btn-new-army">New</button>
         <button class="btn btn-sm btn-accent"  id="btn-save-army">Save</button>
         <button class="btn btn-sm btn-outline" id="btn-load-army">Load</button>
-        <button class="btn btn-sm btn-outline" id="btn-export-json">JSON</button>
+        <button class="btn btn-sm btn-outline" id="btn-export-string">Export</button>
+        <button class="btn btn-sm btn-outline" id="btn-import-string">Import</button>
         <button class="btn btn-sm btn-outline" id="btn-export-text">Copy</button>
         <button class="btn btn-sm btn-outline" id="btn-export-csv">CSV</button>
-        <button class="btn btn-sm btn-outline" id="btn-import-json">Import</button>
       </div>
     </aside>
 
@@ -191,22 +191,44 @@
     </div>
   </div>
 
-  <!-- Import JSON Modal -->
+  <!-- Import Army Modal (accepts compact code or raw JSON) -->
   <div class="modal-backdrop" id="modal-import" hidden>
     <div class="modal">
       <div class="modal-header">
-        <h3>Import Army JSON</h3>
+        <h3>Import Army</h3>
         <button class="modal-close" id="modal-import-close" aria-label="Close">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="muted" style="margin-bottom:10px">Paste exported army JSON below:</p>
-        <textarea id="import-json-textarea" class="form-input" rows="12"
-          style="width:100%;resize:vertical;font-family:monospace;font-size:12px"
-          placeholder='{"id":"...","name":"My Army",...}'></textarea>
+        <p class="muted" style="margin-bottom:10px">Paste an army code (starts with <code>YAAB1:</code>) below:</p>
+        <textarea id="import-json-textarea" class="form-input" rows="10"
+          style="width:100%;resize:vertical;font-family:monospace;font-size:12px;word-break:break-all"
+          placeholder="YAAB1:..."></textarea>
       </div>
       <div class="modal-footer">
         <button class="btn btn-accent" id="btn-import-confirm">Import</button>
         <button class="btn btn-outline" id="btn-import-cancel" style="margin-left:8px">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Army Modal (displays copy-paste string) -->
+  <div class="modal-backdrop" id="modal-export" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Export Army</h3>
+        <button class="modal-close" id="modal-export-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted" style="margin-bottom:10px">
+          Copy this code to save or share your army. Paste it into Import to restore.
+          <span id="export-string-size" class="muted" style="margin-left:8px"></span>
+        </p>
+        <textarea id="export-string-textarea" class="form-input" rows="10" readonly
+          style="width:100%;resize:vertical;font-family:monospace;font-size:12px;word-break:break-all"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-accent" id="btn-export-copy">Copy to Clipboard</button>
+        <button class="btn btn-outline" id="btn-export-done" style="margin-left:8px">Done</button>
       </div>
     </div>
   </div>

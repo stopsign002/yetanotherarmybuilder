@@ -772,6 +772,20 @@ window.UI = (() => {
     document.getElementById('modal-import').setAttribute('hidden', '');
   }
 
+  // ── Export modal ──────────────────────────────────────────────────────
+  function showExportModal(code) {
+    const ta = document.getElementById('export-string-textarea');
+    ta.value = code;
+    const sizeEl = document.getElementById('export-string-size');
+    if (sizeEl) sizeEl.textContent = `${code.length} chars`;
+    document.getElementById('modal-export').removeAttribute('hidden');
+    setTimeout(() => { ta.focus(); ta.select(); }, 50);
+  }
+
+  function hideExportModal() {
+    document.getElementById('modal-export').setAttribute('hidden', '');
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────
   function escapeHtml(str) {
     if (str == null) return '';
@@ -797,6 +811,8 @@ window.UI = (() => {
     hideLoadModal,
     showImportModal,
     hideImportModal,
+    showExportModal,
+    hideExportModal,
     escapeHtml,
   };
 })();

@@ -41,14 +41,60 @@ window.Storage = (() => {
     return factions;
   }
 
-  function exportArmyToJSON(army) {
-    return JSON.stringify(army.toJSON(), null, 2);
+  // ── Compact string export/import ──────────────────────────────────────
+  // Format: `YAAB1:<base64url(deflate-raw(JSON))>`
+  // Using the native CompressionStream API (Chrome 103+, FF 113+, Safari 16.4+).
+  const EXPORT_PREFIX = 'YAAB1:';
+
+  function _bytesToBase64Url(bytes) {
+    let binary = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
 
-  function importArmyFromJSON(jsonString) {
-    const data = JSON.parse(jsonString);
+  function _base64UrlToBytes(str) {
+    let s = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    const binary = atob(s);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  async function exportArmyToString(army) {
+    const json = JSON.stringify(army.toJSON());
+    const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    const buf = await new Response(stream).arrayBuffer();
+    return EXPORT_PREFIX + _bytesToBase64Url(new Uint8Array(buf));
+  }
+
+  async function importArmyFromString(input) {
+    const raw = (input || '').trim();
+    if (!raw) throw new Error('Empty input');
+
+    // Backward-compat: allow pasting raw JSON.
+    if (raw.startsWith('{')) {
+      const data = JSON.parse(raw);
+      if (!data.name || !Array.isArray(data.entries)) {
+        throw new Error('Invalid army data');
+      }
+      return Army.fromJSON(data);
+    }
+
+    if (!raw.startsWith(EXPORT_PREFIX)) {
+      throw new Error('Not a valid army code');
+    }
+    const payload = raw.slice(EXPORT_PREFIX.length).replace(/\s+/g, '');
+    const bytes = _base64UrlToBytes(payload);
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    const buf = await new Response(stream).arrayBuffer();
+    const json = new TextDecoder().decode(buf);
+    const data = JSON.parse(json);
     if (!data.name || !Array.isArray(data.entries)) {
-      throw new Error('Invalid army file format');
+      throw new Error('Invalid army data');
     }
     return Army.fromJSON(data);
   }
@@ -121,8 +167,8 @@ window.Storage = (() => {
     loadFactionData,
     addFaction,
     removeFaction,
-    exportArmyToJSON,
-    importArmyFromJSON,
+    exportArmyToString,
+    importArmyFromString,
     exportArmyToText,
     exportArmyToCSV,
     downloadFile

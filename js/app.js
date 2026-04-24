@@ -530,11 +530,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    document.getElementById('btn-export-json').addEventListener('click', () => {
-      const json = Storage.exportArmyToJSON(state.currentArmy);
-      const name = (state.currentArmy.name || 'army').replace(/[^a-z0-9_-]/gi, '_');
-      Storage.downloadFile(json, `${name}.json`, 'application/json');
-      UI.toast('Exported as JSON', 'success');
+    document.getElementById('btn-export-string').addEventListener('click', async () => {
+      try {
+        const code = await Storage.exportArmyToString(state.currentArmy);
+        UI.showExportModal(code);
+      } catch (err) {
+        UI.toast('Export failed: ' + err.message, 'error', 5000);
+      }
+    });
+
+    document.getElementById('btn-export-copy').addEventListener('click', async () => {
+      const ta = document.getElementById('export-string-textarea');
+      try {
+        await navigator.clipboard.writeText(ta.value);
+        UI.toast('Copied to clipboard', 'success');
+      } catch (_) {
+        ta.select();
+        document.execCommand && document.execCommand('copy');
+        UI.toast('Copied (select-and-copy fallback)', 'info');
+      }
+    });
+
+    document.getElementById('btn-export-done').addEventListener('click', UI.hideExportModal);
+    document.getElementById('modal-export-close').addEventListener('click', UI.hideExportModal);
+    document.getElementById('modal-export').addEventListener('click', e => {
+      if (e.target === e.currentTarget) UI.hideExportModal();
     });
 
     document.getElementById('btn-export-text').addEventListener('click', async () => {
@@ -558,18 +578,18 @@ document.addEventListener('DOMContentLoaded', () => {
       UI.toast('Exported as CSV', 'success');
     });
 
-    document.getElementById('btn-import-json').addEventListener('click', UI.showImportModal);
+    document.getElementById('btn-import-string').addEventListener('click', UI.showImportModal);
     document.getElementById('modal-import-close').addEventListener('click', UI.hideImportModal);
     document.getElementById('btn-import-cancel').addEventListener('click', UI.hideImportModal);
     document.getElementById('modal-import').addEventListener('click', e => {
       if (e.target === e.currentTarget) UI.hideImportModal();
     });
 
-    document.getElementById('btn-import-confirm').addEventListener('click', () => {
+    document.getElementById('btn-import-confirm').addEventListener('click', async () => {
       const raw = document.getElementById('import-json-textarea').value.trim();
-      if (!raw) { UI.toast('Paste JSON first', 'warning'); return; }
+      if (!raw) { UI.toast('Paste an army code first', 'warning'); return; }
       try {
-        const army = Storage.importArmyFromJSON(raw);
+        const army = await Storage.importArmyFromString(raw);
         state.armyManager.saveArmy(army);
         state.currentArmy = army;
         state.armyManager.currentArmy = army;
@@ -586,6 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Escape') {
         UI.hideLoadModal();
         UI.hideImportModal();
+        UI.hideExportModal();
       }
     });
   }
