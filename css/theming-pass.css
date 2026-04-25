@@ -1,161 +1,159 @@
-/* css/theming-pass.css — per-mode atmospheric backgrounds, faction glyph styling, hero header polish, role-icon visuals. */
+/* css/theming-pass.css — calm static per-mode SVG backgrounds, faction glyph styling, hero header polish, role-icon visuals. */
 
 /* ──────────────────────────────────────────────────────────────────────
-   1. BUILD mode — tactical / forge feel.
-   The base panel-body already carries a hex grid (atmosphere.css). We add
-   a faint diagonal scan-line overlay, an accent radial at the top, and a
-   slow drift of glyph particles via a layered SVG data URI.
+   Original-geometry SVG tile library (inline data URIs).
+
+   All patterns are designed in-house — no GW iconography. They evoke
+   tactical / imperial / gothic feel through generic shapes only:
+   chevrons, hex grids, dot scans, gothic arches, abstract winged
+   chevron-and-circle emblems. Every pattern is STATIC.
+
+   Usage pattern: each mode layers 2-3 of these via background-image,
+   pinned with `background-attachment: fixed` so the field sits behind
+   content and never bleeds into / drifts under panels. No keyframes.
    ────────────────────────────────────────────────────────────────────── */
 
-/* Diagonal scan-line overlay across BUILD mode's panel-bodies. */
-body[data-mode="build"] .panel-body::after {
+/* Common: every mode root gets relative positioning so its decoration
+   pseudo-elements anchor correctly. We replaced the old ::after-driven
+   moving overlays with a single fixed ::before holding the SVG stack. */
+
+body[data-mode="build"]   #build-mode,
+body[data-mode="collect"] #collect-mode,
+body[data-mode="play"]    #play-mode { position: relative; }
+
+/* Children always sit above the static decoration. */
+body[data-mode="build"]   #build-mode > *,
+body[data-mode="collect"] #collect-mode > *,
+body[data-mode="play"]    #play-mode > *  { position: relative; z-index: 1; }
+
+/* ──────────────────────────────────────────────────────────────────────
+   1. BUILD mode — workshop / forge tactical feel.
+   Layers (top → bottom):
+     a) faint accent radial bloom near the top (4-6%)
+     b) hex grid (3% opacity)
+     c) chevron rows (2% opacity)
+   No movement. No drifting particles. No scan line.
+   ────────────────────────────────────────────────────────────────────── */
+body[data-mode="build"] #build-mode::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image: repeating-linear-gradient(
-    115deg,
-    rgba(255, 255, 255, 0.015) 0px,
-    rgba(255, 255, 255, 0.015) 1px,
-    transparent 1px,
-    transparent 6px
-  );
   z-index: 0;
-  mix-blend-mode: screen;
+  background-color: transparent;
+  background-image:
+    /* a) accent-tinted top bloom */
+    radial-gradient(60% 36% at 50% 0%,
+      rgba(var(--accent-rgb, 200, 200, 200), 0.05) 0%,
+      rgba(var(--accent-rgb, 200, 200, 200), 0.0) 75%),
+    /* b) small hex grid (3%) */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='49' viewBox='0 0 56 49'><g fill='none' stroke='%23ffffff' stroke-opacity='0.03' stroke-width='1'><path d='M14 0.5 L42 0.5 L56 24.5 L42 48.5 L14 48.5 L0 24.5 Z'/></g></svg>"),
+    /* c) chevron rows (2%) */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='48' viewBox='0 0 120 48'><g fill='none' stroke='%23ffffff' stroke-opacity='0.02' stroke-width='1'><path d='M0 18 L20 6 L40 18'/><path d='M40 18 L60 6 L80 18'/><path d='M80 18 L100 6 L120 18'/><path d='M0 42 L20 30 L40 42'/><path d='M40 42 L60 30 L80 42'/><path d='M80 42 L100 30 L120 42'/></g></svg>");
+  background-repeat: no-repeat, repeat, repeat;
+  background-size: 100% 320px, 56px 49px, 120px 48px;
+  background-position: top center, 0 0, 0 0;
 }
+
+/* Centerpiece: subtle abstract winged-chevron emblem placed once near top
+   of the build pane. Original geometry — chevron + ring composition. */
+body[data-mode="build"] #build-mode::after {
+  content: "";
+  position: fixed;
+  top: 96px;
+  left: 50%;
+  width: 480px;
+  height: 480px;
+  margin-left: -240px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='none' stroke='%23ffffff' stroke-opacity='0.04' stroke-width='1.2'><circle cx='240' cy='240' r='62'/><circle cx='240' cy='240' r='44'/><path d='M178 240 L60 200 L100 240 L60 280 Z'/><path d='M302 240 L420 200 L380 240 L420 280 Z'/><path d='M240 178 L240 120'/><path d='M240 302 L240 360'/><path d='M196 196 L160 160'/><path d='M284 196 L320 160'/><path d='M196 284 L160 320'/><path d='M284 284 L320 320'/></g></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+/* The old per-panel scan-line is replaced with a static, far subtler
+   diagonal hatch — held to 1.5% opacity and fixed (no scroll movement). */
 body[data-mode="build"] .panel-body { position: relative; }
 body[data-mode="build"] .panel-body > * { position: relative; z-index: 1; }
 
-/* Accent-tinted radial at the top of the BUILD page. Subtle, faction-tuned
-   via the existing --accent-rgb CSS var. */
-body[data-mode="build"] #build-mode::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 240px;
-  pointer-events: none;
-  background: radial-gradient(
-    60% 100% at 50% 0%,
-    rgba(var(--accent-rgb, 200, 200, 200), 0.07) 0%,
-    rgba(var(--accent-rgb, 200, 200, 200), 0.0) 70%
-  );
-  z-index: 0;
-  opacity: 0.9;
-}
-body[data-mode="build"] #build-mode { position: relative; }
-
-/* Floating glyph particles. Layered SVG data URI carrying ten tiny shapes
-   (chevrons, dots, lines) at low opacity, looped on a long drift animation
-   so it never reads as "moving". Pure decoration; pointer-events: none. */
-body[data-mode="build"] #build-mode::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.85;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420' viewBox='0 0 420 420'><g fill='none' stroke='%23ffffff' stroke-opacity='0.04' stroke-width='1'><path d='M30 60 l10 -6 l10 6'/><circle cx='90' cy='110' r='2'/><path d='M150 40 h14'/><path d='M210 90 l8 -5 l8 5'/><circle cx='270' cy='30' r='1.5'/><path d='M340 70 l-8 -5 l-8 5'/><path d='M380 160 v12'/><circle cx='60' cy='220' r='1.5'/><path d='M120 270 l10 6 l10 -6'/><path d='M200 320 h12'/><circle cx='280' cy='360' r='2'/><path d='M340 280 v10'/><path d='M50 380 l8 5 l8 -5'/><circle cx='200' cy='200' r='1.2'/><path d='M380 380 l-8 -5'/></g></svg>");
-  background-repeat: repeat;
-  background-size: 420px 420px;
-  animation: build-glyph-drift 90s linear infinite;
-  will-change: background-position;
-}
-
-@keyframes build-glyph-drift {
-  from { background-position: 0 0; }
-  to   { background-position: 420px -420px; }
-}
-
 /* ──────────────────────────────────────────────────────────────────────
-   2. COLLECT mode — armoury / library feel.
-   Calmer: a parchment-noise SVG at low opacity + a warm overlay tint. No
-   moving particles.
+   2. COLLECT mode — armoury / library / parchment feel.
+   Layers:
+     a) warm parchment tint (very low)
+     b) dotted scan grid (3%)
+     c) tiny gothic-arch lattice (2%)
    ────────────────────────────────────────────────────────────────────── */
-
 body[data-mode="collect"] #collect-mode::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 1;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.7  0 0 0 0 0.65  0 0 0 0 0.55  0 0 0 0.04 0'/></filter><rect width='320' height='320' filter='url(%23n)'/></svg>");
-  background-repeat: repeat;
-  background-size: 320px 320px;
-  mix-blend-mode: screen;
+  background-image:
+    /* a) warm parchment wash, top → bottom */
+    linear-gradient(180deg,
+      rgba(220, 180, 120, 0.020) 0%,
+      rgba(120, 90, 60, 0.012) 100%),
+    /* b) dot grid (3%) */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><g fill='%23e6c79a' fill-opacity='0.03'><circle cx='4' cy='4' r='1'/><circle cx='20' cy='12' r='1'/><circle cx='12' cy='24' r='1'/><circle cx='28' cy='28' r='1'/></g></svg>"),
+    /* c) gothic arch lattice (2%) */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='128' viewBox='0 0 96 128'><g fill='none' stroke='%23e6c79a' stroke-opacity='0.025' stroke-width='1'><path d='M16 120 L16 64 Q16 32 48 32 Q80 32 80 64 L80 120'/><path d='M28 120 L28 72 Q28 48 48 48 Q68 48 68 72 L68 120'/><path d='M48 120 L48 32'/></g></svg>");
+  background-repeat: no-repeat, repeat, repeat;
+  background-size: 100% 100%, 32px 32px, 96px 128px;
+  background-position: 0 0, 0 0, center top;
 }
 
-/* Warm parchment overlay tint. */
+/* Centerpiece sits as a single static medallion on the collect page —
+   a stylized roundel made only of geometric primitives. */
 body[data-mode="collect"] #collect-mode::after {
   content: "";
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: 140px;
+  left: 50%;
+  width: 420px;
+  height: 420px;
+  margin-left: -210px;
   pointer-events: none;
   z-index: 0;
-  background: linear-gradient(180deg,
-    rgba(255, 200, 130, 0.018) 0%,
-    rgba(120, 90, 60, 0.012) 100%);
+  opacity: 0.55;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420' viewBox='0 0 420 420'><g fill='none' stroke='%23e6c79a' stroke-opacity='0.05' stroke-width='1'><circle cx='210' cy='210' r='90'/><circle cx='210' cy='210' r='118'/><circle cx='210' cy='210' r='150'/><path d='M210 60 L210 100'/><path d='M210 320 L210 360'/><path d='M60 210 L100 210'/><path d='M320 210 L360 210'/><path d='M104 104 L132 132'/><path d='M316 104 L288 132'/><path d='M104 316 L132 288'/><path d='M316 316 L288 288'/></g></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
 }
-body[data-mode="collect"] #collect-mode { position: relative; }
 
 /* ──────────────────────────────────────────────────────────────────────
-   3. PLAY mode — tactical cockpit.
-   Tighter hex grid + corner HUD brackets + slow horizontal scan line.
+   3. PLAY mode — tactical cockpit, but CALM.
+   Layers:
+     a) cool accent vignette (4%)
+     b) hex grid (3%)
+     c) corner reticle dots (2%)
+   STATIC. No scan line, no drifting overlays.
    ────────────────────────────────────────────────────────────────────── */
-
-body[data-mode="play"] #play-mode {
-  position: relative;
-}
-
 body[data-mode="play"] #play-mode::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='34' height='30' viewBox='0 0 34 30'><g fill='none' stroke='%23ffffff' stroke-opacity='0.04' stroke-width='1'><path d='M8.5 0.5 L25.5 0.5 L34 15 L25.5 29.5 L8.5 29.5 L0 15 Z'/></g></svg>");
-  background-repeat: repeat;
-  background-size: 34px 30px;
-  opacity: 1;
+  background-image:
+    /* a) accent-cool vignette from corners */
+    radial-gradient(80% 60% at 50% 50%,
+      rgba(var(--accent-rgb, 200, 200, 200), 0.0) 55%,
+      rgba(var(--accent-rgb, 200, 200, 200), 0.04) 100%),
+    /* b) tighter hex grid */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='34' height='30' viewBox='0 0 34 30'><g fill='none' stroke='%23ffffff' stroke-opacity='0.03' stroke-width='1'><path d='M8.5 0.5 L25.5 0.5 L34 15 L25.5 29.5 L8.5 29.5 L0 15 Z'/></g></svg>"),
+    /* c) tactical dot scan */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='%23ffffff' fill-opacity='0.02'><circle cx='10' cy='10' r='1'/><circle cx='40' cy='40' r='1'/><circle cx='70' cy='10' r='1'/><circle cx='10' cy='70' r='1'/><circle cx='70' cy='70' r='1'/></g></svg>");
+  background-repeat: no-repeat, repeat, repeat;
+  background-size: 100% 100%, 34px 30px, 80px 80px;
+  background-position: center, 0 0, 0 0;
 }
 
-/* Drifting horizontal scan line on the play backdrop. Always visible (low
-   opacity), drifts top to bottom over 8s. */
-body[data-mode="play"] #play-mode::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background: linear-gradient(180deg,
-    transparent 0%,
-    transparent 49%,
-    rgba(var(--accent-rgb, 200, 200, 200), 0.08) 50%,
-    transparent 51%,
-    transparent 100%);
-  background-size: 100% 200%;
-  animation: play-scan-drift 8s linear infinite;
-}
-
-@keyframes play-scan-drift {
-  from { background-position: 0 -100%; }
-  to   { background-position: 0 100%; }
-}
-
-/* Corner HUD brackets — four small SVGs pinned to viewport corners (within
-   the play container) at low opacity, accent-tinted. */
-body[data-mode="play"] .play-shell {
-  position: relative;
-}
-body[data-mode="play"] .play-shell::before,
-body[data-mode="play"] .play-shell::after,
-body[data-mode="play"] #play-mode > .play-corner-tl,
-body[data-mode="play"] #play-mode > .play-corner-br {
-  /* fallback no-op for elements that may not exist */
-}
-body[data-mode="play"] #play-mode {
-  --hud-bracket: 22px;
-}
+/* Static HUD corner brackets — same spec as before but no animation,
+   no glow pulse. Pinned to viewport corners. */
+body[data-mode="play"] .play-shell { position: relative; }
 body[data-mode="play"] #play-mode > .play-shell::before,
 body[data-mode="play"] #play-mode > .play-shell::after {
   content: "";
@@ -164,7 +162,7 @@ body[data-mode="play"] #play-mode > .play-shell::after {
   height: 32px;
   pointer-events: none;
   z-index: 1;
-  border: 2px solid rgba(var(--accent-rgb, 200, 200, 200), 0.35);
+  border: 2px solid rgba(var(--accent-rgb, 200, 200, 200), 0.30);
   opacity: 0.9;
 }
 body[data-mode="play"] #play-mode > .play-shell::before {
@@ -172,18 +170,16 @@ body[data-mode="play"] #play-mode > .play-shell::before {
   left: 12px;
   border-right: none;
   border-bottom: none;
-  box-shadow: 0 0 6px rgba(var(--accent-rgb, 200, 200, 200), 0.18);
 }
 body[data-mode="play"] #play-mode > .play-shell::after {
   bottom: 12px;
   right: 12px;
   border-left: none;
   border-top: none;
-  box-shadow: 0 0 6px rgba(var(--accent-rgb, 200, 200, 200), 0.18);
 }
 
 /* Make sure the actual content sits above the backgrounds. */
-body[data-mode="play"] #play-mode > .play-shell,
+body[data-mode="play"]    #play-mode > .play-shell,
 body[data-mode="collect"] #collect-mode > .collect-root {
   position: relative;
   z-index: 1;
@@ -298,16 +294,18 @@ body[data-mode="build"] .build-hero::after {
 }
 
 /* ──────────────────────────────────────────────────────────────────────
-   6. prefers-reduced-motion — disable every keyframe animation we added.
+   6. prefers-reduced-motion — there are no longer any background
+      animations to gate, but the rule stays as a no-op safety net for
+      future additions and keeps any inherited animations off.
    ────────────────────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  body[data-mode="build"]  #build-mode::after,
-  body[data-mode="play"]   #play-mode::after {
+  body[data-mode="build"]   #build-mode::before,
+  body[data-mode="build"]   #build-mode::after,
+  body[data-mode="collect"] #collect-mode::before,
+  body[data-mode="collect"] #collect-mode::after,
+  body[data-mode="play"]    #play-mode::before,
+  body[data-mode="play"]    #play-mode::after {
     animation: none !important;
   }
-}
-body.reduce-motion body[data-mode="build"]  #build-mode::after,
-body.reduce-motion body[data-mode="play"]   #play-mode::after {
-  animation: none !important;
 }

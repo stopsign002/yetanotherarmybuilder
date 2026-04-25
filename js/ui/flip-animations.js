@@ -38,6 +38,23 @@
     return { left: r.left, top: r.top, width: r.width, height: r.height };
   }
 
+  // Emit faction-themed stinger + accent particle burst when a unit lands.
+  // Falls back to the generic thud if faction-fx hasn't loaded.
+  function emitAddFx(entry) {
+    const A = window.App || {};
+    if (A.factionFx && typeof A.factionFx.playAddStinger === 'function') {
+      try { A.factionFx.playAddStinger(); } catch (_) { safePlayThud(); }
+    } else {
+      safePlayThud();
+    }
+    if (A.factionFx && typeof A.factionFx.particleBurst === 'function' && entry) {
+      try {
+        const r = entry.getBoundingClientRect();
+        A.factionFx.particleBurst(r.left + r.width / 2, r.top + r.height / 2);
+      } catch (_) {}
+    }
+  }
+
   function safePlayThud() {
     try {
       // The orphaned sound-fx module exposes App.isSoundEnabled / App.toggleSound
@@ -267,7 +284,7 @@
         targetEntry.style.visibility = prevVis || '';
         inFlight = false;
         pulse(targetEntry, false);
-        safePlayThud();
+        emitAddFx(targetEntry);
       });
     });
   }

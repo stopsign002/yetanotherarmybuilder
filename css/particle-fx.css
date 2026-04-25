@@ -1,0 +1,29 @@
+/* particle-fx.css — accent-colored particle bursts emitted by faction-fx.js
+   on add-to-army landings. Uses GPU-friendly transform + opacity. */
+
+#yaab-fx-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.yaab-fx-particle {
+  position: absolute;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor, 0 0 14px currentColor;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: yaab-fx-particle-burst 620ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes yaab-fx-particle-burst {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  18%  { opacity: 1; transform: translate(calc(var(--dx, 0px) * 0.3), calc(var(--dy, 0px) * 0.3)) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(0.5); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yaab-fx-particle { animation: none; opacity: 0; }
+}

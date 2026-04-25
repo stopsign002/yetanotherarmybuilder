@@ -67,3 +67,38 @@ body.build-mode-enhanced #app-main {
   height: 100% !important;
   min-height: 0 !important;
 }
+
+/* === Hero points-limit click-to-edit affordance === */
+.build-hero-points-limit.is-editable {
+  cursor: pointer;
+  transition: color 120ms ease, text-shadow 120ms ease;
+}
+.build-hero-points-limit.is-editable:hover,
+.build-hero-points-limit.is-editable:focus-visible {
+  color: var(--accent, #c8c8c8);
+  text-shadow: 0 0 6px rgba(var(--accent-rgb, 200, 200, 200), 0.4);
+  outline: none;
+}
+.build-hero-points-limit-input {
+  width: 64px;
+  font-size: 18px;
+  font-weight: 600;
+  background: var(--panel-alt, #1a1a1a);
+  color: var(--text, #ddd);
+  border: 1px solid var(--accent, #c8c8c8);
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-align: center;
+}
+.build-hero-points-limit-input:focus {
+  outline: 2px solid rgba(var(--accent-rgb, 200, 200, 200), 0.5);
+  outline-offset: 2px;
+}
+
+/* === Army rules in left panel: cap height + scroll so it doesn't push the
+   entry list below the fold when a faction has many rules. === */
+body.build-mode-enhanced #panel-left .army-rules-section {
+  max-height: 30vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}

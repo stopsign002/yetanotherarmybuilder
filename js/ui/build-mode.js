@@ -144,6 +144,76 @@
     ui.armyNameInput.addEventListener('change', function () {
       try { legacyName.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
     });
+
+    // Click-to-edit on the points limit. The legacy #points-limit-input is
+    // hidden (build-mode-enhanced hides .army-meta), so the hero must own the
+    // affordance.
+    if (ui.pointsLimitEl) {
+      ui.pointsLimitEl.classList.add('is-editable');
+      ui.pointsLimitEl.title = 'Click to edit points limit';
+      ui.pointsLimitEl.setAttribute('role', 'button');
+      ui.pointsLimitEl.setAttribute('tabindex', '0');
+      const beginEdit = function () {
+        if (ui.pointsLimitEl.dataset.editing === '1') return;
+        ui.pointsLimitEl.dataset.editing = '1';
+        const current = parseInt(ui.pointsLimitEl.textContent, 10) || 0;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.step = '50';
+        input.value = current;
+        input.className = 'build-hero-points-limit-input';
+        input.setAttribute('aria-label', 'Points limit');
+        ui.pointsLimitEl.replaceWith(input);
+        input.focus();
+        input.select();
+        const commit = function () {
+          const next = Math.max(0, parseInt(input.value, 10) || 0);
+          // Push to legacy input so the existing change listener in events.js
+          // updates army.pointsLimit and re-renders the army list.
+          const legacyLimit = $('points-limit-input');
+          if (legacyLimit) {
+            legacyLimit.value = next;
+            try { legacyLimit.dispatchEvent(new Event('input', { bubbles: true })); } catch (_) {}
+            try { legacyLimit.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+          } else {
+            // Fallback: write directly + re-render.
+            const army = App.state && App.state.currentArmy;
+            if (army) {
+              army.pointsLimit = next;
+              if (window.UI && typeof UI.renderArmyList === 'function') UI.renderArmyList(army);
+            }
+          }
+          // Restore the span. syncHero() will fill its text from the army on next render.
+          const span = document.createElement('span');
+          span.className = 'build-hero-points-limit is-editable';
+          span.setAttribute('data-build-hero', 'points-limit');
+          span.setAttribute('role', 'button');
+          span.setAttribute('tabindex', '0');
+          span.title = 'Click to edit points limit';
+          span.textContent = next;
+          input.replaceWith(span);
+          ui.pointsLimitEl = span;
+          span.addEventListener('click', beginEdit);
+          span.addEventListener('keydown', onKey);
+          delete span.dataset.editing;
+          syncHero();
+        };
+        input.addEventListener('blur', commit, { once: true });
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+          else if (e.key === 'Escape') {
+            input.value = current; // restore so commit writes the original
+            input.blur();
+          }
+        });
+      };
+      const onKey = function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); beginEdit(); }
+      };
+      ui.pointsLimitEl.addEventListener('click', beginEdit);
+      ui.pointsLimitEl.addEventListener('keydown', onKey);
+    }
   }
 
   function syncHero() {
@@ -188,16 +258,18 @@
       ui.armyNameInput.value = army.name || '';
     }
 
-    // Points: read from already-rendered legacy spans so we don't duplicate
-    // computation logic. Falls back to army totals if the legacy DOM hasn't
-    // been rendered yet.
+    // Points: prefer authoritative army totals. Reading the legacy spans is
+    // unreliable because UI.renderArmyList fires armyChange BEFORE updating
+    // those spans, so we'd lag one render behind.
     let total = 0, limit = 0;
-    const legacyCurrent = $('points-current');
-    const legacyLimit   = $('points-limit-display');
-    if (legacyCurrent) total = parseInt(legacyCurrent.textContent, 10) || 0;
-    else if (army && typeof army.getTotalPoints === 'function') total = army.getTotalPoints();
-    if (legacyLimit) limit = parseInt(legacyLimit.textContent, 10) || 0;
-    else if (army) limit = army.pointsLimit || 0;
+    if (army && typeof army.getTotalPoints === 'function') total = army.getTotalPoints();
+    if (army) limit = army.pointsLimit || 0;
+    if (!army) {
+      const legacyCurrent = $('points-current');
+      const legacyLimit   = $('points-limit-display');
+      if (legacyCurrent) total = parseInt(legacyCurrent.textContent, 10) || 0;
+      if (legacyLimit)   limit = parseInt(legacyLimit.textContent, 10) || 0;
+    }
 
     const pct = limit > 0 ? Math.min((total / limit) * 100, 100) : (total > 0 ? 100 : 0);
 
@@ -233,136 +305,16 @@
     }
   }
 
-  // ── Rules pinboard / tab switcher ──────────────────────────────────────
-  function setupTabs() {
-    const detailPanelBody = $('unit-detail-panel');
-    if (!detailPanelBody) return;
-    const detailPanelHost = detailPanelBody.parentElement; // .panel-right
-    if (!detailPanelHost) return;
-
-    // Build the tab strip and the rules tab body. The rules tab body is a
-    // sibling element that shares the panel; we toggle visibility, not
-    // remove from DOM, so the events.js delegated handler on
-    // #army-rules-section keeps firing.
-    if (detailPanelHost.querySelector('.build-detail-tabs')) return;
-
-    const tabStrip = document.createElement('div');
-    tabStrip.className = 'build-detail-tabs';
-    tabStrip.setAttribute('role', 'tablist');
-    tabStrip.innerHTML =
-      '<button type="button" class="build-detail-tab is-active" data-build-tab="detail" role="tab" aria-selected="true">Unit Detail</button>' +
-      '<button type="button" class="build-detail-tab" data-build-tab="rules" role="tab" aria-selected="false">Rules</button>';
-
-    // Insert tab strip BEFORE the panel-body (#unit-detail-panel).
-    detailPanelHost.insertBefore(tabStrip, detailPanelBody);
-
-    // Build the rules pinboard container, inserted AFTER #unit-detail-panel
-    // so they share scroll context within the right-panel host.
-    const rulesPanel = document.createElement('div');
-    rulesPanel.className = 'panel-body build-rules-panel';
-    rulesPanel.id = 'build-rules-panel';
-    rulesPanel.setAttribute('role', 'tabpanel');
-    rulesPanel.hidden = true;
-    rulesPanel.innerHTML =
-      '<div class="build-rules-header">Army Rules</div>' +
-      '<div class="build-rules-mount" id="build-rules-mount"></div>' +
-      '<div class="build-rules-stratagems-card" id="build-rules-stratagems">' +
-        '<div class="build-rules-stratagems-title">Stratagems</div>' +
-        '<div class="build-rules-stratagems-desc">Browse detachment, faction, and core stratagems for game day.</div>' +
-        '<button type="button" class="btn btn-sm btn-outline build-rules-stratagems-btn" id="build-rules-stratagems-btn">Open Stratagems</button>' +
-      '</div>' +
-      '<div class="build-rules-empty" id="build-rules-empty">Select a faction and detachment to see Army Rules, the Detachment Rule, and Enhancements here.</div>';
-    detailPanelHost.insertBefore(rulesPanel, detailPanelBody.nextSibling);
-
-    // MOVE the existing army-rules-section node (and its children) into the
-    // mount. The events.js delegate listens on #army-rules-section so moving
-    // (not duplicating) preserves the click handler.
-    const rulesSection = $('army-rules-section');
-    const rulesMount   = $('build-rules-mount');
-    if (rulesSection && rulesMount) {
-      // Force-show: even if section was hidden originally, the empty-state
-      // message inside the rules tab handles the empty case.
-      rulesMount.appendChild(rulesSection);
-    }
-
-    // Wire stratagems button.
-    const stratBtn = $('build-rules-stratagems-btn');
-    if (stratBtn) {
-      stratBtn.addEventListener('click', function () {
-        if (typeof App.openStratagems === 'function') App.openStratagems();
-        else if (window.UI && typeof UI.toast === 'function') UI.toast('Stratagems are unavailable', 'info');
-      });
-    }
-
-    // Wire tab buttons.
-    ui.rulesTabBtn  = tabStrip.querySelector('[data-build-tab="rules"]');
-    ui.detailTabBtn = tabStrip.querySelector('[data-build-tab="detail"]');
-    ui.rulesPanel   = rulesPanel;
-    ui.panelBody    = detailPanelBody;
-
-    tabStrip.addEventListener('click', function (e) {
-      const btn = e.target.closest('.build-detail-tab');
-      if (!btn) return;
-      const next = btn.dataset.buildTab;
-      if (next) setActiveTab(next);
-    });
-  }
-
-  function setActiveTab(name) {
-    if (name !== 'detail' && name !== 'rules') name = 'detail';
-    ui.activeTab = name;
-    if (ui.detailTabBtn) {
-      const isDetail = name === 'detail';
-      ui.detailTabBtn.classList.toggle('is-active', isDetail);
-      ui.detailTabBtn.setAttribute('aria-selected', isDetail ? 'true' : 'false');
-    }
-    if (ui.rulesTabBtn) {
-      const isRules = name === 'rules';
-      ui.rulesTabBtn.classList.toggle('is-active', isRules);
-      ui.rulesTabBtn.setAttribute('aria-selected', isRules ? 'true' : 'false');
-    }
-    if (ui.panelBody) ui.panelBody.hidden = name === 'rules';
-    if (ui.rulesPanel) ui.rulesPanel.hidden = name !== 'rules';
-    syncRulesEmptyState();
-    // Persist intended tab on App.state if the optional flag is wired.
-    if (App.state) App.state.activeBuildTab = name;
-  }
-
-  function syncRulesEmptyState() {
-    const empty = $('build-rules-empty');
-    const section = $('army-rules-section');
-    if (!empty || !section) return;
-    // The faction-rules.js renderer toggles the `hidden` attribute on the
-    // section when there's nothing to show. Use that as the empty signal.
-    const hasContent = !section.hasAttribute('hidden');
-    empty.hidden = hasContent;
-  }
-
-  // Auto-switch to a tab when a rule or unit is rendered. We hook the
-  // existing UI.renderRuleDetail and UI.renderUnitDetail by wrapping them
-  // (defensively — checks they exist on bootstrap, not at IIFE time, since
-  // index.js may load this orchestrator before UI module load order).
-  function wrapDetailRenderers() {
-    if (!window.UI) return;
-    if (typeof UI.renderUnitDetail === 'function' && !UI.renderUnitDetail._buildModeWrapped) {
-      const orig = UI.renderUnitDetail;
-      UI.renderUnitDetail = function () {
-        const r = orig.apply(this, arguments);
-        setActiveTab('detail');
-        return r;
-      };
-      UI.renderUnitDetail._buildModeWrapped = true;
-    }
-    if (typeof UI.renderRuleDetail === 'function' && !UI.renderRuleDetail._buildModeWrapped) {
-      const orig = UI.renderRuleDetail;
-      UI.renderRuleDetail = function () {
-        const r = orig.apply(this, arguments);
-        setActiveTab('detail'); // rule detail renders in the detail panel body
-        return r;
-      };
-      UI.renderRuleDetail._buildModeWrapped = true;
-    }
-  }
+  // ── Rules placement ────────────────────────────────────────────────────
+  // Earlier versions moved #army-rules-section into a right-panel "Rules" tab,
+  // which buried it under the unit-detail content. The rules now stay where
+  // the static markup puts them — left panel, between selection controls and
+  // the entry list — so they're always visible without tab switching. The
+  // section's own `hidden` attribute (toggled by faction-rules.js) collapses
+  // it to nothing when no faction/detachment is set.
+  function setupTabs() { /* no-op — rules stay in left panel */ }
+  function syncRulesEmptyState() { /* no-op */ }
+  function wrapDetailRenderers() { /* no-op */ }
 
   // ── Saved-status tracking ──────────────────────────────────────────────
   // Mirror save-pulse.js: signature-check so "render" callbacks that don't

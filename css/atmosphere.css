@@ -13,30 +13,30 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────
-   2. Active panel-header accent stripe — 2px bar along the top edge of
-   whichever panel currently holds the user's focus. Driven by body
-   classes set in js/ui/scanline.js.
+   2. Panel-header accent — uniform 1px accent underline along the bottom
+   edge of every panel header. Previously this was an "active" stripe
+   gated by body.has-selected-faction / .has-selected-unit, which left
+   one panel visually mismatched once a unit was clicked. The underline
+   below now applies to every panel-header so the three columns share the
+   same visual language. The body-class gating + scaleX transition is
+   preserved as a brief flash on the panel that just received focus.
    ────────────────────────────────────────────────────────────────────── */
 .panel-header { position: relative; }
 
 .panel-header::before {
   content: "";
   position: absolute;
-  inset: 0 0 auto 0;
-  height: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.55);
-  opacity: 0;
-  transform: scaleX(0.6);
-  transform-origin: left center;
-  transition: opacity 220ms ease, transform 220ms ease;
-  pointer-events: none;
-}
-
-body.has-selected-faction .panel-left .panel-header::before,
-body.has-selected-unit    .panel-right .panel-header::before {
+  inset: auto 0 -1px 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--accent-rgb), 0.55) 0%,
+    rgba(var(--accent-rgb), 0.18) 60%,
+    rgba(var(--accent-rgb), 0.0) 100%
+  );
   opacity: 1;
-  transform: scaleX(1);
+  transform: none;
+  pointer-events: none;
 }
 
 /* ──────────────────────────────────────────────────────────────────────

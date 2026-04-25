@@ -387,6 +387,15 @@
   // bootstrap, so the menus include the buttons even though the modules
   // haven't loaded yet.
   MODULES.forEach(mod => {
+    // If a real (non-placeholder) action with one of this module's
+    // placeholder ids is already registered, the module was eager-loaded
+    // earlier in this page load. Skip placeholder registration entirely.
+    const realLoaded = (mod.placeholders || []).some(ph => {
+      const arr = (ph.kind === 'detail') ? App.hooks.detailActions : App.hooks.armyToolbarActions;
+      return arr.some(a => a && !a._lazyPlaceholder && a.id === ph.id);
+    });
+    if (realLoaded) { loaded[mod.id] = true; return; }
+
     (mod.placeholders || []).forEach(ph => {
       if (ph.kind === 'toolbar') {
         App.hooks.armyToolbarActions.push({
