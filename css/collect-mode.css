@@ -1,0 +1,623 @@
+/* collect-mode.css — Collect mode page (Painting / Crusade / Kill Team sub-tabs); inline replacement for toolbar modals. */
+
+/* ── root scaffold ────────────────────────────────────────────────── */
+#collect-mode .collect-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: var(--bg, #18181b);
+  color: var(--text, #e0e0e0);
+  overflow: hidden;
+}
+
+#collect-mode .collect-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--border, #3a3a44);
+  background: var(--panel-bg, #22222a);
+}
+#collect-mode .collect-title {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text, #e0e0e0);
+  margin: 0;
+}
+
+/* ── sub-tab nav ───────────────────────────────────────────────────── */
+#collect-mode .collect-subtabs {
+  display: flex;
+  gap: 4px;
+  background: var(--panel-alt, #28282f);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+  padding: 3px;
+}
+#collect-mode .collect-subtab {
+  appearance: none;
+  background: transparent;
+  color: var(--text-muted, #a8a8a8);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+#collect-mode .collect-subtab:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text, #e0e0e0);
+}
+#collect-mode .collect-subtab.active {
+  background: var(--accent, #fff);
+  color: var(--accent-on, #111);
+  border-color: var(--accent, #fff);
+}
+
+/* ── body ──────────────────────────────────────────────────────────── */
+#collect-mode .collect-body {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 18px 22px;
+}
+
+/* ── empty / loading state ─────────────────────────────────────────── */
+.collect-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 80px 16px;
+  color: var(--text-muted, #a8a8a8);
+  font-size: 14px;
+  text-align: center;
+}
+.collect-empty-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--accent, #fff);
+  animation: collect-spin 0.9s linear infinite;
+}
+@keyframes collect-spin { to { transform: rotate(360deg); } }
+.collect-empty-text {
+  font-style: italic;
+}
+@media (prefers-reduced-motion: reduce) {
+  .collect-empty-spinner {
+    animation: none;
+    border-top-color: rgba(255, 255, 255, 0.45);
+  }
+}
+
+/* shared muted helper (inside collect-mode only — avoid leaking) */
+#collect-mode .muted { color: var(--text-muted, #a8a8a8); }
+
+/* ── PAINTING TAB layout ───────────────────────────────────────────── */
+.collect-paint-layout,
+.collect-crusade-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* Mobile dropdown picker; hidden on wide screens. */
+.collect-paint-mobile-picker,
+.collect-crusade-mobile-picker {
+  display: none;
+  width: 100%;
+  background: var(--panel-bg, #22222a);
+  color: var(--text, #e0e0e0);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+/* Faction sidebar */
+.collect-paint-sidebar,
+.collect-crusade-sidebar {
+  background: var(--panel-bg, #22222a);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+  padding: 10px 8px;
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+.collect-paint-sidebar-head {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted, #a8a8a8);
+  padding: 4px 8px 8px;
+  border-bottom: 1px solid var(--border, #3a3a44);
+  margin-bottom: 6px;
+}
+
+.collect-paint-faction-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.collect-paint-faction-list li { margin-bottom: 2px; }
+.collect-faction-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4px 8px;
+  align-items: center;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text, #e0e0e0);
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.collect-faction-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.collect-faction-row.active {
+  background: rgba(var(--accent-rgb, 255, 255, 255), 0.12);
+  border-color: var(--accent, #fff);
+}
+.collect-faction-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent, #fff);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.collect-faction-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.collect-faction-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: var(--text-muted, #a8a8a8);
+}
+.collect-faction-bar-wrap {
+  grid-column: 1 / -1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+.collect-faction-bar {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #e6c7a8, #a8e6b7);
+}
+
+.collect-sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 4px 4px;
+  border-top: 1px solid var(--border, #3a3a44);
+  margin-top: 8px;
+}
+
+/* ── faction main pane (Painting) ──────────────────────────────────── */
+.collect-paint-main,
+.collect-crusade-main {
+  min-width: 0; /* allow grid item to shrink, prevents overflow */
+}
+.collect-main-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.collect-main-title {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0;
+  color: var(--text, #e0e0e0);
+}
+.collect-main-summary {
+  font-size: 13px;
+  color: var(--text, #e0e0e0);
+}
+.collect-main-summary strong {
+  color: var(--accent, #fff);
+}
+
+.collect-main-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--panel-bg, #22222a);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+  margin-bottom: 12px;
+}
+.collect-search {
+  flex: 1 1 220px;
+  min-width: 180px;
+  background: var(--panel-alt, #28282f);
+  color: var(--text, #e0e0e0);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.collect-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.collect-filter-chip {
+  appearance: none;
+  background: transparent;
+  color: var(--text-muted, #a8a8a8);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.collect-filter-chip:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text, #e0e0e0);
+}
+.collect-filter-chip.active {
+  background: var(--accent, #fff);
+  color: var(--accent-on, #111);
+  border-color: var(--accent, #fff);
+}
+.collect-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* ── unit grid (cards mirror .unit-card chassis) ───────────────────── */
+.collect-unit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.collect-unit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--card-bg, #2c2c34);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+  transition: border-color 0.12s, background 0.12s;
+}
+.collect-unit-card:hover {
+  border-color: var(--border-light, #4a4a54);
+  background: var(--card-hover, #34343c);
+}
+.collect-unit-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.collect-unit-name {
+  flex: 1 1 auto;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text, #e0e0e0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.collect-unit-pts {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--text-muted, #a8a8a8);
+}
+.collect-unit-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.collect-unit-status-row .collection-status-btn {
+  flex: 1 1 auto;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+
+/* ── CRUSADE MAIN ──────────────────────────────────────────────────── */
+.collect-detail-empty {
+  padding: 40px 30px;
+  text-align: center;
+  background: var(--panel-bg, #22222a);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+}
+.collect-detail-empty p { margin: 10px 0; }
+
+.collect-crusade-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.collect-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--panel-bg, #22222a);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+}
+.collect-stat-num {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent, #fff);
+  font-variant-numeric: tabular-nums;
+}
+.collect-stat-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #a8a8a8);
+}
+
+.collect-crusade-section {
+  margin-bottom: 22px;
+}
+.collect-section-title {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #a8a8a8);
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border, #3a3a44);
+}
+
+.collect-crusade-unit-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.collect-crusade-unit {
+  padding: 8px 12px;
+  background: var(--panel-bg, #22222a);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+}
+.collect-crusade-unit-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.collect-crusade-unit-name {
+  font-weight: 500;
+  color: var(--text, #e0e0e0);
+}
+.collect-crusade-unit-label {
+  font-style: italic;
+  color: var(--text-muted, #a8a8a8);
+  font-size: 12px;
+}
+.collect-crusade-unit-rank {
+  margin-left: auto;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent, #fff);
+  background: rgba(var(--accent-rgb, 255, 255, 255), 0.1);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+.collect-crusade-unit-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-muted, #a8a8a8);
+  font-variant-numeric: tabular-nums;
+}
+
+.collect-crusade-battle-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.collect-crusade-battle {
+  display: grid;
+  grid-template-columns: 80px 1fr 0.8fr 0.8fr 70px 80px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--panel-bg, #22222a);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: 4px;
+  font-size: 12px;
+}
+.collect-battle-date  { font-variant-numeric: tabular-nums; color: var(--text-muted, #a8a8a8); }
+.collect-battle-vs    { font-weight: 500; }
+.collect-battle-score { text-align: right; font-variant-numeric: tabular-nums; }
+.collect-battle-verdict {
+  text-align: center;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+.collect-battle-verdict-win  { color: #a8e6b7; background: rgba(168, 230, 183, 0.12); }
+.collect-battle-verdict-loss { color: #e6a8a8; background: rgba(230, 168, 168, 0.12); }
+.collect-battle-verdict-draw { color: #e6dba8; background: rgba(230, 219, 168, 0.12); }
+
+.collect-deferred-cta {
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--panel-bg, #22222a);
+  border: 1px dashed var(--border-light, #4a4a54);
+  border-radius: var(--radius, 6px);
+  text-align: center;
+}
+.collect-deferred-cta p { margin: 0 0 8px; }
+
+/* ── KILL TEAM TAB ────────────────────────────────────────────────── */
+.collect-kt-status {
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  background: var(--panel-bg, #22222a);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+}
+.collect-kt-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.collect-kt-status-title {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text, #e0e0e0);
+  margin-bottom: 2px;
+}
+
+.collect-kt-section {
+  margin-bottom: 22px;
+}
+
+.collect-kt-templates {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.collect-kt-template {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--card-bg, #2c2c34);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+  transition: border-color 0.12s;
+}
+.collect-kt-template:hover { border-color: var(--border-light, #4a4a54); }
+.collect-kt-template-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.collect-kt-template-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text, #e0e0e0);
+}
+.collect-kt-template-pill {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent-on, #111);
+  background: var(--accent, #fff);
+  border-radius: 12px;
+  padding: 2px 8px;
+}
+.collect-kt-template-faction { font-size: 11px; }
+.collect-kt-template-desc { font-size: 12px; color: var(--text-muted, #a8a8a8); }
+.collect-kt-template-actions { margin-top: 4px; }
+
+.collect-kt-mission-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px;
+}
+.collect-kt-mission-display {
+  flex: 1 1 280px;
+  min-height: 60px;
+  padding: 10px 14px;
+  background: var(--panel-bg, #22222a);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: var(--radius, 6px);
+  display: flex;
+  align-items: center;
+}
+.collect-kt-mission-card { width: 100%; }
+.collect-kt-mission-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--accent, #fff);
+  margin-bottom: 2px;
+}
+
+/* ── Mobile collapse ──────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  #collect-mode .collect-header {
+    padding: 12px 14px;
+  }
+  #collect-mode .collect-body {
+    padding: 12px 14px;
+  }
+  .collect-paint-layout,
+  .collect-crusade-layout {
+    grid-template-columns: 1fr;
+  }
+  .collect-paint-sidebar,
+  .collect-crusade-sidebar {
+    display: none;
+  }
+  .collect-paint-mobile-picker,
+  .collect-crusade-mobile-picker {
+    display: block;
+    margin-bottom: 12px;
+  }
+  .collect-bulk-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+  .collect-crusade-battle {
+    grid-template-columns: 1fr 1fr;
+  }
+  .collect-crusade-battle .collect-battle-verdict { grid-column: 1 / -1; }
+}

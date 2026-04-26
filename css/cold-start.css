@@ -1,0 +1,340 @@
+/* css/cold-start.css — first-visit splash overlay shown while BSData factions load. */
+
+.cold-start-root {
+  position: fixed;
+  inset: 0;
+  z-index: 99000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg, #18181b);
+  background-image:
+    radial-gradient(
+      ellipse at 50% 38%,
+      rgba(var(--accent-rgb, 255, 255, 255), 0.07) 0%,
+      rgba(0, 0, 0, 0) 60%
+    ),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='49' viewBox='0 0 56 49'><g fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='1'><path d='M14 0.5 L42 0.5 L56 24.5 L42 48.5 L14 48.5 L0 24.5 Z'/><path d='M42 0.5 L70 0.5 L84 24.5 L70 48.5 L42 48.5'/><path d='M-14 24.5 L0 24.5'/><path d='M56 24.5 L70 24.5'/></g></svg>");
+  background-size: auto, 56px 49px;
+  background-repeat: no-repeat, repeat;
+  color: #f1f1f3;
+  opacity: 1;
+  transition: opacity 1s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cold-start-root.is-fading { opacity: 0; pointer-events: none; }
+
+.cold-start-inner {
+  position: relative;
+  width: min(420px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px 40px;
+  gap: 22px;
+}
+
+/* ── Crest ─────────────────────────────────────────────────────────── */
+.cold-start-crest {
+  width: 80px;
+  height: 80px;
+  display: block;
+  color: var(--accent, #ffffff);
+  filter: drop-shadow(0 0 12px rgba(var(--accent-rgb, 255, 255, 255), 0.45));
+}
+
+.cold-start-crest-rotor {
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+  animation: cold-start-rotor-spin 8s linear infinite;
+}
+
+.cold-start-crest-pulse {
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+  animation: cold-start-pulse 3.6s ease-in-out infinite;
+}
+
+@keyframes cold-start-rotor-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes cold-start-pulse {
+  0%, 100% { opacity: 0.65; }
+  50%      { opacity: 1; }
+}
+
+/* ── Title ─────────────────────────────────────────────────────────── */
+.cold-start-title {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0;
+  color: #f1f1f3;
+}
+
+@media (min-width: 480px) {
+  .cold-start-title { font-size: 26px; }
+}
+
+.cold-start-tagline {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: rgba(241, 241, 243, 0.72);
+  margin: -6px 0 0;
+}
+
+/* ── Progress ──────────────────────────────────────────────────────── */
+.cold-start-progress {
+  width: min(320px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.cold-start-bar-track {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cold-start-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: var(--accent, #ffffff);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb, 255, 255, 255), 0.5);
+  border-radius: 999px;
+  transition: width 280ms ease;
+}
+
+.cold-start-bar-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: cold-start-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes cold-start-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.cold-start-status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: rgba(241, 241, 243, 0.85);
+  min-height: 16px;
+}
+
+.cold-start-status-name {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+  transition: opacity 200ms ease;
+}
+
+.cold-start-status-name.is-swapping { opacity: 0; }
+
+.cold-start-status-count {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  color: rgba(241, 241, 243, 0.65);
+  flex: 0 0 auto;
+}
+
+/* ── Recently-completed list ───────────────────────────────────────── */
+.cold-start-recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: min(320px, 100%);
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: rgba(241, 241, 243, 0.7);
+  text-align: left;
+}
+
+.cold-start-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: cold-start-recent-in 380ms ease-out both;
+}
+
+.cold-start-recent-item.is-aged   { opacity: 0.55; }
+.cold-start-recent-item.is-faded  { opacity: 0.32; }
+
+.cold-start-recent-tick {
+  color: var(--accent, #ffffff);
+  flex: 0 0 auto;
+  width: 12px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.cold-start-recent-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes cold-start-recent-in {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Skip button ───────────────────────────────────────────────────── */
+.cold-start-skip {
+  margin-top: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(241, 241, 243, 0.78);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 320ms ease, transform 320ms ease,
+              color 200ms ease, border-color 200ms ease, background 200ms ease;
+}
+
+.cold-start-skip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cold-start-skip:hover,
+.cold-start-skip:focus-visible {
+  color: var(--accent, #ffffff);
+  border-color: var(--accent, #ffffff);
+  background: rgba(var(--accent-rgb, 255, 255, 255), 0.08);
+  outline: none;
+}
+
+.cold-start-skip:focus-visible {
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb, 255, 255, 255), 0.35);
+}
+
+/* ── Error state ───────────────────────────────────────────────────── */
+.cold-start-error {
+  width: min(360px, 100%);
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 2px solid #d36969;
+  padding: 16px 18px;
+  border-radius: 4px;
+}
+
+.cold-start-root.is-error .cold-start-error    { display: flex; }
+.cold-start-root.is-error .cold-start-progress,
+.cold-start-root.is-error .cold-start-recent,
+.cold-start-root.is-error .cold-start-skip,
+.cold-start-root.is-error .cold-start-tagline { display: none; }
+
+.cold-start-error-title {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  margin: 0;
+  color: #f1f1f3;
+}
+
+.cold-start-error-list {
+  list-style: disc;
+  margin: 0;
+  padding-left: 20px;
+  font-size: 12px;
+  color: rgba(241, 241, 243, 0.78);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cold-start-error-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.cold-start-error-actions button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(241, 241, 243, 0.9);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
+}
+
+.cold-start-error-actions button:hover,
+.cold-start-error-actions button:focus-visible {
+  color: var(--accent, #ffffff);
+  border-color: var(--accent, #ffffff);
+  background: rgba(var(--accent-rgb, 255, 255, 255), 0.08);
+  outline: none;
+}
+
+.cold-start-error-actions .cold-start-btn-retry {
+  border-color: rgba(var(--accent-rgb, 255, 255, 255), 0.45);
+  color: var(--accent, #ffffff);
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .cold-start-crest-rotor,
+  .cold-start-crest-pulse,
+  .cold-start-bar-fill::after,
+  .cold-start-recent-item {
+    animation: none !important;
+  }
+  .cold-start-root,
+  .cold-start-skip,
+  .cold-start-bar-fill,
+  .cold-start-status-name {
+    transition: none !important;
+  }
+}

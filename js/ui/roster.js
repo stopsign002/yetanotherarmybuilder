@@ -107,15 +107,16 @@
       ? ptsOpts.join(' / ') + ' pts'
       : ptsOpts.length === 1 ? ptsOpts[0] + ' pts' : '—';
 
+    card.classList.add('unit-card-datasheet');
     card.innerHTML = `
-      <div class="unit-card-header">
-        <div class="unit-card-name">${esc(unit.name)}</div>
-        <div class="unit-card-pts">${ptsDisplay}</div>
+      <div class="unit-card-header unit-card-banner">
+        <div class="unit-card-name unit-card-name-primary">${esc(unit.name)}</div>
+        <div class="unit-card-pts unit-card-pts-badge">${ptsDisplay}</div>
       </div>
-      <div class="unit-card-faction">${esc(unit._factionName || '')}</div>
-      <div class="unit-card-stats" style="grid-template-columns:repeat(${cardStats.length || 6},1fr)">
+      <div class="unit-card-faction unit-card-faction-tertiary">${esc(unit._factionName || '')}</div>
+      <div class="unit-card-stats unit-card-stat-strip" style="grid-template-columns:repeat(${cardStats.length || 6},1fr)">
         ${cardStats.length > 0 ? cardStats.map(k => UI.renderStatCell(k, resolvedStats[k])).join('') : UI.renderStatCell('—','—')}</div>
-      ${keywords.length > 0 ? `<div class="unit-card-keywords">${
+      ${keywords.length > 0 ? `<div class="unit-card-keywords unit-card-keywords-muted">${
         keywords.slice(0, 4).map(k => `<span class="keyword-tag">${esc(k)}</span>`).join('')
         }${keywords.length > 4 ? `<span class="keyword-tag">+${keywords.length - 4}</span>` : ''
       }</div>` : ''}

@@ -1,0 +1,706 @@
+/* build-mode.css — BUILD-mode hero header, rules pinboard tab, roster card upgrade. */
+
+/* ─────────────────────────────────────────────────────────────
+   Layout: redefine #app-main as a 2-row grid — hero on top, the
+   existing 3-pane row below. The original style.css declares
+   #app-main as a single-row grid; we extend it with an extra row
+   above. Panels + resize-handles still flow into the same column
+   tracks they always did.
+   When the SHELL agent wraps the 3-pane layout in #build-mode,
+   the hero is injected inside #build-mode and these rules don't
+   apply (the wrapper owns its own grid). The :not(:has(...))
+   guard is conservative: only restyle #app-main when there is
+   no build-mode wrapper.
+───────────────────────────────────────────────────────────── */
+body.build-mode-enhanced #app-main:not(:has(> #build-mode)) {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: var(--col-left, 300px) 4px 1fr 4px var(--col-right, 420px);
+  height: 100vh;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* When SHELL agent's #build-mode wrapper exists, that becomes the
+   2-row container and #app-main can stay as-is. */
+body.build-mode-enhanced #build-mode {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+}
+body.build-mode-enhanced #build-mode > .build-hero {
+  grid-row: 1;
+}
+
+body.build-mode-enhanced #app-main > .build-hero {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+body.build-mode-enhanced #app-main > .panel,
+body.build-mode-enhanced #app-main > .resize-handle {
+  grid-row: 2;
+  min-height: 0;
+}
+
+/* Hide the now-redundant left-panel meta + points-summary when the hero
+   header has taken over those duties. The DOM elements remain so existing
+   events (army-name-input, points-limit-input, points-bar) keep firing. */
+body.build-mode-enhanced .army-meta,
+body.build-mode-enhanced .points-summary {
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Hero header
+───────────────────────────────────────────────────────────── */
+.build-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 22px;
+  min-height: 104px;
+  background:
+    linear-gradient(135deg, rgba(var(--accent-rgb,200,200,200),0.08) 0%, rgba(0,0,0,0.0) 60%),
+    var(--panel-alt, #1a1a1a);
+  border-bottom: 1px solid var(--border, #2a2a2a);
+  box-shadow: inset 0 -1px 0 rgba(var(--accent-rgb,200,200,200),0.15);
+  overflow: visible;  /* let the army-name input fully render */
+}
+/* Make the army-name input actually readable. */
+.build-hero-name {
+  min-width: 220px !important;
+  font-size: 16px !important;
+}
+/* Subtitle row shouldn't overflow — give the name input room. */
+.build-hero-subtitle {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+.build-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 60% at 100% 0%, rgba(var(--accent-rgb,200,200,200),0.10), transparent 60%);
+  opacity: 0.85;
+}
+
+.build-hero-crest-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  color: var(--accent, #c8c8c8);
+  opacity: 0.92;
+}
+.build-hero-crest-wrap .build-hero-crest {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.build-hero-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.build-hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #888);
+}
+.build-hero-status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted, #888);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb,200,200,200),0.0);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.build-hero-status.is-saved .build-hero-status-dot {
+  background: #5fbf6c;
+  box-shadow: 0 0 8px rgba(95,191,108,0.45);
+}
+.build-hero-status.is-unsaved .build-hero-status-dot {
+  background: #e8b86a;
+  box-shadow: 0 0 8px rgba(232,184,106,0.55);
+  animation: build-hero-status-pulse 1.6s ease-in-out infinite;
+}
+.build-hero-status.is-saved   { color: #8fcb98; }
+.build-hero-status.is-unsaved { color: #e8b86a; }
+
+@keyframes build-hero-status-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.25); }
+}
+
+.build-hero-faction {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent, #c8c8c8);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 0 24px rgba(var(--accent-rgb,200,200,200),0.18);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.build-hero-faction.is-empty {
+  color: var(--text-muted, #888);
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  text-shadow: none;
+}
+
+.build-hero-subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text, #ddd);
+  min-width: 0;
+}
+
+.build-hero-name {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text, #ddd);
+  outline: none;
+  min-width: 80px;
+  max-width: 280px;
+  width: auto;
+  transition: border-color 0.15s, background 0.15s;
+}
+.build-hero-name:hover  { border-color: rgba(var(--accent-rgb,200,200,200),0.25); }
+.build-hero-name:focus  {
+  border-color: var(--accent, #c8c8c8);
+  background: rgba(var(--accent-rgb,200,200,200),0.08);
+}
+
+.build-hero-sep {
+  color: var(--text-muted, #888);
+  font-weight: 400;
+}
+
+.build-hero-detachment {
+  font-size: 13px;
+  color: var(--text, #ddd);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.build-hero-detachment.is-empty {
+  color: var(--text-muted, #888);
+  font-style: italic;
+}
+
+/* Points block (right-side) */
+.build-hero-points {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  min-width: 240px;
+  max-width: 360px;
+}
+
+.build-hero-points-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.build-hero-points-current {
+  font-size: 28px;
+  color: var(--accent, #c8c8c8);
+  line-height: 1;
+  transition: color 0.2s;
+}
+.build-hero.points-over .build-hero-points-current { color: var(--danger, #d9534f); }
+.build-hero-points-sep    { color: var(--text-muted, #888); font-size: 18px; }
+.build-hero-points-limit  { color: var(--text, #ddd); font-size: 18px; }
+.build-hero-points-label  {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  letter-spacing: 0.12em;
+  margin-left: 6px;
+}
+
+.build-hero-bar-wrap {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: rgba(0,0,0,0.45);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(var(--accent-rgb,200,200,200),0.18);
+}
+.build-hero-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(var(--accent-rgb,200,200,200),0.7), var(--accent, #c8c8c8));
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(.2,.7,.3,1), background 0.3s;
+  box-shadow: 0 0 10px rgba(var(--accent-rgb,200,200,200),0.35);
+}
+.build-hero-bar.over-limit {
+  background: linear-gradient(90deg, #e07b73, var(--danger, #d9534f));
+  box-shadow: 0 0 10px rgba(217,83,79,0.45);
+}
+.build-hero-bar.near-limit {
+  background: linear-gradient(90deg, #e6c07a, var(--warning, #e8b86a));
+  box-shadow: 0 0 10px rgba(232,184,106,0.4);
+}
+.build-hero-bar-shimmer {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(255,255,255,0.18) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  animation: build-hero-shimmer 4.5s linear infinite;
+  mix-blend-mode: overlay;
+  border-radius: 999px;
+}
+@keyframes build-hero-shimmer {
+  0%   { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.build-hero-bar-pct {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  letter-spacing: 0.08em;
+}
+
+/* Reduced motion: kill shimmer and crest rotation. */
+@media (prefers-reduced-motion: reduce) {
+  .build-hero-bar-shimmer { animation: none; opacity: 0.3; }
+  .build-hero-bar         { transition: none; }
+  .build-hero-status-dot  { animation: none !important; }
+  .build-hero-crest-wrap .atmosphere-crest-rotor,
+  .build-hero-crest-wrap .atmosphere-crest-pulse {
+    animation: none !important;
+  }
+}
+
+/* Compact at narrow widths: stack the points block under the main column. */
+@media (max-width: 920px) {
+  .build-hero {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px 14px;
+  }
+  .build-hero-points {
+    grid-column: 1 / -1;
+    align-items: stretch;
+    min-width: 0;
+    max-width: none;
+  }
+  .build-hero-faction { font-size: 22px; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Detail-panel tabs (Unit Detail / Rules)
+───────────────────────────────────────────────────────────── */
+.build-detail-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px 0;
+  background: var(--panel-alt, #1a1a1a);
+  border-bottom: 1px solid var(--border, #2a2a2a);
+  flex-shrink: 0;
+}
+.build-detail-tab {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  padding: 7px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  position: relative;
+  top: 1px;
+}
+.build-detail-tab:hover {
+  color: var(--text, #ddd);
+  background: rgba(var(--accent-rgb,200,200,200),0.06);
+}
+.build-detail-tab.is-active {
+  color: var(--accent, #c8c8c8);
+  background: var(--panel-bg, #181818);
+  border-color: var(--border, #2a2a2a);
+  border-bottom-color: var(--panel-bg, #181818);
+}
+.build-detail-tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 8px; right: 8px;
+  top: 0;
+  height: 2px;
+  background: var(--accent, #c8c8c8);
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(var(--accent-rgb,200,200,200),0.5);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Rules pinboard panel
+───────────────────────────────────────────────────────────── */
+.build-rules-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+.build-rules-panel[hidden] { display: none; }
+.build-rules-header {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent, #c8c8c8);
+  border-bottom: 1px solid var(--border, #2a2a2a);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+}
+.build-rules-mount {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* Inside the rules tab the section may still be `hidden` when there's
+   nothing to render; that's fine — the .build-rules-empty fallback handles
+   the empty case. We just neutralize the legacy section margins/borders. */
+.build-rules-mount #army-rules-section {
+  margin: 0;
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+.build-rules-mount #army-rules-section[hidden] { display: none; }
+
+.build-rules-stratagems-card {
+  border: 1px solid var(--border, #2a2a2a);
+  border-left: 3px solid var(--accent, #c8c8c8);
+  background: var(--card-bg, #161616);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.build-rules-stratagems-title {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent, #c8c8c8);
+}
+.build-rules-stratagems-desc {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  line-height: 1.5;
+}
+.build-rules-stratagems-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+.build-rules-empty {
+  color: var(--text-muted, #888);
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 14px 8px;
+  text-align: center;
+  font-style: italic;
+}
+.build-rules-empty[hidden] { display: none; }
+
+/* ─────────────────────────────────────────────────────────────
+   Roster card upgrade (left-panel army entries)
+───────────────────────────────────────────────────────────── */
+
+/* Reset the army-entries header columns to match the new card layout
+   (we hide the per-column header text; the cards label their own stats). */
+body.build-mode-enhanced .army-entries-header {
+  display: none;
+}
+
+body.build-mode-enhanced .army-entry,
+.army-entry-card {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  grid-template-columns: none !important;
+  background: var(--card-bg, #161616);
+  border: 1px solid var(--border, #2a2a2a);
+  border-radius: 8px;
+  padding: 10px 10px 10px 18px;
+  font-size: 12px;
+  transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s, background 0.18s;
+  overflow: hidden;
+}
+
+body.build-mode-enhanced .army-entry:hover,
+.army-entry-card:hover {
+  border-color: rgba(var(--accent-rgb,200,200,200),0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35), 0 0 0 1px rgba(var(--accent-rgb,200,200,200),0.12);
+  background: rgba(var(--accent-rgb,200,200,200),0.03);
+}
+
+.army-entry-stripe {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent, #c8c8c8);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb,200,200,200),0.4);
+  border-radius: 8px 0 0 8px;
+}
+
+.army-entry-handle {
+  display: grid;
+  grid-template-columns: repeat(2, 3px);
+  grid-template-rows: repeat(3, 3px);
+  gap: 2px;
+  align-content: center;
+  justify-content: center;
+  padding: 0 8px 0 2px;
+  margin-right: 4px;
+  cursor: grab;
+  opacity: 0.45;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.army-entry-handle:hover { opacity: 0.95; }
+.army-entry-handle:active { cursor: grabbing; }
+.army-entry-handle-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-muted, #888);
+}
+
+.army-entry-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+
+body.build-mode-enhanced .army-entry-name {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text, #ddd);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+body.build-mode-enhanced .army-entry-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.build-mode-enhanced .army-entry-squad {
+  font-family: var(--ui-font, system-ui, sans-serif);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted, #888);
+  letter-spacing: 0;
+}
+
+body.build-mode-enhanced .army-enh-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+body.build-mode-enhanced .army-enh-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(var(--accent-rgb,200,200,200),0.15);
+  color: var(--accent, #c8c8c8);
+  border: 1px solid rgba(var(--accent-rgb,200,200,200),0.35);
+  letter-spacing: 0.04em;
+}
+
+.army-entry-stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  flex-wrap: wrap;
+}
+.army-entry-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+.army-entry-stat-label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted, #888);
+  opacity: 0.75;
+}
+body.build-mode-enhanced .army-entry-pts {
+  text-align: left;
+  color: var(--text, #ddd);
+  font-size: 12px;
+  font-weight: 600;
+}
+body.build-mode-enhanced .army-enh-pts {
+  font-size: 10px;
+  color: var(--accent, #c8c8c8);
+  margin-left: 2px;
+}
+body.build-mode-enhanced .army-entry-qty {
+  display: inline-flex;
+}
+body.build-mode-enhanced .army-entry-qty input {
+  width: 38px;
+  background: var(--bg, #0e0e0e);
+  border: 1px solid var(--border, #2a2a2a);
+  border-radius: 4px;
+  color: var(--text, #ddd);
+  padding: 1px 4px;
+  font-size: 12px;
+  text-align: center;
+  outline: none;
+  font-weight: 600;
+}
+body.build-mode-enhanced .army-entry-qty input:focus {
+  border-color: var(--accent, #c8c8c8);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb,200,200,200),0.2);
+}
+body.build-mode-enhanced .army-entry-total {
+  font-weight: 700;
+  color: var(--accent, #c8c8c8);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+body.build-mode-enhanced .army-entry-remove {
+  align-self: flex-start;
+  margin-top: 2px;
+  margin-left: 6px;
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+body.build-mode-enhanced .army-entry-remove:hover {
+  color: var(--danger, #d9534f);
+  background: rgba(217,83,79,0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.build-mode-enhanced .army-entry,
+  .army-entry-card {
+    transition: none;
+  }
+  body.build-mode-enhanced .army-entry:hover,
+  .army-entry-card:hover {
+    transform: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Detail panel polish: tighter banner spacing, datasheet feel.
+───────────────────────────────────────────────────────────── */
+.unit-detail-datasheet .detail-banner {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border, #2a2a2a);
+  background:
+    linear-gradient(135deg, rgba(var(--accent-rgb,200,200,200),0.10), transparent 60%),
+    var(--panel-alt, #1a1a1a);
+}
+.unit-detail-datasheet .detail-name {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  letter-spacing: 0.04em;
+}
+.unit-detail-datasheet .detail-stat-strip {
+  gap: 4px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border, #2a2a2a);
+  background: rgba(0,0,0,0.25);
+}
+.unit-detail-datasheet .detail-stat-pillar {
+  background: rgba(var(--accent-rgb,200,200,200),0.04);
+  border-right: 1px solid var(--border, #2a2a2a);
+}
+.unit-detail-datasheet .detail-stat-pillar:last-child { border-right: none; }
+.unit-detail-datasheet .detail-section { margin-top: 12px; }
+
+.unit-detail-rule .detail-banner-rule {
+  background:
+    linear-gradient(135deg, rgba(var(--accent-rgb,200,200,200),0.18), transparent 60%),
+    var(--panel-alt, #1a1a1a);
+}
+.unit-detail-rule .detail-rule-kind {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent, #c8c8c8);
+  font-weight: 700;
+}

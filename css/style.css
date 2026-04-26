@@ -4,9 +4,9 @@
 
 /* ── CSS Variables ─────────────────────────────────────────── */
 :root {
-  --bg:           #1a1a1a;
-  --panel-bg:     #242424;
-  --panel-alt:    #2a2a2a;
+  --bg:           #18181b;
+  --panel-bg:     #22222a;
+  --panel-alt:    #28282f;
   --accent:       #ffffff;
   --accent-hover: #cccccc;
   --accent-dark:  #aaaaaa;
@@ -14,19 +14,26 @@
   --accent-on:    #111111;
   --text:         #e0e0e0;
   --text-muted:   #a8a8a8;
-  --border:       #3a3a3a;
-  --border-light: #4a4a4a;
+  --border:       #3a3a44;
+  --border-light: #4a4a54;
   --success:      #2ecc71;
   --warning:      #f39c12;
   --danger:       #e74c3c;
-  --card-bg:      #2f2f2f;
-  --card-hover:   #383838;
+  --card-bg:      #2c2c34;
+  --card-hover:   #34343c;
   --radius:       6px;
   --radius-lg:    10px;
   --shadow:       0 2px 8px rgba(0,0,0,0.5);
   --shadow-lg:    0 8px 32px rgba(0,0,0,0.7);
   --font:         -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
   --font-mono:    'Consolas', 'Monaco', 'Courier New', monospace;
+  --font-display: 'Cinzel', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-body:    var(--font);
+  --scale-h1:     24px;
+  --scale-h2:     18px;
+  --scale-h3:     15px;
+  --scale-body:   15px;
+  --scale-small:  12px;
 }
 
 /* ── Reset / Base ─────────────────────────────────────────── */
@@ -34,8 +41,10 @@
 
 html, body {
   height: 100%;
-  font-family: var(--font);
-  font-size: 14px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  font-feature-settings: 'tnum';
   background: var(--bg);
   color: var(--text);
   overflow: hidden;
@@ -508,13 +517,18 @@ ul { list-style: none; }
   align-items: flex-start;
   margin-bottom: 8px;
   gap: 6px;
+  min-width: 0;
 }
 
 .unit-card-name {
   font-size: 13px;
   font-weight: 700;
   line-height: 1.3;
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .unit-card-pts {
@@ -522,6 +536,7 @@ ul { list-style: none; }
   font-weight: 700;
   color: var(--accent);
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .unit-card-keywords {

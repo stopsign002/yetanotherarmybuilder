@@ -17,14 +17,22 @@
     selectedDetachment: null,
     detachmentFaction:  null,
     selectedArmyEntryIndex: null,
+    // Which tab the BUILD-mode right panel shows: 'detail' (Unit Detail) or
+    // 'rules' (Rules pinboard). Owned by js/ui/build-mode.js.
+    activeBuildTab: 'detail',
   };
 
-  App.VIRTUAL_PARENTS = [
-    {
-      name: 'Imperium - Adeptus Astartes',
-      baseChapter: 'Imperium - Adeptus Astartes - Space Marines',
-    },
-  ];
+  // VIRTUAL_PARENTS used to group "Imperium - Adeptus Astartes - <Chapter>"
+  // sub-faction files under a synthetic parent so the UI could expose a
+  // Chapter sub-dropdown. BSData (wh40k-10e) has since flattened those files
+  // to top-level catalogues (e.g. `Imperium - Space Marines.cat`,
+  // `Imperium - Blood Angels.cat`), so no faction names match the old
+  // `<parent> - ` prefix scan in App.buildChaptersMap. The chapter dropdown
+  // therefore stays permanently hidden (group.hidden = true when chapters
+  // is empty — see selections.js). Each chapter is now a top-level faction
+  // option. Leaving this empty is the supported "no virtual parents" shape;
+  // filters.js / selections.js handle the empty map gracefully.
+  App.VIRTUAL_PARENTS = [];
 
   // Light pastel palette for readability against the dark UI. Each entry:
   // [accent, hover, dark, rgb] — tuned at HSL L ~78% / S ~55% (lower S for

@@ -1,0 +1,104 @@
+/* bugfix-pass.css — overflow guards for flex containers whose children lacked min-width:0. */
+
+/* Modal header: long titles should ellipsize, not push the close button off-screen. */
+.modal-header { min-width: 0; gap: 8px; }
+.modal-header h3 {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.modal-close { flex: 0 0 auto; }
+
+/* Detail banner: ensure the actions group (pts pill + buttons) never collapses
+ * to zero, and the title column always allows ellipsis fallback if word-break
+ * can't help (e.g. a single very long token). */
+.unit-detail-content .detail-banner { min-width: 0; }
+.unit-detail-content .detail-banner .detail-header-main { min-width: 0; flex: 1 1 auto; }
+.unit-detail-content .detail-banner-actions { flex-shrink: 0; }
+
+/* Saved-army items: name should ellipsize even when the actions group widens. */
+.saved-army-item { min-width: 0; }
+.saved-army-info { min-width: 0; flex: 1 1 auto; }
+.saved-army-actions { flex: 0 0 auto; }
+
+/* Faction-list rows: same pattern — info column shrinks, delete stays put. */
+.faction-item { min-width: 0; }
+.faction-item-info { min-width: 0; flex: 1 1 auto; }
+.faction-item-del { flex: 0 0 auto; }
+
+/* === Wave-7.5 cutoff fixes === */
+
+/* Left panel: panel-body must shrink so panel-footer (toolbar + status row)
+   stays fully visible even when the army list is long. min-height:0 lets
+   flex children shrink below their content size. */
+.panel-left .panel-body { min-height: 0; }
+
+/* Toolbar status row + buttons must NOT be clipped by parent overflow. */
+.panel-left .panel-footer {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+/* Build mode: hero header in build-mode shouldn't be clipped vertically. */
+body.build-mode-enhanced #build-mode > .build-hero,
+body.build-mode-enhanced #app-main > .build-hero {
+  overflow: visible !important;
+}
+
+/* Right panel: details panel must fill the full mode-page height. The
+   build-mode tab strip (Unit Detail / Rules) was wrapping the rules
+   pinboard in a way that left empty space below — this enforces full
+   vertical fill via flex column inheritance. */
+.panel-right { min-height: 0; }
+.panel-right .panel-body { display: flex; flex-direction: column; min-height: 0; }
+#unit-detail-panel { flex: 1 1 auto; min-height: 0; }
+
+/* === Hero header pushed panels off-screen ===
+   .app-main has hard `height: 100vh` (style.css:111). When the hero
+   row is added above it inside #build-mode grid, the app-main still
+   tries to take 100vh — total = hero + 100vh > viewport — pushing
+   the bottom of every panel (composition warning, save status, etc.)
+   below the visible fold.
+   Fix: when build-mode is enhanced, app-main fills the 1fr grid row
+   instead of forcing 100vh. */
+body.build-mode-enhanced #app-main {
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+/* === Hero points-limit click-to-edit affordance === */
+.build-hero-points-limit.is-editable {
+  cursor: pointer;
+  transition: color 120ms ease, text-shadow 120ms ease;
+}
+.build-hero-points-limit.is-editable:hover,
+.build-hero-points-limit.is-editable:focus-visible {
+  color: var(--accent, #c8c8c8);
+  text-shadow: 0 0 6px rgba(var(--accent-rgb, 200, 200, 200), 0.4);
+  outline: none;
+}
+.build-hero-points-limit-input {
+  width: 64px;
+  font-size: 18px;
+  font-weight: 600;
+  background: var(--panel-alt, #1a1a1a);
+  color: var(--text, #ddd);
+  border: 1px solid var(--accent, #c8c8c8);
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-align: center;
+}
+.build-hero-points-limit-input:focus {
+  outline: 2px solid rgba(var(--accent-rgb, 200, 200, 200), 0.5);
+  outline-offset: 2px;
+}
+
+/* === Army rules in left panel: cap height + scroll so it doesn't push the
+   entry list below the fold when a faction has many rules. === */
+body.build-mode-enhanced #panel-left .army-rules-section {
+  max-height: 30vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}

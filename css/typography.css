@@ -1,0 +1,68 @@
+/* Typography overhaul: Cinzel display font + datasheet-feel numerals */
+
+/* ── @font-face: vendored Cinzel woff2 (offline-safe) ───────── */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../js/vendor/fonts/cinzel-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../js/vendor/fonts/cinzel-600.woff2') format('woff2');
+}
+
+/* ── Display-font headings & names ───────────────────────────── */
+.panel-header h2,
+.detail-name,
+.unit-card-name,
+.ds-name,
+.detail-section-title,
+.modal-header h3,
+.army-rules-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+.panel-header h2 {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.detail-name {
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
+.unit-card-name {
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.modal-header h3 {
+  font-size: 17px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Stat values: heavier, tabular numerals ─────────────────── */
+.stat-value,
+.ds-stat-value,
+.points-current,
+.points-limit,
+.detail-stat-cell .stat-value,
+.army-entry-pts,
+.army-entry-total {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  font-weight: 700;
+}

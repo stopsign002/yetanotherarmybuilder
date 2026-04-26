@@ -40,7 +40,7 @@ Each `Unit`:
 }
 ```
 
-Do not change this shape without bumping `FACTION_CACHE_PREFIX` in `js/bsdata.js` (`yaab_bsf_10e_v7_` → `v8_`). Session-cached factions deserialize directly into `state.factions`; a mismatched shape silently breaks rendering.
+Do not change this shape without bumping `DB_VERSION` in `js/db.js`. Parsed factions are persisted in IndexedDB across sessions; the `onupgradeneeded` handler drops both `factions` and `gst` stores on a version bump. NOT bumping leaves users reading stale cached JSON that lacks the new field, and the mismatch will silently misrender.
 
 ## Module map
 
@@ -95,7 +95,7 @@ Catalogue `entryLink`s routinely resolve into `sharedSelectionEntries` defined i
   console.log(faction.units.find(u => u.name === 'Immortals'));
   ```
 - **Missing weapons or abilities on a unit**: the unit probably references a `sharedSelectionEntry` that lives in a library catalogue. Confirm the library was loaded (check the Phase 1.5 filter regex against the actual filename) and that `WahapediaParser._internal.sharedEntriesById.size > 0` before catalogue parsing begins.
-- **`sessionStorage` stale after a parser change**: bump `FACTION_CACHE_PREFIX` in `bsdata.js`. Do not edit cached values by hand.
+- **IndexedDB stale after a parser change**: bump `DB_VERSION` in `js/db.js`. Do not edit cached values by hand. To force-clear from devtools: `BSData.clearFactionCache()`.
 - **Cycle / depth-limit bailout**: if a faction silently loses abilities or weapons on deeply-nested units, check the `depth >` guards in `findStats` (4), `collectWeapons` (6), `collectAbilities` (3). Raise carefully — the guards exist because BSData has legitimate cycles.
 
 ## What NOT to touch

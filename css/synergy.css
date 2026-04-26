@@ -1,0 +1,179 @@
+/* css/synergy.css — synergy detector modal + toolbar-icon badge. */
+
+/* ── Toolbar-icon counter badge ─────────────────────────────────── */
+
+#yaab-btn-synergy {
+  position: relative;
+}
+
+#yaab-btn-synergy.has-synergies::after {
+  content: attr(data-count);
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--accent, #c9a33a);
+  color: var(--accent-on, #0a0a0a);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 9px;
+  box-shadow: 0 0 0 1px var(--bg, #0d0d0d);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+#yaab-btn-synergy.has-synergies {
+  border-color: var(--accent, #c9a33a);
+  color: var(--accent, #c9a33a);
+}
+
+/* ── Modal frame ─────────────────────────────────────────────── */
+
+.yaab-syn-modal {
+  max-width: 720px;
+  width: 100%;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.yaab-syn-body {
+  padding: 14px 18px 18px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.yaab-syn-empty {
+  text-align: center;
+  color: var(--text-muted, #888);
+  padding: 48px 20px;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* ── Section ─────────────────────────────────────────────────── */
+
+.yaab-syn-section {
+  background: var(--card-bg, #161616);
+  border: 1px solid var(--border, rgba(255,255,255,0.08));
+  border-radius: var(--radius, 4px);
+  overflow: hidden;
+}
+
+.yaab-syn-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg, #0d0d0d);
+  border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));
+}
+
+.yaab-syn-section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  color: var(--accent, #c9a33a);
+  flex-shrink: 0;
+}
+
+.yaab-syn-section-title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text, #ddd);
+}
+
+.yaab-syn-section-count {
+  background: var(--accent, #c9a33a);
+  color: var(--accent-on, #0a0a0a);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 8px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ── List ────────────────────────────────────────────────────── */
+
+.yaab-syn-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.yaab-syn-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border, rgba(255,255,255,0.06));
+}
+
+.yaab-syn-row:first-child {
+  border-top: none;
+}
+
+.yaab-syn-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.yaab-syn-row-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #ddd);
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+
+.yaab-syn-arrow {
+  color: var(--accent, #c9a33a);
+  font-weight: 700;
+  margin: 0 2px;
+}
+
+.yaab-syn-row-explain {
+  font-size: 12px;
+  color: var(--text-muted, #999);
+  line-height: 1.45;
+}
+
+.yaab-syn-row-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.yaab-syn-row-actions .btn {
+  white-space: nowrap;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  .yaab-syn-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .yaab-syn-row-actions {
+    width: 100%;
+  }
+  .yaab-syn-row-actions .btn {
+    width: 100%;
+  }
+}

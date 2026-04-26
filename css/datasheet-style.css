@@ -1,0 +1,379 @@
+/* datasheet-style.css — screen-only datasheet aesthetic for detail panel + roster cards. */
+
+/* ============================================================
+ * Detail panel — banner header
+ * ============================================================ */
+.unit-detail-content .detail-banner {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  margin: 0 0 14px 0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.10)),
+    var(--panel-alt, #28282f);
+  border: 1px solid var(--border, #3a3a44);
+  border-left: 3px solid var(--accent, #fff);
+  border-radius: 4px;
+  position: relative;
+}
+
+.unit-detail-content .detail-banner::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--accent-rgb, 255,255,255), 0.55) 0%,
+    rgba(var(--accent-rgb, 255,255,255), 0.0) 60%
+  );
+  pointer-events: none;
+}
+
+.unit-detail-content .detail-banner .detail-header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.unit-detail-content .detail-banner .detail-name {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 26px;
+  line-height: 1.05;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text, #e0e0e0);
+  margin: 0;
+  word-break: break-word;
+}
+
+.unit-detail-content .detail-banner-subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  font-size: 12px;
+  color: var(--text-muted, #a8a8a8);
+  letter-spacing: 0.02em;
+}
+
+.unit-detail-content .detail-banner-subtitle .detail-faction,
+.unit-detail-content .detail-banner-subtitle .detail-type {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  color: var(--text-muted, #a8a8a8);
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.unit-detail-content .detail-banner-subtitle > span + span::before {
+  content: "\00a0\00b7\00a0";
+  opacity: 0.55;
+  margin: 0 2px;
+}
+
+.unit-detail-content .detail-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.unit-detail-content .detail-banner-pts {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-display, Georgia, serif);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  padding: 7px 12px;
+  border-radius: 3px;
+  background: rgba(var(--accent-rgb, 255,255,255), 0.14);
+  color: var(--accent, #fff);
+  border: 1px solid rgba(var(--accent-rgb, 255,255,255), 0.35);
+  white-space: nowrap;
+}
+
+/* ============================================================
+ * Detail panel — pillar stat strip
+ * ============================================================ */
+.unit-detail-content .detail-stats-section {
+  margin: 0 0 16px 0;
+}
+
+.unit-detail-content .detail-stat-strip {
+  display: grid;
+  gap: 0;
+  background: var(--panel-alt, #28282f);
+  border: 1px solid var(--border, #3a3a44);
+  border-radius: 4px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.unit-detail-content .detail-stat-pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 9px 6px 10px;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--border, #3a3a44);
+  border-radius: 0;
+  text-align: center;
+  position: relative;
+}
+
+.unit-detail-content .detail-stat-pillar:last-child {
+  border-right: 0;
+}
+
+.unit-detail-content .detail-stat-pillar-label {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted, #a8a8a8);
+  margin: 0 0 3px 0;
+  line-height: 1;
+}
+
+.unit-detail-content .detail-stat-pillar-value {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text, #e0e0e0);
+  margin: 0;
+}
+
+.unit-detail-content .detail-stat-pillar-invuln {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent, #fff);
+  opacity: 0.85;
+  line-height: 1;
+}
+
+/* ============================================================
+ * Detail panel — weapons section banners + table
+ * ============================================================ */
+.unit-detail-content .weapons-section {
+  margin-bottom: 12px;
+}
+
+.unit-detail-content .weapons-section-banner {
+  display: block;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  margin: 0 0 0 0;
+  color: #fff;
+  background: var(--panel-alt, #28282f);
+  border-left: 3px solid var(--accent, #fff);
+  border-top: 1px solid var(--border, #3a3a44);
+  border-right: 1px solid var(--border, #3a3a44);
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+}
+
+.unit-detail-content .weapons-section-banner-ranged {
+  border-left-color: #6b8fbf;
+}
+
+.unit-detail-content .weapons-section-banner-melee {
+  border-left-color: #c46a6a;
+}
+
+.unit-detail-content .weapons-table-wrap {
+  border: 1px solid var(--border, #3a3a44);
+  border-top: 0;
+  border-radius: 0 0 3px 3px;
+  overflow: hidden;
+}
+
+.unit-detail-content .weapons-datasheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.unit-detail-content .weapons-datasheet-table th {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #a8a8a8);
+  background: rgba(0,0,0,0.18);
+  padding: 5px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border, #3a3a44);
+}
+
+.unit-detail-content .weapons-datasheet-table th.weapons-col-name { text-align: left; }
+.unit-detail-content .weapons-datasheet-table th.weapons-col-kw   { text-align: left; }
+
+.unit-detail-content .weapons-datasheet-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(var(--accent-rgb, 255,255,255), 0.06);
+  text-align: center;
+  vertical-align: top;
+}
+
+.unit-detail-content .weapons-datasheet-table td.weapons-col-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.unit-detail-content .weapons-datasheet-table th.weapons-col-num {
+  text-align: right;
+}
+
+.unit-detail-content .weapons-datasheet-table td.weapons-col-name {
+  text-align: left;
+  font-weight: 600;
+}
+
+.unit-detail-content .weapons-datasheet-table td.weapons-col-kw {
+  text-align: left;
+}
+
+.unit-detail-content .weapons-datasheet-table tbody tr:nth-child(even) td {
+  background: rgba(255,255,255,0.025);
+}
+
+.unit-detail-content .weapons-datasheet-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.unit-detail-content .weapons-datasheet-table .weapon-kw-tag {
+  font-size: 10.5px;
+  padding: 1px 6px;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+ * Roster card — datasheet hierarchy
+ * ============================================================ */
+.unit-card.unit-card-datasheet {
+  position: relative;
+}
+
+.unit-card.unit-card-datasheet .unit-card-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 0 6px 0;
+  margin: 0 0 8px 0;
+  border-bottom: 1px solid var(--border, #3a3a44);
+  position: relative;
+}
+
+.unit-card.unit-card-datasheet .unit-card-banner::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 36px;
+  height: 1px;
+  background: var(--accent, #fff);
+  opacity: 0.55;
+}
+
+.unit-card.unit-card-datasheet .unit-card-name-primary {
+  font-family: var(--font-display, Georgia, serif);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text, #e0e0e0);
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.unit-card.unit-card-datasheet .unit-card-pts-badge {
+  flex-shrink: 0;
+  font-family: var(--font-display, Georgia, serif);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  padding: 5px 8px;
+  border-radius: 3px;
+  background: rgba(var(--accent-rgb, 255,255,255), 0.12);
+  color: var(--accent, #fff);
+  border: 1px solid rgba(var(--accent-rgb, 255,255,255), 0.30);
+  white-space: nowrap;
+}
+
+.unit-card.unit-card-datasheet .unit-card-stat-strip {
+  opacity: 0.92;
+  margin-bottom: 6px;
+}
+
+.unit-card.unit-card-datasheet .unit-card-stat-strip .stat-name {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.unit-card.unit-card-datasheet .unit-card-keywords-muted {
+  opacity: 0.72;
+}
+
+.unit-card.unit-card-datasheet .unit-card-keywords-muted .keyword-tag {
+  font-size: 10.5px;
+  padding: 1px 6px;
+  letter-spacing: 0.02em;
+}
+
+.unit-card.unit-card-datasheet .unit-card-faction-tertiary {
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted, #a8a8a8);
+  opacity: 0.7;
+  margin: -4px 0 6px 0;
+}
+
+/* faction-hidden flag (set when a specific faction is selected) already
+   collapses the faction line via base CSS; honor that here too. */
+.unit-card.unit-card-datasheet.faction-hidden .unit-card-faction-tertiary {
+  display: none;
+}
+
+/* ============================================================
+ * Reduced motion
+ * ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .unit-detail-content .detail-banner,
+  .unit-detail-content .detail-banner-pts,
+  .unit-card.unit-card-datasheet,
+  .unit-card.unit-card-datasheet .unit-card-pts-badge {
+    transition: none !important;
+    animation: none !important;
+  }
+}

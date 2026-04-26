@@ -1,0 +1,265 @@
+/* css/stratagems.css — styling for the Stratagem Browser modal. */
+
+.strat-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: strat-fade-in 120ms ease-out;
+}
+.strat-backdrop[hidden] { display: none !important; }
+
+@keyframes strat-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.strat-modal {
+  position: relative;
+  width: min(820px, 100%);
+  max-height: 84vh;
+  background: #1a1a1a;
+  color: var(--text, #e0e0e0);
+  border: 1px solid #3a3a3a;
+  border-top: 3px solid var(--accent, #c8c8c8);
+  border-radius: 6px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.strat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #2c2c2c;
+  background: #161616;
+  flex: 0 0 auto;
+}
+
+.strat-title {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--accent, #e8e8e8);
+}
+
+.strat-close {
+  background: transparent;
+  color: var(--text-muted, #a8a8a8);
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.strat-close:hover {
+  color: var(--accent, #fff);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.strat-controls {
+  padding: 10px 14px;
+  border-bottom: 1px solid #2c2c2c;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #181818;
+  flex: 0 0 auto;
+}
+
+.strat-search {
+  width: 100%;
+  background: #0f0f0f;
+  border: 1px solid #2e2e2e;
+  border-radius: 4px;
+  color: var(--text, #e0e0e0);
+  font-size: 13px;
+  padding: 7px 10px;
+  outline: none;
+}
+.strat-search:focus {
+  border-color: var(--accent, #c8c8c8);
+}
+
+.strat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.strat-chip {
+  background: #1f1f1f;
+  color: var(--text-muted, #a8a8a8);
+  border: 1px solid #2e2e2e;
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 80ms, color 80ms, border-color 80ms;
+}
+.strat-chip:hover {
+  background: #262626;
+  color: var(--text, #e0e0e0);
+}
+.strat-chip.is-on {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  border-color: var(--accent, #c8c8c8);
+}
+
+.strat-list {
+  padding: 12px 14px 18px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.strat-section {
+  margin-bottom: 16px;
+}
+.strat-section:last-child {
+  margin-bottom: 4px;
+}
+
+.strat-section-title {
+  margin: 4px 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent, #c8c8c8);
+  border-bottom: 1px solid #262626;
+  padding-bottom: 4px;
+}
+
+.strat-section-count {
+  color: var(--text-muted, #888);
+  font-weight: 400;
+  font-size: 11.5px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.strat-empty {
+  color: var(--text-muted, #888);
+  font-size: 12.5px;
+  font-style: italic;
+  padding: 8px 4px 4px;
+}
+
+.strat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.strat-card {
+  background: #161616;
+  border: 1px solid #2c2c2c;
+  border-radius: 5px;
+  padding: 10px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.strat-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.strat-name {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--text, #f0f0f0);
+  line-height: 1.25;
+}
+
+.strat-cp {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  font-weight: 700;
+  font-size: 11px;
+  border-radius: 10px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+.strat-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.strat-tag {
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  padding: 1px 7px;
+  border: 1px solid #2e2e2e;
+  color: var(--text-muted, #aaa);
+  background: #1f1f1f;
+}
+
+.strat-tag-phase {
+  border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.40);
+  color: var(--accent, #c8c8c8);
+}
+
+.strat-tag-type {
+  /* defaults are fine */
+}
+
+.strat-desc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #cfcfcf;
+  white-space: pre-wrap;
+}
+
+.strat-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.strat-use {
+  background: transparent;
+  color: var(--accent, #c8c8c8);
+  border: 1px solid var(--accent, #c8c8c8);
+  border-radius: 4px;
+  padding: 3px 12px;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 80ms, color 80ms;
+}
+.strat-use:hover {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+}
+
+body.strat-modal-open {
+  overflow: hidden;
+}
+
+@media (max-width: 540px) {
+  .strat-modal {
+    max-height: 92vh;
+  }
+  .strat-grid {
+    grid-template-columns: 1fr;
+  }
+}

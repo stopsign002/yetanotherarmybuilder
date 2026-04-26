@@ -8,7 +8,10 @@
     if (I.getAttr(entryEl, 'hidden', 'false') === 'true') return null;
 
     const name = I.getAttr(entryEl, 'name', 'Unknown Unit');
-    if (name.includes('[Legends]')) return null;
+    // Legacy: units tagged `[Legends]` used to be filtered out entirely.
+    // Now we surface them with an opt-in flag so the Legends toggle can reveal them.
+    // if (name.includes('[Legends]')) return null;
+    const isLegends = name.includes('[Legends]');
 
     const id   = I.getAttr(entryEl, 'id') || Math.random().toString(36).slice(2, 9);
     const type = I.getAttr(entryEl, 'type', '');
@@ -70,7 +73,8 @@
       points,
       pointsOptions,
       squadOptions,
-      description: descEl ? I.cleanText(descEl.textContent) : ''
+      description: descEl ? I.cleanText(descEl.textContent) : '',
+      isLegends
     };
   }
 

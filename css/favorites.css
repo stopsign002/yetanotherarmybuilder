@@ -1,0 +1,99 @@
+/* favorites.css — star button + Favorites/Recents chip styling. */
+
+/* ----- Star button (rendered inside .detail-header-actions) ------------ */
+
+.detail-action-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 4px);
+  padding: 4px 7px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #bbb);
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  line-height: 1;
+}
+.detail-action-btn:hover {
+  border-color: var(--border-light, rgba(255,255,255,0.25));
+  background: rgba(255,255,255,0.04);
+}
+.detail-action-btn[data-action-id="favorite-toggle"].is-starred {
+  border-color: rgba(230,214,168,0.55);
+  background: rgba(230,214,168,0.08);
+}
+
+.fav-star {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-muted, #888);
+  transform-origin: center;
+  transition: transform 0.12s ease, color 0.15s ease;
+}
+.detail-action-btn:hover .fav-star {
+  transform: scale(1.1);
+  color: #e6d6a8;
+}
+.fav-star.is-starred {
+  color: #e6d6a8;                   /* pastel gold, matches palette accents */
+  text-shadow: 0 0 6px rgba(230,214,168,0.35);
+}
+
+/* Click micro-animation: scale up then settle back. */
+@keyframes yaab-fav-pop {
+  0%   { transform: scale(1);    }
+  40%  { transform: scale(1.35); }
+  70%  { transform: scale(0.92); }
+  100% { transform: scale(1);    }
+}
+.fav-star.fav-pop {
+  animation: yaab-fav-pop 280ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fav-star,
+  .detail-action-btn:hover .fav-star { transition: none; }
+  .fav-star.fav-pop { animation: none; }
+}
+
+/* ----- Favorites + Recents chips (live in #roster-filter-chips) -------- */
+
+.filter-chip.fav-chip,
+.filter-chip.recent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filter-chip.fav-chip .fav-chip-glyph,
+.filter-chip.recent-chip .recent-chip-glyph {
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.filter-chip.fav-chip .fav-chip-count,
+.filter-chip.recent-chip .recent-chip-count {
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.7;
+  margin-left: 1px;
+}
+
+/* Active state: reuse the existing pastel highlight but tint toward gold
+   for favorites and slate for recents so the two chips read distinctly. */
+.filter-chip.fav-chip.active {
+  background: rgba(230,214,168,0.18);
+  border-color: rgba(230,214,168,0.55);
+  color: #f1e4b8;
+}
+.filter-chip.fav-chip.active .fav-chip-glyph { opacity: 1; color: #e6d6a8; }
+
+.filter-chip.recent-chip.active {
+  background: rgba(var(--accent-rgb, 168, 232, 138), 0.16);
+  border-color: rgba(var(--accent-rgb, 168, 232, 138), 0.5);
+  color: var(--accent, #d4f5bb);
+}
+.filter-chip.recent-chip.active .recent-chip-glyph { opacity: 1; }

@@ -1,0 +1,276 @@
+/* kill-team.css — small-format mode banner, modal, switch, templates, missions. */
+
+/* ── Body theme hook (subtle accent strip; consumers can target for more). ── */
+body.kt-mode #panel-center .panel-header h2::after {
+  content: 'Kill Team';
+  margin-left: 8px;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  vertical-align: middle;
+}
+
+/* ── Banner (mounted into #panel-center .panel-controls) ──────────────── */
+.kt-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: var(--accent-on, #111);
+  background: var(--accent, #c8c8c8);
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--accent-dark, #909090);
+}
+.kt-banner[hidden] { display: none; }
+.kt-banner-tag {
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid currentColor;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.kt-banner-text { flex: 1; }
+.kt-banner-action {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+.kt-banner-action:hover { background: rgba(0, 0, 0, 0.1); }
+.kt-banner-close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  font-weight: 700;
+}
+.kt-banner-close:hover { opacity: 0.7; }
+
+/* ── Modal shell ─────────────────────────────────────────────────────── */
+.kt-modal {
+  max-width: 720px;
+  width: 100%;
+}
+.kt-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kt-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kt-section-title {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-muted, #a8a8a8);
+}
+.kt-section-help {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* ── Status row (big switch) ─────────────────────────────────────────── */
+.kt-section-status {
+  padding: 12px;
+  background: var(--panel-alt, #2a2a2a);
+  border: 1px solid var(--border, #3a3a3a);
+  border-radius: var(--radius, 6px);
+}
+.kt-status-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.kt-status-text { flex: 1; }
+.kt-status-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+.kt-status-sub {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.kt-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 96px;
+  height: 36px;
+  padding: 4px;
+  border-radius: 20px;
+  border: 2px solid var(--border, #3a3a3a);
+  background: var(--panel-bg, #242424);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.kt-switch-knob {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--text-muted, #a8a8a8);
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+.kt-switch-label {
+  position: absolute;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: var(--text-muted, #a8a8a8);
+  pointer-events: none;
+}
+.kt-switch.kt-switch-on {
+  background: var(--accent, #c8c8c8);
+  border-color: var(--accent-dark, #909090);
+}
+.kt-switch.kt-switch-on .kt-switch-knob {
+  transform: translateX(60px);
+  background: var(--accent-on, #111);
+}
+.kt-switch.kt-switch-on .kt-switch-label {
+  left: 12px;
+  right: auto;
+  color: var(--accent-on, #111);
+}
+
+/* ── Templates grid ──────────────────────────────────────────────────── */
+.kt-templates {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.kt-template {
+  padding: 10px 12px;
+  background: var(--panel-alt, #2a2a2a);
+  border: 1px solid var(--border, #3a3a3a);
+  border-radius: var(--radius, 6px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kt-template.disabled {
+  opacity: 0.55;
+}
+.kt-template-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.kt-template-title {
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.kt-template-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+.kt-template-faction {
+  font-size: 11px;
+  color: var(--text-muted, #a8a8a8);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.kt-template-desc {
+  font-size: 12px;
+  color: var(--text, #e0e0e0);
+  line-height: 1.35;
+}
+.kt-template-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* ── Mission ─────────────────────────────────────────────────────────── */
+.kt-mission-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+.kt-mission-row .btn {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.kt-mission-display {
+  flex: 1;
+  min-height: 56px;
+  padding: 8px 12px;
+  background: var(--panel-alt, #2a2a2a);
+  border: 1px solid var(--border, #3a3a3a);
+  border-radius: var(--radius, 6px);
+  display: flex;
+  align-items: center;
+}
+.kt-mission-empty {
+  color: var(--text-muted, #a8a8a8);
+  font-size: 12px;
+  font-style: italic;
+}
+.kt-mission-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kt-mission-name {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.kt-mission-desc {
+  font-size: 12px;
+  color: var(--text, #e0e0e0);
+  line-height: 1.35;
+}
+
+.kt-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted, #a8a8a8);
+  font-size: 12px;
+  font-style: italic;
+  background: var(--panel-alt, #2a2a2a);
+  border: 1px solid var(--border, #3a3a3a);
+  border-radius: var(--radius, 6px);
+}
+
+/* ── Mobile tweaks ───────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .kt-templates { grid-template-columns: 1fr; }
+  .kt-mission-row { flex-direction: column; }
+  .kt-banner { flex-wrap: wrap; }
+}

@@ -57,19 +57,59 @@ window.BSData = (() => {
 
   // ── File content ─────────────────────────────────────────────────────────
 
+  // Per-fetch timeout. A hung TCP connection can otherwise wedge a worker forever
+  // and freeze the progress bar at "X / total".
+  const FETCH_TIMEOUT_MS = 30000;
+  // One retry on network failure before giving up. Helps with flaky wifi.
+  const FETCH_RETRIES    = 1;
+  const FETCH_RETRY_MS   = 1000;
+  // IndexedDB put cap — slow/quota-pressured Safari can hang put forever.
+  const DB_PUT_TIMEOUT_MS = 10000;
+
   /**
    * Fetches the raw XML text of a single file by its repo path.
    * Files are plain XML despite the .cat extension.
+   *
+   * Hardened against silent hangs:
+   *  - 30s AbortController timeout per attempt
+   *  - 1 retry on network failure (1s delay)
    */
   async function fetchFile(path) {
     // raw.githubusercontent.com doesn't encode spaces the same way
     const encodedPath = path.split('/').map(encodeURIComponent).join('/');
     const url = `${RAW_BASE}/${encodedPath}`;
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      throw new Error(`Failed to download "${path}" (HTTP ${resp.status})`);
+
+    let lastErr = null;
+    for (let attempt = 0; attempt <= FETCH_RETRIES; attempt++) {
+      // Each attempt gets its own AbortController so the timeout is fresh.
+      const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      const timer = ctrl ? setTimeout(() => {
+        try { ctrl.abort(); } catch (_) {}
+      }, FETCH_TIMEOUT_MS) : null;
+      try {
+        const resp = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+        if (timer) clearTimeout(timer);
+        if (!resp.ok) {
+          // 404/403 won't get better with a retry — fail fast.
+          throw new Error(`Failed to download "${path}" (HTTP ${resp.status})`);
+        }
+        return await resp.text();
+      } catch (err) {
+        if (timer) clearTimeout(timer);
+        lastErr = err;
+        const aborted = err && (err.name === 'AbortError' || /aborted/i.test(String(err.message || '')));
+        if (aborted) {
+          console.warn(`[BSData] fetch timeout on "${path}" (attempt ${attempt + 1})`);
+        }
+        if (attempt < FETCH_RETRIES) {
+          await new Promise(r => setTimeout(r, FETCH_RETRY_MS));
+          continue;
+        }
+        throw lastErr;
+      }
     }
-    return resp.text();
+    // Unreachable — loop above either returns or throws.
+    throw lastErr || new Error(`fetchFile: unknown failure for ${path}`);
   }
 
   // ── Bulk loader ──────────────────────────────────────────────────────────
@@ -124,10 +164,24 @@ window.BSData = (() => {
 
     let cursor = 0;
 
+    // Watchdog: log any file that's been "in flight" for more than 15s without
+    // completing. Helps diagnose hangs when the progress bar freezes.
+    const inFlight = new Map(); // file.name -> startedAtMs
+    const watchdog = setInterval(() => {
+      const now = Date.now();
+      inFlight.forEach((startedAt, name) => {
+        const elapsed = now - startedAt;
+        if (elapsed > 15000) {
+          console.warn(`[BSData] still fetching: "${name}" (${Math.round(elapsed / 1000)}s)`);
+        }
+      });
+    }, 5000);
+
     async function worker() {
       while (cursor < catFiles.length) {
         if (signal && signal.aborted) return;
         const file = catFiles[cursor++];
+        inFlight.set(file.name, Date.now());
         try {
           const cached = await _getCachedFaction(file.name);
           let faction;
@@ -135,22 +189,43 @@ window.BSData = (() => {
             faction = cached;
           } else {
             const xml = await fetchFile(file.path);
-            if (signal && signal.aborted) return;
+            if (signal && signal.aborted) { inFlight.delete(file.name); return; }
+            // Some catalogues (e.g. "Unaligned Forces") aren't named "Library …"
+            // but still mark themselves as `library="true"` in XML and contain
+            // only sharedSelectionEntries/Groups. Parsing them as normal
+            // catalogues yields zero units and (more importantly) made the
+            // loader appear to hang on certain BSData versions. Detect via
+            // the root element attribute and route to the shared index.
+            if (/<catalogue\b[^>]*\blibrary\s*=\s*"true"/i.test(xml.slice(0, 1024))) {
+              try { WahapediaParser.addToSharedIndex(xml); } catch (_) {}
+              done++;
+              inFlight.delete(file.name);
+              onProgress(done, total, file.name);
+              continue;
+            }
             faction = WahapediaParser.parse(xml, file.path);
             await _cacheFaction(faction);
           }
           done++;
+          inFlight.delete(file.name);
           onProgress(done, total, faction.factionName);
           if (faction.units.length > 0) onFactionLoaded(faction);
         } catch (err) {
+          // CRITICAL: catch must always increment `done` so the worker pool drains
+          // even when fetchFile throws (timeout) or the parser throws (bad input).
           done++;
+          inFlight.delete(file.name);
           onProgress(done, total, file.name);
-          console.warn(`[BSData] Failed to load "${file.name}":`, err.message);
+          console.warn(`[BSData] Failed to load "${file.name}":`, err && err.message ? err.message : err);
         }
       }
     }
 
-    await Promise.all(Array.from({ length: 6 }, worker));
+    try {
+      await Promise.all(Array.from({ length: 6 }, worker));
+    } finally {
+      clearInterval(watchdog);
+    }
 
     // Release the shared DOM-node index. Each retained element kept its entire
     // parsed XML document alive via ownerDocument; clearing these Maps lets
@@ -167,12 +242,30 @@ window.BSData = (() => {
   // ── Persistent cache helpers (IndexedDB via YaabDB) ──────────────────────
 
   async function _getCachedFaction(name) {
-    try { return await YaabDB.getFaction(name); }
+    try {
+      // Guard against an IDB read that never resolves (txn pipeline wedged
+      // by an earlier slow put). 10s is plenty for a single record read.
+      const get = YaabDB.getFaction(name);
+      const timeout = new Promise((resolve) => setTimeout(() => {
+        console.warn(`[BSData] IndexedDB get timed out for "${name}" — falling back to network`);
+        resolve(null);
+      }, DB_PUT_TIMEOUT_MS));
+      return await Promise.race([get, timeout]);
+    }
     catch (_) { return null; }
   }
 
   async function _cacheFaction(faction) {
-    try { await YaabDB.putFaction(faction); } catch (_) {}
+    // YaabDB.putFaction can hang silently on quota pressure / Safari private mode.
+    // Race it against a 10s timeout so a stuck IDB write can't wedge the worker.
+    try {
+      const put = YaabDB.putFaction(faction);
+      const timeout = new Promise((resolve) => setTimeout(() => {
+        console.warn(`[BSData] IndexedDB put timed out for "${faction && faction.factionName}" — skipping cache`);
+        resolve();
+      }, DB_PUT_TIMEOUT_MS));
+      await Promise.race([put, timeout]);
+    } catch (_) {}
   }
 
   async function clearFactionCache() {

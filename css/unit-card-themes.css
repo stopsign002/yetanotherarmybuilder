@@ -1,0 +1,381 @@
+/* css/unit-card-themes.css — per-faction unit-card gradients + accent stripes + tinted hover glows. Additive on top of .unit-card. */
+
+/* ──────────────────────────────────────────────────────────────────────
+   Strategy
+   --------
+   `js/ui/unit-card-themes.js` adds a `faction-<slug>` class to each
+   unit card. Slugs come from each faction's short name (last segment
+   after " - " in unit._factionName), lowercased with non-alnum runs
+   collapsed to `-`. See App.FACTION_COLORS in js/app/state.js for the
+   canonical list — every key there has a matching block below.
+
+   Each block adds, ON TOP of .unit-card chassis:
+     * a faint diagonal gradient washing the faction's accent across the card
+     * a 3px accent-color left border stripe
+     * a brighter stripe + tinted shadow on hover
+
+   Opacities are tuned so the cards remain dark and readable; the accent
+   only whispers under the chassis. Hover bumps things up to ~50% alpha
+   so the hovered card pops with its faction colour.
+
+   Variables follow the [accent, hover, dark, rgb] palette. We pull the
+   `rgb` triple from the JS palette into rgba() literals so we don't need
+   per-card inline styles.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Generic baseline for any card with a `faction-*` class — keeps left
+   stripe geometry consistent even when a specific block below doesn't
+   override the colour (covers brand-new factions added to BSData).
+   The `--card-bg` var is provided by card-chassis.css; the fallback
+   keeps things sensible if it isn't set. */
+.unit-card[class*="faction-"] {
+  position: relative;
+  border-left: 3px solid rgba(255, 255, 255, 0.10);
+  transition: border-left-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+.unit-card[class*="faction-"]:hover {
+  border-left-color: rgba(255, 255, 255, 0.35);
+}
+
+/* ─── Imperium — blue family ───────────────────────────────────────── */
+.unit-card.faction-adeptus-astartes,
+.unit-card.faction-space-marines,
+.unit-card.faction-ultramarines {
+  background: linear-gradient(135deg,
+    var(--card-bg, #1f1f23) 0%,
+    rgba(168, 189, 230, 0.06) 100%);
+  border-left-color: rgba(168, 189, 230, 0.5);
+}
+.unit-card.faction-adeptus-astartes:hover,
+.unit-card.faction-space-marines:hover,
+.unit-card.faction-ultramarines:hover {
+  border-left-color: rgba(168, 189, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 189, 230, 0.20);
+}
+
+/* Blood Angels — red */
+.unit-card.faction-blood-angels {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 168, 168, 0.07) 100%);
+  border-left-color: rgba(230, 168, 168, 0.5);
+}
+.unit-card.faction-blood-angels:hover {
+  border-left-color: rgba(230, 168, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 168, 168, 0.22);
+}
+
+/* Dark Angels — green */
+.unit-card.faction-dark-angels {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(168, 230, 168, 0.06) 100%);
+  border-left-color: rgba(168, 230, 168, 0.5);
+}
+.unit-card.faction-dark-angels:hover {
+  border-left-color: rgba(168, 230, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 230, 168, 0.20);
+}
+
+/* Grey Knights — silvered violet */
+.unit-card.faction-grey-knights {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(168, 173, 230, 0.06) 100%);
+  border-left-color: rgba(168, 173, 230, 0.5);
+}
+.unit-card.faction-grey-knights:hover {
+  border-left-color: rgba(168, 173, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 173, 230, 0.20);
+}
+
+/* Space Wolves — pale ice blue */
+.unit-card.faction-space-wolves {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(168, 199, 230, 0.06) 100%);
+  border-left-color: rgba(168, 199, 230, 0.5);
+}
+.unit-card.faction-space-wolves:hover {
+  border-left-color: rgba(168, 199, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 199, 230, 0.20);
+}
+
+/* Imperial Fists — gold */
+.unit-card.faction-imperial-fists {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 219, 168, 0.06) 100%);
+  border-left-color: rgba(230, 219, 168, 0.55);
+}
+.unit-card.faction-imperial-fists:hover {
+  border-left-color: rgba(230, 219, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 219, 168, 0.22);
+}
+
+/* Black Templars / Iron Hands — neutral steel */
+.unit-card.faction-black-templars,
+.unit-card.faction-iron-hands {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(187, 199, 211, 0.06) 100%);
+  border-left-color: rgba(187, 199, 211, 0.5);
+}
+.unit-card.faction-black-templars:hover,
+.unit-card.faction-iron-hands:hover {
+  border-left-color: rgba(187, 199, 211, 0.95);
+  box-shadow: 0 4px 18px rgba(187, 199, 211, 0.20);
+}
+
+/* Salamanders — emerald */
+.unit-card.faction-salamanders {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(168, 230, 178, 0.06) 100%);
+  border-left-color: rgba(168, 230, 178, 0.5);
+}
+.unit-card.faction-salamanders:hover {
+  border-left-color: rgba(168, 230, 178, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 230, 178, 0.20);
+}
+
+/* White Scars — sand */
+.unit-card.faction-white-scars {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(211, 199, 187, 0.06) 100%);
+  border-left-color: rgba(211, 199, 187, 0.5);
+}
+.unit-card.faction-white-scars:hover {
+  border-left-color: rgba(211, 199, 187, 0.95);
+  box-shadow: 0 4px 18px rgba(211, 199, 187, 0.20);
+}
+
+/* Raven Guard — pale lilac on near-black */
+.unit-card.faction-raven-guard {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(195, 187, 211, 0.06) 100%);
+  border-left-color: rgba(195, 187, 211, 0.5);
+}
+.unit-card.faction-raven-guard:hover {
+  border-left-color: rgba(195, 187, 211, 0.95);
+  box-shadow: 0 4px 18px rgba(195, 187, 211, 0.20);
+}
+
+/* Deathwatch — slate blue (treated like Space Wolves palette) */
+.unit-card.faction-deathwatch {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(168, 199, 230, 0.05) 100%);
+  border-left-color: rgba(168, 199, 230, 0.5);
+}
+.unit-card.faction-deathwatch:hover {
+  border-left-color: rgba(168, 199, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 199, 230, 0.20);
+}
+
+/* Adeptus Mechanicus — rust red */
+.unit-card.faction-adeptus-mechanicus {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 173, 168, 0.06) 100%);
+  border-left-color: rgba(230, 173, 168, 0.5);
+}
+.unit-card.faction-adeptus-mechanicus:hover {
+  border-left-color: rgba(230, 173, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 173, 168, 0.22);
+}
+
+/* Astra Militarum — drab gold/yellow */
+.unit-card.faction-astra-militarum {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 230, 168, 0.06) 100%);
+  border-left-color: rgba(230, 230, 168, 0.55);
+}
+.unit-card.faction-astra-militarum:hover {
+  border-left-color: rgba(230, 230, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 230, 168, 0.22);
+}
+
+/* Adepta Sororitas — rose */
+.unit-card.faction-adepta-sororitas {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 168, 183, 0.06) 100%);
+  border-left-color: rgba(230, 168, 183, 0.5);
+}
+.unit-card.faction-adepta-sororitas:hover {
+  border-left-color: rgba(230, 168, 183, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 168, 183, 0.22);
+}
+
+/* Adeptus Custodes — gold */
+.unit-card.faction-adeptus-custodes,
+.unit-card.faction-imperial-knights {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 214, 168, 0.06) 100%);
+  border-left-color: rgba(230, 214, 168, 0.55);
+}
+.unit-card.faction-adeptus-custodes:hover,
+.unit-card.faction-imperial-knights:hover {
+  border-left-color: rgba(230, 214, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 214, 168, 0.22);
+}
+
+/* Genestealer Cults — magenta */
+.unit-card.faction-genestealer-cults {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(219, 168, 230, 0.06) 100%);
+  border-left-color: rgba(219, 168, 230, 0.5);
+}
+.unit-card.faction-genestealer-cults:hover {
+  border-left-color: rgba(219, 168, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(219, 168, 230, 0.22);
+}
+
+/* Leagues of Votann — bronze */
+.unit-card.faction-leagues-of-votann {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 199, 168, 0.06) 100%);
+  border-left-color: rgba(230, 199, 168, 0.5);
+}
+.unit-card.faction-leagues-of-votann:hover {
+  border-left-color: rgba(230, 199, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 199, 168, 0.22);
+}
+
+/* ─── Chaos — red / pestilent / arcane ─────────────────────────────── */
+
+/* Chaos Space Marines — blood red */
+.unit-card.faction-chaos-space-marines {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 168, 168, 0.07) 100%);
+  border-left-color: rgba(230, 168, 168, 0.5);
+}
+.unit-card.faction-chaos-space-marines:hover {
+  border-left-color: rgba(230, 168, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 168, 168, 0.22);
+}
+
+/* Death Guard — pestilent green */
+.unit-card.faction-death-guard {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(214, 230, 168, 0.06) 100%);
+  border-left-color: rgba(214, 230, 168, 0.5);
+}
+.unit-card.faction-death-guard:hover {
+  border-left-color: rgba(214, 230, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(214, 230, 168, 0.22);
+}
+
+/* Thousand Sons — arcane blue */
+.unit-card.faction-thousand-sons {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(168, 189, 230, 0.06) 100%);
+  border-left-color: rgba(168, 189, 230, 0.5);
+}
+.unit-card.faction-thousand-sons:hover {
+  border-left-color: rgba(168, 189, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 189, 230, 0.22);
+}
+
+/* World Eaters — burnt red-orange */
+.unit-card.faction-world-eaters {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 178, 168, 0.07) 100%);
+  border-left-color: rgba(230, 178, 168, 0.5);
+}
+.unit-card.faction-world-eaters:hover {
+  border-left-color: rgba(230, 178, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 178, 168, 0.22);
+}
+
+/* Emperor's Children — magenta */
+.unit-card.faction-emperor-s-children {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 168, 230, 0.06) 100%);
+  border-left-color: rgba(230, 168, 230, 0.5);
+}
+.unit-card.faction-emperor-s-children:hover {
+  border-left-color: rgba(230, 168, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 168, 230, 0.22);
+}
+
+/* Chaos Daemons — sickly pink */
+.unit-card.faction-chaos-daemons {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 168, 189, 0.06) 100%);
+  border-left-color: rgba(230, 168, 189, 0.5);
+}
+.unit-card.faction-chaos-daemons:hover {
+  border-left-color: rgba(230, 168, 189, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 168, 189, 0.22);
+}
+
+/* Chaos Knights — violet */
+.unit-card.faction-chaos-knights {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(199, 168, 230, 0.06) 100%);
+  border-left-color: rgba(199, 168, 230, 0.5);
+}
+.unit-card.faction-chaos-knights:hover {
+  border-left-color: rgba(199, 168, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(199, 168, 230, 0.22);
+}
+
+/* ─── Xenos ─────────────────────────────────────────────────────────── */
+
+/* Necrons — necron green */
+.unit-card.faction-necrons {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(168, 230, 183, 0.06) 100%);
+  border-left-color: rgba(168, 230, 183, 0.5);
+}
+.unit-card.faction-necrons:hover {
+  border-left-color: rgba(168, 230, 183, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 230, 183, 0.22);
+}
+
+/* T'au Empire — cyan. Slug = `t-au-empire` because the apostrophe is
+   collapsed to `-` by slugify(). */
+.unit-card.faction-t-au-empire {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(168, 219, 230, 0.06) 100%);
+  border-left-color: rgba(168, 219, 230, 0.5);
+}
+.unit-card.faction-t-au-empire:hover {
+  border-left-color: rgba(168, 219, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 219, 230, 0.22);
+}
+
+/* Tyranids — bio-pink */
+.unit-card.faction-tyranids {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 168, 209, 0.07) 100%);
+  border-left-color: rgba(230, 168, 209, 0.5);
+}
+.unit-card.faction-tyranids:hover {
+  border-left-color: rgba(230, 168, 209, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 168, 209, 0.24);
+}
+
+/* Orks — bright green */
+.unit-card.faction-orks {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(204, 230, 168, 0.07) 100%);
+  border-left-color: rgba(204, 230, 168, 0.55);
+}
+.unit-card.faction-orks:hover {
+  border-left-color: rgba(204, 230, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(204, 230, 168, 0.24);
+}
+
+/* Aeldari — sky cyan */
+.unit-card.faction-aeldari {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(168, 214, 230, 0.06) 100%);
+  border-left-color: rgba(168, 214, 230, 0.5);
+}
+.unit-card.faction-aeldari:hover {
+  border-left-color: rgba(168, 214, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 214, 230, 0.22);
+}
+
+/* Drukhari — violet */
+.unit-card.faction-drukhari {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(209, 168, 230, 0.06) 100%);
+  border-left-color: rgba(209, 168, 230, 0.5);
+}
+.unit-card.faction-drukhari:hover {
+  border-left-color: rgba(209, 168, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(209, 168, 230, 0.22);
+}
+
+/* Harlequins — saturated coral */
+.unit-card.faction-harlequins {
+  background: linear-gradient(135deg, var(--card-bg, #1f1f23) 0%, rgba(230, 183, 168, 0.06) 100%);
+  border-left-color: rgba(230, 183, 168, 0.5);
+}
+.unit-card.faction-harlequins:hover {
+  border-left-color: rgba(230, 183, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 183, 168, 0.22);
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Selected-state amplification — when a card is active in the roster,
+   the faction stripe goes full strength regardless of hover. Stops the
+   accent stripe disappearing under the existing .unit-card.selected
+   chassis treatment.
+   ────────────────────────────────────────────────────────────────────── */
+.unit-card.selected[class*="faction-"] {
+  border-left-width: 3px;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   prefers-reduced-motion: gradients & stripes are static, but the
+   border/shadow transitions are gated for users who want zero motion.
+   ────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .unit-card[class*="faction-"] { transition: none !important; }
+}

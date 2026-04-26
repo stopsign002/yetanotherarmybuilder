@@ -1,0 +1,67 @@
+/* mode-shell.css — Build / Collect / Play mode page containers + transitions. */
+
+.mode-page {
+  /* Each mode owns the entire viewport below the topbar. */
+  display: block;
+  width: 100%;
+  height: calc(100vh - var(--topbar-h, 56px));
+  overflow: hidden;
+}
+
+.mode-page[hidden] { display: none !important; }
+
+/* Build mode hosts the existing 3-panel app-main grid; preserve its height. */
+#build-mode .app-main {
+  height: 100%;
+}
+
+/* Collect / Play placeholders shown until other agents fill them in. */
+.mode-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-muted);
+}
+.mode-placeholder h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.mode-placeholder p { font-size: 14px; }
+
+/* ── Mode enter animation (fade + slight slide) ───────────── */
+@keyframes mode-enter-anim {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.mode-page.mode-enter {
+  animation: mode-enter-anim 200ms ease-out;
+}
+
+/* Mobile: shrink topbar offset. */
+@media (max-width: 720px) {
+  .mode-page {
+    height: calc(100vh - var(--topbar-h-mobile, 48px));
+  }
+}
+
+/* Reduced-motion overrides. */
+body.reduce-motion .mode-page,
+body.reduce-motion .mode-page.mode-enter { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .mode-page.mode-enter { animation: none; }
+}

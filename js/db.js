@@ -2,9 +2,9 @@
 window.YaabDB = (() => {
 
   const DB_NAME    = 'yaab';
-  // Bumped to v2 after parser fixes: detachments/enhancements surface for Tyranids,
-  // points + model counts corrected for several faction units.
-  const DB_VERSION = 2;
+  // Bumped to v4 after parser added detachment.stratagems + factionStratagems
+  // arrays (powers the Stratagem Browser modal).
+  const DB_VERSION = 4;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
 

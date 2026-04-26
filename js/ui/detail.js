@@ -84,20 +84,38 @@
 
     const getStatVal = key => (UI._STAT_ALIASES[key] || [key]).map(a => stats[a]).find(v => v) || '—';
 
-    let html = `<div class="unit-detail-content">`;
+    let html = `<div class="unit-detail-content unit-detail-datasheet" data-detail-kind="unit">`;
 
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
+    const subtitleParts = [];
+    if (unit._factionName) subtitleParts.push(`<span class="detail-faction">${esc(unit._factionName)}</span>`);
+    if (unit.type)         subtitleParts.push(`<span class="detail-type">${esc(unit.type)}</span>`);
+
+    // Render unit-flavor blurb when unit.description is empty and a matching
+    // App.UNIT_FLAVOR entry exists (case-insensitive substring match on name).
+    let flavorHtml = '';
+    if (!unit.description && window.App && App.UNIT_FLAVOR) {
+      const lcName = String(unit.name || '').toLowerCase();
+      let flavor = null;
+      for (const key in App.UNIT_FLAVOR) {
+        if (lcName.indexOf(key) !== -1) { flavor = App.UNIT_FLAVOR[key]; break; }
+      }
+      if (flavor) {
+        flavorHtml = `<div class="detail-flavor" style="font-style:italic;font-size:12px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(flavor)}</div>`;
+      }
+    }
+
     html += `
-      <div class="detail-header">
+      <div class="detail-header detail-banner">
         <div class="detail-header-main">
           <div class="detail-name">${esc(unit.name)}</div>
-          <div class="detail-meta">
-            ${unit._factionName ? `<span class="detail-faction">${esc(unit._factionName)}</span>` : ''}
-            ${unit.type ? `<span class="detail-type">${esc(unit.type)}</span>` : ''}
-            ${ptsOpts.length > 0 ? `<span class="detail-pts">${ptsOpts.join(' / ')} pts</span>` : ''}
+          ${flavorHtml}
+          <div class="detail-meta detail-banner-subtitle">
+            ${subtitleParts.join('')}
           </div>
         </div>
-        <div class="detail-header-actions">
+        <div class="detail-header-actions detail-banner-actions">
+          ${ptsOpts.length > 0 ? `<span class="detail-pts detail-banner-pts">${ptsOpts.join(' / ')} pts</span>` : ''}
           ${(window.App && App.hooks && App.hooks.detailActions || []).map(a =>
             `<button class="detail-action-btn" data-action-id="${esc(a.id)}" title="${esc(a.title || '')}">${a.html || esc(a.label || '')}</button>`
           ).join('')}
@@ -135,17 +153,24 @@
     const presentStats = STAT_ORDER.filter(k => getStatVal(k) !== '—');
 
     if (presentStats.length > 0) {
-      const displayVal = k => {
+      const renderPillar = k => {
         const v = getStatVal(k);
-        if (k === 'SV' && unit.invulnSave && v !== '—') return v + '/' + unit.invulnSave;
-        return v;
+        if (k === 'SV' && unit.invulnSave && v !== '—') {
+          return `<div class="detail-stat-cell detail-stat-pillar detail-stat-pillar-sv">
+            <span class="stat-name detail-stat-pillar-label">SV</span>
+            <span class="stat-value detail-stat-pillar-value">${esc(String(v))}</span>
+            <span class="detail-stat-pillar-invuln">${esc(String(unit.invulnSave))} INV</span>
+          </div>`;
+        }
+        return `<div class="detail-stat-cell detail-stat-pillar">
+          <span class="stat-name detail-stat-pillar-label">${esc(k)}</span>
+          <span class="stat-value detail-stat-pillar-value">${esc(String(v))}</span>
+        </div>`;
       };
-      const displayLabel = k => k === 'SV' && unit.invulnSave ? 'SV / INV' : k;
 
-      html += `<div class="detail-section">
-        <div class="detail-section-title">Stats</div>
-        <div class="detail-stats-row" style="grid-template-columns:repeat(${presentStats.length},1fr)">
-          ${presentStats.map(k => `<div class="detail-stat-cell"><span class="stat-name">${esc(displayLabel(k))}</span><span class="stat-value">${esc(String(displayVal(k)))}</span></div>`).join('')}
+      html += `<div class="detail-section detail-stats-section">
+        <div class="detail-stats-row detail-stat-strip" style="grid-template-columns:repeat(${presentStats.length},1fr)">
+          ${presentStats.map(renderPillar).join('')}
         </div>
       </div>`;
     }
@@ -170,21 +195,22 @@
         const cols = COLS.filter(c => allCols.has(c));
 
         const label = type === 'ranged' ? 'Ranged Weapons' : 'Melee Weapons';
+        const numericCols = new Set(['Range', 'A', 'BS', 'WS', 'S', 'AP', 'D']);
         return `
-          <div class="weapons-subsection">
-            <div class="weapons-subsection-title ${type}">${label}</div>
-            <div class="detail-table-wrap">
-              <table class="weapons-table">
+          <div class="weapons-subsection weapons-section">
+            <div class="weapons-subsection-title weapons-section-banner weapons-section-banner-${type} ${type}">${label}</div>
+            <div class="detail-table-wrap weapons-table-wrap">
+              <table class="weapons-table weapons-datasheet-table">
                 <thead><tr>
-                  <th>Name</th>${cols.map(c => `<th>${esc(c)}</th>`).join('')}
+                  <th class="weapons-col-name">Name</th>${cols.map(c => `<th class="${numericCols.has(c) ? 'weapons-col-num' : 'weapons-col-kw'}">${esc(c)}</th>`).join('')}
                 </tr></thead>
                 <tbody>
                   ${list.map(w => `<tr>
-                    <td class="weapon-type-${type}">${esc(w.name)}</td>
+                    <td class="weapon-type-${type} weapons-col-name">${esc(w.name)}</td>
                     ${cols.map(c => {
                       if (c === 'Keywords' && w[c]) {
                         const kws = String(w[c]).split(',').map(k => k.trim()).filter(Boolean);
-                        return `<td class="weapon-keywords-cell">${kws.map(k => {
+                        return `<td class="weapon-keywords-cell weapons-col-kw">${kws.map(k => {
                           const d = w._keywordDefs && w._keywordDefs[k];
                           const colorClass = weaponKwClass(k);
                           const classes = 'weapon-kw-tag'
@@ -193,7 +219,8 @@
                           return `<span class="${classes}"${d ? ` data-tooltip="${esc(d)}"` : ''}>${esc(k)}</span>`;
                         }).join('')}</td>`;
                       }
-                      return `<td>${esc(String(w[c] != null ? w[c] : '—'))}</td>`;
+                      const cellClass = numericCols.has(c) ? 'weapons-col-num' : '';
+                      return `<td class="${cellClass}">${esc(String(w[c] != null ? w[c] : '—'))}</td>`;
                     }).join('')}
                   </tr>`).join('')}
                 </tbody>
@@ -202,7 +229,7 @@
           </div>`;
       };
 
-      html += `<div class="detail-section">
+      html += `<div class="detail-section detail-weapons-section">
         <div class="detail-section-title">Weapons</div>
         ${renderWeaponTable(ranged, 'ranged')}
         ${renderWeaponTable(melee, 'melee')}
@@ -418,10 +445,15 @@
     const body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${esc(data.description || 'No description available.')}</p>`;
 
     panel.insertAdjacentHTML('beforeend', `
-      <div class="unit-detail-content">
-        <div class="detail-header">
-          <div class="detail-name">${esc(data.name)}</div>
-          ${isEnhancement && data.pts ? `<div class="detail-meta"><span class="detail-pts">${esc(String(data.pts))} pts</span></div>` : ''}
+      <div class="unit-detail-content unit-detail-rule" data-detail-kind="rule">
+        <div class="detail-header detail-banner detail-banner-rule">
+          <div class="detail-header-main">
+            <div class="detail-name">${esc(data.name)}</div>
+            <div class="detail-meta detail-banner-subtitle">
+              <span class="detail-rule-kind">${isEnhancement ? 'Enhancement' : 'Army Rule'}</span>
+            </div>
+          </div>
+          ${isEnhancement && data.pts ? `<div class="detail-header-actions detail-banner-actions"><span class="detail-pts detail-banner-pts">${esc(String(data.pts))} pts</span></div>` : ''}
         </div>
         <div class="detail-section">
           <div class="detail-section-title">${isEnhancement ? 'Enhancement' : 'Rule'}</div>

@@ -1,0 +1,245 @@
+/* card-chassis.css — unified card visual language + FLIP animation styles. */
+
+/* ===========================================================================
+   Tunables. Override-friendly via :root.
+   ========================================================================= */
+:root {
+  --yaab-card-radius:     8px;
+  --yaab-card-pad:        12px;
+  --yaab-card-pad-tight:  6px 8px;
+  --yaab-card-bg:         var(--card-bg, #2c2c34);
+  --yaab-card-bg-hover:   var(--card-hover, #34343c);
+  --yaab-card-border:     var(--border-light, #4a4a54);
+  --yaab-card-border-soft: var(--border, #3a3a44);
+  --yaab-card-accent:     var(--accent, #ffffff);
+  --yaab-card-accent-rgb: var(--accent-rgb, 255, 255, 255);
+  --yaab-card-shadow-h:   0 6px 18px rgba(0, 0, 0, 0.35);
+  --yaab-card-shadow-a:   0 0 0 2px rgba(var(--yaab-card-accent-rgb), 0.28);
+  --yaab-card-ease:       cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ===========================================================================
+   Base chassis. Any element can opt-in by adding `.yaab-card`.
+   It is also applied additively to existing well-known card selectors.
+   We keep specificity low so component-specific rules win.
+   ========================================================================= */
+.yaab-card,
+.unit-card,
+.army-entry,
+.starter-card,
+.community-card,
+.ac-card {
+  background: var(--yaab-card-bg);
+  border: 1px solid var(--yaab-card-border-soft);
+  border-radius: var(--yaab-card-radius);
+  position: relative;
+  transition:
+    border-color 0.18s var(--yaab-card-ease),
+    background   0.18s var(--yaab-card-ease),
+    transform    0.16s var(--yaab-card-ease),
+    box-shadow   0.18s var(--yaab-card-ease);
+  will-change: transform;
+}
+
+/* Padding by default — tighter for the army-entry list rows. */
+.yaab-card,
+.unit-card,
+.starter-card,
+.community-card,
+.ac-card {
+  padding: var(--yaab-card-pad);
+}
+.army-entry { padding: var(--yaab-card-pad-tight); }
+
+/* Title / body type. Only nudge defaults — don't overrule component overrides. */
+.yaab-card-title {
+  font-family: var(--font-display);
+  color: var(--yaab-card-accent);
+  letter-spacing: 0.4px;
+  font-weight: 600;
+}
+.yaab-card-body {
+  font-family: var(--font-body);
+  color: var(--text);
+}
+.yaab-card-muted { color: var(--text-muted); }
+
+/* ===========================================================================
+   Hover lift. GPU-friendly transform only.
+   We avoid touching .army-entry's hover so the list doesn't jump 1px on
+   every cursor pass — the chassis still gives it border + shadow polish.
+   ========================================================================= */
+.yaab-card:hover,
+.unit-card:hover,
+.starter-card:hover,
+.community-card:hover,
+.ac-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(var(--yaab-card-accent-rgb), 0.55);
+  box-shadow: var(--yaab-card-shadow-h);
+}
+
+/* Subtle accent ring on the army-entry hover (no lift). */
+.army-entry:hover {
+  border-color: rgba(var(--yaab-card-accent-rgb), 0.40);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Active squash. */
+.yaab-card:active,
+.unit-card:active,
+.starter-card:active,
+.community-card:active,
+.ac-card:active {
+  transform: translateY(0) scale(0.985);
+  box-shadow: none;
+}
+
+/* Keyboard focus ring for accessibility. */
+.yaab-card:focus-visible,
+.unit-card:focus-visible,
+.army-entry:focus-visible,
+.starter-card:focus-visible,
+.community-card:focus-visible,
+.ac-card:focus-visible {
+  outline: none;
+  box-shadow: var(--yaab-card-shadow-a);
+}
+
+/* ===========================================================================
+   Selected / active state — accent border + tint + corner dot.
+   Component CSS already styles .unit-card.selected; we add the corner dot
+   without overriding the existing border treatment.
+   ========================================================================= */
+.yaab-card.is-selected,
+.yaab-card.selected,
+.unit-card.selected,
+.community-card.is-selected,
+.starter-card.is-selected {
+  border-color: var(--yaab-card-accent);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--yaab-card-accent-rgb), 0.06),
+    transparent 60%
+  ),
+  var(--yaab-card-bg-hover);
+}
+
+.yaab-card.is-selected::after,
+.yaab-card.selected::after,
+.unit-card.selected::after,
+.community-card.is-selected::after,
+.starter-card.is-selected::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--yaab-card-accent);
+  box-shadow: 0 0 6px rgba(var(--yaab-card-accent-rgb), 0.9);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ===========================================================================
+   FLIP add-to-army animation primitives.
+   ========================================================================= */
+.yaab-flip-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  margin: 0;
+  pointer-events: none;
+  z-index: 9999;
+  box-sizing: border-box;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55),
+              0 0 0 2px rgba(var(--yaab-card-accent-rgb), 0.35);
+  border-radius: var(--yaab-card-radius);
+  overflow: hidden;
+  /* Lock the cloned card's hover/transition behavior so it stays stable. */
+  transition: none !important;
+  filter: brightness(1.04) saturate(1.05);
+}
+.yaab-flip-ghost,
+.yaab-flip-ghost * {
+  cursor: default !important;
+  user-select: none !important;
+}
+
+/* Glow-pulse on the freshly added army-entry. */
+@keyframes yaab-just-added-pulse {
+  0%   { box-shadow: 0 0 0 0    rgba(var(--yaab-card-accent-rgb), 0.65); background-color: rgba(var(--yaab-card-accent-rgb), 0.12); }
+  60%  { box-shadow: 0 0 0 6px  rgba(var(--yaab-card-accent-rgb), 0.00); background-color: rgba(var(--yaab-card-accent-rgb), 0.06); }
+  100% { box-shadow: 0 0 0 0    rgba(var(--yaab-card-accent-rgb), 0.00); background-color: transparent; }
+}
+.army-entry.just-added,
+.yaab-card.just-added {
+  animation: yaab-just-added-pulse 700ms var(--yaab-card-ease);
+  border-color: var(--yaab-card-accent) !important;
+}
+
+/* Fade-in fallback when no source rect is found (e.g. command palette adds). */
+@keyframes yaab-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+.army-entry.just-added-fade {
+  animation: yaab-fade-in 220ms var(--yaab-card-ease);
+}
+
+/* ===========================================================================
+   Drag-to-reorder visuals.
+   ========================================================================= */
+.army-entry.is-dragging {
+  opacity: 0.55;
+  cursor: grabbing !important;
+  z-index: 5;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55),
+              0 0 0 1px rgba(var(--yaab-card-accent-rgb), 0.55);
+}
+.army-entry.is-dragging * { cursor: grabbing !important; }
+
+.army-entry.is-drop-target-before {
+  box-shadow: 0 -2px 0 0 var(--yaab-card-accent) inset;
+}
+.army-entry.is-drop-target-after {
+  box-shadow: 0 2px 0 0 var(--yaab-card-accent) inset;
+}
+
+.army-entry-handle {
+  cursor: grab;
+}
+.army-entry.is-dragging .army-entry-handle { cursor: grabbing; }
+
+/* ===========================================================================
+   Reduced-motion: kill animation, preserve final state.
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .yaab-card,
+  .unit-card,
+  .army-entry,
+  .starter-card,
+  .community-card,
+  .ac-card,
+  .yaab-flip-ghost {
+    transition: none !important;
+    animation: none !important;
+  }
+  .yaab-card:hover,
+  .unit-card:hover,
+  .starter-card:hover,
+  .community-card:hover,
+  .ac-card:hover {
+    transform: none;
+  }
+  .army-entry.just-added,
+  .army-entry.just-added-fade,
+  .yaab-card.just-added {
+    animation: none !important;
+    background-color: rgba(var(--yaab-card-accent-rgb), 0.10);
+  }
+}

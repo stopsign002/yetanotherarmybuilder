@@ -1,0 +1,283 @@
+/* css/animations-polish.css — refined transitions, mode-enter polish, card hover lift, faction-switch ripple, save-toast bounce, FLIP-landing pulse, crest spin tune-up, detail-tab cross-fade. */
+
+/* ──────────────────────────────────────────────────────────────────────
+   1. Mode transitions — replace the old 200ms fade+slide with a 280ms
+   fade + scale that uses an ease-out-back-style curve for a slight settle.
+   The original mode-enter-anim is overridden by name.
+   ────────────────────────────────────────────────────────────────────── */
+
+@keyframes mode-enter-anim {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1.004);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mode-page.mode-enter {
+  animation: mode-enter-anim 280ms cubic-bezier(0.34, 1.16, 0.64, 1) both !important;
+  will-change: opacity, transform;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   2. Unit-card hover lift — smooth, slightly springy.
+   The base transition in style.css uses linear timing for transform; we
+   layer a springier curve here without touching the base.
+   ────────────────────────────────────────────────────────────────────── */
+
+.unit-card {
+  transition:
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 200ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+  will-change: transform;
+}
+
+.unit-card:hover {
+  transform: translateY(-2px) scale(1.005);
+}
+
+.unit-card:active {
+  transform: translateY(0) scale(0.997);
+  transition-duration: 90ms;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   3. Faction-color morph ripple — when the body class flips faction, the
+   panels briefly pulse with the new accent. Fired by the same body-class
+   change scanline.js already triggers (it adds .has-selected-faction).
+   The first .panel-body to mount (or change accent) gets a one-shot
+   animation via a CSS animation key.
+   ────────────────────────────────────────────────────────────────────── */
+
+@keyframes faction-ripple-pulse {
+  0% {
+    box-shadow: inset 0 0 0 0 rgba(var(--accent-rgb, 200, 200, 200), 0.0);
+    background-color: transparent;
+  }
+  35% {
+    box-shadow: inset 0 0 24px 0 rgba(var(--accent-rgb, 200, 200, 200), 0.10);
+    background-color: rgba(var(--accent-rgb, 200, 200, 200), 0.025);
+  }
+  100% {
+    box-shadow: inset 0 0 0 0 rgba(var(--accent-rgb, 200, 200, 200), 0.0);
+    background-color: transparent;
+  }
+}
+
+/* The scanline.js module runs the .atmosphere-scanline element on every
+   accent change. We hook on it: when scanline appears, mark the panels for a
+   one-shot pulse via animation-iteration-count: 1. */
+body:has(.atmosphere-scanline) .panel-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: faction-ripple-pulse 700ms ease-out forwards;
+  z-index: 0;
+}
+.panel-body { position: relative; }
+
+/* ──────────────────────────────────────────────────────────────────────
+   4. Save success toast — bouncy entrance.
+   Toast container animates with a subtle settle. Existing toast.js adds
+   its toast-in class; we extend it.
+   ────────────────────────────────────────────────────────────────────── */
+
+@keyframes toast-bounce-in {
+  0%   { opacity: 0; transform: translateY(20px) scale(0.92); }
+  55%  { opacity: 1; transform: translateY(-3px) scale(1.02); }
+  78%  {              transform: translateY(1px)  scale(0.997); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.toast-container .toast,
+.toast {
+  animation: toast-bounce-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform, opacity;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   5. Add-to-army FLIP landing — bigger glow pulse + settle bounce.
+   flip-animations.js applies .flip-landed on the destination card; we
+   amplify the visual.
+   ────────────────────────────────────────────────────────────────────── */
+
+@keyframes flip-landed-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(var(--accent-rgb, 200, 200, 200), 0.55),
+                     0 0 18px 4px rgba(var(--accent-rgb, 200, 200, 200), 0.45); transform: scale(1.04); }
+  40%  { box-shadow: 0 0 0 6px rgba(var(--accent-rgb, 200, 200, 200), 0.0),
+                     0 0 0 rgba(var(--accent-rgb, 200, 200, 200), 0.0); transform: scale(0.985); }
+  70%  { transform: scale(1.012); }
+  100% { box-shadow: none; transform: scale(1); }
+}
+
+.flip-landed,
+.flip-target.flip-landed,
+.army-entry.flip-landed,
+.army-entry-card.flip-landed {
+  animation: flip-landed-pulse 720ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform, box-shadow;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   6. Loading splash crest — speed up rotation + brighter pulse.
+   ────────────────────────────────────────────────────────────────────── */
+
+.atmosphere-crest-rotor {
+  animation-duration: 8s !important;
+}
+
+.atmosphere-crest-pulse {
+  animation-duration: 2.6s !important;
+}
+
+@keyframes atmosphere-crest-pulse {
+  0%, 100% { opacity: 0.82; filter: drop-shadow(0 0 6px rgba(var(--accent-rgb, 200, 200, 200), 0.30)); }
+  50%      { opacity: 1.0;  filter: drop-shadow(0 0 14px rgba(var(--accent-rgb, 200, 200, 200), 0.55)); }
+}
+
+/* Cold-start splash crest if present. */
+.cold-start-crest svg,
+.cold-start-crest {
+  animation-duration: 8s !important;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   7. Detail-panel tab cross-fade (Unit Detail ↔ Rules).
+   build-mode.js toggles `[hidden]` on the rules panel; we soften the
+   visibility flip with a 150ms cross-fade.
+   ────────────────────────────────────────────────────────────────────── */
+
+.build-rules-panel,
+#unit-detail-panel {
+  transition: opacity 150ms ease;
+}
+.build-rules-panel[hidden] {
+  display: block !important;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  transition: opacity 0ms;
+}
+
+/* Fade-in for the detail content when a unit is freshly selected. */
+@keyframes detail-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.unit-detail-content,
+.unit-detail-datasheet {
+  animation: detail-fade-in 220ms ease-out;
+  will-change: opacity, transform;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   8. Faction glyph: subtle entrance + accent-color ease.
+   ────────────────────────────────────────────────────────────────────── */
+
+@keyframes faction-glyph-in {
+  from { opacity: 0; transform: scale(0.6) rotate(-6deg); }
+  to   { opacity: 1; transform: scale(1)   rotate(0deg); }
+}
+.faction-glyph {
+  animation: faction-glyph-in 340ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   9. Hero points-bar glow on width change — leverages the existing
+   width transition; a brief inner glow pulses every time the bar resizes
+   (CSS-only via attribute change is impossible, so we use a soft repeating
+   glint that is masked by the bar fill).
+   ────────────────────────────────────────────────────────────────────── */
+
+.build-hero-bar {
+  transition:
+    width 480ms cubic-bezier(0.22, 0.9, 0.32, 1),
+    background 320ms ease,
+    box-shadow 320ms ease !important;
+}
+.build-hero-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 100%);
+  opacity: 0;
+  animation: build-hero-bar-glint 5s ease-in-out infinite;
+  pointer-events: none;
+}
+.build-hero-bar { position: relative; }
+
+@keyframes build-hero-bar-glint {
+  0%, 100% { opacity: 0; transform: translateX(-30%); }
+  45%      { opacity: 0.55; transform: translateX(20%); }
+  60%      { opacity: 0; transform: translateX(50%); }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   10. Topbar mode-tab focus / active polish — quicker accent slide.
+   ────────────────────────────────────────────────────────────────────── */
+
+.topbar-mode-tab {
+  transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+.topbar-mode-tab[aria-selected="true"] {
+  box-shadow: inset 0 -2px 0 0 rgba(var(--accent-rgb, 200, 200, 200), 0.85);
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   11. Reduced-motion overrides — disable every keyframe + transition we
+   layered above. Honors both the media query and the `body.reduce-motion`
+   class fallback.
+   ────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-page.mode-enter,
+  .unit-card,
+  .toast,
+  .toast-container .toast,
+  .flip-landed,
+  .flip-target.flip-landed,
+  .army-entry.flip-landed,
+  .army-entry-card.flip-landed,
+  .unit-detail-content,
+  .unit-detail-datasheet,
+  .faction-glyph,
+  .build-hero-bar::after,
+  body:has(.atmosphere-scanline) .panel-body::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  .unit-card:hover,
+  .unit-card:active {
+    transform: none !important;
+  }
+}
+
+body.reduce-motion .mode-page.mode-enter,
+body.reduce-motion .unit-card,
+body.reduce-motion .toast,
+body.reduce-motion .flip-landed,
+body.reduce-motion .unit-detail-content,
+body.reduce-motion .faction-glyph,
+body.reduce-motion .build-hero-bar::after {
+  animation: none !important;
+  transition: none !important;
+}
+body.reduce-motion .unit-card:hover {
+  transform: none !important;
+}

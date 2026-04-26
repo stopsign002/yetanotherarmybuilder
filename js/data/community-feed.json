@@ -1,0 +1,261 @@
+{
+  "version": 1,
+  "updatedAt": "2026-04-24",
+  "lists": [
+    {
+      "id": "tyranids-vanguard-2000",
+      "title": "WTC-Style Tyranid Vanguard",
+      "author": "Sample Tournament Player",
+      "event": "Sample WTC Format 2024",
+      "placement": "Top 8",
+      "points": 2000,
+      "faction": "Tyranids",
+      "detachment": "Invasion Fleet",
+      "tags": ["competitive", "wtc", "tournament"],
+      "description": "Aggressive Tyranid list emphasizing fast melee, big monsters, and screening swarms to control the midfield.",
+      "units": [
+        { "nameMatches": "Hive Tyrant", "count": 1 },
+        { "nameMatches": "Neurotyrant", "count": 1 },
+        { "nameMatches": "Winged Tyranid Prime", "count": 1 },
+        { "nameMatches": "Termagants", "count": 2 },
+        { "nameMatches": "Hormagaunts", "count": 2 },
+        { "nameMatches": "Genestealers", "count": 2 },
+        { "nameMatches": "Tyrannofex", "count": 1 },
+        { "nameMatches": "Carnifex", "count": 1 },
+        { "nameMatches": "Exocrine", "count": 1 }
+      ]
+    },
+    {
+      "id": "necrons-canoptek-2000",
+      "title": "Canoptek Court Control",
+      "author": "Anvil Test Pilot",
+      "event": "Apex Open '24",
+      "placement": "Top 16",
+      "points": 2000,
+      "faction": "Necrons",
+      "detachment": "Canoptek Court",
+      "tags": ["competitive", "tournament"],
+      "description": "Robot-tide Necron build leveraging Canoptek synergies and Doomstalker pressure for board control.",
+      "units": [
+        { "nameMatches": "Technomancer", "count": 1 },
+        { "nameMatches": "Catacomb Command Barge", "count": 1 },
+        { "nameMatches": "Necron Warriors", "count": 2 },
+        { "nameMatches": "Immortals", "count": 1 },
+        { "nameMatches": "Canoptek Wraiths", "count": 2 },
+        { "nameMatches": "Canoptek Scarab Swarms", "count": 2 },
+        { "nameMatches": "Canoptek Doomstalker", "count": 2 },
+        { "nameMatches": "Canoptek Spyder", "count": 1 }
+      ]
+    },
+    {
+      "id": "space-marines-firestorm-2000",
+      "title": "Firestorm Assault Force",
+      "author": "Fictional Captain",
+      "event": "Mock Major '24",
+      "placement": "Top 32",
+      "points": 2000,
+      "faction": "Imperium - Adeptus Astartes - Space Marines",
+      "detachment": "Firestorm Assault Force",
+      "tags": ["competitive", "wtc"],
+      "description": "Fast-attack Space Marine list using Firestorm bonuses to push aggressive Outriders and Inceptors.",
+      "units": [
+        { "nameMatches": "Captain on Bike", "count": 1 },
+        { "nameMatches": "Lieutenant", "count": 1 },
+        { "nameMatches": "Apothecary Biologis", "count": 1 },
+        { "nameMatches": "Assault Intercessor Squad", "count": 2 },
+        { "nameMatches": "Outrider Squad", "count": 2 },
+        { "nameMatches": "Inceptor Squad", "count": 2 },
+        { "nameMatches": "Eradicator Squad", "count": 1 },
+        { "nameMatches": "Repulsor Executioner", "count": 1 }
+      ]
+    },
+    {
+      "id": "custodes-intro-1000",
+      "title": "Adeptus Custodes — Beginner Intro",
+      "author": "New Player Sample",
+      "event": "Local Learning League",
+      "placement": "Friendly",
+      "points": 1000,
+      "faction": "Imperium - Adeptus Custodes",
+      "detachment": "Shield Host",
+      "tags": ["beginner", "casual"],
+      "description": "Approachable elite-infantry intro showcasing Custodian Guard, a Shield-Captain, and a single anchor vehicle.",
+      "units": [
+        { "nameMatches": "Shield-Captain", "count": 1 },
+        { "nameMatches": "Custodian Guard", "count": 2 },
+        { "nameMatches": "Custodian Wardens", "count": 1 },
+        { "nameMatches": "Vertus Praetors", "count": 1 },
+        { "nameMatches": "Caladius Grav-Tank", "count": 1 }
+      ]
+    },
+    {
+      "id": "orks-greentide-2000",
+      "title": "Pure Green Tide",
+      "author": "Theme List Author",
+      "event": "Themed Brawl Cup",
+      "placement": "Best Themed",
+      "points": 2000,
+      "faction": "Orks",
+      "detachment": "War Horde",
+      "tags": ["theme", "casual", "narrative"],
+      "description": "Theme: only Boyz, Nobz, and Warbosses. Pure foot-slogging Ork horde with no vehicles.",
+      "units": [
+        { "nameMatches": "Warboss", "count": 2 },
+        { "nameMatches": "Weirdboy", "count": 1 },
+        { "nameMatches": "Painboy", "count": 1 },
+        { "nameMatches": "Boyz", "count": 4 },
+        { "nameMatches": "Gretchin", "count": 2 },
+        { "nameMatches": "Nobz", "count": 2 },
+        { "nameMatches": "Meganobz", "count": 2 }
+      ]
+    },
+    {
+      "id": "aeldari-windriders-2000",
+      "title": "All-Cavalry Windrider Wing",
+      "author": "Theme Brigade",
+      "event": "Narrative Weekender",
+      "placement": "Best Painted",
+      "points": 2000,
+      "faction": "Aeldari",
+      "detachment": "Windrider Host",
+      "tags": ["theme", "narrative", "casual"],
+      "description": "Theme: all jetbike cavalry. Hyper-mobile Aeldari force that sacrifices durability for speed and shooting.",
+      "units": [
+        { "nameMatches": "Autarch on Skyrunner", "count": 1 },
+        { "nameMatches": "Farseer Skyrunner", "count": 1 },
+        { "nameMatches": "Warlock Skyrunners", "count": 1 },
+        { "nameMatches": "Windriders", "count": 4 },
+        { "nameMatches": "Shining Spears", "count": 2 },
+        { "nameMatches": "Vyper", "count": 2 }
+      ]
+    },
+    {
+      "id": "tau-kauyon-2000",
+      "title": "Kauyon Patient Hunter",
+      "author": "Sample Cadre Commander",
+      "event": "Apex Open '24",
+      "placement": "Top 16",
+      "points": 2000,
+      "faction": "T'au Empire",
+      "detachment": "Kauyon",
+      "tags": ["competitive", "tournament"],
+      "description": "Patient T'au gunline using Kauyon to deliver a devastating turn-three salvo from layered firing positions.",
+      "units": [
+        { "nameMatches": "Commander in Enforcer", "count": 1 },
+        { "nameMatches": "Cadre Fireblade", "count": 1 },
+        { "nameMatches": "Ethereal", "count": 1 },
+        { "nameMatches": "Strike Team", "count": 2 },
+        { "nameMatches": "Pathfinder Team", "count": 1 },
+        { "nameMatches": "Crisis Battlesuits", "count": 2 },
+        { "nameMatches": "Broadside", "count": 1 },
+        { "nameMatches": "Hammerhead", "count": 1 },
+        { "nameMatches": "Riptide", "count": 1 }
+      ]
+    },
+    {
+      "id": "csm-renegade-1500",
+      "title": "Renegade Raiders",
+      "author": "Casual Player Sample",
+      "event": "Friendly League",
+      "placement": "Mid-table",
+      "points": 1500,
+      "faction": "Chaos - Chaos Space Marines",
+      "detachment": "Renegade Raiders",
+      "tags": ["casual"],
+      "description": "Mid-points Chaos warband balancing Legionaries, Raptors, and a Helbrute for casual club play.",
+      "units": [
+        { "nameMatches": "Chaos Lord", "count": 1 },
+        { "nameMatches": "Sorcerer", "count": 1 },
+        { "nameMatches": "Legionaries", "count": 2 },
+        { "nameMatches": "Raptors", "count": 1 },
+        { "nameMatches": "Chaos Terminator Squad", "count": 1 },
+        { "nameMatches": "Helbrute", "count": 1 },
+        { "nameMatches": "Vindicator", "count": 1 }
+      ]
+    },
+    {
+      "id": "guard-combined-2000",
+      "title": "Combined Regiment Mass",
+      "author": "Sample Commissar",
+      "event": "Mock Major '24",
+      "placement": "Top 32",
+      "points": 2000,
+      "faction": "Imperium - Astra Militarum",
+      "detachment": "Combined Regiment",
+      "tags": ["competitive", "tournament"],
+      "description": "Astra Militarum massed-infantry with Russ tanks and an Artillery anchor for board-wide pressure.",
+      "units": [
+        { "nameMatches": "Lord Solar Leontus", "count": 1 },
+        { "nameMatches": "Cadian Command Squad", "count": 1 },
+        { "nameMatches": "Cadian Shock Troops", "count": 3 },
+        { "nameMatches": "Catachan Jungle Fighters", "count": 1 },
+        { "nameMatches": "Scout Sentinels", "count": 1 },
+        { "nameMatches": "Leman Russ Battle Tank", "count": 2 },
+        { "nameMatches": "Basilisk", "count": 1 }
+      ]
+    },
+    {
+      "id": "sisters-faithful-2000",
+      "title": "Hallowed Martyrs Mid-Range",
+      "author": "Sample Sister Superior",
+      "event": "Apex Open '24",
+      "placement": "Top 16",
+      "points": 2000,
+      "faction": "Imperium - Adepta Sororitas",
+      "detachment": "Hallowed Martyrs",
+      "tags": ["competitive", "wtc"],
+      "description": "Miracle-dice driven Sisters list mixing Battle Sisters, Paragon Warsuits, and Repentia for layered threats.",
+      "units": [
+        { "nameMatches": "Canoness", "count": 1 },
+        { "nameMatches": "Morvenn Vahl", "count": 1 },
+        { "nameMatches": "Battle Sisters Squad", "count": 2 },
+        { "nameMatches": "Sisters Repentia", "count": 1 },
+        { "nameMatches": "Paragon Warsuits", "count": 1 },
+        { "nameMatches": "Seraphim Squad", "count": 1 },
+        { "nameMatches": "Castigator", "count": 1 },
+        { "nameMatches": "Immolator", "count": 2 }
+      ]
+    },
+    {
+      "id": "death-guard-plague-2000",
+      "title": "Plague Company Grindfest",
+      "author": "Fictional Plague Champion",
+      "event": "Sample WTC Format 2024",
+      "placement": "Top 8",
+      "points": 2000,
+      "faction": "Chaos - Death Guard",
+      "detachment": "Plague Company",
+      "tags": ["competitive", "wtc"],
+      "description": "Resilient Death Guard built around Plague Marines, Blightlords, and a Mortarion centerpiece.",
+      "units": [
+        { "nameMatches": "Mortarion", "count": 1 },
+        { "nameMatches": "Lord of Virulence", "count": 1 },
+        { "nameMatches": "Malignant Plaguecaster", "count": 1 },
+        { "nameMatches": "Plague Marines", "count": 2 },
+        { "nameMatches": "Poxwalkers", "count": 1 },
+        { "nameMatches": "Blightlord Terminators", "count": 1 },
+        { "nameMatches": "Deathshroud Terminators", "count": 1 },
+        { "nameMatches": "Plagueburst Crawler", "count": 2 }
+      ]
+    },
+    {
+      "id": "drukhari-skirmish-1000",
+      "title": "Drukhari Raid — Beginner Skirmish",
+      "author": "New Player Sample",
+      "event": "Local Learning League",
+      "placement": "Friendly",
+      "points": 1000,
+      "faction": "Aeldari - Drukhari",
+      "detachment": "Realspace Raiders",
+      "tags": ["beginner", "casual", "narrative"],
+      "description": "Small-points Drukhari intro: one Archon, two Kabalite squads in Raiders, and a Ravager for fire support.",
+      "units": [
+        { "nameMatches": "Archon", "count": 1 },
+        { "nameMatches": "Kabalite Warriors", "count": 2 },
+        { "nameMatches": "Wyches", "count": 1 },
+        { "nameMatches": "Raider", "count": 2 },
+        { "nameMatches": "Ravager", "count": 1 }
+      ]
+    }
+  ]
+}

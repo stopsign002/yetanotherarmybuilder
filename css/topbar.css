@@ -1,0 +1,308 @@
+/* topbar.css — persistent top app bar: brand + mode tabs, search, Settings + Help. */
+
+:root {
+  --topbar-h:        56px;
+  --topbar-h-mobile: 48px;
+  --topbar-bg:       rgba(20, 20, 24, 0.82);
+  --topbar-border:   rgba(var(--accent-rgb), 0.22);
+  --topbar-pad-x:    18px;
+  --topbar-blur:     14px;
+}
+
+/* Push everything below the fixed top bar. */
+html, body { overflow: hidden; }
+body { padding-top: var(--topbar-h); }
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar-h);
+  z-index: 400;
+  background: var(--topbar-bg);
+  -webkit-backdrop-filter: blur(var(--topbar-blur)) saturate(140%);
+  backdrop-filter: blur(var(--topbar-blur)) saturate(140%);
+  border-bottom: 1px solid var(--topbar-border);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.35);
+}
+
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+  padding: 0 var(--topbar-pad-x);
+  min-width: 0;
+}
+
+/* ── Left group: brand + mode tabs ────────────────────────── */
+.topbar-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.topbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--text);
+  flex: 0 0 auto;
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  outline-offset: 2px;
+}
+.topbar-brand:hover { color: var(--accent); }
+.topbar-brand-glyph {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--accent);
+  filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.35));
+}
+.topbar-brand-mark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ── Mode tabs (Build / Collect / Play) ──────────────────── */
+.topbar-modes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 3px;
+}
+.topbar-mode-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 14px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.topbar-mode-tab:hover {
+  color: var(--text);
+  background: rgba(var(--accent-rgb), 0.08);
+  transform: translateY(-1px);
+}
+.topbar-mode-tab[aria-selected="true"] {
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.14);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.topbar-mode-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Search / command bar ─────────────────────────────────── */
+.topbar-search {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 12px 0 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: text;
+  text-align: left;
+  min-width: 0;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.topbar-search:hover,
+.topbar-search:focus-visible {
+  border-color: rgba(var(--accent-rgb), 0.45);
+  color: var(--text);
+  outline: none;
+}
+.topbar-search-glyph {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+.topbar-search-placeholder {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-search-kbd {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  background: rgba(0,0,0,0.35);
+  color: var(--text-muted);
+}
+
+/* ── Right group: Settings + Help ─────────────────────────── */
+.topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.topbar-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.topbar-action-btn:hover {
+  background: rgba(var(--accent-rgb), 0.10);
+  border-color: rgba(var(--accent-rgb), 0.45);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+.topbar-action-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.topbar-action-btn[aria-expanded="true"] {
+  background: rgba(var(--accent-rgb), 0.16);
+  border-color: rgba(var(--accent-rgb), 0.45);
+  color: var(--accent);
+}
+.topbar-action-glyph {
+  font-size: 14px;
+  line-height: 1;
+}
+.topbar-action-label {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-size: 11px;
+}
+
+/* Help button is icon-only at narrower widths to save space. */
+.topbar-action-label-help { display: inline; }
+
+/* ── Toolbar (left panel footer) — preserved from previous layout */
+.army-toolbar { gap: 4px; }
+.toolbar-status-row {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 0 2px 2px;
+  min-height: 14px;
+}
+.toolbar-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.toolbar-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+.toolbar-status.is-saved::before { background: var(--success); }
+.toolbar-status.is-unsaved {
+  color: var(--accent);
+  font-weight: 600;
+}
+.toolbar-status.is-unsaved::before {
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.6);
+}
+
+.toolbar-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+  margin: 2px 4px;
+}
+.toolbar-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.toolbar-icons-inline {
+  display: inline-flex;
+  gap: 2px;
+}
+.toolbar-icons-inline:empty { display: none; }
+.toolbar-compat-shelf { display: none !important; }
+
+/* ── Tablet ────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .topbar-search { max-width: 320px; }
+  .topbar-mode-tab { padding: 0 10px; font-size: 11px; letter-spacing: 1px; }
+}
+
+/* ── Mobile ────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  :root { --topbar-pad-x: 10px; }
+  body  { padding-top: var(--topbar-h-mobile); }
+  .topbar { height: var(--topbar-h-mobile); }
+  .topbar-inner { gap: 8px; }
+
+  .topbar-brand-mark { display: none; }
+
+  .topbar-modes { height: 32px; padding: 2px; gap: 2px; }
+  .topbar-mode-tab { padding: 0 8px; font-size: 10px; letter-spacing: 0.8px; }
+
+  .topbar-search {
+    flex: 0 0 auto;
+    max-width: 40px;
+    padding: 0 10px;
+    justify-content: center;
+  }
+  .topbar-search-placeholder,
+  .topbar-search-kbd { display: none; }
+
+  .topbar-action-btn { padding: 0 8px; height: 32px; }
+  .topbar-action-label { display: none; }
+}
+
+/* ── Reduced motion override (user-toggleable via Settings) ── */
+body.reduce-motion .topbar-mode-tab,
+body.reduce-motion .topbar-action-btn { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .topbar-mode-tab,
+  .topbar-action-btn { transition: none; }
+}

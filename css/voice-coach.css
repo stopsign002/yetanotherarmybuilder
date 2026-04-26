@@ -1,0 +1,158 @@
+/* voice-coach.css — shared styles for voice mic indicator + list coach modal. */
+
+/* ── Floating voice mic indicator ──────────────────────────────────── */
+
+.yaab-voice-mic {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9000;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 20, 20, 0.92);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45),
+              0 0 0 0 rgba(var(--accent-rgb, 255, 80, 80), 0.6);
+  pointer-events: none; /* purely informational; toggle is in the toolbar */
+}
+
+.yaab-voice-mic[hidden] { display: none !important; }
+
+.yaab-voice-mic-glyph {
+  font-family: var(--font-display, inherit);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.05em;
+  color: rgb(var(--accent-rgb, 230, 80, 80));
+}
+
+.yaab-voice-mic-ring {
+  position: absolute;
+  inset: -4px;
+  border: 2px solid rgba(var(--accent-rgb, 230, 80, 80), 0.55);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.yaab-voice-mic-active .yaab-voice-mic-ring {
+  animation: yaab-voice-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes yaab-voice-pulse {
+  0%   { transform: scale(0.95); opacity: 0.85; }
+  50%  { transform: scale(1.15); opacity: 0.25; }
+  100% { transform: scale(0.95); opacity: 0.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yaab-voice-mic-active .yaab-voice-mic-ring {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+.yaab-voice-transcript {
+  position: absolute;
+  right: 64px;
+  bottom: 6px;
+  max-width: 280px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(20, 20, 20, 0.95);
+  color: #ddd;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.yaab-voice-transcript[hidden] { display: none !important; }
+
+/* ── List Coach modal ──────────────────────────────────────────────── */
+
+.list-coach-modal {
+  max-width: 560px;
+  width: 92vw;
+}
+
+.list-coach-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.coach-empty {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--muted, #888);
+  font-size: 14px;
+}
+
+.coach-empty-good {
+  color: rgb(var(--accent-rgb, 168, 230, 178));
+}
+
+.coach-suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coach-suggestion {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 4px solid transparent;
+}
+
+.coach-sev-info     { border-left-color: #7aa3e6; }
+.coach-sev-warning  { border-left-color: #e6c77a; }
+.coach-sev-critical { border-left-color: #e67a7a; }
+
+.coach-sev-icon {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: #111;
+}
+
+.coach-sev-info     .coach-sev-icon { background: #7aa3e6; }
+.coach-sev-warning  .coach-sev-icon { background: #e6c77a; }
+.coach-sev-critical .coach-sev-icon { background: #e67a7a; color: #fff; }
+
+.coach-sug-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.coach-sug-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text, #ececec);
+  margin-bottom: 2px;
+}
+
+.coach-sug-body {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--muted, #aaa);
+}

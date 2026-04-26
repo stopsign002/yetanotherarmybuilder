@@ -1,0 +1,320 @@
+/* css/deployment-planner.css — styles for the drag-drop Deployment Planner modal. */
+
+.yaab-dp-backdrop {
+  padding: 10px;
+}
+
+.yaab-dp-modal {
+  max-width: min(1400px, 98vw);
+  width: 100%;
+  max-height: 94vh;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.yaab-dp-body {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Top toolbar — presets + saved-deployment controls */
+.yaab-dp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+.yaab-dp-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.yaab-dp-toolbar-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin-right: 2px;
+}
+
+.yaab-dp-toolbar .yaab-dp-sep {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.yaab-dp-select {
+  background: var(--input-bg, #1a1a1a);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  max-width: 220px;
+}
+
+.yaab-dp-btn {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.yaab-dp-btn:hover { background: rgba(255,255,255,0.06); }
+.yaab-dp-btn.yaab-dp-btn-active {
+  background: #e6c77a;
+  color: #111;
+  border-color: #e6c77a;
+}
+.yaab-dp-btn.yaab-dp-btn-danger { border-color: #a24c4c; color: #e68a8a; }
+.yaab-dp-btn.yaab-dp-btn-danger:hover { background: rgba(230,138,138,0.1); }
+
+/* Two-column layout: token panel + battlefield */
+.yaab-dp-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Side panel with draggable unit tokens */
+.yaab-dp-side {
+  width: 240px;
+  min-width: 240px;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 10px 8px;
+  background: rgba(0,0,0,0.15);
+  flex-shrink: 0;
+}
+
+.yaab-dp-side-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 4px 6px 8px;
+}
+
+.yaab-dp-side-empty {
+  padding: 20px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.yaab-dp-token-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+  margin-bottom: 6px;
+  cursor: grab;
+  user-select: none;
+  transition: background 0.12s, border-color 0.12s;
+}
+.yaab-dp-token-item:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: #e6c77a66;
+}
+.yaab-dp-token-item:active { cursor: grabbing; }
+.yaab-dp-token-item.yaab-dp-dragging { opacity: 0.55; }
+
+.yaab-dp-token-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111;
+  font-size: 10px;
+  font-weight: 700;
+  border: 2px solid rgba(0,0,0,0.35);
+  letter-spacing: 0.02em;
+}
+
+.yaab-dp-token-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.yaab-dp-token-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.yaab-dp-token-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.yaab-dp-token-placed {
+  font-size: 10px;
+  color: #e6c77a;
+  background: rgba(230,199,122,0.12);
+  border: 1px solid rgba(230,199,122,0.4);
+  border-radius: 3px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+/* Battlefield canvas wrapper */
+.yaab-dp-field-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  background: radial-gradient(circle at center, #1b1b1b 0%, #0d0d0d 100%);
+  overflow: auto;
+  position: relative;
+}
+
+.yaab-dp-canvas-host {
+  position: relative;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.5);
+  border-radius: 4px;
+  overflow: hidden;
+  line-height: 0;
+  touch-action: none;
+}
+
+.yaab-dp-canvas {
+  display: block;
+  cursor: default;
+}
+.yaab-dp-canvas.yaab-dp-cursor-measure { cursor: crosshair; }
+.yaab-dp-canvas.yaab-dp-cursor-move    { cursor: grab; }
+.yaab-dp-canvas.yaab-dp-cursor-grab    { cursor: grabbing; }
+
+/* Measurement readout overlay */
+.yaab-dp-readout {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.72);
+  color: #e6c77a;
+  border: 1px solid #e6c77a66;
+  font-size: 12px;
+  font-family: ui-monospace, Menlo, monospace;
+  padding: 4px 8px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.yaab-dp-readout[hidden] { display: none; }
+
+/* Token popup editor (double-click) */
+.yaab-dp-popup {
+  position: absolute;
+  z-index: 10;
+  min-width: 210px;
+  background: var(--panel-bg, #1a1a1a);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.yaab-dp-popup-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.yaab-dp-popup-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  min-width: 44px;
+}
+.yaab-dp-popup input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  padding: 4px 6px;
+  background: rgba(0,0,0,0.4);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.yaab-dp-swatches {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.yaab-dp-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.35);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.yaab-dp-swatch:hover { transform: scale(1.15); }
+.yaab-dp-swatch.yaab-dp-swatch-active {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+.yaab-dp-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Empty-state overlay when the modal opens without an army */
+.yaab-dp-empty-state {
+  padding: 60px 30px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Respect reduced motion — disable any entrance animations */
+@media (prefers-reduced-motion: reduce) {
+  .yaab-dp-modal { animation: none; }
+  .yaab-dp-swatch { transition: none; }
+  .yaab-dp-swatch:hover { transform: none; }
+  .yaab-dp-token-item { transition: none; }
+}
+
+/* Narrow viewport — collapse side panel */
+@media (max-width: 780px) {
+  .yaab-dp-side {
+    width: 180px;
+    min-width: 180px;
+  }
+  .yaab-dp-toolbar { padding: 8px; }
+}

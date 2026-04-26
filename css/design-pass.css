@@ -1,0 +1,173 @@
+/* design-pass.css — toolbar overflow menus, panel-header polish, scrollbar tune. */
+
+/* ── Tools / More dropdown menus ─────────────────────────────────────── */
+.dropdown-menu.dropdown-menu-grouped {
+  /* Tools menu can grow long; clamp height and allow scroll. */
+  max-height: 60vh;
+  overflow-y: auto;
+  min-width: 220px;
+}
+.tools-menu,
+.more-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.tools-menu:empty,
+.more-menu:empty {
+  display: none;
+}
+
+/* Section header inside Tools dropdown. */
+.menu-section-header {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+  padding: 8px 10px 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
+  pointer-events: none;
+}
+.menu-section-header:first-child {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 4px;
+}
+
+/* Menu items inside .tools-menu / .more-menu — match existing
+   .dropdown-menu > button styling so they look unified. */
+.dropdown-menu .tools-menu > button,
+.dropdown-menu .more-menu > button,
+.dropdown-menu button.menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text, #e8e8e8);
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: calc(var(--radius, 4px) - 1px);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+.dropdown-menu .tools-menu > button:hover,
+.dropdown-menu .more-menu > button:hover,
+.dropdown-menu button.menu-item:hover,
+.dropdown-menu .tools-menu > button:focus,
+.dropdown-menu .more-menu > button:focus,
+.dropdown-menu button.menu-item:focus {
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+
+/* Empty-state placeholder (shown when no actions registered). */
+.dropdown-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  font-style: italic;
+}
+
+/* Disabled trigger (no actions registered). */
+.dropdown-trigger[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Width-clamp dropdown menus to the panel column. */
+#tools-dropdown-menu,
+#more-dropdown-menu,
+#export-dropdown-menu {
+  max-width: calc(var(--col-left, 300px) - 20px);
+}
+
+/* ── Toolbar buttons: tighter, more uniform height ───────────────────── */
+.army-toolbar .btn-sm {
+  line-height: 1.25;
+  height: 28px;
+}
+.army-toolbar .btn.btn-icon {
+  height: 28px;
+  min-width: 30px;
+  padding: 0 8px;
+}
+
+/* ── Panel header polish ─────────────────────────────────────────────── */
+.panel-header {
+  padding: 12px 16px 9px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.panel-header h2 {
+  position: relative;
+  padding-bottom: 1px;
+}
+.panel-header h2::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 28px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  opacity: 0.85;
+}
+
+/* ── Section spacing rhythm ──────────────────────────────────────────── */
+.detail-section { margin-bottom: 14px; }
+.army-rules-section { margin-bottom: 12px; }
+.army-rules-subsection { margin-bottom: 12px; }
+.army-rules-subsection:last-child { margin-bottom: 0; }
+
+/* ── Button hover lift ──────────────────────────────────────────────── */
+.btn-outline:hover {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* ── Slim accent scrollbar for unit grid + dropdown menus ────────────── */
+.unit-grid::-webkit-scrollbar,
+.panel-body::-webkit-scrollbar,
+.dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.unit-grid::-webkit-scrollbar-thumb,
+.panel-body::-webkit-scrollbar-thumb,
+.dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(var(--accent-rgb), 0.35);
+  border-radius: 3px;
+}
+.unit-grid::-webkit-scrollbar-thumb:hover,
+.panel-body::-webkit-scrollbar-thumb:hover,
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb), 0.6);
+}
+.unit-grid::-webkit-scrollbar-track,
+.dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── Reduced motion: opt-out of the hover lift transform. ────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .btn-outline:hover { box-shadow: none; }
+}
+
+/* ── Mobile: keep three-row toolbar usable. ──────────────────────────── */
+@media (max-width: 820px) {
+  .army-toolbar .toolbar-row { gap: 5px; }
+  .army-toolbar .btn-sm { font-size: 11px; padding: 4px 8px; height: 26px; }
+  .army-toolbar .btn.btn-icon { height: 26px; min-width: 26px; }
+  /* Dropdown menus may be wider than the column on mobile; allow viewport
+     width minus padding. */
+  #tools-dropdown-menu,
+  #more-dropdown-menu,
+  #export-dropdown-menu {
+    max-width: calc(100vw - 32px);
+  }
+}
