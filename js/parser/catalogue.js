@@ -145,6 +145,34 @@
         }
       });
 
+      // Pattern C: units imported via catalogueLinks with importRootEntries="true".
+      // Some factions (e.g. Imperial Knights, Chaos Knights) store all their unit
+      // definitions in a "-Library" catalogue and import them via this mechanism.
+      // The shared index was seeded with those root entryLinks during Phase 1.5.
+      root.querySelectorAll(':scope > catalogueLinks > catalogueLink[importRootEntries="true"]').forEach(catLink => {
+        const targetCatalogueId = I.getAttr(catLink, 'targetId');
+        const rootLinks = I.sharedRootEntryLinksByCatalogueId.get(targetCatalogueId) || [];
+        rootLinks.forEach(link => {
+          if (I.getAttr(link, 'hidden', 'false') === 'true') return;
+          const targetId = I.getAttr(link, 'targetId');
+          if (seenIds.has(targetId)) return;
+          const target = entriesById.get(targetId);
+          if (!target) return;
+          const t = I.getAttr(target, 'type', '');
+          if (t !== 'unit' && t !== 'model') return;
+          const linkName   = I.getAttr(link,   'name', '');
+          const targetName = I.getAttr(target, 'name', '');
+          if (I.isCrusadeSection(targetName) || I.isCrusadeSection(linkName)) return;
+          const linkIsLegends = linkName.includes('[Legends]') || targetName.includes('[Legends]');
+          const unit = I.parseEntry(target, entriesById, profilesById, rulesById);
+          if (unit && !seenIds.has(unit.id)) {
+            if (linkIsLegends) unit.isLegends = true;
+            seenIds.add(unit.id);
+            units.push(unit);
+          }
+        });
+      });
+
       // ── Detachments ──
       const detachments = [];
       const detachmentRuleIds = new Set();

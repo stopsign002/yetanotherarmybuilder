@@ -144,10 +144,14 @@ window.BSData = (() => {
     let done = 0;
 
     // ── Phase 1.5: load library catalogues into shared index ─────────────────
-    // Library catalogues (e.g. "Library - Tyranids.cat") contain shared unit
-    // definitions referenced by entryLink from main catalogues. Loading them into
-    // the shared index makes their sharedSelectionEntries resolvable during parse.
-    const libFiles = catFiles.filter(f => /^library[\s-]/i.test(f.name));
+    // Library catalogues (e.g. "Library - Tyranids.cat",
+    // "Imperium - Imperial Knights - Library.cat") contain shared unit
+    // definitions referenced by entryLink or importRootEntries catalogueLinks.
+    // Loading them into the shared index before Phase 2 ensures their entries
+    // and root entryLinks are resolvable during parallel catalogue parsing.
+    // Match any name containing the word "library" (case-insensitive) to catch
+    // both "Library - X" and "X - Library" naming conventions.
+    const libFiles = catFiles.filter(f => /\blibrary\b/i.test(f.name));
     for (const lib of libFiles) {
       try {
         let xml = null;
@@ -185,7 +189,10 @@ window.BSData = (() => {
         try {
           const cached = await _getCachedFaction(file.name);
           let faction;
-          if (cached) {
+          // A cached faction with 0 units is stale (e.g. parsed before its
+          // library catalogue was in the shared index). Re-fetch so Pattern C
+          // can resolve the missing units now that the index is populated.
+          if (cached && cached.units && cached.units.length > 0) {
             faction = cached;
           } else {
             const xml = await fetchFile(file.path);
