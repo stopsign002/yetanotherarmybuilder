@@ -58,14 +58,16 @@ Do not change this shape without bumping `DB_VERSION` in `js/db.js`. Parsed fact
 | `catalogue.js` | `buildIndexes` copies the shared Maps and overlays catalogue-local `sharedSelectionEntries` / `sharedProfiles` / `sharedRules` / `rules`. `parse` walks Pattern A (`selectionEntries`) and Pattern B (root `entryLinks` → sharedSelectionEntries) unit sources, extracts detachments, enhancements-by-detachment, and army rules (with detachment-rule de-duplication by both id and lowercased name). |
 | `index.js` | Loads LAST. Copies `P._internal.parse`, `P._internal.addToSharedIndex`, `P._internal.releaseSharedIndex` onto the public `P`. |
 
-## Cost patterns (A/B/C/D)
+## Cost patterns (A/B/C/D/F + recursion)
 
-All in `parser/costs.js::findCosts`. They run in order; the first one that yields non-null `min`/`max` wins.
+All in `parser/costs.js::findCosts`. Groups are processed by the `processGroup` inner function which runs Patterns F → A → B in order; if all yield nothing it **recurses into child `selectionEntryGroup`s**. This recursion is what makes units like Skorpekh Destroyers work — they wrap their "3-6 Bodies" sub-group inside an outer "Unit Composition" group that carries no constraints itself.
 
-- **Pattern A** (lines ~36–42): per-group `constraints > constraint[type="min"|"max"]` directly on a `selectionEntryGroup`. This is the standard BSData squad-size pattern (`min: 5, max: 10`).
-- **Pattern B** (lines ~44–58): if a group has no direct constraint but contains per-model `selectionEntry[type="model"]` each with its own `constraint`, sum them. Used when a squad has multiple distinct model entries (leader + bodies) each size-capped individually.
-- **Pattern C** (lines ~64–73): entry-level `constraints > constraint` on the unit entry itself. Used for single-model units and some characters.
-- **Pattern D** (lines ~75–89): if the entry has no constraints but its direct `selectionEntry[type="model"]` children do, sum those.
+- **Pattern F**: group contains `selectionEntry[type="upgrade"]` entries that each represent a composition choice (Squighog Boyz / Gretchin). Follows each upgrade's `entryLinks > entryLink` to a model/unit target and reads the link-level constraints. Takes the min of all option-mins and max of all option-maxes.
+- **Pattern A**: per-group `constraints > constraint[type="min"|"max"]` directly on a `selectionEntryGroup`. This is the standard BSData squad-size pattern (`min: 3, max: 6`).
+- **Pattern B**: if a group has no direct constraint but contains per-model `selectionEntry[type="model"]` each with its own `constraint`, sum them. Used when a squad has multiple distinct model entries (leader + bodies) each size-capped individually.
+- **Recursion**: if F/A/B all yield nothing for a group, walk `:scope > selectionEntryGroups > selectionEntryGroup` children and accumulate their results.
+- **Pattern C**: entry-level `constraints > constraint[field="selections"]` on the unit entry itself. Restricted to `field="selections"` to avoid treating Crusade-specific constraints (Battle Honours `max=3`, Weapon Modifications, etc.) as model counts. Used for single-model units and some characters.
+- **Pattern D**: if the entry has no constraints but its direct `selectionEntry[type="model"]` children do, sum those.
 
 Then `basePts` comes from the entry's own `costs > cost[name="pts"|"points"]`. Squad-variant prices come from `modifier[type="set"][field=<ptsTypeId>]` children under the entry — this is how "5 for 90 / 10 for 170" surfaces. Sorted ascending into `squadOptions`.
 
@@ -77,7 +79,7 @@ Catalogue `entryLink`s routinely resolve into `sharedSelectionEntries` defined i
 
 - **Seeded** by `BSData.loadAllFactions` in two phases:
   - **Phase 1**: every `.gst` file.
-  - **Phase 1.5**: every catalogue whose filename matches `^library[\s-]` (case-insensitive).
+  - **Phase 1.5**: every catalogue whose filename contains the word `library` (case-insensitive, `\blibrary\b`). This catches both "Library - X" and "X - Library" naming conventions.
 - Each call to `addToSharedIndex(xml)` stuffs `root > sharedProfiles > profile`, `root > sharedRules > rule` / `root > rules > rule`, and `root > sharedSelectionEntries > selectionEntry` / `sharedSelectionEntryGroups > selectionEntryGroup` into their respective `Map<id, Element>`.
 - **Consumed** during Phase 2 by `catalogue.js::buildIndexes`, which clones the Maps and then overlays any catalogue-local shared entries.
 - **Released** by `WahapediaParser.releaseSharedIndex()` once `loadAllFactions` finishes. This is important: each retained element holds its entire XML `Document` alive through `ownerDocument`. Clearing these Maps lets `DOMParser`-produced docs be garbage-collected.

@@ -28,8 +28,12 @@
       }
     });
 
-    let minModels = null, maxModels = null;
-    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+    // Returns [groupMin, groupMax] for a selectionEntryGroup.
+    // Tries Patterns F → A → B in order; recurses into child groups if all yield
+    // nothing.  This handles factions like Necrons (Skorpekh Destroyers) that wrap
+    // their "N-M Bodies" sub-group inside an outer "Unit Composition" group that
+    // carries no constraints itself.
+    function processGroup(group) {
       let groupMin = null, groupMax = null;
 
       // Pattern F (composition picks): group contains upgrade entries that each
@@ -90,13 +94,29 @@
         });
       }
 
+      // Recurse into child selectionEntryGroups when this level yields nothing.
+      if (groupMin === null && groupMax === null) {
+        group.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(subGroup => {
+          const [subMin, subMax] = processGroup(subGroup);
+          if (subMin !== null) groupMin = (groupMin || 0) + subMin;
+          if (subMax !== null) groupMax = (groupMax || 0) + subMax;
+        });
+      }
+
+      return [groupMin, groupMax];
+    }
+
+    let minModels = null, maxModels = null;
+    entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      const [groupMin, groupMax] = processGroup(group);
       if (groupMin !== null) minModels = (minModels || 0) + groupMin;
       if (groupMax !== null) maxModels = (maxModels || 0) + groupMax;
     });
 
-    // Pattern C
+    // Pattern C — restrict to field="selections" to avoid treating Crusade-specific
+    // constraints (Battle Honours max=3, Weapon Modifications, etc.) as model counts.
     if (minModels === null && maxModels === null) {
-      entryEl.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+      entryEl.querySelectorAll(':scope > constraints > constraint[field="selections"]').forEach(c => {
         const val = Math.round(parseFloat(I.getAttr(c, 'value', '0')));
         if (!isNaN(val) && val > 0) {
           if (I.getAttr(c, 'type') === 'min') minModels = val;
