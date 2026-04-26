@@ -12,6 +12,11 @@
       state.detachmentFaction  = null;
       state.selectedArmyEntryIndex = null;
       document.getElementById('army-detachment-select').value = '';
+      if (state.currentArmy) {
+        state.currentArmy.factionName    = state.factionFilter === 'all' ? '' : state.factionFilter;
+        state.currentArmy.chapter        = null;
+        state.currentArmy.detachmentName = null;
+      }
       App.applyFactionColor(state.factionFilter === 'all' ? null : state.factionFilter);
       App.updateChapterDropdown(state.factionFilter);
       App.renderUnitRosterWithContext();
@@ -26,6 +31,10 @@
       state.detachmentFaction  = null;
       state.selectedArmyEntryIndex = null;
       document.getElementById('army-detachment-select').value = '';
+      if (state.currentArmy) {
+        state.currentArmy.chapter        = state.selectedChapter;
+        state.currentArmy.detachmentName = null;
+      }
       App.applyFactionColor(state.selectedChapter || state.factionFilter);
       App.renderUnitRosterWithContext();
       const faction = App.getCurrentFaction();
@@ -37,6 +46,9 @@
       const detName = e.target.value;
       const dets = (state.detachmentFaction && state.detachmentFaction.detachments) || [];
       state.selectedDetachment = detName ? (dets.find(d => d.name === detName) || null) : null;
+      if (state.currentArmy) {
+        state.currentArmy.detachmentName = state.selectedDetachment ? state.selectedDetachment.name : null;
+      }
       UI.updateFactionRules(App.getCurrentFaction(), state.selectedDetachment);
     });
 
@@ -198,6 +210,7 @@
           state.armyManager.currentArmy = army;
           UI.hideLoadModal();
           UI.renderArmyList(state.currentArmy);
+          App.applyImportedSelections(army.factionName, army.chapter, army.detachmentName);
           UI.toast(`Loaded "${army.name}"`, 'success');
         }
       }
