@@ -3,10 +3,12 @@
  */
 
 window.Army = class Army {
-  constructor({ id, name, factionName, pointsLimit, entries } = {}) {
+  constructor({ id, name, factionName, chapter, detachmentName, pointsLimit, entries } = {}) {
     this.id = id || Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     this.name = name || 'New Army';
     this.factionName = factionName || '';
+    this.chapter = chapter || null;
+    this.detachmentName = detachmentName || null;
     this.pointsLimit = pointsLimit || 2000;
     this.entries = entries || []; // [{unitId, unitName, unitData, count}]
     this.createdAt = new Date().toISOString();
@@ -76,6 +78,8 @@ window.Army = class Army {
       id: this.id,
       name: this.name,
       factionName: this.factionName,
+      chapter: this.chapter,
+      detachmentName: this.detachmentName,
       pointsLimit: this.pointsLimit,
       entries: this.entries,
       createdAt: this.createdAt,
