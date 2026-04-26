@@ -11,12 +11,9 @@
 }
 .modal-close { flex: 0 0 auto; }
 
-/* Detail banner: ensure the actions group (pts pill + buttons) never collapses
- * to zero, and the title column always allows ellipsis fallback if word-break
- * can't help (e.g. a single very long token). */
+/* Detail banner: column layout — name is full-width, actions row is below. */
 .unit-detail-content .detail-banner { min-width: 0; }
-.unit-detail-content .detail-banner .detail-header-main { min-width: 0; flex: 1 1 auto; }
-.unit-detail-content .detail-banner-actions { flex-shrink: 0; }
+.unit-detail-content .detail-banner .detail-header-main { min-width: 0; }
 
 /* Saved-army items: name should ellipsize even when the actions group widens. */
 .saved-army-item { min-width: 0; }
