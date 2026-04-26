@@ -5,9 +5,9 @@
  * ============================================================ */
 .unit-detail-content .detail-banner {
   display: flex;
+  flex-direction: column;
   align-items: stretch;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   padding: 14px 18px;
   margin: 0 0 14px 0;
   background:
@@ -37,7 +37,6 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
-  flex: 1;
 }
 
 .unit-detail-content .detail-banner .detail-name {
@@ -85,8 +84,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  flex-shrink: 0;
 }
 
 .unit-detail-content .detail-banner-pts {
@@ -282,9 +281,9 @@
 
 .unit-card.unit-card-datasheet .unit-card-banner {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   padding: 0 0 6px 0;
   margin: 0 0 8px 0;
   border-bottom: 1px solid var(--border, #3a3a44);
@@ -310,14 +309,13 @@
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--text, #e0e0e0);
-  flex: 1;
   min-width: 0;
   overflow-wrap: break-word;
   word-break: normal;
 }
 
 .unit-card.unit-card-datasheet .unit-card-pts-badge {
-  flex-shrink: 0;
+  align-self: flex-end;
   font-family: var(--font-display, Georgia, serif);
   font-weight: 700;
   font-size: 12px;
