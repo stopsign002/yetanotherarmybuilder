@@ -49,7 +49,8 @@
   letter-spacing: 0.02em;
   color: var(--text, #e0e0e0);
   margin: 0;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .unit-detail-content .detail-banner-subtitle {
@@ -311,7 +312,8 @@
   color: var(--text, #e0e0e0);
   flex: 1;
   min-width: 0;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .unit-card.unit-card-datasheet .unit-card-pts-badge {
