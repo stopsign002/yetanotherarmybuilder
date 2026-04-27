@@ -203,20 +203,23 @@
         return;
       }
 
-      // Icons: undo/redo dock in the bottom toolbar; everything else goes
-      // to the top bar's icon shelf.
+      // Icons: undo/redo dock in the bottom toolbar; the auth button keeps
+      // its slot in the top-bar shelf; everything else (legends, install,
+      // teef, sound, voice, …) is reachable from the Settings drawer instead
+      // of cluttering the top bar. The hook onClicks are still invoked
+      // directly via clickToolbarBtn's fallback in settings-drawer.js.
       if (region === 'icon') {
         if (BOTTOM_INLINE_ICON_IDS.has(a.id) && undoRedo) {
           undoRedo.appendChild(buildIconButton({ ...a, className: 'btn btn-sm btn-outline btn-icon' }));
-        } else if (topIcons) {
+        } else if (a.id === 'yaab-btn-auth' && topIcons) {
           topIcons.appendChild(buildIconButton(a));
         }
         return;
       }
 
-      // 'more-menu' → top bar icon shelf (these are flat, secondary icons).
+      // 'more-menu' → previously top-bar shelf; now Action Center / Settings
+      // cover discoverability for these without cluttering the top bar.
       if (region === 'more-menu') {
-        if (topIcons) topIcons.appendChild(buildIconButton(a));
         return;
       }
 

@@ -15,10 +15,13 @@
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.id = BTN_ID;
-    btn.className = 'topbar-icon-btn auth-btn auth-btn-signed-out';
+    btn.className = 'topbar-action-btn auth-btn auth-btn-signed-out';
     btn.title = 'Sign in to sync armies';
     btn.setAttribute('aria-label', 'Sign in');
-    btn.textContent = 'Sign in';
+    const outLabel = document.createElement('span');
+    outLabel.className = 'topbar-action-label';
+    outLabel.textContent = 'Sign in';
+    btn.appendChild(outLabel);
     btn.addEventListener('click', () => UI.showAuthModal && UI.showAuthModal('login'));
     return btn;
   }
@@ -30,12 +33,20 @@
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.id = BTN_ID;
-    btn.className = 'topbar-icon-btn auth-btn auth-btn-signed-in';
+    btn.className = 'topbar-action-btn auth-btn auth-btn-signed-in';
     btn.title = `Signed in as ${username}`;
     btn.setAttribute('aria-label', `Account menu for ${username}`);
     btn.setAttribute('aria-haspopup', 'menu');
     btn.setAttribute('aria-expanded', 'false');
-    btn.textContent = username;
+    const inLabel = document.createElement('span');
+    inLabel.className = 'topbar-action-label auth-btn-username';
+    inLabel.textContent = username;
+    btn.appendChild(inLabel);
+    const caret = document.createElement('span');
+    caret.className = 'auth-btn-caret';
+    caret.setAttribute('aria-hidden', 'true');
+    caret.textContent = '▾';
+    btn.appendChild(caret);
 
     const menu = document.createElement('div');
     menu.id = MENU_ID;
