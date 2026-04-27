@@ -69,6 +69,7 @@
       state.selectedArmyEntryIndex = null;
       const detEnhancements = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
       UI.renderUnitDetail(unit, detEnhancements, []);
+      if (App.setMobilePanel) App.setMobilePanel('detail');
     });
 
     document.getElementById('army-rules-section').addEventListener('click', e => {
@@ -129,6 +130,7 @@
         ? `${qty}× ${state.selectedUnit.name} (${squadOption.models} models)`
         : `${qty}× ${state.selectedUnit.name}`;
       UI.toast(`Added ${label}`, 'success');
+      if (App.setMobilePanel) App.setMobilePanel('units');
     });
 
     document.getElementById('army-name-input').addEventListener('input', e => {

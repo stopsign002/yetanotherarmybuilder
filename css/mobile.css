@@ -1,50 +1,71 @@
-/* mobile.css — responsive overrides; all rules gated behind (max-width: 820px) so desktop is untouched. */
+/* mobile.css — responsive overrides; layout rules gated behind max-width so desktop is untouched. */
 
 @media (max-width: 820px) {
   /* Prevent iOS Safari from auto-zooming form inputs (needs >= 16px). */
-  html, body { overflow: auto; }
   input, select, textarea, .form-input, .form-select, .search-input {
     font-size: 16px !important;
   }
 
-  /* Convert three-panel grid into a single stacked column. Show one panel at a time. */
-  .app-main {
-    display: block !important;
-    grid-template-columns: none !important;
-    grid-template-rows: none !important;
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
+  /* Fixed-height viewport stack: topbar (handled by body padding-top in topbar.css)
+     + app content + tab bar. This is what makes panel scrolling work — each visible
+     panel gets a concrete height so overflow-y: auto actually triggers. */
+  html, body {
+    height: 100%;
+    overflow: hidden !important;
   }
 
-  .panel { display: none; }
-  body[data-mobile-panel="army"]   .panel-left   { display: flex; }
-  body[data-mobile-panel="units"]  .panel-center { display: flex; }
-  body[data-mobile-panel="detail"] .panel-right  { display: flex; }
+  /* Drop the old padding-bottom — height calc below accounts for tab bar instead. */
+  body { padding-bottom: 0; }
 
-  .panel-left,
-  .panel-center,
-  .panel-right {
+  /* Three-panel grid → single flex column. Height = body content area (= viewport
+     minus topbar padding) minus 56 px tab bar. */
+  .app-main {
+    display: flex !important;
+    flex-direction: column;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+    height: calc(100% - 56px);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* build-mode sets height:100% !important on app-main — re-apply tab bar offset. */
+  body.build-mode-enhanced #app-main {
+    height: calc(100% - 56px) !important;
+  }
+
+  /* One panel visible at a time, filling all available app-main height. */
+  .panel {
+    display: none;
+    flex-direction: column;
     width: 100% !important;
     min-width: 0 !important;
     max-width: none !important;
-    height: auto;
-    min-height: calc(100vh - 56px);
+    min-height: 0;
     border-right: none;
     border-left: none;
     border-bottom: none;
+    overflow: hidden;
   }
+  body[data-mobile-panel="army"]   .panel-left   { display: flex; flex: 1; }
+  body[data-mobile-panel="units"]  .panel-center { display: flex; flex: 1; }
+  body[data-mobile-panel="detail"] .panel-right  { display: flex; flex: 1; }
+
+  /* Panel internals: header/controls fixed, body scrolls, footer fixed. */
+  .panel-header,
+  .panel-controls { flex-shrink: 0; }
 
   .panel-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto !important;
     max-height: none !important;
-    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   /* No drag handles when columns are stacked. */
   .resize-handle { display: none !important; }
-
-  /* Leave space above tab bar so content isn't covered. */
-  body { padding-bottom: 56px; }
 
   /* ── Mobile tab bar ─────────────────────────────────── */
   .mobile-tabbar {
@@ -62,12 +83,13 @@
     color: var(--text-muted, #999);
     border: none;
     font: inherit;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.03em;
-    padding: 8px 4px;
+    padding: 6px 4px;
     cursor: pointer;
     min-height: 44px;
+    touch-action: manipulation;
   }
   .mobile-tabbar button + button {
     border-left: 1px solid var(--border, #2a2a2a);
@@ -80,32 +102,124 @@
     box-shadow: inset 0 2px 0 var(--accent, #e8c86a);
   }
 
-  /* Larger tap targets overall. */
-  .btn-sm { min-height: 36px; }
-  .mobile-tabbar button,
+  /* ── Compact sizes: panel chrome ───────────────────── */
+  .panel-header {
+    padding: 5px 10px;
+  }
+  .panel-header h2 {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+  }
+  .panel-controls {
+    padding: 5px 10px;
+    gap: 4px;
+  }
+  .search-input {
+    padding: 4px 8px;
+  }
+  .filter-chip {
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+
+  /* ── Compact sizes: unit cards ──────────────────────── */
+  .unit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px;
+  }
+  .unit-card { padding: 7px 8px; }
+  .unit-card-name,
+  .unit-card-name-primary { font-size: 12px !important; }
+  .unit-card-pts,
+  .unit-card-pts-badge { font-size: 11px; padding: 3px 5px; }
+  .stat-cell { padding: 2px 1px; }
+  .stat-name { font-size: 7px; }
+  .stat-value { font-size: 10px; }
+  .keyword-tag { font-size: 8px; padding: 1px 4px; }
+
+  /* ── Compact sizes: detail panel ───────────────────── */
+  .unit-detail-content .detail-banner {
+    padding: 8px 10px;
+    gap: 4px;
+  }
+  .unit-detail-content .detail-banner .detail-name {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+  .unit-detail-content .detail-banner-pts {
+    font-size: 12px;
+    padding: 4px 7px;
+  }
+  .detail-action-btn {
+    padding: 4px 6px;
+    font-size: 13px;
+  }
+  .detail-stat-pillar { padding: 5px 3px; }
+  .detail-stat-pillar-value,
+  .detail-stat-pillar-label { font-size: 11px; }
+  .detail-section-title {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    margin-bottom: 5px;
+  }
+  .detail-ability {
+    font-size: 11px;
+    padding: 5px 7px;
+    margin-bottom: 4px;
+  }
+  .detail-add-section {
+    padding: 7px 10px;
+    margin-bottom: 10px;
+  }
+  .weapons-table { font-size: 11px; }
+  .weapons-table th { font-size: 9px; padding: 3px 4px; }
+  .weapons-table td { padding: 3px 4px; }
+
+  /* ── Compact sizes: build hero ──────────────────────── */
+  .build-hero {
+    padding: 4px 12px;
+    gap: 10px;
+  }
+  .build-hero-faction { font-size: 13px; }
+  .build-hero-status { font-size: 9px; }
+  .build-hero-subtitle { font-size: 11px; }
+  .build-hero-points-current { font-size: 14px; }
+  .build-hero-points-sep,
+  .build-hero-points-limit { font-size: 12px; }
+
+  /* ── Compact sizes: army list ───────────────────────── */
+  .army-entry {
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+  .army-entries-header {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+  .points-summary { padding: 8px 10px; margin-bottom: 10px; }
+  .points-current { font-size: 22px; }
+
+  /* ── Buttons ────────────────────────────────────────── */
+  .btn { font-size: 12px; padding: 6px 12px; }
+  .btn-sm {
+    min-height: 32px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
   .btn,
   .unit-card,
   .army-entry-list li {
     touch-action: manipulation;
   }
 
-  /* Army toolbar: stack more aggressively. */
+  /* ── Army toolbar ───────────────────────────────────── */
   .army-toolbar .toolbar-row {
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
   }
   .army-toolbar .toolbar-spacer { flex-basis: 100%; height: 0; }
 
-  /* Unit cards: 2 per row, slightly larger text. */
-  .unit-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px;
-  }
-  .unit-card-name  { font-size: 14px; }
-  .unit-card-pts   { font-size: 13px; }
-  .unit-card-stats { font-size: 12px; }
-
-  /* Full-screen modals on narrow widths. */
+  /* ── Full-screen modals ─────────────────────────────── */
   .modal-backdrop {
     padding: 0;
     align-items: stretch;
