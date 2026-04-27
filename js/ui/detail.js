@@ -303,53 +303,76 @@
       html += `</div>`;
     }
 
-    if (wargearOpts.length > 0) {
-      html += `<div class="detail-section">
-        <div class="detail-section-title">Wargear Options</div>
-        <ul class="wargear-option-list">`;
-      wargearOpts.forEach(opt => {
-        if (opt.type === 'model') {
-          let modelLabel;
-          if (opt.perModels && opt.perModels > 1) {
-            modelLabel = `1 per ${opt.perModels} models — ${opt.modelName}`;
-          } else if (opt.modelMax != null) {
-            modelLabel = `Up to ${opt.modelMax} ${opt.modelName}`;
-          } else {
-            modelLabel = opt.modelName;
-          }
-          html += `<li class="wargear-option-item wargear-model-ctx">
-            <span class="wargear-model-name">${esc(modelLabel)}</span> can be equipped with:`;
-          if (opt.subOptions && opt.subOptions.length > 0) {
-            opt.subOptions.forEach(sub => {
-              html += `<ul class="wargear-suboption-list">`;
-              if (sub.name) {
-                html += `<li class="wargear-suboption-header">${esc(sub.name)}:</li>`;
-              }
-              (sub.choices || []).forEach(c => {
-                const cn = typeof c === 'object' ? c.name : c;
-                html += `<li class="wargear-choice-item">${esc(cn)}</li>`;
-              });
-              html += `</ul>`;
-            });
-          }
-          html += `</li>`;
-        } else {
-          const name = typeof opt === 'object' ? (opt.name || '') : opt;
-          const choices = (typeof opt === 'object' && opt.choices) ? opt.choices : [];
-          const maxStr = (typeof opt === 'object' && opt.max != null) ? ` (max ${opt.max})` : '';
-          html += `<li class="wargear-option-item">${esc(name)}${esc(maxStr)}`;
-          if (choices.length > 0) {
-            html += `<ul class="wargear-choice-list">${
-              choices.map(c => {
-                const cn = typeof c === 'object' ? c.name : c;
-                return `<li>${esc(cn)}</li>`;
-              }).join('')
-            }</ul>`;
-          }
-          html += `</li>`;
+    const modelNums = [...new Set(squadOptions.map(o => o.models).filter(m => m != null))].sort((a, b) => a - b);
+    const compLabel = modelNums.length === 0 ? null
+      : modelNums.length === 1 ? `${modelNums[0]} model${modelNums[0] !== 1 ? 's' : ''}`
+      : `${modelNums[0]}–${modelNums[modelNums.length - 1]} models`;
+
+    const modelTypeOpts = wargearOpts.filter(o => o.type === 'model');
+    const choiceOpts    = wargearOpts.filter(o => o.type !== 'model');
+
+    if (compLabel || wargearOpts.length > 0) {
+      html += `<div class="detail-section"><div class="detail-section-title">Loadout</div>`;
+
+      if (compLabel) {
+        html += `<div class="wl-composition">${esc(compLabel)}</div>`;
+      }
+
+      modelTypeOpts.forEach(opt => {
+        let countStr = '';
+        if (opt.perModels && opt.perModels > 1) {
+          countStr = `1 per ${opt.perModels} models`;
+        } else if (opt.modelMin != null && opt.modelMax != null) {
+          countStr = opt.modelMin === opt.modelMax
+            ? `${opt.modelMin} model${opt.modelMin !== 1 ? 's' : ''}`
+            : `${opt.modelMin}–${opt.modelMax} models`;
+        } else if (opt.modelMax != null) {
+          countStr = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
+        } else if (opt.modelMin != null) {
+          countStr = `${opt.modelMin}+ models`;
         }
+
+        html += `<div class="wl-model-block"><div class="wl-model-header">
+          <span class="wl-model-name">${esc(opt.modelName)}</span>`;
+        if (countStr) html += `<span class="wl-model-count">${esc(countStr)}</span>`;
+        html += `</div>`;
+
+        if (opt.defaultWeapons && opt.defaultWeapons.length > 0) {
+          html += `<div class="wl-defaults">
+            <span class="wl-defaults-label">Default:</span>
+            <span class="wl-defaults-weapons">${opt.defaultWeapons.map(esc).join(' · ')}</span>
+          </div>`;
+        }
+
+        (opt.subOptions || []).forEach(sub => {
+          html += `<div class="wl-suboption">
+            <div class="wl-suboption-title">${esc(sub.name)}</div>
+            <ul class="wl-choice-list">`;
+          (sub.choices || []).forEach(c => {
+            html += `<li>${esc(typeof c === 'object' ? c.name : c)}</li>`;
+          });
+          html += `</ul></div>`;
+        });
+
+        html += `</div>`;
       });
-      html += `</ul></div>`;
+
+      choiceOpts.forEach(opt => {
+        const name    = typeof opt === 'object' ? (opt.name || '') : opt;
+        const choices = typeof opt === 'object' && opt.choices ? opt.choices : [];
+        const maxSpan = typeof opt === 'object' && opt.max != null
+          ? ` <span class="wl-max">(max ${opt.max})</span>` : '';
+        html += `<div class="wl-choice-group">
+          <div class="wl-choice-group-title">${esc(name)}${maxSpan}</div>`;
+        if (choices.length > 0) {
+          html += `<ul class="wl-choice-list">`;
+          choices.forEach(c => { html += `<li>${esc(typeof c === 'object' ? c.name : c)}</li>`; });
+          html += `</ul>`;
+        }
+        html += `</div>`;
+      });
+
+      html += `</div>`;
     }
 
     if (keywords.length > 0) {
