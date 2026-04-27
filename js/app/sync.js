@@ -350,30 +350,35 @@
           enqueue({ op: 'putArmy', id: local.id });
           uploadedLocal++;
         } else if (cloudTs > localTs) {
-          if (local.id === currentId) {
-            // Currently editing — don't clobber. Enqueue a soft-prompt task.
-            console.warn('[Sync] Currently-edited army has newer cloud version; not overwriting:', local.id);
-            // For v1 we keep local + push it; user wins. (Per plan: prompt is
-            // a v1.1 enhancement — leaving a console warn for now to avoid
-            // an interruptive modal mid-edit.)
-            enqueue({ op: 'putArmy', id: local.id });
-            uploadedLocal++;
-          } else {
-            adoptions.push((async () => {
-              try {
-                const full = await apiFetch(`${API_ARMIES}/${encodeURIComponent(local.id)}`);
-                const newArmy = full && full.payload ? decodeArmy(full.payload) : null;
-                if (newArmy && mgr) {
-                  const idx = mgr.armies.findIndex(a => a.id === local.id);
-                  if (idx >= 0) mgr.armies[idx] = newArmy;
-                  mergedFromCloud++;
-                  const k = known();
-                  k[local.id] = full.updated_at || cloudTs;
-                  setKnown(k);
+          // Cloud is newer — pull it. Previously we made an exception for
+          // the currently-active army and pushed local up instead, which
+          // meant a save on device A was clobbered when device B (still
+          // viewing the same army from before A's save) next polled. The
+          // user expects "the latest save wins, no matter where I'm
+          // looking." Pull cloud and, if this is the active army on this
+          // device, swap App.state.currentArmy too so the render picks up
+          // the new content. Toast so the swap isn't surprising.
+          adoptions.push((async () => {
+            try {
+              const full = await apiFetch(`${API_ARMIES}/${encodeURIComponent(local.id)}`);
+              const newArmy = full && full.payload ? decodeArmy(full.payload) : null;
+              if (newArmy && mgr) {
+                const idx = mgr.armies.findIndex(a => a.id === local.id);
+                if (idx >= 0) mgr.armies[idx] = newArmy;
+                if (local.id === currentId && App.state) {
+                  App.state.currentArmy = newArmy;
+                  mgr.currentArmy = newArmy;
+                  if (window.UI && UI.toast) {
+                    UI.toast('Army updated from another device.', 'info', 3500);
+                  }
                 }
-              } catch (_) {}
-            })());
-          }
+                mergedFromCloud++;
+                const k = known();
+                k[local.id] = full.updated_at || cloudTs;
+                setKnown(k);
+              }
+            } catch (_) {}
+          })());
         } else {
           // Equal timestamps — already in sync. Make sure known has it.
           const k = known();
