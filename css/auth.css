@@ -19,8 +19,7 @@
   white-space: nowrap;
 }
 
-.auth-btn-signed-in::after {
-  content: '\25BE'; /* ▾ */
+.auth-btn-caret {
   margin-left: 4px;
   opacity: 0.7;
   font-size: 0.85em;
