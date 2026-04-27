@@ -1,71 +1,47 @@
-/* css/auth.css — auth button + auth modal styling. Keeps the visual
-   language of the rest of the app: dark surfaces, accent on primary CTA,
-   monospace for the recovery code. */
+/* css/auth.css — auth button menu + auth modal styling. The Sign in
+   button itself uses the existing .topbar-action-btn pattern (see
+   index.html + topbar.css), so we only style the dropdown + modal here. */
 
-/* ── Top-bar shelf for hook-registered icons ──────────────────────── */
-.topbar-icons-shelf {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* ── Auth icon button (signed out / signed in) ────────────────────── */
-.auth-btn-wrap {
-  position: relative;
-  display: inline-block;
-}
-
-.auth-btn {
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  padding: 6px 10px;
-  white-space: nowrap;
-  max-width: 14ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.auth-btn-signed-out {
-  background: var(--accent, #d4a356);
-  color: var(--bg, #15110b);
-  border-color: transparent;
-}
-.auth-btn-signed-out:hover { filter: brightness(1.08); }
-
-.auth-btn-signed-in::after {
-  content: '\25BE'; /* ▾ */
-  margin-left: 4px;
-  opacity: 0.7;
-  font-size: 0.85em;
-}
-
-.auth-menu {
+/* ── Sign-in / signed-in dropdown ─────────────────────────────────── */
+.topbar-auth-menu {
   position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
+  top: 56px; /* below the topbar */
+  right: 12px;
   min-width: 180px;
   background: var(--surface, #1c1812);
   border: 1px solid var(--border, #3a2f20);
-  border-radius: 6px;
+  border-radius: var(--radius, 4px);
   box-shadow: 0 6px 18px rgba(0,0,0,0.45);
   padding: 4px 0;
   z-index: 1100;
   display: flex;
   flex-direction: column;
 }
+.topbar-auth-menu[hidden] { display: none; }
 
-.auth-menu-item {
+.topbar-auth-menu-item {
   background: transparent;
   border: 0;
   color: inherit;
   text-align: left;
   padding: 8px 14px;
   font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.5px;
   cursor: pointer;
 }
-.auth-menu-item:hover,
-.auth-menu-item:focus-visible {
-  background: rgba(212, 163, 86, 0.12);
+.topbar-auth-menu-item:hover,
+.topbar-auth-menu-item:focus-visible {
+  background: rgba(var(--accent-rgb, 212 163 86), 0.12);
+  color: var(--accent, #d4a356);
+}
+
+/* Truncate long usernames in the topbar button. */
+#topbar-auth .topbar-action-label {
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Auth modal body styling (slots into existing .modal pattern) ── */
@@ -94,8 +70,8 @@
 }
 
 .auth-warning {
-  background: rgba(212, 163, 86, 0.12);
-  border: 1px solid rgba(212, 163, 86, 0.4);
+  background: rgba(var(--accent-rgb, 212 163 86), 0.12);
+  border: 1px solid rgba(var(--accent-rgb, 212 163 86), 0.4);
   padding: 10px 12px;
   border-radius: 4px;
   font-size: 0.95em;

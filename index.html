@@ -108,9 +108,15 @@
         <kbd class="topbar-search-kbd">&#8984;K</kbd>
       </button>
 
-      <!-- Right: Sign-in + hook-registered icons + Settings + Help ---- -->
+      <!-- Right: Sign-in + Settings + Help -------------------------- -->
       <div class="topbar-actions">
-        <div id="topbar-icons" class="topbar-icons-shelf"></div>
+        <button class="topbar-action-btn" id="topbar-auth" type="button"
+                aria-label="Sign in" title="Sign in to sync armies"
+                aria-haspopup="menu" aria-expanded="false">
+          <span class="topbar-action-glyph" aria-hidden="true">&#9737;</span>
+          <span class="topbar-action-label" id="topbar-auth-label">Sign in</span>
+        </button>
+        <div class="topbar-auth-menu" id="topbar-auth-menu" role="menu" hidden></div>
         <button class="topbar-action-btn" id="topbar-settings" type="button"
                 aria-label="Settings" title="Settings"
                 aria-expanded="false" aria-controls="settings-drawer-root">
