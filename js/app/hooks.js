@@ -39,8 +39,10 @@
     }
   };
 
-  App.fireArmyChange = function (kind) {
-    const army = App.state && App.state.currentArmy;
+  App.fireArmyChange = function (kind, armyOverride) {
+    const army = (armyOverride !== undefined)
+      ? armyOverride
+      : (App.state && App.state.currentArmy);
     for (let i = 0; i < App.hooks.armyChange.length; i++) {
       try { App.hooks.armyChange[i](army, kind); }
       catch (e) { console.warn('[hooks.armyChange]', e); }

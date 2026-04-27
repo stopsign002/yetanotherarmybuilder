@@ -110,6 +110,9 @@ window.ArmyManager = class ArmyManager {
 
   save() {
     localStorage.setItem('yaab_armies', JSON.stringify(this.armies.map(a => a.toJSON())));
+    if (window.App && window.App.Sync && typeof window.App.Sync.notifyArmiesChanged === 'function') {
+      window.App.Sync.notifyArmiesChanged();
+    }
   }
 
   saveArmy(army) {
@@ -120,11 +123,17 @@ window.ArmyManager = class ArmyManager {
       this.armies.push(army);
     }
     this.save();
+    if (window.App && typeof window.App.fireArmyChange === 'function') {
+      window.App.fireArmyChange('save', army);
+    }
   }
 
   deleteArmy(id) {
     this.armies = this.armies.filter(a => a.id !== id);
     this.save();
+    if (window.App && typeof window.App.fireArmyChange === 'function') {
+      window.App.fireArmyChange('delete');
+    }
   }
 
   getArmy(id) {

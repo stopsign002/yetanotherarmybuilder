@@ -1,0 +1,156 @@
+/* css/auth.css — auth button + auth modal styling. Keeps the visual
+   language of the rest of the app: dark surfaces, accent on primary CTA,
+   monospace for the recovery code. */
+
+/* ── Top-bar shelf for hook-registered icons ──────────────────────── */
+.topbar-icons-shelf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Auth icon button (signed out / signed in) ────────────────────── */
+.auth-btn-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.auth-btn {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 6px 10px;
+  white-space: nowrap;
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-btn-signed-out {
+  background: var(--accent, #d4a356);
+  color: var(--bg, #15110b);
+  border-color: transparent;
+}
+.auth-btn-signed-out:hover { filter: brightness(1.08); }
+
+.auth-btn-signed-in::after {
+  content: '\25BE'; /* ▾ */
+  margin-left: 4px;
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+
+.auth-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--surface, #1c1812);
+  border: 1px solid var(--border, #3a2f20);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  padding: 4px 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-menu-item {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  padding: 8px 14px;
+  font: inherit;
+  cursor: pointer;
+}
+.auth-menu-item:hover,
+.auth-menu-item:focus-visible {
+  background: rgba(212, 163, 86, 0.12);
+}
+
+/* ── Auth modal body styling (slots into existing .modal pattern) ── */
+#modal-auth .modal {
+  width: min(420px, 92vw);
+}
+
+.auth-form .form-group {
+  margin-bottom: 12px;
+}
+
+.auth-error {
+  background: rgba(180, 40, 40, 0.15);
+  color: #ff8b8b;
+  border: 1px solid rgba(180, 40, 40, 0.45);
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 0.92em;
+  margin: 8px 0 4px;
+}
+
+.auth-notice {
+  font-size: 0.9em;
+  opacity: 0.8;
+  margin: 4px 0 8px;
+}
+
+.auth-warning {
+  background: rgba(212, 163, 86, 0.12);
+  border: 1px solid rgba(212, 163, 86, 0.4);
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 0.95em;
+  margin: 0 0 12px;
+}
+
+.auth-switch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.btn-link {
+  background: transparent;
+  border: 0;
+  color: var(--accent, #d4a356);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: left;
+  font: inherit;
+}
+.btn-link:hover { filter: brightness(1.15); }
+
+/* ── Recovery code display ───────────────────────────────────────── */
+.auth-recovery-code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 1.15em;
+  letter-spacing: 0.04em;
+  user-select: all;
+  background: #0e0c08;
+  border: 1px solid var(--border, #3a2f20);
+  padding: 12px 14px;
+  border-radius: 4px;
+  margin: 0 0 12px;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.auth-recovery-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.auth-saved-lbl {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.92em;
+  cursor: pointer;
+}
+
+.auth-saved-lbl input[type="checkbox"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
