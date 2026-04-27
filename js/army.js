@@ -3,7 +3,7 @@
  */
 
 window.Army = class Army {
-  constructor({ id, name, factionName, chapter, detachmentName, pointsLimit, entries } = {}) {
+  constructor({ id, name, factionName, chapter, detachmentName, pointsLimit, entries, createdAt, updatedAt } = {}) {
     this.id = id || Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     this.name = name || 'New Army';
     this.factionName = factionName || '';
@@ -11,8 +11,12 @@ window.Army = class Army {
     this.detachmentName = detachmentName || null;
     this.pointsLimit = pointsLimit || 2000;
     this.entries = entries || []; // [{unitId, unitName, unitData, count}]
-    this.createdAt = new Date().toISOString();
-    this.updatedAt = new Date().toISOString();
+    // Preserve timestamps when rehydrating from JSON (localStorage or cloud).
+    // Resetting these to "now" on every fromJSON breaks sync — every load
+    // would mark this device's local copy as newer than cloud, triggering
+    // an upload that clobbers fresh saves from other devices.
+    this.createdAt = createdAt || new Date().toISOString();
+    this.updatedAt = updatedAt || new Date().toISOString();
   }
 
   /**

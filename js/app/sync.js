@@ -250,6 +250,31 @@
         method: 'PUT', body,
       });
       const newTs = (resp && resp.updated_at) || body.updated_at;
+      // Server does last-write-wins on updated_at: if our incoming ts was
+      // older than the row's, the row is unchanged and the response echoes
+      // the *cloud's* ts (newer than ours). Detect that mismatch and pull
+      // cloud's actual content, otherwise the diff loop will keep re-PUT-ing
+      // our stale local until the heat death of the universe.
+      if (newTs !== body.updated_at) {
+        try {
+          const full = await apiFetch(`${API_ARMIES}/${encodeURIComponent(op.id)}`);
+          const newArmy = full && full.payload ? decodeArmy(full.payload) : null;
+          const mgr = App.state && App.state.armyManager;
+          if (newArmy && mgr) {
+            const idx = mgr.armies.findIndex(a => a.id === op.id);
+            if (idx >= 0) mgr.armies[idx] = newArmy;
+            if (App.state.currentArmy && App.state.currentArmy.id === op.id) {
+              App.state.currentArmy = newArmy;
+              mgr.currentArmy = newArmy;
+              if (window.UI && UI.toast) {
+                UI.toast('Army updated from another device.', 'info', 3500);
+              }
+            }
+            mgr.save();
+            if (typeof App.renderAll === 'function') App.renderAll();
+          }
+        } catch (_) {}
+      }
       k[op.id] = newTs;
       setKnown(k);
       return;
