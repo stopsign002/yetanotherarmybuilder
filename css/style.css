@@ -1169,6 +1169,95 @@ ul { list-style: none; }
   opacity: 0.6;
 }
 
+/* Redesigned Loadout section */
+.wl-composition {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 10px;
+  padding: 4px 8px;
+  background: var(--surface2, rgba(255,255,255,0.04));
+  border-radius: 4px;
+  display: inline-block;
+}
+.wl-model-block {
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--accent);
+  background: var(--surface2, rgba(255,255,255,0.03));
+  border-radius: 0 4px 4px 0;
+}
+.wl-model-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.wl-model-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+}
+.wl-model-count {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.wl-defaults {
+  font-size: 12px;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.wl-defaults-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+.wl-defaults-weapons {
+  color: var(--text);
+}
+.wl-suboption {
+  margin-top: 6px;
+}
+.wl-suboption-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.wl-choice-list {
+  list-style: none;
+  padding-left: 10px;
+  margin: 2px 0 0 0;
+}
+.wl-choice-list li {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.wl-choice-list li::before {
+  content: '• ';
+  color: var(--accent);
+  opacity: 0.6;
+}
+.wl-choice-group {
+  margin-bottom: 10px;
+}
+.wl-choice-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.wl-max {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
 
 /* ── Unit Detail Modal (legacy — keep weapons-table styles) ─ */
 .unit-detail-meta {

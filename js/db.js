@@ -2,9 +2,9 @@
 window.YaabDB = (() => {
 
   const DB_NAME    = 'yaab';
-  // Bumped to v4 after parser added detachment.stratagems + factionStratagems
-  // arrays (powers the Stratagem Browser modal).
-  const DB_VERSION = 4;
+  // Bumped to v5: wargearOptions shape extended with modelMin + defaultWeapons,
+  // and model entries with no optional upgrades are now emitted (for default-loadout display).
+  const DB_VERSION = 5;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
 
