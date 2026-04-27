@@ -42,6 +42,7 @@
   <link rel="stylesheet" href="css/hero-state.css" />
   <link rel="stylesheet" href="css/atmosphere.css" />
   <link rel="stylesheet" href="css/topbar.css" />
+  <link rel="stylesheet" href="css/auth.css" />
   <link rel="stylesheet" href="css/mode-shell.css" />
   <link rel="stylesheet" href="css/settings-drawer.css" />
   <link rel="stylesheet" href="css/voice-coach.css" />
@@ -107,8 +108,9 @@
         <kbd class="topbar-search-kbd">&#8984;K</kbd>
       </button>
 
-      <!-- Right: Settings + Help -------------------------------- -->
+      <!-- Right: Sign-in + hook-registered icons + Settings + Help ---- -->
       <div class="topbar-actions">
+        <div id="topbar-icons" class="topbar-icons-shelf"></div>
         <button class="topbar-action-btn" id="topbar-settings" type="button"
                 aria-label="Settings" title="Settings"
                 aria-expanded="false" aria-controls="settings-drawer-root">
@@ -411,6 +413,12 @@
     </div>
   </div>
 
+  <!-- Auth modal (login / register / recover / recovery-code / change-password).
+       js/ui/auth-modal.js renders the active view into .modal. -->
+  <div class="modal-backdrop" id="modal-auth" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-auth-title"></div>
+  </div>
+
   <!-- ============================================================
        SETTINGS DRAWER — right-side slide-in sheet. Opens from the
        gear icon in the top bar. Populated by settings-drawer.js.
@@ -477,6 +485,10 @@
        bootstrap index.js last (DOMContentLoaded). -->
   <script src="js/app/state.js"></script>
   <script src="js/app/hooks.js"></script>
+  <script src="js/app/auth.js"></script>
+  <script src="js/app/sync.js"></script>
+  <script src="js/ui/auth-modal.js"></script>
+  <script src="js/ui/auth-button.js"></script>
   <script src="js/app/filters.js"></script>
   <script src="js/app/render.js"></script>
   <script src="js/app/bsdata-load.js"></script>

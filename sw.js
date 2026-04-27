@@ -1,5 +1,5 @@
 // sw.js - App-shell service worker; precaches HTML/CSS/JS, passes BSData fetches through.
-const SHELL = 'yaab-shell-v26';
+const SHELL = 'yaab-shell-v27';
 
 const PRECACHE = [
   '/',
@@ -39,6 +39,7 @@ const PRECACHE = [
   '/css/hero-state.css',
   '/css/atmosphere.css',
   '/css/topbar.css',
+  '/css/auth.css',
   '/css/mode-shell.css',
   '/css/settings-drawer.css',
   '/css/action-center.css',
@@ -91,6 +92,10 @@ const PRECACHE = [
   '/js/ui/dropdown.js',
   '/js/app/state.js',
   '/js/app/hooks.js',
+  '/js/app/auth.js',
+  '/js/app/sync.js',
+  '/js/ui/auth-modal.js',
+  '/js/ui/auth-button.js',
   '/js/app/filters.js',
   '/js/app/render.js',
   '/js/app/selections.js',
@@ -183,6 +188,10 @@ self.addEventListener('fetch', (e) => {
 
   // Cross-origin (BSData, GitHub API, anything else): pass through, never cache here.
   if (url.origin !== self.location.origin) return;
+
+  // Same-origin /api/* (auth, armies, state): never intercept. Caching these
+  // would serve stale /api/auth/me forever and could cache Set-Cookie responses.
+  if (url.pathname.startsWith('/api/')) return;
 
   // Same-origin: cache-first with network fallback; opportunistically refresh cache.
   e.respondWith(
