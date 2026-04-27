@@ -321,9 +321,15 @@
       modelTypeOpts.forEach(opt => {
         let countStr = '';
         if (opt.modelMin != null && opt.modelMax != null) {
-          countStr = opt.modelMin === opt.modelMax
-            ? `${opt.modelMin} model${opt.modelMin !== 1 ? 's' : ''}`
-            : `${opt.modelMin}–${opt.modelMax} models`;
+          if (opt.modelMin === opt.modelMax) {
+            countStr = `${opt.modelMin} model${opt.modelMin !== 1 ? 's' : ''}`;
+          } else if (opt.modelMin === 0) {
+            // Optional model variant ("up to N of these can be swapped in").
+            // Render as "up to N models" rather than "0–N models" — clearer.
+            countStr = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
+          } else {
+            countStr = `${opt.modelMin}–${opt.modelMax} models`;
+          }
         } else if (opt.modelMax != null) {
           countStr = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
         } else if (opt.modelMin != null) {

@@ -2,9 +2,13 @@
 window.YaabDB = (() => {
 
   const DB_NAME    = 'yaab';
-  // Bumped to v5: wargearOptions shape extended with modelMin + defaultWeapons,
-  // and model entries with no optional upgrades are now emitted (for default-loadout display).
-  const DB_VERSION = 5;
+  // Bumped to v6: wargearOptions defaultWeapons now resolves
+  // selectionEntryGroup defaultSelectionEntryId (so e.g. an Intercessor
+  // Sergeant's pre-selected Bolt Rifle / Close combat weapon surface as
+  // defaults), filters optional entryLinks (no min) out of defaults, and
+  // emits modelMin=0 for max-only model variants instead of inheriting
+  // squadGroupMin (fixes "5–2 models" rendering for "1 per N" variants).
+  const DB_VERSION = 6;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
 
