@@ -24,14 +24,14 @@
     flex-direction: column;
     grid-template-columns: none !important;
     grid-template-rows: none !important;
-    height: calc(100% - 56px) !important;
+    height: calc(100% - 44px) !important;
     min-height: 0;
     overflow: hidden;
   }
 
   /* build-mode sets height:100% !important on app-main — re-apply tab bar offset. */
   body.build-mode-enhanced #app-main {
-    height: calc(100% - 56px) !important;
+    height: calc(100% - 44px) !important;
   }
 
   /* One panel visible at a time, filling all available app-main height. */
@@ -71,7 +71,7 @@
   .mobile-tabbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    height: 56px;
+    height: 44px;
     display: flex;
     background: #0d0d0d;
     border-top: 1px solid var(--border, #2a2a2a);
@@ -83,10 +83,10 @@
     color: var(--text-muted, #999);
     border: none;
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.03em;
-    padding: 6px 4px;
+    padding: 4px 4px;
     cursor: pointer;
     min-height: 44px;
     touch-action: manipulation;

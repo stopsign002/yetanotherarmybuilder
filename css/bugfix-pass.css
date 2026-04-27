@@ -60,9 +60,12 @@ body.build-mode-enhanced #app-main > .build-hero {
    below the visible fold.
    Fix: when build-mode is enhanced, app-main fills the 1fr grid row
    instead of forcing 100vh. */
-body.build-mode-enhanced #app-main {
-  height: 100% !important;
-  min-height: 0 !important;
+/* Desktop only — on mobile the tab-bar offset in mobile.css controls height. */
+@media (min-width: 821px) {
+  body.build-mode-enhanced #app-main {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
 }
 
 /* === Hero points-limit click-to-edit affordance === */
