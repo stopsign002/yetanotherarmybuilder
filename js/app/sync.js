@@ -487,10 +487,35 @@
     };
   }
 
+  // ── Flush any pending debounce timers immediately ────────────────────
+  // Edits trigger notifyArmiesChanged with a 500ms debounce. If the user
+  // reloads (or closes the tab) before the timer fires, the diff never
+  // runs and the queue never gets the putArmy op — so the edit never
+  // makes it to cloud. Call this from pagehide / visibility-hidden so
+  // the queue is up-to-date in localStorage before navigation; the next
+  // page load's drainQueue will then push it.
+  function flushPendingNow() {
+    if (_armyTimer) {
+      clearTimeout(_armyTimer);
+      _armyTimer = null;
+      if (authReady()) diffAndEnqueueArmies();
+    }
+    if (_bagTimer) {
+      clearTimeout(_bagTimer);
+      _bagTimer = null;
+      if (authReady()) enqueue({ op: 'putState' });
+    }
+  }
+
   // ── Cross-tab + connectivity listeners ───────────────────────────────
   function installListeners() {
     window.addEventListener('online',  () => { _backoffMs = 0; drainQueue(); });
     window.addEventListener('offline', () => { /* UI offline pip if added */ });
+
+    // pagehide fires on reload, navigation, and tab close (more reliable
+    // than beforeunload, especially on mobile bfcache). Flush the
+    // debounce so pending edits aren't lost on quick reload.
+    window.addEventListener('pagehide', flushPendingNow);
 
     window.addEventListener('storage', (e) => {
       if (!e || !e.key) return;
