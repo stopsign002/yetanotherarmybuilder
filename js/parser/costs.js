@@ -113,12 +113,29 @@
       if (groupMax !== null) maxModels = (maxModels || 0) + groupMax;
     });
 
-    // Pattern C — restrict to field="selections" to avoid treating Crusade-specific
-    // constraints (Battle Honours max=3, Weapon Modifications, etc.) as model counts.
-    // Also skip scope="roster" — those cap how many of this unit appear in the whole
-    // roster (Rule of Three), not how many models are in the unit itself. Without this
-    // filter, Biovores' roster max=3 prevents Pattern D from running, causing Fallback E
-    // to output only the 3-model price (150pts) instead of the correct 50/150pt options.
+    // Always add any direct type="model" children of the unit entry. These are mandatory
+    // leader/sergeant models (Ranger Alpha, Plague Champion, Shas'ui, Aspiring Sorcerer,
+    // Exarch, etc.) that live at the unit level alongside the body group. Previously this
+    // ran only when groups produced nothing (Pattern D), so those mandatory models were
+    // silently dropped whenever a body group had already set minModels/maxModels — causing
+    // e.g. Skitarii Rangers to report 9 models instead of 10.
+    entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(model => {
+      let mMin = null, mMax = null;
+      model.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+        const val = Math.round(parseFloat(I.getAttr(c, 'value', '0')));
+        if (!isNaN(val) && val > 0) {
+          if (I.getAttr(c, 'type') === 'min') mMin = val;
+          if (I.getAttr(c, 'type') === 'max') mMax = val;
+        }
+      });
+      if (mMin !== null) minModels = (minModels || 0) + mMin;
+      if (mMax !== null) maxModels = (maxModels || 0) + mMax;
+    });
+
+    // Pattern C — fallback for single-model units / characters that express their count
+    // as entry-level constraints when groups and direct model children both yield nothing.
+    // Restrict to field="selections" to avoid Crusade constraints (Battle Honours, etc.).
+    // Skip scope="roster" — those are army-wide caps (Rule of Three), not model counts.
     if (minModels === null && maxModels === null) {
       entryEl.querySelectorAll(':scope > constraints > constraint[field="selections"]').forEach(c => {
         if (I.getAttr(c, 'scope', '') === 'roster') return;
@@ -130,24 +147,8 @@
       });
     }
 
-    // Pattern D
-    if (minModels === null && maxModels === null) {
-      entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(model => {
-        let mMin = null, mMax = null;
-        model.querySelectorAll(':scope > constraints > constraint').forEach(c => {
-          const val = Math.round(parseFloat(I.getAttr(c, 'value', '0')));
-          if (!isNaN(val) && val > 0) {
-            if (I.getAttr(c, 'type') === 'min') mMin = val;
-            if (I.getAttr(c, 'type') === 'max') mMax = val;
-          }
-        });
-        if (mMin !== null) minModels = (minModels || 0) + mMin;
-        if (mMax !== null) maxModels = (maxModels || 0) + mMax;
-      });
-    }
-
     const squadOptions = [];
-    if (basePts > 0) squadOptions.push({ pts: basePts, models: minModels });
+    if (basePts > 0) squadOptions.push({ pts: basePts, models: minModels ?? maxModels });
 
     if (ptsTypeId) {
       entryEl.querySelectorAll(':scope > modifiers > modifier').forEach(mod => {
