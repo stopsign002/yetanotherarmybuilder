@@ -406,8 +406,24 @@
         }
       }
 
-      // 4. Persist locally + re-render.
+      // 4. Persist locally + re-render. If the user is sitting on the
+      // empty default "New Army" placeholder (created at boot before
+      // sign-in), switch them to the most-recently-updated stored army
+      // so the synced content actually shows. Skip if they've already
+      // started editing — entries.length > 0 or non-default name.
       if (mgr) mgr.save();
+      const cur = App.state && App.state.currentArmy;
+      const curIsUntouched = !!cur
+        && (!cur.entries || cur.entries.length === 0)
+        && (cur.name === 'New Army' || !cur.name)
+        && !mgr.armies.some(a => a.id === cur.id);
+      if (mgr.armies.length > 0 && curIsUntouched) {
+        const sorted = [...mgr.armies].sort((a, b) =>
+          new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+        );
+        App.state.currentArmy = sorted[0];
+        mgr.currentArmy = sorted[0];
+      }
       if (App && typeof App.renderAll === 'function') App.renderAll();
 
       // 5. Toast + drain.
