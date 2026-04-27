@@ -306,3 +306,6 @@ body.reduce-motion .topbar-action-btn { transition: none; }
   .topbar-mode-tab,
   .topbar-action-btn { transition: none; }
 }
+
+/* Hide Build/Collect/Play mode nav until all modes are ready. */
+.topbar-modes { display: none !important; }

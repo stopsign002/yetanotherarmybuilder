@@ -77,6 +77,7 @@
     document.body.dataset.mobilePanel = valid;
     try { localStorage.setItem(PANEL_KEY, valid); } catch (_) {}
   }
+  App.setMobilePanel = setPanel;
 
   function initialPanel() {
     try {
