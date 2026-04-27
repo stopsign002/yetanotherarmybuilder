@@ -115,8 +115,13 @@
 
     // Pattern C — restrict to field="selections" to avoid treating Crusade-specific
     // constraints (Battle Honours max=3, Weapon Modifications, etc.) as model counts.
+    // Also skip scope="roster" — those cap how many of this unit appear in the whole
+    // roster (Rule of Three), not how many models are in the unit itself. Without this
+    // filter, Biovores' roster max=3 prevents Pattern D from running, causing Fallback E
+    // to output only the 3-model price (150pts) instead of the correct 50/150pt options.
     if (minModels === null && maxModels === null) {
       entryEl.querySelectorAll(':scope > constraints > constraint[field="selections"]').forEach(c => {
+        if (I.getAttr(c, 'scope', '') === 'roster') return;
         const val = Math.round(parseFloat(I.getAttr(c, 'value', '0')));
         if (!isNaN(val) && val > 0) {
           if (I.getAttr(c, 'type') === 'min') minModels = val;
