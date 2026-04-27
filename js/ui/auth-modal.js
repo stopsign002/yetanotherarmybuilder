@@ -75,7 +75,8 @@
   // ── Login view ────────────────────────────────────────────────────────
   function renderLogin() {
     let userInput, passInput, errEl, submitBtn;
-    const form = el('form', { class: 'auth-form', autocomplete: 'on' });
+    const FORM_ID = 'auth-form-login';
+    const form = el('form', { id: FORM_ID, class: 'auth-form', autocomplete: 'on' });
 
     userInput = el('input', {
       type: 'text', name: 'username', id: 'auth-login-user',
@@ -101,7 +102,7 @@
     form.appendChild(errEl);
 
     submitBtn = el('button', {
-      type: 'submit', class: 'btn btn-accent',
+      type: 'submit', class: 'btn btn-accent', form: FORM_ID,
     }, 'Sign in');
 
     form.addEventListener('submit', async (e) => {
@@ -149,7 +150,8 @@
   // ── Register view ─────────────────────────────────────────────────────
   function renderRegister() {
     let userInput, passInput, pass2Input, errEl, submitBtn;
-    const form = el('form', { class: 'auth-form', autocomplete: 'on' });
+    const FORM_ID = 'auth-form-register';
+    const form = el('form', { id: FORM_ID, class: 'auth-form', autocomplete: 'on' });
 
     userInput = el('input', {
       type: 'text', name: 'username', id: 'auth-reg-user',
@@ -189,7 +191,7 @@
     errEl = el('div', { class: 'auth-error', hidden: 'hidden', role: 'alert' });
     form.appendChild(errEl);
 
-    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent' }, 'Create account');
+    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent', form: FORM_ID }, 'Create account');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -312,7 +314,8 @@
   // ── Recover (use recovery code to set new password) ───────────────────
   function renderRecover() {
     let userInput, codeInput, passInput, errEl, submitBtn;
-    const form = el('form', { class: 'auth-form', autocomplete: 'on' });
+    const FORM_ID = 'auth-form-recover';
+    const form = el('form', { id: FORM_ID, class: 'auth-form', autocomplete: 'on' });
 
     userInput = el('input', {
       type: 'text', name: 'username', id: 'auth-rec-user', class: 'form-input',
@@ -344,7 +347,7 @@
     errEl = el('div', { class: 'auth-error', hidden: 'hidden', role: 'alert' });
     form.appendChild(errEl);
 
-    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent' }, 'Reset password');
+    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent', form: FORM_ID }, 'Reset password');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -385,7 +388,8 @@
   // ── Change password (logged-in) ───────────────────────────────────────
   function renderChangePassword() {
     let oldInput, newInput, new2Input, errEl, submitBtn;
-    const form = el('form', { class: 'auth-form', autocomplete: 'on' });
+    const FORM_ID = 'auth-form-change-password';
+    const form = el('form', { id: FORM_ID, class: 'auth-form', autocomplete: 'on' });
 
     oldInput = el('input', {
       type: 'password', id: 'auth-cp-old', class: 'form-input',
@@ -416,7 +420,7 @@
     errEl = el('div', { class: 'auth-error', hidden: 'hidden', role: 'alert' });
     form.appendChild(errEl);
 
-    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent' }, 'Update password');
+    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent', form: FORM_ID }, 'Update password');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
