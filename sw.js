@@ -1,209 +1,39 @@
-// sw.js - App-shell service worker; precaches HTML/CSS/JS, passes BSData fetches through.
-const SHELL = 'yaab-shell-v32';
+// sw.js — kill-switch for the legacy app-shell service worker.
+//
+// Earlier versions precached HTML/CSS/JS via a "yaab-shell-v*" cache and
+// served them cache-first. That meant every code update required bumping
+// SHELL and waiting for the new SW to activate before users got the fix —
+// exactly the loop we don't want for active development. This version
+// exists solely to unregister itself and clear the old cache, so existing
+// installs migrate cleanly to the no-SW world.
+//
+// New visits don't install a SW at all (sw-register.js no longer calls
+// register). Going forward the browser fetches each asset from the
+// network with normal HTTP caching only.
 
-const PRECACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/img/icon-192.svg',
-  '/img/icon-512.svg',
-  '/css/style.css',
-  '/css/validation.css',
-  '/css/datasheet.css',
-  '/css/mobile.css',
-  '/css/celebrations.css',
-  '/css/command-palette.css',
-  '/css/analytics.css',
-  '/css/starter-lists.css',
-  '/css/quirky.css',
-  '/css/legends-toggle.css',
-  '/css/match-mode.css',
-  '/css/damage-calc.css',
-  '/css/opponent.css',
-  '/css/army-diff.css',
-  '/css/favorites.css',
-  '/css/tournament-export.css',
-  '/css/deployment-planner.css',
-  '/css/lore.css',
-  '/css/utilities.css',
-  '/css/collection.css',
-  '/css/synergy.css',
-  '/css/stratagems.css',
-  '/css/crusade.css',
-  '/css/kill-team.css',
-  '/css/activity-log.css',
-  '/css/community-feed.css',
-  '/css/design-pass.css',
-  '/css/typography.css',
-  '/css/datasheet-style.css',
-  '/css/hero-state.css',
-  '/css/atmosphere.css',
-  '/css/topbar.css',
-  '/css/auth.css',
-  '/css/mode-shell.css',
-  '/css/settings-drawer.css',
-  '/css/action-center.css',
-  '/css/voice-coach.css',
-  '/css/cold-start.css',
-  '/css/build-mode.css',
-  '/css/collect-mode.css',
-  '/css/play-mode.css',
-  '/css/card-chassis.css',
-  '/css/bugfix-pass.css',
-  '/css/menu-overflow-fixes.css',
-  '/css/theming-pass.css',
-  '/css/animations-polish.css',
-  '/css/aaa-polish.css',
-  '/css/unit-card-themes.css',
-  '/css/particle-fx.css',
-  '/css/faction-banner.css',
-  '/js/vendor/fonts/cinzel-400.woff2',
-  '/js/vendor/fonts/cinzel-600.woff2',
-  '/js/vendor/html2pdf.bundle.min.js',
-  '/js/vendor/qrcode.min.js',
-  '/js/db.js',
-  '/js/bsdata.js',
-  '/js/storage.js',
-  '/js/army.js',
-  '/js/parser/shared-index.js',
-  '/js/parser/classify.js',
-  '/js/parser/stats.js',
-  '/js/parser/weapons.js',
-  '/js/parser/abilities.js',
-  '/js/parser/wargear.js',
-  '/js/parser/costs.js',
-  '/js/parser/keywords.js',
-  '/js/parser/entry.js',
-  '/js/parser/catalogue.js',
-  '/js/parser/index.js',
-  '/js/parser/report.js',
-  '/js/ui/index.js',
-  '/js/ui/helpers.js',
-  '/js/ui/tooltip.js',
-  '/js/ui/toast.js',
-  '/js/ui/progress.js',
-  '/js/ui/modals.js',
-  '/js/ui/roster.js',
-  '/js/ui/detail.js',
-  '/js/ui/army-list.js',
-  '/js/ui/faction-filter.js',
-  '/js/ui/faction-rules.js',
-  '/js/ui/datasheet.js',
-  '/js/ui/dropdown.js',
-  '/js/app/state.js',
-  '/js/app/hooks.js',
-  '/js/app/auth.js',
-  '/js/app/sync.js',
-  '/js/ui/auth-modal.js',
-  '/js/ui/auth-button.js',
-  '/js/app/filters.js',
-  '/js/app/render.js',
-  '/js/app/selections.js',
-  '/js/app/resize.js',
-  '/js/app/events.js',
-  '/js/app/bsdata-load.js',
-  '/js/app/history.js',
-  '/js/app/url-share.js',
-  '/js/app/validation.js',
-  '/js/app/keyboard.js',
-  '/js/app/pwa-install.js',
-  '/js/app/command-palette.js',
-  '/js/app/starter-lists.js',
-  '/js/app/flavor.js',
-  '/js/app/ork-math.js',
-  '/js/app/nickname.js',
-  '/js/ui/celebrations.js',
-  '/js/ui/analytics.js',
-  '/js/ui/dice-roller.js',
-  '/js/app/legends-toggle.js',
-  '/js/app/match-mode.js',
-  '/js/ui/damage-calc.js',
-  '/js/app/opponent.js',
-  '/js/ui/matchup.js',
-  '/js/app/army-diff.js',
-  '/js/app/favorites.js',
-  '/js/ui/tournament-export.js',
-  '/js/ui/deployment-planner.js',
-  '/js/data/lore-data.js',
-  '/js/app/lore.js',
-  '/js/app/points-override.js',
-  '/js/app/bug-report.js',
-  '/js/app/qr-share.js',
-  '/js/app/collection.js',
-  '/js/ui/synergy.js',
-  '/js/data/stratagems-data.js',
-  '/js/app/stratagems.js',
-  '/js/app/crusade.js',
-  '/js/app/kill-team.js',
-  '/js/app/activity-log.js',
-  '/js/app/community-feed.js',
-  '/js/data/community-feed.json',
-  '/js/app/hero-state.js',
-  '/js/app/first-time-tour.js',
-  '/js/ui/scanline.js',
-  '/js/ui/save-pulse.js',
-  '/js/ui/animated-crest.js',
-  '/js/ui/cold-start.js',
-  '/js/ui/action-center.js',
-  '/js/app/topbar.js',
-  '/js/app/mode-shell.js',
-  '/js/app/settings-drawer.js',
-  '/js/app/lazy-modules.js',
-  '/js/app/voice-commands.js',
-  '/js/app/sound-fx.js',
-  '/js/app/faction-fx.js',
-  '/js/ui/list-coach.js',
-  '/js/ui/build-mode.js',
-  '/js/ui/collect-mode.js',
-  '/js/ui/play-mode.js',
-  '/js/ui/flip-animations.js',
-  '/js/ui/faction-glyphs.js',
-  '/js/ui/role-icons.js',
-  '/js/ui/unit-card-themes.js',
-  '/js/app/sw-register.js',
-  '/js/app/index.js',
-];
-
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(SHELL).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
-  );
-});
+self.addEventListener('install', () => { self.skipWaiting(); });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((names) => Promise.all(
-      names.filter((n) => n.startsWith('yaab-shell-v') && n !== SHELL)
-           .map((n) => caches.delete(n))
-    )).then(() => self.clients.claim())
-  );
+  e.waitUntil((async () => {
+    try {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.filter((k) => k.startsWith('yaab-shell-v'))
+            .map((k) => caches.delete(k))
+      );
+    } catch (_) {}
+    try { await self.registration.unregister(); } catch (_) {}
+    try {
+      const all = await self.clients.matchAll({ includeUncontrolled: true });
+      for (const c of all) {
+        try { c.navigate(c.url); } catch (_) {}
+      }
+    } catch (_) {}
+  })());
 });
 
-self.addEventListener('fetch', (e) => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
-
-  let url;
-  try { url = new URL(req.url); } catch (_) { return; }
-
-  // Cross-origin (BSData, GitHub API, anything else): pass through, never cache here.
-  if (url.origin !== self.location.origin) return;
-
-  // Same-origin /api/* (auth, armies, state): never intercept. Caching these
-  // would serve stale /api/auth/me forever and could cache Set-Cookie responses.
-  if (url.pathname.startsWith('/api/')) return;
-
-  // Same-origin: cache-first with network fallback; opportunistically refresh cache.
-  e.respondWith(
-    caches.match(req).then((hit) => {
-      if (hit) return hit;
-      return fetch(req).then((resp) => {
-        if (resp && resp.ok && resp.type === 'basic') {
-          const copy = resp.clone();
-          caches.open(SHELL).then((cache) => cache.put(req, copy)).catch(() => {});
-        }
-        return resp;
-      }).catch(() => caches.match('/index.html'));
-    })
-  );
-});
+// Pass every fetch through to the network — no caching, no app-shell
+// fallback. The activate handler above also unregisters us, so this
+// listener is only relevant for the brief window between install and
+// activate.
+self.addEventListener('fetch', () => {});
