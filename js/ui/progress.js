@@ -4,6 +4,7 @@
 
   let _loadCompleteTimer = null;
   let _loadingComplete   = false;
+  UI.loadingComplete     = false;
 
   UI.setLoadProgress = function (done, total) {
     if (_loadingComplete) return;
@@ -24,6 +25,7 @@
 
     if (done >= total) {
       _loadingComplete = true;
+      UI.loadingComplete = true;
 
       bar.style.width = '100%';
       if (spinner) spinner.style.display = 'none';

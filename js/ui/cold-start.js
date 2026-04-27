@@ -156,6 +156,12 @@
 
     function tick() {
       if (dismissed) return;
+
+      // Dismiss as soon as all catalogue files are processed, regardless of
+      // how many produced faction objects (some files have 0 units and are
+      // never pushed to state.factions, so count never reaches the file total).
+      if (UI.loadingComplete) { dismiss({ fade: true }); return; }
+
       const state = App.state;
       const factions = (state && state.factions) || [];
       const count = factions.length;
