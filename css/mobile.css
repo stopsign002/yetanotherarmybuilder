@@ -24,7 +24,7 @@
     flex-direction: column;
     grid-template-columns: none !important;
     grid-template-rows: none !important;
-    height: calc(100% - 56px);
+    height: calc(100% - 56px) !important;
     min-height: 0;
     overflow: hidden;
   }
