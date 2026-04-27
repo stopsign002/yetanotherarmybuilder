@@ -181,9 +181,17 @@
     if (modelCosts.length > 0) {
       const perModel = Math.min(...modelCosts);
       const opts = [];
-      if (minModels) opts.push({ pts: perModel * minModels, models: minModels });
-      if (maxModels && maxModels !== minModels) opts.push({ pts: perModel * maxModels, models: maxModels });
-      if (opts.length === 0) opts.push({ pts: perModel, models: null });
+      if (minModels && maxModels) {
+        for (let count = minModels; count <= maxModels; count++) {
+          opts.push({ pts: perModel * count, models: count });
+        }
+      } else if (minModels) {
+        opts.push({ pts: perModel * minModels, models: minModels });
+      } else if (maxModels) {
+        opts.push({ pts: perModel * maxModels, models: maxModels });
+      } else {
+        opts.push({ pts: perModel, models: null });
+      }
       opts.sort((a, b) => a.pts - b.pts);
       return { points: opts[0].pts, pointsOptions: opts.map(o => o.pts), squadOptions: opts };
     }
