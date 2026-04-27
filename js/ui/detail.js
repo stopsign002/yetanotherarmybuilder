@@ -320,9 +320,7 @@
 
       modelTypeOpts.forEach(opt => {
         let countStr = '';
-        if (opt.perModels && opt.perModels > 1) {
-          countStr = `1 per ${opt.perModels} models`;
-        } else if (opt.modelMin != null && opt.modelMax != null) {
+        if (opt.modelMin != null && opt.modelMax != null) {
           countStr = opt.modelMin === opt.modelMax
             ? `${opt.modelMin} model${opt.modelMin !== 1 ? 's' : ''}`
             : `${opt.modelMin}–${opt.modelMax} models`;
@@ -345,8 +343,9 @@
         }
 
         (opt.subOptions || []).forEach(sub => {
+          const subCtx = sub.max === 1 ? ' — choose one' : sub.max > 1 ? ` — choose up to ${sub.max}` : '';
           html += `<div class="wl-suboption">
-            <div class="wl-suboption-title">${esc(sub.name)}</div>
+            <div class="wl-suboption-title">${esc(sub.name)}${subCtx}</div>
             <ul class="wl-choice-list">`;
           (sub.choices || []).forEach(c => {
             html += `<li>${esc(typeof c === 'object' ? c.name : c)}</li>`;

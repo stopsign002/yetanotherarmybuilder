@@ -131,18 +131,21 @@
         if (I.isCrusadeSection(gName)) return;
         const choices = getChoices(group);
         if (choices.length === 0) return;
-        subOptions.push({ name: gName, choices });
+        subOptions.push({ name: gName, choices, max: getMaxConstraint(group) });
       });
 
       const ownModelMax = getMaxConstraint(modelEl);
+      const ownModelMin = getMinConstraint(modelEl);
       const defaultWeapons = getDefaultWeaponNames(modelEl);
       if (subOptions.length === 0 && defaultWeapons.length === 0) return;
       if (modelId) seenIds.add(modelId);
 
-      const modelMin = getMinConstraint(modelEl) ?? squadGroupMin;
+      const modelMin = ownModelMin ?? squadGroupMin;
       const modelMax = ownModelMax ?? squadGroupMax;
       let perModels = null;
-      if (ownModelMax && squadGroupMin && squadGroupMin > ownModelMax) {
+      // Only derive "1 per N" for optional model variants (no own min = can have zero).
+      // Mandatory models (ownModelMin >= 1, e.g. sergeant) are never "1 per N".
+      if (ownModelMax && squadGroupMin && squadGroupMin > ownModelMax && !ownModelMin) {
         perModels = Math.round(squadGroupMin / ownModelMax);
       }
       options.push({ type: 'model', modelName, modelMin, modelMax, perModels, defaultWeapons, subOptions });

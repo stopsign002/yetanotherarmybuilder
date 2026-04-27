@@ -38,22 +38,8 @@
     return `<div class="stat-cell"><span class="stat-name">${label}</span><span class="stat-value">${UI.escapeHtml(String(value))}</span></div>`;
   };
 
-  // Subsequence match — tests whether every character in `needle` appears
-  // in `haystack` in order (not necessarily contiguous). Both lowercased.
-  // Returns false for empty needle.
-  function isSubsequence(needle, haystack) {
-    if (!needle) return false;
-    let i = 0, j = 0;
-    while (i < needle.length && j < haystack.length) {
-      if (needle.charCodeAt(i) === haystack.charCodeAt(j)) i++;
-      j++;
-    }
-    return i === needle.length;
-  }
-
-  // Fuzzy match: split search into whitespace tokens; every token must match
-  // the unit (AND). A single token matches if it's a substring of name,
-  // any keyword, or the faction name — or a subsequence of unit.name.
+  // Match: split search into whitespace tokens; every token must match the unit (AND).
+  // A token matches if it's a substring of the unit name, any keyword, or the faction name.
   function fuzzyMatch(unit, tokens) {
     const name     = (unit.name || '').toLowerCase();
     const fac      = (unit._factionName || '').toLowerCase();
@@ -64,8 +50,7 @@
       const hit =
         name.indexOf(tok) !== -1 ||
         fac.indexOf(tok)  !== -1 ||
-        keywords.some(k => k.indexOf(tok) !== -1) ||
-        isSubsequence(tok, name);
+        keywords.some(k => k.indexOf(tok) !== -1);
       if (!hit) return false;
     }
     return true;
