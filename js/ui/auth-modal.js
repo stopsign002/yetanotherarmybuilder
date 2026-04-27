@@ -49,7 +49,15 @@
     if (!m) return;
     const inner = m.querySelector('.modal');
     if (!inner) return;
-    inner.replaceChildren(node);
+    // Render functions return a wrapper <div class="modal">. Unwrap it
+    // so we don't nest .modal inside .modal — the inner one ignores the
+    // outer's max-height: 80vh and pushes the footer (submit button)
+    // below the viewport on small screens.
+    if (node && node.classList && node.classList.contains('modal')) {
+      inner.replaceChildren(...node.childNodes);
+    } else {
+      inner.replaceChildren(node);
+    }
   }
 
   function errorBanner(msg) {
