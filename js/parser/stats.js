@@ -66,25 +66,37 @@
       if (Object.keys(s).length > 0) return s;
     }
 
-    for (const child of entryEl.querySelectorAll(
-      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="model"], ' +
-      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry[type="unit"]'
-    )) {
-      const s = findStats(child, entriesById, profilesById, depth + 1);
-      if (Object.keys(s).length > 0) return s;
-    }
-
-    for (const link of entryEl.querySelectorAll(
-      ':scope > selectionEntryGroups > selectionEntryGroup > entryLinks > entryLink, ' +
-      // Composition-pick pattern (Squighog Boyz): entryLinks live inside upgrade entries
-      // that sit in the squad-size group, not directly under the group.
-      ':scope > selectionEntryGroups > selectionEntryGroup > selectionEntries > selectionEntry > entryLinks > entryLink'
-    )) {
-      const target = entriesById.get(I.getAttr(link, 'targetId'));
-      if (target) {
-        const s = findStats(target, entriesById, profilesById, depth + 1);
+    // Walk selectionEntryGroups recursively — mirrors the recursive processGroup in
+    // costs.js so both handle the "Unit Composition" wrapper pattern (e.g. Skorpekh
+    // Destroyers) where the actual model entries sit inside a nested sub-group.
+    function searchGroups(groupEl) {
+      for (const child of groupEl.querySelectorAll(
+        ':scope > selectionEntries > selectionEntry[type="model"], ' +
+        ':scope > selectionEntries > selectionEntry[type="unit"]'
+      )) {
+        const s = findStats(child, entriesById, profilesById, depth + 1);
         if (Object.keys(s).length > 0) return s;
       }
+      for (const link of groupEl.querySelectorAll(
+        ':scope > entryLinks > entryLink, ' +
+        // Squighog Boyz pattern: entryLinks inside upgrade entries within the group.
+        ':scope > selectionEntries > selectionEntry > entryLinks > entryLink'
+      )) {
+        const target = entriesById.get(I.getAttr(link, 'targetId'));
+        if (target) {
+          const s = findStats(target, entriesById, profilesById, depth + 1);
+          if (Object.keys(s).length > 0) return s;
+        }
+      }
+      for (const sub of groupEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup')) {
+        const s = searchGroups(sub);
+        if (Object.keys(s).length > 0) return s;
+      }
+      return {};
+    }
+    for (const group of entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup')) {
+      const s = searchGroups(group);
+      if (Object.keys(s).length > 0) return s;
     }
 
     return {};
