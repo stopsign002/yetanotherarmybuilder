@@ -2,7 +2,7 @@
 
 ## What this is
 
-A client-only static site (no build step) that fetches BattleScribe 10th-edition XML from `BSData/wh40k-10e` over GitHub's raw.githubusercontent.com and the raw tree API, parses it in-browser with `DOMParser`, and lets a user build, share, and play 40k armies. Persists user data in `localStorage` and parsed faction data in IndexedDB. Installable PWA with offline app-shell.
+A client-only static site (no build step) that fetches BattleScribe 10th-edition XML from `BSData/wh40k-10e` over GitHub's raw.githubusercontent.com and the raw tree API, parses it in-browser with `DOMParser`, and lets a user build, share, and play 40k armies. Persists user data in `localStorage` and parsed faction data in IndexedDB. Optional username/password account with offline-first cloud sync of armies + a small KV bag (favorites, collection, crusade rosters, etc.) via the sibling `api/` backend.
 
 ## Running it
 
@@ -17,14 +17,19 @@ Then open `http://localhost:8000/`. Cannot be opened via `file://` — the BSDat
 | Path | Purpose |
 |---|---|
 | `index.html` | Single-page shell. Hardcoded `<script>` order matters. Holds the topbar + 3-pane layout + modal mounts. |
-| `css/*.css` | One file per feature surface (see `sw.js` PRECACHE for the canonical list). `style.css` is the base; everything else is additive. |
-| `sw.js` | App-shell service worker. Same-origin cache-first, BSData passes through. |
+| `css/*.css` | One file per feature surface. `style.css` is the base; everything else is additive. |
+| `css/auth.css` | Auth UI styling (sign-in button, dropdown, auth modal). |
+| `sw.js` | Kill-switch for the retired app-shell service worker. Self-unregisters and clears legacy `yaab-shell-v*` caches. New visits don't register a SW. |
 | `manifest.json` | PWA manifest (installable). |
 | `js/db.js` | `YaabDB` IndexedDB wrapper: `factions` + `gst` stores. |
 | `js/bsdata.js` | GitHub fetch + 6-worker bulk loader. Caches via `YaabDB`. |
 | `js/parser/` | BattleScribe XML → plain-object units. See `docs/PARSER.md`. |
 | `js/storage.js` | `localStorage` armies + compact `YAAB1:` deflate-base64url export/import. |
 | `js/army.js` | `Army` + `ArmyManager` data model. |
+| `js/app/auth.js` | `App.Auth`: session state + auth API client. (See `docs/AUTH.md`.) |
+| `js/app/sync.js` | `App.Sync`: offline-first cloud sync. (See `docs/SYNC.md`.) |
+| `js/ui/auth-modal.js` | `UI.showAuthModal(mode)` for login/register/recover/change-password. |
+| `js/ui/auth-button.js` | Top-bar Sign-in / username button + dropdown menu (Sync now, Change password, Sign out). |
 | `js/data/` | Static JSON-ish data: lore, stratagems, community feed. |
 | `js/ui/` | DOM-rendering modules. Each attaches to `window.UI`. See `docs/UI.md`. |
 | `js/app/` | Bootstrap, state, events, and feature modules. Each attaches to `window.App`. See `docs/UI.md`. |
@@ -47,6 +52,9 @@ Grouped by user intent. One module per row; module path is the search target.
 | Build | Points overrides (dataslate edits, per-unit) | `js/app/points-override.js` |
 | Build | Auto-suggest army nickname from faction | `js/app/nickname.js` |
 | Build | Cmd/Ctrl+K command palette + `?` keyboard help | `js/app/command-palette.js` |
+| Account & sync | Username/password auth | `js/app/auth.js`, `js/ui/auth-modal.js` |
+| Account & sync | Top-bar account button | `js/ui/auth-button.js` |
+| Account & sync | Cloud sync of armies + KV bag | `js/app/sync.js` |
 | Game Day | Match-mode overlay (CP, turns, phases, wounds, VP) | `js/app/match-mode.js` |
 | Game Day | Stratagem browser (detachment + faction + core) | `js/app/stratagems.js` |
 | Game Day | Crusade campaign tracker (rosters, XP, ranks, scars) | `js/app/crusade.js` |
@@ -66,7 +74,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Print & Export | YAAB1 string export/import (compact deflate) | `js/storage.js` |
 | Browse | Faction lore browser modal | `js/app/lore.js`, `js/data/lore-data.js` |
 | Browse | Community feed (curated army lists) | `js/app/community-feed.js`, `js/data/community-feed.json` |
-| Browse | First-time guided tour | `js/app/first-time-tour.js` |
+| Browse | First-time guided tour (retired; `js/app/first-time-tour.js` is a no-op stub — `App.replayTour` and `App.startTour` are empty so callers in `settings-drawer.js` don't crash. The Settings drawer "Replay onboarding tour" entry is still present but does nothing.) | `js/app/first-time-tour.js` |
 | Collection | Owned/painted tracker (per unit) | `js/app/collection.js` |
 | Polish | Confetti / save pulse / scanline / animated crest | `js/ui/celebrations.js`, `js/ui/save-pulse.js`, `js/ui/scanline.js`, `js/ui/animated-crest.js` |
 | Polish | Faction flavor quotes on empty army | `js/app/flavor.js` |
@@ -117,28 +125,32 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_sound_enabled` | localStorage | `sound-fx.js` (orphan) | Opt-in WebAudio toggle | User pref |
 | `yaab_voice_enabled` | localStorage | `voice-commands.js` (orphan) | Opt-in voice-control toggle | User pref |
 | `yaab_parse_debug` | localStorage | `parser/report.js` | Parse-coverage console logging | Dev flag |
-| `yaab-shell-v17` | Cache API | `sw.js` | Service worker app shell | Bump `SHELL` in `sw.js` when any precached asset changes |
+| `yaab_auth_session_hint` | localStorage | `auth.js` | Cosmetic `{username}` hint so the topbar can render "signed in" instantly on reload (cookie is source of truth) | Cleared on sign-out |
+| `yaab_sync_queue` | localStorage | `sync.js` | FIFO of pending `{op, id?, ts, mutationId}` sync operations; coalesced on enqueue | Drained as ops succeed |
+| `yaab_sync_known` | localStorage | `sync.js` | `{ armyId -> updated_at }` last seen on the server; drives LWW push/pull decisions | Cleared on sign-out |
+| `yaab_sync_state_at` | localStorage | `sync.js` | Last successful state-bag (KV) push timestamp | Cleared on sign-out |
 
-## SW versioning
+The kill-switch in `sw.js` self-unregisters and clears any legacy `yaab-shell-v*` caches; no Cache API entries are maintained anymore.
 
-- Current shell version: `yaab-shell-v17` (`sw.js` line 2).
-- **Bump `SHELL` whenever**: you add/remove a file in `PRECACHE`, change a file's URL, or ship breaking parser/storage changes that would mismatch with stale-cached JS.
-- The activate handler clears any `yaab-shell-v*` cache that doesn't match the current `SHELL`, so old versions self-evict.
+## Service worker (retired)
+
+The app-shell service worker has been retired. Existing installs are migrated by the kill-switch in `sw.js`: it deletes legacy `yaab-shell-v*` caches, unregisters itself, and navigates open clients so the next page load is SW-free. New visits don't register a SW. `js/app/sw-register.js` is a defensive helper that proactively unregisters anything still registered. Code updates ship live with the next reload — no SHELL bumping required.
 
 ## Editing guidance
 
 1. **Find the right file FIRST. Don't grep blindly.** The file map above is intentionally exhaustive. If you can't tell where a feature lives from the table, scan `js/app/` and `js/ui/` filenames first — every module is named after what it does.
-2. **Hook-first.** Adding a new feature should never require touching `events.js`, `detail.js`, `index.html` toolbar markup, or any other shared file. Create a new file under `js/app/` or `js/ui/`, register via `App.hooks.*`, append the script tag to `index.html`, and add it to `sw.js` PRECACHE. See `docs/UI.md` "How to add X".
+2. **Hook-first.** Adding a new feature should never require touching `events.js`, `detail.js`, `index.html` toolbar markup, or any other shared file. Create a new file under `js/app/` or `js/ui/`, register via `App.hooks.*`, and append the script tag to `index.html`. See `docs/UI.md` "How to add X".
 3. **Don't introduce a bundler, framework, or TypeScript.** Vanilla JS, IIFE, namespace globals. That's the deal.
 4. **Don't change `WahapediaParser.parse()` output shape** without bumping `DB_VERSION` in `js/db.js` AND clearing the IndexedDB stores in `onupgradeneeded`. Stale cached JSON will silently misrender.
-5. **When adding precached assets**, add to `sw.js` PRECACHE AND bump `SHELL`.
-6. **Don't break the namespaces** (`window.App`, `window.UI`, `window.Storage`, `window.Army`, `window.ArmyManager`, `window.BSData`, `window.WahapediaParser`, `window.YaabDB`, `App.hooks`). External tabs reload through them.
+5. **Don't break the namespaces** (`window.App`, `window.UI`, `window.Storage`, `window.Army`, `window.ArmyManager`, `window.BSData`, `window.WahapediaParser`, `window.YaabDB`, `App.hooks`). External tabs reload through them.
 
 ## Don't break
 
 - `WahapediaParser.parse()` output shape (see `docs/PARSER.md`). Bump `DB_VERSION` if you must.
 - `App.hooks.*` action shapes. New feature modules consume them.
 - `Army.toJSON()` / `Army.fromJSON()`. Saved armies must keep deserializing.
+- `Army.toJSON()` keys must include `createdAt` and `updatedAt`, and the constructor must accept them. Every `fromJSON` path that drops the timestamps breaks cross-device sync (every load looks "newer" than cloud → uploads stale → clobbers other devices).
+- API endpoint paths under `/api/*` and their request/response shapes are contract — see `../api/CLAUDE.md`.
 - `YAAB1:` v2 export format (`storage.js`). Bookmarked share URLs depend on it.
 - The hook iteration in `App.fireBootstrap` / `fireArmyChange` / `fireSelectionChange` — they wrap each call in try/catch, so one broken module shouldn't break others. Keep that pattern.
 - `releaseSharedIndex()` is called once in `bsdata.js` after Phase 2. Don't hold DOM refs alive past that point — it leaks tens of MB.
