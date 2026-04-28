@@ -50,6 +50,17 @@
         state.currentArmy.detachmentName = state.selectedDetachment ? state.selectedDetachment.name : null;
       }
       UI.updateFactionRules(App.getCurrentFaction(), state.selectedDetachment);
+      // Refresh whichever unit detail is currently open so its
+      // enhancements section reflects the newly-picked detachment.
+      // Without this, the detail keeps showing "pick a detachment" or
+      // stale enhancements from the previous detachment.
+      const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
+      if (state.selectedArmyEntryIndex != null && state.currentArmy) {
+        const entry = state.currentArmy.entries[state.selectedArmyEntryIndex];
+        if (entry) UI.renderUnitDetail(entry.unitData, detEnhs, entry.enhancements || []);
+      } else if (state.selectedUnit) {
+        UI.renderUnitDetail(state.selectedUnit, detEnhs, []);
+      }
     });
 
     document.getElementById('search-input').addEventListener('input', () => {

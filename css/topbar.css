@@ -297,6 +297,11 @@ body { padding-top: var(--topbar-h); }
 
   .topbar-action-btn { padding: 0 8px; height: 32px; }
   .topbar-action-label { display: none; }
+  /* The auth button has no glyph fallback (it shows "Sign in" or the
+     username), so hiding its label leaves an empty button. Keep it
+     visible on mobile. */
+  .auth-btn .topbar-action-label { display: inline; }
+  .auth-btn { max-width: 10ch; overflow: hidden; text-overflow: ellipsis; }
 }
 
 /* ── Reduced motion override (user-toggleable via Settings) ── */
