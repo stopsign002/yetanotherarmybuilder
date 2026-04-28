@@ -109,9 +109,8 @@
     errEl = el('div', { class: 'auth-error', hidden: 'hidden', role: 'alert' });
     form.appendChild(errEl);
 
-    submitBtn = el('button', {
-      type: 'submit', class: 'btn btn-accent', form: FORM_ID,
-    }, 'Sign in');
+    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent auth-form-submit' }, 'Sign in');
+    form.appendChild(submitBtn);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -151,7 +150,6 @@
         form,
         el('div', { class: 'auth-switch' }, [switchBtn, recoverBtn]),
       ]),
-      footerBtns([submitBtn]),
     ]);
   }
 
@@ -199,7 +197,8 @@
     errEl = el('div', { class: 'auth-error', hidden: 'hidden', role: 'alert' });
     form.appendChild(errEl);
 
-    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent', form: FORM_ID }, 'Create account');
+    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent auth-form-submit' }, 'Create account');
+    form.appendChild(submitBtn);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -251,7 +250,6 @@
         form,
         el('div', { class: 'auth-switch' }, [switchBtn]),
       ]),
-      footerBtns([submitBtn]),
     ]);
   }
 
@@ -355,7 +353,8 @@
     errEl = el('div', { class: 'auth-error', hidden: 'hidden', role: 'alert' });
     form.appendChild(errEl);
 
-    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent', form: FORM_ID }, 'Reset password');
+    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent auth-form-submit' }, 'Reset password');
+    form.appendChild(submitBtn);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -389,7 +388,6 @@
     return el('div', { class: 'modal' }, [
       header('Recover account'),
       el('div', { class: 'modal-body' }, [form, el('div', { class: 'auth-switch' }, [backBtn])]),
-      footerBtns([submitBtn]),
     ]);
   }
 
@@ -428,7 +426,8 @@
     errEl = el('div', { class: 'auth-error', hidden: 'hidden', role: 'alert' });
     form.appendChild(errEl);
 
-    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent', form: FORM_ID }, 'Update password');
+    submitBtn = el('button', { type: 'submit', class: 'btn btn-accent auth-form-submit' }, 'Update password');
+    form.appendChild(submitBtn);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -464,7 +463,6 @@
     return el('div', { class: 'modal' }, [
       header('Change password'),
       el('div', { class: 'modal-body' }, [form]),
-      footerBtns([submitBtn]),
     ]);
   }
 

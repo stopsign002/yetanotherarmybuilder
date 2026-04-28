@@ -64,6 +64,15 @@
   margin-bottom: 12px;
 }
 
+/* Submit button is rendered as the last child of the form (not in
+   .modal-footer) so it always sits with its inputs and can never be
+   pushed below the visible viewport on mobile. */
+.auth-form-submit {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+}
+
 .auth-error {
   background: rgba(180, 40, 40, 0.15);
   color: #ff8b8b;
