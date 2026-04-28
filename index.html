@@ -68,47 +68,71 @@
   </div>
 
   <!-- ============================================================
-       TOP APP BAR — persistent navigation across the whole app.
-       Brand + mode tabs | Search | Settings + Help
+       TOP APP BAR — single condensed bar.
+       YAAB | mode tabs | name + faction + detachment | pts | actions
+       (army-meta / faction-select / points-summary used to live
+       in the left panel; they were merged here to save vertical
+       space. The IDs are unchanged so events.js + render code
+       still finds them.)
   ============================================================ -->
   <header class="topbar" id="topbar" role="banner">
     <div class="topbar-inner">
 
-      <!-- Left group: brand + mode tabs ------------------------- -->
-      <div class="topbar-left">
-        <a class="topbar-brand" href="#" id="topbar-brand" aria-label="YAAB home">
-          <span class="topbar-brand-glyph" aria-hidden="true">&#9876;</span>
-          <span class="topbar-brand-mark">YAAB</span>
-        </a>
+      <a class="topbar-brand" href="#" id="topbar-brand" aria-label="YAAB home">
+        <span class="topbar-brand-mark">YAAB</span>
+      </a>
 
-        <nav class="topbar-modes" role="tablist" aria-label="App mode">
-          <button class="topbar-mode-tab" id="topbar-mode-build"
-                  type="button" role="tab" data-mode="build"
-                  aria-selected="true" aria-controls="build-mode">
-            Build
-          </button>
-          <button class="topbar-mode-tab" id="topbar-mode-collect"
-                  type="button" role="tab" data-mode="collect"
-                  aria-selected="false" aria-controls="collect-mode">
-            Collect
-          </button>
-          <button class="topbar-mode-tab" id="topbar-mode-play"
-                  type="button" role="tab" data-mode="play"
-                  aria-selected="false" aria-controls="play-mode">
-            Play
-          </button>
-        </nav>
+      <nav class="topbar-modes" role="tablist" aria-label="App mode">
+        <button class="topbar-mode-tab" id="topbar-mode-build"
+                type="button" role="tab" data-mode="build"
+                aria-selected="true" aria-controls="build-mode">Build</button>
+        <button class="topbar-mode-tab" id="topbar-mode-collect"
+                type="button" role="tab" data-mode="collect"
+                aria-selected="false" aria-controls="collect-mode">Collect</button>
+        <button class="topbar-mode-tab" id="topbar-mode-play"
+                type="button" role="tab" data-mode="play"
+                aria-selected="false" aria-controls="play-mode">Play</button>
+      </nav>
+
+      <!-- Army inputs inline. Same IDs as the old left-panel inputs. -->
+      <div class="topbar-army">
+        <input type="text" id="army-name-input" class="topbar-army-name"
+               placeholder="Army name" value="My Army" aria-label="Army name" />
+        <select id="army-faction-select" class="topbar-army-select"
+                aria-label="Faction">
+          <option value="all">All Factions</option>
+        </select>
+        <span id="army-chapter-group" hidden>
+          <select id="army-chapter-select" class="topbar-army-select"
+                  aria-label="Chapter / Supplement">
+            <option value="">— All —</option>
+          </select>
+        </span>
+        <select id="army-detachment-select" class="topbar-army-select"
+                aria-label="Detachment">
+          <option value="">— Detachment —</option>
+        </select>
       </div>
 
-      <!-- Center: command/search bar ---------------------------- -->
-      <button class="topbar-search" id="topbar-search" type="button"
-              aria-label="Find anything (Cmd/Ctrl+K)">
-        <span class="topbar-search-glyph" aria-hidden="true">&#8982;</span>
-        <span class="topbar-search-placeholder">Find anything&hellip;</span>
-        <kbd class="topbar-search-kbd">&#8984;K</kbd>
-      </button>
+      <!-- Compact points widget with inline editable limit. -->
+      <div class="topbar-points points-summary" id="points-summary">
+        <span class="topbar-points-text">
+          <span class="points-current" id="points-current">0</span>
+          <span class="points-separator">/</span>
+          <input type="number" id="points-limit-input"
+                 class="topbar-points-limit-input"
+                 value="2000" min="0" step="50" aria-label="Points limit" />
+          <span class="points-label">pts</span>
+        </span>
+        <div class="topbar-points-bar-wrap points-bar-wrap">
+          <div class="points-bar" id="points-bar"></div>
+        </div>
+        <span class="points-bar-pct" id="points-bar-pct" hidden>0%</span>
+        <span class="points-bar-remaining" id="points-bar-remaining" hidden>2000 pts remaining</span>
+        <span class="points-limit" id="points-limit-display" hidden>2000</span>
+      </div>
 
-      <!-- Right: Sign-in + hook-registered icons + Settings + Help ---- -->
+      <!-- Right: account + Settings + Help ----------------------- -->
       <div class="topbar-actions">
         <div id="topbar-icons" class="topbar-icons-shelf"></div>
         <button class="topbar-action-btn" id="topbar-settings" type="button"
@@ -144,56 +168,10 @@
 
       <div class="panel-body">
 
-        <!-- Army Meta -->
-        <div class="army-meta">
-          <div class="form-group">
-            <label for="army-name-input" class="form-label">Army Name</label>
-            <input type="text" id="army-name-input" class="form-input" placeholder="My Army" value="My Army" />
-          </div>
-          <div class="form-group">
-            <label for="points-limit-input" class="form-label">Points Limit</label>
-            <input type="number" id="points-limit-input" class="form-input" placeholder="2000" value="2000" min="0" step="50" />
-          </div>
-        </div>
-
-        <!-- Faction / Chapter / Detachment Selection -->
-        <div class="army-selection-section">
-          <div class="form-group">
-            <label for="army-faction-select" class="form-label">Army / Faction</label>
-            <select id="army-faction-select" class="form-select">
-              <option value="all">All Factions</option>
-            </select>
-          </div>
-          <div class="form-group" id="army-chapter-group" hidden>
-            <label for="army-chapter-select" class="form-label">Chapter / Supplement</label>
-            <select id="army-chapter-select" class="form-select">
-              <option value="">— All —</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="army-detachment-select" class="form-label">Detachment</label>
-            <select id="army-detachment-select" class="form-select">
-              <option value="">— Select Faction First —</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Points Summary -->
-        <div class="points-summary">
-          <div class="points-display">
-            <span class="points-current" id="points-current">0</span>
-            <span class="points-separator">/</span>
-            <span class="points-limit" id="points-limit-display">2000</span>
-            <span class="points-label">pts</span>
-          </div>
-          <div class="points-bar-wrap">
-            <div class="points-bar" id="points-bar"></div>
-          </div>
-          <div class="points-bar-labels">
-            <span class="points-bar-pct" id="points-bar-pct">0%</span>
-            <span class="points-bar-remaining" id="points-bar-remaining">2000 pts remaining</span>
-          </div>
-        </div>
+        <!-- Army name, faction, chapter, detachment, and points summary
+             have been merged into the top app bar to save vertical space.
+             Their old <input> / <select> / <span> elements moved up there
+             with the same IDs, so events.js + render code still binds. -->
 
         <!-- Faction / Detachment Rules -->
         <div class="army-rules-section" id="army-rules-section" hidden>

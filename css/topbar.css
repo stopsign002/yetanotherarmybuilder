@@ -36,15 +36,6 @@ body { padding-top: var(--topbar-h); }
   min-width: 0;
 }
 
-/* ── Left group: brand + mode tabs ────────────────────────── */
-.topbar-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 18px;
-  flex: 0 0 auto;
-  min-width: 0;
-}
-
 .topbar-brand {
   display: inline-flex;
   align-items: center;
@@ -117,52 +108,125 @@ body { padding-top: var(--topbar-h); }
   outline-offset: 2px;
 }
 
-/* ── Search / command bar ─────────────────────────────────── */
-.topbar-search {
-  flex: 1 1 auto;
+/* ── Inline army-meta in the topbar (name + faction + detachment) ── */
+.topbar-army {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  height: 36px;
-  padding: 0 12px 0 14px;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.topbar-army-name,
+.topbar-army-select {
+  height: 32px;
+  padding: 0 10px;
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  color: var(--text-muted);
+  border-radius: var(--radius);
+  color: var(--text);
   font: inherit;
   font-size: 13px;
-  cursor: text;
-  text-align: left;
   min-width: 0;
-  max-width: 520px;
-  margin: 0 auto;
 }
-.topbar-search:hover,
-.topbar-search:focus-visible {
-  border-color: rgba(var(--accent-rgb), 0.45);
-  color: var(--text);
+.topbar-army-name {
+  flex: 0 1 200px;
+}
+.topbar-army-select {
+  flex: 0 1 180px;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 22px;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 12px) 14px, calc(100% - 8px) 14px;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+.topbar-army-name:focus,
+.topbar-army-select:focus {
   outline: none;
+  border-color: rgba(var(--accent-rgb), 0.6);
+  background-color: rgba(255,255,255,0.06);
 }
-.topbar-search-glyph {
-  font-size: 15px;
-  color: var(--text-muted);
+
+/* ── Inline points widget ────────────────────────────────── */
+.topbar-points {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 13px;
 }
-.topbar-search-placeholder {
-  flex: 1 1 auto;
+.topbar-points-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.topbar-points .points-current { font-weight: 600; }
+.topbar-points .points-current.over-limit { color: #ff8b8b; }
+.topbar-points .points-separator { color: var(--text-muted); margin: 0 2px; }
+.topbar-points .points-label { color: var(--text-muted); margin-left: 4px; }
+.topbar-points-limit-input {
+  width: 4ch;
+  height: 22px;
+  padding: 0 2px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: center;
+  border-radius: 3px;
+  -moz-appearance: textfield;
+}
+.topbar-points-limit-input::-webkit-outer-spin-button,
+.topbar-points-limit-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.topbar-points-limit-input:hover,
+.topbar-points-limit-input:focus {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  outline: none;
+  background: rgba(255,255,255,0.04);
+}
+.topbar-points-bar-wrap {
+  position: relative;
+  flex: 0 0 110px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.08);
   overflow: hidden;
-  text-overflow: ellipsis;
 }
-.topbar-search-kbd {
-  font-family: var(--font-mono, monospace);
-  font-size: 10px;
-  letter-spacing: 0.5px;
-  padding: 2px 6px;
-  border: 1px solid var(--border-light);
-  border-radius: 4px;
-  background: rgba(0,0,0,0.35);
-  color: var(--text-muted);
+.topbar-points-bar-wrap .points-bar {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.2s ease;
 }
+.topbar-points-bar-wrap .points-bar.over-limit { background: #ff5b5b; }
+.topbar-points-bar-wrap .points-bar.near-limit { background: #ffa84a; }
+
+/* The topbar reuses .points-summary on its compact widget so existing
+   JS that toggles .points-over still works. Override the legacy
+   panel-style chrome from style.css that would otherwise frame the
+   topbar widget like a card. Also shrink the now-massive .points-current
+   font and the .points-limit label-side font. */
+.topbar-points.points-summary {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.topbar-points .points-current { font-size: 14px; line-height: 1; }
+.topbar-points .points-separator { font-size: 14px; }
+.topbar-points .points-limit { font-size: 14px; }
 
 /* ── Right group: Settings + Help ─────────────────────────── */
 .topbar-actions {
@@ -270,30 +334,34 @@ body { padding-top: var(--topbar-h); }
 
 /* ── Tablet ────────────────────────────────────────────────── */
 @media (max-width: 960px) {
-  .topbar-search { max-width: 320px; }
-  .topbar-mode-tab { padding: 0 10px; font-size: 11px; letter-spacing: 1px; }
+  .topbar-army-name   { flex-basis: 140px; }
+  .topbar-army-select { flex-basis: 140px; }
+  .topbar-points-bar-wrap { flex-basis: 80px; }
 }
 
 /* ── Mobile ────────────────────────────────────────────────── */
 @media (max-width: 720px) {
   :root { --topbar-pad-x: 10px; }
-  body  { padding-top: var(--topbar-h-mobile); }
-  .topbar { height: var(--topbar-h-mobile); }
-  .topbar-inner { gap: 8px; }
 
-  .topbar-brand-mark { display: none; }
+  /* Let the topbar grow to two rows on phones — gear/help/account
+     stay on the right, the army inputs wrap underneath. The fixed
+     padding-top below is wide enough for both rows; the build mode
+     panels start under it. */
+  body  { padding-top: calc(var(--topbar-h-mobile) + 44px); }
+  .topbar { height: auto; min-height: var(--topbar-h-mobile); }
 
-  .topbar-modes { height: 32px; padding: 2px; gap: 2px; }
-  .topbar-mode-tab { padding: 0 8px; font-size: 10px; letter-spacing: 0.8px; }
-
-  .topbar-search {
-    flex: 0 0 auto;
-    max-width: 40px;
-    padding: 0 10px;
-    justify-content: center;
+  .topbar-inner {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 6px;
+    padding-bottom: 6px;
   }
-  .topbar-search-placeholder,
-  .topbar-search-kbd { display: none; }
+
+  .topbar-brand-mark { font-size: 14px; letter-spacing: 1.5px; }
+  .topbar-army { order: 10; flex-basis: 100%; }
+  .topbar-points { order: 11; flex-basis: 100%; }
+  .topbar-army-name,
+  .topbar-army-select { flex: 1 1 0; }
 
   .topbar-action-btn { padding: 0 8px; height: 32px; }
   .topbar-action-label { display: none; }
