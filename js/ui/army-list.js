@@ -82,8 +82,10 @@
     bar.style.width = pct + '%';
     bar.classList.toggle('over-limit',  total > limit && limit > 0);
     bar.classList.toggle('near-limit', !bar.classList.contains('over-limit') && pct >= 90);
-    document.querySelector('.points-summary').classList.toggle('points-over', total > limit && limit > 0);
-    document.getElementById('points-current').classList.toggle('over-limit', total > limit && limit > 0);
+    const summaryEl = document.querySelector('.points-summary');
+    if (summaryEl) summaryEl.classList.toggle('points-over', total > limit && limit > 0);
+    const curEl = document.getElementById('points-current');
+    if (curEl) curEl.classList.toggle('over-limit', total > limit && limit > 0);
 
     const list = document.getElementById('army-entry-list');
     list.innerHTML = '';

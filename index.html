@@ -170,9 +170,11 @@
         <!-- Points summary lives in the top-bar build-hero now; the
              #points-current / #points-bar / #points-bar-pct /
              #points-bar-remaining / #points-limit-display nodes that
-             events.js writes to are kept here as hidden no-op spans
-             so existing render code keeps working without nulls. -->
-        <div class="points-summary-shadow" hidden aria-hidden="true">
+             events.js + army-list.js write to are kept here as hidden
+             shadow spans so existing render code keeps working. The
+             outer wrapper carries .points-summary because army-list.js
+             toggles .points-over on it (and other modules query it). -->
+        <div class="points-summary points-summary-shadow" hidden aria-hidden="true">
           <span id="points-current">0</span>
           <span id="points-limit-display">2000</span>
           <div id="points-bar"></div>
