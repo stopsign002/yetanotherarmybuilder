@@ -133,39 +133,40 @@
 
       <div class="panel-body">
 
-        <!-- Army Meta -->
-        <div class="army-meta">
-          <div class="form-group">
-            <label for="army-name-input" class="form-label">Army Name</label>
-            <input type="text" id="army-name-input" class="form-input" placeholder="My Army" value="My Army" />
+        <!-- Army setup: name + points limit + faction + (chapter) +
+             detachment, all in one collapsible <details> so the user
+             can hide it once they've set up the army. -->
+        <details class="army-setup-section" id="army-setup-section" open>
+          <summary class="army-setup-summary">Army setup</summary>
+          <div class="army-setup-body">
+            <div class="form-group">
+              <label for="army-name-input" class="form-label">Army Name</label>
+              <input type="text" id="army-name-input" class="form-input" placeholder="My Army" value="My Army" />
+            </div>
+            <div class="form-group">
+              <label for="points-limit-input" class="form-label">Points Limit</label>
+              <input type="number" id="points-limit-input" class="form-input" placeholder="2000" value="2000" min="0" step="50" />
+            </div>
+            <div class="form-group">
+              <label for="army-faction-select" class="form-label">Army / Faction</label>
+              <select id="army-faction-select" class="form-select">
+                <option value="all">All Factions</option>
+              </select>
+            </div>
+            <div class="form-group" id="army-chapter-group" hidden>
+              <label for="army-chapter-select" class="form-label">Chapter / Supplement</label>
+              <select id="army-chapter-select" class="form-select">
+                <option value="">— All —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="army-detachment-select" class="form-label">Detachment</label>
+              <select id="army-detachment-select" class="form-select">
+                <option value="">— Select Faction First —</option>
+              </select>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="points-limit-input" class="form-label">Points Limit</label>
-            <input type="number" id="points-limit-input" class="form-input" placeholder="2000" value="2000" min="0" step="50" />
-          </div>
-        </div>
-
-        <!-- Faction / Chapter / Detachment Selection -->
-        <div class="army-selection-section">
-          <div class="form-group">
-            <label for="army-faction-select" class="form-label">Army / Faction</label>
-            <select id="army-faction-select" class="form-select">
-              <option value="all">All Factions</option>
-            </select>
-          </div>
-          <div class="form-group" id="army-chapter-group" hidden>
-            <label for="army-chapter-select" class="form-label">Chapter / Supplement</label>
-            <select id="army-chapter-select" class="form-select">
-              <option value="">— All —</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="army-detachment-select" class="form-label">Detachment</label>
-            <select id="army-detachment-select" class="form-select">
-              <option value="">— Select Faction First —</option>
-            </select>
-          </div>
-        </div>
+        </details>
 
         <!-- Points summary lives in the top-bar build-hero now; the
              #points-current / #points-bar / #points-bar-pct /

@@ -87,6 +87,24 @@
     const curEl = document.getElementById('points-current');
     if (curEl) curEl.classList.toggle('over-limit', total > limit && limit > 0);
 
+    // The topbar build-hero has its own current/limit/pct/bar elements
+    // (data-build-hero="*"); build-mode.js#syncHero is supposed to refresh
+    // them via the armyChange hook, but the hook fires *before* the legacy
+    // spans are written, so under some timing it lagged a render behind.
+    // Update the visible elements directly here too — cheap, idempotent.
+    const heroCur = document.querySelector('[data-build-hero="points-current"]');
+    if (heroCur) heroCur.textContent = total;
+    const heroLim = document.querySelector('[data-build-hero="points-limit"]');
+    if (heroLim) heroLim.textContent = limit;
+    const heroPct = document.querySelector('[data-build-hero="pct"]');
+    if (heroPct) heroPct.textContent = Math.round(pct) + '%';
+    const heroBar = document.querySelector('[data-build-hero="bar"]');
+    if (heroBar) {
+      heroBar.style.width = pct + '%';
+      heroBar.classList.toggle('over-limit',  total > limit && limit > 0);
+      heroBar.classList.toggle('near-limit', !heroBar.classList.contains('over-limit') && pct >= 90);
+    }
+
     const list = document.getElementById('army-entry-list');
     list.innerHTML = '';
 

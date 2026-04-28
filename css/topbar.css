@@ -167,22 +167,33 @@ body { padding-top: var(--topbar-h); }
   border-color: rgba(var(--accent-rgb), 0.4);
   outline: none;
 }
-.build-hero--in-topbar .build-hero-detachment { font-size: 12px; }
+/* Detachment is editable in the panel; hide its read-only mirror + the
+   leading "·" separator from the topbar to free up space. */
+.build-hero--in-topbar .build-hero-detachment,
+.build-hero--in-topbar .build-hero-sep { display: none !important; }
+
 .build-hero--in-topbar .build-hero-points {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   flex: 1 1 auto;
   min-width: 0;
+  justify-content: center;
 }
 .build-hero--in-topbar .build-hero-points-readout { font-size: 13px; padding: 0; }
 .build-hero--in-topbar .build-hero-points-current { font-size: 14px; }
+
+/* Compact, fixed-ish bar — visually centered between current/limit and pct.
+   Drop the accent border (the "weird green line" the user saw on the bar
+   outline) and shrink the height. */
 .build-hero--in-topbar .build-hero-bar-wrap {
-  flex: 1 1 auto;
+  flex: 0 1 240px;
   min-width: 80px;
-  max-width: 100%;
   height: 6px;
+  border: 0 !important;
+  box-shadow: none !important;
 }
+.build-hero--in-topbar .build-hero-bar { box-shadow: none; }
 .build-hero--in-topbar .build-hero-bar-pct { font-size: 11px; }
 .topbar-army-name,
 .topbar-army-select {
