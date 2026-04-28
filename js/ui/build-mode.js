@@ -52,6 +52,15 @@
     return document.getElementById('build-mode') || document.getElementById('app-main');
   }
 
+  // The topbar exposes #topbar-hero-slot as the preferred mount point
+  // for the build-hero so the YAAB row + status row collapse into one
+  // bar. If the slot isn't on the page (older index.html, or a build
+  // that ran before the topbar refactor), we fall back to the legacy
+  // mount inside the build-mode page.
+  function heroMountHost() {
+    return document.getElementById('topbar-hero-slot') || buildContainer();
+  }
+
   function fmtAgo(ts) {
     if (!ts) return '';
     const ms = Date.now() - ts;
@@ -75,10 +84,11 @@
   // ── Hero header ────────────────────────────────────────────────────────
   function buildHero() {
     if (ui.hero) return ui.hero;
-    const host = buildContainer();
+    const host = heroMountHost();
     if (!host) return null;
     const hero = document.createElement('header');
     hero.className = 'build-hero';
+    if (host.id === 'topbar-hero-slot') hero.classList.add('build-hero--in-topbar');
     hero.setAttribute('role', 'region');
     hero.setAttribute('aria-label', 'Army summary');
     hero.innerHTML =
@@ -109,9 +119,16 @@
         '</div>' +
         '<div class="build-hero-bar-pct" data-build-hero="pct">0%</div>' +
       '</div>';
-    // Insert as the very first child of the build-mode container (or app-main).
-    if (host.firstChild) host.insertBefore(hero, host.firstChild);
-    else host.appendChild(hero);
+    // For the topbar slot we just append (the slot is already positioned).
+    // For the legacy build-mode/app-main host, insert at the top so the
+    // hero sits above the panels.
+    if (host.id === 'topbar-hero-slot') {
+      host.appendChild(hero);
+    } else if (host.firstChild) {
+      host.insertBefore(hero, host.firstChild);
+    } else {
+      host.appendChild(hero);
+    }
 
     ui.hero            = hero;
     ui.crestWrap       = hero.querySelector('[data-build-hero-crest="1"]');

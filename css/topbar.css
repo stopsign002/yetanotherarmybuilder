@@ -108,14 +108,82 @@ body { padding-top: var(--topbar-h); }
   outline-offset: 2px;
 }
 
-/* ── Inline army-meta in the topbar (name + faction + detachment) ── */
-.topbar-army {
+/* ── Slot for build-mode.js's hero (READY/faction/name/det/pts) ── */
+.topbar-hero-slot {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.topbar-hero-slot:empty { display: none; }
+
+/* When the build-hero is mounted into the topbar, override the
+   stacked card layout from css/build-mode.css and lay it out as a
+   single horizontal strip that lives inside .topbar-inner. */
+.build-hero--in-topbar {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  grid-template-columns: none !important;
+  min-width: 0;
+}
+.build-hero--in-topbar::before { display: none !important; }
+.build-hero--in-topbar .build-hero-crest-wrap { display: none !important; }
+.build-hero--in-topbar .build-hero-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.build-hero--in-topbar .build-hero-status { font-size: 11px; }
+.build-hero--in-topbar .build-hero-faction { font-size: 13px; padding: 0; margin: 0; }
+.build-hero--in-topbar .build-hero-subtitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+.build-hero--in-topbar .build-hero-name {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 6px;
+  width: auto;
+  min-width: 60px;
+  max-width: 24ch;
+}
+.build-hero--in-topbar .build-hero-name:hover,
+.build-hero--in-topbar .build-hero-name:focus {
+  border-color: rgba(var(--accent-rgb), 0.4);
+  outline: none;
+}
+.build-hero--in-topbar .build-hero-detachment { font-size: 12px; }
+.build-hero--in-topbar .build-hero-points {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   flex: 1 1 auto;
   min-width: 0;
 }
+.build-hero--in-topbar .build-hero-points-readout { font-size: 13px; padding: 0; }
+.build-hero--in-topbar .build-hero-points-current { font-size: 14px; }
+.build-hero--in-topbar .build-hero-bar-wrap {
+  flex: 1 1 auto;
+  min-width: 80px;
+  max-width: 100%;
+  height: 6px;
+}
+.build-hero--in-topbar .build-hero-bar-pct { font-size: 11px; }
 .topbar-army-name,
 .topbar-army-select {
   height: 32px;
@@ -358,10 +426,9 @@ body { padding-top: var(--topbar-h); }
   }
 
   .topbar-brand-mark { font-size: 14px; letter-spacing: 1.5px; }
-  .topbar-army { order: 10; flex-basis: 100%; }
-  .topbar-points { order: 11; flex-basis: 100%; }
-  .topbar-army-name,
-  .topbar-army-select { flex: 1 1 0; }
+  .topbar-hero-slot { order: 10; flex-basis: 100%; }
+  .build-hero--in-topbar { flex-wrap: wrap; gap: 8px; }
+  .build-hero--in-topbar .build-hero-points { flex-basis: 100%; }
 
   .topbar-action-btn { padding: 0 8px; height: 32px; }
   .topbar-action-label { display: none; }
