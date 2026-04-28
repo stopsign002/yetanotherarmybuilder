@@ -838,13 +838,26 @@ ul { list-style: none; }
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  min-width: 360px;
+  min-width: min(360px, 100%);
   max-width: 560px;
   width: 100%;
   max-height: 80vh;
+  /* dvh shrinks when the iOS Safari on-screen keyboard appears, so the
+     modal (and its submit button in .modal-footer) stays in the visible
+     area. Older browsers fall back to the vh value above. */
+  max-height: 80dvh;
   display: flex;
   flex-direction: column;
   animation: modal-in 0.15s ease;
+}
+
+/* Narrow viewports: anchor to the top so the keyboard popping up doesn't
+   push the modal off-screen, and tighten padding to give the form room. */
+@media (max-width: 480px) {
+  .modal-backdrop {
+    align-items: flex-start;
+    padding: 12px;
+  }
 }
 
 .modal-unit-detail { max-width: 640px; }
