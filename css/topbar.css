@@ -167,10 +167,14 @@ body { padding-top: var(--topbar-h); }
   border-color: rgba(var(--accent-rgb), 0.4);
   outline: none;
 }
-/* Detachment is editable in the panel; hide its read-only mirror + the
-   leading "·" separator from the topbar to free up space. */
+/* Army name, detachment, and the "·" separator are all editable from
+   the army panel; hide the read-only mirrors in the topbar so they
+   don't duplicate inputs. The whole .build-hero-subtitle row is empty
+   once those three children are hidden, so collapse it too. */
 .build-hero--in-topbar .build-hero-detachment,
-.build-hero--in-topbar .build-hero-sep { display: none !important; }
+.build-hero--in-topbar .build-hero-sep,
+.build-hero--in-topbar .build-hero-name,
+.build-hero--in-topbar .build-hero-subtitle { display: none !important; }
 
 .build-hero--in-topbar .build-hero-points {
   display: inline-flex;
