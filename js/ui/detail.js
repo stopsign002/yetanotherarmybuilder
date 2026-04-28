@@ -389,32 +389,41 @@
       </div>`;
     }
 
-    if (detachmentEnhancements && detachmentEnhancements.length > 0) {
+    // 10e rule: enhancements require the Character keyword on the recipient.
+    const isCharacter = (unit.keywords || []).some(k => String(k).toLowerCase() === 'character');
+    // Show the section when the unit can take enhancements, or when a
+    // detachment with enhancements is loaded — that way users always see
+    // where the feature lives, with a contextual hint when they haven't
+    // selected a detachment yet.
+    if (isCharacter || (detachmentEnhancements && detachmentEnhancements.length > 0)) {
       const selectedNames = new Set((selectedEnhancements || []).map(e => e.name));
-      // 10e rule: enhancements require the Character keyword on the recipient.
-      // Conservative: only mark ineligible when the keyword is clearly missing;
-      // never hide (users may want to see what exists in the detachment).
-      const isCharacter = (unit.keywords || []).some(k => String(k).toLowerCase() === 'character');
       html += `<div class="detail-section" id="detail-enhancements-section">
-        <div class="detail-section-title">Enhancements</div>
-        <div class="detail-enhancements-list">`;
-      detachmentEnhancements.forEach(enh => {
-        const checked = selectedNames.has(enh.name) ? ' checked' : '';
-        const ineligClass = isCharacter ? '' : ' enhancement-ineligible';
-        html += `<label class="enhancement-cb-item${ineligClass}"${!isCharacter ? ' title="Character-only"' : ''}>
-          <input type="checkbox" class="enhancement-cb" value="${esc(enh.name)}"${checked}
-            data-enh-pts="${enh.pts || 0}" data-enh-name="${esc(enh.name)}" data-enh-desc="${esc(enh.description || '')}"/>
-          <span class="enh-cb-body">
-            <span class="enh-cb-header">
-              <span class="enh-cb-name">${esc(enh.name)}</span>
-              <span class="enh-cb-pts">${enh.pts ? enh.pts + ' pts' : ''}</span>
+        <div class="detail-section-title">Enhancements</div>`;
+
+      if (!detachmentEnhancements || detachmentEnhancements.length === 0) {
+        html += `<div class="detail-enhancements-empty">
+          Pick a detachment with enhancements (top-left) to apply one to this character.
+        </div></div>`;
+      } else {
+        html += `<div class="detail-enhancements-list">`;
+        detachmentEnhancements.forEach(enh => {
+          const checked = selectedNames.has(enh.name) ? ' checked' : '';
+          const ineligClass = isCharacter ? '' : ' enhancement-ineligible';
+          html += `<label class="enhancement-cb-item${ineligClass}"${!isCharacter ? ' title="Character-only"' : ''}>
+            <input type="checkbox" class="enhancement-cb" value="${esc(enh.name)}"${checked}
+              data-enh-pts="${enh.pts || 0}" data-enh-name="${esc(enh.name)}" data-enh-desc="${esc(enh.description || '')}"/>
+            <span class="enh-cb-body">
+              <span class="enh-cb-header">
+                <span class="enh-cb-name">${esc(enh.name)}</span>
+                <span class="enh-cb-pts">${enh.pts ? enh.pts + ' pts' : ''}</span>
+              </span>
+              <span class="enh-cb-desc">${esc(enh.description || '')}</span>
+              ${!isCharacter ? '<span class="enh-cb-ineligible-note">Character-only</span>' : ''}
             </span>
-            <span class="enh-cb-desc">${esc(enh.description || '')}</span>
-            ${!isCharacter ? '<span class="enh-cb-ineligible-note">Character-only</span>' : ''}
-          </span>
-        </label>`;
-      });
-      html += `</div></div>`;
+          </label>`;
+        });
+        html += `</div></div>`;
+      }
     }
 
     html += `</div>`;

@@ -100,6 +100,10 @@
         if (i >= 0) enhs.splice(i, 1);
       }
       state.currentArmy.setEnhancements(state.selectedArmyEntryIndex, enhs);
+      // Persist immediately. Without saveArmy the change only lives in
+      // memory — reload would drop it and sync would never push it. The
+      // saveArmy path also writes localStorage and notifies sync.
+      state.armyManager.saveArmy(state.currentArmy);
       UI.renderArmyList(state.currentArmy);
     });
 
