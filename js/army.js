@@ -92,7 +92,38 @@ window.Army = class Army {
   }
 
   static fromJSON(data) {
-    return new Army(data);
+    // Untrusted-input gate. Reachable from URL share (`?a=YAAB1:`),
+    // QR-share, cloud sync, and localStorage rehydration. Top-level keys
+    // are already filtered by the constructor's destructuring, but
+    // `entries` previously flowed through verbatim — a crafted payload
+    // could have set `entries` to a non-array (crash on render) or
+    // smuggled prototype-chain objects through `entries[i]`. Rebuild
+    // each entry from a fixed shape using only own-property reads.
+    if (!data || typeof data !== 'object') data = {};
+    const safeEntries = Array.isArray(data.entries)
+      ? data.entries
+          .filter(e => e && typeof e === 'object')
+          .map(e => ({
+            unitId:      typeof e.unitId === 'string' ? e.unitId : String(e.unitId == null ? '' : e.unitId),
+            unitName:    typeof e.unitName === 'string' ? e.unitName : String(e.unitName == null ? '' : e.unitName),
+            unitData:    e.unitData && typeof e.unitData === 'object' ? e.unitData : {},
+            count:       Number.isFinite(e.count) ? e.count : 1,
+            selectedPts: Number.isFinite(e.selectedPts) ? e.selectedPts : undefined,
+            squadLabel:  typeof e.squadLabel === 'string' ? e.squadLabel : null,
+            enhancements: Array.isArray(e.enhancements) ? e.enhancements : [],
+          }))
+      : [];
+    return new Army({
+      id:             typeof data.id === 'string' ? data.id : undefined,
+      name:           typeof data.name === 'string' ? data.name : undefined,
+      factionName:    typeof data.factionName === 'string' ? data.factionName : '',
+      chapter:        data.chapter && typeof data.chapter === 'object' ? data.chapter : null,
+      detachmentName: typeof data.detachmentName === 'string' ? data.detachmentName : null,
+      pointsLimit:    Number.isFinite(data.pointsLimit) ? data.pointsLimit : 2000,
+      entries:        safeEntries,
+      createdAt:      typeof data.createdAt === 'string' ? data.createdAt : undefined,
+      updatedAt:      typeof data.updatedAt === 'string' ? data.updatedAt : undefined,
+    });
   }
 };
 
