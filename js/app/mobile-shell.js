@@ -75,34 +75,15 @@
     }
   }
 
-  // ── 2. Back-arrow in Detail panel header ─────────────────────────────
-  // On mobile, prepends a "<" button into #panel-right .panel-header that
-  // calls App.setMobilePanel('units'). Hidden by CSS on desktop.
-  function ensureDetailBackBtn() {
-    const header = document.querySelector('#panel-right .panel-header');
-    if (!header) return;
-    if (header.querySelector('.mobile-back-btn')) return;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'mobile-back-btn';
-    btn.setAttribute('aria-label', 'Back to units');
-    btn.innerHTML = '&larr;';
-    btn.addEventListener('click', () => {
-      if (typeof App.setMobilePanel === 'function') App.setMobilePanel('units');
-    });
-    header.insertBefore(btn, header.firstChild);
-  }
-
-  // ── 3. Init + listeners ──────────────────────────────────────────────
+  // ── 2. Init + listeners ──────────────────────────────────────────────
+  // Back-arrow is no longer injected — the bottom tab bar is the sole
+  // navigation surface, so users return to Units by tapping the tab.
   function rebuild() {
     if (isMobile()) {
-      ensureDetailBackBtn();
       ensurePtsPill();
       updatePtsPill();
     } else {
       removePtsPill();
-      // back-btn stays in DOM (CSS hides it on desktop) so we don't
-      // churn the panel header on resize.
     }
   }
 

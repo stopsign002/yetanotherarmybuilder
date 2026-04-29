@@ -578,6 +578,7 @@
     document.body.classList.add('settings-drawer-open');
     const sb = settingsBtn();
     if (sb) sb.setAttribute('aria-expanded', 'true');
+    if (typeof App._syncMobileTabActive === 'function') App._syncMobileTabActive(document.body.dataset.mobilePanel || 'units');
     // focus the close button for keyboard users
     const close = document.getElementById('settings-drawer-close');
     setTimeout(() => { if (close) close.focus(); }, 30);
@@ -591,6 +592,7 @@
     document.body.classList.remove('settings-drawer-open');
     const sb = settingsBtn();
     if (sb) sb.setAttribute('aria-expanded', 'false');
+    if (typeof App._syncMobileTabActive === 'function') App._syncMobileTabActive(document.body.dataset.mobilePanel || 'units');
     if (lastFocus && typeof lastFocus.focus === 'function') {
       try { lastFocus.focus(); } catch (_) {}
     }

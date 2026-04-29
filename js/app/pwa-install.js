@@ -98,14 +98,23 @@
   function syncActiveTab(panel) {
     const nav = document.querySelector('.mobile-tabbar');
     if (!nav) return;
+    const moreOpen = !!(App.settingsDrawer && typeof App.settingsDrawer.isOpen === 'function'
+                        && App.settingsDrawer.isOpen());
     nav.querySelectorAll('button[data-panel]').forEach(b => {
-      if (b.getAttribute('data-panel') === panel) {
+      if (!moreOpen && b.getAttribute('data-panel') === panel) {
         b.setAttribute('aria-current', 'page');
       } else {
         b.removeAttribute('aria-current');
       }
     });
+    const moreBtn = nav.querySelector('button[data-action="more"]');
+    if (moreBtn) {
+      if (moreOpen) moreBtn.setAttribute('aria-current', 'page');
+      else moreBtn.removeAttribute('aria-current');
+    }
   }
+  // Expose so settings-drawer can call us when it opens/closes.
+  App._syncMobileTabActive = syncActiveTab;
 
   // Inline SVGs (24×24, currentColor) — keeps everything in one file, no
   // sprite asset to wire up. Stroke-based glyphs to read well at 22px.
@@ -142,12 +151,22 @@
       if (!btn) return;
       const panel = btn.getAttribute('data-panel');
       if (panel) {
+        // Tapping a panel tab while the More sheet is open closes it
+        // first — gives the user "navigate away" semantics without
+        // forcing them to find the X button.
+        if (App.settingsDrawer && typeof App.settingsDrawer.isOpen === 'function'
+            && App.settingsDrawer.isOpen()
+            && typeof App.settingsDrawer.close === 'function') {
+          App.settingsDrawer.close();
+        }
         setPanel(panel);
         return;
       }
-      // More: open the settings drawer (it has sync-now, change-pwd, sign-out,
-      // bug-report, feature toggles, BSData clear, etc.).
-      if (App.settingsDrawer && typeof App.settingsDrawer.open === 'function') {
+      // More: toggle the settings drawer. If already open, close it
+      // (re-tapping More acts as a close/back affordance).
+      if (App.settingsDrawer && typeof App.settingsDrawer.toggle === 'function') {
+        App.settingsDrawer.toggle();
+      } else if (App.settingsDrawer && typeof App.settingsDrawer.open === 'function') {
         App.settingsDrawer.open();
       } else {
         // Fallback: click the topbar settings button.
