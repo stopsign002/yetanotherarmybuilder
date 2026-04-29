@@ -69,6 +69,67 @@
     return out;
   }
 
+  // Lazy global map of weapon keyword → rule text, harvested from every
+  // BSData-parsed weapon's _keywordDefs across all loaded factions. Used to
+  // attach tooltips to GDC-rendered weapon rows (GDC ships keyword names but
+  // not their rule text). Rebuilt when factionsVersion advances.
+  let _weaponKwGlossary = null;
+  let _weaponKwGlossaryVersion = -1;
+
+  function buildWeaponKwGlossary() {
+    const map = new Map();
+    const factions = (window.App && App.state && App.state.factions) || [];
+    factions.forEach(f => {
+      (f.units || []).forEach(u => {
+        (u.weapons || []).forEach(w => {
+          const defs = w && w._keywordDefs;
+          if (!defs) return;
+          for (const k in defs) {
+            if (!Object.prototype.hasOwnProperty.call(defs, k)) continue;
+            const lk = k.trim().toLowerCase();
+            if (!lk || map.has(lk)) continue;
+            const v = defs[k];
+            if (typeof v === 'string' && v) map.set(lk, v);
+          }
+        });
+      });
+    });
+    return map;
+  }
+
+  function ensureWeaponKwGlossary() {
+    const state = window.App && App.state;
+    const v = (state && state.factionsVersion) || 0;
+    if (_weaponKwGlossary === null || _weaponKwGlossaryVersion !== v) {
+      _weaponKwGlossary = buildWeaponKwGlossary();
+      _weaponKwGlossaryVersion = v;
+    }
+    return _weaponKwGlossary;
+  }
+
+  // Resolve a (potentially parameterized) keyword to its rule text. Mirrors
+  // parser/weapons.js findWeaponKeywordDesc: try exact, then strip a trailing
+  // " N" or " N+" (so "Sustained Hits 1" → "Sustained Hits", "Anti-Infantry 4+"
+  // → "Anti-Infantry"), then look for a glossary key that ends with "-" the
+  // keyword starts with (e.g. "anti-" matching "anti-infantry").
+  function lookupWeaponKwDef(rawKeyword) {
+    const map = ensureWeaponKwGlossary();
+    if (!map || map.size === 0) return undefined;
+    const lower = String(rawKeyword || '').trim().toLowerCase();
+    if (!lower) return undefined;
+    let d = map.get(lower);
+    if (d !== undefined) return d;
+    const stripped = lower.replace(/\s+\d+\+?$/, '').trim();
+    if (stripped !== lower) {
+      d = map.get(stripped);
+      if (d !== undefined) return d;
+    }
+    for (const [name, desc] of map) {
+      if (name.endsWith('-') && lower.startsWith(name)) return desc;
+    }
+    return undefined;
+  }
+
   // Convert GDC's pre-bucketed weapon shape (meleeWeapons[]/rangedWeapons[],
   // each with profiles[]) into the flat row shape the existing weapon-table
   // renderer consumes (one row per profile, fields named Range/A/BS|WS/S/AP/D/
@@ -97,6 +158,15 @@
         else                   row.WS = p.skill;
         if (Array.isArray(p.keywords) && p.keywords.length > 0) {
           row.Keywords = p.keywords.join(', ');
+          // Attach per-keyword rule text from the BSData-harvested glossary so
+          // the existing tooltip path (renderWeaponTable reads w._keywordDefs)
+          // lights up for GDC-rendered rows too.
+          const defs = {};
+          p.keywords.forEach(k => {
+            const def = lookupWeaponKwDef(k);
+            if (def) defs[k] = def;
+          });
+          if (Object.keys(defs).length > 0) row._keywordDefs = defs;
         }
         out.push(row);
       });
