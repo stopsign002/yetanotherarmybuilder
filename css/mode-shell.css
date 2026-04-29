@@ -52,10 +52,13 @@
   animation: mode-enter-anim 200ms ease-out;
 }
 
-/* Mobile: shrink topbar offset. */
-@media (max-width: 720px) {
+/* Mobile: topbar is hidden entirely (see css/topbar.css), so the mode
+   page consumes the full viewport (minus the bottom tab bar, which the
+   inner #app-main subtracts in css/mobile.css). */
+@media (max-width: 820px) {
   .mode-page {
-    height: calc(100vh - var(--topbar-h-mobile, 48px));
+    height: 100%;
+    min-height: 0;
   }
 }
 

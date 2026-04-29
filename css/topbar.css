@@ -436,36 +436,13 @@ body { padding-top: var(--topbar-h); }
   .topbar-points-bar-wrap { flex-basis: 80px; }
 }
 
-/* ── Mobile ────────────────────────────────────────────────── */
-@media (max-width: 720px) {
-  :root { --topbar-pad-x: 10px; }
-
-  /* Let the topbar grow to two rows on phones — gear/help/account
-     stay on the right, the army inputs wrap underneath. The fixed
-     padding-top below is wide enough for both rows; the build mode
-     panels start under it. */
-  body  { padding-top: calc(var(--topbar-h-mobile) + 44px); }
-  .topbar { height: auto; min-height: var(--topbar-h-mobile); }
-
-  .topbar-inner {
-    flex-wrap: wrap;
-    gap: 6px;
-    padding-top: 6px;
-    padding-bottom: 6px;
-  }
-
-  .topbar-brand-mark { font-size: 14px; letter-spacing: 1.5px; }
-  .topbar-hero-slot { order: 10; flex-basis: 100%; }
-  .build-hero--in-topbar { flex-wrap: wrap; gap: 8px; }
-  .build-hero--in-topbar .build-hero-points { flex-basis: 100%; }
-
-  .topbar-action-btn { padding: 0 8px; height: 32px; }
-  .topbar-action-label { display: none; }
-  /* The auth button has no glyph fallback (it shows "Sign in" or the
-     username), so hiding its label leaves an empty button. Keep it
-     visible on mobile. */
-  .auth-btn .topbar-action-label { display: inline; }
-  .auth-btn { max-width: 10ch; overflow: hidden; text-overflow: ellipsis; }
+/* ── Mobile (≤820px) — topbar is hidden entirely.
+   Brand, page title, account, settings, help, and export are surfaced
+   through the bottom-nav More tab (which opens the settings drawer).
+   Saves ~48px of vertical space on phones. */
+@media (max-width: 820px) {
+  .topbar { display: none !important; }
+  body { padding-top: env(safe-area-inset-top, 0px) !important; }
 }
 
 /* ── Reduced motion override (user-toggleable via Settings) ── */

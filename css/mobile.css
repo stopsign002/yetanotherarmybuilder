@@ -1,40 +1,84 @@
-/* mobile.css — responsive overrides; layout rules gated behind max-width so desktop is untouched. */
+/* mobile.css — comprehensive mobile redesign.
+   Activates at ≤820px. Desktop is untouched.
+   Pairs with: css/topbar.css mobile rules, js/app/pwa-install.js (4-tab nav),
+   js/app/mobile-shell.js (page title, back nav, sticky pts pill). */
 
+/* ── Tokens (mobile-only) ─────────────────────────────────────── */
 @media (max-width: 820px) {
-  /* Prevent iOS Safari from auto-zooming form inputs (needs >= 16px). */
+  :root {
+    --m-topbar-h: 48px;
+    --m-tabbar-h: 56px;
+    --m-pts-pill-h: 44px;
+    /* Safe-area insets: 0 on devices that don't expose them. */
+    --m-safe-top: env(safe-area-inset-top, 0px);
+    --m-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --m-safe-left: env(safe-area-inset-left, 0px);
+    --m-safe-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+/* ── Reset perf-heavy effects on mobile ───────────────────────── */
+@media (max-width: 820px) {
+  .topbar,
+  .modal-backdrop,
+  .settings-drawer-scrim,
+  .strat-backdrop,
+  .lore-backdrop,
+  .mm-backdrop,
+  .action-center-scrim {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .topbar { background: #0d0d0d !important; }
+}
+
+/* ── Viewport stack (no wrap, single 48px topbar) ─────────────── */
+@media (max-width: 820px) {
+  /* Prevent iOS Safari auto-zoom on input focus (needs >= 16px). */
   input, select, textarea, .form-input, .form-select, .search-input {
     font-size: 16px !important;
   }
 
-  /* Fixed-height viewport stack: topbar (handled by body padding-top in topbar.css)
-     + app content + tab bar. This is what makes panel scrolling work — each visible
-     panel gets a concrete height so overflow-y: auto actually triggers. */
   html, body {
     height: 100%;
     overflow: hidden !important;
   }
 
-  /* Drop the old padding-bottom — height calc below accounts for tab bar instead. */
-  body { padding-bottom: 0; }
+  /* No topbar on mobile — only safe-area top inset (notch). */
+  body {
+    padding-top: var(--m-safe-top);
+    padding-bottom: 0;
+    padding-left: var(--m-safe-left);
+    padding-right: var(--m-safe-right);
+  }
 
-  /* Three-panel grid → single flex column. Height = body content area (= viewport
-     minus topbar padding) minus 56 px tab bar. */
+  /* App-main fills viewport between safe-top and the bottom tab bar
+     (which itself absorbs safe-bottom). 100% here = body content area. */
   .app-main {
     display: flex !important;
     flex-direction: column;
     grid-template-columns: none !important;
     grid-template-rows: none !important;
-    height: calc(100% - 44px) !important;
+    height: calc(100% - var(--m-tabbar-h) - var(--m-safe-bottom)) !important;
     min-height: 0;
     overflow: hidden;
   }
-
-  /* build-mode sets height:100% !important on app-main — re-apply tab bar offset. */
   body.build-mode-enhanced #app-main {
-    height: calc(100% - 44px) !important;
+    height: calc(100% - var(--m-tabbar-h) - var(--m-safe-bottom)) !important;
   }
 
-  /* One panel visible at a time, filling all available app-main height. */
+  /* The mode-page section wraps the .app-main; make sure it doesn't
+     impose its own height. mode-shell.css gives it min-height: 100vh on
+     desktop, which forces a tall flow that breaks our fixed-height
+     mobile stack. */
+  .mode-page {
+    min-height: 0 !important;
+    height: 100%;
+  }
+}
+
+/* ── Single visible panel, switched by data-mobile-panel ──────── */
+@media (max-width: 820px) {
   .panel {
     display: none;
     flex-direction: column;
@@ -42,16 +86,13 @@
     min-width: 0 !important;
     max-width: none !important;
     min-height: 0;
-    border-right: none;
-    border-left: none;
-    border-bottom: none;
+    border: none;
     overflow: hidden;
   }
   body[data-mobile-panel="army"]   .panel-left   { display: flex; flex: 1; }
   body[data-mobile-panel="units"]  .panel-center { display: flex; flex: 1; }
   body[data-mobile-panel="detail"] .panel-right  { display: flex; flex: 1; }
 
-  /* Panel internals: header/controls fixed, body scrolls, footer fixed. */
   .panel-header,
   .panel-controls { flex-shrink: 0; }
 
@@ -62,175 +103,409 @@
     max-height: none !important;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    padding: 12px 12px 24px;
   }
 
-  /* No drag handles when columns are stacked. */
-  .resize-handle { display: none !important; }
+  /* The army panel-footer toolbar (New/Save/Load/Import/Export/Undo) is
+     hidden on mobile — those actions are surfaced in the More sheet
+     (settings drawer's "Army" section) so the panel-body can fill the
+     entire visible area with no empty chrome below. */
+  .panel-footer.army-toolbar { display: none !important; }
 
-  /* ── Mobile tab bar ─────────────────────────────────── */
+  /* Make the Army panel-body a flex column so the entry list can grow
+     to consume any remaining space below the setup/rules sections. With
+     no units added, the empty state ("No units added yet") expands to
+     fill the rest of the panel — same visual whether the army is empty
+     or stuffed. */
+  .panel-left .panel-body {
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-left .army-entry-list {
+    flex: 1 0 auto;
+    min-height: 120px;
+  }
+  /* The empty-state <li> centers itself in the grown list. */
+  .panel-left .army-list-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 120px;
+    text-align: center;
+    color: var(--text-muted, #999);
+  }
+
+  /* Drag handles are useless on touch. */
+  .resize-handle { display: none !important; }
+}
+
+/* ── Bottom tab bar (mobile only) ─────────────────────────────── */
+@media (max-width: 820px) {
   .mobile-tabbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    height: 44px;
+    height: calc(var(--m-tabbar-h) + var(--m-safe-bottom));
+    padding-bottom: var(--m-safe-bottom);
+    padding-left: var(--m-safe-left);
+    padding-right: var(--m-safe-right);
     display: flex;
-    background: #0d0d0d;
+    align-items: stretch;
+    background: #0a0a0a;
     border-top: 1px solid var(--border, #2a2a2a);
-    z-index: 900;
+    z-index: 950;
   }
   .mobile-tabbar button {
     flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
     background: transparent;
     color: var(--text-muted, #999);
     border: none;
     font: inherit;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    padding: 4px 4px;
+    padding: 6px 4px 4px;
     cursor: pointer;
     min-height: 44px;
     touch-action: manipulation;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
   }
-  .mobile-tabbar button + button {
-    border-left: 1px solid var(--border, #2a2a2a);
+  .mobile-tabbar button:active { background: rgba(255,255,255,0.03); }
+  .mobile-tabbar .mtab-icon {
+    line-height: 1;
+    pointer-events: none;
   }
-  body[data-mobile-panel="army"]   .mobile-tabbar button[data-panel="army"],
-  body[data-mobile-panel="units"]  .mobile-tabbar button[data-panel="units"],
-  body[data-mobile-panel="detail"] .mobile-tabbar button[data-panel="detail"] {
-    color: var(--accent, #e8c86a);
-    background: rgba(232, 200, 106, 0.08);
-    box-shadow: inset 0 2px 0 var(--accent, #e8c86a);
+  .mobile-tabbar .mtab-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+    display: block;
   }
-
-  /* ── Compact sizes: panel chrome ───────────────────── */
-  .panel-header {
-    padding: 5px 10px;
-  }
-  .panel-header h2 {
-    font-size: 11px;
-    letter-spacing: 1.2px;
-  }
-  .panel-controls {
-    padding: 5px 10px;
-    gap: 4px;
-  }
-  .search-input {
-    padding: 4px 8px;
-  }
-  .filter-chip {
+  /* Match the desktop topbar mode-tab type style: Cinzel display font,
+     uppercase, generous letter-spacing. Tighter font-size + spacing for
+     mobile constraints. */
+  .mobile-tabbar .mtab-label {
+    font-family: var(--font-display, inherit);
     font-size: 10px;
-    padding: 3px 7px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    pointer-events: none;
   }
+  .mobile-tabbar .mtab-badge {
+    position: absolute;
+    top: 4px;
+    right: calc(50% - 22px);
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--accent, #e8c86a);
+    color: #0a0a0a;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    pointer-events: none;
+  }
+  .mobile-tabbar .mtab-badge:empty { display: none; }
+  .mobile-tabbar button[aria-current="page"] {
+    color: var(--accent, #e8c86a);
+  }
+  .mobile-tabbar button[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 16%;
+    right: 16%;
+    height: 2px;
+    background: var(--accent, #e8c86a);
+    border-radius: 0 0 2px 2px;
+  }
+}
 
-  /* ── Compact sizes: unit cards ──────────────────────── */
-  .unit-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+/* ── Mobile-only chrome ───────────────────────────────────────── */
+@media (max-width: 820px) {
+  /* Sticky points pill that mobile-shell.js mounts at top of Army panel.
+     Always visible while user scrolls the Army body — gives running total. */
+  .mobile-pts-pill {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin: -12px -12px 12px;
+    background: linear-gradient(180deg, #1a1a20 0%, #16161b 100%);
+    border-bottom: 1px solid var(--border, #2a2a2a);
+    min-height: var(--m-pts-pill-h);
+  }
+  .mobile-pts-pill-faction {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted, #999);
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-pts-pill-spacer { flex: 1 1 auto; }
+  .mobile-pts-pill-value {
+    font-family: var(--font-display, inherit);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 auto;
+  }
+  .mobile-pts-pill-value.over { color: #ff6b6b; }
+  .mobile-pts-pill-bar {
+    flex: 0 0 70px;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .mobile-pts-pill-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent, #e8c86a);
+    transition: width 0.2s ease, background 0.2s ease;
+  }
+  .mobile-pts-pill-bar-fill.over { background: #ff5b5b; }
+  .mobile-pts-pill-bar-fill.near { background: #ffa84a; }
+
+  /* Back-arrow in Detail panel header (mobile only). */
+  .mobile-back-btn {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--accent, #e8c86a);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    margin-right: 4px;
+  }
+  .mobile-back-btn:active { background: rgba(255,255,255,0.05); }
+}
+
+/* ── Compact panel chrome ─────────────────────────────────────── */
+@media (max-width: 820px) {
+  /* The panel header just duplicates the active bottom-tab label
+     ("Army", "Units", "Details"). Remove it on mobile to reclaim ~44px
+     of vertical space. The Detail panel's back-arrow is no longer
+     needed — users navigate via the bottom tab bar. */
+  .panel-header { display: none !important; }
+  .panel-controls {
+    padding: 8px 12px;
     gap: 6px;
   }
-  .unit-card { padding: 7px 8px; }
-  .unit-card-name,
-  .unit-card-name-primary { font-size: 12px !important; }
-  .unit-card-pts,
-  .unit-card-pts-badge { font-size: 11px; padding: 3px 5px; }
-  .stat-cell { padding: 2px 1px; }
-  .stat-name { font-size: 7px; }
-  .stat-value { font-size: 10px; }
-  .keyword-tag { font-size: 8px; padding: 1px 4px; }
-
-  /* ── Compact sizes: detail panel ───────────────────── */
-  .unit-detail-content .detail-banner {
-    padding: 8px 10px;
-    gap: 4px;
+  .search-input {
+    padding: 10px 12px;
+    min-height: 44px;
   }
-  .unit-detail-content .detail-banner .detail-name {
-    font-size: 16px;
-    line-height: 1.1;
-  }
-  .unit-detail-content .detail-banner-pts {
+  .filter-chip {
     font-size: 12px;
-    padding: 4px 7px;
+    padding: 8px 12px;
+    min-height: 32px;
   }
-  .detail-action-btn {
-    padding: 4px 6px;
-    font-size: 13px;
-  }
-  .detail-stat-pillar { padding: 5px 3px; }
-  .detail-stat-pillar-value,
-  .detail-stat-pillar-label { font-size: 11px; }
-  .detail-section-title {
-    font-size: 9px;
-    letter-spacing: 1.2px;
-    margin-bottom: 5px;
-  }
-  .detail-ability {
-    font-size: 11px;
-    padding: 5px 7px;
-    margin-bottom: 4px;
-  }
-  .detail-add-section {
-    padding: 7px 10px;
-    margin-bottom: 10px;
-  }
-  .weapons-table { font-size: 11px; }
-  .weapons-table th { font-size: 9px; padding: 3px 4px; }
-  .weapons-table td { padding: 3px 4px; }
+}
 
-  /* ── Compact sizes: build hero ──────────────────────── */
-  .build-hero {
-    padding: 4px 12px;
+/* ── Unit grid: 2-col tablet, 1-col phone ─────────────────────── */
+@media (max-width: 820px) {
+  .unit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px;
   }
-  .build-hero-faction { font-size: 13px; }
-  .build-hero-status { font-size: 9px; }
-  .build-hero-subtitle { font-size: 11px; }
-  .build-hero-points-current { font-size: 14px; }
-  .build-hero-points-sep,
-  .build-hero-points-limit { font-size: 12px; }
-
-  /* ── Compact sizes: army list ───────────────────────── */
-  .army-entry {
-    font-size: 11px;
-    padding: 4px 6px;
+  .unit-card {
+    padding: 12px;
+    min-height: 96px;
   }
+  .unit-card-name,
+  .unit-card-name-primary { font-size: 13px !important; }
+  .unit-card-pts,
+  .unit-card-pts-badge { font-size: 12px; padding: 4px 7px; }
+  .stat-cell { padding: 4px 2px; }
+  .stat-name { font-size: 9px; }
+  .stat-value { font-size: 12px; }
+  .keyword-tag { font-size: 10px; padding: 2px 6px; }
+}
+@media (max-width: 480px) {
+  .unit-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+  }
+  .unit-card {
+    min-height: 76px;
+    padding: 10px 12px;
+  }
+}
+
+/* ── Detail panel ─────────────────────────────────────────────── */
+@media (max-width: 820px) {
+  .unit-detail-content .detail-banner {
+    padding: 12px;
+    gap: 8px;
+  }
+  .unit-detail-content .detail-banner .detail-name {
+    font-size: 18px;
+    line-height: 1.15;
+  }
+  .unit-detail-content .detail-banner-pts {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+  .detail-action-btn {
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+  .detail-stat-pillar { padding: 8px 4px; }
+  .detail-stat-pillar-value { font-size: 14px; }
+  .detail-stat-pillar-label { font-size: 10px; }
+  .detail-section-title {
+    font-size: 11px;
+    letter-spacing: 1.3px;
+    margin-bottom: 8px;
+  }
+  .detail-ability {
+    font-size: 13px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    line-height: 1.45;
+  }
+  .detail-add-section {
+    padding: 12px;
+    margin-bottom: 14px;
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    background: linear-gradient(180deg, transparent 0%, var(--panel-bg, #22222a) 14px);
+    border-top: 1px solid var(--border, #2a2a2a);
+  }
+  .weapons-table { font-size: 13px; }
+  .weapons-table th { font-size: 11px; padding: 6px 4px; }
+  .weapons-table td { padding: 6px 4px; }
+}
+
+/* ── Build hero in topbar: hide on mobile (relocated to Army panel) ── */
+@media (max-width: 820px) {
+  .build-hero--in-topbar { display: none !important; }
+  .topbar-hero-slot { display: none !important; }
+}
+
+/* ── Army list rows ───────────────────────────────────────────── */
+@media (max-width: 820px) {
   .army-entries-header {
-    font-size: 9px;
-    padding: 3px 6px;
+    font-size: 10px;
+    padding: 6px 8px;
   }
-  .points-summary { padding: 8px 10px; margin-bottom: 10px; }
-  .points-current { font-size: 22px; }
-
-  /* ── Buttons ────────────────────────────────────────── */
-  .btn { font-size: 12px; padding: 6px 12px; }
-  .btn-sm {
+  .army-entry {
+    font-size: 13px;
+    padding: 10px 8px;
+    min-height: 44px;
+  }
+  .army-entry .qty-input,
+  .army-entry button {
     min-height: 32px;
-    padding: 4px 8px;
-    font-size: 11px;
+    min-width: 32px;
+  }
+  .army-list-empty {
+    padding: 24px 16px;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+@media (max-width: 820px) {
+  .btn {
+    font-size: 14px;
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+  .btn-sm {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 13px;
   }
   .btn,
   .unit-card,
-  .army-entry-list li {
+  .army-entry,
+  .army-entry-list li,
+  .filter-chip,
+  .mobile-tabbar button,
+  .army-rule-item {
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
+}
 
-  /* ── Army toolbar ───────────────────────────────────── */
+/* ── Army toolbar (panel-footer) ──────────────────────────────── */
+@media (max-width: 820px) {
+  .panel-footer.army-toolbar {
+    padding: 10px 12px calc(10px + var(--m-safe-bottom));
+    gap: 8px;
+  }
+  .army-toolbar .toolbar-status-row {
+    font-size: 11px;
+  }
   .army-toolbar .toolbar-row {
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 6px;
   }
-  .army-toolbar .toolbar-spacer { flex-basis: 100%; height: 0; }
-
-  /* Pin the panel-footer (army toolbar with New/Save/Load) to the
-     bottom of the panel. The panel is a flex column; margin-top:auto
-     pushes the footer to the end even if .panel-body's flex:1 grow is
-     suppressed by tall content or a missing min-height somewhere up
-     the tree. Without this the toolbar floated mid-panel on mobile. */
-  .panel-footer {
-    margin-top: auto;
+  .army-toolbar .toolbar-spacer {
+    flex-basis: 100%;
+    height: 0;
   }
+  .army-toolbar .btn {
+    flex: 1 1 30%;
+  }
+}
 
-  /* ── Full-screen modals ─────────────────────────────── */
+/* ── Forms (army setup) ───────────────────────────────────────── */
+@media (max-width: 820px) {
+  .form-input,
+  .form-select {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+  .form-label {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .form-group { margin-bottom: 14px; }
+
+  /* Make the army-setup details summary a bigger tap target. */
+  .army-setup-summary,
+  .army-rules-summary {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* ── Modals: full-screen with sticky header/footer ────────────── */
+@media (max-width: 820px) {
   .modal-backdrop {
-    padding: 0;
+    padding: 0 !important;
     align-items: stretch;
     justify-content: stretch;
   }
@@ -238,21 +513,97 @@
     width: 100% !important;
     max-width: none !important;
     min-width: 0 !important;
-    max-height: 100vh !important;
-    height: 100vh;
+    max-height: 100dvh !important;
+    height: 100dvh;
     border-radius: 0;
     border: none;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-header {
+    padding: 12px 16px;
+    padding-top: calc(12px + var(--m-safe-top));
+    min-height: 56px;
+    position: sticky;
+    top: 0;
+    background: var(--panel-bg, #22222a);
+    z-index: 2;
+  }
+  .modal-header h3 { font-size: 16px; }
+  .modal-close {
+    width: 44px;
+    height: 44px;
+    font-size: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 16px;
+  }
+  .modal-footer {
+    padding: 12px 16px;
+    padding-bottom: calc(12px + var(--m-safe-bottom));
+    border-top: 1px solid var(--border, #2a2a2a);
+    background: var(--panel-bg, #22222a);
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .modal-footer .btn { flex: 1 1 auto; }
+}
+
+/* ── Toast container: keep above tab bar ──────────────────────── */
+@media (max-width: 820px) {
+  .toast-container {
+    bottom: calc(var(--m-tabbar-h) + var(--m-safe-bottom) + 8px) !important;
+    left: 8px !important;
+    right: 8px !important;
+  }
+  .toast {
+    font-size: 13px;
+    padding: 10px 14px;
   }
 }
 
-/* Very narrow: unit cards to a single column. */
-@media (max-width: 420px) {
-  .unit-grid {
-    grid-template-columns: 1fr !important;
+/* ── Settings drawer (More sheet) — keep tab bar visible ──────── */
+@media (max-width: 820px) {
+  /* Drawer root + scrim stop above the tab bar so the tab bar stays
+     fully visible and clickable. The tab bar's z-index is bumped above
+     the drawer so taps pass through cleanly. */
+  .settings-drawer-root,
+  .settings-drawer-scrim {
+    bottom: calc(var(--m-tabbar-h) + var(--m-safe-bottom)) !important;
+  }
+  .settings-drawer {
+    height: 100% !important;
+    max-height: none !important;
+  }
+  .mobile-tabbar { z-index: 1200 !important; }
+  /* Drawer drops its scrim blur on mobile (matches .topbar / .modal-
+     backdrop perf rule earlier in this file). */
+  .settings-drawer-scrim {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
 }
 
-/* Hide tab bar in desktop / wide viewports. */
+/* ── Hide mobile-only chrome on desktop ───────────────────────── */
 @media (min-width: 821px) {
   .mobile-tabbar { display: none !important; }
+  .mobile-pts-pill { display: none !important; }
+  .mobile-back-btn { display: none !important; }
+}
+
+/* ── Smaller phones: tighten further ──────────────────────────── */
+@media (max-width: 380px) {
+  .mobile-tabbar .mtab-label { font-size: 10px; }
+  .mobile-tabbar .mtab-icon svg { width: 20px; height: 20px; }
+  .panel-body { padding: 10px 10px 24px; }
+  .army-toolbar .btn { flex-basis: 45%; }
 }

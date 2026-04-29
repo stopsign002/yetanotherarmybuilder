@@ -146,8 +146,158 @@
     return true;
   }
 
+  // ── Account state helper ────────────────────────────────────────────
+  function getAuthUser() {
+    try {
+      if (App.Auth && typeof App.Auth.getUser === 'function') return App.Auth.getUser();
+      if (App.Auth && App.Auth.user) return App.Auth.user;
+    } catch (_) {}
+    return null;
+  }
+
   function buildActions() {
+    const user = getAuthUser();
+    const signedIn = !!user;
     return [
+      // ── ARMY ─────────────────────────────────────────────────────────
+      // Mirrors the desktop panel-footer toolbar (which is hidden on mobile).
+      {
+        id: 'army-new',
+        label: 'New army',
+        section: 'army',
+        run() { close(); clickToolbarBtn('btn-new-army'); },
+      },
+      {
+        id: 'army-save',
+        label: 'Save army',
+        section: 'army',
+        run() { close(); clickToolbarBtn('btn-save-army'); },
+      },
+      {
+        id: 'army-load',
+        label: 'Load army',
+        section: 'army',
+        run() { close(); clickToolbarBtn('btn-load-army'); },
+      },
+      {
+        id: 'army-import',
+        label: 'Import army code',
+        section: 'army',
+        run() { close(); clickToolbarBtn('btn-import-string'); },
+      },
+      {
+        id: 'army-undo',
+        label: 'Undo',
+        section: 'army',
+        run() { close(); clickToolbarBtn('yaab-btn-undo'); },
+      },
+      {
+        id: 'army-redo',
+        label: 'Redo',
+        section: 'army',
+        run() { close(); clickToolbarBtn('yaab-btn-redo'); },
+      },
+
+      // ── ACCOUNT ──────────────────────────────────────────────────────
+      signedIn ? {
+        id: 'account-status',
+        label: 'Signed in as ' + user.username,
+        section: 'account',
+        run() { /* informational only */ },
+      } : {
+        id: 'sign-in',
+        label: 'Sign in',
+        section: 'account',
+        run() {
+          close();
+          if (window.UI && UI.showAuthModal) UI.showAuthModal('login');
+        },
+      },
+      signedIn ? {
+        id: 'sync-now',
+        label: 'Sync now',
+        section: 'account',
+        run() {
+          close();
+          if (App.Sync && typeof App.Sync.pullAll === 'function') {
+            App.Sync.pullAll().catch(() => {});
+          }
+          if (App.Sync && typeof App.Sync.drainQueue === 'function') {
+            App.Sync.drainQueue();
+          }
+          if (window.UI && UI.toast) UI.toast('Syncing…', 'info', 1500);
+        },
+      } : null,
+      signedIn ? {
+        id: 'change-password',
+        label: 'Change password',
+        section: 'account',
+        run() {
+          close();
+          if (window.UI && UI.showAuthModal) UI.showAuthModal('change-password');
+        },
+      } : {
+        id: 'register',
+        label: 'Create account',
+        section: 'account',
+        run() {
+          close();
+          if (window.UI && UI.showAuthModal) UI.showAuthModal('register');
+        },
+      },
+      signedIn ? {
+        id: 'sign-out',
+        label: 'Sign out',
+        section: 'account',
+        run: async function () {
+          const keep = confirm('Sign out?\n\nClick OK to keep your synced data on this device. Click Cancel to also remove it from this device.');
+          try { if (App.Auth) await App.Auth.logout(); } catch (_) {}
+          if (!keep) {
+            try {
+              ['yaab_armies', 'yaab_favorites', 'yaab_recents', 'yaab_collection',
+                'yaab_crusade_rosters', 'yaab_deployments', 'yaab_points_overrides',
+                'yaab_sync_known', 'yaab_sync_state_at']
+                .forEach(k => localStorage.removeItem(k));
+              if (App.state && App.state.armyManager) {
+                App.state.armyManager.armies = [];
+                App.state.currentArmy = App.state.armyManager.newArmy();
+                if (typeof App.renderAll === 'function') App.renderAll();
+              }
+            } catch (_) {}
+          }
+          close();
+          if (window.UI && UI.toast) UI.toast('Signed out.', 'info', 2200);
+        },
+      } : null,
+
+      // ── EXPORT ───────────────────────────────────────────────────────
+      // Mirror the desktop export dropdown by clicking its hidden buttons.
+      {
+        id: 'export-string',
+        label: 'Copy army code',
+        section: 'export',
+        run() { close(); clickToolbarBtn('btn-export-string'); },
+      },
+      {
+        id: 'export-text',
+        label: 'Copy as text',
+        section: 'export',
+        run() { close(); clickToolbarBtn('btn-export-text'); },
+      },
+      {
+        id: 'export-csv',
+        label: 'Download CSV',
+        section: 'export',
+        run() { close(); clickToolbarBtn('btn-export-csv'); },
+      },
+      {
+        id: 'print-army',
+        label: 'Print datasheets',
+        section: 'export',
+        run() { close(); clickToolbarBtn('btn-print-army'); },
+      },
+
+      // ── HELP ─────────────────────────────────────────────────────────
       {
         id: 'replay-tour',
         label: 'Replay onboarding tour',
@@ -367,6 +517,30 @@
     if (!b) return;
     b.replaceChildren();
 
+    const actions = buildActions().filter(Boolean);
+    const visible = a => typeof a.visible !== 'function' || a.visible();
+
+    // ARMY — primary actions (was the desktop panel-footer toolbar).
+    const armyActions = actions.filter(a => a.section === 'army' && visible(a));
+    if (armyActions.length) {
+      b.appendChild(renderSectionHeader('Army'));
+      armyActions.forEach(a => b.appendChild(renderActionRow(a)));
+    }
+
+    // ACCOUNT — sign in/out, sync, change password.
+    const accountActions = actions.filter(a => a.section === 'account' && visible(a));
+    if (accountActions.length) {
+      b.appendChild(renderSectionHeader('Account'));
+      accountActions.forEach(a => b.appendChild(renderActionRow(a)));
+    }
+
+    // EXPORT — desktop export-dropdown items, surfaced here for mobile.
+    const exportActions = actions.filter(a => a.section === 'export' && visible(a));
+    if (exportActions.length) {
+      b.appendChild(renderSectionHeader('Export'));
+      exportActions.forEach(a => b.appendChild(renderActionRow(a)));
+    }
+
     // DISPLAY (toggles 0..3)
     b.appendChild(renderSectionHeader('Display'));
     [0, 1, 2, 3].forEach(i => b.appendChild(renderToggleRow(TOGGLES[i])));
@@ -377,13 +551,12 @@
 
     // HELP & SUPPORT
     b.appendChild(renderSectionHeader('Help & support'));
-    const actions = buildActions();
-    actions.filter(a => a.section === 'help' && (typeof a.visible !== 'function' || a.visible()))
+    actions.filter(a => a.section === 'help' && visible(a))
            .forEach(a => b.appendChild(renderActionRow(a)));
 
     // DATA
     b.appendChild(renderSectionHeader('Data'));
-    actions.filter(a => a.section === 'data')
+    actions.filter(a => a.section === 'data' && visible(a))
            .forEach(a => b.appendChild(renderActionRow(a)));
   }
 
@@ -405,6 +578,7 @@
     document.body.classList.add('settings-drawer-open');
     const sb = settingsBtn();
     if (sb) sb.setAttribute('aria-expanded', 'true');
+    if (typeof App._syncMobileTabActive === 'function') App._syncMobileTabActive(document.body.dataset.mobilePanel || 'units');
     // focus the close button for keyboard users
     const close = document.getElementById('settings-drawer-close');
     setTimeout(() => { if (close) close.focus(); }, 30);
@@ -418,6 +592,7 @@
     document.body.classList.remove('settings-drawer-open');
     const sb = settingsBtn();
     if (sb) sb.setAttribute('aria-expanded', 'false');
+    if (typeof App._syncMobileTabActive === 'function') App._syncMobileTabActive(document.body.dataset.mobilePanel || 'units');
     if (lastFocus && typeof lastFocus.focus === 'function') {
       try { lastFocus.focus(); } catch (_) {}
     }

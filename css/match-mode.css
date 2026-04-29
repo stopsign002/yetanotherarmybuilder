@@ -555,6 +555,42 @@ body.mm-open { overflow: hidden; }
   .mm-vp-totals { grid-template-columns: 1fr; }
 }
 
+/* ── Phones — full-screen overlay, single column ─────────────────────── */
+@media (max-width: 480px) {
+  .mm-backdrop {
+    padding: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 1000; /* lift above the bottom tab bar */
+  }
+  .mm-shell {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 8px;
+    gap: 6px;
+  }
+  .mm-topbar {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .mm-cp-val { font-size: 22px; min-width: 36px; }
+  .mm-cp-label { font-size: 9px; }
+  .mm-phases {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+  .mm-phase {
+    font-size: 12px;
+    padding: 8px 6px;
+    min-height: 40px;
+  }
+  .mm-btn {
+    min-height: 40px;
+    padding: 8px 10px;
+  }
+}
+
 /* ── Reduced motion ──────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
