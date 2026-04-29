@@ -530,11 +530,44 @@
   }
 }
 
-/* ── Hide tab bar on desktop ──────────────────────────────────── */
+/* ── Mobile page title in topbar ──────────────────────────────── */
+@media (max-width: 820px) {
+  .mobile-page-title {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 4px;
+    line-height: 1.1;
+  }
+  .mobile-page-title-main {
+    font-family: var(--font-display, inherit);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-page-title-sub {
+    font-size: 11px;
+    color: var(--text-muted, #999);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-page-title-sub:empty { display: none; }
+}
+
+/* ── Hide tab bar / pts pill / back-btn / page-title on desktop ── */
 @media (min-width: 821px) {
   .mobile-tabbar { display: none !important; }
   .mobile-pts-pill { display: none !important; }
   .mobile-back-btn { display: none !important; }
+  .mobile-page-title { display: none !important; }
 }
 
 /* ── Smaller phones: tighten further ──────────────────────────── */
