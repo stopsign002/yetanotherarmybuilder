@@ -205,8 +205,17 @@
     });
 
     document.getElementById('btn-save-army').addEventListener('click', () => {
-      state.currentArmy.name = document.getElementById('army-name-input').value || 'My Army';
-      state.armyManager.saveArmy(state.currentArmy);
+      const nameInput = document.getElementById('army-name-input');
+      state.currentArmy.name = nameInput.value;
+      if (!state.armyManager.saveArmy(state.currentArmy)) {
+        // ArmyManager rejected the save because the army is still using
+        // the default placeholder name. Tell the user explicitly and
+        // focus the name field so they can fix it without hunting.
+        alert('Please give your army a name before saving.\n\n"New Army" is the default placeholder — change it to something like "My Custodes 2k" first.');
+        nameInput.focus();
+        nameInput.select();
+        return;
+      }
       UI.toast(`Saved "${state.currentArmy.name}"`, 'success');
     });
 

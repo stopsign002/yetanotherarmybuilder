@@ -143,6 +143,16 @@ window.ArmyManager = class ArmyManager {
     }
   }
 
+  // True iff `army` has a real, user-chosen name. We block persistence of
+  // armies still on the boot-time placeholder so a user clicking around
+  // doesn't seed a graveyard of "New Army" entries in their saved list.
+  // Whitespace-only names count as unnamed too.
+  static isNamed(army) {
+    if (!army) return false;
+    const n = (army.name || '').trim();
+    return n.length > 0 && n !== 'New Army';
+  }
+
   save() {
     localStorage.setItem('yaab_armies', JSON.stringify(this.armies.map(a => a.toJSON())));
     if (window.App && window.App.Sync && typeof window.App.Sync.notifyArmiesChanged === 'function') {
@@ -150,7 +160,11 @@ window.ArmyManager = class ArmyManager {
     }
   }
 
+  // Returns true if the army was persisted, false if the name guard rejected
+  // it. Callers that need to surface an error to the user (e.g. the explicit
+  // Save button) should check the return value; auto-save callers can ignore.
   saveArmy(army) {
+    if (!ArmyManager.isNamed(army)) return false;
     const idx = this.armies.findIndex(a => a.id === army.id);
     if (idx >= 0) {
       this.armies[idx] = army;
@@ -161,6 +175,7 @@ window.ArmyManager = class ArmyManager {
     if (window.App && typeof window.App.fireArmyChange === 'function') {
       window.App.fireArmyChange('save', army);
     }
+    return true;
   }
 
   deleteArmy(id) {
