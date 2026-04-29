@@ -1,112 +1,98 @@
-// app/points-filter.js — "what can I afford" roster filter.
-// Numeric input next to the search box; only units whose minimum buyable
-// points cost is ≤ the entered value pass through. Use case: "I have 40
-// points left, what fits?"
+// app/points-filter.js — points filter inlined into the unit search bar.
+// Comparator tokens in the search input filter units by buildable points cost:
+//   <=200  ≤200    pts cost is at most N
+//   <100             strictly less than N
+//   >=100  ≥100    pts cost is at least N
+//   >50              strictly greater than N
+//   =150             exactly N pts
+// Multiple comparators AND together. Example: ">=100 <=200 captain" finds
+// captains with a variant in the 100–200 pt range. A unit passes a constraint
+// if ANY of its squad/variant costs satisfies it. Use case: "≤40 — what fits
+// in my last 40 points?"
 (function () {
   const App = window.App = window.App || {};
   if (!App.hooks) return;
 
-  const STORAGE_KEY = 'yaab_points_filter_max';
+  // A token is a comparator followed by a positive integer with no whitespace.
+  // Exported so roster.js strips the same tokens before name/keyword matching.
+  const TOKEN_RE = /^(<=|>=|≤|≥|<|>|=)(\d+)$/;
 
-  let maxPts = NaN; // NaN = filter inactive
+  // Constraints are recomputed lazily inside the predicate so we stay in sync
+  // with the search input without depending on listener-registration order
+  // (events.js's input listener triggers the re-render that calls us).
+  let cachedQuery = null;
+  let constraints = [];
 
-  function unitMinCost(unit) {
-    // Squad-able units carry one cost per buyable squad size in
-    // `pointsOptions[]`. `points` is the headline cost (typically the smallest
-    // squad). Use the minimum of either source so a 5-model option that costs
-    // 80 doesn't hide the unit from a 40-pt budget when it has a smaller
-    // variant. If neither is present we treat the cost as 0 (unknown) and let
-    // the unit pass — false-positives are harmless, false-negatives hide
-    // affordable picks.
-    if (!unit) return 0;
+  function parseQuery(value) {
+    const out = [];
+    const tokens = (value || '').split(/\s+/).filter(Boolean);
+    for (const tok of tokens) {
+      const m = TOKEN_RE.exec(tok);
+      if (!m) continue;
+      const n = Number(m[2]);
+      if (Number.isFinite(n) && n >= 0) out.push({ op: m[1], n });
+    }
+    return out;
+  }
+
+  function syncFromInput() {
+    const input = document.getElementById('search-input');
+    const value = input ? (input.value || '') : '';
+    if (value === cachedQuery) return;
+    cachedQuery = value;
+    constraints = parseQuery(value);
+  }
+
+  function unitCosts(unit) {
+    if (!unit) return [];
+    const out = [];
     const opts = Array.isArray(unit.pointsOptions) ? unit.pointsOptions : [];
-    const candidates = [];
     for (const p of opts) {
       const n = Number(p);
-      if (Number.isFinite(n) && n > 0) candidates.push(n);
+      if (Number.isFinite(n) && n > 0) out.push(n);
     }
     const head = Number(unit.points);
-    if (Number.isFinite(head) && head > 0) candidates.push(head);
-    if (candidates.length === 0) return 0;
-    return Math.min(...candidates);
+    if (Number.isFinite(head) && head > 0) out.push(head);
+    return out;
+  }
+
+  function satisfies(cost, c) {
+    switch (c.op) {
+      case '<=': case '≤': return cost <= c.n;
+      case '>=': case '≥': return cost >= c.n;
+      case '<':            return cost <  c.n;
+      case '>':            return cost >  c.n;
+      case '=':            return cost === c.n;
+    }
+    return true;
   }
 
   function pointsPredicate(unit) {
-    if (!Number.isFinite(maxPts)) return true; // filter off
-    return unitMinCost(unit) <= maxPts;
+    syncFromInput();
+    if (constraints.length === 0) return true;
+    const costs = unitCosts(unit);
+    // Unknown cost: let it pass — false-positives are harmless, false-negatives
+    // would hide otherwise-valid picks.
+    if (costs.length === 0) return true;
+    for (const c of constraints) {
+      if (!costs.some(cost => satisfies(cost, c))) return false;
+    }
+    return true;
   }
-  // Tag the predicate so we can look it up / replace it idempotently.
   pointsPredicate._isPointsFilter = true;
 
-  function ensurePredicateRegistered() {
+  function register() {
     const list = App.hooks.rosterFilters;
     if (list.some(fn => fn._isPointsFilter)) return;
     list.push(pointsPredicate);
   }
 
-  function readFromStorage() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return NaN;
-      const n = Number(raw);
-      return (Number.isFinite(n) && n > 0) ? n : NaN;
-    } catch (_) { return NaN; }
-  }
-
-  function writeToStorage(n) {
-    try {
-      if (Number.isFinite(n) && n > 0) localStorage.setItem(STORAGE_KEY, String(n));
-      else localStorage.removeItem(STORAGE_KEY);
-    } catch (_) {}
-  }
-
-  function syncClearButton(input, clearBtn) {
-    if (!clearBtn) return;
-    const val = (input.value || '').trim();
-    clearBtn.hidden = val === '';
-  }
-
-  function applyFromInput(input, clearBtn) {
-    const raw = (input.value || '').trim();
-    const n = raw === '' ? NaN : Number(raw);
-    maxPts = (Number.isFinite(n) && n > 0) ? n : NaN;
-    writeToStorage(maxPts);
-    syncClearButton(input, clearBtn);
-    if (typeof App.renderUnitRosterWithContext === 'function') {
-      App.renderUnitRosterWithContext();
-    }
-  }
-
-  function wire() {
-    const input = document.getElementById('points-filter-input');
-    const clearBtn = document.getElementById('points-filter-clear');
-    if (!input) return;
-    ensurePredicateRegistered();
-
-    // Restore last-used value across reloads so a user who set "≤ 40" doesn't
-    // lose it on refresh.
-    const saved = readFromStorage();
-    if (Number.isFinite(saved)) {
-      input.value = String(saved);
-      maxPts = saved;
-    }
-    syncClearButton(input, clearBtn);
-
-    input.addEventListener('input', () => applyFromInput(input, clearBtn));
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
-        input.value = '';
-        applyFromInput(input, clearBtn);
-        input.focus();
-      });
-    }
-  }
+  // Exposed for roster.js so it can strip points tokens before name matching.
+  App.PointsFilter = { TOKEN_RE };
 
   if (Array.isArray(App.hooks.bootstrap)) {
-    App.hooks.bootstrap.push(wire);
-  } else if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', wire, { once: true });
+    App.hooks.bootstrap.push(register);
   } else {
-    wire();
+    register();
   }
 })();

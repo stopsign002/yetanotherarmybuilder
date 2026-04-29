@@ -303,15 +303,9 @@
       </div>
 
       <div class="panel-controls">
-        <input type="text" id="search-input" class="search-input" placeholder="Search by name or keyword&#8230;" />
-        <div class="points-filter" title="Show only units that cost up to N points (leave blank for no limit)">
-          <span class="points-filter-label" aria-hidden="true">≤</span>
-          <input type="number" id="points-filter-input" class="points-filter-input"
-                 inputmode="numeric" min="0" step="5" placeholder="pts" aria-label="Max points filter" />
-          <span class="points-filter-suffix" aria-hidden="true">pts</span>
-          <button type="button" id="points-filter-clear" class="points-filter-clear"
-                  aria-label="Clear points filter" title="Clear" hidden>&times;</button>
-        </div>
+        <input type="text" id="search-input" class="search-input"
+               placeholder="Search — name, keyword, or points (e.g. &#8804;200, &gt;=100)&#8230;"
+               title="Tip: filter by points with comparators like <=200, >=100, <50, >150, =95. Combine with names: '<=200 captain'." />
       </div>
 
       <div class="panel-body">

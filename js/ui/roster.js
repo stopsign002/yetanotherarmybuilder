@@ -247,7 +247,11 @@
       );
     }
     if (searchTerm) {
-      const tokens = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+      let tokens = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+      // Drop points-comparator tokens (e.g. "<=200", "≥100") — they're owned
+      // by the points filter hook, not by name/keyword matching.
+      const ptsRe = window.App && App.PointsFilter && App.PointsFilter.TOKEN_RE;
+      if (ptsRe) tokens = tokens.filter(t => !ptsRe.test(t));
       if (tokens.length > 0) filtered = filtered.filter(u => fuzzyMatch(u, tokens));
     }
 
