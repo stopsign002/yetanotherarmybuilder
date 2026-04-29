@@ -10,11 +10,19 @@
 // Recursion guard: ArmyManager.saveArmy fires armyChange('save') on
 // completion. Without filtering, that would re-trigger autosave forever.
 // We ignore 'save' and 'delete' kinds — those paths already persist.
+//
+// Default-name skip: if the army is still using the boot-time placeholder
+// name ("New Army" — see Army constructor in js/army.js), don't autosave.
+// Otherwise every accidental click on a unit while the user is browsing
+// would seed an unnamed entry in their saved list. Once they rename, the
+// next mutation autosaves normally. Explicit Save and create-from-template
+// paths bypass autosave entirely so they're unaffected.
 (function () {
   const App = window.App = window.App || {};
   if (!App.hooks || !Array.isArray(App.hooks.armyChange)) return;
 
   const DEBOUNCE_MS = 500;
+  const DEFAULT_ARMY_NAME = 'New Army';
   let saveTimer = null;
   let pending = null; // { armyId } — the army to save when timer fires
 
@@ -29,6 +37,10 @@
     // Switching to another army between schedule and fire is fine — the
     // new army's hook will queue its own save.
     if (state.currentArmy.id !== target.armyId) return;
+    // Blacklist the default placeholder name so unnamed scratch armies
+    // don't get persisted. Check at fire time (not schedule time) so a
+    // user who renames between schedule and fire still gets the save.
+    if (state.currentArmy.name === DEFAULT_ARMY_NAME) return;
     try {
       state.armyManager.saveArmy(state.currentArmy);
     } catch (e) {
