@@ -193,6 +193,7 @@
       document.querySelectorAll('.unit-card.selected').forEach(c => c.classList.remove('selected'));
       const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
       UI.renderUnitDetail(entry.unitData, detEnhs, entry.enhancements || []);
+      if (App.setMobilePanel) App.setMobilePanel('detail');
     });
 
     document.getElementById('btn-new-army').addEventListener('click', () => {
