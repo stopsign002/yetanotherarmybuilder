@@ -239,18 +239,21 @@ window.BSData = (() => {
     // those multi-MB trees be garbage collected.
     try { WahapediaParser.releaseSharedIndex(); } catch (_) {}
 
-    // ── Phase 3: GDC stratagem layer ─────────────────────────────────────────
-    // BSData wh40k-10e doesn't ship 10e stratagem rules. Pull them from the
-    // game-datacards-eu JSON repo and merge into the parsed faction objects.
-    // Defensive: if GDC is unreachable or its schema shifts, BSData-driven
-    // units/datasheets/detachments still work — only the inline Stratagems
-    // subsection silently degrades to core strats only.
+    // ── Phase 3: GDC overlay (stratagems + unit wargear/loadout) ─────────────
+    // BSData wh40k-10e doesn't ship 10e stratagem rules, and its wargear
+    // option tree has parsing edge cases. Pull GDC payloads (stratagems +
+    // datasheets) from the game-datacards-eu JSON repo and merge as an
+    // overlay. Defensive: if GDC is unreachable or its schema shifts,
+    // BSData-driven units/datasheets/detachments still work.
     try {
       if (window.App && App.GDC && Array.isArray(App.state && App.state.factions)) {
         const factionNames = App.state.factions.map(f => f.factionName);
         await App.GDC.loadAll(factionNames);
         if (signal && signal.aborted) return;
         App.GDC.mergeIntoFactions(App.state.factions);
+        if (typeof App.GDC.mergeUnitDataIntoFactions === 'function') {
+          App.GDC.mergeUnitDataIntoFactions(App.state.factions);
+        }
 
         // Re-render the army-rules box now that gdcStratagems are attached.
         // On a fresh page load with a saved army, App.getCurrentFaction()
@@ -269,9 +272,23 @@ window.BSData = (() => {
         } catch (renderErr) {
           console.warn('[BSData] post-GDC re-render failed (non-fatal):', renderErr && renderErr.message ? renderErr.message : renderErr);
         }
+
+        // Re-render the unit detail panel if a unit is currently selected,
+        // so the freshly-merged gdcWargear/gdcLoadout fields show up without
+        // the user having to click another unit and back.
+        try {
+          const sel = App.state && App.state.selectedUnit;
+          if (sel && window.UI && typeof UI.renderUnitDetail === 'function') {
+            const det = App.state.selectedDetachment || null;
+            const detEnhs = (det && Array.isArray(det.enhancements)) ? det.enhancements : [];
+            UI.renderUnitDetail(sel, detEnhs, []);
+          }
+        } catch (renderErr) {
+          console.warn('[BSData] post-GDC detail re-render failed (non-fatal):', renderErr && renderErr.message ? renderErr.message : renderErr);
+        }
       }
     } catch (e) {
-      console.warn('[BSData] GDC stratagem layer failed (non-fatal):', e && e.message ? e.message : e);
+      console.warn('[BSData] GDC overlay failed (non-fatal):', e && e.message ? e.message : e);
     }
   }
 

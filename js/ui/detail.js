@@ -311,7 +311,53 @@
     const modelTypeOpts = wargearOpts.filter(o => o.type === 'model');
     const choiceOpts    = wargearOpts.filter(o => o.type !== 'model');
 
-    if (compLabel || wargearOpts.length > 0) {
+    // ── GDC-driven wargear/composition (preferred when present) ──
+    // game-datacards-eu ships pre-formatted wargear option strings + a default
+    // loadout line + canonical composition lines. When we have those we render
+    // them in place of the BSData-derived Loadout section, which has parser
+    // edge cases for some units. Coverage is faction-dependent (e.g. Imperial
+    // Knights, Titans aren't in GDC) so we fall back to BSData below.
+    const gdcWargear     = Array.isArray(unit.gdcWargear) ? unit.gdcWargear : null;
+    const gdcLoadoutText = (typeof unit.gdcLoadout === 'string') ? unit.gdcLoadout : '';
+    const gdcComposition = Array.isArray(unit.gdcComposition) ? unit.gdcComposition : null;
+    const useGdc = !!(gdcWargear || gdcLoadoutText || gdcComposition);
+
+    if (useGdc) {
+      const sectionTitle = (gdcWargear && gdcWargear.length > 0) ? 'Wargear Options' : 'Loadout';
+      html += `<div class="detail-section"><div class="detail-section-title">${esc(sectionTitle)}</div>`;
+
+      if (gdcComposition && gdcComposition.length > 0) {
+        html += `<div class="wl-composition">${gdcComposition.map(esc).join(' · ')}</div>`;
+      }
+
+      if (gdcLoadoutText) {
+        html += `<div class="wl-defaults">
+          <span class="wl-defaults-label">Default:</span>
+          <span class="wl-defaults-weapons">${esc(gdcLoadoutText)}</span>
+        </div>`;
+      }
+
+      if (gdcWargear && gdcWargear.length > 0) {
+        gdcWargear.forEach(line => {
+          // GDC encodes "X can be replaced with one of the following: ◦ A ◦ B …"
+          // by separating the heading from each option with a ◦. Split on ◦,
+          // first piece is the description, the rest are sub-bullets.
+          const parts = String(line).split(/\s*◦\s*/);
+          const head = (parts[0] || '').replace(/:\s*$/, '').trim();
+          const subs = parts.slice(1).map(s => s.trim()).filter(Boolean);
+          html += `<div class="wl-choice-group">`;
+          if (head) html += `<div class="wl-choice-group-title">${esc(head)}</div>`;
+          if (subs.length > 0) {
+            html += `<ul class="wl-choice-list">`;
+            subs.forEach(s => { html += `<li>${esc(s)}</li>`; });
+            html += `</ul>`;
+          }
+          html += `</div>`;
+        });
+      }
+
+      html += `</div>`;
+    } else if (compLabel || wargearOpts.length > 0) {
       html += `<div class="detail-section"><div class="detail-section-title">Loadout</div>`;
 
       if (compLabel) {
