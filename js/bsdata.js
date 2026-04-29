@@ -238,6 +238,41 @@ window.BSData = (() => {
     // parsed XML document alive via ownerDocument; clearing these Maps lets
     // those multi-MB trees be garbage collected.
     try { WahapediaParser.releaseSharedIndex(); } catch (_) {}
+
+    // ── Phase 3: GDC stratagem layer ─────────────────────────────────────────
+    // BSData wh40k-10e doesn't ship 10e stratagem rules. Pull them from the
+    // game-datacards-eu JSON repo and merge into the parsed faction objects.
+    // Defensive: if GDC is unreachable or its schema shifts, BSData-driven
+    // units/datasheets/detachments still work — only the inline Stratagems
+    // subsection silently degrades to core strats only.
+    try {
+      if (window.App && App.GDC && Array.isArray(App.state && App.state.factions)) {
+        const factionNames = App.state.factions.map(f => f.factionName);
+        await App.GDC.loadAll(factionNames);
+        if (signal && signal.aborted) return;
+        App.GDC.mergeIntoFactions(App.state.factions);
+
+        // Re-render the army-rules box now that gdcStratagems are attached.
+        // On a fresh page load with a saved army, App.getCurrentFaction()
+        // and App.state.selectedDetachment are already populated by the
+        // saved-army restore flow — but updateFactionRules ran BEFORE this
+        // merge, so the Detachment Stratagems list came back empty. Without
+        // this re-render the user has to manually re-pick the detachment to
+        // see the strats appear.
+        try {
+          if (window.UI && typeof UI.updateFactionRules === 'function') {
+            const currentFaction = (typeof App.getCurrentFaction === 'function')
+              ? App.getCurrentFaction()
+              : null;
+            UI.updateFactionRules(currentFaction, App.state.selectedDetachment || null);
+          }
+        } catch (renderErr) {
+          console.warn('[BSData] post-GDC re-render failed (non-fatal):', renderErr && renderErr.message ? renderErr.message : renderErr);
+        }
+      }
+    } catch (e) {
+      console.warn('[BSData] GDC stratagem layer failed (non-fatal):', e && e.message ? e.message : e);
+    }
   }
 
   // ── Cache busting ────────────────────────────────────────────────────────

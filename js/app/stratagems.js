@@ -109,30 +109,17 @@
     const faction = getCurrentFaction();
     const det = state.selectedDetachment;
 
-    const detList = (det && Array.isArray(det.stratagems)) ? det.stratagems.slice() : [];
-    const factionList = (faction && Array.isArray(faction.factionStratagems))
-      ? faction.factionStratagems.slice() : [];
-    const coreList = CORE_STRATAGEMS.slice();
+    // Detachment strats: BSData first (rare), then GDC layer.
+    const detList = [];
+    if (det && Array.isArray(det.stratagems))    det.stratagems.forEach(s => detList.push(s));
+    if (det && Array.isArray(det.gdcStratagems)) det.gdcStratagems.forEach(s => detList.push(s));
 
-    // Merge in sample stratagems from App.STRATAGEMS_DATA when available.
-    // These are clearly tagged "sample" so users know they're not from BSData.
-    const sampleData = App.STRATAGEMS_DATA;
-    if (sampleData) {
-      const factionName = faction ? faction.factionName : null;
-      if (factionName && sampleData.factions) {
-        const fSamples = sampleData.factions[factionName];
-        if (Array.isArray(fSamples)) {
-          fSamples.forEach(s => factionList.push(Object.assign({ type: 'sample' }, s)));
-        }
-      }
-      const detName = det ? det.name : null;
-      if (detName && sampleData.detachments) {
-        const dSamples = sampleData.detachments[detName];
-        if (Array.isArray(dSamples)) {
-          dSamples.forEach(s => detList.push(Object.assign({ type: 'sample' }, s)));
-        }
-      }
-    }
+    // Faction-wide strats: BSData first, then GDC.
+    const factionList = [];
+    if (faction && Array.isArray(faction.factionStratagems))     faction.factionStratagems.forEach(s => factionList.push(s));
+    if (faction && Array.isArray(faction.gdcFactionStratagems))  faction.gdcFactionStratagems.forEach(s => factionList.push(s));
+
+    const coreList = CORE_STRATAGEMS.slice();
 
     return {
       detachmentName: det ? det.name : null,
@@ -349,6 +336,10 @@
   // ── Public + hook registration ───────────────────────────────────────────
 
   App.openStratagems = open;
+  // Expose the core list so other UI surfaces (e.g. the inline strategems
+  // subsection in the Army-rules panel) can render it without duplicating
+  // the data.
+  App.CORE_STRATAGEMS = CORE_STRATAGEMS;
 
   App.hooks.armyToolbarActions.push({
     id: BTN_ID,
