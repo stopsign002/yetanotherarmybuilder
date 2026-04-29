@@ -219,6 +219,15 @@
   }
   .army-toolbar .toolbar-spacer { flex-basis: 100%; height: 0; }
 
+  /* Pin the panel-footer (army toolbar with New/Save/Load) to the
+     bottom of the panel. The panel is a flex column; margin-top:auto
+     pushes the footer to the end even if .panel-body's flex:1 grow is
+     suppressed by tall content or a missing min-height somewhere up
+     the tree. Without this the toolbar floated mid-panel on mobile. */
+  .panel-footer {
+    margin-top: auto;
+  }
+
   /* ── Full-screen modals ─────────────────────────────── */
   .modal-backdrop {
     padding: 0;

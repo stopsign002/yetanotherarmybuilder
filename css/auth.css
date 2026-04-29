@@ -55,6 +55,29 @@
   background: rgba(212, 163, 86, 0.12);
 }
 
+/* Visual divider between army actions and auth actions in the menu. */
+.auth-menu-divider {
+  border-top: 1px solid var(--border, #3a2f20);
+  margin: 4px 0;
+}
+
+/* Topbar Export button — same family as Settings/Help, with a caret +
+   absolutely-positioned dropdown menu reusing .auth-menu styling. */
+.topbar-export-wrap {
+  position: relative;
+  display: inline-block;
+}
+.topbar-export-caret {
+  margin-left: 4px;
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+.topbar-export-menu {
+  /* Pin to the right edge of the wrap so the menu doesn't overflow off-screen. */
+  right: 0;
+  min-width: 200px;
+}
+
 /* ── Auth modal body styling (slots into existing .modal pattern) ── */
 #modal-auth .modal {
   width: min(420px, 92vw);

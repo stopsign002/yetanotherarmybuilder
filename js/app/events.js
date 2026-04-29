@@ -91,6 +91,8 @@
         description: item.dataset.ruleDesc,
         type:        item.dataset.ruleType || 'rule',
         pts:         item.dataset.rulePts  ? parseInt(item.dataset.rulePts) : null,
+        cp:          item.dataset.ruleCp   != null && item.dataset.ruleCp !== '' ? item.dataset.ruleCp : null,
+        phase:       item.dataset.rulePhase || null,
       });
     });
 

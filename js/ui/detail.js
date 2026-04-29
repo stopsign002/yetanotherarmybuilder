@@ -389,13 +389,19 @@
       </div>`;
     }
 
-    // 10e rule: enhancements require the Character keyword on the recipient.
-    const isCharacter = (unit.keywords || []).some(k => String(k).toLowerCase() === 'character');
+    // 10e rule: enhancements require the Character keyword AND the unit
+    // must NOT be an Epic Hero (named special characters can't take
+    // enhancements per 10e core rules).
+    const kws = unit.keywords || [];
+    const isCharacter = kws.some(k => String(k).toLowerCase() === 'character');
+    const isEpicHero  = kws.some(k => String(k).toLowerCase() === 'epic hero');
+    const canTakeEnhancement = isCharacter && !isEpicHero;
     // Show the section when the unit can take enhancements, or when a
     // detachment with enhancements is loaded — that way users always see
     // where the feature lives, with a contextual hint when they haven't
-    // selected a detachment yet.
-    if (isCharacter || (detachmentEnhancements && detachmentEnhancements.length > 0)) {
+    // selected a detachment yet. Epic Heroes with no detachment loaded
+    // get nothing (the "pick a detachment" hint would be misleading).
+    if (canTakeEnhancement || (detachmentEnhancements && detachmentEnhancements.length > 0)) {
       const selectedNames = new Set((selectedEnhancements || []).map(e => e.name));
       html += `<div class="detail-section" id="detail-enhancements-section">
         <div class="detail-section-title">Enhancements</div>`;
@@ -405,11 +411,17 @@
           Pick a detachment with enhancements (top-left) to apply one to this character.
         </div></div>`;
       } else {
+        const ineligNote = isEpicHero
+          ? 'Epic Hero — cannot take enhancements'
+          : 'Character-only';
+        const ineligTitle = isEpicHero
+          ? 'Epic Heroes cannot take enhancements'
+          : 'Character-only';
         html += `<div class="detail-enhancements-list">`;
         detachmentEnhancements.forEach(enh => {
           const checked = selectedNames.has(enh.name) ? ' checked' : '';
-          const ineligClass = isCharacter ? '' : ' enhancement-ineligible';
-          html += `<label class="enhancement-cb-item${ineligClass}"${!isCharacter ? ' title="Character-only"' : ''}>
+          const ineligClass = canTakeEnhancement ? '' : ' enhancement-ineligible';
+          html += `<label class="enhancement-cb-item${ineligClass}"${!canTakeEnhancement ? ` title="${esc(ineligTitle)}"` : ''}>
             <input type="checkbox" class="enhancement-cb" value="${esc(enh.name)}"${checked}
               data-enh-pts="${enh.pts || 0}" data-enh-name="${esc(enh.name)}" data-enh-desc="${esc(enh.description || '')}"/>
             <span class="enh-cb-body">
@@ -418,7 +430,7 @@
                 <span class="enh-cb-pts">${enh.pts ? enh.pts + ' pts' : ''}</span>
               </span>
               <span class="enh-cb-desc">${esc(enh.description || '')}</span>
-              ${!isCharacter ? '<span class="enh-cb-ineligible-note">Character-only</span>' : ''}
+              ${!canTakeEnhancement ? `<span class="enh-cb-ineligible-note">${esc(ineligNote)}</span>` : ''}
             </span>
           </label>`;
         });
@@ -479,7 +491,28 @@
     if (existing) existing.remove();
 
     const isEnhancement = data.type === 'enhancement';
+    const isStratagem   = data.type === 'stratagem';
     const body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${esc(data.description || 'No description available.')}</p>`;
+
+    let kindLabel = 'Army Rule';
+    if (isEnhancement) kindLabel = 'Enhancement';
+    else if (isStratagem) kindLabel = 'Stratagem';
+
+    let sectionTitle = 'Rule';
+    if (isEnhancement) sectionTitle = 'Enhancement';
+    else if (isStratagem) sectionTitle = 'Stratagem';
+
+    let headerActions = '';
+    if (isEnhancement && data.pts) {
+      headerActions = `<div class="detail-header-actions detail-banner-actions"><span class="detail-pts detail-banner-pts">${esc(String(data.pts))} pts</span></div>`;
+    } else if (isStratagem && data.cp != null) {
+      headerActions = `<div class="detail-header-actions detail-banner-actions"><span class="detail-pts detail-banner-pts">${esc(String(data.cp))} CP</span></div>`;
+    }
+
+    let subtitleExtra = '';
+    if (isStratagem && data.phase) {
+      subtitleExtra = ` <span class="detail-rule-phase">· ${esc(data.phase)}</span>`;
+    }
 
     panel.insertAdjacentHTML('beforeend', `
       <div class="unit-detail-content unit-detail-rule" data-detail-kind="rule">
@@ -487,13 +520,13 @@
           <div class="detail-header-main">
             <div class="detail-name">${esc(data.name)}</div>
             <div class="detail-meta detail-banner-subtitle">
-              <span class="detail-rule-kind">${isEnhancement ? 'Enhancement' : 'Army Rule'}</span>
+              <span class="detail-rule-kind">${kindLabel}</span>${subtitleExtra}
             </div>
           </div>
-          ${isEnhancement && data.pts ? `<div class="detail-header-actions detail-banner-actions"><span class="detail-pts detail-banner-pts">${esc(String(data.pts))} pts</span></div>` : ''}
+          ${headerActions}
         </div>
         <div class="detail-section">
-          <div class="detail-section-title">${isEnhancement ? 'Enhancement' : 'Rule'}</div>
+          <div class="detail-section-title">${sectionTitle}</div>
           ${body}
         </div>
       </div>

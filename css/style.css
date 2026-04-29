@@ -61,13 +61,18 @@ ul { list-style: none; }
 ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #666; }
 
-/* ── Page-level loading progress strip (fixed, top of viewport) ─ */
+/* ── Page-level loading progress strip (fixed, top of viewport) ─
+   The visual strip is hidden — load progress is communicated via
+   the load-status text in the panel header instead. progress.js
+   still toggles this element's `hidden` attribute, but the strip
+   never paints because of the !important display:none below. */
 .page-progress-wrap {
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 3px;
   z-index: 500;
   background: rgba(var(--accent-rgb), 0.2);
+  display: none !important;
 }
 /* Override [hidden] — CSS display: flex/block has higher specificity than
    the browser's built-in [hidden]{display:none} rule, so we must be explicit */
@@ -437,6 +442,72 @@ ul { list-style: none; }
 
 .search-input:focus { border-color: var(--accent); }
 .search-input::placeholder { color: var(--text-muted); }
+
+/* Points-filter input — sits next to the search box. Compact pill that
+   reads "≤ [40] pts (×)". The clear button only shows when there's a
+   value typed in. */
+.points-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 0 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  height: 32px;
+  align-self: flex-start;
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.points-filter:focus-within {
+  border-color: var(--accent);
+}
+.points-filter-label {
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+.points-filter-input {
+  width: 56px;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  padding: 0 2px;
+  text-align: right;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  outline: none;
+}
+.points-filter-input::-webkit-outer-spin-button,
+.points-filter-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.points-filter-suffix {
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+.points-filter-clear {
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.points-filter-clear:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+}
+.points-filter-clear[hidden] { display: none; }
 
 .unit-count-badge {
   font-size: 11px;
@@ -1429,7 +1500,14 @@ ul { list-style: none; }
   :root { --col-left: 260px; --col-right: 360px; }
 }
 
-@media (max-width: 860px) {
+/* Legacy stacked-panel responsive layout for the narrow tablet band
+   that's too small for the 3-column grid but too wide for the
+   tab-bar mobile layout in mobile.css. Bounded to (821px, 860px) so
+   the `.panel { height: auto }` and `.panel-body { max-height: 500px }`
+   here don't leak into ≤820px and collapse the mobile panel — which
+   left the army-toolbar floating mid-screen instead of pinned above
+   the mobile tab bar. */
+@media (min-width: 821px) and (max-width: 860px) {
   html, body { overflow: auto; }
   .app-main {
     grid-template-columns: 1fr !important;
@@ -1460,9 +1538,108 @@ ul { list-style: none; }
 
 /* BSData browse modal styles removed — data now auto-loads */
 
-/* ── Army Rules: two sub-sections ───────────────────────── */
+/* ── Army Rules: collapsible wrapper ─────────────────────── */
+.army-rules-collapsible {
+  margin-bottom: 12px;
+  border: 1px solid var(--border, #2a2a2a);
+  border-radius: var(--radius, 6px);
+  background: rgba(255,255,255,0.02);
+}
+.army-rules-collapsible[open] { background: rgba(255,255,255,0.03); }
+.army-rules-summary {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-muted, #888);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--radius, 6px);
+}
+.army-rules-summary::-webkit-details-marker { display: none; }
+.army-rules-summary::before {
+  content: '\25B8'; /* ▸ */
+  font-size: 10px;
+  transition: transform 0.15s ease;
+  color: var(--accent);
+}
+.army-rules-collapsible[open] > .army-rules-summary::before { transform: rotate(90deg); }
+.army-rules-summary:hover { color: var(--text); }
+/* Explicit collapse: when <details> is closed, hide non-summary children.
+   The UA default does this but headless chromium can miss it; making it
+   explicit is also defensive against any inner-element rule that might
+   override the UA stylesheet. */
+.army-rules-collapsible:not([open]) > *:not(summary) {
+  display: none !important;
+}
+.army-rules-collapsible > .army-rules-section {
+  padding: 8px 12px 12px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 0;
+}
+
+/* ── Army Rules: sub-sections ───────────────────────── */
 .army-rules-subsection { margin-bottom: 10px; }
 .army-rules-subsection:last-child { margin-bottom: 0; }
+
+/* Internally-scrollable list for the Stratagems sections. Tall enough that
+   most cases don't need to scroll at all, and when they do, the wheel
+   passes through to the outer panel once the inner list hits its bounds.
+   We deliberately do NOT set `overscroll-behavior: contain` — that traps
+   wheel events on the inner box even when its content fits in max-height,
+   which read as "broken scroll" when the cursor was over a strat item. */
+.army-rules-list-scroll {
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px; /* leave room for scrollbar without clipping items */
+}
+
+/* Placeholder shown inside the always-visible army-rules-section when no
+   faction/detachment is yet selected. Compact, muted, single line. */
+.army-rules-empty {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  font-style: italic;
+}
+
+/* The panel-footer Army-toolbar (New/Save/Load/Import/Export buttons) was
+   moved into topbar menus. Buttons stay in the DOM so existing event
+   handlers, command-palette references, and activity-log click delegation
+   keep working untouched — but the visual footer is gone. */
+.panel-footer.army-toolbar {
+  display: none !important;
+}
+
+/* Inline stratagem CP badge (separate from the modal-internal
+   .stratagem-cp-badge so the styling can drift independently). */
+.cp-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f5c842;
+  background: rgba(245,200,66,0.12);
+  border: 1px solid rgba(245,200,66,0.3);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-right: 4px;
+}
+.strat-phase-badge {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-right: 4px;
+}
 
 .stratagem-cp-badge {
   font-size: 10px;

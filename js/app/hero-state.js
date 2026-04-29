@@ -281,18 +281,12 @@
   }
 
   function renderChipRow() {
-    const sel = document.getElementById('army-faction-select');
-    if (!sel) return;
-    // Mount inside the .form-group that wraps the faction <select>.
-    const formGroup = sel.closest('.form-group');
-    if (!formGroup) return;
-
+    // Recent-faction quick-select chips were judged useless and visually
+    // crowding the Army Setup form. Disable the render but keep the
+    // pushRecent/readRecents tracking in place — other modules read recents
+    // for telemetry and there's no harm in still recording them.
     const existing = document.getElementById('yaab-faction-chips');
     if (existing) existing.remove();
-
-    const row = buildChipRow();
-    if (!row) return;
-    formGroup.insertBefore(row, formGroup.firstChild);
   }
 
   // ─────────────────────────────────────────────────────────────

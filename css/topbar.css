@@ -133,6 +133,12 @@ body { padding-top: var(--topbar-h); }
   min-width: 0;
 }
 .build-hero--in-topbar::before { display: none !important; }
+/* theming-pass.css adds a 3px white-gradient underline at the bottom of
+   .build-hero (intended for the original card layout). Inside the
+   topbar the build-hero is vertically centered and its bottom edge
+   lands mid-topbar, so the underline reads as a stray horizontal line
+   across the middle of the bar. Suppress it here. */
+.build-hero--in-topbar::after { display: none !important; }
 .build-hero--in-topbar .build-hero-crest-wrap { display: none !important; }
 .build-hero--in-topbar .build-hero-main {
   display: inline-flex;
@@ -187,6 +193,14 @@ body { padding-top: var(--topbar-h); }
 .build-hero--in-topbar .build-hero-points-readout { font-size: 13px; padding: 0; }
 .build-hero--in-topbar .build-hero-points-current { font-size: 14px; }
 
+/* Hide the progress bar + percentage in the topbar — the "current /
+   limit PTS" readout already communicates points. The bar wrap and
+   pct text remain in the DOM so existing JS that writes to them
+   (#points-bar, #points-bar-pct) doesn't need null guards. */
+.build-hero--in-topbar .build-hero-bar-wrap,
+.build-hero--in-topbar .build-hero-bar-pct {
+  display: none !important;
+}
 /* Compact, fixed-ish bar — visually centered between current/limit and pct.
    Drop the accent border (the "weird green line" the user saw on the bar
    outline) and shrink the height. */
