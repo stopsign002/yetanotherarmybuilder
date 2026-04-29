@@ -318,3 +318,32 @@
   }
   .yaab-dp-toolbar { padding: 8px; }
 }
+
+/* Phones — stack token panel above the battlefield. Side becomes a
+   short, horizontally-scrollable strip so the battlefield consumes the
+   full width below it. */
+@media (max-width: 600px) {
+  .yaab-dp-main {
+    flex-direction: column;
+  }
+  .yaab-dp-side {
+    width: 100%;
+    min-width: 0;
+    max-height: 30vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px;
+  }
+  .yaab-dp-side-title { padding: 0 4px 6px; }
+  .yaab-dp-toolbar {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
+  }
+  .yaab-dp-toolbar .yaab-dp-btn {
+    min-height: 40px;
+    padding: 6px 10px;
+  }
+}

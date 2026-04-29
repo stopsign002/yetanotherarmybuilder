@@ -224,3 +224,24 @@ body.lore-modal-open { overflow: hidden; }
   .lore-browse-grid { grid-template-columns: 1fr; }
   .lore-faction-name { font-size: 19px; }
 }
+
+/* Phones — full-screen reading view with safe-area. */
+@media (max-width: 820px) {
+  .lore-backdrop {
+    padding: 0;
+    z-index: 1000;
+  }
+  .lore-modal {
+    width: 100%;
+    max-width: none;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex;
+    flex-direction: column;
+  }
+  .lore-body { flex: 1 1 auto; overflow-y: auto; }
+}

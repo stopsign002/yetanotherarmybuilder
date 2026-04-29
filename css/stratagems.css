@@ -263,3 +263,23 @@ body.strat-modal-open {
     grid-template-columns: 1fr;
   }
 }
+
+/* Phones — full-screen modal with safe-area, lift above the bottom tab bar. */
+@media (max-width: 820px) {
+  .strat-backdrop {
+    padding: 0;
+    z-index: 1000;
+  }
+  .strat-modal {
+    width: 100%;
+    max-width: none;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex;
+    flex-direction: column;
+  }
+}
