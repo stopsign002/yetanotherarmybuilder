@@ -342,9 +342,21 @@
       let uploadedLocal = 0;
       const adoptions = [];
 
-      // 1. Cloud-only ids → fetch full payload and adopt.
+      // 1. Cloud-only ids → either adopt (new from another device) or
+      // propagate a local deletion (user deleted on this device, but the
+      // DELETE op hasn't drained to cloud yet). The `known` map is the
+      // discriminator: if we've previously synced this id to this device
+      // and it's now missing locally, the user must have deleted it —
+      // don't resurrect. Without this guard, a pullAll firing inside the
+      // 500ms diff debounce after a delete races the deleteArmy op into
+      // the queue and re-pushes the army into mgr.armies.
+      const knownAtPull = known();
       for (const [id, summ] of cloudIndex.entries()) {
         if (localIndex.has(id)) continue;
+        if (knownAtPull[id]) {
+          enqueue({ op: 'deleteArmy', id });
+          continue;
+        }
         adoptions.push((async () => {
           try {
             const full = await apiFetch(`${API_ARMIES}/${encodeURIComponent(id)}`);
