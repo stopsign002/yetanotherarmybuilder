@@ -69,6 +69,41 @@
     return out;
   }
 
+  // Convert GDC's pre-bucketed weapon shape (meleeWeapons[]/rangedWeapons[],
+  // each with profiles[]) into the flat row shape the existing weapon-table
+  // renderer consumes (one row per profile, fields named Range/A/BS|WS/S/AP/D/
+  // Keywords). GDC pre-disambiguates same-name dual-profile weapons (e.g.
+  // "Plasmic lance – Melee" / "Plasmic lance – Ranged") and structurally
+  // separates ranged vs melee, so this avoids the BSData heuristic-bucketing
+  // that loses one of two same-named profiles on units like the Plasmancer.
+  function gdcProfilesToRows(weapons, type) {
+    if (!Array.isArray(weapons)) return [];
+    const out = [];
+    weapons.forEach(w => {
+      if (!w || w.active === false || !Array.isArray(w.profiles)) return;
+      w.profiles.forEach(p => {
+        if (!p || p.active === false) return;
+        const row = {
+          name: p.name || w.name || '',
+          Range: p.range != null && p.range !== '' ? p.range : (type === 'melee' ? 'Melee' : '—'),
+          A: p.attacks,
+          S: p.strength,
+          AP: p.ap,
+          D: p.damage,
+        };
+        // GDC merges BS/WS into a single `skill` field; route to the correct
+        // column based on the bucket the weapon came from.
+        if (type === 'ranged') row.BS = p.skill;
+        else                   row.WS = p.skill;
+        if (Array.isArray(p.keywords) && p.keywords.length > 0) {
+          row.Keywords = p.keywords.join(', ');
+        }
+        out.push(row);
+      });
+    });
+    return out;
+  }
+
   UI.renderUnitDetail = function (unit, detachmentEnhancements = [], selectedEnhancements = []) {
     const esc = UI.escapeHtml;
     const panel = document.getElementById('unit-detail-panel');
@@ -175,16 +210,28 @@
       </div>`;
     }
 
-    if (weapons.length > 0) {
-      const ranged = weapons.filter(w => {
+    // Prefer GDC weapons when available — they're pre-bucketed into ranged
+    // vs melee, multi-profile weapons are explicitly modeled, and same-name
+    // dual-mode weapons (e.g. Plasmancer's Plasmic lance) are pre-disambiguated.
+    // Falls back to the BSData _typeName/Range heuristic for units with no
+    // GDC entry.
+    const useGdcWeapons = Array.isArray(unit.gdcMeleeWeapons) || Array.isArray(unit.gdcRangedWeapons);
+    let ranged, melee;
+    if (useGdcWeapons) {
+      ranged = gdcProfilesToRows(unit.gdcRangedWeapons || [], 'ranged');
+      melee  = gdcProfilesToRows(unit.gdcMeleeWeapons  || [], 'melee');
+    } else {
+      ranged = weapons.filter(w => {
         const tn = (w._typeName || '').toLowerCase();
         return tn.includes('ranged') || (!tn.includes('melee') && w.Range !== 'Melee');
       });
-      const melee = weapons.filter(w => {
+      melee = weapons.filter(w => {
         const tn = (w._typeName || '').toLowerCase();
         return tn.includes('melee') || w.Range === 'Melee';
       });
+    }
 
+    if (ranged.length > 0 || melee.length > 0) {
       const renderWeaponTable = (list, type) => {
         if (list.length === 0) return '';
         const COLS = type === 'ranged'
