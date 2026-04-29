@@ -2,15 +2,35 @@
 window.YaabDB = (() => {
 
   const DB_NAME    = 'yaab';
+  // Bumped to v7: detachment parser now recognizes plural "Detachments"
+  // group/selectionEntry/entryLink names (BSData uses both forms — Aeldari
+  // library, Adeptus Mechanicus, and Grey Knights all sit behind the plural
+  // form and previously surfaced zero detachments). Also walks
+  // sharedSelectionEntries for Tyranid/GSC-style wrappers. Stale v6 cache
+  // still has the missing detachments — drop it on upgrade.
   // Bumped to v6: wargearOptions defaultWeapons now resolves
   // selectionEntryGroup defaultSelectionEntryId (so e.g. an Intercessor
   // Sergeant's pre-selected Bolt Rifle / Close combat weapon surface as
   // defaults), filters optional entryLinks (no min) out of defaults, and
   // emits modelMin=0 for max-only model variants instead of inheriting
   // squadGroupMin (fixes "5–2 models" rendering for "1 per N" variants).
-  const DB_VERSION = 6;
+  // Bumped to v12: squad-size tier parser now uses the UPPER bound of each
+  // tier (next threshold − 1, falling back to maxModels for the highest
+  // tier). Lokhust Destroyers now show "1 / 2 / 3 / 6" instead of v11's
+  // "1 / 2 / 3 / 4" — the 4-tier modifier covers 4–6 models flat-priced.
+  // Bumped to v11: squad-size cost parser now reads each cost modifier's
+  // `atLeast model` condition for the tier's model count. Previously every
+  // tier inherited maxModels (e.g. Lokhust Destroyers showed squad sizes
+  // "1 / 6 / 6 / 6" instead of "1 / 2 / 3 / 4"). Stale v10 cache still has
+  // the wrong counts — drop it on upgrade.
+  // Bumped to v10: added `gdc` store for cached game-datacards-eu JSON
+  // payloads (per-faction stratagem/detachment/enhancement data). Source:
+  // https://github.com/game-datacards/datasources — used to fill the gap
+  // BSData wh40k-10e leaves around stratagem rules.
+  const DB_VERSION = 12;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
+  const STORE_GDC      = 'gdc';
 
   const hasIDB = typeof indexedDB !== 'undefined' && !!indexedDB;
 
@@ -31,8 +51,10 @@ window.YaabDB = (() => {
         // Drop existing stores on any version bump so stale parsed shapes don't leak across releases.
         if (db.objectStoreNames.contains(STORE_FACTIONS)) db.deleteObjectStore(STORE_FACTIONS);
         if (db.objectStoreNames.contains(STORE_GST))      db.deleteObjectStore(STORE_GST);
+        if (db.objectStoreNames.contains(STORE_GDC))      db.deleteObjectStore(STORE_GDC);
         db.createObjectStore(STORE_FACTIONS, { keyPath: 'factionName' });
         db.createObjectStore(STORE_GST,      { keyPath: 'name' });
+        db.createObjectStore(STORE_GDC,      { keyPath: 'name' });
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror   = () => { _disabled = true; resolve(null); };
@@ -108,8 +130,32 @@ window.YaabDB = (() => {
     try { await _wrap(_tx(db, STORE_GST, 'readwrite').clear()); } catch (_) {}
   }
 
+  // ── GDC (game-datacards-eu) cached JSON payloads ────────────────────────
+
+  async function getGdc(name) {
+    const db = await _open();
+    if (!db) return null;
+    try {
+      const rec = await _wrap(_tx(db, STORE_GDC, 'readonly').get(name));
+      return rec && rec.payload ? rec.payload : null;
+    } catch (_) { return null; }
+  }
+
+  async function putGdc(name, payload) {
+    const db = await _open();
+    if (!db || !name || !payload) return;
+    try { await _wrap(_tx(db, STORE_GDC, 'readwrite').put({ name, payload })); } catch (_) {}
+  }
+
+  async function clearGdc() {
+    const db = await _open();
+    if (!db) return;
+    try { await _wrap(_tx(db, STORE_GDC, 'readwrite').clear()); } catch (_) {}
+  }
+
   return {
     getFaction, putFaction, getAllFactions, clearFactions,
     getGst, putGst, clearGst,
+    getGdc, putGdc, clearGdc,
   };
 })();

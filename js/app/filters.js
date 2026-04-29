@@ -61,6 +61,14 @@
         linkedFactions: state.chaptersMap[state.factionFilter],
       };
     }
+    // Space Marine chapter inheritance: pull in generic SM units alongside the
+    // chapter-specific roster. See App.CHAPTER_PARENTS in state.js for the map.
+    if (state.factionFilter !== 'all' && App.CHAPTER_PARENTS && App.CHAPTER_PARENTS[state.factionFilter]) {
+      return {
+        factionFilter:  state.factionFilter,
+        linkedFactions: [App.CHAPTER_PARENTS[state.factionFilter]],
+      };
+    }
     if (state.factionFilter !== 'all') {
       return { factionFilter: state.factionFilter, linkedFactions: [] };
     }
@@ -91,6 +99,16 @@
     const faction = App.getCurrentFaction();
     if (!faction) return null;
     if (faction.detachments && faction.detachments.length > 0) return faction;
+    // Fall back to the chapter's parent faction's detachments. BSData ships
+    // each Space Marines chapter as its own catalogue with zero detachments
+    // (Blood Angels/Space Wolves/etc. inherit the generic SM detachment list
+    // by reference). Without this fallback the chapter dropdown is empty.
+    const parents = App.CHAPTER_PARENTS || {};
+    const childName = state.selectedChapter || (state.factionFilter !== 'all' ? state.factionFilter : null);
+    if (childName && parents[childName]) {
+      const parent = state.factions.find(f => f.factionName === parents[childName]);
+      if (parent && parent.detachments && parent.detachments.length > 0) return parent;
+    }
     const vp = state.selectedChapter
       ? App.getVirtualParentOf(state.selectedChapter)
       : (state.factionFilter !== 'all' ? App.getVirtualParentOf(state.factionFilter) : null);

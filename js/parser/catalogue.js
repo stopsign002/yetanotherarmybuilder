@@ -179,7 +179,13 @@
       const detachmentRuleNames = new Set();
 
       // Collect Detachment selectionEntryGroups from: local groups, and root-level
-      // entryLinks named "Detachment" whose target is a shared group or upgrade wrapper.
+      // entryLinks named "Detachment"/"Detachments" whose target is a shared
+      // group or upgrade wrapper. BSData is inconsistent — some factions use
+      // singular "Detachment", others use plural "Detachments" (e.g. Aeldari
+      // library, Adeptus Mechanicus, Grey Knights), and the wrapper SE may
+      // contain an inner entryLink whose name disagrees with the outer one.
+      // We accept both with a case-insensitive regex.
+      const DETACH_NAME_RE = /^Detachments?$/i;
       const detachGroups = [];
       const seenDetachGroups = new Set();
       function addDetachGroup(g) {
@@ -189,10 +195,14 @@
         if (gid) seenDetachGroups.add(gid);
         detachGroups.push(g);
       }
-      root.querySelectorAll('selectionEntryGroup[name="Detachment"]').forEach(addDetachGroup);
+      // Local groups whose name matches /^Detachments?$/i.
+      root.querySelectorAll('selectionEntryGroup').forEach(g => {
+        const n = I.getAttr(g, 'name', '').trim();
+        if (DETACH_NAME_RE.test(n)) addDetachGroup(g);
+      });
 
-      // Tyranids-style: top-level selectionEntry name="Detachment" wraps an entryLink
-      // whose targetId points into a library catalogue's shared group.
+      // Tyranids-style: top-level selectionEntry name="Detachment(s)" wraps an
+      // entryLink whose targetId points into a library catalogue's shared group.
       //
       // Defensive guards: a malformed (or library-cycle) entryLink chain
       // could otherwise recurse forever — track visited targetIds AND
@@ -204,7 +214,11 @@
           console.warn('[Parser] walkDetachmentEntryLinks: max depth exceeded; aborting recursion');
           return;
         }
-        scopeEl.querySelectorAll(':scope > entryLinks > entryLink[name="Detachment"]').forEach(link => {
+        // Accept both "Detachment" and "Detachments" (plural) — the BSData
+        // Aeldari library wraps a singular outer link around a plural inner link.
+        scopeEl.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
+          const linkName = I.getAttr(link, 'name', '').trim();
+          if (!DETACH_NAME_RE.test(linkName)) return;
           const targetId = I.getAttr(link, 'targetId');
           if (!targetId || visitedDetachLinks.has(targetId)) return;
           visitedDetachLinks.add(targetId);
@@ -213,9 +227,31 @@
           if (resolved.tagName === 'selectionEntryGroup') addDetachGroup(resolved);
           else walkDetachmentEntryLinks(resolved, (depth | 0) + 1);
         });
+        // Chaos Daemons / Chaos Knights pattern: the wrapper selectionEntry
+        // (resolved from a top-level entryLink into a Library catalogue) holds
+        // its detachment list in a child <selectionEntryGroups>/<selectionEntryGroup
+        // name="Detachment"> directly — no inner entryLink. Pick those up here
+        // so the ~6 detachments per faction surface.
+        scopeEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(g => {
+          const gName = I.getAttr(g, 'name', '').trim();
+          if (DETACH_NAME_RE.test(gName)) addDetachGroup(g);
+        });
       }
       walkDetachmentEntryLinks(root, 0);
-      root.querySelectorAll(':scope > selectionEntries > selectionEntry[name="Detachment"]').forEach(el => walkDetachmentEntryLinks(el, 0));
+      // Top-level selectionEntries named "Detachment"/"Detachments" — Tyranid-style
+      // wrappers that themselves contain entryLinks into shared groups.
+      root.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(el => {
+        const n = I.getAttr(el, 'name', '').trim();
+        if (DETACH_NAME_RE.test(n)) walkDetachmentEntryLinks(el, 0);
+      });
+      // Genestealer Cults-style: the wrapper selectionEntry lives in
+      // <sharedSelectionEntries> at root, with a root-level entryLink pointing
+      // to it. The walkDetachmentEntryLinks above handles the entryLink, but
+      // also walk shared SEs directly in case a future faction skips the link.
+      root.querySelectorAll(':scope > sharedSelectionEntries > selectionEntry').forEach(el => {
+        const n = I.getAttr(el, 'name', '').trim();
+        if (DETACH_NAME_RE.test(n)) walkDetachmentEntryLinks(el, 0);
+      });
 
       detachGroups.forEach(detachGroup => {
         detachGroup.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
@@ -311,31 +347,52 @@
         if (resolved && resolved.tagName === 'selectionEntryGroup') addEnhGroup(resolved);
       });
 
+      function extractEnhancementEntry(entry) {
+        if (I.getAttr(entry, 'hidden', 'false') === 'true') return null;
+        const name = I.getAttr(entry, 'name', '').trim();
+        if (!name || /^new\s/i.test(name)) return null;
+        if (I.isCrusadeSection(name)) return null;
+        const costEl = entry.querySelector(':scope > costs > cost[name="pts"]');
+        const pts = costEl ? Math.round(parseFloat(I.getAttr(costEl, 'value', '0'))) : 0;
+        let description = '';
+        const profile = entry.querySelector(':scope > profiles > profile[typeName="Abilities"]');
+        if (profile) {
+          const descEl = profile.querySelector(':scope > characteristics > characteristic');
+          if (descEl) description = I.cleanText(descEl.textContent);
+        }
+        return { name, pts, description };
+      }
+
+      function pushEnhancement(detName, enh) {
+        if (!detName || !enh) return;
+        const list = enhancementsByDetachment[detName] || [];
+        if (list.some(e => e.name === enh.name)) return;
+        list.push(enh);
+        enhancementsByDetachment[detName] = list;
+      }
+
       enhGroups.forEach(enhGroup => {
+        // Pattern A (Space Marines etc.): subgroups named "<Detachment> Enhancements"
+        // each containing the detachment's selectionEntries.
         enhGroup.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(subGroup => {
           const groupName = I.getAttr(subGroup, 'name', '').trim();
           if (!/\s+Enhancements$/i.test(groupName)) return;
           const detName = groupName.replace(/\s+Enhancements$/i, '').trim();
-          const enhancements = enhancementsByDetachment[detName] || [];
-          const seenEnhNames = new Set(enhancements.map(e => e.name));
           subGroup.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
-            if (I.getAttr(entry, 'hidden', 'false') === 'true') return;
-            const name = I.getAttr(entry, 'name', '').trim();
-            if (!name || /^new\s/i.test(name)) return;
-            if (I.isCrusadeSection(name)) return;
-            if (seenEnhNames.has(name)) return;
-            seenEnhNames.add(name);
-            const costEl = entry.querySelector(':scope > costs > cost[name="pts"]');
-            const pts = costEl ? Math.round(parseFloat(I.getAttr(costEl, 'value', '0'))) : 0;
-            let description = '';
-            const profile = entry.querySelector(':scope > profiles > profile[typeName="Abilities"]');
-            if (profile) {
-              const descEl = profile.querySelector(':scope > characteristics > characteristic');
-              if (descEl) description = I.cleanText(descEl.textContent);
-            }
-            enhancements.push({ name, pts, description });
+            const enh = extractEnhancementEntry(entry);
+            if (enh) pushEnhancement(detName, enh);
           });
-          if (enhancements.length > 0) enhancementsByDetachment[detName] = enhancements;
+        });
+        // Pattern B (Necrons etc.): flat list — direct selectionEntries with a
+        // <comment> child naming the owning detachment. Skip entries that are
+        // already covered by the subgroup pattern.
+        enhGroup.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
+          const enh = extractEnhancementEntry(entry);
+          if (!enh) return;
+          const commentEl = entry.querySelector(':scope > comment');
+          const detName = commentEl ? commentEl.textContent.trim() : '';
+          if (!detName) return;
+          pushEnhancement(detName, enh);
         });
       });
       detachments.forEach(d => { d.enhancements = enhancementsByDetachment[d.name] || []; });

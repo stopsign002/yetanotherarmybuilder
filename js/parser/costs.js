@@ -151,13 +151,43 @@
     if (basePts > 0) squadOptions.push({ pts: basePts, models: minModels ?? maxModels });
 
     if (ptsTypeId) {
+      // First pass: collect modifier tiers along with each tier's atLeast
+      // threshold (the smallest squad size where the cost kicks in).
+      const tiers = []; // [{ pts, threshold }]
+      const condSelectors = [
+        ':scope > conditions > condition[type="atLeast"][field="selections"][childId="model"]',
+        ':scope > conditionGroups > conditionGroup > conditions > condition[type="atLeast"][field="selections"][childId="model"]',
+      ];
       entryEl.querySelectorAll(':scope > modifiers > modifier').forEach(mod => {
-        if (I.getAttr(mod, 'type') === 'set' && I.getAttr(mod, 'field') === ptsTypeId) {
-          const val = parseFloat(I.getAttr(mod, 'value', '0'));
-          if (!isNaN(val) && val > 0 && val !== basePts) {
-            squadOptions.push({ pts: val, models: maxModels });
+        if (I.getAttr(mod, 'type') !== 'set' || I.getAttr(mod, 'field') !== ptsTypeId) return;
+        const val = parseFloat(I.getAttr(mod, 'value', '0'));
+        if (isNaN(val) || val <= 0 || val === basePts) return;
+        let threshold = NaN;
+        for (const sel of condSelectors) {
+          const cond = mod.querySelector(sel);
+          if (cond) {
+            const n = parseFloat(I.getAttr(cond, 'value', '0'));
+            if (!isNaN(n) && n > 0) { threshold = n; break; }
           }
         }
+        tiers.push({ pts: val, threshold });
+      });
+      // Second pass: convert each tier's threshold into the UPPER squad-size
+      // bound for that tier. A tier with threshold T covers `T..(nextT-1)`
+      // models (or `T..maxModels` for the highest tier). The squad picker
+      // shows that upper bound — e.g. Lokhust Destroyers thresholds 2/3/4
+      // with maxModels=6 surface as 2 / 3 / 6 (the 4-tier covers 4–6).
+      const sortedThresholds = tiers
+        .map(t => t.threshold)
+        .filter(n => Number.isFinite(n))
+        .sort((a, b) => a - b);
+      tiers.forEach(tier => {
+        let upper = maxModels;
+        if (Number.isFinite(tier.threshold)) {
+          const next = sortedThresholds.find(t => t > tier.threshold);
+          if (Number.isFinite(next)) upper = next - 1;
+        }
+        squadOptions.push({ pts: tier.pts, models: upper });
       });
     }
 

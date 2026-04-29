@@ -34,6 +34,30 @@
   // filters.js / selections.js handle the empty map gracefully.
   App.VIRTUAL_PARENTS = [];
 
+  // Space Marines chapters all inherit the generic Space Marines unit roster
+  // (Intercessors, Tactical Marines, Captain, etc.). Each chapter ships as its
+  // own BSData catalogue but only contains chapter-specific units (Grey Hunters,
+  // Death Company, Sword Brethren). The map below makes App.getEffectiveFilter
+  // merge the parent's units into the chapter's roster.
+  //
+  // Faction names match the BSData `<catalogue name="...">` attribute, which
+  // for Space Marine chapters is `Imperium - Adeptus Astartes - <Chapter>`
+  // (NOT `Imperium - <Chapter>` — that's just the filename). Verified against
+  // the BSData wh40k-10e repo on 2026-04-28.
+  App.CHAPTER_PARENTS = {
+    'Imperium - Adeptus Astartes - Blood Angels':    'Imperium - Adeptus Astartes - Space Marines',
+    'Imperium - Adeptus Astartes - Dark Angels':     'Imperium - Adeptus Astartes - Space Marines',
+    'Imperium - Adeptus Astartes - Space Wolves':    'Imperium - Adeptus Astartes - Space Marines',
+    'Imperium - Adeptus Astartes - Black Templars':  'Imperium - Adeptus Astartes - Space Marines',
+    'Imperium - Adeptus Astartes - Deathwatch':      'Imperium - Adeptus Astartes - Space Marines',
+    'Imperium - Adeptus Astartes - Imperial Fists':  'Imperium - Adeptus Astartes - Space Marines',
+    'Imperium - Adeptus Astartes - Iron Hands':      'Imperium - Adeptus Astartes - Space Marines',
+    'Imperium - Adeptus Astartes - Raven Guard':     'Imperium - Adeptus Astartes - Space Marines',
+    'Imperium - Adeptus Astartes - Salamanders':     'Imperium - Adeptus Astartes - Space Marines',
+    'Imperium - Adeptus Astartes - Ultramarines':    'Imperium - Adeptus Astartes - Space Marines',
+    'Imperium - Adeptus Astartes - White Scars':     'Imperium - Adeptus Astartes - Space Marines',
+  };
+
   // Light pastel palette for readability against the dark UI. Each entry:
   // [accent, hover, dark, rgb] — tuned at HSL L ~78% / S ~55% (lower S for
   // the greyscale chapters so they stay identifiable without oversaturating).
