@@ -117,12 +117,33 @@
     return payload;
   }
 
+  // SM chapters with their own GDC file ship only chapter-specific datasheets
+  // (e.g. blacktemplar.json has 18 entries — Helbrecht, Crusader Squad, etc.).
+  // The shared SM roster (Intercessor Squad, Lieutenants, Tactical Squad…)
+  // lives only in space_marines.json. For unit-data merging we therefore
+  // consult the chapter file FIRST (chapter-specific entries win on name
+  // collisions) then fall back to space_marines.json.
+  // Stratagem merging still uses the chapter file alone — chapter strats are
+  // distinct and SM-pool strats already live in the parent SM file.
+  const SM_CHAPTER_FILES = new Set([
+    'blacktemplar', 'bloodangels', 'darkangels', 'deathwatch', 'spacewolves',
+  ]);
+
+  // Ordered list of GDC files to consult for a given faction's unit data.
+  // First file wins on name collisions.
+  function gdcFilesFor(factionName) {
+    const primary = FACTION_TO_GDC[factionName];
+    if (!primary) return [];
+    if (SM_CHAPTER_FILES.has(primary)) return [primary, 'space_marines'];
+    return [primary];
+  }
+
   // Build the unique set of GDC filenames we need based on the faction list.
+  // Includes the SM fallback file when any SM-chapter faction is loaded.
   function uniqueFilenamesFor(factionNames) {
     const set = new Set();
     factionNames.forEach(name => {
-      const file = FACTION_TO_GDC[name];
-      if (file) set.add(file);
+      gdcFilesFor(name).forEach(f => set.add(f));
     });
     return [...set];
   }
@@ -180,13 +201,109 @@
     });
   }
 
+  // Normalize a unit name for cross-source matching. GDC and BSData mostly
+  // agree on names, but a stray apostrophe variant (’ vs ') or stray suffix
+  // ([Legends], (...)) can break exact matches. We compare on a relaxed key:
+  // lowercased, curly-quotes folded to ASCII, parenthetical/[bracket] suffixes
+  // stripped, all non-alphanumerics removed.
+  function nameKey(s) {
+    if (!s) return '';
+    return String(s)
+      .toLowerCase()
+      .replace(/[‘’]/g, "'")
+      .replace(/\s*\([^)]*\)\s*$/, '')
+      .replace(/\s*\[[^\]]*\]\s*$/, '')
+      .replace(/[^a-z0-9]/g, '');
+  }
+
+  // Build a lookup: nameKey → datasheet, with earlier files winning on
+  // collisions (chapter-specific entries override the SM fallback).
+  function buildDatasheetIndex(filenames) {
+    const idx = new Map();
+    filenames.forEach(fn => {
+      const payload = rawCache.get(fn);
+      if (!payload) return;
+      const sheets = Array.isArray(payload.datasheets) ? payload.datasheets : [];
+      sheets.forEach(ds => {
+        const key = nameKey(ds && ds.name);
+        if (!key) return;
+        if (!idx.has(key)) idx.set(key, ds);
+      });
+    });
+    return idx;
+  }
+
+  // Project a GDC datasheet's wargear / weapon data onto a unit. We attach
+  // under `gdc*` fields so detail.js can prefer them when present without
+  // disturbing the BSData-derived shape (which other code already consumes).
+  function projectUnitData(ds) {
+    if (!ds) return null;
+    const out = {};
+    if (typeof ds.loadout === 'string' && ds.loadout.trim()) {
+      out.loadout = ds.loadout.trim();
+    }
+    if (Array.isArray(ds.wargear)) {
+      // Filter out the placeholder "None" entries GDC uses for HQs with no
+      // options — they'd render as a confusing empty bullet.
+      const lines = ds.wargear
+        .map(s => (typeof s === 'string' ? s.trim() : ''))
+        .filter(s => s && s.toLowerCase() !== 'none');
+      if (lines.length > 0) out.wargear = lines;
+    }
+    if (Array.isArray(ds.composition)) {
+      const lines = ds.composition
+        .map(s => (typeof s === 'string' ? s.trim() : ''))
+        .filter(Boolean);
+      if (lines.length > 0) out.composition = lines;
+    }
+    if (Array.isArray(ds.leadBy) && ds.leadBy.length > 0) {
+      out.leadBy = ds.leadBy.slice();
+    }
+    if (Array.isArray(ds.meleeWeapons))  out.meleeWeapons  = ds.meleeWeapons;
+    if (Array.isArray(ds.rangedWeapons)) out.rangedWeapons = ds.rangedWeapons;
+    return Object.keys(out).length > 0 ? out : null;
+  }
+
+  // Merge GDC unit-level data (loadout text, wargear options, composition,
+  // leadBy, weapon profiles) onto matching units in each faction. Attaches:
+  //   unit.gdcLoadout       string  — "Every model is equipped with: …"
+  //   unit.gdcWargear       string[] — printed Wargear Options bullet lines
+  //   unit.gdcComposition   string[] — printed Unit Composition lines
+  //   unit.gdcLeadBy        string[] — leader names this unit can be led by
+  //   unit.gdcMeleeWeapons  GDC weapon objects (profiles inside)
+  //   unit.gdcRangedWeapons same
+  // Match is by relaxed name key (see nameKey). Misses are silent — units
+  // without GDC entries (Imperial Knights, Titans, oddballs) just keep their
+  // BSData-derived display.
+  function mergeUnitDataIntoFactions(factions) {
+    factions.forEach(faction => {
+      const files = gdcFilesFor(faction.factionName);
+      if (files.length === 0) return;
+      const idx = buildDatasheetIndex(files);
+      if (idx.size === 0) return;
+      (faction.units || []).forEach(unit => {
+        const ds = idx.get(nameKey(unit && unit.name));
+        const data = projectUnitData(ds);
+        if (!data) return;
+        if (data.loadout)       unit.gdcLoadout       = data.loadout;
+        if (data.wargear)       unit.gdcWargear       = data.wargear;
+        if (data.composition)   unit.gdcComposition   = data.composition;
+        if (data.leadBy)        unit.gdcLeadBy        = data.leadBy;
+        if (data.meleeWeapons)  unit.gdcMeleeWeapons  = data.meleeWeapons;
+        if (data.rangedWeapons) unit.gdcRangedWeapons = data.rangedWeapons;
+      });
+    });
+  }
+
   // ── Public API ────────────────────────────────────────────────
   App.GDC = {
     FACTION_TO_GDC,
     loadAll,
     mergeIntoFactions,
+    mergeUnitDataIntoFactions,
     // Exposed for tests / debugging:
     _rawCache: rawCache,
     _projectStratagem: projectStratagem,
+    _nameKey: nameKey,
   };
 })();

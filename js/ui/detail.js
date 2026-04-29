@@ -69,6 +69,111 @@
     return out;
   }
 
+  // Lazy global map of weapon keyword → rule text, harvested from every
+  // BSData-parsed weapon's _keywordDefs across all loaded factions. Used to
+  // attach tooltips to GDC-rendered weapon rows (GDC ships keyword names but
+  // not their rule text). Rebuilt when factionsVersion advances.
+  let _weaponKwGlossary = null;
+  let _weaponKwGlossaryVersion = -1;
+
+  function buildWeaponKwGlossary() {
+    const map = new Map();
+    const factions = (window.App && App.state && App.state.factions) || [];
+    factions.forEach(f => {
+      (f.units || []).forEach(u => {
+        (u.weapons || []).forEach(w => {
+          const defs = w && w._keywordDefs;
+          if (!defs) return;
+          for (const k in defs) {
+            if (!Object.prototype.hasOwnProperty.call(defs, k)) continue;
+            const lk = k.trim().toLowerCase();
+            if (!lk || map.has(lk)) continue;
+            const v = defs[k];
+            if (typeof v === 'string' && v) map.set(lk, v);
+          }
+        });
+      });
+    });
+    return map;
+  }
+
+  function ensureWeaponKwGlossary() {
+    const state = window.App && App.state;
+    const v = (state && state.factionsVersion) || 0;
+    if (_weaponKwGlossary === null || _weaponKwGlossaryVersion !== v) {
+      _weaponKwGlossary = buildWeaponKwGlossary();
+      _weaponKwGlossaryVersion = v;
+    }
+    return _weaponKwGlossary;
+  }
+
+  // Resolve a (potentially parameterized) keyword to its rule text. Mirrors
+  // parser/weapons.js findWeaponKeywordDesc: try exact, then strip a trailing
+  // " N" or " N+" (so "Sustained Hits 1" → "Sustained Hits", "Anti-Infantry 4+"
+  // → "Anti-Infantry"), then look for a glossary key that ends with "-" the
+  // keyword starts with (e.g. "anti-" matching "anti-infantry").
+  function lookupWeaponKwDef(rawKeyword) {
+    const map = ensureWeaponKwGlossary();
+    if (!map || map.size === 0) return undefined;
+    const lower = String(rawKeyword || '').trim().toLowerCase();
+    if (!lower) return undefined;
+    let d = map.get(lower);
+    if (d !== undefined) return d;
+    const stripped = lower.replace(/\s+\d+\+?$/, '').trim();
+    if (stripped !== lower) {
+      d = map.get(stripped);
+      if (d !== undefined) return d;
+    }
+    for (const [name, desc] of map) {
+      if (name.endsWith('-') && lower.startsWith(name)) return desc;
+    }
+    return undefined;
+  }
+
+  // Convert GDC's pre-bucketed weapon shape (meleeWeapons[]/rangedWeapons[],
+  // each with profiles[]) into the flat row shape the existing weapon-table
+  // renderer consumes (one row per profile, fields named Range/A/BS|WS/S/AP/D/
+  // Keywords). GDC pre-disambiguates same-name dual-profile weapons (e.g.
+  // "Plasmic lance – Melee" / "Plasmic lance – Ranged") and structurally
+  // separates ranged vs melee, so this avoids the BSData heuristic-bucketing
+  // that loses one of two same-named profiles on units like the Plasmancer.
+  function gdcProfilesToRows(weapons, type) {
+    if (!Array.isArray(weapons)) return [];
+    const out = [];
+    weapons.forEach(w => {
+      if (!w || w.active === false || !Array.isArray(w.profiles)) return;
+      w.profiles.forEach(p => {
+        if (!p || p.active === false) return;
+        const row = {
+          name: p.name || w.name || '',
+          Range: p.range != null && p.range !== '' ? p.range : (type === 'melee' ? 'Melee' : '—'),
+          A: p.attacks,
+          S: p.strength,
+          AP: p.ap,
+          D: p.damage,
+        };
+        // GDC merges BS/WS into a single `skill` field; route to the correct
+        // column based on the bucket the weapon came from.
+        if (type === 'ranged') row.BS = p.skill;
+        else                   row.WS = p.skill;
+        if (Array.isArray(p.keywords) && p.keywords.length > 0) {
+          row.Keywords = p.keywords.join(', ');
+          // Attach per-keyword rule text from the BSData-harvested glossary so
+          // the existing tooltip path (renderWeaponTable reads w._keywordDefs)
+          // lights up for GDC-rendered rows too.
+          const defs = {};
+          p.keywords.forEach(k => {
+            const def = lookupWeaponKwDef(k);
+            if (def) defs[k] = def;
+          });
+          if (Object.keys(defs).length > 0) row._keywordDefs = defs;
+        }
+        out.push(row);
+      });
+    });
+    return out;
+  }
+
   UI.renderUnitDetail = function (unit, detachmentEnhancements = [], selectedEnhancements = []) {
     const esc = UI.escapeHtml;
     const panel = document.getElementById('unit-detail-panel');
@@ -175,16 +280,28 @@
       </div>`;
     }
 
-    if (weapons.length > 0) {
-      const ranged = weapons.filter(w => {
+    // Prefer GDC weapons when available — they're pre-bucketed into ranged
+    // vs melee, multi-profile weapons are explicitly modeled, and same-name
+    // dual-mode weapons (e.g. Plasmancer's Plasmic lance) are pre-disambiguated.
+    // Falls back to the BSData _typeName/Range heuristic for units with no
+    // GDC entry.
+    const useGdcWeapons = Array.isArray(unit.gdcMeleeWeapons) || Array.isArray(unit.gdcRangedWeapons);
+    let ranged, melee;
+    if (useGdcWeapons) {
+      ranged = gdcProfilesToRows(unit.gdcRangedWeapons || [], 'ranged');
+      melee  = gdcProfilesToRows(unit.gdcMeleeWeapons  || [], 'melee');
+    } else {
+      ranged = weapons.filter(w => {
         const tn = (w._typeName || '').toLowerCase();
         return tn.includes('ranged') || (!tn.includes('melee') && w.Range !== 'Melee');
       });
-      const melee = weapons.filter(w => {
+      melee = weapons.filter(w => {
         const tn = (w._typeName || '').toLowerCase();
         return tn.includes('melee') || w.Range === 'Melee';
       });
+    }
 
+    if (ranged.length > 0 || melee.length > 0) {
       const renderWeaponTable = (list, type) => {
         if (list.length === 0) return '';
         const COLS = type === 'ranged'
@@ -311,7 +428,53 @@
     const modelTypeOpts = wargearOpts.filter(o => o.type === 'model');
     const choiceOpts    = wargearOpts.filter(o => o.type !== 'model');
 
-    if (compLabel || wargearOpts.length > 0) {
+    // ── GDC-driven wargear/composition (preferred when present) ──
+    // game-datacards-eu ships pre-formatted wargear option strings + a default
+    // loadout line + canonical composition lines. When we have those we render
+    // them in place of the BSData-derived Loadout section, which has parser
+    // edge cases for some units. Coverage is faction-dependent (e.g. Imperial
+    // Knights, Titans aren't in GDC) so we fall back to BSData below.
+    const gdcWargear     = Array.isArray(unit.gdcWargear) ? unit.gdcWargear : null;
+    const gdcLoadoutText = (typeof unit.gdcLoadout === 'string') ? unit.gdcLoadout : '';
+    const gdcComposition = Array.isArray(unit.gdcComposition) ? unit.gdcComposition : null;
+    const useGdc = !!(gdcWargear || gdcLoadoutText || gdcComposition);
+
+    if (useGdc) {
+      const sectionTitle = (gdcWargear && gdcWargear.length > 0) ? 'Wargear Options' : 'Loadout';
+      html += `<div class="detail-section"><div class="detail-section-title">${esc(sectionTitle)}</div>`;
+
+      if (gdcComposition && gdcComposition.length > 0) {
+        html += `<div class="wl-composition">${gdcComposition.map(esc).join(' · ')}</div>`;
+      }
+
+      if (gdcLoadoutText) {
+        html += `<div class="wl-defaults">
+          <span class="wl-defaults-label">Default:</span>
+          <span class="wl-defaults-weapons">${esc(gdcLoadoutText)}</span>
+        </div>`;
+      }
+
+      if (gdcWargear && gdcWargear.length > 0) {
+        gdcWargear.forEach(line => {
+          // GDC encodes "X can be replaced with one of the following: ◦ A ◦ B …"
+          // by separating the heading from each option with a ◦. Split on ◦,
+          // first piece is the description, the rest are sub-bullets.
+          const parts = String(line).split(/\s*◦\s*/);
+          const head = (parts[0] || '').replace(/:\s*$/, '').trim();
+          const subs = parts.slice(1).map(s => s.trim()).filter(Boolean);
+          html += `<div class="wl-choice-group">`;
+          if (head) html += `<div class="wl-choice-group-title">${esc(head)}</div>`;
+          if (subs.length > 0) {
+            html += `<ul class="wl-choice-list">`;
+            subs.forEach(s => { html += `<li>${esc(s)}</li>`; });
+            html += `</ul>`;
+          }
+          html += `</div>`;
+        });
+      }
+
+      html += `</div>`;
+    } else if (compLabel || wargearOpts.length > 0) {
       html += `<div class="detail-section"><div class="detail-section-title">Loadout</div>`;
 
       if (compLabel) {
