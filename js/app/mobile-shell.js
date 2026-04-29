@@ -93,65 +93,16 @@
     header.insertBefore(btn, header.firstChild);
   }
 
-  // ── 3. Dynamic page-title in topbar ──────────────────────────────────
-  // Mounts a <span class="mobile-page-title"> inside .topbar-inner. Updates
-  // text based on current data-mobile-panel and selected faction.
-  function ensurePageTitle() {
-    if (document.querySelector('.mobile-page-title')) return;
-    const inner = document.querySelector('.topbar-inner');
-    if (!inner) return;
-    const span = document.createElement('span');
-    span.className = 'mobile-page-title';
-    span.setAttribute('aria-live', 'polite');
-    span.innerHTML =
-      '<span class="mobile-page-title-main" data-role="main">Units</span>' +
-      '<span class="mobile-page-title-sub"  data-role="sub"></span>';
-    // Insert after the brand (first child).
-    const brand = inner.querySelector('.topbar-brand');
-    if (brand && brand.nextSibling) {
-      inner.insertBefore(span, brand.nextSibling);
-    } else {
-      inner.appendChild(span);
-    }
-  }
-
-  const PANEL_LABELS = { army: 'Army', units: 'Units', detail: 'Details' };
-
-  function updatePageTitle() {
-    const span = document.querySelector('.mobile-page-title');
-    if (!span) return;
-    const panel = (document.body.dataset.mobilePanel) || 'units';
-    const main = span.querySelector('[data-role="main"]');
-    const sub  = span.querySelector('[data-role="sub"]');
-    if (main) main.textContent = PANEL_LABELS[panel] || 'Units';
-
-    let subtitle = '';
-    try {
-      if (panel === 'detail') {
-        const u = App.state && App.state.selectedUnit;
-        if (u && u.name) subtitle = u.name;
-      } else {
-        const sel = App.state && App.state.factionFilter;
-        if (sel && sel !== 'all') {
-          subtitle = sel.includes(' - ') ? sel.split(' - ').pop().trim() : sel;
-        }
-      }
-    } catch (_) {}
-    if (sub) sub.textContent = subtitle;
-  }
-
-  // ── 4. Init + listeners ──────────────────────────────────────────────
+  // ── 3. Init + listeners ──────────────────────────────────────────────
   function rebuild() {
     if (isMobile()) {
-      ensurePageTitle();
       ensureDetailBackBtn();
       ensurePtsPill();
       updatePtsPill();
-      updatePageTitle();
     } else {
       removePtsPill();
-      // page-title and back-btn stay in DOM (CSS hides them on desktop) so
-      // we don't churn the topbar on resize.
+      // back-btn stays in DOM (CSS hides it on desktop) so we don't
+      // churn the panel header on resize.
     }
   }
 
@@ -159,24 +110,15 @@
     rebuild();
   });
 
-  // armyChange → pts pill + sub-title (faction may have changed via load).
+  // armyChange → refresh pts pill (faction may have changed via load).
   if (App.hooks.armyChange && Array.isArray(App.hooks.armyChange)) {
-    App.hooks.armyChange.push(function () {
-      updatePtsPill();
-      updatePageTitle();
-    });
+    App.hooks.armyChange.push(updatePtsPill);
   }
 
-  // selectionChange → faction sub-title and pts pill faction line.
+  // selectionChange → refresh pts pill faction line.
   if (App.hooks.selectionChange && Array.isArray(App.hooks.selectionChange)) {
-    App.hooks.selectionChange.push(function () {
-      updatePtsPill();
-      updatePageTitle();
-    });
+    App.hooks.selectionChange.push(updatePtsPill);
   }
-
-  // Panel switch (dispatched by pwa-install.js).
-  document.addEventListener('yaab:mobile-panel-change', updatePageTitle);
 
   // Resize / orientation: rebuild as we cross the 820px threshold.
   if (window.matchMedia) {

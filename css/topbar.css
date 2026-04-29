@@ -436,79 +436,13 @@ body { padding-top: var(--topbar-h); }
   .topbar-points-bar-wrap { flex-basis: 80px; }
 }
 
-/* ── Mobile (≤820px) — single 48px row, redesign by mobile-shell.js ──
-   The mobile-shell.js module injects a .mobile-page-title between the
-   brand and the action group. The build-hero is hidden (relocated to a
-   sticky pts pill at the top of the Army panel, see css/mobile.css). */
+/* ── Mobile (≤820px) — topbar is hidden entirely.
+   Brand, page title, account, settings, help, and export are surfaced
+   through the bottom-nav More tab (which opens the settings drawer).
+   Saves ~48px of vertical space on phones. */
 @media (max-width: 820px) {
-  :root { --topbar-pad-x: 10px; }
-
-  /* Body padding-top is owned by css/mobile.css now (uses --m-topbar-h
-     + safe-area-inset-top). Don't double up. */
-  body { padding-top: 0; }
-
-  .topbar {
-    height: 48px;
-    min-height: 48px;
-    padding-top: env(safe-area-inset-top, 0px);
-    box-sizing: content-box;
-  }
-
-  .topbar-inner {
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding: 0 var(--topbar-pad-x);
-    height: 48px;
-  }
-
-  .topbar-brand {
-    flex: 0 0 auto;
-    padding: 4px;
-  }
-  .topbar-brand-mark { font-size: 13px; letter-spacing: 1.2px; }
-
-  /* Build hero is moved into the Army panel on mobile — hide its topbar
-     mount entirely. mobile.css also enforces this; redundant for safety. */
-  .topbar-hero-slot,
-  .build-hero--in-topbar { display: none !important; }
-
-  /* Mode tabs (Build/Collect/Play) stay hidden until all 3 modes ship. */
-  .topbar-modes { display: none !important; }
-
-  .topbar-actions {
-    flex: 0 0 auto;
-    gap: 4px;
-  }
-  .topbar-action-btn {
-    padding: 0;
-    width: 40px;
-    height: 40px;
-    min-height: 44px;
-    min-width: 44px;
-    justify-content: center;
-    border: 1px solid transparent;
-  }
-  .topbar-action-glyph { font-size: 18px; }
-  .topbar-action-label { display: none; }
-  /* The auth button has no glyph fallback (it shows "Sign in" or the
-     username), so hiding its label leaves an empty button. Keep it
-     visible on mobile but compact. */
-  .auth-btn .topbar-action-label { display: inline; font-size: 11px; }
-  .auth-btn {
-    width: auto;
-    max-width: 9ch;
-    padding: 0 8px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-/* ── Very narrow phones ──────────────────────────────────────── */
-@media (max-width: 380px) {
-  .mobile-page-title-main { font-size: 13px; }
-  .mobile-page-title-sub { font-size: 10px; }
-  .auth-btn { max-width: 7ch; }
+  .topbar { display: none !important; }
+  body { padding-top: env(safe-area-inset-top, 0px) !important; }
 }
 
 /* ── Reduced motion override (user-toggleable via Settings) ── */
