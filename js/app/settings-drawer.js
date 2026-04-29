@@ -159,6 +159,45 @@
     const user = getAuthUser();
     const signedIn = !!user;
     return [
+      // ── ARMY ─────────────────────────────────────────────────────────
+      // Mirrors the desktop panel-footer toolbar (which is hidden on mobile).
+      {
+        id: 'army-new',
+        label: 'New army',
+        section: 'army',
+        run() { close(); clickToolbarBtn('btn-new-army'); },
+      },
+      {
+        id: 'army-save',
+        label: 'Save army',
+        section: 'army',
+        run() { close(); clickToolbarBtn('btn-save-army'); },
+      },
+      {
+        id: 'army-load',
+        label: 'Load army',
+        section: 'army',
+        run() { close(); clickToolbarBtn('btn-load-army'); },
+      },
+      {
+        id: 'army-import',
+        label: 'Import army code',
+        section: 'army',
+        run() { close(); clickToolbarBtn('btn-import-string'); },
+      },
+      {
+        id: 'army-undo',
+        label: 'Undo',
+        section: 'army',
+        run() { close(); clickToolbarBtn('yaab-btn-undo'); },
+      },
+      {
+        id: 'army-redo',
+        label: 'Redo',
+        section: 'army',
+        run() { close(); clickToolbarBtn('yaab-btn-redo'); },
+      },
+
       // ── ACCOUNT ──────────────────────────────────────────────────────
       signedIn ? {
         id: 'account-status',
@@ -481,7 +520,14 @@
     const actions = buildActions().filter(Boolean);
     const visible = a => typeof a.visible !== 'function' || a.visible();
 
-    // ACCOUNT — top of the sheet on mobile, where the topbar account button used to be.
+    // ARMY — primary actions (was the desktop panel-footer toolbar).
+    const armyActions = actions.filter(a => a.section === 'army' && visible(a));
+    if (armyActions.length) {
+      b.appendChild(renderSectionHeader('Army'));
+      armyActions.forEach(a => b.appendChild(renderActionRow(a)));
+    }
+
+    // ACCOUNT — sign in/out, sync, change password.
     const accountActions = actions.filter(a => a.section === 'account' && visible(a));
     if (accountActions.length) {
       b.appendChild(renderSectionHeader('Account'));

@@ -96,7 +96,6 @@
   .panel-header,
   .panel-controls { flex-shrink: 0; }
 
-  /* Default panel-body still grows to fill (Units grid, Detail panel). */
   .panel-body {
     flex: 1;
     min-height: 0;
@@ -107,22 +106,11 @@
     padding: 12px 12px 24px;
   }
 
-  /* Army panel: the toolbar (panel-footer) should sit immediately under
-     the army info, not floating at the bottom of the viewport with a
-     hex-pattern void in between. So size the body to its content; if
-     content overflows it'll shrink and scroll (overflow-y: auto + the
-     min-height: 0 above let flex-shrink kick in cleanly). The empty
-     space BELOW the toolbar gets a solid panel-alt fill so the bottom of
-     the panel reads as "toolbar continued" rather than "empty hex". */
-  .panel-left .panel-body {
-    flex: 0 1 auto;
-  }
-  .panel-left .panel-footer.army-toolbar {
-    margin-top: 0;
-  }
-  .panel-left {
-    background: var(--panel-alt);
-  }
+  /* The army panel-footer toolbar (New/Save/Load/Import/Export/Undo) is
+     hidden on mobile — those actions are surfaced in the More sheet
+     (settings drawer's "Army" section) so the panel-body can fill the
+     entire visible area with no empty chrome below. */
+  .panel-footer.army-toolbar { display: none !important; }
 
   /* Drag handles are useless on touch. */
   .resize-handle { display: none !important; }
