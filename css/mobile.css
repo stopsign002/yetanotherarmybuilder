@@ -112,6 +112,30 @@
      entire visible area with no empty chrome below. */
   .panel-footer.army-toolbar { display: none !important; }
 
+  /* Make the Army panel-body a flex column so the entry list can grow
+     to consume any remaining space below the setup/rules sections. With
+     no units added, the empty state ("No units added yet") expands to
+     fill the rest of the panel — same visual whether the army is empty
+     or stuffed. */
+  .panel-left .panel-body {
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-left .army-entry-list {
+    flex: 1 0 auto;
+    min-height: 120px;
+  }
+  /* The empty-state <li> centers itself in the grown list. */
+  .panel-left .army-list-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 120px;
+    text-align: center;
+    color: var(--text-muted, #999);
+  }
+
   /* Drag handles are useless on touch. */
   .resize-handle { display: none !important; }
 }
