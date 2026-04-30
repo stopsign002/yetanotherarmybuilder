@@ -92,7 +92,38 @@ window.Army = class Army {
   }
 
   static fromJSON(data) {
-    return new Army(data);
+    // Untrusted-input gate. Reachable from URL share (`?a=YAAB1:`),
+    // QR-share, cloud sync, and localStorage rehydration. Top-level keys
+    // are already filtered by the constructor's destructuring, but
+    // `entries` previously flowed through verbatim — a crafted payload
+    // could have set `entries` to a non-array (crash on render) or
+    // smuggled prototype-chain objects through `entries[i]`. Rebuild
+    // each entry from a fixed shape using only own-property reads.
+    if (!data || typeof data !== 'object') data = {};
+    const safeEntries = Array.isArray(data.entries)
+      ? data.entries
+          .filter(e => e && typeof e === 'object')
+          .map(e => ({
+            unitId:      typeof e.unitId === 'string' ? e.unitId : String(e.unitId == null ? '' : e.unitId),
+            unitName:    typeof e.unitName === 'string' ? e.unitName : String(e.unitName == null ? '' : e.unitName),
+            unitData:    e.unitData && typeof e.unitData === 'object' ? e.unitData : {},
+            count:       Number.isFinite(e.count) ? e.count : 1,
+            selectedPts: Number.isFinite(e.selectedPts) ? e.selectedPts : undefined,
+            squadLabel:  typeof e.squadLabel === 'string' ? e.squadLabel : null,
+            enhancements: Array.isArray(e.enhancements) ? e.enhancements : [],
+          }))
+      : [];
+    return new Army({
+      id:             typeof data.id === 'string' ? data.id : undefined,
+      name:           typeof data.name === 'string' ? data.name : undefined,
+      factionName:    typeof data.factionName === 'string' ? data.factionName : '',
+      chapter:        data.chapter && typeof data.chapter === 'object' ? data.chapter : null,
+      detachmentName: typeof data.detachmentName === 'string' ? data.detachmentName : null,
+      pointsLimit:    Number.isFinite(data.pointsLimit) ? data.pointsLimit : 2000,
+      entries:        safeEntries,
+      createdAt:      typeof data.createdAt === 'string' ? data.createdAt : undefined,
+      updatedAt:      typeof data.updatedAt === 'string' ? data.updatedAt : undefined,
+    });
   }
 };
 
@@ -106,10 +137,33 @@ window.ArmyManager = class ArmyManager {
     try {
       const raw = localStorage.getItem('yaab_armies');
       if (!raw) return [];
-      return JSON.parse(raw).map(d => Army.fromJSON(d));
+      const all = JSON.parse(raw).map(d => Army.fromJSON(d));
+      // Drop any persisted entries that fail the name guard. Legacy local
+      // state (and cloud state from before the guard was added) can still
+      // contain "New Army" placeholders. Filtering at load time both
+      // hides them from the UI and — once mgr.save() runs and notifies
+      // sync — kicks off a diff that enqueues deleteArmy for each id, so
+      // the cloud copies get cleaned up too.
+      const named = all.filter(a => ArmyManager.isNamed(a));
+      if (named.length !== all.length) {
+        try {
+          localStorage.setItem('yaab_armies', JSON.stringify(named.map(a => a.toJSON())));
+        } catch (_) {}
+      }
+      return named;
     } catch {
       return [];
     }
+  }
+
+  // True iff `army` has a real, user-chosen name. We block persistence of
+  // armies still on the boot-time placeholder so a user clicking around
+  // doesn't seed a graveyard of "New Army" entries in their saved list.
+  // Whitespace-only names count as unnamed too.
+  static isNamed(army) {
+    if (!army) return false;
+    const n = (army.name || '').trim();
+    return n.length > 0 && n !== 'New Army';
   }
 
   save() {
@@ -119,7 +173,11 @@ window.ArmyManager = class ArmyManager {
     }
   }
 
+  // Returns true if the army was persisted, false if the name guard rejected
+  // it. Callers that need to surface an error to the user (e.g. the explicit
+  // Save button) should check the return value; auto-save callers can ignore.
   saveArmy(army) {
+    if (!ArmyManager.isNamed(army)) return false;
     const idx = this.armies.findIndex(a => a.id === army.id);
     if (idx >= 0) {
       this.armies[idx] = army;
@@ -130,6 +188,7 @@ window.ArmyManager = class ArmyManager {
     if (window.App && typeof window.App.fireArmyChange === 'function') {
       window.App.fireArmyChange('save', army);
     }
+    return true;
   }
 
   deleteArmy(id) {

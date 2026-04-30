@@ -83,6 +83,23 @@
       if (App.setMobilePanel) App.setMobilePanel('detail');
     });
 
+    // Double-click on a unit card adds 1× to the army with the default
+    // squad option and no enhancements — a quick path that skips the
+    // detail panel for users who know what they want.
+    document.getElementById('unit-grid').addEventListener('dblclick', e => {
+      const card = e.target.closest('.unit-card');
+      if (!card) return;
+      const unit = App.findUnit(card.dataset.unitId, card.dataset.factionName);
+      if (!unit) return;
+      const squadOption = (unit.squadOptions && unit.squadOptions[0]) || null;
+      state.currentArmy.addUnit(unit, 1, squadOption, []);
+      UI.renderArmyList(state.currentArmy);
+      const label = squadOption && squadOption.models
+        ? `${unit.name} (${squadOption.models} models)`
+        : unit.name;
+      UI.toast(`Added ${label}`, 'success');
+    });
+
     document.getElementById('army-rules-section').addEventListener('click', e => {
       const item = e.target.closest('.army-rule-item');
       if (!item) return;
@@ -94,6 +111,10 @@
         cp:          item.dataset.ruleCp   != null && item.dataset.ruleCp !== '' ? item.dataset.ruleCp : null,
         phase:       item.dataset.rulePhase || null,
       });
+      // Mobile: show the detail panel where renderRuleDetail just wrote.
+      // Without this, the rule body lands in an off-screen panel and the
+      // tap looks like it did nothing.
+      if (App.setMobilePanel) App.setMobilePanel('detail');
     });
 
     document.getElementById('unit-detail-panel').addEventListener('change', e => {
@@ -193,6 +214,7 @@
       document.querySelectorAll('.unit-card.selected').forEach(c => c.classList.remove('selected'));
       const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
       UI.renderUnitDetail(entry.unitData, detEnhs, entry.enhancements || []);
+      if (App.setMobilePanel) App.setMobilePanel('detail');
     });
 
     document.getElementById('btn-new-army').addEventListener('click', () => {
@@ -204,8 +226,17 @@
     });
 
     document.getElementById('btn-save-army').addEventListener('click', () => {
-      state.currentArmy.name = document.getElementById('army-name-input').value || 'My Army';
-      state.armyManager.saveArmy(state.currentArmy);
+      const nameInput = document.getElementById('army-name-input');
+      state.currentArmy.name = nameInput.value;
+      if (!state.armyManager.saveArmy(state.currentArmy)) {
+        // ArmyManager rejected the save because the army is still using
+        // the default placeholder name. Tell the user explicitly and
+        // focus the name field so they can fix it without hunting.
+        alert('Please give your army a name before saving.\n\n"New Army" is the default placeholder — change it to something like "My Custodes 2k" first.');
+        nameInput.focus();
+        nameInput.select();
+        return;
+      }
       UI.toast(`Saved "${state.currentArmy.name}"`, 'success');
     });
 

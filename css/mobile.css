@@ -75,6 +75,17 @@
     min-height: 0 !important;
     height: 100%;
   }
+
+  /* build-mode.css turns #build-mode into a 2-row grid (auto 1fr) for
+     the desktop build-hero. On mobile the hero is hidden but the empty
+     1fr row still claims space — leaving a dead strip below app-main
+     that the user sees as "the panel ends halfway down the screen."
+     Drop the grid on mobile so app-main's calc(100% - tabbar - safe)
+     drives the layout directly. */
+  body.build-mode-enhanced #build-mode {
+    display: block !important;
+    grid-template-rows: none !important;
+  }
 }
 
 /* ── Single visible panel, switched by data-mobile-panel ──────── */
@@ -104,6 +115,22 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     padding: 12px 12px 24px;
+    /* Override atmosphere.css `background-attachment: local`. With local
+       the hex-grid bg paints only behind the content area; when the
+       content is shorter than the panel (e.g. a short stratagem), the
+       portion below shows a solid panel-bg with no pattern, which
+       reads as "the box ends halfway down the screen." `scroll` (default)
+       tiles the bg across the whole panel-body so the pattern is
+       continuous to the tab bar. */
+    background-attachment: scroll !important;
+    /* Pin a solid panel-bg so the `#build-mode::before` fixed accent
+       bloom (theming-pass.css:46-48 — top-anchored radial gradient
+       that fades by 75% of viewport) can't show through. On desktop
+       the panel-right's own solid bg covers the bloom uniformly; on
+       mobile the bloom was bleeding through and making the upper half
+       visibly lighter than the lower half — which read as "the box
+       only covers the top half of the screen." */
+    background-color: var(--panel-bg, #1a1a1a) !important;
   }
 
   /* The army panel-footer toolbar (New/Save/Load/Import/Export/Undo) is
@@ -357,6 +384,29 @@
 
 /* ── Detail panel ─────────────────────────────────────────────── */
 @media (max-width: 820px) {
+  /* Make the detail content claim the full panel-body height. Without
+     this, a short stratagem (just WHEN/TARGET/EFFECT) leaves a wedge of
+     bare panel background between the last card and the tab bar — which
+     reads as "the box doesn't reach the nav bar" because the strat
+     cards have a faint translucent background and the gap below has
+     none. With min-height:100% the content container fills, and the
+     panel-body still scrolls when the content is taller than the
+     viewport. */
+  #unit-detail-panel { display: flex; flex-direction: column; }
+  #unit-detail-panel > .unit-detail-content,
+  #unit-detail-panel > .unit-detail-empty {
+    flex: 1 0 auto;
+    min-height: 100%;
+  }
+
+  /* Hide the collection (Owned / Painted) widget on mobile — it's
+     desktop-only chrome that clutters the small detail view. The widget
+     is injected into the panel by js/app/collection.js after the detail
+     content renders; CSS-hiding here keeps the JS path intact for
+     desktop while the mobile detail pane stays focused on the unit /
+     stratagem itself. */
+  .collection-detail-widget { display: none !important; }
+
   .unit-detail-content .detail-banner {
     padding: 12px;
     gap: 8px;

@@ -644,6 +644,40 @@
     }
   };
 
+  // Stratagem descriptions follow GW's "WHEN: … TARGET: … EFFECT: …
+  // [RESTRICTIONS: …]" datacard convention. Splitting on the uppercase
+  // label tokens lets us render each clause as its own labelled block,
+  // matching how the official datasheets read.
+  function splitStratagemSections(text) {
+    if (!text) return [];
+    // Match label tokens that look like the GW labels: 2+ uppercase
+    // letters (with optional internal spaces / ampersand) followed by a
+    // colon and a space. Keeps captures so we can pair labels with the
+    // text that follows them.
+    const re = /\b([A-Z][A-Z &]{1,})\s*:\s/g;
+    const matches = [];
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      matches.push({ label: m[1].trim(), start: m.index, contentStart: m.index + m[0].length });
+    }
+    if (matches.length === 0) return [{ label: '', text: text.trim() }];
+    const out = [];
+    // Anything before the first label is a preface (rare — included
+    // verbatim above the labelled blocks).
+    if (matches[0].start > 0) {
+      const pre = text.slice(0, matches[0].start).trim();
+      if (pre) out.push({ label: '', text: pre });
+    }
+    for (let i = 0; i < matches.length; i++) {
+      const cur = matches[i];
+      const next = matches[i + 1];
+      const body = text.slice(cur.contentStart, next ? next.start : text.length).trim()
+        .replace(/\s*\.\s*$/, ''); // trim trailing dot — re-added by CSS layout, not needed inline
+      out.push({ label: cur.label, text: body });
+    }
+    return out;
+  }
+
   UI.renderRuleDetail = function (data) {
     const esc = UI.escapeHtml;
     const panel = document.getElementById('unit-detail-panel');
@@ -655,7 +689,26 @@
 
     const isEnhancement = data.type === 'enhancement';
     const isStratagem   = data.type === 'stratagem';
-    const body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${esc(data.description || 'No description available.')}</p>`;
+
+    let body;
+    if (isStratagem) {
+      const sections = splitStratagemSections(data.description || '');
+      if (sections.length === 0) {
+        body = `<p class="strat-section-empty">No description available.</p>`;
+      } else {
+        body = '<div class="strat-sections">' + sections.map(s => {
+          if (!s.label) {
+            return `<p class="strat-section-text strat-section-preface">${esc(s.text)}</p>`;
+          }
+          return `<div class="strat-section">
+            <div class="strat-section-label">${esc(s.label)}</div>
+            <div class="strat-section-text">${esc(s.text)}</div>
+          </div>`;
+        }).join('') + '</div>';
+      }
+    } else {
+      body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${esc(data.description || 'No description available.')}</p>`;
+    }
 
     let kindLabel = 'Army Rule';
     if (isEnhancement) kindLabel = 'Enhancement';

@@ -111,9 +111,12 @@
         } catch (_) {}
         if (!keep) {
           try {
+            // yaab_sync_queue MUST be in this list — otherwise pending ops
+            // queued under user A drain to user B's cloud bag if A signs
+            // out (with "remove data") and B signs in on the same device.
             ['yaab_armies', 'yaab_favorites', 'yaab_recents', 'yaab_collection',
               'yaab_crusade_rosters', 'yaab_deployments', 'yaab_points_overrides',
-              'yaab_sync_known', 'yaab_sync_state_at']
+              'yaab_sync_known', 'yaab_sync_state_at', 'yaab_sync_queue']
               .forEach(k => localStorage.removeItem(k));
             if (App.state && App.state.armyManager) {
               App.state.armyManager.armies = [];

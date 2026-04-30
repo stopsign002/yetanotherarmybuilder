@@ -151,43 +151,60 @@
     if (basePts > 0) squadOptions.push({ pts: basePts, models: minModels ?? maxModels });
 
     if (ptsTypeId) {
-      // First pass: collect modifier tiers along with each tier's atLeast
-      // threshold (the smallest squad size where the cost kicks in).
-      const tiers = []; // [{ pts, threshold }]
-      const condSelectors = [
-        ':scope > conditions > condition[type="atLeast"][field="selections"][childId="model"]',
-        ':scope > conditionGroups > conditionGroup > conditions > condition[type="atLeast"][field="selections"][childId="model"]',
+      // First pass: collect modifier tiers, each with its lower-threshold T
+      // and whether the tier represents an exact count (equalTo) or a range
+      // (atLeast / greaterThan). BSData uses all three condition types
+      // depending on faction (Necrons all-atLeast; Tyranids mix
+      // atLeast/equalTo/greaterThan; Orks lean greaterThan). Previously the
+      // selector matched only `atLeast`, so non-atLeast tiers had threshold
+      // NaN and fell through to maxModels — Ripper Swarms (basePts=25,
+      // equalTo=2 → 40, atLeast=3 → 50, max=3) surfaced as "1 / 3 / 3".
+      const tiers = []; // [{ pts, threshold, exact }]
+      const condGroupPrefixes = [
+        ':scope > conditions > ',
+        ':scope > conditionGroups > conditionGroup > conditions > ',
       ];
+      const condTypes = ['atLeast', 'greaterThan', 'equalTo'];
       entryEl.querySelectorAll(':scope > modifiers > modifier').forEach(mod => {
         if (I.getAttr(mod, 'type') !== 'set' || I.getAttr(mod, 'field') !== ptsTypeId) return;
         const val = parseFloat(I.getAttr(mod, 'value', '0'));
         if (isNaN(val) || val <= 0 || val === basePts) return;
         let threshold = NaN;
-        for (const sel of condSelectors) {
-          const cond = mod.querySelector(sel);
-          if (cond) {
+        let exact = false;
+        outer: for (const prefix of condGroupPrefixes) {
+          for (const ct of condTypes) {
+            const cond = mod.querySelector(`${prefix}condition[type="${ct}"][field="selections"][childId="model"]`);
+            if (!cond) continue;
             const n = parseFloat(I.getAttr(cond, 'value', '0'));
-            if (!isNaN(n) && n > 0) { threshold = n; break; }
+            if (isNaN(n) || n <= 0) continue;
+            if (ct === 'atLeast')          { threshold = n;     exact = false; }
+            else if (ct === 'greaterThan') { threshold = n + 1; exact = false; }
+            else /* equalTo */             { threshold = n;     exact = true;  }
+            break outer;
           }
         }
-        tiers.push({ pts: val, threshold });
+        tiers.push({ pts: val, threshold, exact });
       });
-      // Second pass: convert each tier's threshold into the UPPER squad-size
-      // bound for that tier. A tier with threshold T covers `T..(nextT-1)`
-      // models (or `T..maxModels` for the highest tier). The squad picker
-      // shows that upper bound — e.g. Lokhust Destroyers thresholds 2/3/4
-      // with maxModels=6 surface as 2 / 3 / 6 (the 4-tier covers 4–6).
+      // Second pass: convert each tier into its displayed model count. Range
+      // tiers (atLeast / greaterThan) cover threshold..(next-1) — display
+      // the upper bound, matching Lokhust's flat-priced 4-6 = "6 models".
+      // Exact tiers (equalTo) display the threshold itself. Tiers with no
+      // detected condition fall back to maxModels.
       const sortedThresholds = tiers
         .map(t => t.threshold)
         .filter(n => Number.isFinite(n))
         .sort((a, b) => a - b);
       tiers.forEach(tier => {
-        let upper = maxModels;
+        let models = maxModels;
         if (Number.isFinite(tier.threshold)) {
-          const next = sortedThresholds.find(t => t > tier.threshold);
-          if (Number.isFinite(next)) upper = next - 1;
+          if (tier.exact) {
+            models = tier.threshold;
+          } else {
+            const next = sortedThresholds.find(t => t > tier.threshold);
+            models = Number.isFinite(next) ? next - 1 : maxModels;
+          }
         }
-        squadOptions.push({ pts: tier.pts, models: upper });
+        squadOptions.push({ pts: tier.pts, models });
       });
     }
 

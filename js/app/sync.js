@@ -361,6 +361,14 @@
           try {
             const full = await apiFetch(`${API_ARMIES}/${encodeURIComponent(id)}`);
             const army = full && full.payload ? decodeArmy(full.payload) : null;
+            // Name guard: a cloud-only army that fails the local name guard
+            // (still on the "New Army" placeholder, blank, etc.) is residue
+            // from before the guard existed. Don't adopt it locally; queue
+            // a delete so the cloud copy goes away too.
+            if (army && window.ArmyManager && !ArmyManager.isNamed(army)) {
+              enqueue({ op: 'deleteArmy', id });
+              return;
+            }
             if (army && mgr) {
               mgr.armies.push(army);
               mergedFromCloud++;
@@ -399,6 +407,15 @@
             try {
               const full = await apiFetch(`${API_ARMIES}/${encodeURIComponent(local.id)}`);
               const newArmy = full && full.payload ? decodeArmy(full.payload) : null;
+              // If cloud's newer version is unnamed (legacy state from
+              // before the guard), don't pull it down — queue a delete.
+              // Local copy is presumably also unnamed (the diff loop only
+              // pulls when local has the same id), so removing both is
+              // the right move.
+              if (newArmy && window.ArmyManager && !ArmyManager.isNamed(newArmy)) {
+                enqueue({ op: 'deleteArmy', id: local.id });
+                return;
+              }
               if (newArmy && mgr) {
                 const idx = mgr.armies.findIndex(a => a.id === local.id);
                 if (idx >= 0) mgr.armies[idx] = newArmy;
