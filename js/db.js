@@ -14,6 +14,11 @@ window.YaabDB = (() => {
   // defaults), filters optional entryLinks (no min) out of defaults, and
   // emits modelMin=0 for max-only model variants instead of inheriting
   // squadGroupMin (fixes "5–2 models" rendering for "1 per N" variants).
+  // Bumped to v14: weapon dedup keys on name + classification (ranged
+  // vs melee) instead of name alone. Necron Plasmancer / Technomancer
+  // each carry a ranged AND a melee "Staff of Light" profile — v13's
+  // single-key dedup dropped the melee, so the unit detail panel only
+  // showed the ranged version. v14 keeps both.
   // Bumped to v13: squad-size tier parser now also recognises modifier
   // conditions of type "equalTo" and "greaterThan", not just "atLeast".
   // Ripper Swarms (basePts=25, equalTo=2 → 40, atLeast=3 → 50, max=3) was
@@ -34,7 +39,7 @@ window.YaabDB = (() => {
   // payloads (per-faction stratagem/detachment/enhancement data). Source:
   // https://github.com/game-datacards/datasources — used to fill the gap
   // BSData wh40k-10e leaves around stratagem rules.
-  const DB_VERSION = 13;
+  const DB_VERSION = 14;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

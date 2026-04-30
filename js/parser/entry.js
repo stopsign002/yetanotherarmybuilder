@@ -17,7 +17,14 @@
     const type = I.getAttr(entryEl, 'type', '');
 
     const stats        = I.findStats(entryEl, entriesById, profilesById);
-    const weapons      = I.dedup(I.collectWeapons(entryEl, entriesById), 'name');
+    // Weapons dedup keys on name + classification (typeName) so a unit
+    // with both a ranged and a melee weapon of the same name keeps both
+    // profiles. Plasmancer / Technomancer (Necron) each carry a ranged
+    // and melee "Staff of Light" — single-key dedup dropped the melee.
+    const weapons      = I.dedup(I.collectWeapons(entryEl, entriesById), w => {
+      const cls = (w._typeName || '').toLowerCase().includes('melee') ? 'melee' : 'ranged';
+      return (w.name || '') + '|' + cls;
+    });
     const allAbilities = I.dedup(I.collectAbilities(entryEl, entriesById, profilesById, rulesById), 'name');
     const keywords     = I.parseKeywords(entryEl);
     const wargearOptions = I.collectWargearOptions(entryEl, entriesById);
