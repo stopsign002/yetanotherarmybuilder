@@ -83,6 +83,23 @@
       if (App.setMobilePanel) App.setMobilePanel('detail');
     });
 
+    // Double-click on a unit card adds 1× to the army with the default
+    // squad option and no enhancements — a quick path that skips the
+    // detail panel for users who know what they want.
+    document.getElementById('unit-grid').addEventListener('dblclick', e => {
+      const card = e.target.closest('.unit-card');
+      if (!card) return;
+      const unit = App.findUnit(card.dataset.unitId, card.dataset.factionName);
+      if (!unit) return;
+      const squadOption = (unit.squadOptions && unit.squadOptions[0]) || null;
+      state.currentArmy.addUnit(unit, 1, squadOption, []);
+      UI.renderArmyList(state.currentArmy);
+      const label = squadOption && squadOption.models
+        ? `${unit.name} (${squadOption.models} models)`
+        : unit.name;
+      UI.toast(`Added ${label}`, 'success');
+    });
+
     document.getElementById('army-rules-section').addEventListener('click', e => {
       const item = e.target.closest('.army-rule-item');
       if (!item) return;
