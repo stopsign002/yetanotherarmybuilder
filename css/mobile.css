@@ -104,6 +104,14 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     padding: 12px 12px 24px;
+    /* Override atmosphere.css `background-attachment: local`. With local
+       the hex-grid bg paints only behind the content area; when the
+       content is shorter than the panel (e.g. a short stratagem), the
+       portion below shows a solid panel-bg with no pattern, which
+       reads as "the box ends halfway down the screen." `scroll` (default)
+       tiles the bg across the whole panel-body so the pattern is
+       continuous to the tab bar. */
+    background-attachment: scroll !important;
   }
 
   /* The army panel-footer toolbar (New/Save/Load/Import/Export/Undo) is
