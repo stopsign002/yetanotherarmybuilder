@@ -1521,16 +1521,12 @@ ul { list-style: none; }
 .army-rules-subsection { margin-bottom: 10px; }
 .army-rules-subsection:last-child { margin-bottom: 0; }
 
-/* Internally-scrollable list for the Stratagems sections. Tall enough that
-   most cases don't need to scroll at all, and when they do, the wheel
-   passes through to the outer panel once the inner list hits its bounds.
-   We deliberately do NOT set `overscroll-behavior: contain` — that traps
-   wheel events on the inner box even when its content fits in max-height,
-   which read as "broken scroll" when the cursor was over a strat item. */
+/* Stratagems sections render at full height — no inner scroll cap. The
+   collapsible starts minimized, so when the user opens it they want to
+   see every strat at once and use the page's own scroll. The class is
+   kept on markup/JS as a no-op so existing call sites still work. */
 .army-rules-list-scroll {
-  max-height: 480px;
-  overflow-y: auto;
-  padding-right: 4px; /* leave room for scrollbar without clipping items */
+  padding-right: 4px;
 }
 
 /* Placeholder shown inside the always-visible army-rules-section when no
