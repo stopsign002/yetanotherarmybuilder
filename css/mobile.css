@@ -112,6 +112,14 @@
        tiles the bg across the whole panel-body so the pattern is
        continuous to the tab bar. */
     background-attachment: scroll !important;
+    /* Pin a solid panel-bg so the `#build-mode::before` fixed accent
+       bloom (theming-pass.css:46-48 — top-anchored radial gradient
+       that fades by 75% of viewport) can't show through. On desktop
+       the panel-right's own solid bg covers the bloom uniformly; on
+       mobile the bloom was bleeding through and making the upper half
+       visibly lighter than the lower half — which read as "the box
+       only covers the top half of the screen." */
+    background-color: var(--panel-bg, #1a1a1a) !important;
   }
 
   /* The army panel-footer toolbar (New/Save/Load/Import/Export/Undo) is
