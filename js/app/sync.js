@@ -169,9 +169,14 @@
     const init = Object.assign({
       method: 'GET',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     }, opts || {});
     if (init.body && typeof init.body !== 'string') init.body = JSON.stringify(init.body);
+    // Only declare a JSON content-type when there's actually a body. Sending
+    // Content-Type: application/json on a bodyless DELETE makes Fastify's
+    // JSON parser reject the request with FST_ERR_CTP_EMPTY_JSON_BODY → 400.
+    const headers = Object.assign({ 'Accept': 'application/json' }, init.headers || {});
+    if (init.body) headers['Content-Type'] = 'application/json';
+    init.headers = headers;
     const resp = await fetch(path, init);
     if (resp.status === 401) {
       if (App.Auth && typeof App.Auth.handleSessionExpired === 'function') {
