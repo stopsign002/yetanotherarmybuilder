@@ -139,7 +139,15 @@
   function buildDetachmentCandidates(state) {
     const faction = state.detachmentFaction || (typeof App.getCurrentFaction === 'function' ? App.getCurrentFaction() : null);
     if (!faction || !Array.isArray(faction.detachments)) return [];
-    return faction.detachments.map(d => ({
+    let detachments = faction.detachments;
+    // Mirror the dropdown's chapter filter so the palette doesn't expose
+    // detachments hidden by App.filterSMDetachmentsForChapter.
+    if (typeof App.filterSMDetachmentsForChapter === 'function') {
+      const chapter = state.selectedChapter
+        || (state.factionFilter && state.factionFilter !== 'all' ? state.factionFilter : null);
+      if (chapter) detachments = App.filterSMDetachmentsForChapter(detachments, chapter);
+    }
+    return detachments.map(d => ({
       type: 'Detachments',
       label: d.name,
       subtitle: faction.name,

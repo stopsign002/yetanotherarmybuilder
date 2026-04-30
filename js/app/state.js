@@ -58,6 +58,29 @@
     'Imperium - Adeptus Astartes - White Scars':     'Imperium - Adeptus Astartes - Space Marines',
   };
 
+  // Chapter-exclusive detachment tokens. The BSData Space Marines catalogue
+  // bundles every chapter-specific detachment (Sons of Sanguinius, Inner
+  // Circle Task Force, Champions of Russ, Righteous Crusaders, Black Spear
+  // Task Force...) into the parent SM detachment list. getDetachmentFaction()
+  // falls back to that parent for any chapter whose own catalogue ships
+  // zero detachments — which means an Ultramarines player would otherwise
+  // see Inner Circle Task Force in the dropdown.
+  //
+  // Each entry maps a chapter faction name to lowercase substrings that
+  // mark a detachment as belonging exclusively to THAT chapter. The filter
+  // in App.filterSMDetachmentsForChapter (selections.js) excludes any
+  // detachment whose name contains a token from a DIFFERENT chapter.
+  // Generic codex SM detachments (Gladius / Anvil Siege / Ironstorm /
+  // Stormlance / Firestorm / 1st Company / Vanguard Spearhead / Champions
+  // of Humanity) match no token and survive for every chapter.
+  App.SM_CHAPTER_EXCLUSIVE_TOKENS = {
+    'Imperium - Adeptus Astartes - Blood Angels':   ['sanguinius', 'liberator assault', 'angelic'],
+    'Imperium - Adeptus Astartes - Dark Angels':    ['inner circle', "lion's", 'unforgiven'],
+    'Imperium - Adeptus Astartes - Space Wolves':   ['champions of russ', 'wolfspear', 'hunters unleashed'],
+    'Imperium - Adeptus Astartes - Black Templars': ['righteous crusaders', 'vow of honour', 'vow of honor', 'crusader spearhead', 'templar'],
+    'Imperium - Adeptus Astartes - Deathwatch':     ['black spear', 'veterans of the long war', 'deathwatch'],
+  };
+
   // Light pastel palette for readability against the dark UI. Each entry:
   // [accent, hover, dark, rgb] — tuned at HSL L ~78% / S ~55% (lower S for
   // the greyscale chapters so they stay identifiable without oversaturating).
