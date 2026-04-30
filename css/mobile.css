@@ -75,6 +75,17 @@
     min-height: 0 !important;
     height: 100%;
   }
+
+  /* build-mode.css turns #build-mode into a 2-row grid (auto 1fr) for
+     the desktop build-hero. On mobile the hero is hidden but the empty
+     1fr row still claims space — leaving a dead strip below app-main
+     that the user sees as "the panel ends halfway down the screen."
+     Drop the grid on mobile so app-main's calc(100% - tabbar - safe)
+     drives the layout directly. */
+  body.build-mode-enhanced #build-mode {
+    display: block !important;
+    grid-template-rows: none !important;
+  }
 }
 
 /* ── Single visible panel, switched by data-mobile-panel ──────── */
