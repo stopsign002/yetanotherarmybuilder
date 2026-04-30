@@ -240,7 +240,25 @@
       UI.toast(`Saved "${state.currentArmy.name}"`, 'success');
     });
 
-    document.getElementById('btn-load-army').addEventListener('click', () => {
+    document.getElementById('btn-load-army').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-load-army');
+      // If signed in, pull cloud state before opening the modal so the
+      // listing — and getArmy() on click — reflects saves made on other
+      // devices since this tab was last in the foreground. Race against a
+      // 2s timeout so a slow network can't hold the modal closed; the user
+      // still gets the local list as a fallback.
+      const signedIn = App.Auth && App.Auth.isSignedIn && App.Auth.isSignedIn();
+      if (signedIn && App.Sync && typeof App.Sync.pullAll === 'function') {
+        btn.disabled = true;
+        try {
+          await Promise.race([
+            App.Sync.pullAll().catch(() => {}),
+            new Promise(r => setTimeout(r, 2000)),
+          ]);
+        } finally {
+          btn.disabled = false;
+        }
+      }
       UI.showLoadModal(state.armyManager.armies);
     });
 
