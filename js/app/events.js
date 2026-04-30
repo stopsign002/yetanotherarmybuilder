@@ -111,6 +111,10 @@
         cp:          item.dataset.ruleCp   != null && item.dataset.ruleCp !== '' ? item.dataset.ruleCp : null,
         phase:       item.dataset.rulePhase || null,
       });
+      // Mobile: show the detail panel where renderRuleDetail just wrote.
+      // Without this, the rule body lands in an off-screen panel and the
+      // tap looks like it did nothing.
+      if (App.setMobilePanel) App.setMobilePanel('detail');
     });
 
     document.getElementById('unit-detail-panel').addEventListener('change', e => {

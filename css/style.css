@@ -1540,6 +1540,51 @@ ul { list-style: none; }
   padding-right: 4px;
 }
 
+/* ── Stratagem detail: WHEN / TARGET / EFFECT layout ─────────────────
+   GW datacards split a stratagem into labelled clauses (WHEN, TARGET,
+   EFFECT, RESTRICTIONS). renderRuleDetail parses the description and
+   emits one .strat-section per clause; the styling below puts the
+   label on its own line in the accent colour and indents the body
+   text so each clause reads as a self-contained block. */
+.strat-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.strat-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--accent, #c8c8c8);
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 0 var(--radius, 6px) var(--radius, 6px) 0;
+}
+.strat-section-label {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent, #c8c8c8);
+}
+.strat-section-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text, #e6e6e6);
+}
+.strat-section-preface {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted, #aaa);
+  font-style: italic;
+  margin: 0 0 4px 0;
+}
+.strat-section-empty {
+  font-size: 13px;
+  color: var(--text-muted, #888);
+}
+
 /* Placeholder shown inside the always-visible army-rules-section when no
    faction/detachment is yet selected. Compact, muted, single line. */
 .army-rules-empty {
