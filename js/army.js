@@ -137,7 +137,20 @@ window.ArmyManager = class ArmyManager {
     try {
       const raw = localStorage.getItem('yaab_armies');
       if (!raw) return [];
-      return JSON.parse(raw).map(d => Army.fromJSON(d));
+      const all = JSON.parse(raw).map(d => Army.fromJSON(d));
+      // Drop any persisted entries that fail the name guard. Legacy local
+      // state (and cloud state from before the guard was added) can still
+      // contain "New Army" placeholders. Filtering at load time both
+      // hides them from the UI and — once mgr.save() runs and notifies
+      // sync — kicks off a diff that enqueues deleteArmy for each id, so
+      // the cloud copies get cleaned up too.
+      const named = all.filter(a => ArmyManager.isNamed(a));
+      if (named.length !== all.length) {
+        try {
+          localStorage.setItem('yaab_armies', JSON.stringify(named.map(a => a.toJSON())));
+        } catch (_) {}
+      }
+      return named;
     } catch {
       return [];
     }
