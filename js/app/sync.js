@@ -42,7 +42,6 @@
   // ── Internal state ───────────────────────────────────────────────────
   let _suppressMonkeyPatch = false; // set when we're writing localStorage from sync itself
   let _pulling = false;
-  let _pullPromise = null;          // in-flight pullAll, so concurrent callers can await the same one
   let _draining = false;
   let _backoffMs = 0;
   let _armyTimer = null;
@@ -322,13 +321,8 @@
   // currently-edited army — for that one we prompt).
   async function pullAll() {
     if (!authReady()) return null;
-    // If a pull is already in flight, return the same promise so concurrent
-    // callers (e.g. visibilitychange + an explicit "pull before Load") wait
-    // for the same merge to finish instead of one returning null and the
-    // other proceeding with stale local state.
-    if (_pulling && _pullPromise) return _pullPromise;
+    if (_pulling) return null;
     _pulling = true;
-    _pullPromise = (async () => {
     try {
       const [cloudSummaries, cloudState] = await Promise.all([
         apiFetch(API_ARMIES).catch(e => { if (e.status === 401) throw e; return []; }),
@@ -503,10 +497,6 @@
     } finally {
       _pulling = false;
     }
-    })();
-    const p = _pullPromise;
-    p.finally(() => { if (_pullPromise === p) _pullPromise = null; });
-    return p;
   }
 
   // ── Monkey-patch localStorage for the bag-key allowlist ──────────────
