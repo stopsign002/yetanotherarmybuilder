@@ -1527,15 +1527,6 @@ ul { list-style: none; }
   border-top: 1px solid rgba(255,255,255,0.05);
   margin-bottom: 0;
 }
-/* Cap the open box at 85vh and scroll inside so a long stratagem list
-   stays reachable without pushing the entries list far below the fold.
-   Pairs with the flex-shrink: 0 above — outside the cap, the collapsible
-   still claims natural height, so a short rules list (army rule + a few
-   strats) renders fully without an inner scrollbar. */
-.army-rules-collapsible[open] > .army-rules-section {
-  max-height: 85vh;
-  overflow-y: auto;
-}
 
 /* ── Army Rules: sub-sections ───────────────────────── */
 .army-rules-subsection { margin-bottom: 10px; }

@@ -98,7 +98,7 @@ body.build-mode-enhanced #app-main > .build-hero {
 /* === Army rules in left panel: cap height + scroll so it doesn't push the
    entry list below the fold when a faction has many rules. === */
 body.build-mode-enhanced #panel-left .army-rules-section {
-  max-height: 30vh;
+  max-height: 85vh;
   overflow-y: auto;
   padding-right: 4px;
 }
