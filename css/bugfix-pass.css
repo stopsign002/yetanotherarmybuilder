@@ -95,10 +95,9 @@ body.build-mode-enhanced #app-main > .build-hero {
   outline-offset: 2px;
 }
 
-/* === Army rules in left panel: cap height + scroll so it doesn't push the
-   entry list below the fold when a faction has many rules. === */
+/* === Army rules in left panel: render at natural height. The panel-body's
+   own overflow-y: auto handles overflow; we don't want a second scrollbar
+   inside the rules box. === */
 body.build-mode-enhanced #panel-left .army-rules-section {
-  max-height: 85vh;
-  overflow-y: auto;
   padding-right: 4px;
 }
