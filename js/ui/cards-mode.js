@@ -1316,13 +1316,22 @@
             const bg = grainUrl ? grainUrl + ', ' + t.base : t.base;
             const blend = grainUrl ? 'multiply, normal, normal' : 'normal';
             const isActive = t.id === textureId;
+            // The grain URL contains literal `"` around the data URI
+            // (CSS `url("data:…")`), and we're injecting it into an
+            // HTML `style="…"` attribute. Without escaping the inner
+            // quotes the parser closes the style attribute on the first
+            // `"` inside the URL and renders only the prefix —
+            // 15 of 16 swatches showed no texture, just a faint stripe.
+            // HTML-escape the value so the browser decodes &quot; back
+            // to `"` when it parses the attribute.
+            const styleAttr = ('background:' + bg + ';background-blend-mode:' + blend).replace(/"/g, '&quot;');
             return `<button type="button"
                           class="cards-texture${isActive ? ' is-active' : ''}"
                           data-texture-id="${esc(t.id)}"
                           title="${esc(t.label)}"
                           aria-label="${esc(t.label)}"
                           aria-selected="${isActive}"
-                          style="background:${bg};background-blend-mode:${blend}">
+                          style="${styleAttr}">
                     <span class="cards-texture-label">${esc(t.label)}</span>
                   </button>`;
           }).join('')}
