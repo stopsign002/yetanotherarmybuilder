@@ -382,14 +382,14 @@
       }
     });
 
-    // Static Data-cards button (data-card-creator module exposes the handler).
+    // Static Data-cards button — switches to the full-page Cards mode.
     const cardsBtn = document.getElementById('btn-data-cards');
     if (cardsBtn) {
       cardsBtn.addEventListener('click', () => {
-        if (window.App && typeof App.openDataCardCreator === 'function') {
-          App.openDataCardCreator();
+        if (window.App && typeof App.setMode === 'function') {
+          App.setMode('cards');
         } else if (window.UI && typeof UI.toast === 'function') {
-          UI.toast('Data card creator unavailable', 'warning');
+          UI.toast('Cards mode unavailable', 'warning');
         }
       });
     }

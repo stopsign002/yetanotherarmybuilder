@@ -1,0 +1,585 @@
+/* css/cards-mode.css — Cards mode (full-page) + card chrome + print rules.
+ *
+ * Layout
+ *   #cards-mode owns the whole viewport when active.
+ *   `.cards-shell` is a 2-column flex split: a fixed-width settings rail
+ *   on the left + a flexible preview pane on the right.
+ *
+ * Card sizing
+ *   Card widths/heights/font sizes are all in millimetres so the on-
+ *   screen preview matches the printed output 1:1. The preview wraps
+ *   each `.dcc-page` in a `.dcc-page-frame` whose own width and height
+ *   are scaled (fit-to-viewport) and which clips the transformed child.
+ *
+ * Print
+ *   Both "Print" and "Save as PDF" use the browser's native print
+ *   dialog. The JS adds `body.cards-printing` and injects a `@page` rule
+ *   with the chosen size; the `@media print` block at the bottom of
+ *   this file hides everything except the cards and unwraps the
+ *   preview transforms so each page prints at full physical size.
+ */
+
+/* ── Mode container ─────────────────────────────────────────────────────── */
+#cards-mode { padding: 0; }
+#cards-mode.mode-page { background: #0c0d10; }
+.cards-mode-host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.cards-shell {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: calc(100vh - 64px);  /* topbar height; gracefully degrades if smaller */
+  background: #0c0d10;
+  color: #e7e9ee;
+}
+
+/* ── Settings rail ──────────────────────────────────────────────────────── */
+.cards-side {
+  width: 340px;
+  flex-shrink: 0;
+  background: #14171c;
+  border-right: 1px solid #23272e;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.cards-side-head {
+  padding: 14px 18px 8px;
+  border-bottom: 1px solid #23272e;
+}
+.cards-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.cards-summary {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #9aa1ad;
+}
+.cards-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  color: #d8dde6;
+}
+.cards-row:hover { background: #1c1f25; }
+.cards-row input[type="checkbox"] { accent-color: var(--accent, #c8c8c8); }
+
+.cards-row-all { font-size: 13px; color: #cdd1d8; }
+.cards-field { display: flex; flex-direction: column; gap: 4px; padding: 0 18px; }
+.cards-field-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8c92a0;
+}
+.cards-row-section { padding: 10px 18px; }
+.cards-row { padding: 6px 18px; }
+
+.cards-select {
+  background: #0f1115;
+  color: #e7e9ee;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  width: 100%;
+  cursor: pointer;
+}
+
+/* Top-level sub-tabs (Pick cards / Display) */
+.cards-subtabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid #23272e;
+  margin-top: 12px;
+}
+.cards-subtab {
+  flex: 1 1 0;
+  background: transparent;
+  border: 1px solid #2e323a;
+  color: #b9bec8;
+  padding: 7px 8px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cards-subtab:hover { background: #1f232a; color: #fff; }
+.cards-subtab.is-active {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.cards-side-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 6px 4px 12px;
+}
+
+/* Inner category tabs (Units / Rules / Stratagems) inside Pick cards */
+.cards-cat-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 4px 14px 8px;
+  border-bottom: 1px solid #1f232a;
+  margin-bottom: 4px;
+}
+.cards-cat-tab {
+  flex: 1 1 0;
+  background: transparent;
+  border: 0;
+  color: #9aa1ad;
+  padding: 6px 4px;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 2px;
+}
+.cards-cat-tab:hover { color: #fff; }
+.cards-cat-tab.is-active {
+  color: #fff;
+  border-bottom-color: var(--accent, #c8c8c8);
+}
+.cards-cat-count {
+  font-size: 10px;
+  color: #6f7682;
+  font-weight: 500;
+}
+.cards-cat-tab.is-active .cards-cat-count { color: var(--accent, #c8c8c8); }
+
+.cards-list-head {
+  padding: 4px 8px;
+  border-bottom: 1px solid #1f232a;
+  margin-bottom: 6px;
+}
+.cards-list { list-style: none; padding: 0; margin: 0; }
+.cards-list li { margin: 0; }
+
+/* Display sub-panel groups */
+.cards-disp-group { margin-bottom: 10px; padding: 0 6px; }
+.cards-disp-heading {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  color: #8c92a0;
+  padding: 4px 12px;
+  margin-top: 6px;
+  border-bottom: 1px solid #1f232a;
+}
+.cards-link-btn {
+  background: transparent;
+  border: 0;
+  color: var(--accent, #c8c8c8);
+  font-size: 12px;
+  padding: 4px 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.cards-link-btn:hover { color: #fff; }
+
+/* Footer: print button */
+.cards-side-foot {
+  padding: 12px 18px 16px;
+  border-top: 1px solid #23272e;
+  background: #14171c;
+}
+.cards-btn {
+  width: 100%;
+  background: #20232a;
+  color: #e7e9ee;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cards-btn:hover { background: #2a2e36; }
+.cards-btn-primary {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  border-color: transparent;
+}
+.cards-btn-primary:hover { background: var(--accent-hover, #e0e0e0); }
+
+/* ── Preview pane ───────────────────────────────────────────────────────── */
+.cards-preview-wrap {
+  flex: 1 1 auto;
+  overflow: auto;
+  background: #0c0d10;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+.cards-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.cards-empty {
+  padding: 24px;
+  text-align: center;
+  color: #888c95;
+  font-size: 13px;
+}
+.cards-empty-large {
+  padding: 64px 24px;
+  font-size: 15px;
+  color: #aab0bc;
+}
+
+/* ── Page (one printable sheet, always 1:1) ─────────────────────────────── */
+.dcc-page {
+  /* Width/height are set INLINE by JS in mm. CSS only handles cosmetics
+   * and grid behaviour. */
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #111;
+  display: grid;
+  /* grid-template-columns/rows + padding + gap also set inline by JS */
+}
+/* Pretty drop shadow only in preview */
+.cards-preview .dcc-page { box-shadow: 0 6px 24px rgba(0,0,0,0.45); }
+
+/* The preview wraps each .dcc-page in a frame that scales it to fit.
+ * Width and height are scaled, transform: scale on the inner page. The
+ * frame clips the overflow created by transform-origin. */
+.dcc-page-frame {
+  --dcc-preview-scale: 0.55;
+  width:  calc(var(--dcc-page-w, 100mm) * var(--dcc-preview-scale));
+  height: calc(var(--dcc-page-h, 100mm) * var(--dcc-preview-scale));
+  overflow: hidden;
+  position: relative;
+}
+.dcc-page-frame > .dcc-page {
+  transform: scale(var(--dcc-preview-scale));
+  transform-origin: top left;
+}
+/* Per-preset preview scale — keyed off the page width var on the frame. */
+.dcc-page-frame[style*="--dcc-page-w: 215.9mm"],
+.dcc-page-frame[style*="--dcc-page-w: 210mm"]   { --dcc-preview-scale: 0.6; }
+.dcc-page-frame[style*="--dcc-page-w: 152.4mm"] { --dcc-preview-scale: 0.85; }
+.dcc-page-frame[style*="--dcc-page-w: 101.6mm"] { --dcc-preview-scale: 1.0; }
+
+/* ── Card chrome ─────────────────────────────────────────────────────────
+ * Sized in mm so the on-screen preview matches print 1:1. Visual style
+ * cribbed from 10e GW datasheets — dark header bar, gold/accent
+ * underline, tabular weapons block, accent footers. */
+.dcc-card {
+  background: #fdfdfb;
+  color: #111;
+  border: 0.4mm solid #1a1a1a;
+  border-radius: 1mm;
+  box-sizing: border-box;
+  padding: 1.6mm 2mm;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2mm;
+  overflow: hidden;
+  position: relative;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+}
+.dcc-card-empty { border: 0.3mm dashed #d2d2d2; background: transparent; }
+
+.dcc-head {
+  background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
+  color: #fff;
+  padding: 1.2mm 1.6mm;
+  border-radius: 0.5mm;
+  margin: -0.6mm -0.6mm 0;
+  position: relative;
+}
+.dcc-head::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -0.6mm;
+  height: 0.4mm;
+  background: var(--accent-dark, #909090);
+}
+.dcc-name-line { display: flex; align-items: baseline; gap: 1.6mm; }
+.dcc-name {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 3.8mm;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0;
+  flex: 1 1 auto;
+  line-height: 1.05;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dcc-count { font-size: 2.4mm; font-weight: 500; opacity: 0.85; }
+.dcc-pts {
+  background: var(--accent-dark, #b3b3b3);
+  color: #fff;
+  font-weight: 600;
+  font-size: 2.6mm;
+  padding: 0.4mm 1.4mm;
+  border-radius: 0.6mm;
+  white-space: nowrap;
+}
+.dcc-sub-line {
+  display: flex; align-items: center; gap: 1.6mm;
+  font-size: 2.2mm;
+  margin-top: 0.6mm;
+  color: #d8d8d2;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dcc-role { opacity: 0.85; }
+.dcc-inv {
+  background: #b32020;
+  color: #fff;
+  padding: 0.2mm 1mm;
+  border-radius: 0.6mm;
+  font-weight: 600;
+  font-size: 2.2mm;
+  margin-left: auto;
+}
+.dcc-strat-phase { margin-left: auto; opacity: 0.85; }
+
+/* Stratagem CP pill */
+.dcc-head-strat .dcc-cp {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: #b32020;
+  border-radius: 0.6mm;
+  padding: 0.6mm 1.2mm;
+  line-height: 1;
+  color: #fff;
+  margin-left: auto;
+}
+.dcc-cp-num { font-size: 4mm; font-weight: 700; }
+.dcc-cp-lbl { font-size: 1.6mm; opacity: 0.85; letter-spacing: 0.06em; }
+
+/* Stat strip */
+.dcc-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--dcc-stat-cols, 6), 1fr);
+  gap: 0.6mm;
+  margin-top: 0.6mm;
+}
+.dcc-stat-cell {
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 0.6mm;
+  padding: 0.6mm 0.4mm;
+  text-align: center;
+  display: flex; flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.dcc-stat-key {
+  font-size: 1.8mm;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+.dcc-stat-val {
+  font-size: 3.6mm;
+  font-weight: 700;
+  margin-top: 0.4mm;
+}
+
+/* Section blocks (weapons, abilities, wargear, footers) */
+.dcc-section { display: flex; flex-direction: column; }
+.dcc-section-head {
+  background: var(--accent-dark, #4a4a4a);
+  color: #fff;
+  font-size: 1.9mm;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.6mm 1.4mm;
+  border-radius: 0.4mm 0.4mm 0 0;
+  display: flex;
+  align-items: center;
+  gap: 1.2mm;
+}
+.dcc-section-cols {
+  margin-left: auto;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1mm;
+  width: 36mm;
+  text-align: center;
+  font-size: 1.6mm;
+  opacity: 0.9;
+}
+.dcc-section-label { flex: 0 0 auto; }
+
+/* Weapons table */
+.dcc-w-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 2.2mm;
+}
+.dcc-w-table tr { border-bottom: 0.15mm solid #cfcfcf; }
+.dcc-w-table tr:last-child { border-bottom: none; }
+.dcc-w-table td { padding: 0.7mm 0.4mm; vertical-align: top; }
+.dcc-w-name { font-weight: 600; padding-left: 1.4mm !important; }
+.dcc-w-kw {
+  font-style: italic;
+  font-size: 1.7mm;
+  color: #5a5a5a;
+  margin-top: 0.2mm;
+  font-weight: 400;
+}
+.dcc-num {
+  text-align: center;
+  width: 6mm;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Abilities */
+.dcc-abilities-body {
+  padding: 0.8mm 1.4mm;
+  font-size: 2.1mm;
+  line-height: 1.25;
+  color: #1a1a1a;
+}
+.dcc-ability-row { margin-bottom: 0.6mm; }
+.dcc-ability-row:last-child { margin-bottom: 0; }
+.dcc-ability-row strong { color: #000; }
+.dcc-core-row { color: #444; font-size: 1.9mm; }
+
+/* Wargear options */
+.dcc-wargear-body {
+  padding: 0.8mm 1.4mm;
+  font-size: 2mm;
+  line-height: 1.25;
+  color: #1a1a1a;
+}
+.dcc-wargear-line { margin-bottom: 0.4mm; }
+.dcc-wargear-line:last-child { margin-bottom: 0; }
+.dcc-wargear-default { font-weight: 600; }
+.dcc-wargear-line strong { color: #000; }
+.dcc-wargear-sub { margin: 0.2mm 0 0.3mm 2.4mm; list-style: none; padding: 0; }
+.dcc-wargear-sub li {
+  position: relative;
+  padding-left: 1.6mm;
+  font-size: 1.9mm;
+}
+.dcc-wargear-sub li::before {
+  content: '◦';
+  position: absolute;
+  left: 0;
+  color: #555;
+}
+
+/* Rule + stratagem body text */
+.dcc-rule-body, .dcc-strat-body { padding: 1mm 1.4mm; flex: 1 1 auto; }
+.dcc-rule-text {
+  font-size: 2.4mm;
+  line-height: 1.32;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+}
+
+/* Footer keywords */
+.dcc-foot {
+  margin-top: auto;
+  padding-top: 0.8mm;
+  border-top: 0.2mm solid #ccc;
+}
+.dcc-keywords {
+  font-size: 1.8mm;
+  letter-spacing: 0.02em;
+  color: #2a2a2a;
+  line-height: 1.2;
+}
+.dcc-keywords strong { color: #000; letter-spacing: 0.06em; }
+.dcc-faction-kw { margin-bottom: 0.4mm; }
+
+/* Tighten card padding for many-up grids */
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-card,
+.dcc-page[style*="grid-template-rows: repeat(3"]    .dcc-card {
+  padding: 1.2mm;
+  gap: 0.9mm;
+}
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-name,
+.dcc-page[style*="grid-template-rows: repeat(3"]    .dcc-name {
+  font-size: 3mm;
+}
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-stat-val,
+.dcc-page[style*="grid-template-rows: repeat(3"]    .dcc-stat-val {
+  font-size: 3.0mm;
+}
+
+/* Responsive: stack the rail above the preview on narrow viewports. */
+@media (max-width: 760px) {
+  .cards-shell { flex-direction: column; height: auto; min-height: 100vh; }
+  .cards-side { width: 100%; max-height: 50vh; border-right: 0; border-bottom: 1px solid #23272e; }
+  .cards-preview-wrap { padding: 12px; }
+}
+
+/* ── Print stylesheet ───────────────────────────────────────────────────── */
+/* JS adds body.cards-printing + a dynamic <style id="cards-print-style">
+ * with @page { size: <layout>; margin: 0 } before calling window.print().
+ * These rules hide everything except the cards and unwrap the preview's
+ * fit-to-viewport scaling so each page prints at full physical size. */
+@media print {
+  body.cards-printing > :not(#cards-mode) { display: none !important; }
+  body.cards-printing #cards-mode {
+    display: block !important;
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  body.cards-printing #cards-mode > :not(.cards-mode-host) { display: none !important; }
+  body.cards-printing .cards-side { display: none !important; }
+  body.cards-printing .cards-shell {
+    display: block !important;
+    height: auto !important;
+    background: #fff !important;
+  }
+  body.cards-printing .cards-preview-wrap {
+    overflow: visible !important;
+    background: #fff !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  body.cards-printing .cards-preview {
+    display: block !important;
+    gap: 0 !important;
+  }
+  /* Strip the preview scaling — print at 1:1 */
+  body.cards-printing .dcc-page-frame {
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    --dcc-preview-scale: 1 !important;
+  }
+  body.cards-printing .dcc-page-frame > .dcc-page {
+    transform: none !important;
+  }
+  body.cards-printing .dcc-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  body.cards-printing .dcc-page-frame:last-child .dcc-page {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+}
