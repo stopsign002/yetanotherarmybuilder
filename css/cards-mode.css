@@ -752,10 +752,16 @@
   line-height: 1.3;
   color: #1a1a1a;
 }
-.dcc-ability-row { margin-bottom: 0.6mm; }
+.dcc-ability-row {
+  margin-bottom: 1.0mm;
+  /* Preserves \n line breaks inserted by formatStructuredText() so
+   * primarch / hero abilities with multi-option text read as a list,
+   * not a wall. */
+  white-space: pre-line;
+}
 .dcc-ability-row:last-child { margin-bottom: 0; }
 .dcc-ability-row strong { color: #000; }
-.dcc-core-row { color: #3a3a3a; font-size: calc(2.0mm * var(--dcc-body-mul, 1)); }
+.dcc-core-row { color: #3a3a3a; font-size: calc(2.0mm * var(--dcc-body-mul, 1)); white-space: normal; }
 
 /* Wargear options */
 .dcc-wargear-body {

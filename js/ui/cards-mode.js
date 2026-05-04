@@ -487,6 +487,32 @@
   // Output is HTML for the inside of a `<article class="dcc-card">` node.
   // Card chrome is styled in css/cards-mode.css under the .dcc-* names.
 
+  // Reformat structured-text descriptions (abilities, rules, stratagems)
+  // so multi-option text doesn't read as one wall. The most common pain
+  // points: bullet markers (• / ◆ / ◾) sitting inline mid-sentence, and
+  // GW-style stratagem sub-headers (WHEN: / TARGET: / EFFECT: / etc.)
+  // that should clearly start their own line. Inserts \n where needed
+  // and lets `white-space: pre-line / pre-wrap` in CSS render the breaks.
+  // Also inserts spacing between consecutive bolded sub-ability heads
+  // ("**Imperator:** … **Saviour of the Imperium:** …" patterns from
+  // primarch abilities).
+  function formatStructuredText(text) {
+    if (!text) return '';
+    let out = String(text);
+    // Bullet-style list markers → new line + bullet.
+    out = out.replace(/\s*([•◆◾●])\s+/g, '\n$1 ');
+    // GW stratagem sub-headers — only when at a word boundary so we
+    // don't break sentences that happen to contain the word.
+    out = out.replace(/\s*\b(WHEN|TARGET|EFFECT|RESTRICTIONS?|DURATION)\b\s*:\s*/g, '\n$1: ');
+    // Sub-ability heading pattern used by primarch / hero abilities:
+    // "Foo Bar: ..." where "Foo Bar" is a short title. Conservative —
+    // require at least one preceding sentence and a Title Case head.
+    out = out.replace(/([.!?])\s+([A-Z][A-Za-z'’\- ]{2,40}):\s+/g, '$1\n\n$2: ');
+    // Collapse runs of 3+ newlines to a max of 2.
+    out = out.replace(/\n{3,}/g, '\n\n');
+    return out.trim();
+  }
+
   // Normalise an invulnerable-save string to the conventional "4++" form,
   // so SV cells read "2+ / 4++". BSData / GDC sometimes hand us "4", "4+",
   // or "4++" depending on faction; this folds them all into the same shape.
@@ -664,7 +690,7 @@
       }</div>`;
     }
     named.forEach(a => {
-      html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${esc(a.description || '')}</div>`;
+      html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${esc(formatStructuredText(a.description || ''))}</div>`;
     });
     html += `</div></div>`;
     return html;
@@ -754,7 +780,7 @@
         ${subLine}
       </header>
       <div class="dcc-section dcc-rule-body">
-        <div class="dcc-rule-text">${esc(r.description || '')}</div>
+        <div class="dcc-rule-text">${esc(formatStructuredText(r.description || ''))}</div>
       </div>`;
   }
 
@@ -775,7 +801,7 @@
         ${subLine}
       </header>
       <div class="dcc-section dcc-strat-body">
-        <div class="dcc-rule-text">${esc(s.description || '')}</div>
+        <div class="dcc-rule-text">${esc(formatStructuredText(s.description || ''))}</div>
       </div>`;
   }
 
