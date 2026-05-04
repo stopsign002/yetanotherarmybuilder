@@ -70,13 +70,21 @@ window.YaabDB = (() => {
   // visible to parseDirectProfiles, just classified as 'other' and
   // dropped). Stale v17 cache still has the old classification; drop
   // the parsed-data stores on upgrade.
+  // Bumped to v20: parser now splits multi-paragraph choose-from-N
+  // ability descriptions into parent + synthetic child records
+  // (Guilliman's "Author of the Codex" — one ability profile whose
+  // description contains 4 paragraphs — becomes 1 parent ability with
+  // typeName="Abilities" + 3 child abilities with typeName="Primarch").
+  // Detection in js/parser/entry.js splitMultiParagraphChooseFromN().
+  // Stale v19 cache still has Guilliman's bundled ability; drop the
+  // parsed-data stores on upgrade.
   // Bumped to v19: ability records gain a `_typeName` field carrying the
   // BSData profile typeName (e.g. "Primarch of the First Legion"). The
   // cards-mode renderer uses this to split primarch sub-abilities into
   // their own PRIMARCH section instead of mixing them into the regular
   // ABILITIES list, so players can see at a glance which abilities are
   // choose-from-N toggles.
-  const DB_VERSION = 19;
+  const DB_VERSION = 20;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

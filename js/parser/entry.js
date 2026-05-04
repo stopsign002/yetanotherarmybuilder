@@ -4,6 +4,57 @@
   const P = window.WahapediaParser;
   const I = P._internal;
 
+  // Detect the "choose-from-N" pattern in a single ability whose entire
+  // mechanic was inlined into one description string (Guilliman's
+  // "Author of the Codex" shape) and split it into a parent ability +
+  // synthetic child sub-abilities. The children get _typeName="Primarch"
+  // so cards-mode subAbilitySectionKey() routes them to the PRIMARCH
+  // section, matching how Lion / Angron / Silent King already render.
+  //
+  // Conservative match: the parent paragraph must explicitly mention
+  // "select <number/word> ... abilit(y/ies)" so flowing rule prose that
+  // happens to use "Foo: bar" sub-headers (e.g. some stratagem-like
+  // abilities) doesn't get accidentally split. All paragraphs after the
+  // first must be `Heading: body` form, and we need at least 2 of them.
+  function splitMultiParagraphChooseFromN(ability) {
+    if (!ability || ability.isCore) return [ability];
+    const desc = String(ability.description || '');
+    // BSData uses straight or curly apostrophes interchangeably; both
+    // can appear at the parent paragraph end (see "abilities.'\n\n…").
+    if (!desc.includes('\n\n')) return [ability];
+
+    const paras = desc.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
+    if (paras.length < 3) return [ability];
+
+    // Parent must announce the choose mechanic.
+    if (!/\bselect\s+\w+\s+[\w '’\-(),]*?\babilit/i.test(paras[0])) return [ability];
+
+    const HEADING_RE = /^([A-Z][A-Za-z0-9 '’()\-]*?):\s+([\s\S]+)$/;
+    const children = [];
+    for (let i = 1; i < paras.length; i++) {
+      const m = paras[i].match(HEADING_RE);
+      if (!m) return [ability];   // any non-matching paragraph → bail entirely
+      const name = m[1].trim();
+      const body = m[2].trim();
+      if (!name || !body) return [ability];
+      children.push({
+        name,
+        description: body,
+        // Synthetic typeName routes through subAbilitySectionKey →
+        // "PRIMARCH" (matches the alias for typeName starting "Primarch").
+        _typeName: 'Primarch',
+      });
+    }
+    if (children.length < 2) return [ability];
+
+    // Replace the bundled ability with: parent (only the first
+    // paragraph) + synthetic children.
+    return [
+      { name: ability.name, description: paras[0], _typeName: ability._typeName || 'Abilities' },
+      ...children,
+    ];
+  }
+
   function parseEntry(entryEl, entriesById, profilesById, rulesById) {
     if (I.getAttr(entryEl, 'hidden', 'false') === 'true') return null;
 
@@ -67,7 +118,17 @@
 
     const abilities = allAbilities
       .filter(a => !/invulnerable\s+save/i.test(a.name))
-      .filter(a => !a.isCore || !weaponKeywordNames.has(a.name.toLowerCase()));
+      .filter(a => !a.isCore || !weaponKeywordNames.has(a.name.toLowerCase()))
+      // Some heroes (Roboute Guilliman is the canonical case) ship their
+      // choose-from-N toggles as ONE ability profile whose description
+      // is a multi-paragraph string — parent paragraph + N "Heading:
+      // body" sub-options separated by blank lines. Other heroes (Lion
+      // El'Jonson, Angron, Silent King) get separate child profiles
+      // with non-standard typeNames. The renderer only knows how to
+      // section the latter shape, so the inline-paragraph form ends up
+      // as one wall of text. Detect that pattern and synthesise the
+      // separate-profiles shape so both encodings render identically.
+      .flatMap(splitMultiParagraphChooseFromN);
 
     return {
       id, name, type,

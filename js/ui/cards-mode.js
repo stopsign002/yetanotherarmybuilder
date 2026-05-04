@@ -716,7 +716,11 @@
     if (!a || !a._typeName) return null;
     const tn = String(a._typeName).trim();
     if (STD_ABILITY_TYPENAMES.has(tn.toLowerCase())) return null;
-    if (/^primarch of /i.test(tn)) return 'PRIMARCH';
+    // Match "Primarch" (the synthetic typeName from
+    // splitMultiParagraphChooseFromN — Guilliman shape) AND
+    // "Primarch of the First Legion" / "Primarch of the XIII" / etc.
+    // (the natural typeNames from Lion / Magnus / Mortarion shape).
+    if (/^primarch\b/i.test(tn)) return 'PRIMARCH';
     return tn.toUpperCase();
   }
 

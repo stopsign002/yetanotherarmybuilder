@@ -369,7 +369,10 @@
       if (!a || !a._typeName) return null;
       const tn = String(a._typeName).trim();
       if (STD_AB_TN.has(tn.toLowerCase())) return null;
-      if (/^primarch of /i.test(tn)) return 'PRIMARCH';
+      // Match "Primarch" (synthetic typeName from Guilliman's split)
+      // AND "Primarch of <legion>" (natural typeName for Lion / Magnus
+      // / Mortarion shapes). Both route to the PRIMARCH section.
+      if (/^primarch\b/i.test(tn)) return 'PRIMARCH';
       return tn.toUpperCase();
     };
     // Group sub-abilities by section key, preserving first-seen order.
