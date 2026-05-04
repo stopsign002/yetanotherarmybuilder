@@ -382,10 +382,16 @@
       }
     });
 
-    // Static Print button (datasheet module exposes the handler).
-    const printBtn = document.getElementById('btn-print-army');
-    if (printBtn && typeof UI.printCurrentArmy === 'function') {
-      printBtn.addEventListener('click', UI.printCurrentArmy);
+    // Static Data-cards button (data-card-creator module exposes the handler).
+    const cardsBtn = document.getElementById('btn-data-cards');
+    if (cardsBtn) {
+      cardsBtn.addEventListener('click', () => {
+        if (window.App && typeof App.openDataCardCreator === 'function') {
+          App.openDataCardCreator();
+        } else if (window.UI && typeof UI.toast === 'function') {
+          UI.toast('Data card creator unavailable', 'warning');
+        }
+      });
     }
   };
 })();

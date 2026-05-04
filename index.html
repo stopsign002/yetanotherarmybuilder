@@ -14,8 +14,6 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/typography.css" />
   <link rel="stylesheet" href="css/validation.css" />
-  <link rel="stylesheet" href="css/datasheet.css" />
-  <link rel="stylesheet" href="css/datasheet-style.css" />
   <link rel="stylesheet" href="css/mobile.css" />
   <link rel="stylesheet" href="css/celebrations.css" />
   <link rel="stylesheet" href="css/command-palette.css" />
@@ -255,7 +253,7 @@
               <button type="button" role="menuitem" id="btn-export-string">Copy army code</button>
               <button type="button" role="menuitem" id="btn-export-text">Copy as text</button>
               <button type="button" role="menuitem" id="btn-export-csv">Download CSV</button>
-              <button type="button" role="menuitem" id="btn-print-army" title="Print datasheets for every unit in your army">Print datasheets</button>
+              <button type="button" role="menuitem" id="btn-data-cards" title="Open the data card creator">Data cards…</button>
               <!-- Hook-registered 'export-menu' items mount here -->
               <div id="export-extras" class="export-extras"></div>
             </div>
@@ -488,7 +486,6 @@
   <script src="js/ui/modals.js"></script>
   <script src="js/vendor/html2pdf.bundle.min.js" defer></script>
   <script src="js/vendor/qrcode.min.js" defer></script>
-  <script src="js/ui/datasheet.js"></script>
   <script src="js/ui/dropdown.js"></script>
 
   <!-- App: state first, hooks second (feature modules register via App.hooks),

@@ -236,8 +236,8 @@
       log('import', 'Imported army');
       return;
     }
-    if (t.closest('#btn-print-army')) {
-      log('print', 'Printed army datasheets');
+    if (t.closest('#btn-data-cards')) {
+      log('print', 'Opened data card creator');
       return;
     }
     if (t.closest('.btn-load-saved')) {
