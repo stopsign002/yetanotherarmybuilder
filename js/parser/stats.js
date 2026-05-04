@@ -28,7 +28,13 @@
       } else if (kind === 'weapon') {
         if (name) weapons.push({ name, _typeName: I.getAttr(profile, 'typeName', ''), ...chars });
       } else if (kind === 'ability') {
-        const descEl = profile.querySelector('characteristic[name="Description"]');
+        // 10e BSData uses two characteristic names for ability prose:
+        // <characteristic name="Description"> for vanilla abilities, and
+        // <characteristic name="Effect"> for primarch sub-abilities and
+        // some warlord-trait-style profiles. Fall back to Effect so
+        // those reach the renderer.
+        const descEl = profile.querySelector('characteristic[name="Description"]')
+                    || profile.querySelector('characteristic[name="Effect"]');
         if (name) abilities.push({ name, description: descEl ? I.cleanText(descEl.textContent) : '' });
       }
     });

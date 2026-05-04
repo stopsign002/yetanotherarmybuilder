@@ -60,7 +60,17 @@ window.YaabDB = (() => {
   // parsed-data stores, this is USER DATA — its upgrade path below is
   // non-destructive (only created if missing) so future DB_VERSION
   // bumps that drop the parsed stores don't wipe the user's library.
-  const DB_VERSION = 17;
+  // Bumped to v18: classifyProfile + parseDirectProfiles + abilities.js
+  // infoLink walk now also recognise <characteristic name="Effect"> as
+  // ability prose (in addition to the existing "Description" path) and
+  // typeName="Primarch of <foo>" as an ability typeName. Lion El'Jonson
+  // ships his three "Primarch of the First Legion" toggles as direct
+  // profiles on the unit using those non-standard names — v17's wider
+  // selectionEntry walk was the wrong axis (the profiles were already
+  // visible to parseDirectProfiles, just classified as 'other' and
+  // dropped). Stale v17 cache still has the old classification; drop
+  // the parsed-data stores on upgrade.
+  const DB_VERSION = 18;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

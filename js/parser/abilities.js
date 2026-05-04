@@ -31,7 +31,10 @@
         const name = I.getAttr(profile, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         if (I.isCrusadeSection(name)) return;
-        const descEl = profile.querySelector('characteristic[name="Description"]');
+        // Match the parseDirectProfiles fallback: prefer Description,
+        // fall back to Effect for primarch / warlord-trait shapes.
+        const descEl = profile.querySelector('characteristic[name="Description"]')
+                    || profile.querySelector('characteristic[name="Effect"]');
         abilities.push({ name, description: descEl ? I.cleanText(descEl.textContent) : '' });
 
       } else if (linkType === 'rule') {

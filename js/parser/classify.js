@@ -33,11 +33,20 @@
     if (UNIT_TYPES.has(typeName))    return 'stats';
     if (WEAPON_TYPES.has(typeName))  return 'weapon';
 
+    // 10e BSData encodes "regular" ability profiles with a
+    // <characteristic name="Description">. Primarch sub-ability
+    // profiles (Lion El'Jonson's three "Primarch of the First Legion"
+    // toggles, Magnus / Mortarion equivalents) instead use a
+    // <characteristic name="Effect"> and a typeName that's the parent
+    // ability's name — e.g. typeName="Primarch of the First Legion".
+    // Treat both shapes as 'ability' so they reach the renderer.
     if (profile.querySelector('characteristic[name="Description"]')) return 'ability';
+    if (profile.querySelector('characteristic[name="Effect"]'))      return 'ability';
 
     if (typeName.includes('abilit') || typeName === 'leader' ||
         typeName.includes('power') || typeName.includes('trait') ||
-        typeName === 'invulnerable save') return 'ability';
+        typeName === 'invulnerable save' ||
+        typeName.startsWith('primarch of ')) return 'ability';
 
     return 'other';
   }
