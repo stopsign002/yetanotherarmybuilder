@@ -88,14 +88,113 @@
     const blend = grainUrl ? 'multiply, normal, normal' : 'normal';
     return '.dcc-card { background: ' + bg + '; background-blend-mode: ' + blend + '; }';
   }
-  function applyTextureStyle() {
+  // Build the full dynamic stylesheet: texture, corner radius, typography
+  // CSS variables, and the optional "bold small text" override. All of it
+  // lives in a single <style id="cards-texture-style"> so we only ever
+  // touch the DOM once per settings change.
+  function applyDynamicStyle() {
     let style = document.getElementById('cards-texture-style');
     if (!style) {
       style = document.createElement('style');
       style.id = 'cards-texture-style';
       document.head.appendChild(style);
     }
-    style.textContent = textureCSS(textureId, textureIntensity);
+    const radius = Math.max(0, Math.min(20, cornerRadiusMm || 0));
+    const t = typography;
+    const css = [
+      textureCSS(textureId, textureIntensity),
+      '.dcc-card {',
+      '  border-radius: ' + radius + 'mm;',
+      '  --dcc-stat-mul: '   + t.statSize   + ';',
+      '  --dcc-w-mul: '      + t.weaponSize + ';',
+      '  --dcc-body-mul: '   + t.bodySize   + ';',
+      '  --dcc-fine-mul: '   + t.fineSize   + ';',
+      '}',
+      // When `bold` is on, push thin text from weight 400 to 600 so it
+      // survives at-size print rendering.
+      t.bold
+        ? '.dcc-w-kw, .dcc-keywords, .dcc-section-cols, .dcc-w-table td.dcc-num { font-weight: 600 !important; }'
+        : '',
+    ].join('\n');
+    style.textContent = css;
+  }
+  // Backwards-compat shim: lots of call sites still reference the older
+  // name. Both write the same stylesheet now.
+  function applyTextureStyle() { applyDynamicStyle(); }
+
+  // ── Pref persistence ────────────────────────────────────────────────────
+  // All cards-mode prefs (display toggles, texture, border, radius, layout
+  // overrides, typography, card-back tuning) write through here to a single
+  // localStorage key `yaab_cards_prefs`. That key is in sync.js's
+  // SYNCED_BAG_KEYS, which means the bag-sync layer pushes it to /api/state
+  // automatically and pulls it on every other device the user signs in
+  // from. Image bytes are NOT persisted here — those go through the
+  // ImageStore (server-side library when signed in, IDB when anon).
+  const PREFS_KEY = 'yaab_cards_prefs';
+  let _prefsLoaded = false;
+  let _suppressSave = false;
+
+  function loadPrefs() {
+    _suppressSave = true;
+    try {
+      const raw = localStorage.getItem(PREFS_KEY);
+      if (!raw) return;
+      const p = JSON.parse(raw) || {};
+      if (p.display && typeof p.display === 'object') {
+        Object.keys(DEFAULT_DISPLAY).forEach(k => {
+          if (typeof p.display[k] === 'boolean') display[k] = p.display[k];
+        });
+      }
+      if (typeof p.textureId === 'string')        textureId        = p.textureId;
+      if (typeof p.textureIntensity === 'number') textureIntensity = p.textureIntensity;
+      if (typeof p.borderColor === 'string')      borderColor      = p.borderColor;
+      if (typeof p.cornerRadiusMm === 'number')   cornerRadiusMm   = p.cornerRadiusMm;
+      if (typeof p.activeLayoutId === 'string')   activeLayoutId   = p.activeLayoutId;
+      if (p.layoutByKind && typeof p.layoutByKind === 'object') {
+        ['unit','rule','strat'].forEach(k => {
+          if (p.layoutByKind[k] === null || typeof p.layoutByKind[k] === 'string') {
+            layoutByKind[k] = p.layoutByKind[k];
+          }
+        });
+      }
+      if (p.typography && typeof p.typography === 'object') {
+        ['statSize','weaponSize','bodySize','fineSize'].forEach(k => {
+          const n = parseFloat(p.typography[k]);
+          if (!Number.isNaN(n) && n > 0) typography[k] = Math.max(0.5, Math.min(2.0, n));
+        });
+        if (typeof p.typography.bold === 'boolean') typography.bold = p.typography.bold;
+      }
+      if (p.cardBack && typeof p.cardBack === 'object') {
+        if (typeof p.cardBack.enabled === 'boolean') cardBack.enabled = p.cardBack.enabled;
+        if (typeof p.cardBack.scale   === 'number')  cardBack.scale   = p.cardBack.scale;
+        if (typeof p.cardBack.offsetX === 'number')  cardBack.offsetX = p.cardBack.offsetX;
+        if (typeof p.cardBack.offsetY === 'number')  cardBack.offsetY = p.cardBack.offsetY;
+      }
+    } catch (_) {}
+    _prefsLoaded = true;
+    _suppressSave = false;
+  }
+
+  function savePrefs() {
+    // Skip while loadPrefs() is mutating state (avoids a redundant write
+    // and a no-op sync round-trip immediately after pull).
+    if (_suppressSave) return;
+    try {
+      const p = {
+        display: Object.assign({}, display),
+        textureId, textureIntensity, borderColor, cornerRadiusMm,
+        activeLayoutId,
+        layoutByKind: Object.assign({}, layoutByKind),
+        typography: Object.assign({}, typography),
+        cardBack: {
+          enabled: cardBack.enabled,
+          scale:   cardBack.scale,
+          offsetX: cardBack.offsetX,
+          offsetY: cardBack.offsetY,
+        },
+      };
+      localStorage.setItem(PREFS_KEY, JSON.stringify(p));
+    } catch (_) {}
   }
 
   // ── Display toggles ──────────────────────────────────────────────────────
@@ -105,7 +204,7 @@
     { kind: 'unit', label: 'Unit cards', keys: [
       ['points',      'Points cost'],
       ['role',        'Role / type subtitle'],
-      ['invuln',      'Invulnerable save badge'],
+      ['invuln',      'Invulnerable save (in SV cell)'],
       ['stats',       'Stat block (M/T/SV/W/LD/OC)'],
       ['ranged',      'Ranged weapons'],
       ['melee',       'Melee weapons'],
@@ -149,6 +248,23 @@
   // <style id="cards-texture-style"> element managed by applyTextureStyle().
   let textureId        = DEFAULT_TEXTURE;
   let textureIntensity = DEFAULT_INTENSITY;
+  // Card corner radius in mm. Default 4mm (R4 — matches the most common
+  // physical corner-cutter setting for trading cards).
+  let cornerRadiusMm = 4;
+  // Typography multipliers — each scales a group of font sizes by the
+  // user's chosen multiplier (0.8 → 1.5). Defaults bias slightly larger
+  // than the original baseline because the base sizes were tuned for
+  // screen + don't always print readably.
+  // `bold` adds weight 600 to the thin elements (.dcc-w-kw, .dcc-keywords,
+  // .dcc-section-cols) so small printed text doesn't ghost.
+  let typography = {
+    statSize:    1.0,    // .dcc-stat-key + .dcc-stat-val
+    weaponSize:  1.15,   // .dcc-w-table (numbers, names, keywords)
+    bodySize:    1.0,    // .dcc-abilities-body, .dcc-wargear-body, .dcc-rule-text
+    fineSize:    1.1,    // .dcc-keywords (footer), .dcc-section-cols
+    bold:        true,
+  };
+  const TYPOGRAPHY_DEFAULTS = JSON.parse(JSON.stringify(typography));
   // Border presets — each is { id, label, hex }. Tuned for the grimdark
   // theme but covers common TCG aesthetics too.
   const BORDER_PRESETS = [
@@ -371,6 +487,17 @@
   // Output is HTML for the inside of a `<article class="dcc-card">` node.
   // Card chrome is styled in css/cards-mode.css under the .dcc-* names.
 
+  // Normalise an invulnerable-save string to the conventional "4++" form,
+  // so SV cells read "2+ / 4++". BSData / GDC sometimes hand us "4", "4+",
+  // or "4++" depending on faction; this folds them all into the same shape.
+  function formatInvuln(raw) {
+    const s = String(raw == null ? '' : raw).trim();
+    if (!s) return '';
+    if (/\+\+$/.test(s)) return s;
+    if (/\+$/.test(s))   return s + '+';
+    return s + '++';
+  }
+
   const STAT_ORDER = ['M', 'T', 'SV', 'W', 'LD', 'OC'];
   function getStatVal(stats, key) {
     const aliases = (UI && UI._STAT_ALIASES && UI._STAT_ALIASES[key]) || [key];
@@ -569,18 +696,32 @@
     const kwFooter = showUKw ? `<div class="dcc-keywords"><strong>KEYWORDS:</strong> ${esc(allKw.join(', '))}</div>` : '';
     const footerHtml = (showFKw || showUKw) ? `<footer class="dcc-foot">${fkwFooter}${kwFooter}</footer>` : '';
 
-    const inv = (display.invuln && unit.invulnSave) ? `<span class="dcc-inv" title="Invulnerable Save">${esc(unit.invulnSave)} INV</span>` : '';
     const role = display.role ? `<span class="dcc-role">${esc(unit.type || '')}</span>` : '';
     const ptsHtml = (display.points && ptsLabel != null) ? `<span class="dcc-pts">${esc(String(ptsLabel))} pts</span>` : '';
-    const showSubLine = !!(role || inv);
+    const showSubLine = !!role;
+    const showInvuln = !!(display.invuln && unit.invulnSave);
 
     const statsHtml = (display.stats && presentStats.length > 0)
       ? `<div class="dcc-stats" style="--dcc-stat-cols:${presentStats.length}">
-          ${presentStats.map(k => `
-            <div class="dcc-stat-cell">
-              <span class="dcc-stat-key">${esc(k)}</span>
-              <span class="dcc-stat-val">${esc(String(getStatVal(stats, k)))}</span>
-            </div>`).join('')}
+          ${presentStats.map(k => {
+            const v = String(getStatVal(stats, k));
+            // Combine the invulnerable save into the SV cell as `2+ / 4++`
+            // so it lives where players' eyes already go for saves.
+            // Adds a `dcc-stat-val-combo` modifier that scales the value
+            // font-size down so the longer string still fits the cell.
+            if (k === 'SV' && showInvuln) {
+              return `
+                <div class="dcc-stat-cell dcc-stat-cell-sv">
+                  <span class="dcc-stat-key">${esc(k)}</span>
+                  <span class="dcc-stat-val dcc-stat-val-combo">${esc(v)} / ${esc(formatInvuln(unit.invulnSave))}</span>
+                </div>`;
+            }
+            return `
+              <div class="dcc-stat-cell">
+                <span class="dcc-stat-key">${esc(k)}</span>
+                <span class="dcc-stat-val">${esc(v)}</span>
+              </div>`;
+          }).join('')}
         </div>`
       : '';
 
@@ -590,7 +731,7 @@
           <h1 class="dcc-name">${esc(unit.name || entry.unitName || 'Unit')}</h1>
           ${ptsHtml}
         </div>
-        ${showSubLine ? `<div class="dcc-sub-line">${role}${inv}</div>` : ''}
+        ${showSubLine ? `<div class="dcc-sub-line">${role}</div>` : ''}
       </header>
       ${statsHtml}
       ${display.ranged ? renderWeaponsBlock(ranged, 'ranged') : ''}
@@ -819,8 +960,13 @@
         activeSubTab = btn.dataset.subtab || 'cards';
         refreshSidebar();
       });
-      hostEl.querySelector('#cards-side-body').addEventListener('change', onSidebarChange);
-      hostEl.querySelector('#cards-side-body').addEventListener('click', onSidebarClick);
+      // Trail every sidebar interaction with a savePrefs() so the user's
+      // changes propagate to localStorage (and from there to the server
+      // via sync.js's bag mechanism). The sync layer coalesces no-op
+      // enqueues, so it's safe to fire on every event.
+      const withSave = fn => function (e) { try { fn(e); } finally { savePrefs(); } };
+      hostEl.querySelector('#cards-side-body').addEventListener('change', withSave(onSidebarChange));
+      hostEl.querySelector('#cards-side-body').addEventListener('click',  withSave(onSidebarClick));
       hostEl.querySelector('#cards-print-btn').addEventListener('click', onPrint);
     }
     applyTextureStyle();
@@ -931,6 +1077,54 @@
                     title="${esc(p.label)}"
                     style="background:${esc(p.hex)}"
                     aria-label="${esc(p.label)}"></button>`).join('')}
+        </div>
+      </div>
+
+      <div class="cards-layout-section">
+        <div class="cards-disp-heading">Corner rounding</div>
+        <p class="cards-help">
+          Card corner radius in millimetres. Default 4mm matches an R4
+          physical corner cutter. Set to 0 for square corners.
+        </p>
+        <div class="cards-field" style="padding:4px 12px 0">
+          <span class="cards-field-label">Radius
+            <span class="cards-slider-val" id="cards-radius-val">${cornerRadiusMm}mm</span>
+          </span>
+          <input type="range" min="0" max="10" step="0.5" value="${cornerRadiusMm}"
+                 id="cards-radius" class="cards-range">
+        </div>
+      </div>
+
+      <div class="cards-layout-section">
+        <div class="cards-disp-heading">Typography</div>
+        <p class="cards-help">
+          Per-section font scaling for printed legibility. 100% = the
+          original size. The "Bolden small text" toggle bumps weapon
+          keywords, footer keywords, and column labels from weight 400
+          → 600 — useful when small print ghosts on your printer.
+        </p>
+        ${[
+          ['statSize',   'Stat block (M T SV W LD OC values)'],
+          ['weaponSize', 'Weapon table (range / A / BS / S / AP / D)'],
+          ['bodySize',   'Body text (abilities, wargear, rule text)'],
+          ['fineSize',   'Fine print (footer keywords, column labels)'],
+        ].map(([k, label]) => {
+          const pct = Math.round(typography[k] * 100);
+          return `
+          <div class="cards-field" style="padding:6px 12px 0">
+            <span class="cards-field-label">${esc(label)}
+              <span class="cards-slider-val" data-typo-val="${k}">${pct}%</span>
+            </span>
+            <input type="range" min="80" max="150" step="5" value="${pct}"
+                   data-typo="${k}" class="cards-range">
+          </div>`;
+        }).join('')}
+        <label class="cards-row" style="margin: 8px 12px 0">
+          <input type="checkbox" id="cards-typo-bold" ${typography.bold ? 'checked' : ''}>
+          <span><strong>Bolden small text</strong></span>
+        </label>
+        <div style="padding:8px 12px 0">
+          <button type="button" class="cards-link-btn" id="cards-typo-reset">Reset typography</button>
         </div>
       </div>
 
@@ -1078,7 +1272,34 @@
       if (Number.isNaN(textureIntensity)) textureIntensity = DEFAULT_INTENSITY;
       const lbl = hostEl.querySelector('#cards-tex-intensity-val');
       if (lbl) lbl.textContent = textureIntensity + '%';
-      applyTextureStyle();
+      applyDynamicStyle();
+      return;
+    }
+    // Corner radius slider
+    if (e.target && e.target.id === 'cards-radius') {
+      const v = parseFloat(e.target.value);
+      cornerRadiusMm = Number.isNaN(v) ? 4 : Math.max(0, Math.min(10, v));
+      const lbl = hostEl.querySelector('#cards-radius-val');
+      if (lbl) lbl.textContent = cornerRadiusMm + 'mm';
+      applyDynamicStyle();
+      return;
+    }
+    // Typography multipliers
+    if (e.target && e.target.matches && e.target.matches('input[data-typo]')) {
+      const key = e.target.getAttribute('data-typo');
+      const pct = parseInt(e.target.value, 10);
+      if (key in typography && !Number.isNaN(pct)) {
+        typography[key] = Math.max(0.5, Math.min(2.0, pct / 100));
+        const lbl = hostEl.querySelector('[data-typo-val="' + key + '"]');
+        if (lbl) lbl.textContent = pct + '%';
+        applyDynamicStyle();
+      }
+      return;
+    }
+    // Typography "bolden small text" toggle
+    if (e.target && e.target.id === 'cards-typo-bold') {
+      typography.bold = !!e.target.checked;
+      applyDynamicStyle();
       return;
     }
     // Card-back: enable toggle
@@ -1273,6 +1494,14 @@
       display = Object.assign({}, DEFAULT_DISPLAY);
       refreshSidebar();
       refreshPreview();
+      return;
+    }
+    // Typography "Reset typography" link
+    if (e.target && e.target.id === 'cards-typo-reset') {
+      typography = JSON.parse(JSON.stringify(TYPOGRAPHY_DEFAULTS));
+      refreshSidebar();
+      applyDynamicStyle();
+      return;
     }
   }
 
@@ -1427,19 +1656,43 @@
   function mount() {
     hostEl = document.getElementById(HOST_ID);
     if (!hostEl) return;
+    // Hydrate prefs from localStorage (sync.js pulled the bag into LS by
+    // the time bootstrap fires for already-signed-in users).
+    loadPrefs();
+    applyDynamicStyle();
     // Kick off saved-image load in the background so it's ready by the
     // time the user opens the Layout sub-tab.
     reloadSavedImages().then(() => {
       if (mounted && activeSubTab === 'layout') refreshSidebar();
     });
-    // Re-load when the user signs in/out — library is owner-scoped.
+    // Re-load when the user signs in/out — library is owner-scoped, and
+    // sync.js will have pulled the latest prefs by then too.
     if (App.Auth && typeof App.Auth.onChange === 'function') {
       App.Auth.onChange(() => {
+        loadPrefs();
+        applyDynamicStyle();
         reloadSavedImages().then(() => {
-          if (mounted && activeSubTab === 'layout') refreshSidebar();
+          if (mounted) {
+            refreshSidebar();
+            refreshPreview();
+            refreshSummary();
+          }
         });
       });
     }
+    // Re-load prefs when localStorage changes from another tab or the
+    // bag-sync layer pulling fresher state from the server.
+    window.addEventListener('storage', e => {
+      if (e.key === PREFS_KEY) {
+        loadPrefs();
+        applyDynamicStyle();
+        if (mounted) {
+          refreshSidebar();
+          refreshPreview();
+          refreshSummary();
+        }
+      }
+    });
     // Render lazily on first activation so we don't pay for it on every
     // app load — the host stays a placeholder until cards mode opens.
     if (typeof App.getMode === 'function' && App.getMode() === 'cards') {
