@@ -39,12 +39,20 @@ window.YaabDB = (() => {
   // payloads (per-faction stratagem/detachment/enhancement data). Source:
   // https://github.com/game-datacards/datasources — used to fill the gap
   // BSData wh40k-10e leaves around stratagem rules.
+  // Bumped to v16: ability walker (js/parser/abilities.js) now also
+  // visits `:scope > selectionEntries > selectionEntry[type="upgrade"]`
+  // and `:scope > entryLinks > entryLink` at the unit's top level.
+  // These are the encodings BSData uses for some 10e hero abilities
+  // (Lion El'Jonson's three "Primarch of the First Legion" sub-
+  // abilities sit in one of those paths — without the new walks they
+  // were missing from his unit card). Stale v15 cache still has the
+  // old ability lists, so drop the parsed-data stores on upgrade.
   // Bumped to v15: added `cardBackImages` store for the user-uploaded
   // card-back image library (cards-mode duplex printing). Unlike the
   // parsed-data stores, this is USER DATA — its upgrade path below is
   // non-destructive (only created if missing) so future DB_VERSION
   // bumps that drop the parsed stores don't wipe the user's library.
-  const DB_VERSION = 15;
+  const DB_VERSION = 16;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
