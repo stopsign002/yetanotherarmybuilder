@@ -146,42 +146,51 @@
     _suppressSave = true;
     try {
       const raw = localStorage.getItem(PREFS_KEY);
-      if (!raw) return;
-      const p = JSON.parse(raw) || {};
-      if (p.display && typeof p.display === 'object') {
-        Object.keys(DEFAULT_DISPLAY).forEach(k => {
-          if (typeof p.display[k] === 'boolean') display[k] = p.display[k];
-        });
+      if (raw) {
+        const p = JSON.parse(raw) || {};
+        if (p.display && typeof p.display === 'object') {
+          Object.keys(DEFAULT_DISPLAY).forEach(k => {
+            if (typeof p.display[k] === 'boolean') display[k] = p.display[k];
+          });
+        }
+        if (typeof p.textureId === 'string')        textureId        = p.textureId;
+        if (typeof p.textureIntensity === 'number') textureIntensity = p.textureIntensity;
+        if (typeof p.borderColor === 'string')      borderColor      = p.borderColor;
+        if (typeof p.cornerRadiusMm === 'number')   cornerRadiusMm   = p.cornerRadiusMm;
+        if (typeof p.headerRadiusMm === 'number')   headerRadiusMm   = p.headerRadiusMm;
+        if (typeof p.activeLayoutId === 'string')   activeLayoutId   = p.activeLayoutId;
+        if (p.layoutByKind && typeof p.layoutByKind === 'object') {
+          ['unit','rule','strat'].forEach(k => {
+            if (p.layoutByKind[k] === null || typeof p.layoutByKind[k] === 'string') {
+              layoutByKind[k] = p.layoutByKind[k];
+            }
+          });
+        }
+        if (p.typography && typeof p.typography === 'object') {
+          ['statSize','weaponSize','bodySize','fineSize'].forEach(k => {
+            const n = parseFloat(p.typography[k]);
+            if (!Number.isNaN(n) && n > 0) typography[k] = Math.max(0.5, Math.min(2.0, n));
+          });
+          if (typeof p.typography.bold === 'boolean') typography.bold = p.typography.bold;
+        }
+        if (p.cardBack && typeof p.cardBack === 'object') {
+          if (typeof p.cardBack.enabled === 'boolean') cardBack.enabled = p.cardBack.enabled;
+          if (typeof p.cardBack.scale   === 'number')  cardBack.scale   = p.cardBack.scale;
+          if (typeof p.cardBack.offsetX === 'number')  cardBack.offsetX = p.cardBack.offsetX;
+          if (typeof p.cardBack.offsetY === 'number')  cardBack.offsetY = p.cardBack.offsetY;
+        }
       }
-      if (typeof p.textureId === 'string')        textureId        = p.textureId;
-      if (typeof p.textureIntensity === 'number') textureIntensity = p.textureIntensity;
-      if (typeof p.borderColor === 'string')      borderColor      = p.borderColor;
-      if (typeof p.cornerRadiusMm === 'number')   cornerRadiusMm   = p.cornerRadiusMm;
-      if (typeof p.headerRadiusMm === 'number')   headerRadiusMm   = p.headerRadiusMm;
-      if (typeof p.activeLayoutId === 'string')   activeLayoutId   = p.activeLayoutId;
-      if (p.layoutByKind && typeof p.layoutByKind === 'object') {
-        ['unit','rule','strat'].forEach(k => {
-          if (p.layoutByKind[k] === null || typeof p.layoutByKind[k] === 'string') {
-            layoutByKind[k] = p.layoutByKind[k];
-          }
-        });
-      }
-      if (p.typography && typeof p.typography === 'object') {
-        ['statSize','weaponSize','bodySize','fineSize'].forEach(k => {
-          const n = parseFloat(p.typography[k]);
-          if (!Number.isNaN(n) && n > 0) typography[k] = Math.max(0.5, Math.min(2.0, n));
-        });
-        if (typeof p.typography.bold === 'boolean') typography.bold = p.typography.bold;
-      }
-      if (p.cardBack && typeof p.cardBack === 'object') {
-        if (typeof p.cardBack.enabled === 'boolean') cardBack.enabled = p.cardBack.enabled;
-        if (typeof p.cardBack.scale   === 'number')  cardBack.scale   = p.cardBack.scale;
-        if (typeof p.cardBack.offsetX === 'number')  cardBack.offsetX = p.cardBack.offsetX;
-        if (typeof p.cardBack.offsetY === 'number')  cardBack.offsetY = p.cardBack.offsetY;
-      }
-    } catch (_) {}
-    _prefsLoaded = true;
-    _suppressSave = false;
+    } catch (_) {
+      // Malformed JSON or quota — fall through; defaults stay in place.
+    } finally {
+      // CRITICAL: must reach this even on the no-prefs path. Earlier
+      // versions used an early `return;` inside the try when raw was
+      // empty, which left _suppressSave stuck at true forever and made
+      // every subsequent savePrefs() a silent no-op. First-time users
+      // saw their settings vanish on every reload as a result.
+      _prefsLoaded  = true;
+      _suppressSave = false;
+    }
   }
 
   function savePrefs() {
