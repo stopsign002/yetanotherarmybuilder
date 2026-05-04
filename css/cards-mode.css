@@ -527,6 +527,78 @@
   position: relative;
   overflow: hidden;
 }
+
+/* ── Continuation cards (overflow spillover) ────────────────────────────
+ * When a unit's text doesn't fit, splitOverflowingUnitCards() emits a
+ * second card with class `dcc-card-cont`. The parchment overlay is sized
+ * to its content (height: auto via flex flow) and pinned to the top of
+ * the card; the rest of the cell shows either the user-set card-back
+ * image (if `dcc-card-cont-art` is also set) or the page border colour
+ * showing through. The friend's "art continues" idea, basically.
+ */
+.dcc-card-cont {
+  /* Strip the card padding — the .dcc-cont-overlay handles its own. The
+   * gilded frame box-shadow inherited from .dcc-card stays. The
+   * !important on background beats the JS-injected
+   * `.dcc-card { background: <texture> }` rule that's appended at
+   * runtime — the article itself must be transparent so the back image
+   * shows through. The parchment lives on .dcc-cont-overlay. */
+  padding: 0;
+  background: transparent !important;
+  background-blend-mode: normal !important;
+  position: relative;
+  overflow: hidden;
+}
+.dcc-card-cont .dcc-cont-bg {
+  /* Same pin/scale rig as the duplex back image, but full-cell behind
+   * the overlay (z-index 0) so the parchment overlay (z-index 1) covers
+   * just the top portion. */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  transform-origin: center;
+  transform:
+    translate(calc(-50% + var(--dcc-back-x, 0%)),
+              calc(-50% + var(--dcc-back-y, 0%)))
+    scale(var(--dcc-back-scale, 1));
+  z-index: 0;
+  pointer-events: none;
+}
+.dcc-card-cont .dcc-cont-overlay {
+  /* Parchment overlay — same look as a regular .dcc-card body. The
+   * JS-injected dynamic stylesheet targets this selector too so the
+   * active texture preset, intensity, and corner radius all apply. */
+  position: relative;
+  z-index: 1;
+  padding: 1.6mm 2mm;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2mm;
+  /* height: auto — only as tall as needed. */
+  /* Soften the bottom edge so the boundary feels designed, not clipped. */
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+  box-shadow: 0 2mm 3mm rgba(0,0,0,0.18);
+}
+/* When there's no user back image, the continuation card's bottom area
+ * just shows the page background. Add a faint horizontal rule at the
+ * overlay's bottom edge so the boundary still reads. */
+.dcc-card-cont:not(.dcc-card-cont-art) .dcc-cont-overlay {
+  border-bottom: 0.4mm solid #1a140a;
+}
+/* "Continued" header tag — small italicised marker the renderer adds to
+ * the cloned header on the continuation card. */
+.dcc-head-cont::after {
+  content: ' (cont.)';
+  font-style: italic;
+  font-weight: 400;
+  opacity: 0.7;
+  font-size: 0.75em;
+}
 .dcc-back-img {
   /* Pinned to the centre of the cell, then translated by (offsetX,
    * offsetY) % and scaled. Container clips overflow so high scales
@@ -866,6 +938,9 @@
   body.cards-printing .dcc-page,
   body.cards-printing .dcc-card,
   body.cards-printing .dcc-card-back,
+  body.cards-printing .dcc-card-cont,
+  body.cards-printing .dcc-cont-overlay,
+  body.cards-printing .dcc-cont-bg,
   body.cards-printing .dcc-back-img,
   body.cards-printing .dcc-head,
   body.cards-printing .dcc-section-head,

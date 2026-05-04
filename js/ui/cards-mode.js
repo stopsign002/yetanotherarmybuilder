@@ -86,7 +86,12 @@
     const grainUrl = buildGrainUrl(t.grain, intensity);
     const bg = grainUrl ? (grainUrl + ', ' + t.base) : t.base;
     const blend = grainUrl ? 'multiply, normal, normal' : 'normal';
-    return '.dcc-card { background: ' + bg + '; background-blend-mode: ' + blend + '; }';
+    // Apply the same texture to the parchment overlay used by
+    // continuation cards, so a spillover card visually matches the
+    // primary card it follows.
+    return ''
+      + '.dcc-card { background: ' + bg + '; background-blend-mode: ' + blend + '; }\n'
+      + '.dcc-card-cont .dcc-cont-overlay { background: ' + bg + '; background-blend-mode: ' + blend + '; }';
   }
   // Build the full dynamic stylesheet: texture, corner radius, typography
   // CSS variables, and the optional "bold small text" override. All of it
@@ -850,7 +855,11 @@
 
     cards.forEach(card => {
       const cardEl = document.createElement('article');
-      cardEl.className = 'dcc-card dcc-card-' + card.kind;
+      // Continuation cards (set by splitOverflowingUnitCards) carry their
+      // own class string; everything else gets the standard kind class.
+      cardEl.className = card.isContinuation
+        ? 'dcc-card dcc-card-' + card.kind + ' ' + (card.contClasses || 'dcc-card-cont')
+        : 'dcc-card dcc-card-' + card.kind;
       cardEl.innerHTML = card.html;
       pageEl.appendChild(cardEl);
     });
@@ -913,12 +922,152 @@
   // strat order, with a back page interleaved after each front when card
   // backs are enabled (1F, 1B, 2F, 2B, …). User prints odd pages, flips
   // the stack in the printer, prints even pages.
+  // ── Card spillover ──────────────────────────────────────────────────────
+  // Some unit cards (primarchs, dense vehicles) carry more text than fits.
+  // Rather than clipping, we measure each unit card off-screen at its
+  // exact target size and — if it overflows — split section-on-boundary
+  // into a primary card (header + fitting sections) and a continuation
+  // card (continuation header + overflowing sections + footer keywords).
+  // The split is conservative: max 2 cards per unit, header always comes
+  // first on each card so the unit is identifiable. The continuation
+  // card uses .dcc-card-cont, which lets the user-uploaded card-back
+  // image (if set) bleed through beneath a height-auto parchment overlay
+  // — the friend's "art continues underneath" idea.
+  function cardSizeFor(layout) {
+    return {
+      w: (layout.w - 2 * PAGE_MARGIN_MM - (layout.cols - 1) * CARD_GUTTER_MM) / layout.cols,
+      h: (layout.h - 2 * PAGE_MARGIN_MM - (layout.rows - 1) * CARD_GUTTER_MM) / layout.rows,
+    };
+  }
+  function splitOverflowingUnitCards(unitCards, layout) {
+    if (unitCards.length === 0) return unitCards;
+    const { w: cardW, h: cardH } = cardSizeFor(layout);
+    const stage = document.createElement('div');
+    stage.style.cssText =
+      'position:fixed;top:-99999px;left:0;width:auto;height:auto;visibility:hidden;z-index:-9999;pointer-events:none;';
+    stage.className = 'dcc-measure-stage';
+    document.body.appendChild(stage);
+    try {
+      const out = [];
+      const backsOn = !!(cardBack.enabled && cardBack.src);
+      for (const card of unitCards) {
+        const split = measureAndMaybeSplit(card, cardW, cardH, stage, backsOn);
+        split.forEach(c => out.push(c));
+      }
+      return out;
+    } finally {
+      document.body.removeChild(stage);
+    }
+  }
+  function measureAndMaybeSplit(card, cardW, cardH, stage, backsOn) {
+    const host = document.createElement('div');
+    host.style.cssText = 'width:' + cardW + 'mm; height:' + cardH + 'mm;';
+    const cardEl = document.createElement('article');
+    cardEl.className = 'dcc-card dcc-card-unit';
+    cardEl.style.cssText = 'width:100%;height:100%;box-sizing:border-box;';
+    cardEl.innerHTML = card.html;
+    host.appendChild(cardEl);
+    stage.appendChild(host);
+    try {
+      // Sub-pixel slack: browsers can round mm-derived heights by ±1px.
+      if (cardEl.scrollHeight <= cardEl.clientHeight + 2) return [card];
+
+      const children = Array.from(cardEl.children);
+      if (children.length < 2) return [card]; // can't split
+
+      const header = children[0];
+      const isHeaderEl = header && header.classList && header.classList.contains('dcc-head');
+      if (!isHeaderEl) return [card];
+
+      const last = children[children.length - 1];
+      const footer = (last && last.classList && last.classList.contains('dcc-foot')) ? last : null;
+      const middle = children.slice(1, footer ? -1 : undefined);
+      if (middle.length === 0) return [card];
+
+      const cardClient = cardEl.clientHeight;
+      const headerH = header.offsetHeight;
+      const footerH = footer ? footer.offsetHeight : 0;
+      // Padding + per-section margins/gap eat ~6mm at default; budget
+      // generously so the visible card never quite fills to its edge.
+      const reserveMm = 8;
+      const reservePx = mmToPx(reserveMm);
+      const usable = cardClient - headerH - footerH - reservePx;
+
+      let running = 0;
+      const fits = [];
+      const overflow = [];
+      for (const c of middle) {
+        // Sections are display:flex blocks; offsetHeight already includes
+        // their internal padding and section-head bar.
+        const h = c.offsetHeight + 4;  // ~1mm gap between sections
+        if (overflow.length === 0 && running + h <= usable) {
+          fits.push(c); running += h;
+        } else {
+          overflow.push(c);
+        }
+      }
+
+      // If even one middle section won't fit alongside the header, give
+      // up and let the card clip — the alternative is an empty primary
+      // card with all content on the continuation, which looks broken.
+      if (fits.length === 0) return [card];
+      if (overflow.length === 0) return [card];
+
+      // Build primary card: header + fits (footer goes on the LAST card
+      // so the unit's KEYWORDS line completes the unit's identity).
+      const firstHTML = header.outerHTML + fits.map(n => n.outerHTML).join('');
+      // Continuation card: same header (so the unit is identifiable on
+      // the table) + overflowing middle + footer if any. The continuation
+      // class triggers the parchment-only-as-tall-as-content + art-bleed
+      // behaviour in CSS when a card-back image is set.
+      const contClasses = backsOn ? 'dcc-card-cont dcc-card-cont-art' : 'dcc-card-cont';
+      const backImg = backsOn
+        ? '<img class="dcc-cont-bg" alt="" src="' + (cardBack.src || '').replace(/"/g, '&quot;') + '"' +
+          ' style="--dcc-back-scale:' + cardBack.scale +
+          ';--dcc-back-x:' + cardBack.offsetX + '%' +
+          ';--dcc-back-y:' + cardBack.offsetY + '%;">'
+        : '';
+      const contInnerHTML =
+        backImg +
+        '<div class="dcc-cont-overlay">' +
+          header.outerHTML.replace('class="dcc-head"', 'class="dcc-head dcc-head-cont"') +
+          overflow.map(n => n.outerHTML).join('') +
+          (footer ? footer.outerHTML : '') +
+        '</div>';
+
+      const primary = Object.assign({}, card, { html: firstHTML });
+      const cont = Object.assign({}, card, {
+        html: contInnerHTML,
+        isContinuation: true,
+        contClasses: contClasses,
+        label: (card.label || 'Unit') + ' (cont.)',
+      });
+      return [primary, cont];
+    } finally {
+      stage.removeChild(host);
+    }
+  }
+  function mmToPx(mm) {
+    // 1in = 25.4mm; browsers default to 96dpi for mm conversion.
+    return mm * 96 / 25.4;
+  }
+
   function buildPagesDOM() {
     const all = selectedCards();
+
+    // Pre-pass: split any unit card whose content overflows the cell at
+    // its target physical size. Rule and stratagem cards aren't split —
+    // they're typically short and benefit from staying contiguous.
+    const unitsRaw  = all.filter(c => c.kind === 'unit');
+    const rules     = all.filter(c => c.kind === 'rule');
+    const strats    = all.filter(c => c.kind === 'strat');
+    const unitsLayout = getLayoutFor('unit');
+    const units = splitOverflowingUnitCards(unitsRaw, unitsLayout);
+
     const groups = [
-      { kind: 'unit',  cards: all.filter(c => c.kind === 'unit'),  layout: getLayoutFor('unit')  },
-      { kind: 'rule',  cards: all.filter(c => c.kind === 'rule'),  layout: getLayoutFor('rule')  },
-      { kind: 'strat', cards: all.filter(c => c.kind === 'strat'), layout: getLayoutFor('strat') },
+      { kind: 'unit',  cards: units,  layout: unitsLayout            },
+      { kind: 'rule',  cards: rules,  layout: getLayoutFor('rule')   },
+      { kind: 'strat', cards: strats, layout: getLayoutFor('strat')  },
     ];
 
     const frag = document.createDocumentFragment();
@@ -940,7 +1089,9 @@
         }
       }
     });
-    return { frag, pageCount, cardCount: all.length };
+    // Recompute total card count — splits inflate it.
+    const cardCount = units.length + rules.length + strats.length;
+    return { frag, pageCount, cardCount };
   }
 
   // ── Mode UI shell ────────────────────────────────────────────────────────
