@@ -209,7 +209,7 @@
       case 'load':       ok = clickIfPresent('btn-load-army'); break;
       case 'undo':       ok = clickIfPresent('yaab-btn-undo'); break;
       case 'redo':       ok = clickIfPresent('yaab-btn-redo'); break;
-      case 'print':      ok = clickIfPresent('btn-print-army'); break;
+      case 'print':      ok = clickIfPresent('btn-data-cards'); break;
       case 'analytics': {
         if (typeof App.openAnalytics === 'function') { App.openAnalytics(); ok = true; }
         else if (window.UI && typeof UI.openAnalytics === 'function') { UI.openAnalytics(); ok = true; }

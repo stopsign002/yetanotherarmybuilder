@@ -49,8 +49,7 @@
     { label: 'Copy as text',       shortcut: null,         btn: 'btn-export-text' },
     { label: 'Download CSV',       shortcut: null,         btn: 'btn-export-csv' },
     { label: 'Share link',         shortcut: null,         btn: 'yaab-btn-share' },
-    { label: 'Print',              shortcut: null,         btn: 'btn-print-army' },
-    { label: 'Save as PDF',        shortcut: null,         btn: '__pdf__' },
+    { label: 'Data cards',         shortcut: null,         btn: 'btn-data-cards' },
     { label: 'Undo',               shortcut: 'Cmd/Ctrl+Z', btn: 'yaab-btn-undo' },
     { label: 'Redo',               shortcut: 'Shift+Cmd/Ctrl+Z', btn: 'yaab-btn-redo' },
     { label: 'Toggle keyboard help', shortcut: '?',        btn: '__help__' },
@@ -65,24 +64,12 @@
     el.click();
   }
 
-  function saveAsPdf() {
-    const printBtn = document.getElementById('btn-print-army');
-    if (!printBtn) return;
-    printBtn.click();
-    // Preview renders synchronously in datasheet.js; click after a frame.
-    setTimeout(() => {
-      const pdfBtn = document.getElementById('print-preview-pdf');
-      if (pdfBtn) pdfBtn.click();
-    }, 150);
-  }
-
   function buildActionCandidates() {
     return ACTIONS.map(a => ({
       type: 'Actions',
       label: a.label,
       subtitle: a.shortcut || '',
       run: a.btn === '__help__' ? openHelp
-         : a.btn === '__pdf__'  ? saveAsPdf
          : () => clickButtonById(a.btn),
     }));
   }

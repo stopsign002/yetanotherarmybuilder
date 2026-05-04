@@ -291,10 +291,10 @@
         run() { close(); clickToolbarBtn('btn-export-csv'); },
       },
       {
-        id: 'print-army',
-        label: 'Print datasheets',
+        id: 'data-cards',
+        label: 'Data cards…',
         section: 'export',
-        run() { close(); clickToolbarBtn('btn-print-army'); },
+        run() { close(); clickToolbarBtn('btn-data-cards'); },
       },
 
       // ── HELP ─────────────────────────────────────────────────────────
