@@ -1,0 +1,481 @@
+/* css/data-card-creator.css — Data Card Creator modal + card styling.
+ *
+ * Card sizing is in millimetres so the on-screen preview (scaled by a
+ * transform on .dcc-page-frame) matches html2pdf output 1:1. Card font
+ * sizes are also in mm — that way text on a 4×6 card stays the same
+ * physical size whether the card prints solo on an index card or shrunk
+ * 4-up on US Letter. */
+
+/* ── Backdrop + modal shell ─────────────────────────────────────────────── */
+.dcc-backdrop {
+  position: fixed; inset: 0;
+  z-index: 1500;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.dcc-backdrop[hidden] { display: none !important; }
+body.dcc-modal-open { overflow: hidden; }
+
+.dcc-modal {
+  width: min(1280px, 100%);
+  height: min(920px, 100%);
+  max-height: 100%;
+  background: #15171b;
+  color: #e7e9ee;
+  border-radius: 10px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.dcc-modal-head {
+  display: flex; align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #2a2d33;
+  background: linear-gradient(180deg, #1c1f24, #15171b);
+}
+.dcc-modal-title {
+  margin: 0;
+  font-size: 16px; font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.dcc-summary {
+  margin-left: auto;
+  font-size: 12px;
+  color: #9aa1ad;
+}
+.dcc-close {
+  background: transparent;
+  color: #cdd1d8;
+  border: 1px solid #2e323a;
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 22px; line-height: 1;
+}
+.dcc-close:hover { background: #20232a; color: #fff; }
+
+/* Toolbar row (tabs + layout + actions) */
+.dcc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #2a2d33;
+  background: #181b20;
+}
+.dcc-tabs { display: flex; gap: 4px; }
+.dcc-tab {
+  background: transparent;
+  border: 1px solid #2e323a;
+  color: #b9bec8;
+  padding: 7px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.dcc-tab:hover { background: #1f232a; color: #fff; }
+.dcc-tab.is-active {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  border-color: transparent;
+  font-weight: 600;
+}
+.dcc-layout-pick { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #9aa1ad; }
+.dcc-layout-select {
+  background: #0f1115; color: #e7e9ee;
+  border: 1px solid #2e323a; border-radius: 6px;
+  padding: 6px 8px; font-size: 13px;
+  min-width: 220px;
+}
+.dcc-actions { margin-left: auto; display: flex; gap: 8px; }
+.dcc-btn {
+  background: #20232a; color: #e7e9ee;
+  border: 1px solid #2e323a; border-radius: 6px;
+  padding: 7px 14px; font-size: 13px; font-weight: 500;
+  cursor: pointer;
+}
+.dcc-btn:hover { background: #2a2e36; }
+.dcc-btn-primary {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  border-color: transparent;
+}
+.dcc-btn-primary:hover { background: var(--accent-hover, #e0e0e0); }
+.dcc-btn[disabled] { opacity: 0.5; cursor: progress; }
+
+/* Body split: sidebar + preview */
+.dcc-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.dcc-side {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid #2a2d33;
+  background: #14171c;
+  overflow-y: auto;
+  padding: 10px 12px;
+}
+.dcc-side-head {
+  position: sticky; top: 0;
+  background: #14171c;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid #23272e;
+  margin-bottom: 6px;
+  z-index: 1;
+}
+.dcc-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+.dcc-row:hover { background: #1c1f25; }
+.dcc-row input[type="checkbox"] { accent-color: var(--accent, #c8c8c8); }
+.dcc-row-all { font-size: 13px; color: #cdd1d8; }
+.dcc-counts {
+  margin-left: 6px;
+  font-size: 11px; color: #8c92a0;
+  font-weight: 400;
+}
+.dcc-list { list-style: none; padding: 0; margin: 0; }
+.dcc-list li { margin: 0; }
+.dcc-empty {
+  padding: 24px;
+  text-align: center;
+  color: #888c95;
+  font-size: 13px;
+}
+
+/* Preview pane: scrollable area where pages float */
+.dcc-preview-wrap {
+  flex: 1 1 auto;
+  overflow: auto;
+  background: #0c0d10;
+  padding: 18px;
+  display: flex;
+  justify-content: center;
+}
+.dcc-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ── Page (one printable sheet) ─────────────────────────────────────────── */
+/* `.dcc-page` is the full physical sheet at 1:1 scale. The preview wraps
+ * each page in a `.dcc-page-frame` shell whose width sets the visual scale
+ * via CSS `transform: scale()`. We set `--dcc-preview-scale` via a media-
+ * style rule below for the preview, and stamp it back to 1 inside the
+ * .dcc-stage container used for PDF/print export. */
+.dcc-page {
+  width: var(--dcc-page-w);
+  height: var(--dcc-page-h);
+  padding: var(--dcc-page-margin);
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #111;
+  display: grid;
+  grid-template-columns: repeat(var(--dcc-grid-cols), 1fr);
+  grid-template-rows: repeat(var(--dcc-grid-rows), 1fr);
+  gap: var(--dcc-gutter);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.45);
+  /* Preview scaling: scale the whole page down to fit the preview pane.
+   * `transform-origin: top left` means we have to compensate width below. */
+  transform: scale(var(--dcc-preview-scale, 0.55));
+  transform-origin: top left;
+  /* Compensate scaled height/width with negative margins so adjacent pages
+   * stack tightly without huge gaps. */
+  margin-right: calc(var(--dcc-page-w) * (var(--dcc-preview-scale, 0.55) - 1));
+  margin-bottom: calc(var(--dcc-page-h) * (var(--dcc-preview-scale, 0.55) - 1));
+}
+/* Pick the scale based on which preset is active. The base 0.55 works for
+ * 4×6 cards; smaller for full Letter/A4 sheets. */
+.dcc-preview .dcc-page[style*="--dcc-page-w: 215.9mm"],
+.dcc-preview .dcc-page[style*="--dcc-page-w: 210mm"] {
+  --dcc-preview-scale: 0.45;
+}
+.dcc-preview .dcc-page[style*="--dcc-page-w: 152.4mm"] {
+  --dcc-preview-scale: 0.7;
+}
+.dcc-preview .dcc-page[style*="--dcc-page-w: 101.6mm"] {
+  --dcc-preview-scale: 0.85;
+}
+
+/* PDF/print export stage uses 1:1 sizing — html2pdf renders this DOM
+ * directly as the source for jsPDF, so it must be the real physical size. */
+.dcc-stage .dcc-page {
+  transform: none;
+  margin: 0 0 0 0;
+  box-shadow: none;
+}
+
+/* ── Card chrome ────────────────────────────────────────────────────────── */
+.dcc-card {
+  width: var(--dcc-card-w);
+  height: var(--dcc-card-h);
+  background: #fdfdfb;
+  color: #111;
+  border: 0.4mm solid #1a1a1a;
+  border-radius: 1mm;
+  box-sizing: border-box;
+  padding: 1.6mm 2mm 1.6mm 2mm;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2mm;
+  /* The cards live inside a CSS grid on the page, so width/height are
+   * already set by the grid track sizes; explicit width/height above is a
+   * safety belt for the empty/empty-grid case. */
+  overflow: hidden;
+  position: relative;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+}
+.dcc-card-empty { border: 0.3mm dashed #d2d2d2; background: transparent; }
+
+/* Header bar (unit name + points / CP / etc.) */
+.dcc-head {
+  background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
+  color: #fff;
+  padding: 1.2mm 1.6mm;
+  border-radius: 0.5mm;
+  margin: -0.6mm -0.6mm 0;
+  position: relative;
+}
+.dcc-head::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -0.6mm;
+  height: 0.4mm;
+  background: var(--accent-dark, #909090);
+}
+.dcc-name-line {
+  display: flex; align-items: baseline; gap: 1.6mm;
+}
+.dcc-name {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 3.8mm;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0;
+  flex: 1 1 auto;
+  line-height: 1.05;
+  /* Allow long names to shrink naturally on tight cards. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dcc-count { font-size: 2.4mm; font-weight: 500; opacity: 0.85; }
+.dcc-pts {
+  background: var(--accent-dark, #b3b3b3);
+  color: #fff;
+  font-weight: 600;
+  font-size: 2.6mm;
+  padding: 0.4mm 1.4mm;
+  border-radius: 0.6mm;
+  white-space: nowrap;
+}
+.dcc-sub-line {
+  display: flex; align-items: center; gap: 1.6mm;
+  font-size: 2.2mm;
+  margin-top: 0.6mm;
+  color: #d8d8d2;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+}
+.dcc-role { opacity: 0.85; }
+.dcc-inv {
+  background: #b32020;
+  color: #fff;
+  padding: 0.2mm 1mm;
+  border-radius: 0.6mm;
+  font-weight: 600;
+  font-size: 2.2mm;
+  margin-left: auto;
+}
+.dcc-strat-phase { margin-left: auto; opacity: 0.85; }
+
+/* Stratagem-style header — accent strip at left to read as "rule card". */
+.dcc-head-strat .dcc-cp {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: #b32020;
+  border-radius: 0.6mm;
+  padding: 0.6mm 1.2mm;
+  line-height: 1;
+  color: #fff;
+  margin-left: auto;
+}
+.dcc-cp-num { font-size: 4mm; font-weight: 700; }
+.dcc-cp-lbl { font-size: 1.6mm; opacity: 0.85; letter-spacing: 0.06em; }
+
+/* Stat strip (M T SV W LD OC) */
+.dcc-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--dcc-stat-cols, 6), 1fr);
+  gap: 0.6mm;
+  margin-top: 0.6mm;
+}
+.dcc-stat-cell {
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 0.6mm;
+  padding: 0.6mm 0.4mm;
+  text-align: center;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  display: flex; flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.dcc-stat-key {
+  font-size: 1.8mm;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+.dcc-stat-val {
+  font-size: 3.6mm;
+  font-weight: 700;
+  margin-top: 0.4mm;
+}
+
+/* Section blocks (weapons, abilities, footers) */
+.dcc-section {
+  display: flex;
+  flex-direction: column;
+}
+.dcc-section-head {
+  background: var(--accent-dark, #4a4a4a);
+  color: #fff;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 1.9mm;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.6mm 1.4mm;
+  border-radius: 0.4mm 0.4mm 0 0;
+  display: flex;
+  align-items: center;
+  gap: 1.2mm;
+}
+.dcc-section-cols {
+  margin-left: auto;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1mm;
+  width: 36mm;
+  text-align: center;
+  font-size: 1.6mm;
+  opacity: 0.9;
+}
+.dcc-section-label { flex: 0 0 auto; }
+
+/* Weapons table */
+.dcc-w-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 2.2mm;
+}
+.dcc-w-table tr { border-bottom: 0.15mm solid #cfcfcf; }
+.dcc-w-table tr:last-child { border-bottom: none; }
+.dcc-w-table td {
+  padding: 0.7mm 0.4mm;
+  vertical-align: top;
+}
+.dcc-w-name {
+  width: auto;
+  font-weight: 600;
+  padding-left: 1.4mm !important;
+}
+.dcc-w-kw {
+  font-style: italic;
+  font-size: 1.7mm;
+  color: #5a5a5a;
+  margin-top: 0.2mm;
+  font-weight: 400;
+}
+.dcc-num {
+  text-align: center;
+  width: 6mm;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Abilities */
+.dcc-abilities-body {
+  padding: 0.8mm 1.4mm;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 2.1mm;
+  line-height: 1.25;
+  color: #1a1a1a;
+}
+.dcc-ability-row { margin-bottom: 0.6mm; }
+.dcc-ability-row:last-child { margin-bottom: 0; }
+.dcc-ability-row strong { color: #000; }
+.dcc-core-row { color: #444; font-size: 1.9mm; }
+
+/* Rule + stratagem body text */
+.dcc-rule-body, .dcc-strat-body { padding: 1mm 1.4mm; flex: 1 1 auto; }
+.dcc-rule-text {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 2.4mm;
+  line-height: 1.32;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+}
+
+/* Footer keywords */
+.dcc-foot {
+  margin-top: auto;
+  padding-top: 0.8mm;
+  border-top: 0.2mm solid #ccc;
+}
+.dcc-keywords {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 1.8mm;
+  letter-spacing: 0.02em;
+  color: #2a2a2a;
+  line-height: 1.2;
+}
+.dcc-keywords strong { color: #000; letter-spacing: 0.06em; }
+.dcc-faction-kw { margin-bottom: 0.4mm; }
+
+/* Small-card adjustments — when packed many-up, shrink fonts a touch */
+.dcc-page[style*="--dcc-grid-cols: 3"] .dcc-card,
+.dcc-page[style*="--dcc-grid-rows: 3"] .dcc-card {
+  padding: 1.2mm;
+  gap: 0.9mm;
+}
+.dcc-page[style*="--dcc-grid-cols: 3"] .dcc-name,
+.dcc-page[style*="--dcc-grid-rows: 3"] .dcc-name {
+  font-size: 3mm;
+}
+.dcc-page[style*="--dcc-grid-cols: 3"] .dcc-stat-val,
+.dcc-page[style*="--dcc-grid-rows: 3"] .dcc-stat-val {
+  font-size: 3.0mm;
+}
+
+/* Responsive: collapse sidebar below the preview on narrow viewports. */
+@media (max-width: 760px) {
+  .dcc-modal { height: 100%; max-height: 100%; border-radius: 0; }
+  .dcc-body { flex-direction: column; }
+  .dcc-side { width: 100%; max-height: 200px; border-right: 0; border-bottom: 1px solid #2a2d33; }
+  .dcc-toolbar { gap: 8px; }
+  .dcc-actions { width: 100%; justify-content: flex-end; }
+}
