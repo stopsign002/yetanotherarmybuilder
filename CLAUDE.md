@@ -52,6 +52,13 @@ Grouped by user intent. One module per row; module path is the search target.
 | Build | Points overrides (dataslate edits, per-unit) | `js/app/points-override.js` |
 | Build | Auto-suggest army nickname from faction | `js/app/nickname.js` |
 | Build | Cmd/Ctrl+K command palette + `?` keyboard help | `js/app/command-palette.js` |
+| Build | Comparator points filter in search bar (`<=200`, `>=100`, `=150`) | `js/app/points-filter.js` |
+| Build | Auto-save current army on every mutation (debounced) | `js/app/autosave.js` |
+| Build | Persist `<details>` open/closed state across reloads | `js/app/details-persist.js` |
+| Modes | Build / Collect / Play container switcher (top-level mode shell) | `js/app/mode-shell.js` |
+| Modes | Build mode page (hero + rules pinboard tab + roster polish) | `js/ui/build-mode.js` |
+| Modes | Collect mode page (Painting / Crusade / Kill Team sub-tabs) | `js/ui/collect-mode.js` |
+| Modes | Play mode cockpit (5 sub-tabs + quick stratagems drawer) | `js/ui/play-mode.js` |
 | Account & sync | Username/password auth | `js/app/auth.js`, `js/ui/auth-modal.js` |
 | Account & sync | Top-bar account button | `js/ui/auth-button.js` |
 | Account & sync | Cloud sync of armies + KV bag | `js/app/sync.js` |
@@ -84,11 +91,19 @@ Grouped by user intent. One module per row; module path is the search target.
 | Polish | PWA install prompt + mobile tab bar | `js/app/pwa-install.js` |
 | Polish | Bug-report modal (prefilled GitHub issue) | `js/app/bug-report.js` |
 | Polish | Top app bar (chip mirror, ⌘K, Action Center) | `js/app/topbar.js`, `js/ui/action-center.js` |
+| Polish | Top-bar Export dropdown (mirrors panel-footer Export menu) | `js/ui/topbar-export.js` |
+| Polish | Settings drawer (sound, motion, badges, replay tour, sign-out) | `js/app/settings-drawer.js` |
+| Polish | Mobile chrome (sticky points pill, dynamic title, back arrow) | `js/app/mobile-shell.js` |
+| Polish | Faction-themed audio stingers + particle bursts | `js/app/faction-fx.js` |
+| Polish | FLIP-style add-to-army flight ghost + drag-to-reorder | `js/ui/flip-animations.js` |
+| Polish | Original geometric faction glyphs (inline SVG) | `js/ui/faction-glyphs.js` |
+| Polish | Role icon prefix on unit cards (Character / Vehicle / Monster …) | `js/ui/role-icons.js` |
+| Polish | Per-faction unit-card gradients (`faction-<slug>` class contributor) | `js/ui/unit-card-themes.js` |
 
 ## Module conventions
 
 - No build step. No `import`/`export`. Plain `<script src>` in `index.html`. Each file is an IIFE that attaches to `window.WahapediaParser`, `window.UI`, `window.App`, `window.YaabDB`, or one of the legacy globals (`Storage`, `Army`, `ArmyManager`, `BSData`).
-- **Hook-first architecture**. Feature modules MUST register via `App.hooks` — do NOT edit shared files (`events.js`, `detail.js`, `index.html` toolbar, etc.) to add a new feature. Push onto `App.hooks.armyToolbarActions`, `App.hooks.detailActions`, `App.hooks.bootstrap`, `App.hooks.armyChange`, `App.hooks.selectionChange`, `App.hooks.rosterFilters`, or `App.hooks.cardClassContributors` from your new module's IIFE. See `js/app/hooks.js`.
+- **Hook-first architecture**. Feature modules MUST register via `App.hooks` — do NOT edit shared files (`events.js`, `detail.js`, `index.html` toolbar, etc.) to add a new feature. Push onto `App.hooks.armyToolbarActions`, `App.hooks.detailActions`, `App.hooks.bootstrap`, `App.hooks.armyChange`, `App.hooks.selectionChange`, `App.hooks.rosterFilters`, `App.hooks.cardClassContributors`, or `App.hooks.modeChange` from your new module's IIFE. See `js/app/hooks.js`.
 - **Toolbar regions**: `primary` (Tools menu by default), `icon` (top-bar icon shelf or More menu), `tools-menu`, `more-menu`, `export-menu`. See `js/app/index.js` for the routing rules.
 - **Lazy loading**: heavy feature modules can be deferred via `js/app/lazy-modules.js` placeholders. The placeholder registers a stub action; on first click it injects the real script(s) and rewires the in-DOM button. Currently ALL feature modules are also eager-loaded from `index.html`, so lazy-modules.js is an opt-in path that is not yet wired into the page.
 - Script load order in `index.html` — see `docs/ARCHITECTURE.md`. Within a folder, hooks resolve lazily by name so leaf order is mostly defensive.
@@ -129,6 +144,12 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_sync_queue` | localStorage | `sync.js` | FIFO of pending `{op, id?, ts, mutationId}` sync operations; coalesced on enqueue | Drained as ops succeed |
 | `yaab_sync_known` | localStorage | `sync.js` | `{ armyId -> updated_at }` last seen on the server; drives LWW push/pull decisions | Cleared on sign-out |
 | `yaab_sync_state_at` | localStorage | `sync.js` | Last successful state-bag (KV) push timestamp | Cleared on sign-out |
+| `yaab_mode` | localStorage | `mode-shell.js` | Active top-level mode (`'build'` / `'collect'` / `'play'`) | User pref |
+| `yaab_play_tab` | localStorage | `play-mode.js` | Active Play-mode sub-tab (`match` / `stratagems` / `calc` / `opponent` / `deploy`) | User pref |
+| `yaab_details_state` | localStorage | `details-persist.js` | Open/closed state of `<details>` boxes (army setup, army rules) | User pref |
+| `yaab_reduced_motion` | localStorage | `settings-drawer.js` | App-level reduced-motion override (in addition to OS pref) | User pref |
+| `yaab_show_collection_badges` | localStorage | `collection.js`, `settings-drawer.js` | Toggle for the painted-status badges on unit cards | User pref |
+| `yaab_collect_debug` | localStorage | `collect-mode.js` | Dev flag for verbose Collect-mode logging | Dev flag |
 
 The kill-switch in `sw.js` self-unregisters and clears any legacy `yaab-shell-v*` caches; no Cache API entries are maintained anymore.
 
