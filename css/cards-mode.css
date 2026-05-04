@@ -543,15 +543,35 @@
  * These rules hide everything except the cards and unwrap the preview's
  * fit-to-viewport scaling so each page prints at full physical size. */
 @media print {
+  /* Reset html/body so default margins don't add a phantom first page. */
+  html, body.cards-printing {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+    overflow: visible !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  /* Hide everything outside the cards-mode subtree. */
   body.cards-printing > :not(#cards-mode) { display: none !important; }
-  body.cards-printing #cards-mode {
+  /* Override mode-shell.css's `.mode-page { height: calc(100vh - …);
+   * overflow: hidden }` (clips past one viewport height during print)
+   * and `.mode-page[hidden] { display:none !important }` defensively. */
+  body.cards-printing #cards-mode,
+  body.cards-printing #cards-mode[hidden] {
     display: block !important;
     background: #fff !important;
     padding: 0 !important;
     margin: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
   }
-  body.cards-printing #cards-mode > :not(.cards-mode-host) { display: none !important; }
+  /* Inside cards-mode, hide just the settings rail; everything else
+   * (.cards-shell -> .cards-preview-wrap -> ... -> .dcc-page) shows. */
   body.cards-printing .cards-side { display: none !important; }
+  body.cards-printing .cards-side-foot { display: none !important; }
   body.cards-printing .cards-shell {
     display: block !important;
     height: auto !important;
