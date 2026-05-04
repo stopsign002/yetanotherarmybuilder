@@ -74,9 +74,13 @@
   // ── Mutable state ────────────────────────────────────────────────────────
   let hostEl = null;             // the #cards-mode <section>
   let mounted = false;           // false until the first renderHost()
-  let activeSubTab = 'cards';    // 'cards' | 'display'
+  let activeSubTab = 'cards';    // 'cards' | 'layout' | 'display'
   let activeCardCat = 'units';   // sub-category within Cards: 'units' | 'rules' | 'strats'
   let activeLayoutId = DEFAULT_LAYOUT;
+  // Per-category layout overrides. null = inherit the global activeLayoutId.
+  // Lets the user, e.g., put units 1-up on 4×6 portrait while putting rules
+  // and stratagems 2-up on 4×6 landscape (their typical printing flow).
+  let layoutByKind = { unit: null, rule: null, strat: null };
   let include = { units: null, rules: null, strats: null };
   let display = Object.assign({}, DEFAULT_DISPLAY);
 
@@ -102,6 +106,10 @@
     return ((App.state && App.state.factions) || []).find(f => f.factionName === army.factionName) || null;
   }
   function getLayout() { return LAYOUTS.find(l => l.id === activeLayoutId) || LAYOUTS[0]; }
+  function getLayoutFor(kind) {
+    const id = layoutByKind[kind] || activeLayoutId;
+    return LAYOUTS.find(l => l.id === id) || getLayout();
+  }
 
   // ── Data gathering ───────────────────────────────────────────────────────
   function gatherUnits() {
@@ -460,51 +468,64 @@
   // visually via CSS `transform: scale()`. The print path (browser-native
   // window.print) doesn't need the wrapper — print CSS in cards-mode.css
   // unwraps it via `transform: none`.
-  function buildPagesDOM() {
-    const layout = getLayout();
+  function buildPageElement(layout, cards, pageNum) {
     const cardsPerPage = layout.cols * layout.rows;
-    const cards = selectedCards();
-    const pages = [];
-    for (let i = 0; i < cards.length; i += cardsPerPage) pages.push(cards.slice(i, i + cardsPerPage));
-    if (pages.length === 0) pages.push([]);
+    const frame = document.createElement('div');
+    frame.className = 'dcc-page-frame';
+    frame.style.setProperty('--dcc-page-w', layout.w + 'mm');
+    frame.style.setProperty('--dcc-page-h', layout.h + 'mm');
+
+    const pageEl = document.createElement('div');
+    pageEl.className = 'dcc-page';
+    pageEl.style.width  = layout.w + 'mm';
+    pageEl.style.height = layout.h + 'mm';
+    pageEl.style.padding = PAGE_MARGIN_MM + 'mm';
+    pageEl.style.gridTemplateColumns = 'repeat(' + layout.cols + ', 1fr)';
+    pageEl.style.gridTemplateRows    = 'repeat(' + layout.rows + ', 1fr)';
+    pageEl.style.gap = CARD_GUTTER_MM + 'mm';
+    pageEl.dataset.page = String(pageNum);
+    pageEl.dataset.layout = layout.id;
+
+    cards.forEach(card => {
+      const cardEl = document.createElement('article');
+      cardEl.className = 'dcc-card dcc-card-' + card.kind;
+      cardEl.innerHTML = card.html;
+      pageEl.appendChild(cardEl);
+    });
+    // Pad with empty grid placeholders so the last page keeps its layout.
+    for (let k = cards.length; k < cardsPerPage; k++) {
+      const ph = document.createElement('div');
+      ph.className = 'dcc-card dcc-card-empty';
+      pageEl.appendChild(ph);
+    }
+    frame.appendChild(pageEl);
+    return frame;
+  }
+
+  // Build pages for the active selection, paginating each card kind by
+  // its own (possibly overridden) layout. Pages are emitted in the order
+  // unit → rule → strat so the user can flip through them naturally.
+  function buildPagesDOM() {
+    const all = selectedCards();
+    const groups = [
+      { kind: 'unit',  cards: all.filter(c => c.kind === 'unit'),  layout: getLayoutFor('unit')  },
+      { kind: 'rule',  cards: all.filter(c => c.kind === 'rule'),  layout: getLayoutFor('rule')  },
+      { kind: 'strat', cards: all.filter(c => c.kind === 'strat'), layout: getLayoutFor('strat') },
+    ];
 
     const frag = document.createDocumentFragment();
-    pages.forEach((page, pi) => {
-      const frame = document.createElement('div');
-      frame.className = 'dcc-page-frame';
-      // Set the page-w/h vars on the FRAME so its width/height calc()
-      // works in the preview's fit-to-viewport scaling.
-      frame.style.setProperty('--dcc-page-w', layout.w + 'mm');
-      frame.style.setProperty('--dcc-page-h', layout.h + 'mm');
-
-      const pageEl = document.createElement('div');
-      pageEl.className = 'dcc-page';
-      // Bake all geometry into inline styles directly so the layout doesn't
-      // depend on CSS-variable inheritance through the frame.
-      pageEl.style.width  = layout.w + 'mm';
-      pageEl.style.height = layout.h + 'mm';
-      pageEl.style.padding = PAGE_MARGIN_MM + 'mm';
-      pageEl.style.gridTemplateColumns = 'repeat(' + layout.cols + ', 1fr)';
-      pageEl.style.gridTemplateRows    = 'repeat(' + layout.rows + ', 1fr)';
-      pageEl.style.gap = CARD_GUTTER_MM + 'mm';
-      pageEl.dataset.page = String(pi + 1);
-
-      page.forEach(card => {
-        const cardEl = document.createElement('article');
-        cardEl.className = 'dcc-card dcc-card-' + card.kind;
-        cardEl.innerHTML = card.html;
-        pageEl.appendChild(cardEl);
-      });
-      // Pad with empty grid placeholders so the last page keeps its layout.
-      for (let k = page.length; k < cardsPerPage; k++) {
-        const ph = document.createElement('div');
-        ph.className = 'dcc-card dcc-card-empty';
-        pageEl.appendChild(ph);
+    let pageCount = 0;
+    let pageNum = 0;
+    groups.forEach(g => {
+      if (g.cards.length === 0) return;
+      const cpp = g.layout.cols * g.layout.rows;
+      for (let i = 0; i < g.cards.length; i += cpp) {
+        pageNum++;
+        frag.appendChild(buildPageElement(g.layout, g.cards.slice(i, i + cpp), pageNum));
+        pageCount++;
       }
-      frame.appendChild(pageEl);
-      frag.appendChild(frame);
     });
-    return { frag, pageCount: pages.length, cardCount: cards.length };
+    return { frag, pageCount, cardCount: all.length };
   }
 
   // ── Mode UI shell ────────────────────────────────────────────────────────
@@ -523,17 +544,9 @@
               <p class="cards-summary" id="cards-summary"></p>
             </header>
 
-            <div class="cards-row">
-              <label class="cards-field">
-                <span class="cards-field-label">Layout</span>
-                <select class="cards-select" id="cards-layout-select">
-                  ${LAYOUTS.map(l => `<option value="${l.id}">${esc(l.label)}</option>`).join('')}
-                </select>
-              </label>
-            </div>
-
             <nav class="cards-subtabs" role="tablist" aria-label="Settings section">
-              <button type="button" class="cards-subtab" data-subtab="cards" role="tab">Pick cards</button>
+              <button type="button" class="cards-subtab" data-subtab="cards"   role="tab">Pick cards</button>
+              <button type="button" class="cards-subtab" data-subtab="layout"  role="tab">Layout</button>
               <button type="button" class="cards-subtab" data-subtab="display" role="tab">Display</button>
             </nav>
 
@@ -552,11 +565,6 @@
           </main>
         </div>`;
 
-      hostEl.querySelector('#cards-layout-select').addEventListener('change', e => {
-        activeLayoutId = e.target.value;
-        refreshPreview();
-        refreshSummary();
-      });
       hostEl.querySelector('.cards-subtabs').addEventListener('click', e => {
         const btn = e.target.closest('.cards-subtab');
         if (!btn) return;
@@ -567,9 +575,6 @@
       hostEl.querySelector('#cards-side-body').addEventListener('click', onSidebarClick);
       hostEl.querySelector('#cards-print-btn').addEventListener('click', onPrint);
     }
-    // Ensure the layout dropdown reflects current state (e.g. after re-entry).
-    const sel = hostEl.querySelector('#cards-layout-select');
-    if (sel) sel.value = activeLayoutId;
     refreshSidebar();
     refreshPreview();
     refreshSummary();
@@ -586,7 +591,55 @@
     });
     const body = hostEl.querySelector('#cards-side-body');
     if (!body) return;
-    body.innerHTML = activeSubTab === 'display' ? renderDisplayPanel() : renderPickPanel();
+    body.innerHTML = activeSubTab === 'display' ? renderDisplayPanel()
+                  : activeSubTab === 'layout'  ? renderLayoutPanel()
+                  :                              renderPickPanel();
+  }
+
+  function renderLayoutPanel() {
+    const opts = LAYOUTS.map(l => `<option value="${l.id}">${esc(l.label)}</option>`).join('');
+    const optsWithGlobal = `<option value="">Use global default</option>` + opts;
+    const overrideRow = (kind, label) => `
+      <label class="cards-field">
+        <span class="cards-field-label">${esc(label)}</span>
+        <select class="cards-select" data-layout-override="${kind}">
+          ${optsWithGlobal}
+        </select>
+      </label>`;
+    const html = `
+      <div class="cards-layout-section">
+        <div class="cards-disp-heading">Default sheet</div>
+        <p class="cards-help">Used for any category that doesn't set its own override below.</p>
+        <label class="cards-field">
+          <span class="cards-field-label">Layout</span>
+          <select class="cards-select" id="cards-layout-global">
+            ${opts}
+          </select>
+        </label>
+      </div>
+
+      <div class="cards-layout-section">
+        <div class="cards-disp-heading">Per-category override</div>
+        <p class="cards-help">
+          Pick a different layout for each card kind. Useful for printing
+          rules and stratagems 2-up while keeping unit cards 1-up. Cards
+          of each kind are paginated independently and printed in order
+          (units → rules → stratagems).
+        </p>
+        ${overrideRow('unit',  'Units')}
+        ${overrideRow('rule',  'Army rules')}
+        ${overrideRow('strat', 'Stratagems')}
+      </div>`;
+    // Defer setting the <select> values until after the HTML lands in the DOM.
+    queueMicrotask(() => {
+      const g = hostEl.querySelector('#cards-layout-global');
+      if (g) g.value = activeLayoutId;
+      hostEl.querySelectorAll('select[data-layout-override]').forEach(sel => {
+        const kind = sel.getAttribute('data-layout-override');
+        sel.value = layoutByKind[kind] || '';
+      });
+    });
+    return html;
   }
 
   function renderPickPanel() {
@@ -655,6 +708,22 @@
   }
 
   function onSidebarChange(e) {
+    // Layout: global preset
+    if (e.target && e.target.id === 'cards-layout-global') {
+      activeLayoutId = e.target.value || DEFAULT_LAYOUT;
+      refreshPreview();
+      refreshSummary();
+      return;
+    }
+    // Layout: per-category override (empty value = inherit global)
+    const ovSel = e.target && e.target.matches && e.target.matches('select[data-layout-override]') ? e.target : null;
+    if (ovSel) {
+      const kind = ovSel.getAttribute('data-layout-override');
+      layoutByKind[kind] = ovSel.value || null;
+      refreshPreview();
+      refreshSummary();
+      return;
+    }
     // Display toggles
     const dispCb = e.target.closest('input[type="checkbox"][data-display]');
     if (dispCb) {
@@ -718,11 +787,16 @@
   function refreshSummary() {
     const sum = hostEl && hostEl.querySelector('#cards-summary');
     if (!sum) return;
-    const cards = selectedCards();
-    const layout = getLayout();
-    const cardsPerPage = layout.cols * layout.rows;
-    const pages = Math.max(1, Math.ceil(cards.length / cardsPerPage));
-    sum.textContent = `${cards.length} card${cards.length === 1 ? '' : 's'} · ${pages} page${pages === 1 ? '' : 's'}`;
+    const all = selectedCards();
+    let pages = 0;
+    ['unit','rule','strat'].forEach(kind => {
+      const cards = all.filter(c => c.kind === kind);
+      if (cards.length === 0) return;
+      const layout = getLayoutFor(kind);
+      pages += Math.ceil(cards.length / (layout.cols * layout.rows));
+    });
+    if (pages === 0) pages = 0;
+    sum.textContent = `${all.length} card${all.length === 1 ? '' : 's'} · ${pages} page${pages === 1 ? '' : 's'}`;
   }
 
   // ── Print / Save PDF ─────────────────────────────────────────────────────
@@ -736,13 +810,44 @@
       if (UI && UI.toast) UI.toast('Nothing selected', 'warning');
       return;
     }
-    const layout = getLayout();
+
+    // Collect every distinct paper size in play. If categories use the
+    // same w/h (e.g. all 4×6 with different grids — the common case),
+    // we emit one global @page rule. If categories truly mix paper
+    // sizes, we emit a named @page per size and tag each .dcc-page with
+    // `page: <name>` via a generated rule keyed off data-layout.
+    const sizes = new Map();   // key "wxh" → { w, h, name, layoutIds:[] }
+    ['unit','rule','strat'].forEach(kind => {
+      const groupCards = cards.filter(c => c.kind === kind);
+      if (groupCards.length === 0) return;
+      const l = getLayoutFor(kind);
+      const key = l.w + 'x' + l.h;
+      if (!sizes.has(key)) sizes.set(key, { w: l.w, h: l.h, name: 'cardspage' + sizes.size, layoutIds: [] });
+      sizes.get(key).layoutIds.push(l.id);
+    });
+
+    let pageCss = '';
+    if (sizes.size <= 1) {
+      const only = [...sizes.values()][0] || { w: getLayout().w, h: getLayout().h };
+      pageCss = '@page { size: ' + only.w + 'mm ' + only.h + 'mm; margin: 0; }';
+    } else {
+      sizes.forEach(s => {
+        pageCss += '@page ' + s.name + ' { size: ' + s.w + 'mm ' + s.h + 'mm; margin: 0; }\n';
+        s.layoutIds.forEach(id => {
+          pageCss += 'body.cards-printing .dcc-page[data-layout="' + id + '"] { page: ' + s.name + '; }\n';
+        });
+      });
+      // Pick the first as the document default, in case the printer
+      // needs an unnamed @page fallback.
+      const first = [...sizes.values()][0];
+      pageCss += '@page { size: ' + first.w + 'mm ' + first.h + 'mm; margin: 0; }\n';
+    }
+
     let style = document.getElementById('cards-print-style');
     if (style) style.remove();
     style = document.createElement('style');
     style.id = 'cards-print-style';
-    style.textContent =
-      '@page { size: ' + layout.w + 'mm ' + layout.h + 'mm; margin: 0; }';
+    style.textContent = pageCss;
     document.head.appendChild(style);
     document.body.classList.add('cards-printing');
 

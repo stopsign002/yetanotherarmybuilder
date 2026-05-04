@@ -178,6 +178,18 @@
   margin-top: 6px;
   border-bottom: 1px solid #1f232a;
 }
+.cards-layout-section {
+  padding: 8px 6px 14px;
+  border-bottom: 1px solid #1f232a;
+}
+.cards-layout-section:last-child { border-bottom: 0; }
+.cards-layout-section .cards-field { padding: 4px 12px 0; margin-top: 6px; }
+.cards-help {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #8c92a0;
+  margin: 4px 12px 6px;
+}
 .cards-link-btn {
   background: transparent;
   border: 0;
@@ -283,13 +295,37 @@
 
 /* ── Card chrome ─────────────────────────────────────────────────────────
  * Sized in mm so the on-screen preview matches print 1:1. Visual style
- * cribbed from 10e GW datasheets — dark header bar, gold/accent
- * underline, tabular weapons block, accent footers. */
+ * cribbed from 10e GW datasheets — but with a grimdark texture pass:
+ * - aged-parchment background with subtle dark grain (inline SVG noise)
+ * - radial vignette for warmth at the corners
+ * - metallic gradient on the title bar with a thin gold accent rule
+ * - ornamental triangular flourish below the title
+ * - faint embossed border to suggest a metal frame
+ *
+ * Everything is inline (no external assets) so it survives the print
+ * pipeline. SVG noise: feTurbulence in dark sepia, low alpha, locked
+ * via stitchTiles so adjacent cards tile cleanly.
+ */
+
 .dcc-card {
-  background: #fdfdfb;
-  color: #111;
-  border: 0.4mm solid #1a1a1a;
+  /* Layered backgrounds (top → bottom):
+   *   1. SVG noise grain in dark sepia (inline data URL)
+   *   2. Soft radial vignette pulling the corners darker
+   *   3. Parchment gradient base */
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' seed='4'/><feColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.13 0 0 0 0 0.07 0 0 0 0.45 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+    radial-gradient(ellipse at 50% 0%, #f7eed4 0%, #ecdfb9 60%, #d8c897 100%),
+    #ecdfb9;
+  background-blend-mode: multiply, normal, normal;
+  color: #1c1308;
+  border: 0.4mm solid #1a140a;
   border-radius: 1mm;
+  /* Dual-layer border: outer dark + inner thin gold to read as a
+   * gilded frame. The inset ring is a box-shadow so it doesn't take
+   * extra layout space. */
+  box-shadow:
+    inset 0 0 0 0.2mm #b89052,
+    inset 0 0 0 0.45mm rgba(0,0,0,0.18);
   box-sizing: border-box;
   padding: 1.6mm 2mm;
   display: flex;
@@ -299,22 +335,56 @@
   position: relative;
   font-family: 'Cinzel', 'Times New Roman', serif;
 }
-.dcc-card-empty { border: 0.3mm dashed #d2d2d2; background: transparent; }
+.dcc-card-empty {
+  background: transparent !important;
+  border: 0.3mm dashed #c8b890;
+  box-shadow: none;
+}
 
+/* Metallic title bar with a subtle horizontal sheen + gold accent rule. */
 .dcc-head {
-  background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
-  color: #fff;
+  background:
+    linear-gradient(180deg,
+      #0b0b0b 0%,
+      #1c1c1c 30%,
+      #292929 50%,
+      #1c1c1c 70%,
+      #0b0b0b 100%);
+  color: #f4ead2;
   padding: 1.2mm 1.6mm;
   border-radius: 0.5mm;
   margin: -0.6mm -0.6mm 0;
   position: relative;
+  box-shadow: 0 0.2mm 0 #5a4a22 inset, 0 -0.2mm 0 rgba(255,255,255,0.06) inset;
 }
+/* Gold accent stripe immediately under the header. */
 .dcc-head::after {
   content: '';
   position: absolute;
   left: 0; right: 0; bottom: -0.6mm;
-  height: 0.4mm;
-  background: var(--accent-dark, #909090);
+  height: 0.5mm;
+  background: linear-gradient(90deg,
+    rgba(184,144,82,0)   0%,
+    #b89052              15%,
+    #e7c87a              50%,
+    #b89052              85%,
+    rgba(184,144,82,0)   100%);
+}
+/* Tiny triangular flourish hanging below the gold stripe — reads as a
+ * stamped seal / banner pendant. */
+.dcc-head::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -1.5mm;
+  width: 2.4mm;
+  height: 1mm;
+  margin-left: -1.2mm;
+  background: linear-gradient(135deg, #b89052 25%, transparent 25%) -0.6mm 0,
+              linear-gradient(225deg, #b89052 25%, transparent 25%)  0.6mm 0;
+  background-size: 1.2mm 1mm;
+  background-repeat: no-repeat;
+  pointer-events: none;
 }
 .dcc-name-line { display: flex; align-items: baseline; gap: 1.6mm; }
 .dcc-name {
@@ -382,8 +452,8 @@
   margin-top: 0.6mm;
 }
 .dcc-stat-cell {
-  background: #1a1a1a;
-  color: #fff;
+  background: linear-gradient(180deg, #1a1308 0%, #2a1f0e 100%);
+  color: #f4ead2;
   border-radius: 0.6mm;
   padding: 0.6mm 0.4mm;
   text-align: center;
@@ -391,6 +461,7 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
+  box-shadow: inset 0 0 0 0.1mm #6a4f1f;
 }
 .dcc-stat-key {
   font-size: 1.8mm;
@@ -407,10 +478,11 @@
 /* Section blocks (weapons, abilities, wargear, footers) */
 .dcc-section { display: flex; flex-direction: column; }
 .dcc-section-head {
-  background: var(--accent-dark, #4a4a4a);
-  color: #fff;
+  /* Bronze-bar look: dark base with a thin gold edge top + bottom. */
+  background: linear-gradient(180deg, #2a1f0e 0%, #1a1308 100%);
+  color: #f0e4c4;
   font-size: 1.9mm;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.6mm 1.4mm;
@@ -418,6 +490,9 @@
   display: flex;
   align-items: center;
   gap: 1.2mm;
+  box-shadow:
+    inset 0 0.15mm 0 #6a4f1f,
+    inset 0 -0.15mm 0 #6a4f1f;
 }
 .dcc-section-cols {
   margin-left: auto;
@@ -437,14 +512,14 @@
   border-collapse: collapse;
   font-size: 2.2mm;
 }
-.dcc-w-table tr { border-bottom: 0.15mm solid #cfcfcf; }
+.dcc-w-table tr { border-bottom: 0.15mm solid rgba(60, 40, 16, 0.32); }
 .dcc-w-table tr:last-child { border-bottom: none; }
 .dcc-w-table td { padding: 0.7mm 0.4mm; vertical-align: top; }
 .dcc-w-name { font-weight: 600; padding-left: 1.4mm !important; }
 .dcc-w-kw {
   font-style: italic;
   font-size: 1.7mm;
-  color: #5a5a5a;
+  color: #6b4e22;
   margin-top: 0.2mm;
   font-weight: 400;
 }
@@ -504,15 +579,25 @@
 .dcc-foot {
   margin-top: auto;
   padding-top: 0.8mm;
-  border-top: 0.2mm solid #ccc;
+  border-top: 0.25mm solid rgba(60, 40, 16, 0.45);
+  position: relative;
+}
+.dcc-foot::before {
+  /* Thin gold line above the dark divider — echoes the title bar. */
+  content: '';
+  position: absolute;
+  top: -0.15mm; left: 0; right: 0;
+  height: 0.15mm;
+  background: linear-gradient(90deg,
+    rgba(184,144,82,0) 0%, #b89052 30%, #b89052 70%, rgba(184,144,82,0) 100%);
 }
 .dcc-keywords {
   font-size: 1.8mm;
   letter-spacing: 0.02em;
-  color: #2a2a2a;
+  color: #2a1f0e;
   line-height: 1.2;
 }
-.dcc-keywords strong { color: #000; letter-spacing: 0.06em; }
+.dcc-keywords strong { color: #0a0703; letter-spacing: 0.06em; }
 .dcc-faction-kw { margin-bottom: 0.4mm; }
 
 /* Tighten card padding for many-up grids */
