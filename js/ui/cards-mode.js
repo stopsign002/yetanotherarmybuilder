@@ -350,7 +350,6 @@
     const { ranged, melee } = classifyWeapons(unit);
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     const ptsLabel = entry.selectedPts != null ? entry.selectedPts : (ptsOpts.length ? ptsOpts[0] : null);
-    const titleSuffix = entry.count > 1 ? ` <span class="dcc-count">×${entry.count}</span>` : '';
 
     const showEnh = display.enhancements && Array.isArray(entry.enhancements) && entry.enhancements.length > 0;
     const enhancementHtml = showEnh
@@ -388,7 +387,7 @@
     return `
       <header class="dcc-head">
         <div class="dcc-name-line">
-          <h1 class="dcc-name">${esc(unit.name || entry.unitName || 'Unit')}${titleSuffix}</h1>
+          <h1 class="dcc-name">${esc(unit.name || entry.unitName || 'Unit')}</h1>
           ${ptsHtml}
         </div>
         ${showSubLine ? `<div class="dcc-sub-line">${role}${inv}</div>` : ''}
