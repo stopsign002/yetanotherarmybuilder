@@ -178,15 +178,98 @@
   // Card-backs section. Reset + reloaded whenever the auth user changes.
   let savedImages = [];
   let savedImagesLoading = false;
-  function imageOwner() {
-    const u = (window.App && App.Auth && typeof App.Auth.getCurrentUser === 'function')
-      ? App.Auth.getCurrentUser() : null;
-    return (u && u.username) ? ('user:' + u.username) : 'anon';
-  }
+
+  // ImageStore — thin abstraction over the persistence layer. Signed-in
+  // users hit the server (so the library follows them across devices —
+  // "prep on one machine, print from another"). Anon users fall back to
+  // the browser-local YaabDB.images store. Same shape returned either
+  // way: { id, name, dataUrl, addedAt }. See docs/CARDS_IMAGES_API.md
+  // for the server contract.
+  const ImageStore = {
+    LIMIT: 30,
+    signedIn() {
+      return !!(window.App && App.Auth && App.Auth.isSignedIn && App.Auth.isSignedIn());
+    },
+    ownerLabel() {
+      if (!this.signedIn()) return 'this browser';
+      const u = App.Auth.getCurrentUser();
+      return (u && u.username) ? u.username : 'account';
+    },
+    storageLocation() {
+      return this.signedIn() ? 'cloud' : 'local';
+    },
+    _on401() {
+      if (window.App && App.Auth && typeof App.Auth.handleSessionExpired === 'function') {
+        App.Auth.handleSessionExpired();
+      }
+    },
+    async list() {
+      if (this.signedIn()) {
+        try {
+          const resp = await fetch('/api/images', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' },
+          });
+          if (resp.status === 401) { this._on401(); return []; }
+          if (resp.ok) {
+            const data = await resp.json();
+            return Array.isArray(data) ? data : [];
+          }
+        } catch (_) {}
+        return [];
+      }
+      return (window.YaabDB && YaabDB.images) ? YaabDB.images.list('anon') : [];
+    },
+    async add(name, dataUrl) {
+      if (this.signedIn()) {
+        try {
+          const resp = await fetch('/api/images', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, dataUrl: dataUrl }),
+          });
+          if (resp.status === 401) { this._on401(); return { ok: false, reason: 'auth' }; }
+          if (resp.ok) {
+            const img = await resp.json();
+            return { ok: true, id: img.id, image: img };
+          }
+          if (resp.status === 409 || resp.status === 413) {
+            let body = null;
+            try { body = await resp.json(); } catch (_) {}
+            return {
+              ok: false,
+              reason: 'limit',
+              limit: (body && body.limit) || this.LIMIT,
+              count: (body && body.count) || 0,
+            };
+          }
+        } catch (_) {}
+        return { ok: false, reason: 'network' };
+      }
+      return (window.YaabDB && YaabDB.images)
+        ? YaabDB.images.add('anon', { name: name, dataUrl: dataUrl })
+        : { ok: false, reason: 'unavailable' };
+    },
+    async remove(id) {
+      if (this.signedIn()) {
+        try {
+          const resp = await fetch('/api/images/' + encodeURIComponent(id), {
+            method: 'DELETE',
+            credentials: 'same-origin',
+          });
+          if (resp.status === 401) { this._on401(); return false; }
+          return resp.ok;
+        } catch (_) { return false; }
+      }
+      return (window.YaabDB && YaabDB.images) ? YaabDB.images.remove(id) : false;
+    },
+  };
+
   async function reloadSavedImages() {
-    if (!window.YaabDB || !YaabDB.images) { savedImages = []; return; }
     savedImagesLoading = true;
-    try { savedImages = await YaabDB.images.list(imageOwner()); }
+    try { savedImages = await ImageStore.list(); }
     catch (_) { savedImages = []; }
     savedImagesLoading = false;
   }
@@ -1020,17 +1103,17 @@
         cardBack.activeId = null;
         refreshPreview();
         refreshSummary();
-        // Then persist to the library.
-        if (window.YaabDB && YaabDB.images) {
-          const result = await YaabDB.images.add(imageOwner(), { name: file.name, dataUrl });
-          if (result.ok) {
-            cardBack.activeId = result.id;
-            savedImages.unshift(result.image);
-          } else if (result.reason === 'limit') {
-            if (UI && UI.toast) {
-              UI.toast(`Library is full (${result.limit} images). Delete one to save more.`, 'warning', 5000);
-            }
-          }
+        // Then persist to the library (server when signed in, IDB when anon).
+        const result = await ImageStore.add(file.name, dataUrl);
+        if (result.ok) {
+          cardBack.activeId = result.id;
+          savedImages.unshift(result.image);
+        } else if (result.reason === 'limit' && UI && UI.toast) {
+          UI.toast(`Library is full (${result.limit} images). Delete one to save more.`, 'warning', 5000);
+        } else if (result.reason === 'network' && UI && UI.toast) {
+          UI.toast('Couldn\'t save to your account — check your connection.', 'warning', 5000);
+        } else if (result.reason === 'auth' && UI && UI.toast) {
+          UI.toast('Sign-in expired. Sign in again to save images to your account.', 'warning', 6000);
         }
         refreshSidebar();
       };
@@ -1135,17 +1218,20 @@
     }
     // Card-back: delete a library thumbnail (× button) — must be checked
     // BEFORE the click-to-select handler since the × is inside the thumb.
+    // Records can have integer ids (IDB autoIncrement) or string ids
+    // (server UUIDs); we round-trip via String() to keep the comparison
+    // robust either way.
     const delBtn = e.target.closest('[data-image-del]');
     if (delBtn) {
       e.preventDefault();
       e.stopPropagation();
-      const id = parseInt(delBtn.getAttribute('data-image-del'), 10);
-      if (!Number.isNaN(id)) {
+      const stringId = delBtn.getAttribute('data-image-del');
+      const target = savedImages.find(img => String(img.id) === stringId);
+      if (target) {
         (async () => {
-          if (window.YaabDB && YaabDB.images) await YaabDB.images.remove(id);
-          savedImages = savedImages.filter(img => img.id !== id);
-          // Drop the active image too if we just deleted it.
-          if (cardBack.activeId === id) {
+          await ImageStore.remove(target.id);
+          savedImages = savedImages.filter(img => String(img.id) !== stringId);
+          if (String(cardBack.activeId) === stringId) {
             cardBack.src = null;
             cardBack.name = '';
             cardBack.activeId = null;
@@ -1160,8 +1246,8 @@
     // Card-back: click a library thumbnail to use it as the active back.
     const thumb = e.target.closest('.cards-img-thumb');
     if (thumb) {
-      const id = parseInt(thumb.getAttribute('data-image-id'), 10);
-      const img = savedImages.find(i => i.id === id);
+      const stringId = thumb.getAttribute('data-image-id');
+      const img = savedImages.find(i => String(i.id) === stringId);
       if (img) {
         cardBack.src = img.dataUrl;
         cardBack.name = img.name;
@@ -1191,24 +1277,26 @@
   }
 
   function renderImageGallery() {
-    const limit = (window.YaabDB && YaabDB.images && YaabDB.images.LIMIT) || 30;
-    const signedIn = !!(window.App && App.Auth && App.Auth.isSignedIn && App.Auth.isSignedIn());
-    const u = (window.App && App.Auth && App.Auth.getCurrentUser && App.Auth.getCurrentUser()) || null;
-    const ownerLabel = signedIn ? esc(u.username) : 'this browser';
+    const limit = ImageStore.LIMIT;
+    const ownerLabel = esc(ImageStore.ownerLabel());
+    const where = ImageStore.storageLocation();   // 'cloud' or 'local'
+    const whereNote = where === 'cloud'
+      ? 'Saved to your account — available on any device you sign in from.'
+      : 'Saved to this browser only. Sign in to sync the library across devices.';
     const count = savedImages.length;
 
     let inner;
     if (savedImagesLoading) {
       inner = `<div class="cards-help" style="margin:4px 12px 6px">Loading library…</div>`;
-    } else if (!window.YaabDB || !YaabDB.images) {
+    } else if (where === 'local' && (!window.YaabDB || !YaabDB.images)) {
       inner = `<div class="cards-help" style="margin:4px 12px 6px">Saved-image library unavailable in this browser.</div>`;
     } else if (count === 0) {
       inner = `<div class="cards-help" style="margin:4px 12px 6px">
-        Uploading saves to ${ownerLabel}'s library (up to ${limit}).
+        ${whereNote} (Up to ${limit}.)
       </div>`;
     } else {
       const thumbs = savedImages.map(img => {
-        const isActive = cardBack.activeId === img.id;
+        const isActive = String(cardBack.activeId) === String(img.id);
         return `
           <div class="cards-img-thumb${isActive ? ' is-active' : ''}"
                data-image-id="${img.id}" title="${esc(img.name)}">
@@ -1219,7 +1307,7 @@
       }).join('');
       inner = `
         <div class="cards-help" style="margin:4px 12px 4px; display:flex; justify-content:space-between">
-          <span>Library (${ownerLabel})</span>
+          <span>Library (${ownerLabel}${where === 'cloud' ? ' · cloud' : ' · local'})</span>
           <span><strong>${count}/${limit}</strong></span>
         </div>
         <div class="cards-img-grid">${thumbs}</div>`;
