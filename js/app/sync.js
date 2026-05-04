@@ -452,16 +452,33 @@
       // 3. State bag merge.
       const localBagTs = jsonGet(STATE_BAG_TS, '');
       const cloudBagTs = (cloudState && cloudState.updated_at) || '';
+      let bagWasPulled = false;
       if (cloudState && cloudState.payload && cloudBagTs && cloudBagTs > localBagTs) {
         try {
           const cloudBag = JSON.parse(cloudState.payload);
+          const updatedKeys = [];
           for (const k of SYNCED_BAG_KEYS) {
             if (Object.prototype.hasOwnProperty.call(cloudBag, k)) {
               if (cloudBag[k] == null) rawRemove(k);
               else rawSet(k, cloudBag[k]);
+              updatedKeys.push(k);
             }
           }
           jsonSet(STATE_BAG_TS, cloudBagTs);
+          if (updatedKeys.length) bagWasPulled = true;
+          // rawSet/rawRemove suppress the localStorage monkey-patch (so
+          // we don't loop the writes back into the queue), and same-tab
+          // writes don't fire the native `storage` event either. Modules
+          // hydrating from these keys (cards-mode reads yaab_cards_prefs
+          // on mount) would otherwise have no way to know the bag just
+          // changed under them. Emit a custom event so they can re-read.
+          if (bagWasPulled) {
+            try {
+              window.dispatchEvent(new CustomEvent('yaab-bag-pulled', {
+                detail: { keys: updatedKeys },
+              }));
+            } catch (_) {}
+          }
         } catch (_) {}
       } else if (!cloudState || !cloudBagTs) {
         // Cloud has nothing — push our local bag if there's anything.

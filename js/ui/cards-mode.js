@@ -1975,8 +1975,7 @@
         });
       });
     }
-    // Re-load prefs when localStorage changes from another tab or the
-    // bag-sync layer pulling fresher state from the server.
+    // Re-load prefs when localStorage changes from another tab.
     window.addEventListener('storage', e => {
       if (e.key === PREFS_KEY) {
         loadPrefs();
@@ -1986,6 +1985,24 @@
           refreshPreview();
           refreshSummary();
         }
+      }
+    });
+    // Re-load when the bag-sync layer pulls fresh values from the
+    // server. sync.js writes via rawSet (suppresses the localStorage
+    // monkey-patch and never fires `storage` for same-tab writes), so
+    // we need this explicit hook to know cloud state has landed —
+    // otherwise a user who signed in on this device after another
+    // device pushed prefs would render their cards with stale defaults
+    // until a manual reload.
+    window.addEventListener('yaab-bag-pulled', e => {
+      const keys = (e && e.detail && e.detail.keys) || null;
+      if (keys && keys.indexOf(PREFS_KEY) === -1) return;  // bag pulled but our key wasn't in it
+      loadPrefs();
+      applyDynamicStyle();
+      if (mounted) {
+        refreshSidebar();
+        refreshPreview();
+        refreshSummary();
       }
     });
     // Render lazily on first activation so we don't pay for it on every
@@ -2005,7 +2022,15 @@
     App.hooks.modeChange.push(mode => {
       if (mode !== 'cards') return;
       if (!hostEl) hostEl = document.getElementById(HOST_ID);
-      if (hostEl) renderHost();
+      if (!hostEl) return;
+      // Re-load prefs every time the user enters Cards mode. Belt-and-
+      // braces in case the bag-pulled event landed before this module
+      // wired its listener (e.g. fresh sign-in flow where pullAll
+      // resolves between bootstrap and the user's first click on the
+      // Cards tab).
+      loadPrefs();
+      applyDynamicStyle();
+      renderHost();
     });
   }
   if (Array.isArray(App.hooks.armyChange)) {
