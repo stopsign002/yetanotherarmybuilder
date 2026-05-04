@@ -494,13 +494,14 @@
 
   // Reformat structured-text descriptions (abilities, rules, stratagems)
   // so multi-option text doesn't read as one wall. The most common pain
-  // points: bullet markers (• / ◆ / ◾) sitting inline mid-sentence, and
-  // GW-style stratagem sub-headers (WHEN: / TARGET: / EFFECT: / etc.)
-  // that should clearly start their own line. Inserts \n where needed
-  // and lets `white-space: pre-line / pre-wrap` in CSS render the breaks.
-  // Also inserts spacing between consecutive bolded sub-ability heads
-  // ("**Imperator:** … **Saviour of the Imperium:** …" patterns from
-  // primarch abilities).
+  // points: bullet markers (• / ◆ / ◾) sitting inline mid-sentence, GW-
+  // style stratagem sub-headers (WHEN: / TARGET: / EFFECT: / etc.) that
+  // should clearly start their own line, and primarch / hero abilities
+  // whose pickable sub-options are concatenated in one paragraph by
+  // BSData ("Author of the Codex" → "Primarch of the XIII (Aura): …
+  // Master of Battle: … Supreme Strategist: …"). Inserts \n where
+  // needed and lets `white-space: pre-line / pre-wrap` in CSS render
+  // the breaks.
   function formatStructuredText(text) {
     if (!text) return '';
     let out = String(text);
@@ -510,9 +511,25 @@
     // don't break sentences that happen to contain the word.
     out = out.replace(/\s*\b(WHEN|TARGET|EFFECT|RESTRICTIONS?|DURATION)\b\s*:\s*/g, '\n$1: ');
     // Sub-ability heading pattern used by primarch / hero abilities:
-    // "Foo Bar: ..." where "Foo Bar" is a short title. Conservative —
-    // require at least one preceding sentence and a Title Case head.
-    out = out.replace(/([.!?])\s+([A-Z][A-Za-z'’\- ]{2,40}):\s+/g, '$1\n\n$2: ');
+    //   "...prev sentence.  Foo Bar (Aura): ..." or
+    //   "...abilities.'  Primarch of the XIII (Aura): ..."
+    // Require a sentence-ending punctuation (optionally followed by a
+    // closing quote / paren) and at least one space, then a Title Case
+    // multi-word heading ending in a colon. Heading allows letters,
+    // digits, hyphens, apostrophes, and parens (10e tags like "(Aura)"
+    // / "(Lethal Hits)" need them).
+    out = out.replace(
+      /([.!?][”’'")\]]?)\s+([A-Z][A-Za-z0-9'’()\-: ]{2,80}?):\s+/g,
+      '$1\n\n$2: '
+    );
+    // Some BSData strings end the parent sentence with just a closing
+    // quote and no terminal punctuation ("...abilities.' Primarch…"
+    // can also occur as "...abilities’ Primarch…" without the period).
+    // Catch a quote-then-Title-Case-heading pattern as a softer fallback.
+    out = out.replace(
+      /([”’'])\s+([A-Z][A-Za-z0-9'’()\-: ]{2,80}?):\s+/g,
+      '$1\n\n$2: '
+    );
     // Collapse runs of 3+ newlines to a max of 2.
     out = out.replace(/\n{3,}/g, '\n\n');
     return out.trim();
