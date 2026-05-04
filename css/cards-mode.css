@@ -259,6 +259,71 @@
   font-size: 11px;
   letter-spacing: 0.04em;
 }
+
+/* Saved-image library (under Card backs) */
+.cards-img-section {
+  margin-top: 8px;
+  border-top: 1px solid #1f232a;
+  padding-top: 6px;
+}
+.cards-img-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 4px 12px 0;
+}
+.cards-img-thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  border: 1px solid #2e323a;
+  overflow: hidden;
+  cursor: pointer;
+  background: #0f1115;
+  /* Subtle gold ring like the swatches. */
+  box-shadow: inset 0 0 0 1px rgba(184, 144, 82, 0.2);
+}
+.cards-img-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cards-img-thumb:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(184, 144, 82, 0.45);
+}
+.cards-img-thumb.is-active {
+  border-color: var(--accent, #b89052);
+  box-shadow: 0 0 0 2px var(--accent, #b89052);
+}
+.cards-img-thumb.is-active::after {
+  content: '✓';
+  position: absolute;
+  top: 2px; left: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.85);
+}
+.cards-img-del {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 18px; height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.cards-img-thumb:hover .cards-img-del { opacity: 1; }
+.cards-img-del:hover { background: #b32020; }
 .cards-link-btn {
   background: transparent;
   border: 0;

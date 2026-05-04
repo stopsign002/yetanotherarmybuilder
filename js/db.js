@@ -39,10 +39,18 @@ window.YaabDB = (() => {
   // payloads (per-faction stratagem/detachment/enhancement data). Source:
   // https://github.com/game-datacards/datasources — used to fill the gap
   // BSData wh40k-10e leaves around stratagem rules.
-  const DB_VERSION = 14;
+  // Bumped to v15: added `cardBackImages` store for the user-uploaded
+  // card-back image library (cards-mode duplex printing). Unlike the
+  // parsed-data stores, this is USER DATA — its upgrade path below is
+  // non-destructive (only created if missing) so future DB_VERSION
+  // bumps that drop the parsed stores don't wipe the user's library.
+  const DB_VERSION = 15;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
+  const STORE_IMAGES   = 'cardBackImages';
+  // Per-owner cap on the image library (30 images). Enforced in add().
+  const IMAGES_PER_OWNER_LIMIT = 30;
 
   const hasIDB = typeof indexedDB !== 'undefined' && !!indexedDB;
 
@@ -60,13 +68,21 @@ window.YaabDB = (() => {
       catch (_) { _disabled = true; resolve(null); return; }
       req.onupgradeneeded = () => {
         const db = req.result;
-        // Drop existing stores on any version bump so stale parsed shapes don't leak across releases.
+        // Parsed-data stores: drop on every version bump so stale parsed
+        // shapes don't leak across releases.
         if (db.objectStoreNames.contains(STORE_FACTIONS)) db.deleteObjectStore(STORE_FACTIONS);
         if (db.objectStoreNames.contains(STORE_GST))      db.deleteObjectStore(STORE_GST);
         if (db.objectStoreNames.contains(STORE_GDC))      db.deleteObjectStore(STORE_GDC);
         db.createObjectStore(STORE_FACTIONS, { keyPath: 'factionName' });
         db.createObjectStore(STORE_GST,      { keyPath: 'name' });
         db.createObjectStore(STORE_GDC,      { keyPath: 'name' });
+        // User-data store: only create if missing; never drop. Holds
+        // card-back images keyed by an auto-incremented `id`, with an
+        // `owner` index so we can cheaply list/cap by username.
+        if (!db.objectStoreNames.contains(STORE_IMAGES)) {
+          const s = db.createObjectStore(STORE_IMAGES, { keyPath: 'id', autoIncrement: true });
+          s.createIndex('owner', 'owner', { unique: false });
+        }
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror   = () => { _disabled = true; resolve(null); };
@@ -165,9 +181,113 @@ window.YaabDB = (() => {
     try { await _wrap(_tx(db, STORE_GDC, 'readwrite').clear()); } catch (_) {}
   }
 
+  // ── Card-back image library ──────────────────────────────────────────────
+  // User-uploaded images for the cards-mode duplex-print feature. Records:
+  //   { id (auto), owner (string), name (string), dataUrl (string), addedAt (ms) }
+  // Owner is the username when signed in, 'anon' otherwise. Capped per-owner
+  // by IMAGES_PER_OWNER_LIMIT.
+
+  function _listByOwnerCursor(store, owner, onRecord, onDone) {
+    // Walk the `owner` index. Cursor is more memory-friendly than getAll()
+    // when records hold large data URLs (an image can be hundreds of KB).
+    const idx = store.index('owner');
+    const req = idx.openCursor(IDBKeyRange.only(owner));
+    req.onsuccess = () => {
+      const cur = req.result;
+      if (cur) {
+        onRecord(cur.value, cur);
+        cur.continue();
+      } else {
+        onDone();
+      }
+    };
+    req.onerror = () => onDone();
+  }
+
+  async function imagesList(owner) {
+    const db = await _open();
+    if (!db || !owner) return [];
+    return new Promise(resolve => {
+      try {
+        const out = [];
+        const store = _tx(db, STORE_IMAGES, 'readonly');
+        _listByOwnerCursor(store, owner, rec => out.push(rec), () => {
+          out.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+          resolve(out);
+        });
+      } catch (_) { resolve([]); }
+    });
+  }
+
+  async function imagesCount(owner) {
+    const db = await _open();
+    if (!db || !owner) return 0;
+    return new Promise(resolve => {
+      try {
+        const idx = _tx(db, STORE_IMAGES, 'readonly').index('owner');
+        const req = idx.count(IDBKeyRange.only(owner));
+        req.onsuccess = () => resolve(req.result || 0);
+        req.onerror   = () => resolve(0);
+      } catch (_) { resolve(0); }
+    });
+  }
+
+  async function imagesAdd(owner, image) {
+    const db = await _open();
+    if (!db || !owner || !image || !image.dataUrl) {
+      return { ok: false, reason: 'unavailable' };
+    }
+    const count = await imagesCount(owner);
+    if (count >= IMAGES_PER_OWNER_LIMIT) {
+      return { ok: false, reason: 'limit', limit: IMAGES_PER_OWNER_LIMIT, count };
+    }
+    return new Promise(resolve => {
+      try {
+        const rec = {
+          owner: String(owner),
+          name: String(image.name || 'image'),
+          dataUrl: String(image.dataUrl),
+          addedAt: Date.now(),
+        };
+        const req = _tx(db, STORE_IMAGES, 'readwrite').add(rec);
+        req.onsuccess = () => resolve({ ok: true, id: req.result, image: Object.assign({ id: req.result }, rec) });
+        req.onerror   = () => resolve({ ok: false, reason: 'idb' });
+      } catch (_) { resolve({ ok: false, reason: 'exception' }); }
+    });
+  }
+
+  async function imagesRemove(id) {
+    const db = await _open();
+    if (!db || id == null) return false;
+    return new Promise(resolve => {
+      try {
+        const req = _tx(db, STORE_IMAGES, 'readwrite').delete(id);
+        req.onsuccess = () => resolve(true);
+        req.onerror   = () => resolve(false);
+      } catch (_) { resolve(false); }
+    });
+  }
+
+  async function imagesGet(id) {
+    const db = await _open();
+    if (!db || id == null) return null;
+    try {
+      const rec = await _wrap(_tx(db, STORE_IMAGES, 'readonly').get(id));
+      return rec || null;
+    } catch (_) { return null; }
+  }
+
   return {
     getFaction, putFaction, getAllFactions, clearFactions,
     getGst, putGst, clearGst,
     getGdc, putGdc, clearGdc,
+    images: {
+      LIMIT: IMAGES_PER_OWNER_LIMIT,
+      list:   imagesList,
+      count:  imagesCount,
+      add:    imagesAdd,
+      remove: imagesRemove,
+      get:    imagesGet,
+    },
   };
 })();

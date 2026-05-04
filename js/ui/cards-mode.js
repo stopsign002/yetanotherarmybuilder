@@ -106,10 +106,27 @@
     enabled: false,
     src: null,           // data: URL (FileReader-produced)
     name: '',
+    activeId: null,      // YaabDB.images id when picked from the library
     scale: 1.0,          // 0.5 → 3.0 multiplier
     offsetX: 0,          // -100 → +100 percent of cell
     offsetY: 0,          // -100 → +100 percent of cell
   };
+  // Per-account image library, populated lazily on first paint of the
+  // Card-backs section. Reset + reloaded whenever the auth user changes.
+  let savedImages = [];
+  let savedImagesLoading = false;
+  function imageOwner() {
+    const u = (window.App && App.Auth && typeof App.Auth.getCurrentUser === 'function')
+      ? App.Auth.getCurrentUser() : null;
+    return (u && u.username) ? ('user:' + u.username) : 'anon';
+  }
+  async function reloadSavedImages() {
+    if (!window.YaabDB || !YaabDB.images) { savedImages = []; return; }
+    savedImagesLoading = true;
+    try { savedImages = await YaabDB.images.list(imageOwner()); }
+    catch (_) { savedImages = []; }
+    savedImagesLoading = false;
+  }
   let include = { units: null, rules: null, strats: null };
   let display = Object.assign({}, DEFAULT_DISPLAY);
 
@@ -751,11 +768,12 @@
           <span><strong>Enable card backs</strong></span>
         </label>
         <div class="cards-field" style="padding:4px 12px 0">
-          <span class="cards-field-label">Image</span>
+          <span class="cards-field-label">Upload new image</span>
           <input type="file" id="cards-back-file" accept="image/*" class="cards-file">
-          ${cardBack.name ? `<div class="cards-help" style="margin:4px 0 0">${esc(cardBack.name)}</div>` : ''}
-          ${cardBack.src ? `<button type="button" class="cards-link-btn" id="cards-back-clear" style="padding:4px 0">Remove image</button>` : ''}
+          ${cardBack.name ? `<div class="cards-help" style="margin:4px 0 0">Active: ${esc(cardBack.name)}</div>` : ''}
+          ${cardBack.src ? `<button type="button" class="cards-link-btn" id="cards-back-clear" style="padding:4px 0">Use no image</button>` : ''}
         </div>
+        ${renderImageGallery()}
         <div class="cards-field" style="padding:8px 12px 0">
           <span class="cards-field-label">Scale <span class="cards-slider-val" id="cards-back-scale-val">${(cardBack.scale * 100).toFixed(0)}%</span></span>
           <input type="range" min="50" max="300" step="5" value="${(cardBack.scale * 100).toFixed(0)}"
@@ -883,22 +901,39 @@
       refreshSummary();
       return;
     }
-    // Card-back: file upload
+    // Card-back: file upload — auto-saves to the library (up to LIMIT
+    // per owner) and switches to it as the active back.
     if (e.target && e.target.id === 'cards-back-file') {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = () => {
-        cardBack.src = reader.result;
+      reader.onload = async () => {
+        const dataUrl = reader.result;
+        // Apply locally first so the preview updates immediately.
+        cardBack.src = dataUrl;
         cardBack.name = file.name;
-        // If the user uploaded an image without first toggling enable,
-        // assume they want it on.
         cardBack.enabled = true;
-        refreshSidebar();
+        cardBack.activeId = null;
         refreshPreview();
         refreshSummary();
+        // Then persist to the library.
+        if (window.YaabDB && YaabDB.images) {
+          const result = await YaabDB.images.add(imageOwner(), { name: file.name, dataUrl });
+          if (result.ok) {
+            cardBack.activeId = result.id;
+            savedImages.unshift(result.image);
+          } else if (result.reason === 'limit') {
+            if (UI && UI.toast) {
+              UI.toast(`Library is full (${result.limit} images). Delete one to save more.`, 'warning', 5000);
+            }
+          }
+        }
+        refreshSidebar();
       };
       reader.readAsDataURL(file);
+      // Reset the file-input value so the same filename can be re-picked
+      // after a "remove image"; otherwise change won't fire on re-pick.
+      e.target.value = '';
       return;
     }
     // Card-back: range sliders
@@ -972,13 +1007,54 @@
       refreshPreview();
       return;
     }
-    // Card-back: clear image
+    // Card-back: clear active image
     if (e.target && e.target.id === 'cards-back-clear') {
       cardBack.src = null;
       cardBack.name = '';
+      cardBack.activeId = null;
       refreshSidebar();
       refreshPreview();
       refreshSummary();
+      return;
+    }
+    // Card-back: delete a library thumbnail (× button) — must be checked
+    // BEFORE the click-to-select handler since the × is inside the thumb.
+    const delBtn = e.target.closest('[data-image-del]');
+    if (delBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = parseInt(delBtn.getAttribute('data-image-del'), 10);
+      if (!Number.isNaN(id)) {
+        (async () => {
+          if (window.YaabDB && YaabDB.images) await YaabDB.images.remove(id);
+          savedImages = savedImages.filter(img => img.id !== id);
+          // Drop the active image too if we just deleted it.
+          if (cardBack.activeId === id) {
+            cardBack.src = null;
+            cardBack.name = '';
+            cardBack.activeId = null;
+            refreshPreview();
+            refreshSummary();
+          }
+          refreshSidebar();
+        })();
+      }
+      return;
+    }
+    // Card-back: click a library thumbnail to use it as the active back.
+    const thumb = e.target.closest('.cards-img-thumb');
+    if (thumb) {
+      const id = parseInt(thumb.getAttribute('data-image-id'), 10);
+      const img = savedImages.find(i => i.id === id);
+      if (img) {
+        cardBack.src = img.dataUrl;
+        cardBack.name = img.name;
+        cardBack.activeId = img.id;
+        cardBack.enabled = true;
+        refreshSidebar();
+        refreshPreview();
+        refreshSummary();
+      }
       return;
     }
     // Card-back: reset position + scale
@@ -996,6 +1072,43 @@
       refreshSidebar();
       refreshPreview();
     }
+  }
+
+  function renderImageGallery() {
+    const limit = (window.YaabDB && YaabDB.images && YaabDB.images.LIMIT) || 30;
+    const signedIn = !!(window.App && App.Auth && App.Auth.isSignedIn && App.Auth.isSignedIn());
+    const u = (window.App && App.Auth && App.Auth.getCurrentUser && App.Auth.getCurrentUser()) || null;
+    const ownerLabel = signedIn ? esc(u.username) : 'this browser';
+    const count = savedImages.length;
+
+    let inner;
+    if (savedImagesLoading) {
+      inner = `<div class="cards-help" style="margin:4px 12px 6px">Loading library…</div>`;
+    } else if (!window.YaabDB || !YaabDB.images) {
+      inner = `<div class="cards-help" style="margin:4px 12px 6px">Saved-image library unavailable in this browser.</div>`;
+    } else if (count === 0) {
+      inner = `<div class="cards-help" style="margin:4px 12px 6px">
+        Uploading saves to ${ownerLabel}'s library (up to ${limit}).
+      </div>`;
+    } else {
+      const thumbs = savedImages.map(img => {
+        const isActive = cardBack.activeId === img.id;
+        return `
+          <div class="cards-img-thumb${isActive ? ' is-active' : ''}"
+               data-image-id="${img.id}" title="${esc(img.name)}">
+            <img src="${esc(img.dataUrl)}" alt="${esc(img.name)}">
+            <button type="button" class="cards-img-del" data-image-del="${img.id}"
+                    title="Delete from library" aria-label="Delete ${esc(img.name)}">×</button>
+          </div>`;
+      }).join('');
+      inner = `
+        <div class="cards-help" style="margin:4px 12px 4px; display:flex; justify-content:space-between">
+          <span>Library (${ownerLabel})</span>
+          <span><strong>${count}/${limit}</strong></span>
+        </div>
+        <div class="cards-img-grid">${thumbs}</div>`;
+    }
+    return `<div class="cards-img-section">${inner}</div>`;
   }
 
   function syncBorderUI() {
@@ -1110,6 +1223,19 @@
   function mount() {
     hostEl = document.getElementById(HOST_ID);
     if (!hostEl) return;
+    // Kick off saved-image load in the background so it's ready by the
+    // time the user opens the Layout sub-tab.
+    reloadSavedImages().then(() => {
+      if (mounted && activeSubTab === 'layout') refreshSidebar();
+    });
+    // Re-load when the user signs in/out — library is owner-scoped.
+    if (App.Auth && typeof App.Auth.onChange === 'function') {
+      App.Auth.onChange(() => {
+        reloadSavedImages().then(() => {
+          if (mounted && activeSubTab === 'layout') refreshSidebar();
+        });
+      });
+    }
     // Render lazily on first activation so we don't pay for it on every
     // app load — the host stays a placeholder until cards mode opens.
     if (typeof App.getMode === 'function' && App.getMode() === 'cards') {
