@@ -264,6 +264,12 @@
   height: calc(var(--dcc-page-h, 100mm) * var(--dcc-preview-scale));
   overflow: hidden;
   position: relative;
+  /* The preview pane is a flex column inside an `overflow:auto` parent.
+   * Without flex-shrink:0 the column squashes every frame proportionally
+   * when total content exceeds the viewport (2 cards => half-height each,
+   * 3 => third, etc). Pin the frames at their physical size and let the
+   * parent scroll. */
+  flex: 0 0 auto;
 }
 .dcc-page-frame > .dcc-page {
   transform: scale(var(--dcc-preview-scale));
