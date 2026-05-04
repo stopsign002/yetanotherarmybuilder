@@ -81,6 +81,23 @@
   // Lets the user, e.g., put units 1-up on 4×6 portrait while putting rules
   // and stratagems 2-up on 4×6 landscape (their typical printing flow).
   let layoutByKind = { unit: null, rule: null, strat: null };
+  // Page background — shows up as a "card border" on borderless printers.
+  // Default is a deep warm near-black (classic TCG aesthetic, makes the
+  // parchment cards pop). User can pick a custom hex or use a preset.
+  const DEFAULT_BORDER = '#0d0a07';
+  let borderColor = DEFAULT_BORDER;
+  // Border presets — each is { id, label, hex }. Tuned for the grimdark
+  // theme but covers common TCG aesthetics too.
+  const BORDER_PRESETS = [
+    { id: 'black',   label: 'Grimdark black',   hex: '#0d0a07' },
+    { id: 'crimson', label: 'Imperial crimson', hex: '#3a0d0d' },
+    { id: 'sable',   label: 'Sable purple',    hex: '#1a0d2a' },
+    { id: 'navy',    label: 'Voidship navy',    hex: '#0a1228' },
+    { id: 'forest',  label: 'Forest green',     hex: '#0d2014' },
+    { id: 'bronze',  label: 'Aquila bronze',    hex: '#5a3f1a' },
+    { id: 'bone',    label: 'Bone (blend)',     hex: '#d8c897' },
+    { id: 'paper',   label: 'White paper',      hex: '#ffffff' },
+  ];
   let include = { units: null, rules: null, strats: null };
   let display = Object.assign({}, DEFAULT_DISPLAY);
 
@@ -483,6 +500,9 @@
     pageEl.style.gridTemplateColumns = 'repeat(' + layout.cols + ', 1fr)';
     pageEl.style.gridTemplateRows    = 'repeat(' + layout.rows + ', 1fr)';
     pageEl.style.gap = CARD_GUTTER_MM + 'mm';
+    // Sheet background fills any space outside the cards — reads as a
+    // "card border" once printed borderless.
+    pageEl.style.backgroundColor = borderColor;
     pageEl.dataset.page = String(pageNum);
     pageEl.dataset.layout = layout.id;
 
@@ -629,6 +649,29 @@
         ${overrideRow('unit',  'Units')}
         ${overrideRow('rule',  'Army rules')}
         ${overrideRow('strat', 'Stratagems')}
+      </div>
+
+      <div class="cards-layout-section">
+        <div class="cards-disp-heading">Card border</div>
+        <p class="cards-help">
+          Colour of the sheet around each card. On a borderless printer
+          this prints right to the edge and reads as a trading-card
+          frame around the parchment.
+        </p>
+        <div class="cards-field" style="padding:4px 12px 0">
+          <span class="cards-field-label">Custom colour</span>
+          <input type="color" id="cards-border-color" class="cards-color"
+                 value="${esc(borderColor)}">
+        </div>
+        <div class="cards-swatches" id="cards-border-swatches" role="listbox" aria-label="Border presets">
+          ${BORDER_PRESETS.map(p => `
+            <button type="button"
+                    class="cards-swatch${p.hex.toLowerCase() === borderColor.toLowerCase() ? ' is-active' : ''}"
+                    data-border-preset="${esc(p.hex)}"
+                    title="${esc(p.label)}"
+                    style="background:${esc(p.hex)}"
+                    aria-label="${esc(p.label)}"></button>`).join('')}
+        </div>
       </div>`;
     // Defer setting the <select> values until after the HTML lands in the DOM.
     queueMicrotask(() => {
@@ -724,6 +767,13 @@
       refreshSummary();
       return;
     }
+    // Border color picker
+    if (e.target && e.target.id === 'cards-border-color') {
+      borderColor = e.target.value || DEFAULT_BORDER;
+      syncBorderUI();
+      refreshPreview();
+      return;
+    }
     // Display toggles
     const dispCb = e.target.closest('input[type="checkbox"][data-display]');
     if (dispCb) {
@@ -765,12 +815,30 @@
       refreshSidebar();
       return;
     }
+    // Border color preset swatch
+    const sw = e.target.closest('[data-border-preset]');
+    if (sw) {
+      borderColor = sw.getAttribute('data-border-preset') || DEFAULT_BORDER;
+      syncBorderUI();
+      refreshPreview();
+      return;
+    }
     // Display "reset to defaults"
     if (e.target && e.target.id === 'cards-display-reset') {
       display = Object.assign({}, DEFAULT_DISPLAY);
       refreshSidebar();
       refreshPreview();
     }
+  }
+
+  function syncBorderUI() {
+    if (!hostEl) return;
+    const picker = hostEl.querySelector('#cards-border-color');
+    if (picker) picker.value = borderColor;
+    hostEl.querySelectorAll('[data-border-preset]').forEach(btn => {
+      const match = btn.getAttribute('data-border-preset').toLowerCase() === borderColor.toLowerCase();
+      btn.classList.toggle('is-active', match);
+    });
   }
 
   function refreshPreview() {

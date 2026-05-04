@@ -190,6 +190,51 @@
   color: #8c92a0;
   margin: 4px 12px 6px;
 }
+
+/* Border-colour controls (inside the Layout sub-tab) */
+.cards-color {
+  width: 100%;
+  height: 32px;
+  padding: 2px;
+  background: #0f1115;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cards-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px 12px 0;
+}
+.cards-swatch {
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid #2e323a;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  /* Subtle inset gold ring so cream/white swatches stay visible against
+   * the dark sidebar. */
+  box-shadow: inset 0 0 0 1px rgba(184, 144, 82, 0.25);
+}
+.cards-swatch:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(184, 144, 82, 0.4);
+}
+.cards-swatch.is-active {
+  border-color: var(--accent, #b89052);
+  box-shadow: 0 0 0 2px var(--accent, #b89052);
+}
+.cards-swatch.is-active::after {
+  content: '✓';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+}
 .cards-link-btn {
   background: transparent;
   border: 0;
@@ -637,6 +682,22 @@
     overflow: visible !important;
     width: auto !important;
     height: auto !important;
+  }
+  /* Force background colours / images to actually print, even when the
+   * user hasn't enabled "Background graphics" in the print dialog.
+   * Without this the parchment, gold accents, and border-colour sheet
+   * all print as white. */
+  body.cards-printing .dcc-page,
+  body.cards-printing .dcc-card,
+  body.cards-printing .dcc-head,
+  body.cards-printing .dcc-section-head,
+  body.cards-printing .dcc-stat-cell,
+  body.cards-printing .dcc-cp,
+  body.cards-printing .dcc-inv,
+  body.cards-printing .dcc-foot::before {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   /* Hide everything outside the cards-mode subtree. */
   body.cards-printing > :not(#cards-mode) { display: none !important; }
