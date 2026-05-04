@@ -381,14 +381,25 @@
     pages.forEach((page, pi) => {
       const pageEl = document.createElement('div');
       pageEl.className = 'dcc-page';
+      // Bake page geometry into inline styles directly. CSS custom
+      // properties don't always survive html2canvas's document clone
+      // (the export DOM gets stamped into a sandbox iframe); inline
+      // width/height/grid here keeps the layout intact in the PDF.
+      pageEl.style.width  = layout.w + 'mm';
+      pageEl.style.height = layout.h + 'mm';
+      pageEl.style.padding = PAGE_MARGIN_MM + 'mm';
+      pageEl.style.gridTemplateColumns = 'repeat(' + layout.cols + ', 1fr)';
+      pageEl.style.gridTemplateRows    = 'repeat(' + layout.rows + ', 1fr)';
+      pageEl.style.gap = CARD_GUTTER_MM + 'mm';
+      // The card-w/h vars are only used by the per-card-grid-density CSS
+      // rules (font tweaks for 9-up). Keep them as CSS vars too so those
+      // selectors still match.
       pageEl.style.setProperty('--dcc-page-w', layout.w + 'mm');
       pageEl.style.setProperty('--dcc-page-h', layout.h + 'mm');
-      pageEl.style.setProperty('--dcc-page-margin', PAGE_MARGIN_MM + 'mm');
       pageEl.style.setProperty('--dcc-grid-cols', layout.cols);
       pageEl.style.setProperty('--dcc-grid-rows', layout.rows);
       pageEl.style.setProperty('--dcc-card-w', cardW + 'mm');
       pageEl.style.setProperty('--dcc-card-h', cardH + 'mm');
-      pageEl.style.setProperty('--dcc-gutter', CARD_GUTTER_MM + 'mm');
       pageEl.dataset.page = String(pi + 1);
 
       page.forEach(card => {
@@ -582,10 +593,22 @@
   function buildExportStage() {
     // Standalone container that html2pdf renders. Full physical size, no
     // preview-scale wrapper. Each `.dcc-page` is one PDF page.
+    const layout = getLayout();
     const stage = document.createElement('div');
     stage.className = 'dcc-stage';
+    // Give the stage a definite bounding box so html2canvas knows what to
+    // capture. Width matches the page; height grows with content.
+    stage.style.width = layout.w + 'mm';
     const { frag } = buildPagesDOM();
     stage.appendChild(frag);
+    // Strip the preview transform inline on every page in this stage.
+    // html2canvas can otherwise render the scaled-down version even though
+    // the .dcc-stage .dcc-page CSS override is supposed to undo it.
+    stage.querySelectorAll('.dcc-page').forEach(p => {
+      p.style.transform = 'none';
+      p.style.margin = '0';
+      p.style.boxShadow = 'none';
+    });
     return stage;
   }
 
@@ -647,10 +670,7 @@
 
     const layout = getLayout();
     const stage = buildExportStage();
-    // Keep stage off-screen so it doesn't flash.
-    stage.style.position = 'fixed';
-    stage.style.left = '-100000px';
-    stage.style.top = '0';
+    // Off-screen positioning lives in CSS (.dcc-stage). Just attach it.
     document.body.appendChild(stage);
 
     const army = getCurrentArmy();

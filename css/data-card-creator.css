@@ -215,11 +215,21 @@ body.dcc-modal-open { overflow: hidden; }
 }
 
 /* PDF/print export stage uses 1:1 sizing — html2pdf renders this DOM
- * directly as the source for jsPDF, so it must be the real physical size. */
+ * directly as the source for jsPDF, so it must be the real physical size.
+ * Positioned way off-screen (visibility:hidden would let html2canvas skip
+ * it; left:-10000px keeps real layout while staying out of view). */
+.dcc-stage {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  background: #ffffff;
+  z-index: -1;
+  pointer-events: none;
+}
 .dcc-stage .dcc-page {
-  transform: none;
-  margin: 0 0 0 0;
-  box-shadow: none;
+  transform: none !important;
+  margin: 0 !important;
+  box-shadow: none !important;
 }
 
 /* ── Card chrome ────────────────────────────────────────────────────────── */
