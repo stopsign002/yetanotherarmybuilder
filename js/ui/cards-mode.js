@@ -105,11 +105,14 @@
       document.head.appendChild(style);
     }
     const radius = Math.max(0, Math.min(20, cornerRadiusMm || 0));
+    const headRadius = Math.max(0, Math.min(20, headerRadiusMm || 0));
     const t = typography;
     const css = [
       textureCSS(textureId, textureIntensity),
       '.dcc-card {',
       '  border-radius: ' + radius + 'mm;',
+      // Header radius cascades into .dcc-head via var(--dcc-head-radius).
+      '  --dcc-head-radius: ' + headRadius + 'mm;',
       '  --dcc-stat-mul: '   + t.statSize   + ';',
       '  --dcc-w-mul: '      + t.weaponSize + ';',
       '  --dcc-body-mul: '   + t.bodySize   + ';',
@@ -154,6 +157,7 @@
       if (typeof p.textureIntensity === 'number') textureIntensity = p.textureIntensity;
       if (typeof p.borderColor === 'string')      borderColor      = p.borderColor;
       if (typeof p.cornerRadiusMm === 'number')   cornerRadiusMm   = p.cornerRadiusMm;
+      if (typeof p.headerRadiusMm === 'number')   headerRadiusMm   = p.headerRadiusMm;
       if (typeof p.activeLayoutId === 'string')   activeLayoutId   = p.activeLayoutId;
       if (p.layoutByKind && typeof p.layoutByKind === 'object') {
         ['unit','rule','strat'].forEach(k => {
@@ -187,7 +191,7 @@
     try {
       const p = {
         display: Object.assign({}, display),
-        textureId, textureIntensity, borderColor, cornerRadiusMm,
+        textureId, textureIntensity, borderColor, cornerRadiusMm, headerRadiusMm,
         activeLayoutId,
         layoutByKind: Object.assign({}, layoutByKind),
         typography: Object.assign({}, typography),
@@ -256,6 +260,10 @@
   // Card corner radius in mm. Default 4mm (R4 — matches the most common
   // physical corner-cutter setting for trading cards).
   let cornerRadiusMm = 4;
+  // Title-bar header corner radius in mm. Independent of the card-frame
+  // radius so users can tune the dark-bar shape (square / softly
+  // rounded / matching-the-card) without affecting the gilded frame.
+  let headerRadiusMm = 3;
   // Typography multipliers — each scales a group of font sizes by the
   // user's chosen multiplier (0.8 → 1.5). Defaults bias slightly larger
   // than the original baseline because the base sizes were tuned for
@@ -1343,15 +1351,24 @@
       <div class="cards-layout-section">
         <div class="cards-disp-heading">Corner rounding</div>
         <p class="cards-help">
-          Card corner radius in millimetres. Default 4mm matches an R4
-          physical corner cutter. Set to 0 for square corners.
+          Card frame radius in millimetres. Default 4mm matches an R4
+          physical corner cutter. The header bar (dark title strip)
+          rounds independently so it can sit flush, softly matched, or
+          fully tab-shaped.
         </p>
         <div class="cards-field" style="padding:4px 12px 0">
-          <span class="cards-field-label">Radius
+          <span class="cards-field-label">Card frame
             <span class="cards-slider-val" id="cards-radius-val">${cornerRadiusMm}mm</span>
           </span>
           <input type="range" min="0" max="10" step="0.5" value="${cornerRadiusMm}"
                  id="cards-radius" class="cards-range">
+        </div>
+        <div class="cards-field" style="padding:6px 12px 0">
+          <span class="cards-field-label">Header corners
+            <span class="cards-slider-val" id="cards-head-radius-val">${headerRadiusMm}mm</span>
+          </span>
+          <input type="range" min="0" max="10" step="0.5" value="${headerRadiusMm}"
+                 id="cards-head-radius" class="cards-range">
         </div>
       </div>
 
@@ -1535,12 +1552,21 @@
       applyDynamicStyle();
       return;
     }
-    // Corner radius slider
+    // Corner radius slider (card frame)
     if (e.target && e.target.id === 'cards-radius') {
       const v = parseFloat(e.target.value);
       cornerRadiusMm = Number.isNaN(v) ? 4 : Math.max(0, Math.min(10, v));
       const lbl = hostEl.querySelector('#cards-radius-val');
       if (lbl) lbl.textContent = cornerRadiusMm + 'mm';
+      applyDynamicStyle();
+      return;
+    }
+    // Header corner-rounding slider — independent of the card frame.
+    if (e.target && e.target.id === 'cards-head-radius') {
+      const v = parseFloat(e.target.value);
+      headerRadiusMm = Number.isNaN(v) ? 3 : Math.max(0, Math.min(10, v));
+      const lbl = hostEl.querySelector('#cards-head-radius-val');
+      if (lbl) lbl.textContent = headerRadiusMm + 'mm';
       applyDynamicStyle();
       return;
     }

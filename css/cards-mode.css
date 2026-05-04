@@ -630,7 +630,11 @@
       #0b0b0b 100%);
   color: #f4ead2;
   padding: 1.2mm 1.6mm;
-  border-radius: 0.5mm;
+  /* Default falls back to a noticeable rounding so the bar reads as
+   * "tab-shaped" if cards-mode.js never gets to inject its dynamic
+   * --dcc-head-radius. The Layout sub-tab's "Header corners" slider
+   * controls the live value. */
+  border-radius: var(--dcc-head-radius, 3mm);
   margin: -0.6mm -0.6mm 0;
   position: relative;
   box-shadow: 0 0.2mm 0 #5a4a22 inset, 0 -0.2mm 0 rgba(255,255,255,0.06) inset;
