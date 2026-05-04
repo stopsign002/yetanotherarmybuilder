@@ -98,6 +98,18 @@
     { id: 'bone',    label: 'Bone (blend)',     hex: '#d8c897' },
     { id: 'paper',   label: 'White paper',      hex: '#ffffff' },
   ];
+  // Card-back image for duplex printing. When `enabled` and `src` is set,
+  // every front page is followed by a matching back page using the same
+  // layout (so 2-up front → 2-up back, etc). Workflow: print odd pages,
+  // flip the stack, print even pages.
+  let cardBack = {
+    enabled: false,
+    src: null,           // data: URL (FileReader-produced)
+    name: '',
+    scale: 1.0,          // 0.5 → 3.0 multiplier
+    offsetX: 0,          // -100 → +100 percent of cell
+    offsetY: 0,          // -100 → +100 percent of cell
+  };
   let include = { units: null, rules: null, strats: null };
   let display = Object.assign({}, DEFAULT_DISPLAY);
 
@@ -522,9 +534,55 @@
     return frame;
   }
 
+  // Build a back page that mirrors the cell grid of the front it follows.
+  // `frontCount` is how many cells on the corresponding front are filled
+  // (the rest become empty padders so the grid alignment matches when the
+  // sheet is flipped through the printer).
+  function buildBackPage(layout, frontCount, pageNum) {
+    const cardsPerPage = layout.cols * layout.rows;
+    const frame = document.createElement('div');
+    frame.className = 'dcc-page-frame';
+    frame.style.setProperty('--dcc-page-w', layout.w + 'mm');
+    frame.style.setProperty('--dcc-page-h', layout.h + 'mm');
+
+    const pageEl = document.createElement('div');
+    pageEl.className = 'dcc-page dcc-page-back';
+    pageEl.style.width  = layout.w + 'mm';
+    pageEl.style.height = layout.h + 'mm';
+    pageEl.style.padding = PAGE_MARGIN_MM + 'mm';
+    pageEl.style.gridTemplateColumns = 'repeat(' + layout.cols + ', 1fr)';
+    pageEl.style.gridTemplateRows    = 'repeat(' + layout.rows + ', 1fr)';
+    pageEl.style.gap = CARD_GUTTER_MM + 'mm';
+    pageEl.style.backgroundColor = borderColor;
+    pageEl.dataset.page = String(pageNum);
+    pageEl.dataset.layout = layout.id;
+    pageEl.dataset.face = 'back';
+
+    const imgVars = ''
+      + '--dcc-back-scale:' + cardBack.scale + ';'
+      + '--dcc-back-x:' + cardBack.offsetX + '%;'
+      + '--dcc-back-y:' + cardBack.offsetY + '%;';
+
+    for (let i = 0; i < cardsPerPage; i++) {
+      const cell = document.createElement('article');
+      if (i < frontCount && cardBack.src) {
+        cell.className = 'dcc-card dcc-card-back';
+        cell.innerHTML = '<img class="dcc-back-img" alt="card back" src="'
+          + cardBack.src.replace(/"/g, '&quot;') + '" style="' + imgVars + '">';
+      } else {
+        cell.className = 'dcc-card dcc-card-empty';
+      }
+      pageEl.appendChild(cell);
+    }
+    frame.appendChild(pageEl);
+    return frame;
+  }
+
   // Build pages for the active selection, paginating each card kind by
-  // its own (possibly overridden) layout. Pages are emitted in the order
-  // unit → rule → strat so the user can flip through them naturally.
+  // its own (possibly overridden) layout. Pages emit in unit → rule →
+  // strat order, with a back page interleaved after each front when card
+  // backs are enabled (1F, 1B, 2F, 2B, …). User prints odd pages, flips
+  // the stack in the printer, prints even pages.
   function buildPagesDOM() {
     const all = selectedCards();
     const groups = [
@@ -536,13 +594,20 @@
     const frag = document.createDocumentFragment();
     let pageCount = 0;
     let pageNum = 0;
+    const backsOn = !!(cardBack.enabled && cardBack.src);
     groups.forEach(g => {
       if (g.cards.length === 0) return;
       const cpp = g.layout.cols * g.layout.rows;
       for (let i = 0; i < g.cards.length; i += cpp) {
+        const slice = g.cards.slice(i, i + cpp);
         pageNum++;
-        frag.appendChild(buildPageElement(g.layout, g.cards.slice(i, i + cpp), pageNum));
+        frag.appendChild(buildPageElement(g.layout, slice, pageNum));
         pageCount++;
+        if (backsOn) {
+          pageNum++;
+          frag.appendChild(buildBackPage(g.layout, slice.length, pageNum));
+          pageCount++;
+        }
       }
     });
     return { frag, pageCount, cardCount: all.length };
@@ -672,6 +737,43 @@
                     style="background:${esc(p.hex)}"
                     aria-label="${esc(p.label)}"></button>`).join('')}
         </div>
+      </div>
+
+      <div class="cards-layout-section">
+        <div class="cards-disp-heading">Card backs (duplex)</div>
+        <p class="cards-help">
+          Insert a back page after every front. Same layout and grid as
+          the front it follows, so a 2-up rules page gets a 2-up back
+          page. Print odd pages, flip the stack, then print even pages.
+        </p>
+        <label class="cards-row" style="margin: 4px 12px 6px">
+          <input type="checkbox" id="cards-back-enabled" ${cardBack.enabled ? 'checked' : ''}>
+          <span><strong>Enable card backs</strong></span>
+        </label>
+        <div class="cards-field" style="padding:4px 12px 0">
+          <span class="cards-field-label">Image</span>
+          <input type="file" id="cards-back-file" accept="image/*" class="cards-file">
+          ${cardBack.name ? `<div class="cards-help" style="margin:4px 0 0">${esc(cardBack.name)}</div>` : ''}
+          ${cardBack.src ? `<button type="button" class="cards-link-btn" id="cards-back-clear" style="padding:4px 0">Remove image</button>` : ''}
+        </div>
+        <div class="cards-field" style="padding:8px 12px 0">
+          <span class="cards-field-label">Scale <span class="cards-slider-val" id="cards-back-scale-val">${(cardBack.scale * 100).toFixed(0)}%</span></span>
+          <input type="range" min="50" max="300" step="5" value="${(cardBack.scale * 100).toFixed(0)}"
+                 id="cards-back-scale" class="cards-range">
+        </div>
+        <div class="cards-field" style="padding:6px 12px 0">
+          <span class="cards-field-label">Horizontal offset <span class="cards-slider-val" id="cards-back-x-val">${cardBack.offsetX}%</span></span>
+          <input type="range" min="-100" max="100" step="1" value="${cardBack.offsetX}"
+                 id="cards-back-x" class="cards-range">
+        </div>
+        <div class="cards-field" style="padding:6px 12px 0">
+          <span class="cards-field-label">Vertical offset <span class="cards-slider-val" id="cards-back-y-val">${cardBack.offsetY}%</span></span>
+          <input type="range" min="-100" max="100" step="1" value="${cardBack.offsetY}"
+                 id="cards-back-y" class="cards-range">
+        </div>
+        <div style="padding:8px 12px 0">
+          <button type="button" class="cards-link-btn" id="cards-back-reset">Reset position &amp; scale</button>
+        </div>
       </div>`;
     // Defer setting the <select> values until after the HTML lands in the DOM.
     queueMicrotask(() => {
@@ -774,6 +876,53 @@
       refreshPreview();
       return;
     }
+    // Card-back: enable toggle
+    if (e.target && e.target.id === 'cards-back-enabled') {
+      cardBack.enabled = !!e.target.checked;
+      refreshPreview();
+      refreshSummary();
+      return;
+    }
+    // Card-back: file upload
+    if (e.target && e.target.id === 'cards-back-file') {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        cardBack.src = reader.result;
+        cardBack.name = file.name;
+        // If the user uploaded an image without first toggling enable,
+        // assume they want it on.
+        cardBack.enabled = true;
+        refreshSidebar();
+        refreshPreview();
+        refreshSummary();
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+    // Card-back: range sliders
+    if (e.target && e.target.id === 'cards-back-scale') {
+      cardBack.scale = (parseInt(e.target.value, 10) || 100) / 100;
+      const v = hostEl.querySelector('#cards-back-scale-val');
+      if (v) v.textContent = (cardBack.scale * 100).toFixed(0) + '%';
+      refreshPreview();
+      return;
+    }
+    if (e.target && e.target.id === 'cards-back-x') {
+      cardBack.offsetX = parseInt(e.target.value, 10) || 0;
+      const v = hostEl.querySelector('#cards-back-x-val');
+      if (v) v.textContent = cardBack.offsetX + '%';
+      refreshPreview();
+      return;
+    }
+    if (e.target && e.target.id === 'cards-back-y') {
+      cardBack.offsetY = parseInt(e.target.value, 10) || 0;
+      const v = hostEl.querySelector('#cards-back-y-val');
+      if (v) v.textContent = cardBack.offsetY + '%';
+      refreshPreview();
+      return;
+    }
     // Display toggles
     const dispCb = e.target.closest('input[type="checkbox"][data-display]');
     if (dispCb) {
@@ -823,6 +972,24 @@
       refreshPreview();
       return;
     }
+    // Card-back: clear image
+    if (e.target && e.target.id === 'cards-back-clear') {
+      cardBack.src = null;
+      cardBack.name = '';
+      refreshSidebar();
+      refreshPreview();
+      refreshSummary();
+      return;
+    }
+    // Card-back: reset position + scale
+    if (e.target && e.target.id === 'cards-back-reset') {
+      cardBack.scale   = 1.0;
+      cardBack.offsetX = 0;
+      cardBack.offsetY = 0;
+      refreshSidebar();
+      refreshPreview();
+      return;
+    }
     // Display "reset to defaults"
     if (e.target && e.target.id === 'cards-display-reset') {
       display = Object.assign({}, DEFAULT_DISPLAY);
@@ -856,15 +1023,17 @@
     const sum = hostEl && hostEl.querySelector('#cards-summary');
     if (!sum) return;
     const all = selectedCards();
-    let pages = 0;
+    let frontPages = 0;
     ['unit','rule','strat'].forEach(kind => {
       const cards = all.filter(c => c.kind === kind);
       if (cards.length === 0) return;
       const layout = getLayoutFor(kind);
-      pages += Math.ceil(cards.length / (layout.cols * layout.rows));
+      frontPages += Math.ceil(cards.length / (layout.cols * layout.rows));
     });
-    if (pages === 0) pages = 0;
-    sum.textContent = `${all.length} card${all.length === 1 ? '' : 's'} · ${pages} page${pages === 1 ? '' : 's'}`;
+    const backsOn = !!(cardBack.enabled && cardBack.src);
+    const totalPages = backsOn ? frontPages * 2 : frontPages;
+    const backNote = backsOn ? ` (${frontPages} front + ${frontPages} back)` : '';
+    sum.textContent = `${all.length} card${all.length === 1 ? '' : 's'} · ${totalPages} page${totalPages === 1 ? '' : 's'}${backNote}`;
   }
 
   // ── Print / Save PDF ─────────────────────────────────────────────────────

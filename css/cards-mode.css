@@ -235,6 +235,30 @@
   font-weight: 700;
   text-shadow: 0 1px 2px rgba(0,0,0,0.7);
 }
+
+/* Card-back form controls */
+.cards-file {
+  width: 100%;
+  font-size: 12px;
+  color: #b9bec8;
+  background: #0f1115;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+}
+.cards-range {
+  width: 100%;
+  accent-color: var(--accent, #b89052);
+  cursor: pointer;
+}
+.cards-slider-val {
+  margin-left: 6px;
+  color: #cdd1d8;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
 .cards-link-btn {
   background: transparent;
   border: 0;
@@ -384,6 +408,36 @@
   background: transparent !important;
   border: 0.3mm dashed #c8b890;
   box-shadow: none;
+}
+
+/* Card backs (duplex-print) */
+.dcc-card-back {
+  /* Reuse the gilded frame from .dcc-card; just strip the parchment
+   * texture and let the user-uploaded image fill the cell. */
+  padding: 0;
+  background: #ecdfb9;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+.dcc-back-img {
+  /* Pinned to the centre of the cell, then translated by (offsetX,
+   * offsetY) % and scaled. Container clips overflow so high scales
+   * crop cleanly. */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  transform-origin: center;
+  transform:
+    translate(calc(-50% + var(--dcc-back-x, 0%)),
+              calc(-50% + var(--dcc-back-y, 0%)))
+    scale(var(--dcc-back-scale, 1));
+  user-select: none;
+  pointer-events: none;
 }
 
 /* Metallic title bar with a subtle horizontal sheen + gold accent rule. */
@@ -689,6 +743,8 @@
    * all print as white. */
   body.cards-printing .dcc-page,
   body.cards-printing .dcc-card,
+  body.cards-printing .dcc-card-back,
+  body.cards-printing .dcc-back-img,
   body.cards-printing .dcc-head,
   body.cards-printing .dcc-section-head,
   body.cards-printing .dcc-stat-cell,
