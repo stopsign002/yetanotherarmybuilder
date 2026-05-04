@@ -354,8 +354,17 @@
     }
 
     const coreAbilities    = abilities.filter(a => a.isCore);
-    const leaderAbilities  = abilities.filter(a => !a.isCore && /can be attached to/i.test(a.description));
-    const regularAbilities = abilities.filter(a => !a.isCore && !/can be attached to/i.test(a.description));
+    // Primarch sub-abilities are CHILDREN whose BSData typeName matches
+    // the parent ability's name (e.g. typeName="Primarch of the First
+    // Legion" on Lion El'Jonson's three choose-from-N toggles). The
+    // parent ability itself has typeName="Abilities" and stays in the
+    // regular Abilities section, since it reads as the always-on rule
+    // explaining the "select two" mechanic. See cards-mode.js
+    // isPrimarchAbility() for the canonical detection.
+    const isPrimarch = a => !!(a && a._typeName && /^primarch of /i.test(a._typeName));
+    const primarchAbilities = abilities.filter(a => !a.isCore && isPrimarch(a));
+    const leaderAbilities  = abilities.filter(a => !a.isCore && !isPrimarch(a) && /can be attached to/i.test(a.description));
+    const regularAbilities = abilities.filter(a => !a.isCore && !isPrimarch(a) && !/can be attached to/i.test(a.description));
 
     if (coreAbilities.length > 0) {
       html += `<div class="detail-section">
@@ -413,6 +422,23 @@
         <div class="detail-section-title">Abilities</div>`;
       regularAbilities.forEach(ab => {
         html += `<div class="detail-ability">
+          <span class="detail-ability-name">${esc(ab.name)}:</span>
+          <span class="detail-ability-desc">${esc(ab.description || '—')}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Primarch sub-abilities — sit in their own section so the player
+    // can see at a glance that they're choose-from-N toggles, not
+    // always-on rules. The parent ability ("Primarch of the First
+    // Legion: At the start of your Command phase, select two…") has
+    // already been rendered above in regularAbilities.
+    if (primarchAbilities.length > 0) {
+      html += `<div class="detail-section detail-section-primarch">
+        <div class="detail-section-title detail-section-title-primarch">Primarch <span class="detail-primarch-hint">choose two each Command phase</span></div>`;
+      primarchAbilities.forEach(ab => {
+        html += `<div class="detail-ability detail-ability-primarch">
           <span class="detail-ability-name">${esc(ab.name)}:</span>
           <span class="detail-ability-desc">${esc(ab.description || '—')}</span>
         </div>`;

@@ -1102,6 +1102,44 @@ ul { list-style: none; }
   border-bottom: 1px solid var(--border);
 }
 
+/* Primarch sub-section — choose-from-N toggles for hero units (Lion
+ * El'Jonson, Magnus, etc.). Distinct gold-leaf treatment so it reads
+ * as "pick two" rather than always-on rules. Mirrors the cards-mode
+ * .dcc-section-head-primarch styling. */
+.detail-section-title-primarch {
+  color: #e7c87a;
+  border-bottom-color: #b89052;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.detail-primarch-hint {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.detail-section-primarch {
+  border: 1px solid rgba(184, 144, 82, 0.4);
+  border-radius: 6px;
+  padding: 8px 10px 6px;
+  background:
+    linear-gradient(180deg, rgba(184, 144, 82, 0.07) 0%, transparent 60%);
+  margin-top: 12px;
+}
+.detail-section-primarch .detail-section-title-primarch {
+  border-bottom-color: rgba(184, 144, 82, 0.5);
+}
+.detail-ability-primarch {
+  /* Subtle inner stripe so each option reads as a card-back-style
+   * pickable item. */
+  border-left: 2px solid #b89052;
+  padding-left: 10px;
+  margin-left: 2px;
+}
+
 .detail-stats-row {
   display: grid;
   grid-template-columns: repeat(6, 1fr);

@@ -695,19 +695,18 @@
     </div>`;
   }
 
-  // True when an ability is a "Primarch of <legion>" toggle — either the
-  // parent ability (whose `name` starts with "Primarch of") or one of
-  // its sub-options (whose BSData `_typeName` is the parent's name,
-  // e.g. typeName="Primarch of the First Legion" on Lion El'Jonson's
-  // three Mist-wreathed Shadow Realms / Martial Exemplar / No Hiding
-  // From the Watchers profiles). Splitting these into their own card
-  // section gives players a visual cue that they're choose-from-N
-  // toggles rather than always-on rules.
+  // True when an ability is one of the choose-from-N primarch toggles —
+  // i.e. a CHILD profile whose BSData typeName matches the parent
+  // ability's name (e.g. typeName="Primarch of the First Legion" on
+  // Lion El'Jonson's Mist-wreathed Shadow Realms / Martial Exemplar /
+  // No Hiding From the Watchers). The parent ability itself
+  // ("Primarch of the First Legion: At the start of your Command
+  // phase, select two…") has typeName="Abilities" — it stays in the
+  // regular ABILITIES section so it reads as the "always on" rule
+  // explaining the choose mechanic, while the three options sit
+  // visually distinct in PRIMARCH below.
   function isPrimarchAbility(a) {
-    if (!a || !a.name) return false;
-    if (/^primarch of /i.test(a.name)) return true;
-    if (a._typeName && /^primarch of /i.test(a._typeName)) return true;
-    return false;
+    return !!(a && a._typeName && /^primarch of /i.test(a._typeName));
   }
 
   function renderAbilitiesBlock(unit) {
