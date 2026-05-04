@@ -695,37 +695,59 @@
     </div>`;
   }
 
-  // True when an ability is one of the choose-from-N primarch toggles —
-  // i.e. a CHILD profile whose BSData typeName matches the parent
-  // ability's name (e.g. typeName="Primarch of the First Legion" on
-  // Lion El'Jonson's Mist-wreathed Shadow Realms / Martial Exemplar /
-  // No Hiding From the Watchers). The parent ability itself
-  // ("Primarch of the First Legion: At the start of your Command
-  // phase, select two…") has typeName="Abilities" — it stays in the
-  // regular ABILITIES section so it reads as the "always on" rule
-  // explaining the choose mechanic, while the three options sit
-  // visually distinct in PRIMARCH below.
-  function isPrimarchAbility(a) {
-    return !!(a && a._typeName && /^primarch of /i.test(a._typeName));
+  // 10e BSData encodes "choose-one-of-N" hero toggles by giving each
+  // child profile a non-standard typeName matching (or related to) the
+  // parent ability's name. Examples:
+  //   Lion El'Jonson  → typeName="Primarch of the First Legion"
+  //   Angron          → typeName="Wrathful Presence"
+  //   Silent King     → typeName="Triarch Abilities"
+  // The parent always has typeName="Abilities" and stays in the regular
+  // ABILITIES section. Children get a dedicated section per typeName so
+  // the player sees at a glance that they're pickable toggles.
+  //
+  // Returns the section label for an ability if it's a sub-ability,
+  // null otherwise. "Primarch of <legion>" is normalised to "PRIMARCH"
+  // (per user preference); other special typeNames are uppercased
+  // verbatim.
+  const STD_ABILITY_TYPENAMES = new Set([
+    '', 'abilities', 'leader', 'invulnerable save', 'damaged',
+  ]);
+  function subAbilitySectionKey(a) {
+    if (!a || !a._typeName) return null;
+    const tn = String(a._typeName).trim();
+    if (STD_ABILITY_TYPENAMES.has(tn.toLowerCase())) return null;
+    if (/^primarch of /i.test(tn)) return 'PRIMARCH';
+    return tn.toUpperCase();
   }
 
   function renderAbilitiesBlock(unit) {
     if (!display.abilities) return '';
     const abil = (unit.abilities || []).filter(a => a && a.name);
     if (abil.length === 0) return '';
-    const core = [], named = [], primarch = [];
+    const core = [], named = [];
+    // Group sub-abilities by their section key — preserves first-seen
+    // order so each unit's special section renders in its natural order.
+    const subGroups = new Map();   // key (label) → [abilities]
     abil.forEach(a => {
-      if (a.isCore) core.push(a);
-      else if (isPrimarchAbility(a)) primarch.push(a);
-      else named.push(a);
+      if (a.isCore) { core.push(a); return; }
+      const key = subAbilitySectionKey(a);
+      if (key) {
+        if (!subGroups.has(key)) subGroups.set(key, []);
+        subGroups.get(key).push(a);
+      } else {
+        named.push(a);
+      }
     });
     const coreVisible = display.coreAbil && core.length > 0;
-    if (!coreVisible && named.length === 0 && primarch.length === 0) return '';
+    if (!coreVisible && named.length === 0 && subGroups.size === 0) return '';
 
     let html = '';
 
     // Regular ABILITIES section first — the "always on" rules players
-    // reference most often.
+    // reference most often. Parent toggles like "Wrathful Presence" /
+    // "Voice of the Triarch" / "Primarch of the First Legion" live here
+    // because they have typeName="Abilities" and explain the choose
+    // mechanic for the special section below.
     if (coreVisible || named.length > 0) {
       html += `<div class="dcc-section dcc-abilities">
         <div class="dcc-section-head"><span class="dcc-section-label">ABILITIES</span></div>
@@ -741,20 +763,19 @@
       html += `</div></div>`;
     }
 
-    // Primarch toggle section — the parent ability (which describes the
-    // "select two" mechanic) lands here too so the choice context sits
-    // right next to the choices themselves. Visually distinct via its
-    // own section head with `dcc-section-head-primarch` so the user can
-    // tell at a glance that these are pick-from-N abilities.
-    if (primarch.length > 0) {
+    // One special section per non-standard typeName: PRIMARCH for any
+    // primarch toggle, "WRATHFUL PRESENCE" for Angron, "TRIARCH
+    // ABILITIES" for Silent King, etc. Same gold-leaf section head
+    // styling for all of them so they read as "pick from N" at a glance.
+    subGroups.forEach((rows, label) => {
       html += `<div class="dcc-section dcc-abilities dcc-abilities-primarch">
-        <div class="dcc-section-head dcc-section-head-primarch"><span class="dcc-section-label">PRIMARCH</span></div>
+        <div class="dcc-section-head dcc-section-head-primarch"><span class="dcc-section-label">${esc(label)}</span></div>
         <div class="dcc-abilities-body">`;
-      primarch.forEach(a => {
+      rows.forEach(a => {
         html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${esc(formatStructuredText(a.description || ''))}</div>`;
       });
       html += `</div></div>`;
-    }
+    });
 
     return html;
   }

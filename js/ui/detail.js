@@ -354,17 +354,36 @@
     }
 
     const coreAbilities    = abilities.filter(a => a.isCore);
-    // Primarch sub-abilities are CHILDREN whose BSData typeName matches
-    // the parent ability's name (e.g. typeName="Primarch of the First
-    // Legion" on Lion El'Jonson's three choose-from-N toggles). The
-    // parent ability itself has typeName="Abilities" and stays in the
-    // regular Abilities section, since it reads as the always-on rule
-    // explaining the "select two" mechanic. See cards-mode.js
-    // isPrimarchAbility() for the canonical detection.
-    const isPrimarch = a => !!(a && a._typeName && /^primarch of /i.test(a._typeName));
-    const primarchAbilities = abilities.filter(a => !a.isCore && isPrimarch(a));
-    const leaderAbilities  = abilities.filter(a => !a.isCore && !isPrimarch(a) && /can be attached to/i.test(a.description));
-    const regularAbilities = abilities.filter(a => !a.isCore && !isPrimarch(a) && !/can be attached to/i.test(a.description));
+    // Sub-ability detection — same logic as cards-mode.js
+    // subAbilitySectionKey(). Children of choose-from-N hero toggles
+    // have a non-standard BSData typeName matching (or related to) the
+    // parent ability's name:
+    //   Lion El'Jonson  → typeName="Primarch of the First Legion"
+    //   Angron          → typeName="Wrathful Presence"
+    //   Silent King     → typeName="Triarch Abilities"
+    // The parent ability has typeName="Abilities" and stays in the
+    // regular Abilities section, where it reads as the always-on rule
+    // explaining the choose mechanic.
+    const STD_AB_TN = new Set(['', 'abilities', 'leader', 'invulnerable save', 'damaged']);
+    const subAbilityKey = (a) => {
+      if (!a || !a._typeName) return null;
+      const tn = String(a._typeName).trim();
+      if (STD_AB_TN.has(tn.toLowerCase())) return null;
+      if (/^primarch of /i.test(tn)) return 'PRIMARCH';
+      return tn.toUpperCase();
+    };
+    // Group sub-abilities by section key, preserving first-seen order.
+    const subGroups = new Map();
+    abilities.forEach(a => {
+      if (a.isCore) return;
+      const key = subAbilityKey(a);
+      if (!key) return;
+      if (!subGroups.has(key)) subGroups.set(key, []);
+      subGroups.get(key).push(a);
+    });
+    const isSub = (a) => !!subAbilityKey(a);
+    const leaderAbilities  = abilities.filter(a => !a.isCore && !isSub(a) && /can be attached to/i.test(a.description));
+    const regularAbilities = abilities.filter(a => !a.isCore && !isSub(a) && !/can be attached to/i.test(a.description));
 
     if (coreAbilities.length > 0) {
       html += `<div class="detail-section">
@@ -429,22 +448,24 @@
       html += `</div>`;
     }
 
-    // Primarch sub-abilities — sit in their own section so the player
-    // can see at a glance that they're choose-from-N toggles, not
-    // always-on rules. The parent ability ("Primarch of the First
-    // Legion: At the start of your Command phase, select two…") has
-    // already been rendered above in regularAbilities.
-    if (primarchAbilities.length > 0) {
+    // One special section per choose-from-N typeName group:
+    //   "PRIMARCH" for Lion / Magnus / Angron-the-primarch / etc.
+    //   "WRATHFUL PRESENCE" for Angron's toggles
+    //   "TRIARCH ABILITIES" for Silent King
+    // Hint text is generic — the parent ability (above) has the
+    // specific "select one/two" wording.
+    subGroups.forEach((rows, label) => {
+      const friendlyLabel = label.charAt(0) + label.slice(1).toLowerCase();
       html += `<div class="detail-section detail-section-primarch">
-        <div class="detail-section-title detail-section-title-primarch">Primarch <span class="detail-primarch-hint">choose two each Command phase</span></div>`;
-      primarchAbilities.forEach(ab => {
+        <div class="detail-section-title detail-section-title-primarch">${esc(friendlyLabel)} <span class="detail-primarch-hint">pick from these each turn</span></div>`;
+      rows.forEach(ab => {
         html += `<div class="detail-ability detail-ability-primarch">
           <span class="detail-ability-name">${esc(ab.name)}:</span>
           <span class="detail-ability-desc">${esc(ab.description || '—')}</span>
         </div>`;
       });
       html += `</div>`;
-    }
+    });
 
     const modelNums = [...new Set(squadOptions.map(o => o.models).filter(m => m != null))].sort((a, b) => a - b);
     const compLabel = modelNums.length === 0 ? null
