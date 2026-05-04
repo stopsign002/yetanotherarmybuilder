@@ -101,6 +101,14 @@
           App.Sync.drainQueue();
         }
       }));
+      // Admin entry — only rendered when the server has flagged the
+      // current user as is_admin in /api/auth/me. Permissions are
+      // re-checked on every /api/admin/* call server-side.
+      if (App.Auth && typeof App.Auth.isAdmin === 'function' && App.Auth.isAdmin()) {
+        menu.appendChild(mkItem('Admin…', () => {
+          if (App.Admin && typeof App.Admin.open === 'function') App.Admin.open();
+        }));
+      }
       menu.appendChild(mkItem('Change password', () => {
         if (UI.showAuthModal) UI.showAuthModal('change-password');
       }));
