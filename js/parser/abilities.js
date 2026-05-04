@@ -35,7 +35,12 @@
         // fall back to Effect for primarch / warlord-trait shapes.
         const descEl = profile.querySelector('characteristic[name="Description"]')
                     || profile.querySelector('characteristic[name="Effect"]');
-        abilities.push({ name, description: descEl ? I.cleanText(descEl.textContent) : '' });
+        const tn = I.getAttr(profile, 'typeName', '');
+        abilities.push({
+          name,
+          description: descEl ? I.cleanText(descEl.textContent) : '',
+          _typeName: tn,
+        });
 
       } else if (linkType === 'rule') {
         const rule = rulesById.get(targetId);

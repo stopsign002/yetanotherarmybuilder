@@ -35,7 +35,16 @@
         // those reach the renderer.
         const descEl = profile.querySelector('characteristic[name="Description"]')
                     || profile.querySelector('characteristic[name="Effect"]');
-        if (name) abilities.push({ name, description: descEl ? I.cleanText(descEl.textContent) : '' });
+        // Capture typeName too — primarch sub-ability profiles ship with
+        // typeName like "Primarch of the First Legion" instead of the
+        // generic "Abilities", which is the only way to tell them apart
+        // from regular abilities at render time.
+        const tn = I.getAttr(profile, 'typeName', '');
+        if (name) abilities.push({
+          name,
+          description: descEl ? I.cleanText(descEl.textContent) : '',
+          _typeName: tn,
+        });
       }
     });
 

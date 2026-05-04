@@ -695,26 +695,68 @@
     </div>`;
   }
 
+  // True when an ability is a "Primarch of <legion>" toggle — either the
+  // parent ability (whose `name` starts with "Primarch of") or one of
+  // its sub-options (whose BSData `_typeName` is the parent's name,
+  // e.g. typeName="Primarch of the First Legion" on Lion El'Jonson's
+  // three Mist-wreathed Shadow Realms / Martial Exemplar / No Hiding
+  // From the Watchers profiles). Splitting these into their own card
+  // section gives players a visual cue that they're choose-from-N
+  // toggles rather than always-on rules.
+  function isPrimarchAbility(a) {
+    if (!a || !a.name) return false;
+    if (/^primarch of /i.test(a.name)) return true;
+    if (a._typeName && /^primarch of /i.test(a._typeName)) return true;
+    return false;
+  }
+
   function renderAbilitiesBlock(unit) {
     if (!display.abilities) return '';
     const abil = (unit.abilities || []).filter(a => a && a.name);
     if (abil.length === 0) return '';
-    const core = [], named = [];
-    abil.forEach(a => { (a.isCore ? core : named).push(a); });
-    const coreVisible = display.coreAbil && core.length > 0;
-    if (!coreVisible && named.length === 0) return '';
-    let html = `<div class="dcc-section dcc-abilities">
-      <div class="dcc-section-head"><span class="dcc-section-label">ABILITIES</span></div>
-      <div class="dcc-abilities-body">`;
-    if (coreVisible) {
-      html += `<div class="dcc-ability-row dcc-core-row"><strong>CORE:</strong> ${
-        core.map(a => esc(a.name)).join(', ')
-      }</div>`;
-    }
-    named.forEach(a => {
-      html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${esc(formatStructuredText(a.description || ''))}</div>`;
+    const core = [], named = [], primarch = [];
+    abil.forEach(a => {
+      if (a.isCore) core.push(a);
+      else if (isPrimarchAbility(a)) primarch.push(a);
+      else named.push(a);
     });
-    html += `</div></div>`;
+    const coreVisible = display.coreAbil && core.length > 0;
+    if (!coreVisible && named.length === 0 && primarch.length === 0) return '';
+
+    let html = '';
+
+    // Regular ABILITIES section first — the "always on" rules players
+    // reference most often.
+    if (coreVisible || named.length > 0) {
+      html += `<div class="dcc-section dcc-abilities">
+        <div class="dcc-section-head"><span class="dcc-section-label">ABILITIES</span></div>
+        <div class="dcc-abilities-body">`;
+      if (coreVisible) {
+        html += `<div class="dcc-ability-row dcc-core-row"><strong>CORE:</strong> ${
+          core.map(a => esc(a.name)).join(', ')
+        }</div>`;
+      }
+      named.forEach(a => {
+        html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${esc(formatStructuredText(a.description || ''))}</div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // Primarch toggle section — the parent ability (which describes the
+    // "select two" mechanic) lands here too so the choice context sits
+    // right next to the choices themselves. Visually distinct via its
+    // own section head with `dcc-section-head-primarch` so the user can
+    // tell at a glance that these are pick-from-N abilities.
+    if (primarch.length > 0) {
+      html += `<div class="dcc-section dcc-abilities dcc-abilities-primarch">
+        <div class="dcc-section-head dcc-section-head-primarch"><span class="dcc-section-label">PRIMARCH</span></div>
+        <div class="dcc-abilities-body">`;
+      primarch.forEach(a => {
+        html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${esc(formatStructuredText(a.description || ''))}</div>`;
+      });
+      html += `</div></div>`;
+    }
+
     return html;
   }
 

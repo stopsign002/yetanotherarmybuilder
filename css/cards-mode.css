@@ -817,6 +817,27 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Primarch section — gold-rich gradient + thicker rims so the
+ * choose-from-N abilities read as a distinct "pick two" block at a
+ * glance, separate from the always-on ABILITIES list above. */
+.dcc-section-head-primarch {
+  background: linear-gradient(180deg, #b89052 0%, #8a6a2a 50%, #5a3f1a 100%) !important;
+  color: #fff8e0 !important;
+  letter-spacing: 0.12em !important;
+  box-shadow:
+    inset 0 0.25mm 0 #f0d68a,
+    inset 0 -0.25mm 0 #3a2710 !important;
+  text-shadow: 0 0.1mm 0.15mm rgba(0,0,0,0.6);
+}
+.dcc-abilities-primarch {
+  /* A faint gold rule along the top edge of the body to extend the
+   * header's accent into the content. */
+  position: relative;
+}
+.dcc-abilities-primarch .dcc-abilities-body {
+  border-top: 0.2mm solid rgba(184, 144, 82, 0.6);
+}
+
 /* Abilities */
 .dcc-abilities-body {
   padding: 0.8mm 1.4mm;

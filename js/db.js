@@ -70,7 +70,13 @@ window.YaabDB = (() => {
   // visible to parseDirectProfiles, just classified as 'other' and
   // dropped). Stale v17 cache still has the old classification; drop
   // the parsed-data stores on upgrade.
-  const DB_VERSION = 18;
+  // Bumped to v19: ability records gain a `_typeName` field carrying the
+  // BSData profile typeName (e.g. "Primarch of the First Legion"). The
+  // cards-mode renderer uses this to split primarch sub-abilities into
+  // their own PRIMARCH section instead of mixing them into the regular
+  // ABILITIES list, so players can see at a glance which abilities are
+  // choose-from-N toggles.
+  const DB_VERSION = 19;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
