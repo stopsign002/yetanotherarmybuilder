@@ -191,6 +191,47 @@
   margin: 4px 12px 6px;
 }
 
+/* Texture picker (inside the Layout sub-tab) */
+.cards-textures {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px 12px 0;
+}
+.cards-texture {
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  border: 1px solid #2e323a;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  /* Inset gold ring helps the swatch read as a card sample. */
+  box-shadow: inset 0 0 0 1px rgba(184, 144, 82, 0.3);
+}
+.cards-texture:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(184, 144, 82, 0.55);
+}
+.cards-texture.is-active {
+  border-color: var(--accent, #b89052);
+  box-shadow: 0 0 0 2px var(--accent, #b89052);
+}
+.cards-texture-label {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.78) 100%);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px 4px 3px;
+  text-align: center;
+  line-height: 1.1;
+  pointer-events: none;
+}
+
 /* Border-colour controls (inside the Layout sub-tab) */
 .cards-color {
   width: 100%;
@@ -442,15 +483,12 @@
  */
 
 .dcc-card {
-  /* Layered backgrounds (top → bottom):
-   *   1. SVG noise grain in dark sepia (inline data URL)
-   *   2. Soft radial vignette pulling the corners darker
-   *   3. Parchment gradient base */
-  background:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' seed='4'/><feColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.13 0 0 0 0 0.07 0 0 0 0.45 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
-    radial-gradient(ellipse at 50% 0%, #f7eed4 0%, #ecdfb9 60%, #d8c897 100%),
-    #ecdfb9;
-  background-blend-mode: multiply, normal, normal;
+  /* Background is owned by the JS-injected <style id="cards-texture-style">,
+   * which writes `.dcc-card { background: ... }` based on the active
+   * texture preset and intensity slider. The fallback below is only
+   * used if cards-mode.js never gets to inject the rule (graceful
+   * degradation). */
+  background: #ecdfb9;
   color: #1c1308;
   border: 0.4mm solid #1a140a;
   border-radius: 1mm;

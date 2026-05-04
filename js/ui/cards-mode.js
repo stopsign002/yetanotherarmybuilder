@@ -39,6 +39,65 @@
   const PAGE_MARGIN_MM  = 5;
   const CARD_GUTTER_MM  = 3;
 
+  // ── Texture presets ──────────────────────────────────────────────────────
+  // Each preset overrides the .dcc-card background. `base` is the parchment-
+  // equivalent gradient + fallback colour. `grain` (optional) describes an
+  // SVG-feTurbulence noise overlay multiplied on top; the renderer scales
+  // its alpha by the user's intensity slider (0–100). All inline-SVG so the
+  // textures travel cleanly through print.
+  //
+  // Tuned to keep a parchment-like reading surface across themes — the
+  // backgrounds shift in tint but not in luminance, so the dark text stays
+  // readable on all 16 options.
+  const TEXTURES = [
+    { id: 'none',      label: 'No texture',        base: '#f4ead2', grain: null },
+    { id: 'parchment', label: 'Oath parchment',    base: 'radial-gradient(ellipse at 50% 0%, #f7eed4 0%, #ecdfb9 60%, #d8c897 100%), #ecdfb9', grain: { freq: 0.85, oct: 2, r: 0.18, g: 0.13, b: 0.07, a: 0.45 } },
+    { id: 'vellum',    label: 'Aged vellum',       base: 'radial-gradient(ellipse at 50% 0%, #fbf6e1 0%, #f3eccf 60%, #e7dcb1 100%), #f3eccf', grain: { freq: 1.10, oct: 2, r: 0.22, g: 0.18, b: 0.10, a: 0.30 } },
+    { id: 'bone',      label: 'Bleached bone',     base: 'radial-gradient(ellipse at 50% 0%, #f0ebe0 0%, #e3dccf 60%, #cfc6b3 100%), #e3dccf', grain: { freq: 0.95, oct: 2, r: 0.30, g: 0.28, b: 0.24, a: 0.35 } },
+    { id: 'necron',    label: 'Necron green',      base: 'radial-gradient(ellipse at 50% 0%, #e6e8d5 0%, #d3dcc0 60%, #b6c79f 100%), #d3dcc0', grain: { freq: 0.75, oct: 3, r: 0.05, g: 0.18, b: 0.10, a: 0.55 } },
+    { id: 'chaos',     label: 'Chaos crimson',     base: 'radial-gradient(ellipse at 50% 0%, #efd6c8 0%, #e0bfa9 60%, #c79880 100%), #e0bfa9', grain: { freq: 0.85, oct: 3, r: 0.32, g: 0.05, b: 0.05, a: 0.55 } },
+    { id: 'warp',      label: 'Warp violet',       base: 'radial-gradient(ellipse at 50% 0%, #ead8e6 0%, #d8bfd1 60%, #b994b1 100%), #d8bfd1', grain: { freq: 0.70, oct: 3, r: 0.22, g: 0.05, b: 0.28, a: 0.55 } },
+    { id: 'plague',    label: 'Plague yellow',     base: 'radial-gradient(ellipse at 50% 0%, #ece7c0 0%, #d8d2a0 60%, #b6b178 100%), #d8d2a0', grain: { freq: 0.70, oct: 3, r: 0.20, g: 0.18, b: 0.05, a: 0.55 } },
+    { id: 'tyranid',   label: 'Tyranid hive',      base: 'radial-gradient(ellipse at 50% 0%, #ecdee0 0%, #ddc7cc 60%, #b890a0 100%), #ddc7cc', grain: { freq: 0.55, oct: 3, r: 0.30, g: 0.10, b: 0.20, a: 0.55 } },
+    { id: 'eldar',     label: 'Eldar moonsilver',  base: 'radial-gradient(ellipse at 50% 0%, #dee5ec 0%, #c8d4e0 60%, #9eb1c4 100%), #c8d4e0', grain: { freq: 0.95, oct: 2, r: 0.10, g: 0.20, b: 0.32, a: 0.40 } },
+    { id: 'drukhari',  label: 'Drukhari obsidian', base: 'radial-gradient(ellipse at 50% 0%, #c8b9c8 0%, #b09bb0 60%, #836383 100%), #b09bb0', grain: { freq: 0.60, oct: 4, r: 0.12, g: 0.05, b: 0.18, a: 0.65 } },
+    { id: 'ork',       label: 'Ork rust',          base: 'radial-gradient(ellipse at 50% 0%, #ecd1b3 0%, #d6b289 60%, #ad8358 100%), #d6b289', grain: { freq: 0.60, oct: 3, r: 0.45, g: 0.20, b: 0.05, a: 0.65 } },
+    { id: 'tau',       label: "T'au sky",          base: 'radial-gradient(ellipse at 50% 0%, #e0e7eb 0%, #c8d3da 60%, #9bb2bd 100%), #c8d3da', grain: { freq: 1.20, oct: 1, r: 0.15, g: 0.30, b: 0.40, a: 0.30 } },
+    { id: 'imperial',  label: 'Imperial khaki',    base: 'radial-gradient(ellipse at 50% 0%, #e3dcb8 0%, #cdc492 60%, #a0995e 100%), #cdc492', grain: { freq: 0.85, oct: 2, r: 0.20, g: 0.18, b: 0.05, a: 0.45 } },
+    { id: 'custodes',  label: 'Custodes gold',     base: 'radial-gradient(ellipse at 50% 0%, #f0e3b0 0%, #e2cd84 60%, #b89052 100%), #e2cd84', grain: { freq: 0.95, oct: 2, r: 0.30, g: 0.20, b: 0.05, a: 0.40 } },
+    { id: 'steel',     label: 'Sigmarite steel',   base: 'radial-gradient(ellipse at 50% 0%, #e6e6e6 0%, #cfcfcf 60%, #a0a0a0 100%), #cfcfcf', grain: { freq: 1.10, oct: 2, r: 0.15, g: 0.15, b: 0.15, a: 0.40 } },
+  ];
+  const DEFAULT_TEXTURE   = 'parchment';
+  const DEFAULT_INTENSITY = 100;
+
+  function buildGrainUrl(grain, intensity) {
+    if (!grain || intensity <= 0) return null;
+    const a = Math.max(0, Math.min(1, (grain.a || 0.45) * (intensity / 100)));
+    // Inline-SVG data URL. %23 is `#`, %25 is `%`, urlencoded so the data
+    // URI parses cleanly when slammed into a `background:` shorthand.
+    return "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'>"
+         + "<filter id='n'>"
+         + "<feTurbulence baseFrequency='" + grain.freq + "' numOctaves='" + grain.oct + "' stitchTiles='stitch' seed='4'/>"
+         + "<feColorMatrix values='0 0 0 0 " + grain.r + " 0 0 0 0 " + grain.g + " 0 0 0 0 " + grain.b + " 0 0 0 " + a.toFixed(3) + " 0'/>"
+         + "</filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\")";
+  }
+  function textureCSS(textureId, intensity) {
+    const t = TEXTURES.find(x => x.id === textureId) || TEXTURES.find(x => x.id === DEFAULT_TEXTURE);
+    const grainUrl = buildGrainUrl(t.grain, intensity);
+    const bg = grainUrl ? (grainUrl + ', ' + t.base) : t.base;
+    const blend = grainUrl ? 'multiply, normal, normal' : 'normal';
+    return '.dcc-card { background: ' + bg + '; background-blend-mode: ' + blend + '; }';
+  }
+  function applyTextureStyle() {
+    let style = document.getElementById('cards-texture-style');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'cards-texture-style';
+      document.head.appendChild(style);
+    }
+    style.textContent = textureCSS(textureId, textureIntensity);
+  }
+
   // ── Display toggles ──────────────────────────────────────────────────────
   // Every section the user can hide. Grouped by card kind so the Display
   // sub-tab can render them under headings.
@@ -86,6 +145,10 @@
   // parchment cards pop). User can pick a custom hex or use a preset.
   const DEFAULT_BORDER = '#0d0a07';
   let borderColor = DEFAULT_BORDER;
+  // Active texture preset and intensity (0–100, %). Live-applied via the
+  // <style id="cards-texture-style"> element managed by applyTextureStyle().
+  let textureId        = DEFAULT_TEXTURE;
+  let textureIntensity = DEFAULT_INTENSITY;
   // Border presets — each is { id, label, hex }. Tuned for the grimdark
   // theme but covers common TCG aesthetics too.
   const BORDER_PRESETS = [
@@ -677,6 +740,7 @@
       hostEl.querySelector('#cards-side-body').addEventListener('click', onSidebarClick);
       hostEl.querySelector('#cards-print-btn').addEventListener('click', onPrint);
     }
+    applyTextureStyle();
     refreshSidebar();
     refreshPreview();
     refreshSummary();
@@ -731,6 +795,37 @@
         ${overrideRow('unit',  'Units')}
         ${overrideRow('rule',  'Army rules')}
         ${overrideRow('strat', 'Stratagems')}
+      </div>
+
+      <div class="cards-layout-section">
+        <div class="cards-disp-heading">Card texture</div>
+        <p class="cards-help">
+          Background texture inside each card. Affects fronts and back-card
+          padding. Pick a faction theme; the intensity slider scales the
+          grain alpha.
+        </p>
+        <div class="cards-textures" role="listbox" aria-label="Card textures">
+          ${TEXTURES.map(t => {
+            const grainUrl = buildGrainUrl(t.grain, 100);
+            const bg = grainUrl ? grainUrl + ', ' + t.base : t.base;
+            const blend = grainUrl ? 'multiply, normal, normal' : 'normal';
+            const isActive = t.id === textureId;
+            return `<button type="button"
+                          class="cards-texture${isActive ? ' is-active' : ''}"
+                          data-texture-id="${esc(t.id)}"
+                          title="${esc(t.label)}"
+                          aria-label="${esc(t.label)}"
+                          aria-selected="${isActive}"
+                          style="background:${bg};background-blend-mode:${blend}">
+                    <span class="cards-texture-label">${esc(t.label)}</span>
+                  </button>`;
+          }).join('')}
+        </div>
+        <div class="cards-field" style="padding:10px 12px 0">
+          <span class="cards-field-label">Intensity <span class="cards-slider-val" id="cards-tex-intensity-val">${textureIntensity}%</span></span>
+          <input type="range" min="0" max="100" step="5" value="${textureIntensity}"
+                 id="cards-tex-intensity" class="cards-range">
+        </div>
       </div>
 
       <div class="cards-layout-section">
@@ -894,6 +989,15 @@
       refreshPreview();
       return;
     }
+    // Texture intensity slider
+    if (e.target && e.target.id === 'cards-tex-intensity') {
+      textureIntensity = parseInt(e.target.value, 10);
+      if (Number.isNaN(textureIntensity)) textureIntensity = DEFAULT_INTENSITY;
+      const lbl = hostEl.querySelector('#cards-tex-intensity-val');
+      if (lbl) lbl.textContent = textureIntensity + '%';
+      applyTextureStyle();
+      return;
+    }
     // Card-back: enable toggle
     if (e.target && e.target.id === 'cards-back-enabled') {
       cardBack.enabled = !!e.target.checked;
@@ -997,6 +1101,18 @@
     if (catTab) {
       activeCardCat = catTab.dataset.cat || 'units';
       refreshSidebar();
+      return;
+    }
+    // Texture swatch
+    const tex = e.target.closest('[data-texture-id]');
+    if (tex) {
+      textureId = tex.getAttribute('data-texture-id') || DEFAULT_TEXTURE;
+      // Update active class without rebuilding the whole panel.
+      hostEl.querySelectorAll('[data-texture-id]').forEach(b => {
+        b.classList.toggle('is-active', b.getAttribute('data-texture-id') === textureId);
+        b.setAttribute('aria-selected', String(b.getAttribute('data-texture-id') === textureId));
+      });
+      applyTextureStyle();
       return;
     }
     // Border color preset swatch
