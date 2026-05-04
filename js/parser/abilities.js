@@ -6,7 +6,11 @@
   const I = P._internal;
 
   function collectAbilities(entryEl, entriesById, profilesById, rulesById, depth = 0, visited = new Set()) {
-    if (depth > 3) return [];
+    // Depth 3 was tight — Lion El'Jonson's primarch sub-abilities sit
+    // 4 levels deep through the nested selectionEntries chain in the
+    // Dark Angels catalog. Bumping to 5 gives headroom without
+    // unbounded recursion (the visited-set still guards against cycles).
+    if (depth > 5) return [];
     const id = entryEl.getAttribute('id');
     if (id) {
       if (visited.has(id)) return [];
@@ -47,33 +51,22 @@
       }
     });
 
-    entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(child => {
+    // Recurse into EVERY selectionEntry child of the unit entry,
+    // regardless of `type`. Lion El'Jonson's three "Primarch of the
+    // First Legion" sub-abilities don't surface with a type="model"
+    // OR type="upgrade" filter — the BSData encoding for some hero
+    // primarch abilities uses a different (or absent) type attribute.
+    // The dedup-by-name in entry.js handles any units that happen to
+    // link the same ability through multiple paths. Crusade-section
+    // names are still skipped.
+    entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
       if (I.isCrusadeSection(I.getAttr(child, 'name', ''))) return;
       collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
         .forEach(a => abilities.push(a));
     });
 
-    // Walk type="upgrade" selectionEntries at the unit's top level too.
-    // 10e BSData encodes some "choose-one-of-N" hero abilities here —
-    // notably Lion El'Jonson's three "Primarch of the First Legion"
-    // sub-abilities, which are upgrade-type sibling entries the player
-    // picks from at the start of each Command phase. The earlier walk
-    // only recursed into type="model", so these went missing on the
-    // unit cards even though the parent rule (also reached via the
-    // entry's infoLinks) was present. Dedup-by-name in entry.js
-    // catches duplicates if a unit links the same ability through
-    // multiple paths.
-    entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry[type="upgrade"]').forEach(child => {
-      if (I.isCrusadeSection(I.getAttr(child, 'name', ''))) return;
-      collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
-        .forEach(a => abilities.push(a));
-    });
-
-    // Top-level entryLinks at the unit entry (not inside a
-    // selectionEntryGroup) — point to shared/upgrade entries that
-    // carry abilities. Same Lion El'Jonson pattern: BSData wraps the
-    // primarch toggles as shared upgrades referenced by entryLink
-    // here. Without this walk, those abilities never reach the parser.
+    // Top-level entryLinks at the unit entry — point to shared/upgrade
+    // entries that carry abilities (also Lion's encoding).
     entryEl.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
       const target = entriesById.get(I.getAttr(link, 'targetId'));
       if (!target) return;
@@ -84,7 +77,9 @@
 
     entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
       if (I.isCrusadeSection(I.getAttr(group, 'name', ''))) return;
-      group.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(child => {
+      // Same widening as above — walk every selectionEntry inside the
+      // group regardless of `type`.
+      group.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
         if (I.isCrusadeSection(I.getAttr(child, 'name', ''))) return;
         collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
           .forEach(a => abilities.push(a));

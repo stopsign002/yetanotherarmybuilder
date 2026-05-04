@@ -39,6 +39,14 @@ window.YaabDB = (() => {
   // payloads (per-faction stratagem/detachment/enhancement data). Source:
   // https://github.com/game-datacards/datasources — used to fill the gap
   // BSData wh40k-10e leaves around stratagem rules.
+  // Bumped to v17: ability walker (js/parser/abilities.js) now recurses
+  // into every selectionEntry child regardless of `type` attribute (was
+  // type="model" + type="upgrade" only) and goes 5 levels deep instead
+  // of 3. v16 added the upgrade walk but Lion El'Jonson's "Primarch of
+  // the First Legion" sub-abilities still didn't surface — they sit
+  // under untyped or differently-typed selectionEntries deeper than
+  // depth 3 in the Dark Angels catalogue. Stale cache still has the
+  // narrow walk; drop the parsed-data stores on upgrade.
   // Bumped to v16: ability walker (js/parser/abilities.js) now also
   // visits `:scope > selectionEntries > selectionEntry[type="upgrade"]`
   // and `:scope > entryLinks > entryLink` at the unit's top level.
@@ -52,7 +60,7 @@ window.YaabDB = (() => {
   // parsed-data stores, this is USER DATA — its upgrade path below is
   // non-destructive (only created if missing) so future DB_VERSION
   // bumps that drop the parsed stores don't wipe the user's library.
-  const DB_VERSION = 16;
+  const DB_VERSION = 17;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
