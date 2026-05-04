@@ -158,6 +158,31 @@ body.dcc-modal-open { overflow: hidden; }
   font-size: 13px;
 }
 
+/* Display-tab panel: grouped sections of toggle checkboxes */
+.dcc-display-group {
+  margin-bottom: 14px;
+}
+.dcc-display-heading {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  color: #8c92a0;
+  padding: 4px 6px;
+  margin-top: 4px;
+  border-bottom: 1px solid #23272e;
+}
+.dcc-link-btn {
+  background: transparent;
+  border: 0;
+  color: var(--accent, #c8c8c8);
+  font-size: 12px;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.dcc-link-btn:hover { color: #fff; }
+
 /* Preview pane: scrollable area where pages float */
 .dcc-preview-wrap {
   flex: 1 1 auto;
@@ -175,61 +200,59 @@ body.dcc-modal-open { overflow: hidden; }
 }
 
 /* ── Page (one printable sheet) ─────────────────────────────────────────── */
-/* `.dcc-page` is the full physical sheet at 1:1 scale. The preview wraps
- * each page in a `.dcc-page-frame` shell whose width sets the visual scale
- * via CSS `transform: scale()`. We set `--dcc-preview-scale` via a media-
- * style rule below for the preview, and stamp it back to 1 inside the
- * .dcc-stage container used for PDF/print export. */
+/* `.dcc-page` is the full physical sheet at 1:1 scale, ALWAYS. Both the
+ * preview and the export stage use this same DOM. The on-screen preview
+ * wraps each page in a `.dcc-page-frame` and applies CSS `transform:
+ * scale()` to that wrapper, so html2canvas (which renders the export
+ * stage) never has to deal with a transformed source. */
 .dcc-page {
   width: var(--dcc-page-w);
   height: var(--dcc-page-h);
-  padding: var(--dcc-page-margin);
+  padding: var(--dcc-page-margin, 5mm);
   box-sizing: border-box;
   background: #ffffff;
   color: #111;
   display: grid;
   grid-template-columns: repeat(var(--dcc-grid-cols), 1fr);
   grid-template-rows: repeat(var(--dcc-grid-rows), 1fr);
-  gap: var(--dcc-gutter);
-  box-shadow: 0 6px 24px rgba(0,0,0,0.45);
-  /* Preview scaling: scale the whole page down to fit the preview pane.
-   * `transform-origin: top left` means we have to compensate width below. */
-  transform: scale(var(--dcc-preview-scale, 0.55));
+  gap: var(--dcc-gutter, 3mm);
+}
+.dcc-preview .dcc-page { box-shadow: 0 6px 24px rgba(0,0,0,0.45); }
+
+/* The preview wraps each .dcc-page in a frame that handles the
+ * fit-to-viewport scaling. Compensate the post-scale rendered box with
+ * negative bottom margin so adjacent pages stack tightly. */
+.dcc-page-frame {
+  --dcc-preview-scale: 0.55;
+  width: calc(var(--dcc-page-w) * var(--dcc-preview-scale));
+  height: calc(var(--dcc-page-h) * var(--dcc-preview-scale));
+  overflow: hidden;
+  position: relative;
+}
+.dcc-page-frame > .dcc-page {
+  transform: scale(var(--dcc-preview-scale));
   transform-origin: top left;
-  /* Compensate scaled height/width with negative margins so adjacent pages
-   * stack tightly without huge gaps. */
-  margin-right: calc(var(--dcc-page-w) * (var(--dcc-preview-scale, 0.55) - 1));
-  margin-bottom: calc(var(--dcc-page-h) * (var(--dcc-preview-scale, 0.55) - 1));
-}
-/* Pick the scale based on which preset is active. The base 0.55 works for
- * 4×6 cards; smaller for full Letter/A4 sheets. */
-.dcc-preview .dcc-page[style*="--dcc-page-w: 215.9mm"],
-.dcc-preview .dcc-page[style*="--dcc-page-w: 210mm"] {
-  --dcc-preview-scale: 0.45;
-}
-.dcc-preview .dcc-page[style*="--dcc-page-w: 152.4mm"] {
-  --dcc-preview-scale: 0.7;
-}
-.dcc-preview .dcc-page[style*="--dcc-page-w: 101.6mm"] {
-  --dcc-preview-scale: 0.85;
 }
 
-/* PDF/print export stage uses 1:1 sizing — html2pdf renders this DOM
- * directly as the source for jsPDF, so it must be the real physical size.
- * Positioned way off-screen (visibility:hidden would let html2canvas skip
- * it; left:-10000px keeps real layout while staying out of view). */
-.dcc-stage {
-  position: fixed;
-  left: -10000px;
-  top: 0;
-  background: #ffffff;
-  z-index: -1;
-  pointer-events: none;
+/* Per-preset scale tweaks — keyed off the page width so we don't need a
+ * separate JS hook. */
+.dcc-page-frame[data-page-w="215.9"], .dcc-page-frame[data-page-w="210"] {
+  --dcc-preview-scale: 0.45;
 }
-.dcc-stage .dcc-page {
-  transform: none !important;
-  margin: 0 !important;
-  box-shadow: none !important;
+.dcc-page-frame[data-page-w="152.4"] { --dcc-preview-scale: 0.7; }
+.dcc-page-frame[data-page-w="101.6"] { --dcc-preview-scale: 0.85; }
+
+/* PDF/print export stage. Positioned absolute at the top of the body so
+ * it has a well-defined bounding box for html2canvas, and z-indexed
+ * BEHIND the modal (which is at z-index 1500 and covers the viewport)
+ * so the user never sees it during render. */
+.dcc-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  background: #ffffff;
+  pointer-events: none;
 }
 
 /* ── Card chrome ────────────────────────────────────────────────────────── */
@@ -448,6 +471,35 @@ body.dcc-modal-open { overflow: hidden; }
   line-height: 1.32;
   color: #1a1a1a;
   white-space: pre-wrap;
+}
+
+/* Wargear options */
+.dcc-wargear-body {
+  padding: 0.8mm 1.4mm;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 2mm;
+  line-height: 1.25;
+  color: #1a1a1a;
+}
+.dcc-wargear-line { margin-bottom: 0.4mm; }
+.dcc-wargear-line:last-child { margin-bottom: 0; }
+.dcc-wargear-default { font-weight: 600; }
+.dcc-wargear-line strong { color: #000; }
+.dcc-wargear-sub {
+  margin: 0.2mm 0 0.3mm 2.4mm;
+  list-style: none;
+  padding: 0;
+}
+.dcc-wargear-sub li {
+  position: relative;
+  padding-left: 1.6mm;
+  font-size: 1.9mm;
+}
+.dcc-wargear-sub li::before {
+  content: '◦';
+  position: absolute;
+  left: 0;
+  color: #555;
 }
 
 /* Footer keywords */

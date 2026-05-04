@@ -35,11 +35,46 @@
   // ── Mutable state ────────────────────────────────────────────────────────
   let modalEl = null;
   let lastFocused = null;
-  let activeTab = 'units';      // 'units' | 'rules' | 'strats'
+  let activeTab = 'units';      // 'units' | 'rules' | 'strats' | 'display'
   let activeLayoutId = DEFAULT_LAYOUT;
   // Per-category include sets keyed by stable id (entry-index for units,
   // name for rules and stratagems). Defaults: everything in.
   let include = { units: null, rules: null, strats: null };
+
+  // Display toggles — every section the user can hide. All keys default to
+  // true (show everything). Grouped by card kind so the Display tab can
+  // render them under headings.
+  const DISPLAY_GROUPS = [
+    { kind: 'unit', label: 'Unit cards', keys: [
+      ['points',      'Points cost'],
+      ['role',        'Role / type subtitle'],
+      ['invuln',      'Invulnerable save badge'],
+      ['stats',       'Stat block (M/T/SV/W/LD/OC)'],
+      ['ranged',      'Ranged weapons'],
+      ['melee',       'Melee weapons'],
+      ['weaponKw',    'Weapon keywords (under name)'],
+      ['abilities',   'Abilities'],
+      ['coreAbil',    'Core abilities row'],
+      ['wargear',     'Wargear options / loadout'],
+      ['enhancements','Enhancement'],
+      ['factionKw',   'Faction keywords footer'],
+      ['unitKw',      'Unit keywords footer'],
+    ]},
+    { kind: 'strat', label: 'Stratagem cards', keys: [
+      ['cp',         'CP cost'],
+      ['phase',      'Phase'],
+      ['type',       'Type label (CORE/FACTION/DETACHMENT)'],
+    ]},
+    { kind: 'rule', label: 'Rule cards', keys: [
+      ['kindLabel',  'Subtitle (ARMY RULE / DETACHMENT RULE)'],
+    ]},
+  ];
+  const DEFAULT_DISPLAY = (() => {
+    const d = {};
+    DISPLAY_GROUPS.forEach(g => g.keys.forEach(([k]) => { d[k] = true; }));
+    return d;
+  })();
+  let display = Object.assign({}, DEFAULT_DISPLAY);
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   function esc(s) {
@@ -196,7 +231,7 @@
     const label = type === 'ranged' ? 'RANGED WEAPONS' : 'MELEE WEAPONS';
     const rows = list.map(w => {
       const stats = COLS.map(c => `<td class="dcc-num">${esc(w[c] != null && w[c] !== '' ? w[c] : '—')}</td>`).join('');
-      const kw = w.Keywords ? `<div class="dcc-w-kw">${esc(w.Keywords)}</div>` : '';
+      const kw = (display.weaponKw && w.Keywords) ? `<div class="dcc-w-kw">${esc(w.Keywords)}</div>` : '';
       return `<tr class="dcc-w-row">
         <td class="dcc-w-name">${esc(w.name)}${kw}</td>
         ${stats}
@@ -214,7 +249,97 @@
       </div>`;
   }
 
+  // ── Wargear section ──────────────────────────────────────────────────
+  // Shows what the unit ACTUALLY has equipped (from "default loadout") plus
+  // any options it COULD swap to. Prefers GDC's pre-formatted strings when
+  // available; falls back to the BSData wargearOptions tree.
+  function renderWargearBlock(unit) {
+    if (!display.wargear) return '';
+
+    const lines = [];
+
+    // Composition (e.g. "5 Models" / "1 Captain · 4 Battle-brothers").
+    const gdcComp = Array.isArray(unit.gdcComposition) ? unit.gdcComposition : null;
+    if (gdcComp && gdcComp.length > 0) {
+      lines.push(`<div class="dcc-wargear-line"><strong>Composition:</strong> ${esc(gdcComp.join(' · '))}</div>`);
+    } else if (Array.isArray(unit.squadOptions)) {
+      const models = [...new Set(unit.squadOptions.map(o => o.models).filter(m => m != null))].sort((a, b) => a - b);
+      if (models.length === 1) lines.push(`<div class="dcc-wargear-line"><strong>Composition:</strong> ${models[0]} model${models[0] !== 1 ? 's' : ''}</div>`);
+      else if (models.length > 1) lines.push(`<div class="dcc-wargear-line"><strong>Composition:</strong> ${models[0]}–${models[models.length - 1]} models</div>`);
+    }
+
+    // Default loadout (what's equipped out of the box).
+    if (typeof unit.gdcLoadout === 'string' && unit.gdcLoadout.trim()) {
+      lines.push(`<div class="dcc-wargear-line dcc-wargear-default"><strong>Default:</strong> ${esc(unit.gdcLoadout)}</div>`);
+    }
+
+    // GDC pre-formatted "X can swap Y for Z" lines, ◦-bulleted.
+    const gdcWg = Array.isArray(unit.gdcWargear) ? unit.gdcWargear : null;
+    if (gdcWg && gdcWg.length > 0) {
+      gdcWg.forEach(line => {
+        const parts = String(line).split(/\s*◦\s*/);
+        const head = (parts[0] || '').replace(/:\s*$/, '').trim();
+        const subs = parts.slice(1).map(s => s.trim()).filter(Boolean);
+        let html = '<div class="dcc-wargear-line">';
+        if (head) html += esc(head);
+        if (subs.length > 0) {
+          html += `<ul class="dcc-wargear-sub">${subs.map(s => `<li>${esc(s)}</li>`).join('')}</ul>`;
+        }
+        html += '</div>';
+        lines.push(html);
+      });
+    } else {
+      // BSData fallback — wargearOptions tree.
+      const opts = Array.isArray(unit.wargearOptions) ? unit.wargearOptions : [];
+      const modelTypeOpts = opts.filter(o => o && o.type === 'model');
+      const choiceOpts    = opts.filter(o => o && o.type !== 'model');
+
+      modelTypeOpts.forEach(opt => {
+        let count = '';
+        if (opt.modelMin != null && opt.modelMax != null) {
+          if (opt.modelMin === opt.modelMax)        count = `${opt.modelMin} model${opt.modelMin !== 1 ? 's' : ''}`;
+          else if (opt.modelMin === 0)              count = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
+          else                                      count = `${opt.modelMin}–${opt.modelMax} models`;
+        }
+        let html = `<div class="dcc-wargear-line"><strong>${esc(opt.modelName || 'Model')}</strong>`;
+        if (count) html += ` <span style="opacity:0.7">(${esc(count)})</span>`;
+        if (opt.defaultWeapons && opt.defaultWeapons.length) {
+          html += `<div class="dcc-wargear-line dcc-wargear-default" style="margin-left:1.6mm"><em>Default:</em> ${esc(opt.defaultWeapons.join(' · '))}</div>`;
+        }
+        (opt.subOptions || []).forEach(sub => {
+          const ctx = sub.max === 1 ? ' — choose one' : sub.max > 1 ? ` — choose up to ${sub.max}` : '';
+          html += `<div style="margin-left:1.6mm"><em>${esc(sub.name)}${ctx}</em>`;
+          if (Array.isArray(sub.choices) && sub.choices.length) {
+            html += `<ul class="dcc-wargear-sub">${sub.choices.map(c => `<li>${esc(typeof c === 'object' ? c.name : c)}</li>`).join('')}</ul>`;
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+        lines.push(html);
+      });
+
+      choiceOpts.forEach(opt => {
+        const name = typeof opt === 'object' ? (opt.name || '') : opt;
+        const choices = typeof opt === 'object' && opt.choices ? opt.choices : [];
+        const maxStr = (typeof opt === 'object' && opt.max != null) ? ` (max ${opt.max})` : '';
+        let html = `<div class="dcc-wargear-line"><strong>${esc(name)}</strong>${maxStr ? `<span style="opacity:0.7"> ${esc(maxStr)}</span>` : ''}`;
+        if (choices.length) {
+          html += `<ul class="dcc-wargear-sub">${choices.map(c => `<li>${esc(typeof c === 'object' ? c.name : c)}</li>`).join('')}</ul>`;
+        }
+        html += '</div>';
+        lines.push(html);
+      });
+    }
+
+    if (lines.length === 0) return '';
+    return `<div class="dcc-section dcc-wargear">
+      <div class="dcc-section-head"><span class="dcc-section-label">WARGEAR</span></div>
+      <div class="dcc-wargear-body">${lines.join('')}</div>
+    </div>`;
+  }
+
   function renderAbilitiesBlock(unit) {
+    if (!display.abilities) return '';
     const abil = (unit.abilities || []).filter(a => a && a.name);
     if (abil.length === 0) return '';
     const core = [];
@@ -223,10 +348,12 @@
       if (a.isCore) core.push(a);
       else named.push(a);
     });
+    const coreVisible = display.coreAbil && core.length > 0;
+    if (!coreVisible && named.length === 0) return '';
     let html = `<div class="dcc-section dcc-abilities">
       <div class="dcc-section-head"><span class="dcc-section-label">ABILITIES</span></div>
       <div class="dcc-abilities-body">`;
-    if (core.length > 0) {
+    if (coreVisible) {
       html += `<div class="dcc-ability-row dcc-core-row"><strong>CORE:</strong> ${
         core.map(a => esc(a.name)).join(', ')
       }</div>`;
@@ -249,7 +376,8 @@
                   : (ptsOpts.length ? ptsOpts[0] : null);
     const titleSuffix = entry.count > 1 ? ` <span class="dcc-count">×${entry.count}</span>` : '';
 
-    const enhancementHtml = (Array.isArray(entry.enhancements) && entry.enhancements.length > 0)
+    const showEnh = display.enhancements && Array.isArray(entry.enhancements) && entry.enhancements.length > 0;
+    const enhancementHtml = showEnh
       ? `<div class="dcc-section dcc-enhancements">
           <div class="dcc-section-head"><span class="dcc-section-label">ENHANCEMENT</span></div>
           <div class="dcc-abilities-body">${
@@ -261,16 +389,24 @@
     // Footer keywords
     const allKw = (unit.keywords || []).filter(Boolean);
     const factionKw = unit._factionName ? [unit._factionName] : [];
-    const kwFooter = allKw.length > 0
+    const showFKw = display.factionKw && factionKw.length > 0;
+    const showUKw = display.unitKw && allKw.length > 0;
+    const kwFooter = showUKw
       ? `<div class="dcc-keywords"><strong>KEYWORDS:</strong> ${esc(allKw.join(', '))}</div>`
       : '';
-    const fkwFooter = factionKw.length > 0
+    const fkwFooter = showFKw
       ? `<div class="dcc-keywords dcc-faction-kw"><strong>FACTION KEYWORDS:</strong> ${esc(factionKw.join(', '))}</div>`
       : '';
+    const footerHtml = (showFKw || showUKw)
+      ? `<footer class="dcc-foot">${fkwFooter}${kwFooter}</footer>`
+      : '';
 
-    const inv = unit.invulnSave ? `<span class="dcc-inv" title="Invulnerable Save">${esc(unit.invulnSave)} INV</span>` : '';
+    const inv = (display.invuln && unit.invulnSave) ? `<span class="dcc-inv" title="Invulnerable Save">${esc(unit.invulnSave)} INV</span>` : '';
+    const role = display.role ? `<span class="dcc-role">${esc(unit.type || '')}</span>` : '';
+    const ptsHtml = (display.points && ptsLabel != null) ? `<span class="dcc-pts">${esc(String(ptsLabel))} pts</span>` : '';
 
-    const statsHtml = presentStats.length > 0
+    const showSubLine = !!(role || inv);
+    const statsHtml = (display.stats && presentStats.length > 0)
       ? `<div class="dcc-stats" style="--dcc-stat-cols:${presentStats.length}">
           ${presentStats.map(k => `
             <div class="dcc-stat-cell">
@@ -284,33 +420,31 @@
       <header class="dcc-head">
         <div class="dcc-name-line">
           <h1 class="dcc-name">${esc(unit.name || entry.unitName || 'Unit')}${titleSuffix}</h1>
-          ${ptsLabel != null ? `<span class="dcc-pts">${esc(String(ptsLabel))} pts</span>` : ''}
+          ${ptsHtml}
         </div>
-        <div class="dcc-sub-line">
-          <span class="dcc-role">${esc(unit.type || '')}</span>
-          ${inv}
-        </div>
+        ${showSubLine ? `<div class="dcc-sub-line">${role}${inv}</div>` : ''}
       </header>
       ${statsHtml}
-      ${renderWeaponsBlock(ranged, 'ranged')}
-      ${renderWeaponsBlock(melee, 'melee')}
+      ${display.ranged ? renderWeaponsBlock(ranged, 'ranged') : ''}
+      ${display.melee  ? renderWeaponsBlock(melee, 'melee')   : ''}
       ${renderAbilitiesBlock(unit)}
+      ${renderWargearBlock(unit)}
       ${enhancementHtml}
-      <footer class="dcc-foot">
-        ${fkwFooter}
-        ${kwFooter}
-      </footer>`;
+      ${footerHtml}`;
   }
 
   function renderRuleCard(item) {
     const r = item.rule || {};
     const kindLabel = item.kind === 'detachment' ? 'DETACHMENT RULE' : 'ARMY RULE';
+    const subLine = display.kindLabel
+      ? `<div class="dcc-sub-line"><span class="dcc-role">${kindLabel}</span></div>`
+      : '';
     return `
       <header class="dcc-head dcc-head-rule">
         <div class="dcc-name-line">
           <h1 class="dcc-name">${esc(r.name || item.label)}</h1>
         </div>
-        <div class="dcc-sub-line"><span class="dcc-role">${kindLabel}</span></div>
+        ${subLine}
       </header>
       <div class="dcc-section dcc-rule-body">
         <div class="dcc-rule-text">${esc(r.description || '')}</div>
@@ -320,18 +454,20 @@
   function renderStratagemCard(item) {
     const s = item.strat || {};
     const cp = s.cp != null ? s.cp : '?';
-    const phase = s.phase ? ('PHASE: ' + String(s.phase).toUpperCase()) : '';
     const typeLabel = item.type === 'core' ? 'CORE' : item.type === 'detachment' ? 'DETACHMENT' : 'FACTION';
+    const cpHtml = display.cp
+      ? `<span class="dcc-cp"><span class="dcc-cp-num">${esc(String(cp))}</span><span class="dcc-cp-lbl">CP</span></span>`
+      : '';
+    const typeHtml = display.type ? `<span class="dcc-role">${esc(typeLabel)} STRATAGEM</span>` : '';
+    const phaseHtml = (display.phase && s.phase) ? `<span class="dcc-strat-phase">PHASE: ${esc(String(s.phase).toUpperCase())}</span>` : '';
+    const subLine = (typeHtml || phaseHtml) ? `<div class="dcc-sub-line">${typeHtml}${phaseHtml}</div>` : '';
     return `
       <header class="dcc-head dcc-head-strat">
         <div class="dcc-name-line">
           <h1 class="dcc-name">${esc(s.name)}</h1>
-          <span class="dcc-cp"><span class="dcc-cp-num">${esc(String(cp))}</span><span class="dcc-cp-lbl">CP</span></span>
+          ${cpHtml}
         </div>
-        <div class="dcc-sub-line">
-          <span class="dcc-role">${esc(typeLabel)} STRATAGEM</span>
-          <span class="dcc-strat-phase">${esc(phase)}</span>
-        </div>
+        ${subLine}
       </header>
       <div class="dcc-section dcc-strat-body">
         <div class="dcc-rule-text">${esc(s.description || '')}</div>
@@ -442,6 +578,7 @@
             <button type="button" class="dcc-tab" data-tab="units" role="tab">Units</button>
             <button type="button" class="dcc-tab" data-tab="rules" role="tab">Army rules</button>
             <button type="button" class="dcc-tab" data-tab="strats" role="tab">Stratagems</button>
+            <button type="button" class="dcc-tab" data-tab="display" role="tab">Display</button>
           </div>
           <label class="dcc-layout-pick">
             <span class="dcc-layout-label">Layout</span>
@@ -484,14 +621,21 @@
       renderPreview();
     });
 
-    // Sidebar checkbox delegation
+    // Sidebar checkbox delegation — handles both per-card include checkboxes
+    // (data-include) and per-section display toggles (data-display).
     modalEl.querySelector('#dcc-side').addEventListener('change', (e) => {
+      const dispCb = e.target.closest('input[type="checkbox"][data-display]');
+      if (dispCb) {
+        const key = dispCb.dataset.display;
+        display[key] = !!dispCb.checked;
+        renderPreview();
+        return;
+      }
       const cb = e.target.closest('input[type="checkbox"][data-include]');
       if (!cb) return;
       const cat = cb.dataset.cat;
       const id  = cb.dataset.include;
       if (id === '__all__') {
-        // bulk toggle: this checkbox only acts as a "select all / none" trigger
         const allOn = cb.checked;
         const items = cat === 'units' ? gatherUnits()
                     : cat === 'rules' ? gatherRules()
@@ -504,6 +648,15 @@
       }
       renderPreview();
       renderSummary();
+    });
+
+    // Display panel "Reset to defaults" button.
+    modalEl.querySelector('#dcc-side').addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'dcc-display-reset') {
+        display = Object.assign({}, DEFAULT_DISPLAY);
+        renderSidebar();
+        renderPreview();
+      }
     });
 
     // Action buttons
@@ -523,6 +676,12 @@
 
   function renderSidebar() {
     const side = modalEl.querySelector('#dcc-side');
+
+    if (activeTab === 'display') {
+      side.innerHTML = renderDisplayPanel();
+      return;
+    }
+
     let items, cat, emptyMsg;
     if (activeTab === 'units')      { cat = 'units';  items = gatherUnits();      emptyMsg = 'No units in your army yet.'; }
     else if (activeTab === 'rules') { cat = 'rules';  items = gatherRules();      emptyMsg = 'Select a faction and detachment to load rules.'; }
@@ -555,6 +714,26 @@
       </ul>`;
   }
 
+  function renderDisplayPanel() {
+    const groups = DISPLAY_GROUPS.map(g => {
+      const rows = g.keys.map(([key, label]) => `
+        <li><label class="dcc-row">
+          <input type="checkbox" data-display="${esc(key)}" ${display[key] ? 'checked' : ''}>
+          <span>${esc(label)}</span>
+        </label></li>`).join('');
+      return `<div class="dcc-display-group">
+        <div class="dcc-display-heading">${esc(g.label)}</div>
+        <ul class="dcc-list">${rows}</ul>
+      </div>`;
+    }).join('');
+    return `<div class="dcc-side-head">
+        <label class="dcc-row dcc-row-all">
+          <button type="button" class="dcc-link-btn" id="dcc-display-reset">Reset to defaults</button>
+        </label>
+      </div>
+      ${groups}`;
+  }
+
   function renderSummary() {
     const sum = modalEl.querySelector('#dcc-summary');
     if (!sum) return;
@@ -575,7 +754,20 @@
       renderSummary();
       return;
     }
-    out.appendChild(frag);
+    // Wrap each page in a .dcc-page-frame so the preview can scale via the
+    // wrapper without putting transform: scale on .dcc-page itself (which
+    // has been a source of html2canvas grief). The export stage skips the
+    // wrapper and uses the pages directly at 1:1.
+    const layout = getLayout();
+    const wrapped = document.createDocumentFragment();
+    Array.from(frag.children).forEach(pageEl => {
+      const frame = document.createElement('div');
+      frame.className = 'dcc-page-frame';
+      frame.dataset.pageW = String(layout.w);
+      frame.appendChild(pageEl);
+      wrapped.appendChild(frame);
+    });
+    out.appendChild(wrapped);
     renderSummary();
   }
 
@@ -591,24 +783,16 @@
 
   // ── Print + PDF ──────────────────────────────────────────────────────────
   function buildExportStage() {
-    // Standalone container that html2pdf renders. Full physical size, no
-    // preview-scale wrapper. Each `.dcc-page` is one PDF page.
+    // Standalone container that html2pdf renders. Pages live directly
+    // inside (no preview wrapper) so they're at full physical size at
+    // 1:1, ready for html2canvas. Stage gets explicit width so it has a
+    // definite bounding box.
     const layout = getLayout();
     const stage = document.createElement('div');
     stage.className = 'dcc-stage';
-    // Give the stage a definite bounding box so html2canvas knows what to
-    // capture. Width matches the page; height grows with content.
     stage.style.width = layout.w + 'mm';
     const { frag } = buildPagesDOM();
     stage.appendChild(frag);
-    // Strip the preview transform inline on every page in this stage.
-    // html2canvas can otherwise render the scaled-down version even though
-    // the .dcc-stage .dcc-page CSS override is supposed to undo it.
-    stage.querySelectorAll('.dcc-page').forEach(p => {
-      p.style.transform = 'none';
-      p.style.margin = '0';
-      p.style.boxShadow = 'none';
-    });
     return stage;
   }
 
@@ -625,11 +809,14 @@
     if (!w) { toast('Pop-up blocked — allow pop-ups for printing', 'warning', 4000); return; }
 
     const dccCss = collectDCCStyles();
+    // Reset .dcc-stage positioning to static so the cards lay out
+    // normally in the popup (the dcc-css we copy in puts the stage at
+    // position:absolute behind the modal — wrong for a print popup).
     const pageCss = `@page { size: ${layout.w}mm ${layout.h}mm; margin: 0; }
       html, body { margin: 0; padding: 0; background: #fff; }
-      .dcc-stage { background: #fff; }
-      .dcc-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; }
-      .dcc-page:last-child { page-break-after: auto; }`;
+      .dcc-stage { position: static !important; top: auto !important; left: auto !important; z-index: auto !important; pointer-events: auto !important; background: #fff; }
+      .dcc-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; break-after: page; }
+      .dcc-page:last-child { page-break-after: auto; break-after: auto; }`;
 
     w.document.open();
     w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Data cards</title>
