@@ -179,6 +179,46 @@
   line-height: 1.4;
 }
 
+.bug-report-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #aaa);
+  margin: 4px 0 4px;
+}
+.bug-report-summary,
+.bug-report-desc {
+  width: 100%;
+}
+.bug-report-desc {
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+}
+.bug-report-diag-wrap {
+  font-size: 12px;
+  color: var(--text-muted, #aaa);
+}
+.bug-report-diag-wrap > summary {
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+}
+.bug-report-status {
+  font-size: 12px;
+  min-height: 18px;
+  padding: 2px 0;
+}
+.bug-report-status-error { color: #e89090; }
+.bug-report-signin {
+  text-align: center;
+  padding: 16px 0;
+}
+.bug-report-signin p {
+  margin-bottom: 12px;
+  color: var(--text-muted, #aaa);
+}
+
 /* ── qr share ─────────────────────────────────────────────────────────── */
 
 .qr-share-modal {

@@ -26,10 +26,35 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.05-1',
-    lastUpdated: '2026-05-05T18:00:00Z',
+    version:     '2026.05.05-2',
+    lastUpdated: '2026-05-05T20:00:00Z',
     entries: [
       // ── 2026-05-05 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-05', kind: 'feature',
+        title: '"What\'s new" button in the topbar',
+        description:
+          'New ✦ icon next to the account button opens a versioned, dated ' +
+          'list of recent changes (this list). A red dot appears on the icon ' +
+          'while you have unseen entries.',
+      },
+      {
+        date: '2026-05-05', kind: 'feature',
+        title: 'Bug report button (signed-in users)',
+        description:
+          'New "!" icon in the topbar opens a bug-report form (summary + ' +
+          'description + auto-attached diagnostics) that posts directly to ' +
+          'the site instead of opening a GitHub URL. Sign-in required.',
+      },
+      {
+        date: '2026-05-05', kind: 'feature',
+        title: 'Admin: Reports tab + pending-approval banner',
+        description:
+          'Site operators see submitted bug reports in a new admin tab with ' +
+          'Open / Fixed / All filters and per-report mark-fixed / reopen / ' +
+          'delete actions. A top-of-page banner also pings admins when ' +
+          'someone is waiting for account approval.',
+      },
       {
         date: '2026-05-05', kind: 'fix',
         title: 'Multi-statline units now show every statline',

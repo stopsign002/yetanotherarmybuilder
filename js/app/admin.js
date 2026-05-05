@@ -1,9 +1,10 @@
 // app/admin.js — Admin panel for site operators (stopsign002 by default).
 //
-// Surfaces three things behind an admin-only modal:
+// Surfaces four things behind an admin-only modal:
 //   1. Pending account approvals + approve/revoke
 //   2. All approved accounts + revoke
 //   3. All uploaded images (across users) + delete (moderation)
+//   4. User-submitted bug reports + mark fixed / unfix / delete
 //
 // The auth layer reads `is_admin` from /api/auth/me — admins see an
 // "Admin" entry in the topbar account dropdown. Server-side permissions
@@ -61,9 +62,11 @@
 
   // ── State ───────────────────────────────────────────────────────────────
   let modalEl = null;
-  let activeTab = 'pending';   // 'pending' | 'users' | 'images'
+  let activeTab = 'pending';   // 'pending' | 'users' | 'images' | 'bugs'
   let users = [];              // [{ username, approved, revoked, is_admin, created_at, approved_at, image_count }]
   let images = [];             // [{ id, owner, name, dataUrl, addedAt }]
+  let bugs = [];               // [{ id, username, title, description, diagnostics, fixed, fixed_at, fixed_by, fixed_note, created_at }]
+  let bugFilter = 'open';      // 'all' | 'open' | 'fixed'
   let loading = false;
 
   // ── Modal shell ─────────────────────────────────────────────────────────
@@ -85,6 +88,7 @@
       +       '<button type="button" class="admin-tab" data-tab="pending" role="tab">Pending</button>'
       +       '<button type="button" class="admin-tab" data-tab="users"   role="tab">Users</button>'
       +       '<button type="button" class="admin-tab" data-tab="images"  role="tab">Images</button>'
+      +       '<button type="button" class="admin-tab" data-tab="bugs"    role="tab">Reports</button>'
       +     '</nav>'
       +     '<button type="button" class="admin-close" aria-label="Close">&times;</button>'
       +   '</header>'
@@ -123,6 +127,8 @@
     }
     if (activeTab === 'images') {
       body.innerHTML = renderImages();
+    } else if (activeTab === 'bugs') {
+      body.innerHTML = renderBugs();
     } else {
       body.innerHTML = renderUsers(activeTab);
     }
@@ -183,16 +189,75 @@
     return '<div class="admin-img-grid">' + cards + '</div>';
   }
 
+  function renderBugs() {
+    const filter = bugFilter;
+    const list = bugs.filter(b => filter === 'all' ? true : filter === 'fixed' ? !!b.fixed : !b.fixed);
+    const filterTabs =
+      '<div class="admin-bug-filters" role="tablist">' +
+        '<button type="button" class="admin-filter' + (filter === 'open'  ? ' is-active' : '') + '" data-bug-filter="open">Open</button>' +
+        '<button type="button" class="admin-filter' + (filter === 'fixed' ? ' is-active' : '') + '" data-bug-filter="fixed">Fixed</button>' +
+        '<button type="button" class="admin-filter' + (filter === 'all'   ? ' is-active' : '') + '" data-bug-filter="all">All</button>' +
+      '</div>';
+    if (list.length === 0) {
+      return filterTabs + '<div class="admin-empty">No '
+        + (filter === 'fixed' ? 'fixed' : filter === 'open' ? 'open' : '')
+        + ' reports.</div>';
+    }
+    const cards = list.map(b => {
+      const fixed = !!b.fixed;
+      const status = fixed ? 'Fixed' : 'Open';
+      const statusClass = fixed ? 'is-ok' : 'is-pending';
+      const actions = fixed
+        ? '<button class="admin-btn admin-btn-outline" data-act="bug-unfix" data-bug-id="' + esc(b.id) + '">Reopen</button>'
+        : '<button class="admin-btn admin-btn-primary" data-act="bug-fix" data-bug-id="' + esc(b.id) + '">Mark fixed</button>';
+      const del = ' <button class="admin-btn admin-btn-danger" data-act="bug-delete" data-bug-id="' + esc(b.id) + '">Delete</button>';
+      const fixedMeta = fixed
+        ? '<div class="admin-bug-fixed-meta">Fixed ' + esc(fmtDate(b.fixed_at))
+            + (b.fixed_by ? ' by ' + esc(b.fixed_by) : '')
+            + (b.fixed_note ? ' · ' + esc(b.fixed_note) : '')
+            + '</div>'
+        : '';
+      return '<article class="admin-bug-card" data-bug-id="' + esc(b.id) + '">'
+        + '<header class="admin-bug-head">'
+        +   '<div class="admin-bug-title">' + esc(b.title || '(no title)') + '</div>'
+        +   '<span class="admin-pill ' + statusClass + '">' + esc(status) + '</span>'
+        + '</header>'
+        + '<div class="admin-bug-meta">'
+        +   '<span><strong>' + esc(b.username || '?') + '</strong></span>'
+        +   '<span>' + esc(fmtDate(b.created_at)) + '</span>'
+        + '</div>'
+        + '<p class="admin-bug-desc">' + esc(b.description || '') + '</p>'
+        + (b.diagnostics
+          ? '<details class="admin-bug-diag-wrap"><summary>Diagnostics</summary>'
+            + '<pre class="admin-bug-diag">' + esc(b.diagnostics) + '</pre></details>'
+          : '')
+        + fixedMeta
+        + '<div class="admin-actions">' + actions + del + '</div>'
+        + '</article>';
+    }).join('');
+    return filterTabs + '<div class="admin-bug-list">' + cards + '</div>';
+  }
+
   // ── Click handler ───────────────────────────────────────────────────────
   function onBodyClick(e) {
+    const filterBtn = e.target.closest('button[data-bug-filter]');
+    if (filterBtn) {
+      bugFilter = filterBtn.getAttribute('data-bug-filter');
+      renderBody();
+      return;
+    }
     const btn = e.target.closest('button[data-act]');
     if (!btn) return;
     const act  = btn.getAttribute('data-act');
     const user = btn.getAttribute('data-user');
     const imgId = btn.getAttribute('data-image-id');
+    const bugId = btn.getAttribute('data-bug-id');
     if (act === 'approve' && user) return doApprove(user, btn);
     if (act === 'revoke'  && user) return doRevoke(user, btn);
     if (act === 'image-delete' && imgId) return doDeleteImage(imgId, btn);
+    if (act === 'bug-fix'    && bugId) return doFixBug(bugId, btn);
+    if (act === 'bug-unfix'  && bugId) return doUnfixBug(bugId, btn);
+    if (act === 'bug-delete' && bugId) return doDeleteBug(bugId, btn);
   }
 
   async function doApprove(username, btn) {
@@ -232,6 +297,63 @@
     }
   }
 
+  async function doFixBug(id, btn) {
+    const note = prompt('Optional note about the fix (e.g. commit hash or PR #):', '') || '';
+    btn.disabled = true;
+    try {
+      const updated = await fetchJson('/bugs/' + encodeURIComponent(id) + '/fix', {
+        method: 'POST', body: { note: note.trim() || undefined },
+      });
+      // Server may return the updated record — fall back to a local patch.
+      const idx = bugs.findIndex(b => String(b.id) === String(id));
+      if (idx >= 0) {
+        bugs[idx] = Object.assign({}, bugs[idx],
+          updated && typeof updated === 'object' && updated.id ? updated : {
+            fixed: true,
+            fixed_at: Date.now(),
+            fixed_by: (App.Auth && App.Auth.getCurrentUser && App.Auth.getCurrentUser()?.username) || 'admin',
+            fixed_note: note.trim() || null,
+          });
+      }
+      toast('Marked fixed.', 'info');
+      renderBody();
+    } catch (err) {
+      toast('Mark-fixed failed: ' + (err.message || 'unknown'), 'error', 4000);
+      btn.disabled = false;
+    }
+  }
+  async function doUnfixBug(id, btn) {
+    btn.disabled = true;
+    try {
+      const updated = await fetchJson('/bugs/' + encodeURIComponent(id) + '/unfix', { method: 'POST' });
+      const idx = bugs.findIndex(b => String(b.id) === String(id));
+      if (idx >= 0) {
+        bugs[idx] = Object.assign({}, bugs[idx],
+          updated && typeof updated === 'object' && updated.id ? updated : {
+            fixed: false, fixed_at: null, fixed_by: null, fixed_note: null,
+          });
+      }
+      toast('Reopened.', 'info');
+      renderBody();
+    } catch (err) {
+      toast('Reopen failed: ' + (err.message || 'unknown'), 'error', 4000);
+      btn.disabled = false;
+    }
+  }
+  async function doDeleteBug(id, btn) {
+    if (!confirm('Permanently delete this report?')) return;
+    btn.disabled = true;
+    try {
+      await fetchJson('/bugs/' + encodeURIComponent(id), { method: 'DELETE' });
+      bugs = bugs.filter(b => String(b.id) !== String(id));
+      toast('Report deleted.', 'info');
+      renderBody();
+    } catch (err) {
+      toast('Delete failed: ' + (err.message || 'unknown'), 'error', 4000);
+      btn.disabled = false;
+    }
+  }
+
   async function reloadAndRender() {
     loading = true;
     renderTabs();
@@ -240,6 +362,11 @@
       if (activeTab === 'images') {
         images = await fetchJson('/images');
         if (!Array.isArray(images)) images = [];
+      } else if (activeTab === 'bugs') {
+        bugs = await fetchJson('/bugs');
+        if (!Array.isArray(bugs)) bugs = [];
+        // Newest first; server should already do this, but be defensive.
+        bugs.sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
       } else {
         users = await fetchJson('/users');
         if (!Array.isArray(users)) users = [];
@@ -257,13 +384,14 @@
   }
 
   // ── Open / close ────────────────────────────────────────────────────────
-  function open() {
+  function open(initialTab) {
     if (!App.Auth || !App.Auth.isAdmin || !App.Auth.isAdmin()) {
       toast('Admin only.', 'warning');
       return;
     }
     ensureModal();
-    activeTab = 'pending';
+    activeTab = (initialTab && ['pending', 'users', 'images', 'bugs'].includes(initialTab))
+      ? initialTab : 'pending';
     renderTabs();
     modalEl.removeAttribute('hidden');
     document.body.classList.add('admin-modal-open');
