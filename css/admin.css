@@ -1,0 +1,174 @@
+/* css/admin.css — Admin panel modal (visible only to is_admin users). */
+
+.admin-backdrop {
+  position: fixed; inset: 0;
+  z-index: 1600;                    /* above auth (1500) */
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.admin-backdrop[hidden] { display: none !important; }
+body.admin-modal-open { overflow: hidden; }
+
+.admin-modal {
+  width: min(1100px, 100%);
+  height: min(800px, 100%);
+  max-height: 100%;
+  background: #15171b;
+  color: #e7e9ee;
+  border-radius: 10px;
+  border: 1px solid rgba(184, 144, 82, 0.4);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  font-family: inherit;
+}
+.admin-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #2a2d33;
+  background: linear-gradient(180deg, #1c1f24, #15171b);
+}
+.admin-title {
+  margin: 0;
+  font-size: 16px; font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #e7c87a;
+}
+.admin-tabs {
+  display: flex; gap: 4px;
+  margin-left: 12px;
+}
+.admin-tab {
+  background: transparent;
+  border: 1px solid #2e323a;
+  color: #b9bec8;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.admin-tab:hover { background: #1f232a; color: #fff; }
+.admin-tab.is-active {
+  background: #b89052;
+  color: #111;
+  border-color: transparent;
+  font-weight: 600;
+}
+.admin-close {
+  margin-left: auto;
+  background: transparent;
+  color: #cdd1d8;
+  border: 1px solid #2e323a;
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 22px; line-height: 1;
+}
+.admin-close:hover { background: #20232a; color: #fff; }
+
+.admin-body {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 16px;
+  background: #0c0d10;
+}
+.admin-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: #888c95;
+  font-size: 14px;
+}
+
+/* User table */
+.admin-table-wrap { background: #14171c; border: 1px solid #23272e; border-radius: 6px; overflow: hidden; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-table th, .admin-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #23272e;
+  vertical-align: middle;
+}
+.admin-table th {
+  background: #1a1d22;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8c92a0;
+  font-weight: 600;
+}
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table td.admin-actions { text-align: right; white-space: nowrap; }
+.admin-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.admin-pill.is-pending  { background: #5a3f1a; color: #f0e3b0; }
+.admin-pill.is-ok       { background: #1a3525; color: #a8e6b7; }
+.admin-pill.is-admin    { background: #b89052; color: #111;     }
+.admin-pill.is-revoked  { background: #3a0d0d; color: #efc8c8; }
+
+.admin-btn {
+  background: #20232a;
+  color: #e7e9ee;
+  border: 1px solid #2e323a;
+  border-radius: 5px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.admin-btn:hover { background: #2a2e36; }
+.admin-btn[disabled] { opacity: 0.5; cursor: progress; }
+.admin-btn-primary { background: #b89052; color: #111; border-color: transparent; }
+.admin-btn-primary:hover { background: #c8a872; }
+.admin-btn-danger { background: #3a0d0d; color: #efc8c8; border-color: transparent; }
+.admin-btn-danger:hover { background: #5a1818; }
+
+/* Image moderation grid */
+.admin-img-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.admin-img {
+  margin: 0;
+  background: #14171c;
+  border: 1px solid #23272e;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.admin-img > img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  background: #0f1115;
+}
+.admin-img figcaption {
+  padding: 8px 10px;
+  display: flex; flex-direction: column;
+  gap: 4px;
+}
+.admin-img-name {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-img-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #8c92a0;
+}
+.admin-img .admin-btn { margin-top: 4px; }

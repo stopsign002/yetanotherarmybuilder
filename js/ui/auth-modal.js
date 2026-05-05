@@ -126,7 +126,16 @@
         close();
         if (window.UI && UI.toast) UI.toast('Signed in.', 'info', 2500);
       } catch (err) {
-        errEl.textContent = 'Invalid credentials.';
+        // Surface server-reasoned errors. The 403 + `pending_approval`
+        // shape is documented in docs/ADMIN_API.md — accounts can register
+        // but not sign in until an admin approves them.
+        if (err && err.status === 403 && err.data && err.data.error === 'pending_approval') {
+          errEl.textContent = "Your account is awaiting admin approval. Try again later.";
+        } else if (err && err.status === 403 && err.data && err.data.error === 'revoked') {
+          errEl.textContent = "Your account has been revoked. Contact the site admin.";
+        } else {
+          errEl.textContent = 'Invalid credentials.';
+        }
         errEl.removeAttribute('hidden');
       } finally {
         submitBtn.disabled = false;
@@ -219,10 +228,14 @@
       try {
         const data = await App.Auth.register(u, p);
         if (data && data.recoveryCode) {
-          renderRecoveryCode(data.recoveryCode, data.username || u);
+          renderRecoveryCode(data.recoveryCode, data.username || u, !!(data && data.pending));
         } else {
           close();
-          if (window.UI && UI.toast) UI.toast('Account created.', 'info', 2500);
+          if (window.UI && UI.toast) {
+            UI.toast(data && data.pending
+              ? 'Account created — awaiting admin approval.'
+              : 'Account created.', 'info', 4000);
+          }
         }
       } catch (err) {
         if (err && err.status === 409) {
@@ -254,7 +267,7 @@
   }
 
   // ── Recovery code (one-time view, post-register) ──────────────────────
-  function renderRecoveryCode(code, username) {
+  function renderRecoveryCode(code, username, pending) {
     const codeEl = el('pre', { class: 'auth-recovery-code', tabindex: '0' });
     codeEl.textContent = code; // textContent is critical for security
 
@@ -305,14 +318,18 @@
     }, 'Done');
 
     return setBody(el('div', { class: 'modal' }, [
-      header('Save your recovery code'),
+      header(pending ? 'Save your recovery code (pending approval)' : 'Save your recovery code'),
       el('div', { class: 'modal-body' }, [
+        pending
+          ? el('p', { class: 'auth-warning', text:
+              'Your account is created but awaiting admin approval. You will not be able to sign in until you have been approved. The recovery code below works whenever you do sign in.' })
+          : null,
         el('p', { class: 'auth-warning', text:
           'This is shown ONCE. Without email recovery, this code is the only way to reset a forgotten password. Save it now.' }),
         codeEl,
         el('div', { class: 'auth-recovery-actions' }, [copyBtn, dlBtn]),
         savedLbl,
-      ]),
+      ].filter(Boolean)),
       footerBtns([dismissBtn]),
     ]));
   }

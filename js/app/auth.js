@@ -108,7 +108,10 @@
       try {
         const me = await jsonFetch('/me');
         if (me && me.username) {
-          setUser({ username: me.username });
+          // Carry over `is_admin` (and any other server-set flags) so the
+          // admin UI can light up without an extra round trip. Server is
+          // the source of truth — never trust a localStorage hint for it.
+          setUser({ username: me.username, is_admin: !!me.is_admin });
         } else {
           setUser(null);
         }
@@ -123,15 +126,22 @@
       return _user;
     },
 
+    isAdmin() {
+      return !!(_user && _user.is_admin);
+    },
+
     async register(username, password) {
       const data = await jsonFetch('/register', {
         method: 'POST',
         body: { username, password },
       });
-      if (data && data.username) {
-        setUser({ username: data.username });
+      // When admin-approval is enabled, server returns { username,
+      // recoveryCode, pending: true } and does NOT issue a session
+      // cookie. Skip the auto-sign-in; the UI shows a pending notice.
+      if (data && data.username && !data.pending) {
+        setUser({ username: data.username, is_admin: !!data.is_admin });
       }
-      return data; // { username, recoveryCode }
+      return data; // { username, recoveryCode, pending? }
     },
 
     async login(username, password) {
@@ -140,7 +150,7 @@
         body: { username, password },
       });
       if (data && data.username) {
-        setUser({ username: data.username });
+        setUser({ username: data.username, is_admin: !!data.is_admin });
       } else {
         // Server didn't echo username; trust the cookie + re-fetch /me
         await Auth.init();

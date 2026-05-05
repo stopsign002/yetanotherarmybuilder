@@ -28,8 +28,23 @@
       } else if (kind === 'weapon') {
         if (name) weapons.push({ name, _typeName: I.getAttr(profile, 'typeName', ''), ...chars });
       } else if (kind === 'ability') {
-        const descEl = profile.querySelector('characteristic[name="Description"]');
-        if (name) abilities.push({ name, description: descEl ? I.cleanText(descEl.textContent) : '' });
+        // 10e BSData uses two characteristic names for ability prose:
+        // <characteristic name="Description"> for vanilla abilities, and
+        // <characteristic name="Effect"> for primarch sub-abilities and
+        // some warlord-trait-style profiles. Fall back to Effect so
+        // those reach the renderer.
+        const descEl = profile.querySelector('characteristic[name="Description"]')
+                    || profile.querySelector('characteristic[name="Effect"]');
+        // Capture typeName too — primarch sub-ability profiles ship with
+        // typeName like "Primarch of the First Legion" instead of the
+        // generic "Abilities", which is the only way to tell them apart
+        // from regular abilities at render time.
+        const tn = I.getAttr(profile, 'typeName', '');
+        if (name) abilities.push({
+          name,
+          description: descEl ? I.cleanText(descEl.textContent) : '',
+          _typeName: tn,
+        });
       }
     });
 
@@ -70,6 +85,12 @@
     // costs.js so both handle the "Unit Composition" wrapper pattern (e.g. Skorpekh
     // Destroyers) where the actual model entries sit inside a nested sub-group.
     function searchGroups(groupEl) {
+      // Some units (Victrix Honour Guard is the canonical case) put
+      // their stats profile directly on the inner selectionEntryGroup
+      // rather than on any of its child model entries. Check the
+      // group's own <profiles> block before recursing.
+      const groupDirect = parseDirectProfiles(groupEl).stats;
+      if (Object.keys(groupDirect).length > 0) return groupDirect;
       for (const child of groupEl.querySelectorAll(
         ':scope > selectionEntries > selectionEntry[type="model"], ' +
         ':scope > selectionEntries > selectionEntry[type="unit"]'

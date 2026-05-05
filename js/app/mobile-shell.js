@@ -49,7 +49,13 @@
     let limit = 0;
     try {
       if (army) {
-        pts = (typeof army.totalPoints === 'function') ? army.totalPoints() : (army.pts || 0);
+        // Army's API is `getTotalPoints()`, not `totalPoints()`. The
+        // older name check left this function falling through to a
+        // non-existent `army.pts` field, so the mobile pill always
+        // displayed 0 / <limit> regardless of what was in the army.
+        if (typeof army.getTotalPoints === 'function')      pts = army.getTotalPoints();
+        else if (typeof army.totalPoints === 'function')    pts = army.totalPoints();
+        else                                                pts = army.pts || 0;
         limit = army.pointsLimit || 0;
       }
       const sel = App.state && App.state.factionFilter;

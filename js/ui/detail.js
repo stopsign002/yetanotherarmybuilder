@@ -354,8 +354,39 @@
     }
 
     const coreAbilities    = abilities.filter(a => a.isCore);
-    const leaderAbilities  = abilities.filter(a => !a.isCore && /can be attached to/i.test(a.description));
-    const regularAbilities = abilities.filter(a => !a.isCore && !/can be attached to/i.test(a.description));
+    // Sub-ability detection — same logic as cards-mode.js
+    // subAbilitySectionKey(). Children of choose-from-N hero toggles
+    // have a non-standard BSData typeName matching (or related to) the
+    // parent ability's name:
+    //   Lion El'Jonson  → typeName="Primarch of the First Legion"
+    //   Angron          → typeName="Wrathful Presence"
+    //   Silent King     → typeName="Triarch Abilities"
+    // The parent ability has typeName="Abilities" and stays in the
+    // regular Abilities section, where it reads as the always-on rule
+    // explaining the choose mechanic.
+    const STD_AB_TN = new Set(['', 'abilities', 'leader', 'invulnerable save', 'damaged']);
+    const subAbilityKey = (a) => {
+      if (!a || !a._typeName) return null;
+      const tn = String(a._typeName).trim();
+      if (STD_AB_TN.has(tn.toLowerCase())) return null;
+      // Match "Primarch" (synthetic typeName from Guilliman's split)
+      // AND "Primarch of <legion>" (natural typeName for Lion / Magnus
+      // / Mortarion shapes). Both route to the PRIMARCH section.
+      if (/^primarch\b/i.test(tn)) return 'PRIMARCH';
+      return tn.toUpperCase();
+    };
+    // Group sub-abilities by section key, preserving first-seen order.
+    const subGroups = new Map();
+    abilities.forEach(a => {
+      if (a.isCore) return;
+      const key = subAbilityKey(a);
+      if (!key) return;
+      if (!subGroups.has(key)) subGroups.set(key, []);
+      subGroups.get(key).push(a);
+    });
+    const isSub = (a) => !!subAbilityKey(a);
+    const leaderAbilities  = abilities.filter(a => !a.isCore && !isSub(a) && /can be attached to/i.test(a.description));
+    const regularAbilities = abilities.filter(a => !a.isCore && !isSub(a) && !/can be attached to/i.test(a.description));
 
     if (coreAbilities.length > 0) {
       html += `<div class="detail-section">
@@ -419,6 +450,25 @@
       });
       html += `</div>`;
     }
+
+    // One special section per choose-from-N typeName group:
+    //   "PRIMARCH" for Lion / Magnus / Angron-the-primarch / etc.
+    //   "WRATHFUL PRESENCE" for Angron's toggles
+    //   "TRIARCH ABILITIES" for Silent King
+    // Hint text is generic — the parent ability (above) has the
+    // specific "select one/two" wording.
+    subGroups.forEach((rows, label) => {
+      const friendlyLabel = label.charAt(0) + label.slice(1).toLowerCase();
+      html += `<div class="detail-section detail-section-primarch">
+        <div class="detail-section-title detail-section-title-primarch">${esc(friendlyLabel)} <span class="detail-primarch-hint">pick from these each turn</span></div>`;
+      rows.forEach(ab => {
+        html += `<div class="detail-ability detail-ability-primarch">
+          <span class="detail-ability-name">${esc(ab.name)}:</span>
+          <span class="detail-ability-desc">${esc(ab.description || '—')}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    });
 
     const modelNums = [...new Set(squadOptions.map(o => o.models).filter(m => m != null))].sort((a, b) => a - b);
     const compLabel = modelNums.length === 0 ? null

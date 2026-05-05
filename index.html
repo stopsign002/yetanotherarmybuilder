@@ -14,8 +14,6 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/typography.css" />
   <link rel="stylesheet" href="css/validation.css" />
-  <link rel="stylesheet" href="css/datasheet.css" />
-  <link rel="stylesheet" href="css/datasheet-style.css" />
   <link rel="stylesheet" href="css/mobile.css" />
   <link rel="stylesheet" href="css/celebrations.css" />
   <link rel="stylesheet" href="css/command-palette.css" />
@@ -29,6 +27,7 @@
   <link rel="stylesheet" href="css/army-diff.css" />
   <link rel="stylesheet" href="css/favorites.css" />
   <link rel="stylesheet" href="css/tournament-export.css" />
+  <link rel="stylesheet" href="css/cards-mode.css" />
   <link rel="stylesheet" href="css/deployment-planner.css" />
   <link rel="stylesheet" href="css/lore.css" />
   <link rel="stylesheet" href="css/utilities.css" />
@@ -44,6 +43,7 @@
   <link rel="stylesheet" href="css/atmosphere.css" />
   <link rel="stylesheet" href="css/topbar.css" />
   <link rel="stylesheet" href="css/auth.css" />
+  <link rel="stylesheet" href="css/admin.css" />
   <link rel="stylesheet" href="css/mode-shell.css" />
   <link rel="stylesheet" href="css/settings-drawer.css" />
   <link rel="stylesheet" href="css/voice-coach.css" />
@@ -93,6 +93,9 @@
         <button class="topbar-mode-tab" id="topbar-mode-play"
                 type="button" role="tab" data-mode="play"
                 aria-selected="false" aria-controls="play-mode">Play</button>
+        <button class="topbar-mode-tab" id="topbar-mode-cards"
+                type="button" role="tab" data-mode="cards"
+                aria-selected="false" aria-controls="cards-mode">Cards</button>
       </nav>
 
       <!-- build-mode.js mounts <header class="build-hero"> here. -->
@@ -255,7 +258,7 @@
               <button type="button" role="menuitem" id="btn-export-string">Copy army code</button>
               <button type="button" role="menuitem" id="btn-export-text">Copy as text</button>
               <button type="button" role="menuitem" id="btn-export-csv">Download CSV</button>
-              <button type="button" role="menuitem" id="btn-print-army" title="Print datasheets for every unit in your army">Print datasheets</button>
+              <button type="button" role="menuitem" id="btn-data-cards" title="Switch to Cards mode to build printable data cards">Data cards…</button>
               <!-- Hook-registered 'export-menu' items mount here -->
               <div id="export-extras" class="export-extras"></div>
             </div>
@@ -355,6 +358,14 @@
     <div class="mode-placeholder">
       <h2>Play</h2>
       <p class="muted">Play mode loading&hellip;</p>
+    </div>
+  </section>
+
+  <section id="cards-mode" class="mode-page" data-mode="cards" hidden>
+    <!-- Owned by js/ui/cards-mode.js — mounted on bootstrap. -->
+    <div class="mode-placeholder">
+      <h2>Cards</h2>
+      <p class="muted">Cards mode loading&hellip;</p>
     </div>
   </section>
 
@@ -488,7 +499,6 @@
   <script src="js/ui/modals.js"></script>
   <script src="js/vendor/html2pdf.bundle.min.js" defer></script>
   <script src="js/vendor/qrcode.min.js" defer></script>
-  <script src="js/ui/datasheet.js"></script>
   <script src="js/ui/dropdown.js"></script>
 
   <!-- App: state first, hooks second (feature modules register via App.hooks),
@@ -496,6 +506,7 @@
   <script src="js/app/state.js"></script>
   <script src="js/app/hooks.js"></script>
   <script src="js/app/auth.js"></script>
+  <script src="js/app/admin.js"></script>
   <script src="js/app/sync.js"></script>
   <script src="js/ui/auth-modal.js"></script>
   <script src="js/ui/auth-button.js"></script>
@@ -539,6 +550,7 @@
   <script src="js/ui/matchup.js"></script>
   <script src="js/app/army-diff.js"></script>
   <script src="js/ui/tournament-export.js"></script>
+  <script src="js/ui/cards-mode.js"></script>
   <script src="js/ui/deployment-planner.js"></script>
   <script src="js/data/lore-data.js"></script>
   <script src="js/app/lore.js"></script>

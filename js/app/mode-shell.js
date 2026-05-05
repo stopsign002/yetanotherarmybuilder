@@ -3,7 +3,7 @@
   const App = window.App = window.App || {};
 
   const LS_KEY = 'yaab_mode';
-  const VALID = ['build', 'collect', 'play'];
+  const VALID = ['build', 'collect', 'play', 'cards'];
   const DEFAULT_MODE = 'build';
 
   // Hook bus for cross-module mode-change notifications.

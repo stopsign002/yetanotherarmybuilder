@@ -25,6 +25,7 @@
     'yaab_crusade_rosters',
     'yaab_deployments',
     'yaab_points_overrides',
+    'yaab_cards_prefs',
   ];
   const BAG_KEY_SET = new Set(SYNCED_BAG_KEYS);
 
@@ -266,6 +267,12 @@
           const newArmy = full && full.payload ? decodeArmy(full.payload) : null;
           const mgr = App.state && App.state.armyManager;
           if (newArmy && mgr) {
+            // Pin the in-memory army's updatedAt to the server's row
+            // timestamp so the next pullAll comparison is equal and
+            // doesn't re-pull → re-toast forever (clock skew between
+            // the payload-internal "saved at" stamp and the row's
+            // upsert timestamp would otherwise loop).
+            if (full.updated_at) newArmy.updatedAt = full.updated_at;
             const idx = mgr.armies.findIndex(a => a.id === op.id);
             if (idx >= 0) mgr.armies[idx] = newArmy;
             if (App.state.currentArmy && App.state.currentArmy.id === op.id) {
@@ -375,10 +382,15 @@
               return;
             }
             if (army && mgr) {
+              // Pin the army's updatedAt to the server's row
+              // timestamp (same reason as the merge path below — keep
+              // future pullAll comparisons equal).
+              const newTs = full.updated_at || summ.updated_at || nowIso();
+              army.updatedAt = newTs;
               mgr.armies.push(army);
               mergedFromCloud++;
               const k = known();
-              k[id] = full.updated_at || summ.updated_at || nowIso();
+              k[id] = newTs;
               setKnown(k);
             }
           } catch (_) {}
@@ -422,6 +434,16 @@
                 return;
               }
               if (newArmy && mgr) {
+                // Same pin as the runOp path — keep the army's
+                // updatedAt aligned with the server's row timestamp so
+                // the next pullAll's `cloudTs > localTs` check is
+                // equal, not greater. Without this, a push from device
+                // A whose row gets a server-clock timestamp slightly
+                // ahead of the payload's "saved at" caused device B
+                // to re-pull on every subsequent pullAll → repeating
+                // "Army updated from another device" toasts.
+                const newTs = full.updated_at || cloudTs;
+                if (newTs) newArmy.updatedAt = newTs;
                 const idx = mgr.armies.findIndex(a => a.id === local.id);
                 if (idx >= 0) mgr.armies[idx] = newArmy;
                 if (local.id === currentId && App.state) {
@@ -433,7 +455,7 @@
                 }
                 mergedFromCloud++;
                 const k = known();
-                k[local.id] = full.updated_at || cloudTs;
+                k[local.id] = newTs;
                 setKnown(k);
               }
             } catch (_) {}
@@ -451,16 +473,33 @@
       // 3. State bag merge.
       const localBagTs = jsonGet(STATE_BAG_TS, '');
       const cloudBagTs = (cloudState && cloudState.updated_at) || '';
+      let bagWasPulled = false;
       if (cloudState && cloudState.payload && cloudBagTs && cloudBagTs > localBagTs) {
         try {
           const cloudBag = JSON.parse(cloudState.payload);
+          const updatedKeys = [];
           for (const k of SYNCED_BAG_KEYS) {
             if (Object.prototype.hasOwnProperty.call(cloudBag, k)) {
               if (cloudBag[k] == null) rawRemove(k);
               else rawSet(k, cloudBag[k]);
+              updatedKeys.push(k);
             }
           }
           jsonSet(STATE_BAG_TS, cloudBagTs);
+          if (updatedKeys.length) bagWasPulled = true;
+          // rawSet/rawRemove suppress the localStorage monkey-patch (so
+          // we don't loop the writes back into the queue), and same-tab
+          // writes don't fire the native `storage` event either. Modules
+          // hydrating from these keys (cards-mode reads yaab_cards_prefs
+          // on mount) would otherwise have no way to know the bag just
+          // changed under them. Emit a custom event so they can re-read.
+          if (bagWasPulled) {
+            try {
+              window.dispatchEvent(new CustomEvent('yaab-bag-pulled', {
+                detail: { keys: updatedKeys },
+              }));
+            } catch (_) {}
+          }
         } catch (_) {}
       } else if (!cloudState || !cloudBagTs) {
         // Cloud has nothing — push our local bag if there's anything.

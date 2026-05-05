@@ -1,0 +1,1044 @@
+/* css/cards-mode.css — Cards mode (full-page) + card chrome + print rules.
+ *
+ * Layout
+ *   #cards-mode owns the whole viewport when active.
+ *   `.cards-shell` is a 2-column flex split: a fixed-width settings rail
+ *   on the left + a flexible preview pane on the right.
+ *
+ * Card sizing
+ *   Card widths/heights/font sizes are all in millimetres so the on-
+ *   screen preview matches the printed output 1:1. The preview wraps
+ *   each `.dcc-page` in a `.dcc-page-frame` whose own width and height
+ *   are scaled (fit-to-viewport) and which clips the transformed child.
+ *
+ * Print
+ *   Both "Print" and "Save as PDF" use the browser's native print
+ *   dialog. The JS adds `body.cards-printing` and injects a `@page` rule
+ *   with the chosen size; the `@media print` block at the bottom of
+ *   this file hides everything except the cards and unwraps the
+ *   preview transforms so each page prints at full physical size.
+ */
+
+/* ── Mode container ─────────────────────────────────────────────────────── */
+#cards-mode { padding: 0; }
+#cards-mode.mode-page { background: #0c0d10; }
+.cards-mode-host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.cards-shell {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: calc(100vh - 64px);  /* topbar height; gracefully degrades if smaller */
+  background: #0c0d10;
+  color: #e7e9ee;
+}
+
+/* ── Settings rail ──────────────────────────────────────────────────────── */
+.cards-side {
+  width: 340px;
+  flex-shrink: 0;
+  background: #14171c;
+  border-right: 1px solid #23272e;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.cards-side-head {
+  padding: 14px 18px 8px;
+  border-bottom: 1px solid #23272e;
+}
+.cards-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.cards-summary {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #9aa1ad;
+}
+.cards-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  color: #d8dde6;
+}
+.cards-row:hover { background: #1c1f25; }
+.cards-row input[type="checkbox"] { accent-color: var(--accent, #c8c8c8); }
+
+.cards-row-all { font-size: 13px; color: #cdd1d8; }
+.cards-field { display: flex; flex-direction: column; gap: 4px; padding: 0 18px; }
+.cards-field-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8c92a0;
+}
+.cards-row-section { padding: 10px 18px; }
+.cards-row { padding: 6px 18px; }
+
+.cards-select {
+  background: #0f1115;
+  color: #e7e9ee;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  width: 100%;
+  cursor: pointer;
+}
+
+/* Top-level sub-tabs (Pick cards / Display) */
+.cards-subtabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid #23272e;
+  margin-top: 12px;
+}
+.cards-subtab {
+  flex: 1 1 0;
+  background: transparent;
+  border: 1px solid #2e323a;
+  color: #b9bec8;
+  padding: 7px 8px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cards-subtab:hover { background: #1f232a; color: #fff; }
+.cards-subtab.is-active {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.cards-side-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 6px 4px 12px;
+}
+
+/* Inner category tabs (Units / Rules / Stratagems) inside Pick cards */
+.cards-cat-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 4px 14px 8px;
+  border-bottom: 1px solid #1f232a;
+  margin-bottom: 4px;
+}
+.cards-cat-tab {
+  flex: 1 1 0;
+  background: transparent;
+  border: 0;
+  color: #9aa1ad;
+  padding: 6px 4px;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 2px;
+}
+.cards-cat-tab:hover { color: #fff; }
+.cards-cat-tab.is-active {
+  color: #fff;
+  border-bottom-color: var(--accent, #c8c8c8);
+}
+.cards-cat-count {
+  font-size: 10px;
+  color: #6f7682;
+  font-weight: 500;
+}
+.cards-cat-tab.is-active .cards-cat-count { color: var(--accent, #c8c8c8); }
+
+.cards-list-head {
+  padding: 4px 8px;
+  border-bottom: 1px solid #1f232a;
+  margin-bottom: 6px;
+}
+.cards-list { list-style: none; padding: 0; margin: 0; }
+.cards-list li { margin: 0; }
+
+/* Display sub-panel groups */
+.cards-disp-group { margin-bottom: 10px; padding: 0 6px; }
+.cards-disp-heading {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  color: #8c92a0;
+  padding: 4px 12px;
+  margin-top: 6px;
+  border-bottom: 1px solid #1f232a;
+}
+.cards-layout-section {
+  padding: 8px 6px 14px;
+  border-bottom: 1px solid #1f232a;
+}
+.cards-layout-section:last-child { border-bottom: 0; }
+.cards-layout-section .cards-field { padding: 4px 12px 0; margin-top: 6px; }
+.cards-help {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #8c92a0;
+  margin: 4px 12px 6px;
+}
+
+/* Texture picker (inside the Layout sub-tab) */
+.cards-textures {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px 12px 0;
+}
+.cards-texture {
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  border: 1px solid #2e323a;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  /* Inset gold ring helps the swatch read as a card sample. */
+  box-shadow: inset 0 0 0 1px rgba(184, 144, 82, 0.3);
+}
+.cards-texture:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(184, 144, 82, 0.55);
+}
+.cards-texture.is-active {
+  border-color: var(--accent, #b89052);
+  box-shadow: 0 0 0 2px var(--accent, #b89052);
+}
+.cards-texture-label {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.78) 100%);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px 4px 3px;
+  text-align: center;
+  line-height: 1.1;
+  pointer-events: none;
+}
+
+/* Border-colour controls (inside the Layout sub-tab) */
+.cards-color {
+  width: 100%;
+  height: 32px;
+  padding: 2px;
+  background: #0f1115;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cards-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px 12px 0;
+}
+.cards-swatch {
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid #2e323a;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  /* Subtle inset gold ring so cream/white swatches stay visible against
+   * the dark sidebar. */
+  box-shadow: inset 0 0 0 1px rgba(184, 144, 82, 0.25);
+}
+.cards-swatch:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(184, 144, 82, 0.4);
+}
+.cards-swatch.is-active {
+  border-color: var(--accent, #b89052);
+  box-shadow: 0 0 0 2px var(--accent, #b89052);
+}
+.cards-swatch.is-active::after {
+  content: '✓';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+}
+
+/* Card-back form controls */
+.cards-file {
+  width: 100%;
+  font-size: 12px;
+  color: #b9bec8;
+  background: #0f1115;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+}
+.cards-range {
+  width: 100%;
+  accent-color: var(--accent, #b89052);
+  cursor: pointer;
+}
+.cards-slider-val {
+  margin-left: 6px;
+  color: #cdd1d8;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+/* Saved-image library (under Card backs) */
+.cards-img-section {
+  margin-top: 8px;
+  border-top: 1px solid #1f232a;
+  padding-top: 6px;
+}
+.cards-img-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 4px 12px 0;
+}
+.cards-img-thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  border: 1px solid #2e323a;
+  overflow: hidden;
+  cursor: pointer;
+  background: #0f1115;
+  /* Subtle gold ring like the swatches. */
+  box-shadow: inset 0 0 0 1px rgba(184, 144, 82, 0.2);
+}
+.cards-img-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cards-img-thumb:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(184, 144, 82, 0.45);
+}
+.cards-img-thumb.is-active {
+  border-color: var(--accent, #b89052);
+  box-shadow: 0 0 0 2px var(--accent, #b89052);
+}
+.cards-img-thumb.is-active::after {
+  content: '✓';
+  position: absolute;
+  top: 2px; left: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.85);
+}
+.cards-img-del {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 18px; height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.cards-img-thumb:hover .cards-img-del { opacity: 1; }
+.cards-img-del:hover { background: #b32020; }
+.cards-link-btn {
+  background: transparent;
+  border: 0;
+  color: var(--accent, #c8c8c8);
+  font-size: 12px;
+  padding: 4px 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.cards-link-btn:hover { color: #fff; }
+
+/* Footer: print button */
+.cards-side-foot {
+  padding: 12px 18px 16px;
+  border-top: 1px solid #23272e;
+  background: #14171c;
+}
+.cards-btn {
+  width: 100%;
+  background: #20232a;
+  color: #e7e9ee;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cards-btn:hover { background: #2a2e36; }
+.cards-btn-primary {
+  background: var(--accent, #c8c8c8);
+  color: var(--accent-on, #111);
+  border-color: transparent;
+}
+.cards-btn-primary:hover { background: var(--accent-hover, #e0e0e0); }
+
+/* ── Preview pane ───────────────────────────────────────────────────────── */
+.cards-preview-wrap {
+  flex: 1 1 auto;
+  overflow: auto;
+  background: #0c0d10;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+.cards-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.cards-empty {
+  padding: 24px;
+  text-align: center;
+  color: #888c95;
+  font-size: 13px;
+}
+.cards-empty-large {
+  padding: 64px 24px;
+  font-size: 15px;
+  color: #aab0bc;
+}
+
+/* ── Page (one printable sheet, always 1:1) ─────────────────────────────── */
+.dcc-page {
+  /* Width/height are set INLINE by JS in mm. CSS only handles cosmetics
+   * and grid behaviour. */
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #111;
+  display: grid;
+  /* grid-template-columns/rows + padding + gap also set inline by JS */
+}
+/* Pretty drop shadow only in preview */
+.cards-preview .dcc-page { box-shadow: 0 6px 24px rgba(0,0,0,0.45); }
+
+/* The preview wraps each .dcc-page in a frame that scales it to fit.
+ * Width and height are scaled, transform: scale on the inner page. The
+ * frame clips the overflow created by transform-origin. */
+.dcc-page-frame {
+  --dcc-preview-scale: 0.55;
+  width:  calc(var(--dcc-page-w, 100mm) * var(--dcc-preview-scale));
+  height: calc(var(--dcc-page-h, 100mm) * var(--dcc-preview-scale));
+  overflow: hidden;
+  position: relative;
+  /* The preview pane is a flex column inside an `overflow:auto` parent.
+   * Without flex-shrink:0 the column squashes every frame proportionally
+   * when total content exceeds the viewport (2 cards => half-height each,
+   * 3 => third, etc). Pin the frames at their physical size and let the
+   * parent scroll. */
+  flex: 0 0 auto;
+}
+.dcc-page-frame > .dcc-page {
+  transform: scale(var(--dcc-preview-scale));
+  transform-origin: top left;
+}
+/* Per-preset preview scale — keyed off the page width var on the frame. */
+.dcc-page-frame[style*="--dcc-page-w: 215.9mm"],
+.dcc-page-frame[style*="--dcc-page-w: 210mm"]   { --dcc-preview-scale: 0.6; }
+.dcc-page-frame[style*="--dcc-page-w: 152.4mm"] { --dcc-preview-scale: 0.85; }
+.dcc-page-frame[style*="--dcc-page-w: 101.6mm"] { --dcc-preview-scale: 1.0; }
+
+/* ── Card chrome ─────────────────────────────────────────────────────────
+ * Sized in mm so the on-screen preview matches print 1:1. Visual style
+ * cribbed from 10e GW datasheets — but with a grimdark texture pass:
+ * - aged-parchment background with subtle dark grain (inline SVG noise)
+ * - radial vignette for warmth at the corners
+ * - metallic gradient on the title bar with a thin gold accent rule
+ * - ornamental triangular flourish below the title
+ * - faint embossed border to suggest a metal frame
+ *
+ * Everything is inline (no external assets) so it survives the print
+ * pipeline. SVG noise: feTurbulence in dark sepia, low alpha, locked
+ * via stitchTiles so adjacent cards tile cleanly.
+ */
+
+.dcc-card {
+  /* Background, border-radius, and typography multipliers (--dcc-*-mul)
+   * are owned by the JS-injected <style id="cards-texture-style">. The
+   * fallbacks below only apply if cards-mode.js never gets to inject
+   * the rule (graceful degradation). Radius default 4mm matches a
+   * physical R4 corner-cutter. */
+  background: #ecdfb9;
+  border-radius: 4mm;
+  color: #1c1308;
+  --dcc-stat-mul: 1;
+  --dcc-w-mul: 1;
+  --dcc-body-mul: 1;
+  --dcc-fine-mul: 1;
+  border: 0.4mm solid #1a140a;
+  /* Dual-layer border: outer dark + inner thin gold to read as a
+   * gilded frame. The inset ring is a box-shadow so it doesn't take
+   * extra layout space. */
+  box-shadow:
+    inset 0 0 0 0.2mm #b89052,
+    inset 0 0 0 0.45mm rgba(0,0,0,0.18);
+  box-sizing: border-box;
+  padding: 1.6mm 2mm;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2mm;
+  overflow: hidden;
+  position: relative;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+}
+.dcc-card-empty {
+  background: transparent !important;
+  border: 0.3mm dashed #c8b890;
+  box-shadow: none;
+}
+
+/* Card backs (duplex-print) */
+.dcc-card-back {
+  /* Reuse the gilded frame from .dcc-card; just strip the parchment
+   * texture and let the user-uploaded image fill the cell. */
+  padding: 0;
+  background: #ecdfb9;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Continuation cards (overflow spillover) ────────────────────────────
+ * When a unit's text doesn't fit, splitOverflowingUnitCards() emits a
+ * second card with class `dcc-card-cont`. The parchment overlay is sized
+ * to its content (height: auto via flex flow) and pinned to the top of
+ * the card; the rest of the cell shows either the user-set card-back
+ * image (if `dcc-card-cont-art` is also set) or the page border colour
+ * showing through. The friend's "art continues" idea, basically.
+ */
+.dcc-card-cont {
+  /* Strip the card padding — the .dcc-cont-overlay handles its own. The
+   * gilded frame box-shadow inherited from .dcc-card stays. The
+   * !important on background beats the JS-injected
+   * `.dcc-card { background: <texture> }` rule that's appended at
+   * runtime — the article itself must be transparent so the back image
+   * shows through. The parchment lives on .dcc-cont-overlay. */
+  padding: 0;
+  background: transparent !important;
+  background-blend-mode: normal !important;
+  position: relative;
+  overflow: hidden;
+}
+.dcc-card-cont .dcc-cont-bg {
+  /* Same pin/scale rig as the duplex back image, but full-cell behind
+   * the overlay (z-index 0) so the parchment overlay (z-index 1) covers
+   * just the top portion. */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  transform-origin: center;
+  transform:
+    translate(calc(-50% + var(--dcc-back-x, 0%)),
+              calc(-50% + var(--dcc-back-y, 0%)))
+    scale(var(--dcc-back-scale, 1));
+  z-index: 0;
+  pointer-events: none;
+}
+.dcc-card-cont .dcc-cont-overlay {
+  /* Parchment overlay — same look as a regular .dcc-card body. The
+   * JS-injected dynamic stylesheet targets this selector too so the
+   * active texture preset, intensity, and corner radius all apply. */
+  position: relative;
+  z-index: 1;
+  padding: 1.6mm 2mm;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2mm;
+  /* height: auto — only as tall as needed. */
+  /* Soften the bottom edge so the boundary feels designed, not clipped. */
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+  box-shadow: 0 2mm 3mm rgba(0,0,0,0.18);
+}
+/* When there's no user back image, the continuation card's bottom area
+ * just shows the page background. Add a faint horizontal rule at the
+ * overlay's bottom edge so the boundary still reads. */
+.dcc-card-cont:not(.dcc-card-cont-art) .dcc-cont-overlay {
+  border-bottom: 0.4mm solid #1a140a;
+}
+/* "Continued" header tag — small italicised marker the renderer adds to
+ * the cloned header on the continuation card. */
+.dcc-head-cont::after {
+  content: ' (cont.)';
+  font-style: italic;
+  font-weight: 400;
+  opacity: 0.7;
+  font-size: 0.75em;
+}
+.dcc-back-img {
+  /* Pinned to the centre of the cell, then translated by (offsetX,
+   * offsetY) % and scaled. Container clips overflow so high scales
+   * crop cleanly. */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  transform-origin: center;
+  transform:
+    translate(calc(-50% + var(--dcc-back-x, 0%)),
+              calc(-50% + var(--dcc-back-y, 0%)))
+    scale(var(--dcc-back-scale, 1));
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Metallic title bar with a subtle horizontal sheen + gold accent rule. */
+.dcc-head {
+  background:
+    linear-gradient(180deg,
+      #0b0b0b 0%,
+      #1c1c1c 30%,
+      #292929 50%,
+      #1c1c1c 70%,
+      #0b0b0b 100%);
+  color: #f4ead2;
+  padding: 1.2mm 1.6mm;
+  /* Default falls back to a noticeable rounding so the bar reads as
+   * "tab-shaped" if cards-mode.js never gets to inject its dynamic
+   * --dcc-head-radius. The Layout sub-tab's "Header corners" slider
+   * controls the live value. */
+  border-radius: var(--dcc-head-radius, 3mm);
+  margin: -0.6mm -0.6mm 0;
+  position: relative;
+  box-shadow: 0 0.2mm 0 #5a4a22 inset, 0 -0.2mm 0 rgba(255,255,255,0.06) inset;
+}
+/* Gold accent stripe immediately under the header. */
+.dcc-head::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -0.6mm;
+  height: 0.5mm;
+  background: linear-gradient(90deg,
+    rgba(184,144,82,0)   0%,
+    #b89052              15%,
+    #e7c87a              50%,
+    #b89052              85%,
+    rgba(184,144,82,0)   100%);
+}
+/* Tiny triangular flourish hanging below the gold stripe — reads as a
+ * stamped seal / banner pendant. */
+.dcc-head::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -1.5mm;
+  width: 2.4mm;
+  height: 1mm;
+  margin-left: -1.2mm;
+  background: linear-gradient(135deg, #b89052 25%, transparent 25%) -0.6mm 0,
+              linear-gradient(225deg, #b89052 25%, transparent 25%)  0.6mm 0;
+  background-size: 1.2mm 1mm;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+.dcc-name-line { display: flex; align-items: baseline; gap: 1.6mm; }
+.dcc-name {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: calc(3.8mm * var(--dcc-name-mul, 1));
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0;
+  flex: 1 1 auto;
+  line-height: 1.05;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dcc-pts {
+  background: var(--accent-dark, #b3b3b3);
+  color: #fff;
+  font-weight: 600;
+  font-size: 2.6mm;
+  padding: 0.4mm 1.4mm;
+  border-radius: 0.6mm;
+  white-space: nowrap;
+}
+.dcc-sub-line {
+  display: flex; align-items: center; gap: 1.6mm;
+  font-size: 2.2mm;
+  margin-top: 0.6mm;
+  color: #d8d8d2;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dcc-role { opacity: 0.85; }
+.dcc-inv {
+  background: #b32020;
+  color: #fff;
+  padding: 0.2mm 1mm;
+  border-radius: 0.6mm;
+  font-weight: 600;
+  font-size: 2.2mm;
+  margin-left: auto;
+}
+.dcc-strat-phase { margin-left: auto; opacity: 0.85; }
+
+/* Stratagem CP pill */
+.dcc-head-strat .dcc-cp {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: #b32020;
+  border-radius: 0.6mm;
+  padding: 0.6mm 1.2mm;
+  line-height: 1;
+  color: #fff;
+  margin-left: auto;
+}
+.dcc-cp-num { font-size: 4mm; font-weight: 700; }
+.dcc-cp-lbl { font-size: 1.6mm; opacity: 0.85; letter-spacing: 0.06em; }
+
+/* Stat strip */
+.dcc-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--dcc-stat-cols, 6), 1fr);
+  gap: 0.6mm;
+  margin-top: 0.6mm;
+}
+.dcc-stat-cell {
+  background: linear-gradient(180deg, #1a1308 0%, #2a1f0e 100%);
+  color: #f4ead2;
+  /* Driven by the "Stat blocks" slider in Layout > Corner rounding. */
+  border-radius: var(--dcc-stat-radius, 1mm);
+  padding: 0.6mm 0.4mm;
+  text-align: center;
+  display: flex; flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: inset 0 0 0 0.1mm #6a4f1f;
+}
+.dcc-stat-key {
+  font-size: calc(1.9mm * var(--dcc-stat-mul, 1));
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  /* Was 0.85 — printed text reads better full-opacity. */
+  opacity: 0.95;
+}
+.dcc-stat-val {
+  font-size: calc(3.6mm * var(--dcc-stat-mul, 1));
+}
+/* Combined SV/invuln cell — the value reads "2+ / 4++", which is wider
+ * than a standalone "2+", so we shrink the value font and tighten letter
+ * spacing to keep it inside the cell. */
+.dcc-stat-val-combo {
+  font-size: calc(2.4mm * var(--dcc-stat-mul, 1)) !important;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  font-weight: 700;
+  margin-top: 0.4mm;
+}
+
+/* Section blocks (weapons, abilities, wargear, footers) */
+.dcc-section { display: flex; flex-direction: column; }
+.dcc-section-head {
+  /* Bronze-bar look: dark base with a thin gold edge top + bottom. */
+  background: linear-gradient(180deg, #2a1f0e 0%, #1a1308 100%);
+  color: #f0e4c4;
+  /* RANGED WEAPONS / MELEE WEAPONS / ABILITIES / WARGEAR / etc.
+   * scale with their own "Section heads" typography slider —
+   * separate from "Fine print" so users can pump the labels without
+   * also bumping the footer-keywords line. */
+  font-size: calc(1.9mm * var(--dcc-heading-mul, 1));
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.6mm 1.4mm;
+  border-radius: var(--dcc-head-section-radius, 0.4mm) var(--dcc-head-section-radius, 0.4mm) 0 0;
+  display: flex;
+  align-items: center;
+  gap: 1.2mm;
+  box-shadow:
+    inset 0 0.15mm 0 #6a4f1f,
+    inset 0 -0.15mm 0 #6a4f1f;
+}
+.dcc-section-cols {
+  margin-left: auto;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1mm;
+  width: 36mm;
+  text-align: center;
+  /* Same base size as `.dcc-section-head` (1.9mm) and same multiplier
+   * (--dcc-heading-mul) so the title and column-abbreviation halves
+   * of the bar render identically and stay baseline-aligned at any
+   * scale. The earlier 1.75mm base + --dcc-fine-mul split made one
+   * side jitter behind the other when the user moved either slider. */
+  font-size: calc(1.9mm * var(--dcc-heading-mul, 1));
+  opacity: 0.95;
+}
+.dcc-section-label { flex: 0 0 auto; }
+
+/* Weapons table */
+.dcc-w-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: calc(2.2mm * var(--dcc-w-mul, 1));
+}
+.dcc-w-table tr { border-bottom: 0.15mm solid rgba(60, 40, 16, 0.32); }
+.dcc-w-table tr:last-child { border-bottom: none; }
+.dcc-w-table td { padding: 0.7mm 0.4mm; vertical-align: top; }
+.dcc-w-name { font-weight: 600; padding-left: 1.4mm !important; }
+.dcc-w-kw {
+  font-style: italic;
+  font-size: calc(1.85mm * var(--dcc-w-mul, 1));
+  color: #5a3f1a;
+  margin-top: 0.2mm;
+  font-weight: 400;
+}
+.dcc-num {
+  text-align: center;
+  width: 6mm;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Primarch section — gold-rich gradient + thicker rims so the
+ * choose-from-N abilities read as a distinct "pick two" block at a
+ * glance, separate from the always-on ABILITIES list above. */
+.dcc-section-head-primarch {
+  background: linear-gradient(180deg, #b89052 0%, #8a6a2a 50%, #5a3f1a 100%) !important;
+  color: #fff8e0 !important;
+  letter-spacing: 0.12em !important;
+  box-shadow:
+    inset 0 0.25mm 0 #f0d68a,
+    inset 0 -0.25mm 0 #3a2710 !important;
+  text-shadow: 0 0.1mm 0.15mm rgba(0,0,0,0.6);
+}
+.dcc-abilities-primarch {
+  /* A faint gold rule along the top edge of the body to extend the
+   * header's accent into the content. */
+  position: relative;
+}
+.dcc-abilities-primarch .dcc-abilities-body {
+  border-top: 0.2mm solid rgba(184, 144, 82, 0.6);
+}
+
+/* Abilities */
+.dcc-abilities-body {
+  padding: 0.8mm 1.4mm;
+  font-size: calc(2.1mm * var(--dcc-body-mul, 1));
+  line-height: 1.3;
+  color: #1a1a1a;
+}
+.dcc-ability-row {
+  margin-bottom: 1.0mm;
+  /* Preserves \n line breaks inserted by formatStructuredText() so
+   * primarch / hero abilities with multi-option text read as a list,
+   * not a wall. */
+  white-space: pre-line;
+}
+.dcc-ability-row:last-child { margin-bottom: 0; }
+.dcc-ability-row strong { color: #000; }
+.dcc-core-row { color: #3a3a3a; font-size: calc(2.0mm * var(--dcc-body-mul, 1)); white-space: normal; }
+
+/* Wargear options */
+.dcc-wargear-body {
+  padding: 0.8mm 1.4mm;
+  font-size: calc(2.05mm * var(--dcc-body-mul, 1));
+  line-height: 1.3;
+  color: #1a1a1a;
+}
+.dcc-wargear-line { margin-bottom: 0.4mm; }
+.dcc-wargear-line:last-child { margin-bottom: 0; }
+.dcc-wargear-default { font-weight: 600; }
+.dcc-wargear-line strong { color: #000; }
+.dcc-wargear-sub { margin: 0.2mm 0 0.3mm 2.4mm; list-style: none; padding: 0; }
+.dcc-wargear-sub li {
+  position: relative;
+  padding-left: 1.6mm;
+  font-size: calc(1.95mm * var(--dcc-body-mul, 1));
+}
+.dcc-wargear-sub li::before {
+  content: '◦';
+  position: absolute;
+  left: 0;
+  color: #555;
+}
+
+/* Rule + stratagem body text */
+.dcc-rule-body, .dcc-strat-body { padding: 1mm 1.4mm; flex: 1 1 auto; }
+.dcc-rule-text {
+  font-size: calc(2.4mm * var(--dcc-body-mul, 1));
+  line-height: 1.32;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+}
+
+/* Footer keywords */
+.dcc-foot {
+  margin-top: auto;
+  padding-top: 0.8mm;
+  border-top: 0.25mm solid rgba(60, 40, 16, 0.45);
+  position: relative;
+}
+.dcc-foot::before {
+  /* Thin gold line above the dark divider — echoes the title bar. */
+  content: '';
+  position: absolute;
+  top: -0.15mm; left: 0; right: 0;
+  height: 0.15mm;
+  background: linear-gradient(90deg,
+    rgba(184,144,82,0) 0%, #b89052 30%, #b89052 70%, rgba(184,144,82,0) 100%);
+}
+.dcc-keywords {
+  font-size: calc(1.95mm * var(--dcc-fine-mul, 1));
+  letter-spacing: 0.02em;
+  color: #2a1f0e;
+  line-height: 1.25;
+}
+.dcc-keywords strong { color: #0a0703; letter-spacing: 0.06em; }
+.dcc-faction-kw { margin-bottom: 0.4mm; }
+
+/* Tighten card padding for many-up grids */
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-card,
+.dcc-page[style*="grid-template-rows: repeat(3"]    .dcc-card {
+  padding: 1.2mm;
+  gap: 0.9mm;
+}
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-name,
+.dcc-page[style*="grid-template-rows: repeat(3"]    .dcc-name {
+  font-size: 3mm;
+}
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-stat-val,
+.dcc-page[style*="grid-template-rows: repeat(3"]    .dcc-stat-val {
+  font-size: 3.0mm;
+}
+
+/* Responsive: stack the rail above the preview on narrow viewports. */
+@media (max-width: 760px) {
+  .cards-shell { flex-direction: column; height: auto; min-height: 100vh; }
+  .cards-side { width: 100%; max-height: 50vh; border-right: 0; border-bottom: 1px solid #23272e; }
+  .cards-preview-wrap { padding: 12px; }
+}
+
+/* ── Print stylesheet ───────────────────────────────────────────────────── */
+/* JS adds body.cards-printing + a dynamic <style id="cards-print-style">
+ * with @page { size: <layout>; margin: 0 } before calling window.print().
+ * These rules hide everything except the cards and unwrap the preview's
+ * fit-to-viewport scaling so each page prints at full physical size. */
+@media print {
+  /* Reset html/body so default margins don't add a phantom first page. */
+  html, body.cards-printing {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+    overflow: visible !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  /* Force background colours / images to actually print, even when the
+   * user hasn't enabled "Background graphics" in the print dialog.
+   * Without this the parchment, gold accents, and border-colour sheet
+   * all print as white. */
+  body.cards-printing .dcc-page,
+  body.cards-printing .dcc-card,
+  body.cards-printing .dcc-card-back,
+  body.cards-printing .dcc-card-cont,
+  body.cards-printing .dcc-cont-overlay,
+  body.cards-printing .dcc-cont-bg,
+  body.cards-printing .dcc-back-img,
+  body.cards-printing .dcc-head,
+  body.cards-printing .dcc-section-head,
+  body.cards-printing .dcc-stat-cell,
+  body.cards-printing .dcc-cp,
+  body.cards-printing .dcc-inv,
+  body.cards-printing .dcc-foot::before {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  /* Hide everything outside the cards-mode subtree. */
+  body.cards-printing > :not(#cards-mode) { display: none !important; }
+  /* Override mode-shell.css's `.mode-page { height: calc(100vh - …);
+   * overflow: hidden }` (clips past one viewport height during print)
+   * and `.mode-page[hidden] { display:none !important }` defensively. */
+  body.cards-printing #cards-mode,
+  body.cards-printing #cards-mode[hidden] {
+    display: block !important;
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  /* Inside cards-mode, hide just the settings rail; everything else
+   * (.cards-shell -> .cards-preview-wrap -> ... -> .dcc-page) shows. */
+  body.cards-printing .cards-side { display: none !important; }
+  body.cards-printing .cards-side-foot { display: none !important; }
+  body.cards-printing .cards-shell {
+    display: block !important;
+    height: auto !important;
+    background: #fff !important;
+  }
+  body.cards-printing .cards-preview-wrap {
+    overflow: visible !important;
+    background: #fff !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  body.cards-printing .cards-preview {
+    display: block !important;
+    gap: 0 !important;
+  }
+  /* Strip the preview scaling — print at 1:1 */
+  body.cards-printing .dcc-page-frame {
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    --dcc-preview-scale: 1 !important;
+  }
+  body.cards-printing .dcc-page-frame > .dcc-page {
+    transform: none !important;
+  }
+  body.cards-printing .dcc-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  body.cards-printing .dcc-page-frame:last-child .dcc-page {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+}

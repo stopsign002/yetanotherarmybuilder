@@ -39,10 +39,73 @@ window.YaabDB = (() => {
   // payloads (per-faction stratagem/detachment/enhancement data). Source:
   // https://github.com/game-datacards/datasources — used to fill the gap
   // BSData wh40k-10e leaves around stratagem rules.
-  const DB_VERSION = 14;
+  // Bumped to v17: ability walker (js/parser/abilities.js) now recurses
+  // into every selectionEntry child regardless of `type` attribute (was
+  // type="model" + type="upgrade" only) and goes 5 levels deep instead
+  // of 3. v16 added the upgrade walk but Lion El'Jonson's "Primarch of
+  // the First Legion" sub-abilities still didn't surface — they sit
+  // under untyped or differently-typed selectionEntries deeper than
+  // depth 3 in the Dark Angels catalogue. Stale cache still has the
+  // narrow walk; drop the parsed-data stores on upgrade.
+  // Bumped to v16: ability walker (js/parser/abilities.js) now also
+  // visits `:scope > selectionEntries > selectionEntry[type="upgrade"]`
+  // and `:scope > entryLinks > entryLink` at the unit's top level.
+  // These are the encodings BSData uses for some 10e hero abilities
+  // (Lion El'Jonson's three "Primarch of the First Legion" sub-
+  // abilities sit in one of those paths — without the new walks they
+  // were missing from his unit card). Stale v15 cache still has the
+  // old ability lists, so drop the parsed-data stores on upgrade.
+  // Bumped to v15: added `cardBackImages` store for the user-uploaded
+  // card-back image library (cards-mode duplex printing). Unlike the
+  // parsed-data stores, this is USER DATA — its upgrade path below is
+  // non-destructive (only created if missing) so future DB_VERSION
+  // bumps that drop the parsed stores don't wipe the user's library.
+  // Bumped to v18: classifyProfile + parseDirectProfiles + abilities.js
+  // infoLink walk now also recognise <characteristic name="Effect"> as
+  // ability prose (in addition to the existing "Description" path) and
+  // typeName="Primarch of <foo>" as an ability typeName. Lion El'Jonson
+  // ships his three "Primarch of the First Legion" toggles as direct
+  // profiles on the unit using those non-standard names — v17's wider
+  // selectionEntry walk was the wrong axis (the profiles were already
+  // visible to parseDirectProfiles, just classified as 'other' and
+  // dropped). Stale v17 cache still has the old classification; drop
+  // the parsed-data stores on upgrade.
+  // Bumped to v20: parser now splits multi-paragraph choose-from-N
+  // ability descriptions into parent + synthetic child records
+  // (Guilliman's "Author of the Codex" — one ability profile whose
+  // description contains 4 paragraphs — becomes 1 parent ability with
+  // typeName="Abilities" + 3 child abilities with typeName="Primarch").
+  // Detection in js/parser/entry.js splitMultiParagraphChooseFromN().
+  // Stale v19 cache still has Guilliman's bundled ability; drop the
+  // parsed-data stores on upgrade.
+  // Bumped to v19: ability records gain a `_typeName` field carrying the
+  // BSData profile typeName (e.g. "Primarch of the First Legion"). The
+  // cards-mode renderer uses this to split primarch sub-abilities into
+  // their own PRIMARCH section instead of mixing them into the regular
+  // ABILITIES list, so players can see at a glance which abilities are
+  // choose-from-N toggles.
+  // Bumped to v21: weapon-keyword normalisation in entry.js. Weapon
+  // keywords with trailing arity ("Rapid Fire 1", "Sustained Hits D3",
+  // "Anti-Infantry 4+") are now also added to the dedup set as their
+  // bare base name, so the existing isCore + name-match filter actually
+  // drops the matching CORE ability ("Rapid Fire") instead of leaving
+  // it on the unit's CORE chip line. Stale v20 cache still has those
+  // entries; drop on upgrade.
+  // Bumped to v22: findStats now also inspects a selectionEntryGroup's
+  // own <profiles> block when recursing through groups. Victrix Honour
+  // Guard puts its M/T/SV/W/LD/OC stats profile on the inner
+  // selectionEntryGroup directly rather than on any of its model
+  // entries — the previous walk only checked the entries' own profiles
+  // and the group's <selectionEntries> children, so Victrix surfaced
+  // with empty stats. Stale v21 cache still has the empty stats; drop
+  // on upgrade.
+  const DB_VERSION = 22;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
+  const STORE_IMAGES   = 'cardBackImages';
+  // Per-owner cap on the image library (30 images). Enforced in add().
+  const IMAGES_PER_OWNER_LIMIT = 30;
 
   const hasIDB = typeof indexedDB !== 'undefined' && !!indexedDB;
 
@@ -60,13 +123,21 @@ window.YaabDB = (() => {
       catch (_) { _disabled = true; resolve(null); return; }
       req.onupgradeneeded = () => {
         const db = req.result;
-        // Drop existing stores on any version bump so stale parsed shapes don't leak across releases.
+        // Parsed-data stores: drop on every version bump so stale parsed
+        // shapes don't leak across releases.
         if (db.objectStoreNames.contains(STORE_FACTIONS)) db.deleteObjectStore(STORE_FACTIONS);
         if (db.objectStoreNames.contains(STORE_GST))      db.deleteObjectStore(STORE_GST);
         if (db.objectStoreNames.contains(STORE_GDC))      db.deleteObjectStore(STORE_GDC);
         db.createObjectStore(STORE_FACTIONS, { keyPath: 'factionName' });
         db.createObjectStore(STORE_GST,      { keyPath: 'name' });
         db.createObjectStore(STORE_GDC,      { keyPath: 'name' });
+        // User-data store: only create if missing; never drop. Holds
+        // card-back images keyed by an auto-incremented `id`, with an
+        // `owner` index so we can cheaply list/cap by username.
+        if (!db.objectStoreNames.contains(STORE_IMAGES)) {
+          const s = db.createObjectStore(STORE_IMAGES, { keyPath: 'id', autoIncrement: true });
+          s.createIndex('owner', 'owner', { unique: false });
+        }
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror   = () => { _disabled = true; resolve(null); };
@@ -165,9 +236,113 @@ window.YaabDB = (() => {
     try { await _wrap(_tx(db, STORE_GDC, 'readwrite').clear()); } catch (_) {}
   }
 
+  // ── Card-back image library ──────────────────────────────────────────────
+  // User-uploaded images for the cards-mode duplex-print feature. Records:
+  //   { id (auto), owner (string), name (string), dataUrl (string), addedAt (ms) }
+  // Owner is the username when signed in, 'anon' otherwise. Capped per-owner
+  // by IMAGES_PER_OWNER_LIMIT.
+
+  function _listByOwnerCursor(store, owner, onRecord, onDone) {
+    // Walk the `owner` index. Cursor is more memory-friendly than getAll()
+    // when records hold large data URLs (an image can be hundreds of KB).
+    const idx = store.index('owner');
+    const req = idx.openCursor(IDBKeyRange.only(owner));
+    req.onsuccess = () => {
+      const cur = req.result;
+      if (cur) {
+        onRecord(cur.value, cur);
+        cur.continue();
+      } else {
+        onDone();
+      }
+    };
+    req.onerror = () => onDone();
+  }
+
+  async function imagesList(owner) {
+    const db = await _open();
+    if (!db || !owner) return [];
+    return new Promise(resolve => {
+      try {
+        const out = [];
+        const store = _tx(db, STORE_IMAGES, 'readonly');
+        _listByOwnerCursor(store, owner, rec => out.push(rec), () => {
+          out.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+          resolve(out);
+        });
+      } catch (_) { resolve([]); }
+    });
+  }
+
+  async function imagesCount(owner) {
+    const db = await _open();
+    if (!db || !owner) return 0;
+    return new Promise(resolve => {
+      try {
+        const idx = _tx(db, STORE_IMAGES, 'readonly').index('owner');
+        const req = idx.count(IDBKeyRange.only(owner));
+        req.onsuccess = () => resolve(req.result || 0);
+        req.onerror   = () => resolve(0);
+      } catch (_) { resolve(0); }
+    });
+  }
+
+  async function imagesAdd(owner, image) {
+    const db = await _open();
+    if (!db || !owner || !image || !image.dataUrl) {
+      return { ok: false, reason: 'unavailable' };
+    }
+    const count = await imagesCount(owner);
+    if (count >= IMAGES_PER_OWNER_LIMIT) {
+      return { ok: false, reason: 'limit', limit: IMAGES_PER_OWNER_LIMIT, count };
+    }
+    return new Promise(resolve => {
+      try {
+        const rec = {
+          owner: String(owner),
+          name: String(image.name || 'image'),
+          dataUrl: String(image.dataUrl),
+          addedAt: Date.now(),
+        };
+        const req = _tx(db, STORE_IMAGES, 'readwrite').add(rec);
+        req.onsuccess = () => resolve({ ok: true, id: req.result, image: Object.assign({ id: req.result }, rec) });
+        req.onerror   = () => resolve({ ok: false, reason: 'idb' });
+      } catch (_) { resolve({ ok: false, reason: 'exception' }); }
+    });
+  }
+
+  async function imagesRemove(id) {
+    const db = await _open();
+    if (!db || id == null) return false;
+    return new Promise(resolve => {
+      try {
+        const req = _tx(db, STORE_IMAGES, 'readwrite').delete(id);
+        req.onsuccess = () => resolve(true);
+        req.onerror   = () => resolve(false);
+      } catch (_) { resolve(false); }
+    });
+  }
+
+  async function imagesGet(id) {
+    const db = await _open();
+    if (!db || id == null) return null;
+    try {
+      const rec = await _wrap(_tx(db, STORE_IMAGES, 'readonly').get(id));
+      return rec || null;
+    } catch (_) { return null; }
+  }
+
   return {
     getFaction, putFaction, getAllFactions, clearFactions,
     getGst, putGst, clearGst,
     getGdc, putGdc, clearGdc,
+    images: {
+      LIMIT: IMAGES_PER_OWNER_LIMIT,
+      list:   imagesList,
+      count:  imagesCount,
+      add:    imagesAdd,
+      remove: imagesRemove,
+      get:    imagesGet,
+    },
   };
 })();
