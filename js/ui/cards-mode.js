@@ -115,11 +115,12 @@
       '  --dcc-head-radius: ' + headRadius + 'mm;',
       '  --dcc-stat-radius: ' + Math.max(0, Math.min(8, statRadiusMm || 0)) + 'mm;',
       '  --dcc-head-section-radius: ' + Math.max(0, Math.min(8, sectionHeadRadiusMm || 0)) + 'mm;',
-      '  --dcc-name-mul: '    + t.nameSize   + ';',
-      '  --dcc-stat-mul: '    + t.statSize   + ';',
-      '  --dcc-w-mul: '       + t.weaponSize + ';',
-      '  --dcc-body-mul: '    + t.bodySize   + ';',
-      '  --dcc-fine-mul: '    + t.fineSize   + ';',
+      '  --dcc-name-mul: '    + t.nameSize    + ';',
+      '  --dcc-stat-mul: '    + t.statSize    + ';',
+      '  --dcc-w-mul: '       + t.weaponSize  + ';',
+      '  --dcc-body-mul: '    + t.bodySize    + ';',
+      '  --dcc-heading-mul: ' + t.headingSize + ';',
+      '  --dcc-fine-mul: '    + t.fineSize    + ';',
       '}',
       // When `bold` is on, push thin text from weight 400 to 600 so it
       // survives at-size print rendering.
@@ -175,7 +176,7 @@
           });
         }
         if (p.typography && typeof p.typography === 'object') {
-          ['nameSize','statSize','weaponSize','bodySize','fineSize'].forEach(k => {
+          ['nameSize','statSize','weaponSize','bodySize','headingSize','fineSize'].forEach(k => {
             const n = parseFloat(p.typography[k]);
             if (!Number.isNaN(n) && n > 0) typography[k] = Math.max(0.5, Math.min(2.0, n));
           });
@@ -304,11 +305,12 @@
   // `bold` adds weight 600 to the thin elements (.dcc-w-kw, .dcc-keywords,
   // .dcc-section-cols) so small printed text doesn't ghost.
   let typography = {
-    nameSize:    1.0,    // .dcc-name (the big card title)
-    statSize:    1.0,    // .dcc-stat-key + .dcc-stat-val
-    weaponSize:  1.15,   // .dcc-w-table (numbers, names, keywords)
-    bodySize:    1.0,    // .dcc-abilities-body, .dcc-wargear-body, .dcc-rule-text
-    fineSize:    1.1,    // .dcc-keywords footer + .dcc-section-cols + .dcc-section-head
+    nameSize:    1.10,   // .dcc-name (the big card title)
+    statSize:    1.50,   // .dcc-stat-key + .dcc-stat-val
+    weaponSize:  1.25,   // .dcc-w-table (numbers, names, keywords)
+    bodySize:    1.20,   // .dcc-abilities-body, .dcc-wargear-body, .dcc-rule-text
+    headingSize: 1.20,   // .dcc-section-head (RANGED WEAPONS / ABILITIES / WARGEAR / etc.)
+    fineSize:    1.20,   // .dcc-keywords (footer) + .dcc-section-cols (col labels)
     bold:        true,
   };
   const TYPOGRAPHY_DEFAULTS = JSON.parse(JSON.stringify(typography));
@@ -1455,11 +1457,12 @@
           → 600 — useful when small print ghosts on your printer.
         </p>
         ${[
-          ['nameSize',   'Unit name (card title)'],
-          ['statSize',   'Stat block (M T SV W LD OC values)'],
-          ['weaponSize', 'Weapon table (range / A / BS / S / AP / D)'],
-          ['bodySize',   'Body text (abilities, wargear, rule text)'],
-          ['fineSize',   'Fine print (section heads, footer kws, col labels)'],
+          ['nameSize',    'Unit name (card title)'],
+          ['statSize',    'Stat block (M T SV W LD OC values)'],
+          ['weaponSize',  'Weapon table (range / A / BS / S / AP / D)'],
+          ['bodySize',    'Body text (abilities, wargear, rule text)'],
+          ['headingSize', 'Section heads (RANGED WEAPONS / ABILITIES / etc.)'],
+          ['fineSize',    'Fine print (footer keywords, column labels)'],
         ].map(([k, label]) => {
           const pct = Math.round(typography[k] * 100);
           return `
@@ -1467,7 +1470,7 @@
             <span class="cards-field-label">${esc(label)}
               <span class="cards-slider-val" data-typo-val="${k}">${pct}%</span>
             </span>
-            <input type="range" min="80" max="150" step="5" value="${pct}"
+            <input type="range" min="80" max="200" step="5" value="${pct}"
                    data-typo="${k}" class="cards-range">
           </div>`;
         }).join('')}

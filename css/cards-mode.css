@@ -773,10 +773,11 @@
   /* Bronze-bar look: dark base with a thin gold edge top + bottom. */
   background: linear-gradient(180deg, #2a1f0e 0%, #1a1308 100%);
   color: #f0e4c4;
-  /* RANGED WEAPONS / MELEE WEAPONS / ABILITIES / WARGEAR / etc. now
-   * scale with the "Fine print" typography slider so users can pump
-   * them up alongside the footer keywords / column labels. */
-  font-size: calc(1.9mm * var(--dcc-fine-mul, 1));
+  /* RANGED WEAPONS / MELEE WEAPONS / ABILITIES / WARGEAR / etc.
+   * scale with their own "Section heads" typography slider —
+   * separate from "Fine print" so users can pump the labels without
+   * also bumping the footer-keywords line. */
+  font-size: calc(1.9mm * var(--dcc-heading-mul, 1));
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
