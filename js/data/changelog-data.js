@@ -26,10 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.05-3',
-    lastUpdated: '2026-05-05T20:30:00Z',
+    version:     '2026.05.05-4',
+    lastUpdated: '2026-05-05T21:00:00Z',
     entries: [
       // ── 2026-05-05 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-05', kind: 'change',
+        title: 'Unit detail panel: tighter header',
+        description:
+          'Removed the collection-status box and favorites star from the ' +
+          'unit detail pane (collection status lives in Collect mode, ' +
+          'favorites still toggle from the faction-row star). The Google ' +
+          'image-search button now sits inline with the points readout.',
+      },
       {
         date: '2026-05-05', kind: 'fix',
         title: 'Topbar buttons match the rest of the bar',
