@@ -67,7 +67,29 @@
     const id   = I.getAttr(entryEl, 'id') || Math.random().toString(36).slice(2, 9);
     const type = I.getAttr(entryEl, 'type', '');
 
-    const stats        = I.findStats(entryEl, entriesById, profilesById);
+    // Collect every stats profile attached to the unit (multi-statline
+    // units like Marneus Calgar + Victrix Honour Guard, Wardens of
+    // Ultramar Sergeant vs body, Terminator Assault Squad TH/SS vs LC
+    // each carry two distinct profiles). De-dupe by characteristic
+    // signature so squads whose 3-6 model profiles all share the same
+    // statline collapse to one row.
+    const statProfiles = I.findStatProfiles(entryEl, entriesById, profilesById);
+    const modelStats = [];
+    {
+      const seenSigs = new Set();
+      for (const p of statProfiles) {
+        const { name: _n, ...rest } = p;
+        const sig = JSON.stringify(rest);
+        if (seenSigs.has(sig)) continue;
+        seenSigs.add(sig);
+        modelStats.push(p);
+      }
+    }
+    const stats = (() => {
+      if (modelStats.length === 0) return {};
+      const { name: _n, ...rest } = modelStats[0];
+      return rest;
+    })();
     // Weapons dedup keys on name + classification (typeName) so a unit
     // with both a ranged and a melee weapon of the same name keeps both
     // profiles. Plasmancer / Technomancer (Necron) each carry a ranged
@@ -142,6 +164,7 @@
     return {
       id, name, type,
       stats,
+      modelStats,
       invulnSave,
       weapons,
       abilities,

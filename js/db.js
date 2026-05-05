@@ -99,7 +99,13 @@ window.YaabDB = (() => {
   // and the group's <selectionEntries> children, so Victrix surfaced
   // with empty stats. Stale v21 cache still has the empty stats; drop
   // on upgrade.
-  const DB_VERSION = 22;
+  // v23: parser now emits unit.modelStats — array of distinct statlines
+  // per unit. Multi-profile units (Marneus Calgar + Victrix Honour
+  // Guard, Wardens of Ultramar Sergeant vs body, Terminator Assault
+  // Squad TH/SS vs LC) lost their second profile to Object.assign
+  // overwrite; v22 caches were wrong (Calgar surfaced with Victrix's
+  // T=4 W=3 instead of his own T=6 W=6). Drop the cache.
+  const DB_VERSION = 23;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

@@ -64,67 +64,106 @@
     return stats;
   }
 
-  function findStats(entryEl, entriesById, profilesById, depth = 0) {
-    if (depth > 4) return {};
+  // Same as parseDirectProfiles but returns every stats profile as a
+  // separate `{ name, ...chars }` object instead of merging them into one
+  // dict. Multi-statline units (Marneus Calgar + Victrix Honour Guard,
+  // Wardens of Ultramar Sergeant vs body, Terminator Assault Squad
+  // TH/SS vs Lightning Claws) lose data when the second profile is
+  // Object.assigned over the first.
+  function parseDirectStatProfiles(el) {
+    const profs = [];
+    el.querySelectorAll(':scope > profiles > profile').forEach(profile => {
+      if (I.classifyProfile(profile) !== 'stats') return;
+      const name  = I.getAttr(profile, 'name', '');
+      const chars = parseCharacteristics(profile);
+      if (Object.keys(chars).length > 0) profs.push({ name, ...chars });
+    });
+    return profs;
+  }
 
-    const direct = parseDirectProfiles(entryEl).stats;
-    if (Object.keys(direct).length > 0) return direct;
+  function statProfilesFromInfoLinks(el, profilesById) {
+    const profs = [];
+    el.querySelectorAll(':scope > infoLinks > infoLink').forEach(link => {
+      if (I.getAttr(link, 'type') !== 'profile') return;
+      const profile = profilesById.get(I.getAttr(link, 'targetId'));
+      if (!profile || I.classifyProfile(profile) !== 'stats') return;
+      const name  = I.getAttr(profile, 'name', '');
+      const chars = parseCharacteristics(profile);
+      if (Object.keys(chars).length > 0) profs.push({ name, ...chars });
+    });
+    return profs;
+  }
 
-    const linked = statsFromInfoLinks(entryEl, profilesById);
-    if (Object.keys(linked).length > 0) return linked;
+  // Mirrors findStats but returns the array of stat profiles found at
+  // the first level that has any. Multi-statline units (different
+  // stats per model in the same unit) come through with N entries.
+  function findStatProfiles(entryEl, entriesById, profilesById, depth = 0) {
+    if (depth > 4) return [];
+
+    const direct = parseDirectStatProfiles(entryEl);
+    if (direct.length > 0) return direct;
+
+    const linked = statProfilesFromInfoLinks(entryEl, profilesById);
+    if (linked.length > 0) return linked;
 
     for (const child of entryEl.querySelectorAll(
       ':scope > selectionEntries > selectionEntry[type="model"], ' +
       ':scope > selectionEntries > selectionEntry[type="unit"]'
     )) {
-      const s = findStats(child, entriesById, profilesById, depth + 1);
-      if (Object.keys(s).length > 0) return s;
+      const s = findStatProfiles(child, entriesById, profilesById, depth + 1);
+      if (s.length > 0) return s;
     }
 
-    // Walk selectionEntryGroups recursively — mirrors the recursive processGroup in
-    // costs.js so both handle the "Unit Composition" wrapper pattern (e.g. Skorpekh
-    // Destroyers) where the actual model entries sit inside a nested sub-group.
     function searchGroups(groupEl) {
-      // Some units (Victrix Honour Guard is the canonical case) put
-      // their stats profile directly on the inner selectionEntryGroup
-      // rather than on any of its child model entries. Check the
-      // group's own <profiles> block before recursing.
-      const groupDirect = parseDirectProfiles(groupEl).stats;
-      if (Object.keys(groupDirect).length > 0) return groupDirect;
+      const groupDirect = parseDirectStatProfiles(groupEl);
+      if (groupDirect.length > 0) return groupDirect;
       for (const child of groupEl.querySelectorAll(
         ':scope > selectionEntries > selectionEntry[type="model"], ' +
         ':scope > selectionEntries > selectionEntry[type="unit"]'
       )) {
-        const s = findStats(child, entriesById, profilesById, depth + 1);
-        if (Object.keys(s).length > 0) return s;
+        const s = findStatProfiles(child, entriesById, profilesById, depth + 1);
+        if (s.length > 0) return s;
       }
       for (const link of groupEl.querySelectorAll(
         ':scope > entryLinks > entryLink, ' +
-        // Squighog Boyz pattern: entryLinks inside upgrade entries within the group.
         ':scope > selectionEntries > selectionEntry > entryLinks > entryLink'
       )) {
         const target = entriesById.get(I.getAttr(link, 'targetId'));
         if (target) {
-          const s = findStats(target, entriesById, profilesById, depth + 1);
-          if (Object.keys(s).length > 0) return s;
+          const s = findStatProfiles(target, entriesById, profilesById, depth + 1);
+          if (s.length > 0) return s;
         }
       }
       for (const sub of groupEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup')) {
         const s = searchGroups(sub);
-        if (Object.keys(s).length > 0) return s;
+        if (s.length > 0) return s;
       }
-      return {};
+      return [];
     }
     for (const group of entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup')) {
       const s = searchGroups(group);
-      if (Object.keys(s).length > 0) return s;
+      if (s.length > 0) return s;
     }
 
-    return {};
+    return [];
   }
 
-  I.parseCharacteristics = parseCharacteristics;
-  I.parseDirectProfiles  = parseDirectProfiles;
-  I.statsFromInfoLinks   = statsFromInfoLinks;
-  I.findStats            = findStats;
+  // Route the legacy flat-dict findStats through findStatProfiles so the
+  // FIRST profile wins, not the last one. Object.assign-style merging
+  // silently corrupted multi-statline units (Marneus Calgar showed
+  // Victrix Honour Guard's T=4 W=3 instead of his own T=6 W=6).
+  function findStats(entryEl, entriesById, profilesById, depth = 0) {
+    const profs = findStatProfiles(entryEl, entriesById, profilesById, depth);
+    if (profs.length === 0) return {};
+    const { name: _name, ...rest } = profs[0];
+    return rest;
+  }
+
+  I.parseCharacteristics      = parseCharacteristics;
+  I.parseDirectProfiles       = parseDirectProfiles;
+  I.statsFromInfoLinks        = statsFromInfoLinks;
+  I.findStats                 = findStats;
+  I.parseDirectStatProfiles   = parseDirectStatProfiles;
+  I.statProfilesFromInfoLinks = statProfilesFromInfoLinks;
+  I.findStatProfiles          = findStatProfiles;
 })();
