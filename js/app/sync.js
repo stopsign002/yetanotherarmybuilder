@@ -267,6 +267,12 @@
           const newArmy = full && full.payload ? decodeArmy(full.payload) : null;
           const mgr = App.state && App.state.armyManager;
           if (newArmy && mgr) {
+            // Pin the in-memory army's updatedAt to the server's row
+            // timestamp so the next pullAll comparison is equal and
+            // doesn't re-pull → re-toast forever (clock skew between
+            // the payload-internal "saved at" stamp and the row's
+            // upsert timestamp would otherwise loop).
+            if (full.updated_at) newArmy.updatedAt = full.updated_at;
             const idx = mgr.armies.findIndex(a => a.id === op.id);
             if (idx >= 0) mgr.armies[idx] = newArmy;
             if (App.state.currentArmy && App.state.currentArmy.id === op.id) {
@@ -376,10 +382,15 @@
               return;
             }
             if (army && mgr) {
+              // Pin the army's updatedAt to the server's row
+              // timestamp (same reason as the merge path below — keep
+              // future pullAll comparisons equal).
+              const newTs = full.updated_at || summ.updated_at || nowIso();
+              army.updatedAt = newTs;
               mgr.armies.push(army);
               mergedFromCloud++;
               const k = known();
-              k[id] = full.updated_at || summ.updated_at || nowIso();
+              k[id] = newTs;
               setKnown(k);
             }
           } catch (_) {}
@@ -423,6 +434,16 @@
                 return;
               }
               if (newArmy && mgr) {
+                // Same pin as the runOp path — keep the army's
+                // updatedAt aligned with the server's row timestamp so
+                // the next pullAll's `cloudTs > localTs` check is
+                // equal, not greater. Without this, a push from device
+                // A whose row gets a server-clock timestamp slightly
+                // ahead of the payload's "saved at" caused device B
+                // to re-pull on every subsequent pullAll → repeating
+                // "Army updated from another device" toasts.
+                const newTs = full.updated_at || cloudTs;
+                if (newTs) newArmy.updatedAt = newTs;
                 const idx = mgr.armies.findIndex(a => a.id === local.id);
                 if (idx >= 0) mgr.armies[idx] = newArmy;
                 if (local.id === currentId && App.state) {
@@ -434,7 +455,7 @@
                 }
                 mergedFromCloud++;
                 const k = known();
-                k[local.id] = full.updated_at || cloudTs;
+                k[local.id] = newTs;
                 setKnown(k);
               }
             } catch (_) {}

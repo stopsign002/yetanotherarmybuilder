@@ -797,7 +797,12 @@
   gap: 1mm;
   width: 36mm;
   text-align: center;
-  font-size: calc(1.7mm * var(--dcc-fine-mul, 1));
+  /* Range / A / BS / S / AP / D abbreviations sit ON the same line as
+   * the RANGED WEAPONS / MELEE WEAPONS title — they need to scale
+   * with the SAME slider as the title (Section heads), or the row
+   * loses its baseline alignment when the user pumps one without the
+   * other. */
+  font-size: calc(1.75mm * var(--dcc-heading-mul, 1));
   opacity: 0.95;
 }
 .dcc-section-label { flex: 0 0 auto; }
