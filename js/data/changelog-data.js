@@ -26,10 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.05-2',
-    lastUpdated: '2026-05-05T20:00:00Z',
+    version:     '2026.05.05-3',
+    lastUpdated: '2026-05-05T20:30:00Z',
     entries: [
       // ── 2026-05-05 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-05', kind: 'fix',
+        title: 'Topbar buttons match the rest of the bar',
+        description:
+          'The new Updates and Report buttons now use the same chrome ' +
+          '(border, hover, glyph + uppercase label) as Settings, Help, ' +
+          'and Account.',
+      },
       {
         date: '2026-05-05', kind: 'feature',
         title: '"What\'s new" button in the topbar',

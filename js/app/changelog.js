@@ -146,11 +146,14 @@
   });
 
   // ── hook registration ───────────────────────────────────────────────────
+  // Topbar-shelf shape: `glyph` is the icon character, `label` is the
+  // uppercase text rendered alongside it (matches Settings / Help /
+  // Account chrome).
   App.hooks.armyToolbarActions.push({
     id: 'yaab-btn-changelog',
     region: 'icon',
-    // Glyph: a small star/burst. Aria-label carries the meaning.
-    label: '✦',
+    glyph: '✦',
+    label: 'Updates',
     ariaLabel: 'Recent updates',
     title: 'What\'s new',
     onClick: openModal,

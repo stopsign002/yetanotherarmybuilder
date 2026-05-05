@@ -233,13 +233,16 @@
   });
 
   // ── hook registration ───────────────────────────────────────────────────
+  // Topbar-shelf shape: `glyph` is the icon character, `label` is the
+  // uppercase text rendered alongside it (matches Settings / Help /
+  // Account chrome).
   App.hooks.armyToolbarActions.push({
     id: 'yaab-btn-bug-report',
     region: 'icon',
-    // Visible label is a small bug-glyph; aria-label carries the meaning.
-    label: '!',
-    ariaLabel: 'Report bug',
-    title: 'Report an issue',
+    glyph: '!',
+    label: 'Report',
+    ariaLabel: 'Report a bug',
+    title: 'Report a bug',
     onClick: openReport,
   });
 

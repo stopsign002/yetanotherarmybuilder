@@ -162,6 +162,35 @@
     return btn;
   }
 
+  // Top-bar shelf buttons sit next to Settings / Help / Account in the
+  // topbar — they need the standard `.topbar-action-btn` chrome (border,
+  // hover state, glyph + uppercase label spans) defined in css/topbar.css.
+  // Action shape adds an optional `glyph` (icon character / HTML entity)
+  // alongside the existing `label` (the uppercase text shown beside it).
+  function buildTopbarShelfButton(a) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'topbar-action-btn';
+    if (a.id)        btn.id = a.id;
+    if (a.title)     btn.title = a.title;
+    if (a.ariaLabel) btn.setAttribute('aria-label', a.ariaLabel);
+    if (a.glyph) {
+      const g = document.createElement('span');
+      g.className = 'topbar-action-glyph';
+      g.setAttribute('aria-hidden', 'true');
+      g.textContent = a.glyph;
+      btn.appendChild(g);
+    }
+    if (a.label) {
+      const l = document.createElement('span');
+      l.className = 'topbar-action-label';
+      l.textContent = a.label;
+      btn.appendChild(l);
+    }
+    if (typeof a.onClick === 'function') btn.addEventListener('click', a.onClick);
+    return btn;
+  }
+
   function buildExportMenuButton(a) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -223,7 +252,7 @@
         if (BOTTOM_INLINE_ICON_IDS.has(a.id) && undoRedo) {
           undoRedo.appendChild(buildIconButton({ ...a, className: 'btn btn-sm btn-outline btn-icon' }));
         } else if (TOPBAR_SHELF_IDS.has(a.id) && topIcons) {
-          topIcons.appendChild(buildIconButton(a));
+          topIcons.appendChild(buildTopbarShelfButton(a));
         }
         return;
       }
