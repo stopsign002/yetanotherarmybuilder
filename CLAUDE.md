@@ -89,7 +89,8 @@ Grouped by user intent. One module per row; module path is the search target.
 | Polish | Ork "teef" math (faction-themed point display) | `js/app/ork-math.js` |
 | Polish | Legends-units toggle | `js/app/legends-toggle.js` |
 | Polish | PWA install prompt + mobile tab bar | `js/app/pwa-install.js` |
-| Polish | Bug-report modal (prefilled GitHub issue) | `js/app/bug-report.js` |
+| Polish | Bug-report modal (server-backed, signed-in users post to `/api/bugs`; admin Reports tab marks fixed) | `js/app/bug-report.js` |
+| Polish | "What's new" updates modal — versioned, dated, user-facing changelog. **All shippable changes must add an entry to `js/data/changelog-data.js`.** | `js/app/changelog.js`, `js/data/changelog-data.js` |
 | Polish | Top app bar (chip mirror, ⌘K, Action Center) | `js/app/topbar.js`, `js/ui/action-center.js` |
 | Polish | Top-bar Export dropdown (mirrors panel-footer Export menu) | `js/ui/topbar-export.js` |
 | Polish | Settings drawer (sound, motion, badges, replay tour, sign-out) | `js/app/settings-drawer.js` |
@@ -150,6 +151,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_reduced_motion` | localStorage | `settings-drawer.js` | App-level reduced-motion override (in addition to OS pref) | User pref |
 | `yaab_show_collection_badges` | localStorage | `collection.js`, `settings-drawer.js` | Toggle for the painted-status badges on unit cards | User pref |
 | `yaab_collect_debug` | localStorage | `collect-mode.js` | Dev flag for verbose Collect-mode logging | Dev flag |
+| `yaab_changelog_seen` | localStorage | `changelog.js` | Last `App.CHANGELOG.version` the user has opened — drives the "unseen" red dot on the Updates icon | User pref |
 
 The kill-switch in `sw.js` self-unregisters and clears any legacy `yaab-shell-v*` caches; no Cache API entries are maintained anymore.
 
@@ -164,6 +166,7 @@ The app-shell service worker has been retired. Existing installs are migrated by
 3. **Don't introduce a bundler, framework, or TypeScript.** Vanilla JS, IIFE, namespace globals. That's the deal.
 4. **Don't change `WahapediaParser.parse()` output shape** without bumping `DB_VERSION` in `js/db.js` AND clearing the IndexedDB stores in `onupgradeneeded`. Stale cached JSON will silently misrender.
 5. **Don't break the namespaces** (`window.App`, `window.UI`, `window.Storage`, `window.Army`, `window.ArmyManager`, `window.BSData`, `window.WahapediaParser`, `window.YaabDB`, `App.hooks`). External tabs reload through them.
+6. **Update the user-facing changelog on every shippable change.** Any new feature, visible bug fix, or data correction the user can notice MUST add an entry to `js/data/changelog-data.js` (and bump `version` + `lastUpdated`). The "What's new" button in the topbar (`js/app/changelog.js`) is the only place users see release notes — if it's missing from there, it didn't happen as far as they know. Skip entries only for pure refactors, internal-only behaviour, doc edits, and CI plumbing. See the comment at the top of `changelog-data.js` for the entry shape and the `feature` / `fix` / `change` `kind` values.
 
 ## Don't break
 

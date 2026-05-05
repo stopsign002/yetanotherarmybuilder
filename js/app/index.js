@@ -41,6 +41,16 @@
 
   // Icons that live inline in the bottom toolbar (undo/redo only).
   const BOTTOM_INLINE_ICON_IDS = new Set(['yaab-btn-undo', 'yaab-btn-redo']);
+  // IDs that are allowed to render in the top-bar icon shelf next to the
+  // mode tabs. Everything else with region:'icon' is dropped from the
+  // shelf to keep it uncluttered (those features are still reachable via
+  // the Settings drawer / Action Center). Add to this set when a feature
+  // genuinely belongs in the persistent top-bar shelf.
+  const TOPBAR_SHELF_IDS = new Set([
+    'yaab-btn-auth',
+    'yaab-btn-bug-report',
+    'yaab-btn-changelog',
+  ]);
 
   // Map known toolbar action IDs to Action Center sections.
   // Sections: 'game-day' | 'analyze' | 'export' | 'browse' | 'collection' | 'settings'
@@ -203,15 +213,16 @@
         return;
       }
 
-      // Icons: undo/redo dock in the bottom toolbar; the auth button keeps
-      // its slot in the top-bar shelf; everything else (legends, install,
-      // teef, sound, voice, …) is reachable from the Settings drawer instead
-      // of cluttering the top bar. The hook onClicks are still invoked
-      // directly via clickToolbarBtn's fallback in settings-drawer.js.
+      // Icons: undo/redo dock in the bottom toolbar; the auth, bug-report,
+      // and changelog buttons keep their slot in the top-bar shelf;
+      // everything else (legends, install, teef, sound, voice, …) is
+      // reachable from the Settings drawer instead of cluttering the top
+      // bar. The hook onClicks are still invoked directly via
+      // clickToolbarBtn's fallback in settings-drawer.js.
       if (region === 'icon') {
         if (BOTTOM_INLINE_ICON_IDS.has(a.id) && undoRedo) {
           undoRedo.appendChild(buildIconButton({ ...a, className: 'btn btn-sm btn-outline btn-icon' }));
-        } else if (a.id === 'yaab-btn-auth' && topIcons) {
+        } else if (TOPBAR_SHELF_IDS.has(a.id) && topIcons) {
           topIcons.appendChild(buildIconButton(a));
         }
         return;

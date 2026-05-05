@@ -1,18 +1,24 @@
-// app/bug-report.js — diagnostics modal + prefilled GitHub issue link.
+// app/bug-report.js — server-backed bug report modal.
+//
+// Posts to /api/bugs (auth required). Diagnostics are gathered locally
+// and submitted alongside a user-typed title + description; the admin
+// panel (App.Admin → Reports tab) lists every report and lets the
+// operator mark them fixed / unfixed.
+//
+// Server contract: docs/ADMIN_API.md §"Bug reports".
 (function () {
   const App = window.App = window.App || {};
+  const UI  = window.UI  = window.UI  || {};
   if (!App.hooks) return;
 
   const APP_VERSION = 'v0.x.y-dev';
-  const REPO_URL    = 'https://github.com/traviscw/yetanotherarmybuilder';
-  const MAX_URL     = 8000; // GitHub caps issue URLs around 8 KB.
+  const ENDPOINT    = '/api/bugs';
+  const MAX_BODY    = 4000;
+  const MAX_DIAG    = 16000;
 
   let modalEl = null;
-  let lastDiagnostics = '';
-  let lastTruncated = false;
 
-  // ── diagnostics collection ───────────────────────────────────────────────
-
+  // ── diagnostics collection ──────────────────────────────────────────────
   async function gatherDiagnostics() {
     const state = (App && App.state) || {};
     const army = state.currentArmy || null;
@@ -56,45 +62,17 @@
     return lines.join('\n');
   }
 
-  // ── github issue URL construction ────────────────────────────────────────
-
-  function buildIssueBody(diagnostics) {
-    return [
-      '<!-- Describe the issue above this line -->',
-      '',
-      '',
-      '### Diagnostics',
-      '```',
-      diagnostics,
-      '```',
-    ].join('\n');
+  function esc(s) {
+    if (UI && UI.escapeHtml) return UI.escapeHtml(s == null ? '' : String(s));
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
+    }[c]));
+  }
+  function toast(msg, kind, ms) {
+    if (UI && UI.toast) UI.toast(msg, kind || 'info', ms || 2500);
   }
 
-  function buildIssueUrl(diagnostics) {
-    const title = 'Bug report: ';
-    const body  = buildIssueBody(diagnostics);
-    const base  = REPO_URL + '/issues/new?title=' + encodeURIComponent(title) +
-                  '&body=' + encodeURIComponent(body);
-    if (base.length <= MAX_URL) return { url: base, truncated: false };
-
-    // Binary-ish trim of the diagnostics block until the encoded URL fits.
-    let body2 = body;
-    let code = diagnostics;
-    while (code.length > 200) {
-      code = code.slice(0, Math.floor(code.length * 0.8));
-      body2 = buildIssueBody(code + '\n…(truncated)…');
-      const u = REPO_URL + '/issues/new?title=' + encodeURIComponent(title) +
-                '&body=' + encodeURIComponent(body2);
-      if (u.length <= MAX_URL) return { url: u, truncated: true };
-    }
-    // Last resort — tiny body.
-    const tiny = REPO_URL + '/issues/new?title=' + encodeURIComponent(title) +
-                 '&body=' + encodeURIComponent('(diagnostics too large to inline — please paste manually)');
-    return { url: tiny, truncated: true };
-  }
-
-  // ── modal ────────────────────────────────────────────────────────────────
-
+  // ── modal ───────────────────────────────────────────────────────────────
   function ensureModal() {
     if (modalEl) return modalEl;
     const backdrop = document.createElement('div');
@@ -102,22 +80,32 @@
     backdrop.id = 'modal-bug-report';
     backdrop.hidden = true;
     backdrop.innerHTML =
-      '<div class="modal bug-report-modal">' +
+      '<div class="modal bug-report-modal" role="dialog" aria-modal="true" aria-labelledby="bug-report-title">' +
         '<div class="modal-header">' +
-          '<h3>Report a bug</h3>' +
-          '<button class="modal-close" id="bug-report-close" aria-label="Close">&times;</button>' +
+          '<h3 id="bug-report-title">Report a bug</h3>' +
+          '<button class="modal-close" id="bug-report-close" aria-label="Close" type="button">&times;</button>' +
         '</div>' +
-        '<div class="modal-body">' +
-          '<p class="muted bug-report-help">' +
-            'The diagnostics below will be included in your GitHub issue. ' +
-            'Review, then click "Open GitHub issue" to file it, or "Copy diagnostics" to paste elsewhere.' +
-          '</p>' +
-          '<div class="bug-report-warn" id="bug-report-warn" hidden></div>' +
-          '<textarea id="bug-report-diag" class="bug-report-diag" rows="14" spellcheck="false"></textarea>' +
+        '<div class="modal-body bug-report-body">' +
+          '<div id="bug-report-signin-prompt" class="bug-report-signin" hidden>' +
+            '<p>Sign in to send a bug report.</p>' +
+            '<button class="btn btn-accent" id="bug-report-signin" type="button">Sign in</button>' +
+          '</div>' +
+          '<div id="bug-report-form-wrap">' +
+            '<label class="bug-report-label" for="bug-report-summary">Summary</label>' +
+            '<input id="bug-report-summary" class="form-input bug-report-summary" type="text" maxlength="200" ' +
+              'placeholder="Short description (e.g. Wardens of Ultramar shows wrong stats)" autocomplete="off" />' +
+            '<label class="bug-report-label" for="bug-report-desc">What went wrong?</label>' +
+            '<textarea id="bug-report-desc" class="form-input bug-report-desc" rows="5" maxlength="' + MAX_BODY + '" ' +
+              'placeholder="Steps to reproduce, what you expected, what happened…"></textarea>' +
+            '<details class="bug-report-diag-wrap">' +
+              '<summary>Diagnostics (auto-attached)</summary>' +
+              '<textarea id="bug-report-diag" class="bug-report-diag" rows="10" spellcheck="false"></textarea>' +
+            '</details>' +
+            '<div class="bug-report-status" id="bug-report-status" aria-live="polite"></div>' +
+          '</div>' +
         '</div>' +
         '<div class="modal-footer">' +
-          '<button class="btn btn-accent" id="bug-report-open" type="button">Open GitHub issue</button>' +
-          '<button class="btn btn-outline" id="bug-report-copy" type="button" style="margin-left:8px">Copy diagnostics</button>' +
+          '<button class="btn btn-accent" id="bug-report-submit" type="button">Send report</button>' +
           '<span class="toolbar-spacer" style="flex:1"></span>' +
           '<button class="btn btn-outline" id="bug-report-cancel" type="button">Cancel</button>' +
         '</div>' +
@@ -127,49 +115,112 @@
     backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
     backdrop.querySelector('#bug-report-close').addEventListener('click', closeModal);
     backdrop.querySelector('#bug-report-cancel').addEventListener('click', closeModal);
-    backdrop.querySelector('#bug-report-open').addEventListener('click', onOpenIssue);
-    backdrop.querySelector('#bug-report-copy').addEventListener('click', onCopyDiag);
+    backdrop.querySelector('#bug-report-submit').addEventListener('click', onSubmit);
+    backdrop.querySelector('#bug-report-signin').addEventListener('click', () => {
+      closeModal();
+      if (UI.showAuthModal) UI.showAuthModal('login');
+    });
     modalEl = backdrop;
     return modalEl;
   }
 
-  function onOpenIssue() {
-    const diag = (modalEl && modalEl.querySelector('#bug-report-diag').value) || lastDiagnostics;
-    const { url, truncated } = buildIssueUrl(diag);
-    if (truncated && window.UI && typeof UI.toast === 'function') {
-      UI.toast('Diagnostics were truncated to fit GitHub URL limit', 'info', 5000);
-    }
-    try { window.open(url, '_blank', 'noopener,noreferrer'); }
-    catch (_) { window.location.href = url; }
+  function setStatus(msg, kind) {
+    const el = modalEl && modalEl.querySelector('#bug-report-status');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.className = 'bug-report-status' + (kind ? (' bug-report-status-' + kind) : '');
   }
 
-  async function onCopyDiag() {
-    const diag = (modalEl && modalEl.querySelector('#bug-report-diag').value) || lastDiagnostics;
-    try {
-      await navigator.clipboard.writeText(diag);
-      if (window.UI && typeof UI.toast === 'function') UI.toast('Diagnostics copied', 'success');
-    } catch (_) {
-      if (window.UI && typeof UI.toast === 'function') UI.toast('Clipboard unavailable', 'error', 4000);
+  async function onSubmit() {
+    if (!isSignedIn()) {
+      // Should not happen — UI is gated — but guard anyway.
+      setStatus('Sign in to send a bug report.', 'error');
+      return;
     }
+    const titleEl = modalEl.querySelector('#bug-report-summary');
+    const descEl  = modalEl.querySelector('#bug-report-desc');
+    const diagEl  = modalEl.querySelector('#bug-report-diag');
+    const submit  = modalEl.querySelector('#bug-report-submit');
+
+    const title = (titleEl.value || '').trim();
+    const description = (descEl.value || '').trim();
+    let diagnostics = (diagEl.value || '').trim();
+    if (diagnostics.length > MAX_DIAG) diagnostics = diagnostics.slice(0, MAX_DIAG) + '\n…(truncated)…';
+
+    if (!title) {
+      setStatus('Please add a short summary.', 'error');
+      titleEl.focus();
+      return;
+    }
+    if (!description) {
+      setStatus('Please describe what happened.', 'error');
+      descEl.focus();
+      return;
+    }
+
+    submit.disabled = true;
+    setStatus('Sending…');
+    try {
+      const resp = await fetch(ENDPOINT, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ title, description, diagnostics }),
+      });
+      if (resp.status === 401) {
+        if (App.Auth && typeof App.Auth.handleSessionExpired === 'function') App.Auth.handleSessionExpired();
+        setStatus('Your session expired. Sign in again.', 'error');
+        return;
+      }
+      if (!resp.ok) {
+        let data = null; try { data = await resp.json(); } catch (_) {}
+        throw new Error((data && data.error) || ('HTTP ' + resp.status));
+      }
+      toast('Bug report sent — thanks!', 'success', 3000);
+      closeModal();
+    } catch (err) {
+      setStatus('Send failed: ' + (err.message || 'unknown'), 'error');
+    } finally {
+      submit.disabled = false;
+    }
+  }
+
+  function isSignedIn() {
+    return !!(App.Auth && typeof App.Auth.isSignedIn === 'function' && App.Auth.isSignedIn());
   }
 
   async function openReport() {
     const el = ensureModal();
     el.hidden = false;
-    const diagEl = el.querySelector('#bug-report-diag');
-    const warnEl = el.querySelector('#bug-report-warn');
-    if (diagEl) diagEl.value = 'Gathering diagnostics…';
-    if (warnEl) warnEl.hidden = true;
-    const diag = await gatherDiagnostics();
-    lastDiagnostics = diag;
-    if (diagEl) diagEl.value = diag;
-    const probe = buildIssueUrl(diag);
-    lastTruncated = probe.truncated;
-    if (lastTruncated && warnEl) {
-      warnEl.hidden = false;
-      warnEl.textContent =
-        'Warning: diagnostics are too large for a GitHub issue URL and will be truncated. ' +
-        'Use "Copy diagnostics" and paste manually for the full payload.';
+
+    const formWrap   = el.querySelector('#bug-report-form-wrap');
+    const signinWrap = el.querySelector('#bug-report-signin-prompt');
+    const titleEl    = el.querySelector('#bug-report-summary');
+    const descEl     = el.querySelector('#bug-report-desc');
+    const diagEl     = el.querySelector('#bug-report-diag');
+    const submitBtn  = el.querySelector('#bug-report-submit');
+
+    if (!isSignedIn()) {
+      formWrap.hidden = true;
+      signinWrap.hidden = false;
+      submitBtn.hidden = true;
+      return;
+    }
+    formWrap.hidden = false;
+    signinWrap.hidden = true;
+    submitBtn.hidden = false;
+    setStatus('');
+
+    // Reset values; gather diagnostics async.
+    titleEl.value = '';
+    descEl.value = '';
+    diagEl.value = 'Gathering diagnostics…';
+    setTimeout(() => titleEl.focus(), 0);
+    try {
+      const diag = await gatherDiagnostics();
+      diagEl.value = diag;
+    } catch (_) {
+      diagEl.value = '(failed to gather diagnostics)';
     }
   }
 
@@ -181,14 +232,17 @@
     if (e.key === 'Escape' && modalEl && !modalEl.hidden) closeModal();
   });
 
-  // ── hook registration ────────────────────────────────────────────────────
-
+  // ── hook registration ───────────────────────────────────────────────────
   App.hooks.armyToolbarActions.push({
     id: 'yaab-btn-bug-report',
     region: 'icon',
+    // Visible label is a small bug-glyph; aria-label carries the meaning.
     label: '!',
     ariaLabel: 'Report bug',
     title: 'Report an issue',
     onClick: openReport,
   });
+
+  // Public — handy for tests / a future admin shortcut.
+  App.BugReport = { open: openReport };
 })();
