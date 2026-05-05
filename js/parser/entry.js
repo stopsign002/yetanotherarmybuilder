@@ -100,10 +100,19 @@
 
     const weaponKeywordNames = new Set();
     weapons.forEach(w => {
-      if (w.Keywords) {
-        String(w.Keywords).split(',').map(k => k.trim()).filter(Boolean)
-          .forEach(k => weaponKeywordNames.add(k.toLowerCase()));
-      }
+      if (!w.Keywords) return;
+      String(w.Keywords).split(',').map(k => k.trim()).filter(Boolean).forEach(k => {
+        const lc = k.toLowerCase();
+        weaponKeywordNames.add(lc);
+        // Strip the trailing arity suffix common in 10e weapon
+        // keywords — "Rapid Fire 1" / "Sustained Hits D3" /
+        // "Anti-Infantry 4+" all collapse to their bare base name so
+        // the abilities filter below catches them. Without this the
+        // base-name core ability ("Rapid Fire") slipped through and
+        // showed up under CORE on the unit card (Guilliman regression).
+        const stripped = lc.replace(/\s+\S*\d\S*\s*$/i, '').trim();
+        if (stripped && stripped !== lc) weaponKeywordNames.add(stripped);
+      });
     });
 
     let invulnSave = stats['INV'] || stats['Invulnerable Save'] || null;

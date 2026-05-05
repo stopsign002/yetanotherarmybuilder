@@ -672,7 +672,7 @@
 .dcc-name {
   font-family: 'Cinzel', 'Times New Roman', serif;
   font-weight: 700;
-  font-size: 3.8mm;
+  font-size: calc(3.8mm * var(--dcc-name-mul, 1));
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin: 0;
@@ -736,7 +736,8 @@
 .dcc-stat-cell {
   background: linear-gradient(180deg, #1a1308 0%, #2a1f0e 100%);
   color: #f4ead2;
-  border-radius: 0.6mm;
+  /* Driven by the "Stat blocks" slider in Layout > Corner rounding. */
+  border-radius: var(--dcc-stat-radius, 1mm);
   padding: 0.6mm 0.4mm;
   text-align: center;
   display: flex; flex-direction: column;
@@ -772,12 +773,15 @@
   /* Bronze-bar look: dark base with a thin gold edge top + bottom. */
   background: linear-gradient(180deg, #2a1f0e 0%, #1a1308 100%);
   color: #f0e4c4;
-  font-size: 1.9mm;
+  /* RANGED WEAPONS / MELEE WEAPONS / ABILITIES / WARGEAR / etc. now
+   * scale with the "Fine print" typography slider so users can pump
+   * them up alongside the footer keywords / column labels. */
+  font-size: calc(1.9mm * var(--dcc-fine-mul, 1));
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.6mm 1.4mm;
-  border-radius: 0.4mm 0.4mm 0 0;
+  border-radius: var(--dcc-head-section-radius, 0.4mm) var(--dcc-head-section-radius, 0.4mm) 0 0;
   display: flex;
   align-items: center;
   gap: 1.2mm;

@@ -113,10 +113,13 @@
       '  border-radius: ' + radius + 'mm;',
       // Header radius cascades into .dcc-head via var(--dcc-head-radius).
       '  --dcc-head-radius: ' + headRadius + 'mm;',
-      '  --dcc-stat-mul: '   + t.statSize   + ';',
-      '  --dcc-w-mul: '      + t.weaponSize + ';',
-      '  --dcc-body-mul: '   + t.bodySize   + ';',
-      '  --dcc-fine-mul: '   + t.fineSize   + ';',
+      '  --dcc-stat-radius: ' + Math.max(0, Math.min(8, statRadiusMm || 0)) + 'mm;',
+      '  --dcc-head-section-radius: ' + Math.max(0, Math.min(8, sectionHeadRadiusMm || 0)) + 'mm;',
+      '  --dcc-name-mul: '    + t.nameSize   + ';',
+      '  --dcc-stat-mul: '    + t.statSize   + ';',
+      '  --dcc-w-mul: '       + t.weaponSize + ';',
+      '  --dcc-body-mul: '    + t.bodySize   + ';',
+      '  --dcc-fine-mul: '    + t.fineSize   + ';',
       '}',
       // When `bold` is on, push thin text from weight 400 to 600 so it
       // survives at-size print rendering.
@@ -158,6 +161,11 @@
         if (typeof p.borderColor === 'string')      borderColor      = p.borderColor;
         if (typeof p.cornerRadiusMm === 'number')   cornerRadiusMm   = p.cornerRadiusMm;
         if (typeof p.headerRadiusMm === 'number')   headerRadiusMm   = p.headerRadiusMm;
+        if (typeof p.statRadiusMm === 'number')     statRadiusMm     = p.statRadiusMm;
+        if (typeof p.sectionHeadRadiusMm === 'number') sectionHeadRadiusMm = p.sectionHeadRadiusMm;
+        if (p.spilloverMode === 'continuation' || p.spilloverMode === 'fullCard') {
+          spilloverMode = p.spilloverMode;
+        }
         if (typeof p.activeLayoutId === 'string')   activeLayoutId   = p.activeLayoutId;
         if (p.layoutByKind && typeof p.layoutByKind === 'object') {
           ['unit','rule','strat'].forEach(k => {
@@ -167,7 +175,7 @@
           });
         }
         if (p.typography && typeof p.typography === 'object') {
-          ['statSize','weaponSize','bodySize','fineSize'].forEach(k => {
+          ['nameSize','statSize','weaponSize','bodySize','fineSize'].forEach(k => {
             const n = parseFloat(p.typography[k]);
             if (!Number.isNaN(n) && n > 0) typography[k] = Math.max(0.5, Math.min(2.0, n));
           });
@@ -200,7 +208,9 @@
     try {
       const p = {
         display: Object.assign({}, display),
-        textureId, textureIntensity, borderColor, cornerRadiusMm, headerRadiusMm,
+        textureId, textureIntensity, borderColor,
+        cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,
+        spilloverMode,
         activeLayoutId,
         layoutByKind: Object.assign({}, layoutByKind),
         typography: Object.assign({}, typography),
@@ -269,10 +279,24 @@
   // Card corner radius in mm. Default 4mm (R4 — matches the most common
   // physical corner-cutter setting for trading cards).
   let cornerRadiusMm = 4;
+  // Spillover handling for unit cards whose content overflows:
+  //   'continuation' — partial parchment overlay sized to content,
+  //                    user's card-back art bleeds through underneath
+  //                    (or page background when no art is set).
+  //   'fullCard'     — a regular full-parchment card identical to the
+  //                    primary, just with the cloned header and the
+  //                    overflowing sections.
+  let spilloverMode = 'continuation';
   // Title-bar header corner radius in mm. Independent of the card-frame
   // radius so users can tune the dark-bar shape (square / softly
   // rounded / matching-the-card) without affecting the gilded frame.
   let headerRadiusMm = 3;
+  // Stat-cell pill rounding (M / T / SV / W / LD / OC blocks).
+  let statRadiusMm = 1;
+  // Category-header bar rounding (RANGED WEAPONS / ABILITIES / WARGEAR
+  // bronze bars). Only top-left + top-right are visible — the bottom
+  // sits flush with the section body.
+  let sectionHeadRadiusMm = 1;
   // Typography multipliers — each scales a group of font sizes by the
   // user's chosen multiplier (0.8 → 1.5). Defaults bias slightly larger
   // than the original baseline because the base sizes were tuned for
@@ -280,10 +304,11 @@
   // `bold` adds weight 600 to the thin elements (.dcc-w-kw, .dcc-keywords,
   // .dcc-section-cols) so small printed text doesn't ghost.
   let typography = {
+    nameSize:    1.0,    // .dcc-name (the big card title)
     statSize:    1.0,    // .dcc-stat-key + .dcc-stat-val
     weaponSize:  1.15,   // .dcc-w-table (numbers, names, keywords)
     bodySize:    1.0,    // .dcc-abilities-body, .dcc-wargear-body, .dcc-rule-text
-    fineSize:    1.1,    // .dcc-keywords (footer), .dcc-section-cols
+    fineSize:    1.1,    // .dcc-keywords footer + .dcc-section-cols + .dcc-section-head
     bold:        true,
   };
   const TYPOGRAPHY_DEFAULTS = JSON.parse(JSON.stringify(typography));
@@ -955,11 +980,13 @@
 
     cards.forEach(card => {
       const cardEl = document.createElement('article');
-      // Continuation cards (set by splitOverflowingUnitCards) carry their
-      // own class string; everything else gets the standard kind class.
-      cardEl.className = card.isContinuation
-        ? 'dcc-card dcc-card-' + card.kind + ' ' + (card.contClasses || 'dcc-card-cont')
-        : 'dcc-card dcc-card-' + card.kind;
+      // Continuation cards may carry a contClasses string (.dcc-card-cont
+      // for the partial-parchment overlay). When contClasses is the
+      // empty string (spilloverMode='fullCard') the continuation is a
+      // regular full-parchment card — no special class.
+      let cls = 'dcc-card dcc-card-' + card.kind;
+      if (card.isContinuation && card.contClasses) cls += ' ' + card.contClasses;
+      cardEl.className = cls;
       cardEl.innerHTML = card.html;
       pageEl.appendChild(cardEl);
     });
@@ -1113,31 +1140,46 @@
       if (fits.length === 0) return [card];
       if (overflow.length === 0) return [card];
 
-      // Build primary card: header + fits (footer goes on the LAST card
-      // so the unit's KEYWORDS line completes the unit's identity).
-      const firstHTML = header.outerHTML + fits.map(n => n.outerHTML).join('');
-      // Continuation card: same header (so the unit is identifiable on
-      // the table) + overflowing middle + footer if any. The continuation
-      // class triggers the parchment-only-as-tall-as-content + art-bleed
-      // behaviour in CSS when a card-back image is set.
-      const contClasses = backsOn ? 'dcc-card-cont dcc-card-cont-art' : 'dcc-card-cont';
-      const backImg = backsOn
-        ? '<img class="dcc-cont-bg" alt="" src="' + (cardBack.src || '').replace(/"/g, '&quot;') + '"' +
-          ' style="--dcc-back-scale:' + cardBack.scale +
-          ';--dcc-back-x:' + cardBack.offsetX + '%' +
-          ';--dcc-back-y:' + cardBack.offsetY + '%;">'
-        : '';
-      const contInnerHTML =
-        backImg +
-        '<div class="dcc-cont-overlay">' +
-          header.outerHTML.replace('class="dcc-head"', 'class="dcc-head dcc-head-cont"') +
-          overflow.map(n => n.outerHTML).join('') +
-          (footer ? footer.outerHTML : '') +
-        '</div>';
+      // Build primary card: header + fits + footer. The footer
+      // (FACTION KEYWORDS / KEYWORDS lines) is pinned to the first
+      // card always — it identifies the unit and shouldn't get
+      // shuffled to a continuation that the user might cut apart from
+      // its primary.
+      const firstHTML = header.outerHTML + fits.map(n => n.outerHTML).join('') + (footer ? footer.outerHTML : '');
+      // Continuation card: cloned header + overflowing middle.
+      // Visual handling depends on `spilloverMode`:
+      //   · 'continuation' — partial parchment overlay sized to content
+      //     with the user's card-back art bleeding through underneath
+      //     (or page background when no art is set). Triggers the
+      //     .dcc-card-cont CSS rules.
+      //   · 'fullCard'     — a regular full-parchment card identical
+      //     to the primary, just with the cloned header and the
+      //     overflowing sections.
+      const clonedHead = header.outerHTML.replace('class="dcc-head"', 'class="dcc-head dcc-head-cont"');
+      const overflowHTML = overflow.map(n => n.outerHTML).join('');
+      let contHtml, contClasses;
+      if (spilloverMode === 'fullCard') {
+        contHtml = clonedHead + overflowHTML;
+        contClasses = '';                // no special continuation chrome
+      } else {
+        contClasses = backsOn ? 'dcc-card-cont dcc-card-cont-art' : 'dcc-card-cont';
+        const backImg = backsOn
+          ? '<img class="dcc-cont-bg" alt="" src="' + (cardBack.src || '').replace(/"/g, '&quot;') + '"' +
+            ' style="--dcc-back-scale:' + cardBack.scale +
+            ';--dcc-back-x:' + cardBack.offsetX + '%' +
+            ';--dcc-back-y:' + cardBack.offsetY + '%;">'
+          : '';
+        contHtml =
+          backImg +
+          '<div class="dcc-cont-overlay">' +
+            clonedHead +
+            overflowHTML +
+          '</div>';
+      }
 
       const primary = Object.assign({}, card, { html: firstHTML });
       const cont = Object.assign({}, card, {
-        html: contInnerHTML,
+        html: contHtml,
         isContinuation: true,
         contClasses: contClasses,
         label: (card.label || 'Unit') + ' (cont.)',
@@ -1369,10 +1411,10 @@
       <div class="cards-layout-section">
         <div class="cards-disp-heading">Corner rounding</div>
         <p class="cards-help">
-          Card frame radius in millimetres. Default 4mm matches an R4
-          physical corner cutter. The header bar (dark title strip)
-          rounds independently so it can sit flush, softly matched, or
-          fully tab-shaped.
+          Card frame defaults to 4mm to match an R4 physical corner
+          cutter. The four inner sliders round the title bar, stat
+          pills, and section heads independently so you can mix sharp
+          and soft to taste.
         </p>
         <div class="cards-field" style="padding:4px 12px 0">
           <span class="cards-field-label">Card frame
@@ -1388,6 +1430,20 @@
           <input type="range" min="0" max="10" step="0.5" value="${headerRadiusMm}"
                  id="cards-head-radius" class="cards-range">
         </div>
+        <div class="cards-field" style="padding:6px 12px 0">
+          <span class="cards-field-label">Stat blocks
+            <span class="cards-slider-val" id="cards-stat-radius-val">${statRadiusMm}mm</span>
+          </span>
+          <input type="range" min="0" max="6" step="0.25" value="${statRadiusMm}"
+                 id="cards-stat-radius" class="cards-range">
+        </div>
+        <div class="cards-field" style="padding:6px 12px 0">
+          <span class="cards-field-label">Section heads
+            <span class="cards-slider-val" id="cards-sect-radius-val">${sectionHeadRadiusMm}mm</span>
+          </span>
+          <input type="range" min="0" max="6" step="0.25" value="${sectionHeadRadiusMm}"
+                 id="cards-sect-radius" class="cards-range">
+        </div>
       </div>
 
       <div class="cards-layout-section">
@@ -1399,10 +1455,11 @@
           → 600 — useful when small print ghosts on your printer.
         </p>
         ${[
+          ['nameSize',   'Unit name (card title)'],
           ['statSize',   'Stat block (M T SV W LD OC values)'],
           ['weaponSize', 'Weapon table (range / A / BS / S / AP / D)'],
           ['bodySize',   'Body text (abilities, wargear, rule text)'],
-          ['fineSize',   'Fine print (footer keywords, column labels)'],
+          ['fineSize',   'Fine print (section heads, footer kws, col labels)'],
         ].map(([k, label]) => {
           const pct = Math.round(typography[k] * 100);
           return `
@@ -1459,6 +1516,29 @@
         <div style="padding:8px 12px 0">
           <button type="button" class="cards-link-btn" id="cards-back-reset">Reset position &amp; scale</button>
         </div>
+      </div>
+
+      <div class="cards-layout-section">
+        <div class="cards-disp-heading">Spillover handling</div>
+        <p class="cards-help">
+          When a unit's text overflows the card, choose how the second
+          card looks. Faction keywords + unit keywords always stay on
+          the first card either way.
+        </p>
+        <label class="cards-row" style="margin: 4px 12px 4px">
+          <input type="radio" name="spillover" value="continuation"
+                 ${spilloverMode === 'continuation' ? 'checked' : ''}>
+          <span><strong>Continuation card</strong>
+            <span class="cards-help" style="display:block; margin:2px 0 0">Partial parchment over the back-art layer.</span>
+          </span>
+        </label>
+        <label class="cards-row" style="margin: 0 12px 4px">
+          <input type="radio" name="spillover" value="fullCard"
+                 ${spilloverMode === 'fullCard' ? 'checked' : ''}>
+          <span><strong>Full second card</strong>
+            <span class="cards-help" style="display:block; margin:2px 0 0">Same full parchment as the primary.</span>
+          </span>
+        </label>
       </div>`;
     // Defer setting the <select> values until after the HTML lands in the DOM.
     queueMicrotask(() => {
@@ -1554,6 +1634,15 @@
       refreshSummary();
       return;
     }
+    // Spillover-mode radio
+    if (e.target && e.target.matches && e.target.matches('input[name="spillover"]') && e.target.checked) {
+      const v = e.target.value;
+      if (v === 'continuation' || v === 'fullCard') {
+        spilloverMode = v;
+        refreshPreview();
+      }
+      return;
+    }
     // Border color picker
     if (e.target && e.target.id === 'cards-border-color') {
       borderColor = e.target.value || DEFAULT_BORDER;
@@ -1585,6 +1674,24 @@
       headerRadiusMm = Number.isNaN(v) ? 3 : Math.max(0, Math.min(10, v));
       const lbl = hostEl.querySelector('#cards-head-radius-val');
       if (lbl) lbl.textContent = headerRadiusMm + 'mm';
+      applyDynamicStyle();
+      return;
+    }
+    // Stat-block radius slider
+    if (e.target && e.target.id === 'cards-stat-radius') {
+      const v = parseFloat(e.target.value);
+      statRadiusMm = Number.isNaN(v) ? 1 : Math.max(0, Math.min(6, v));
+      const lbl = hostEl.querySelector('#cards-stat-radius-val');
+      if (lbl) lbl.textContent = statRadiusMm + 'mm';
+      applyDynamicStyle();
+      return;
+    }
+    // Section-head radius slider
+    if (e.target && e.target.id === 'cards-sect-radius') {
+      const v = parseFloat(e.target.value);
+      sectionHeadRadiusMm = Number.isNaN(v) ? 1 : Math.max(0, Math.min(6, v));
+      const lbl = hostEl.querySelector('#cards-sect-radius-val');
+      if (lbl) lbl.textContent = sectionHeadRadiusMm + 'mm';
       applyDynamicStyle();
       return;
     }

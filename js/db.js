@@ -84,7 +84,14 @@ window.YaabDB = (() => {
   // their own PRIMARCH section instead of mixing them into the regular
   // ABILITIES list, so players can see at a glance which abilities are
   // choose-from-N toggles.
-  const DB_VERSION = 20;
+  // Bumped to v21: weapon-keyword normalisation in entry.js. Weapon
+  // keywords with trailing arity ("Rapid Fire 1", "Sustained Hits D3",
+  // "Anti-Infantry 4+") are now also added to the dedup set as their
+  // bare base name, so the existing isCore + name-match filter actually
+  // drops the matching CORE ability ("Rapid Fire") instead of leaving
+  // it on the unit's CORE chip line. Stale v20 cache still has those
+  // entries; drop on upgrade.
+  const DB_VERSION = 21;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
