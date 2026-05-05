@@ -91,7 +91,15 @@ window.YaabDB = (() => {
   // drops the matching CORE ability ("Rapid Fire") instead of leaving
   // it on the unit's CORE chip line. Stale v20 cache still has those
   // entries; drop on upgrade.
-  const DB_VERSION = 21;
+  // Bumped to v22: findStats now also inspects a selectionEntryGroup's
+  // own <profiles> block when recursing through groups. Victrix Honour
+  // Guard puts its M/T/SV/W/LD/OC stats profile on the inner
+  // selectionEntryGroup directly rather than on any of its model
+  // entries — the previous walk only checked the entries' own profiles
+  // and the group's <selectionEntries> children, so Victrix surfaced
+  // with empty stats. Stale v21 cache still has the empty stats; drop
+  // on upgrade.
+  const DB_VERSION = 22;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

@@ -85,6 +85,12 @@
     // costs.js so both handle the "Unit Composition" wrapper pattern (e.g. Skorpekh
     // Destroyers) where the actual model entries sit inside a nested sub-group.
     function searchGroups(groupEl) {
+      // Some units (Victrix Honour Guard is the canonical case) put
+      // their stats profile directly on the inner selectionEntryGroup
+      // rather than on any of its child model entries. Check the
+      // group's own <profiles> block before recursing.
+      const groupDirect = parseDirectProfiles(groupEl).stats;
+      if (Object.keys(groupDirect).length > 0) return groupDirect;
       for (const child of groupEl.querySelectorAll(
         ':scope > selectionEntries > selectionEntry[type="model"], ' +
         ':scope > selectionEntries > selectionEntry[type="unit"]'
