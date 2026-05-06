@@ -420,6 +420,13 @@
       </div>`;
     }
 
+    if (unit.transportCapacity) {
+      html += `<div class="detail-section detail-transport-section">
+        <div class="detail-section-title">Transport</div>
+        <div class="detail-ability-desc">${esc(unit.transportCapacity)}</div>
+      </div>`;
+    }
+
     if (leaderAbilities.length > 0) {
       html += `<div class="detail-section">
         <div class="detail-section-title detail-section-title-leader">Leader</div>`;

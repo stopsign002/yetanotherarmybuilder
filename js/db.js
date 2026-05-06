@@ -119,7 +119,13 @@ window.YaabDB = (() => {
   // the detachment-level roll tables some factions encode as <profile>
   // siblings of the detachment <rule> (Dread Mob's "Try Dat Button!"
   // D6 table). Drop the cache so the new fields surface.
-  const DB_VERSION = 25;
+  // v26: parser now extracts transport capacity into a dedicated
+  // unit.transportCapacity field (renderer puts it in its own
+  // "Transport" section) and drops the orphan "Damaged: X Wounds
+  // Remaining" wound-band profiles from the abilities list — 10e
+  // BSData vehicles don't actually use degrading statlines, so those
+  // were just clutter on Land Raider, Repulsor, etc.
+  const DB_VERSION = 26;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

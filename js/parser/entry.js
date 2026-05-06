@@ -147,8 +147,41 @@
       }
     }
 
+    // Pull transport capacity out of the abilities list so the renderer
+    // can show it in its own dedicated "Transport" section instead of
+    // mixing it with regular unit abilities.
+    //
+    // Two encoding shapes appear in BSData:
+    //   (a) Orks vehicles use <profile typeName="Transport"> with a
+    //       single <characteristic name="Capacity">; the parser tags
+    //       these abilities with _typeName="Transport".
+    //   (b) Adeptus Astartes vehicles (Land Raider, Repulsor, …) ship
+    //       a regular <profile typeName="Abilities" name="Transport">
+    //       whose Description characteristic carries the capacity
+    //       prose; the parser tags those abilities with
+    //       _typeName="Abilities" and name="Transport".
+    // Either shape collapses into a single transportCapacity string.
+    const transportEntries = allAbilities.filter(a => {
+      const tn = String(a._typeName || '').toLowerCase();
+      if (tn === 'transport') return true;
+      if (a.name && a.name.trim().toLowerCase() === 'transport') return true;
+      return false;
+    });
+    const transportCapacity = transportEntries.length > 0
+      ? transportEntries.map(a => (a.description || '').trim()).filter(Boolean).join('\n\n')
+      : null;
+
+    // Drop wound-band internal profiles ("Damaged: 1-4 Wounds Remaining"
+    // etc.) from the abilities list. 10e BSData vehicles don't actually
+    // run degrading statlines, so these surface as orphan ability prose
+    // that clutters the unit card without adding usable info.
+    const DAMAGED_RE = /^damaged:\s*\d+\s*-\s*\d+\s*wounds?\s+remaining$/i;
+
     const abilities = allAbilities
       .filter(a => !/invulnerable\s+save/i.test(a.name))
+      .filter(a => !DAMAGED_RE.test(a.name || ''))
+      // Transport content is moved to unit.transportCapacity above.
+      .filter(a => !transportEntries.includes(a))
       .filter(a => !a.isCore || !weaponKeywordNames.has(a.name.toLowerCase()))
       // Some heroes (Roboute Guilliman is the canonical case) ship their
       // choose-from-N toggles as ONE ability profile whose description
@@ -166,6 +199,7 @@
       stats,
       modelStats,
       invulnSave,
+      transportCapacity,
       weapons,
       abilities,
       keywords,

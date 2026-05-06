@@ -26,9 +26,30 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.05-6',
-    lastUpdated: '2026-05-05T23:00:00Z',
+    version:     '2026.05.06-1',
+    lastUpdated: '2026-05-06T00:30:00Z',
     entries: [
+      // ── 2026-05-06 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-06', kind: 'change',
+        title: 'Vehicles: dedicated Transport section',
+        description:
+          'Transport capacity now renders in its own "Transport" block ' +
+          'on every unit card instead of being mixed in with regular ' +
+          'abilities (Marines: Land Raider, Repulsor, Impulsor, Rhino) ' +
+          'or accidentally landing in the gold "primarch" sub-ability ' +
+          'box (Orks: Trukk, Battlewagon, Stompa, Gorkanaut and friends).',
+      },
+      {
+        date: '2026-05-06', kind: 'fix',
+        title: 'Vehicles: drop "Damaged: X Wounds Remaining" filler',
+        description:
+          'Land Raider, Repulsor, Tau Hammerhead and other 10e vehicles ' +
+          'shipped with vestigial "Damaged: 1-X Wounds Remaining" ability ' +
+          'profiles in the BSData files even though 10e dropped degrading ' +
+          'statlines. Those entries are no longer surfaced — Land Raider ' +
+          'now shows Assault Ramp as its only proper ability.',
+      },
       // ── 2026-05-05 ──────────────────────────────────────────────────────
       {
         date: '2026-05-05', kind: 'fix',
