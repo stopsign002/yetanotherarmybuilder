@@ -114,7 +114,7 @@
         const t = I.getAttr(entry, 'type', '');
         if (t !== 'unit' && t !== 'model') return;
         if (I.isCrusadeSection(I.getAttr(entry, 'name', ''))) return;
-        const unit = I.parseEntry(entry, entriesById, profilesById, rulesById);
+        const unit = I.parseEntry(entry, entriesById, profilesById, rulesById, factionName);
         if (unit && !seenIds.has(unit.id)) {
           seenIds.add(unit.id);
           units.push(unit);
@@ -137,7 +137,7 @@
         // Previously filtered out entirely; now let the flag flow through so the Legends toggle works.
         // if (linkName.includes('[Legends]') || targetName.includes('[Legends]')) return;
         const linkIsLegends = linkName.includes('[Legends]') || targetName.includes('[Legends]');
-        const unit = I.parseEntry(target, entriesById, profilesById, rulesById);
+        const unit = I.parseEntry(target, entriesById, profilesById, rulesById, factionName);
         if (unit && !seenIds.has(unit.id)) {
           if (linkIsLegends) unit.isLegends = true;
           seenIds.add(unit.id);
@@ -164,7 +164,7 @@
           const targetName = I.getAttr(target, 'name', '');
           if (I.isCrusadeSection(targetName) || I.isCrusadeSection(linkName)) return;
           const linkIsLegends = linkName.includes('[Legends]') || targetName.includes('[Legends]');
-          const unit = I.parseEntry(target, entriesById, profilesById, rulesById);
+          const unit = I.parseEntry(target, entriesById, profilesById, rulesById, factionName);
           if (unit && !seenIds.has(unit.id)) {
             if (linkIsLegends) unit.isLegends = true;
             seenIds.add(unit.id);

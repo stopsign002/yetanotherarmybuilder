@@ -134,7 +134,16 @@ window.YaabDB = (() => {
   // entryLinks. catalogue.js gains a Pattern C that re-extracts
   // detachment enhancements from the standalone sibling groups so
   // detachments like Headhunter Task Force still surface their list.
-  const DB_VERSION = 27;
+  // v28: parser walks <infoGroup> elements (Orks: Ghazghkull / Warboss
+  // "Leader" block, Tau bounty/pilot blocks) so the inner profile +
+  // rule infoLinks reach the unit. Ghazghkull Thraka was missing his
+  // entire Leader → "attached to Boyz / Meganobz / Nobz" entry.
+  // Also drops chapter-locked army rules (Templar Vows) when the
+  // current faction isn't the matching chapter — every non-Templar
+  // chapter's Land Raider / Predator / Intercessor was inheriting
+  // Templar Vows because the parent SM file hardcodes the infoLink
+  // on every unit with no conditional hide modifier.
+  const DB_VERSION = 28;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

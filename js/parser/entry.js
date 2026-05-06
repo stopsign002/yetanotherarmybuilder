@@ -55,7 +55,30 @@
     ];
   }
 
-  function parseEntry(entryEl, entriesById, profilesById, rulesById) {
+  // Some 10e BSData parent files (Imperium - Space Marines.cat being
+  // the canonical case) attach chapter-specific rule infoLinks to
+  // every Astartes unit with no conditional-hide modifier — there are
+  // 110 separate "Templar Vows" infoLinks in the parent file, none of
+  // them gated. As a result every chapter's Land Raider / Predator /
+  // Intercessor Squad inherits Templar Vows as if it were a generic
+  // rule. The data IS correct in the chapter-specific catalogue
+  // (Imperium - Black Templars.cat re-references Templar Vows on its
+  // own units), but the parent's stray references leak out.
+  //
+  // We can't fix BSData's data, so we filter at parse time: when the
+  // ability name matches a known chapter-locked rule and the current
+  // faction name doesn't match that chapter's regex, drop it.
+  // Add new entries as they're spotted.
+  const CHAPTER_LOCKED_RULES = {
+    'templar vows': /\bblack\s+templars\b/i,
+  };
+  function isChapterLockedRuleApplicable(abilityName, factionName) {
+    const re = CHAPTER_LOCKED_RULES[String(abilityName || '').toLowerCase()];
+    if (!re) return true;                   // not a chapter-locked rule
+    return re.test(String(factionName || ''));
+  }
+
+  function parseEntry(entryEl, entriesById, profilesById, rulesById, factionName) {
     if (I.getAttr(entryEl, 'hidden', 'false') === 'true') return null;
 
     const name = I.getAttr(entryEl, 'name', 'Unknown Unit');
@@ -183,6 +206,9 @@
       // Transport content is moved to unit.transportCapacity above.
       .filter(a => !transportEntries.includes(a))
       .filter(a => !a.isCore || !weaponKeywordNames.has(a.name.toLowerCase()))
+      // Drop chapter-locked rules (Templar Vows etc.) when the current
+      // faction isn't the matching chapter. See CHAPTER_LOCKED_RULES.
+      .filter(a => isChapterLockedRuleApplicable(a.name, factionName))
       // Some heroes (Roboute Guilliman is the canonical case) ship their
       // choose-from-N toggles as ONE ability profile whose description
       // is a multi-paragraph string — parent paragraph + N "Heading:

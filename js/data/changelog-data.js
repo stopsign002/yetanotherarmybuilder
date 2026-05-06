@@ -26,10 +26,36 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.06-2',
-    lastUpdated: '2026-05-06T01:00:00Z',
+    version:     '2026.05.06-3',
+    lastUpdated: '2026-05-06T03:00:00Z',
     entries: [
       // ── 2026-05-06 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-06', kind: 'fix',
+        title: 'Ghazghkull Thraka: Leader (attached units) restored',
+        description:
+          'Ghazghkull was missing his Leader entry — the list of units ' +
+          'he can attach to (Boyz, Meganobz, Nobz). BSData wraps that ' +
+          'block in a <infoGroup> element that the parser used to ' +
+          'ignore entirely. Other Ork characters (Warboss, Big Mek, ' +
+          'Beastboss, Painboy, Mad Dok, Mozrog) and a handful of T\'au ' +
+          'units (bounty/pilot blocks) were missing the same ability ' +
+          'profile or rule infoLinks for the same reason; they\'re all ' +
+          'fixed.',
+      },
+      {
+        date: '2026-05-06', kind: 'fix',
+        title: 'Templar Vows no longer shows on non-Templar chapters',
+        description:
+          'BSData\'s parent Space Marines file hardcodes a Templar Vows ' +
+          'rule infoLink on every Astartes unit with no conditional-hide ' +
+          'modifier (110 references in total), so every chapter\'s Land ' +
+          'Raider / Predator / Intercessor was inheriting it. The parser ' +
+          'now recognises chapter-locked rules and only surfaces them ' +
+          'when the parsed faction is the matching chapter. Black ' +
+          'Templars armies still see Templar Vows; everyone else sees ' +
+          'just Oath of Moment.',
+      },
       {
         date: '2026-05-06', kind: 'fix',
         title: 'Vehicles: stop weapon-keyword bleed into core abilities',

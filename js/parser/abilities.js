@@ -75,6 +75,19 @@
         .forEach(a => abilities.push(a));
     });
 
+    // <infoGroups>/<infoGroup> wraps a named bundle of <profiles>
+    // and <infoLinks> (Orks: Ghazghkull, Warboss-class characters'
+    // "Leader" block; Tau: bounty-hunting / pilot blocks). The
+    // recursive call resolves the inner profiles+infoLinks via the
+    // same :scope queries used at the entry level. Without this,
+    // Ghazghkull Thraka was missing his entire Leader block (the
+    // list of units he can be attached to).
+    entryEl.querySelectorAll(':scope > infoGroups > infoGroup').forEach(ig => {
+      if (I.isCrusadeSection(I.getAttr(ig, 'name', ''))) return;
+      collectAbilities(ig, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
+        .forEach(a => abilities.push(a));
+    });
+
     // Top-level entryLinks at the unit entry — point to shared/upgrade
     // entries that carry abilities (also Lion's encoding).
     entryEl.querySelectorAll(':scope > entryLinks > entryLink').forEach(link => {
