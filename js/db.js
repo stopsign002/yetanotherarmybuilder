@@ -105,7 +105,15 @@ window.YaabDB = (() => {
   // Squad TH/SS vs LC) lost their second profile to Object.assign
   // overwrite; v22 caches were wrong (Calgar surfaced with Victrix's
   // T=4 W=3 instead of his own T=6 W=6). Drop the cache.
-  const DB_VERSION = 23;
+  // v24: bsdata.js Phase 1.5 now preloads EVERY catalogue's shared
+  // content into the parser index, not just files matching
+  // /\blibrary\b/i. Cross-catalogue sharedProfile references — e.g.
+  // Wolf Priest's "Litany of Hate" infoLink targeting a profile that
+  // lives in `Imperium - Space Marines.cat` — used to fail to resolve
+  // during parallel Phase 2 parsing, silently dropping the ability.
+  // v23 caches are missing those abilities; drop on upgrade so the
+  // next session reparses with the fully-populated shared index.
+  const DB_VERSION = 24;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

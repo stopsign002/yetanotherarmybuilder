@@ -26,10 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.05-4',
-    lastUpdated: '2026-05-05T21:00:00Z',
+    version:     '2026.05.05-5',
+    lastUpdated: '2026-05-05T22:00:00Z',
     entries: [
       // ── 2026-05-05 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-05', kind: 'fix',
+        title: 'Cross-catalogue abilities now surface',
+        description:
+          'Many leader abilities defined in a parent catalogue and ' +
+          'referenced from a sub-faction were silently dropped — the most ' +
+          'visible example is the Space Wolves Wolf Priest, which was ' +
+          'missing Litany of Hate (defined in the Space Marines parent file ' +
+          'and linked into every chapter). Same shape affected Blood ' +
+          'Angels, Dark Angels, Black Templars, Deathwatch, Salamanders, ' +
+          'Grey Knights, and Ultramarines. The parser now preloads every ' +
+          'catalogue\'s shared profiles before parsing, so chapter-level ' +
+          'infoLinks resolve correctly.',
+      },
       {
         date: '2026-05-05', kind: 'change',
         title: 'Unit detail panel: tighter header',
