@@ -2,7 +2,7 @@
 
 ## What this is
 
-A client-only static site (no build step) that fetches BattleScribe 10th-edition XML from `BSData/wh40k-10e` over GitHub's raw.githubusercontent.com and the raw tree API, parses it in-browser with `DOMParser`, and lets a user build, share, and play 40k armies. Persists user data in `localStorage` and parsed faction data in IndexedDB. Optional username/password account with offline-first cloud sync of armies + a small KV bag (favorites, collection, crusade rosters, etc.) via the sibling `api/` backend.
+A client-only static site (no build step) that fetches BattleScribe 10th-edition XML from a same-origin mirror at `data/bsdata/` (kept fresh by a 6-hourly GitHub Actions cron that pulls `BSData/wh40k-10e`), falls back to `raw.githubusercontent.com` if the mirror is missing, parses the XML in-browser with `DOMParser`, and lets a user build, share, and play 40k armies. Persists user data in `localStorage` and parsed faction data in IndexedDB. Optional username/password account with offline-first cloud sync of armies + a small KV bag (favorites, collection, crusade rosters, etc.) via the sibling `api/` backend.
 
 ## Running it
 
@@ -22,7 +22,10 @@ Then open `http://localhost:8000/`. Cannot be opened via `file://` — the BSDat
 | `sw.js` | Kill-switch for the retired app-shell service worker. Self-unregisters and clears legacy `yaab-shell-v*` caches. New visits don't register a SW. |
 | `manifest.json` | PWA manifest (installable). |
 | `js/db.js` | `YaabDB` IndexedDB wrapper: `factions` + `gst` stores. |
-| `js/bsdata.js` | GitHub fetch + 6-worker bulk loader. Caches via `YaabDB`. |
+| `js/bsdata.js` | Fetches BattleScribe XML — prefers the same-origin mirror at `data/bsdata/`, falls back to `raw.githubusercontent.com` if the mirror is missing. 6-worker bulk loader. Caches parsed factions in `YaabDB`. |
+| `data/bsdata/` | Server-side mirror of `BSData/wh40k-10e`. `index.json` lists the files (with source commit + per-blob SHA); `files/<original/path>.xml` holds each `.cat` / `.gst` payload. Generated; do not hand-edit. |
+| `scripts/mirror-bsdata.mjs` | Cron-driven Node 20 script that diffs against `BSData/wh40k-10e` by blob SHA and downloads only changed files into `data/bsdata/`. No deps. |
+| `.github/workflows/mirror-bsdata.yml` | Runs `scripts/mirror-bsdata.mjs` every 6h (and on manual dispatch); commits any changes back to the branch. |
 | `js/parser/` | BattleScribe XML → plain-object units. See `docs/PARSER.md`. |
 | `js/storage.js` | `localStorage` armies + compact `YAAB1:` deflate-base64url export/import. |
 | `js/army.js` | `Army` + `ArmyManager` data model. |
@@ -117,7 +120,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 |---|---|---|---|---|
 | `yaab` DB / `factions` | IndexedDB | `js/db.js` | Parsed faction objects | Bump `DB_VERSION` in `db.js` (drops all stores in `onupgradeneeded`) |
 | `yaab` DB / `gst` | IndexedDB | `js/db.js` | Raw `.gst` + `Library *.cat` XML | Same |
-| `yaab_bsdata_filelist_10e_v1` | sessionStorage | `bsdata.js` | GitHub tree listing | Bump suffix on tree-format changes |
+| `yaab_bsdata_filelist_10e_v2` | sessionStorage | `bsdata.js` | File listing (source: `'mirror'` or `'github'` + array of files) | Bump suffix on cache-shape changes |
 | `yaab_armies` | localStorage | `army.js` | Saved armies (Array of `Army.toJSON()`) | User data — never invalidate silently |
 | `yaab_factions` | localStorage | `storage.js` | Legacy; unused by active path | Kept for back-compat |
 | `yaab_recent_factions` | localStorage | `hero-state.js` | Recently-selected factions chip | User data |

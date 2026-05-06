@@ -1,0 +1,54 @@
+name: Mirror BSData
+
+# Pulls fresh BattleScribe wh40k-10e XML from BSData/wh40k-10e and commits it
+# to data/bsdata/ so users fetch faction data from this site's own origin
+# instead of hammering raw.githubusercontent.com + the GitHub tree API
+# (which has a 60 req/hr unauthenticated cap shared per IP).
+#
+# Runs every 6 hours; manual dispatch is also supported. The script is a
+# no-op when nothing upstream has changed.
+
+on:
+  schedule:
+    # 02:17, 08:17, 14:17, 20:17 UTC. Off-the-hour to dodge GH cron pile-ups.
+    - cron: '17 2,8,14,20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mirror-bsdata
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run mirror script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/mirror-bsdata.mjs
+
+      - name: Commit changes
+        run: |
+          git config user.name  'yaab-bsdata-mirror[bot]'
+          git config user.email 'yaab-bsdata-mirror@users.noreply.github.com'
+          if git diff --quiet -- data/bsdata; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git add data/bsdata
+          # Surface what changed in the commit message for easy auditing.
+          CHANGED=$(git diff --cached --name-status -- data/bsdata | wc -l | tr -d ' ')
+          COMMIT=$(node -e "const i=require('./data/bsdata/index.json');process.stdout.write((i.sourceCommit||'').slice(0,7))")
+          git commit -m "chore(bsdata): mirror BSData/wh40k-10e@${COMMIT:-unknown} (${CHANGED} file(s))"
+          git push

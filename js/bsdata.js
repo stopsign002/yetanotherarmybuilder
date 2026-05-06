@@ -1,10 +1,21 @@
 /**
- * bsdata.js - Fetch Battlescribe data from the BSData/wh40k GitHub repository.
+ * bsdata.js - Fetch Battlescribe data for the app.
  *
- * Files are served as plain XML (.cat) from raw.githubusercontent.com which
- * supports CORS, so no proxy is needed.  The GitHub tree API (60 req/hr
- * unauthenticated) is used only once per session to list available files;
- * the list is cached in sessionStorage to avoid repeat calls.
+ * Two sources, in priority order:
+ *
+ *   1. **Local mirror** (preferred): `data/bsdata/index.json` lists every
+ *      `.cat` / `.gst` we ship, and the XML lives next to it under
+ *      `data/bsdata/files/<path>.xml`. A scheduled GitHub Action
+ *      (`.github/workflows/mirror-bsdata.yml`) keeps the mirror in sync
+ *      with BSData/wh40k-10e every 6h. Same-origin → no DNS/TLS handshake
+ *      per file, no GitHub API rate limit hitting end users.
+ *
+ *   2. **GitHub fallback** (if the mirror is missing/unreachable): the
+ *      original behavior — `raw.githubusercontent.com` for blobs and the
+ *      GitHub tree API for the file list (60 req/hr unauthenticated).
+ *
+ *  Source is decided once at startup by `fetchFileList()` and cached in
+ *  sessionStorage so the rest of the loader doesn't re-probe.
  */
 
 window.BSData = (() => {
@@ -12,22 +23,73 @@ window.BSData = (() => {
   const REPO     = 'BSData/wh40k-10e';
   const API_TREE = `https://api.github.com/repos/${REPO}/git/trees/main?recursive=1`;
   const RAW_BASE = `https://raw.githubusercontent.com/${REPO}/main`;
-  // Include version in cache key so old cached 9th-ed data is ignored
-  const CACHE_KEY = 'yaab_bsdata_filelist_10e_v1';
+  const MIRROR_INDEX_URL = 'data/bsdata/index.json';
+  const MIRROR_FILES_BASE = 'data/bsdata/files';
+  // Bumping the suffix invalidates the cached file list across all tabs —
+  // necessary when the cache shape changes (e.g. adding `source` and `url`).
+  const CACHE_KEY = 'yaab_bsdata_filelist_10e_v2';
+
+  // 'mirror' once we've confirmed data/bsdata/index.json is present;
+  // 'github' if we fell back to the live tree API. Set by fetchFileList.
+  let dataSource = null;
 
   // ── File list ────────────────────────────────────────────────────────────
 
+  async function tryMirrorIndex() {
+    let resp;
+    try {
+      resp = await fetch(MIRROR_INDEX_URL, { cache: 'no-cache' });
+    } catch (_) {
+      return null;
+    }
+    if (!resp.ok) return null;
+    let data;
+    try { data = await resp.json(); } catch (_) { return null; }
+    if (!data || !Array.isArray(data.files) || data.files.length === 0) return null;
+    return data;
+  }
+
   /**
-   * Returns an array of { path, name, type, size } objects for every .cat
-   * and .gst file in the repo, sorted alphabetically by name.
-   * Result is cached in sessionStorage for the lifetime of the tab.
+   * Returns an array of { path, name, type, size, url } objects for every
+   * .cat and .gst file, sorted alphabetically by name. Each entry's `url`
+   * is the absolute URL to fetch its XML — same-origin if served from the
+   * local mirror, raw.githubusercontent.com otherwise.
+   *
+   * Result is cached in sessionStorage for the lifetime of the tab; the
+   * cached blob also encodes which source it came from so a later
+   * fetchFile() call routes correctly.
    */
   async function fetchFileList() {
     const cached = sessionStorage.getItem(CACHE_KEY);
     if (cached) {
-      try { return JSON.parse(cached); } catch (_) {}
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed && Array.isArray(parsed.files) && parsed.source) {
+          dataSource = parsed.source;
+          return parsed.files;
+        }
+      } catch (_) {}
     }
 
+    // ── Try local mirror first ────────────────────────────────────────────
+    const mirror = await tryMirrorIndex();
+    if (mirror) {
+      const files = mirror.files
+        .filter(f => f.path.endsWith('.cat') || f.path.endsWith('.gst'))
+        .map(f => ({
+          path: f.path,
+          name: f.name || f.path.replace(/\.(cat|gst)$/, ''),
+          type: f.type || (f.path.endsWith('.gst') ? 'gamesystem' : 'catalogue'),
+          size: f.size,
+          url: `${MIRROR_FILES_BASE}/${f.path.split('/').map(encodeURIComponent).join('/')}.xml`,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      dataSource = 'mirror';
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify({ source: 'mirror', files }));
+      return files;
+    }
+
+    // ── Fallback: live GitHub tree API ────────────────────────────────────
     const resp = await fetch(API_TREE);
     if (!resp.ok) {
       // Surface rate-limit errors helpfully
@@ -48,10 +110,12 @@ window.BSData = (() => {
         name: item.path.replace(/\.(cat|gst)$/, ''),
         type: item.path.endsWith('.gst') ? 'gamesystem' : 'catalogue',
         size: item.size,
+        url: `${RAW_BASE}/${item.path.split('/').map(encodeURIComponent).join('/')}`,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify(files));
+    dataSource = 'github';
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ source: 'github', files }));
     return files;
   }
 
@@ -66,18 +130,28 @@ window.BSData = (() => {
   // IndexedDB put cap — slow/quota-pressured Safari can hang put forever.
   const DB_PUT_TIMEOUT_MS = 10000;
 
+  function urlForPath(path) {
+    const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+    if (dataSource === 'mirror') return `${MIRROR_FILES_BASE}/${encodedPath}.xml`;
+    return `${RAW_BASE}/${encodedPath}`;
+  }
+
   /**
    * Fetches the raw XML text of a single file by its repo path.
    * Files are plain XML despite the .cat extension.
    *
+   * Routes to the local mirror when active, otherwise raw.githubusercontent.com.
+   *
    * Hardened against silent hangs:
    *  - 30s AbortController timeout per attempt
    *  - 1 retry on network failure (1s delay)
+   *  - one final fall-through to the GitHub raw URL if the mirror 404s
+   *    (handles the brief window where index.json lists a file the cron
+   *    hasn't finished writing).
    */
-  async function fetchFile(path) {
-    // raw.githubusercontent.com doesn't encode spaces the same way
-    const encodedPath = path.split('/').map(encodeURIComponent).join('/');
-    const url = `${RAW_BASE}/${encodedPath}`;
+  async function fetchFile(path, options) {
+    const opts = options || {};
+    const url = opts.url || urlForPath(path);
 
     let lastErr = null;
     for (let attempt = 0; attempt <= FETCH_RETRIES; attempt++) {
@@ -104,6 +178,16 @@ window.BSData = (() => {
         if (attempt < FETCH_RETRIES) {
           await new Promise(r => setTimeout(r, FETCH_RETRY_MS));
           continue;
+        }
+        // Mirror miss → one final attempt against raw.githubusercontent.com.
+        // Catches the small window where the cron has updated index.json
+        // but is still uploading the matching file, or vice-versa.
+        if (dataSource === 'mirror' && !opts._noFallback) {
+          const fallbackUrl = `${RAW_BASE}/${path.split('/').map(encodeURIComponent).join('/')}`;
+          if (fallbackUrl !== url) {
+            console.warn(`[BSData] mirror miss for "${path}" — falling back to GitHub raw`);
+            return fetchFile(path, { url: fallbackUrl, _noFallback: true });
+          }
         }
         throw lastErr;
       }
