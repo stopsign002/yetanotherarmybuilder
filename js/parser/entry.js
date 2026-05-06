@@ -55,7 +55,30 @@
     ];
   }
 
-  function parseEntry(entryEl, entriesById, profilesById, rulesById) {
+  // Some 10e BSData parent files (Imperium - Space Marines.cat being
+  // the canonical case) attach chapter-specific rule infoLinks to
+  // every Astartes unit with no conditional-hide modifier — there are
+  // 110 separate "Templar Vows" infoLinks in the parent file, none of
+  // them gated. As a result every chapter's Land Raider / Predator /
+  // Intercessor Squad inherits Templar Vows as if it were a generic
+  // rule. The data IS correct in the chapter-specific catalogue
+  // (Imperium - Black Templars.cat re-references Templar Vows on its
+  // own units), but the parent's stray references leak out.
+  //
+  // We can't fix BSData's data, so we filter at parse time: when the
+  // ability name matches a known chapter-locked rule and the current
+  // faction name doesn't match that chapter's regex, drop it.
+  // Add new entries as they're spotted.
+  const CHAPTER_LOCKED_RULES = {
+    'templar vows': /\bblack\s+templars\b/i,
+  };
+  function isChapterLockedRuleApplicable(abilityName, factionName) {
+    const re = CHAPTER_LOCKED_RULES[String(abilityName || '').toLowerCase()];
+    if (!re) return true;                   // not a chapter-locked rule
+    return re.test(String(factionName || ''));
+  }
+
+  function parseEntry(entryEl, entriesById, profilesById, rulesById, factionName) {
     if (I.getAttr(entryEl, 'hidden', 'false') === 'true') return null;
 
     const name = I.getAttr(entryEl, 'name', 'Unknown Unit');
@@ -67,7 +90,29 @@
     const id   = I.getAttr(entryEl, 'id') || Math.random().toString(36).slice(2, 9);
     const type = I.getAttr(entryEl, 'type', '');
 
-    const stats        = I.findStats(entryEl, entriesById, profilesById);
+    // Collect every stats profile attached to the unit (multi-statline
+    // units like Marneus Calgar + Victrix Honour Guard, Wardens of
+    // Ultramar Sergeant vs body, Terminator Assault Squad TH/SS vs LC
+    // each carry two distinct profiles). De-dupe by characteristic
+    // signature so squads whose 3-6 model profiles all share the same
+    // statline collapse to one row.
+    const statProfiles = I.findStatProfiles(entryEl, entriesById, profilesById);
+    const modelStats = [];
+    {
+      const seenSigs = new Set();
+      for (const p of statProfiles) {
+        const { name: _n, ...rest } = p;
+        const sig = JSON.stringify(rest);
+        if (seenSigs.has(sig)) continue;
+        seenSigs.add(sig);
+        modelStats.push(p);
+      }
+    }
+    const stats = (() => {
+      if (modelStats.length === 0) return {};
+      const { name: _n, ...rest } = modelStats[0];
+      return rest;
+    })();
     // Weapons dedup keys on name + classification (typeName) so a unit
     // with both a ranged and a melee weapon of the same name keeps both
     // profiles. Plasmancer / Technomancer (Necron) each carry a ranged
@@ -125,9 +170,45 @@
       }
     }
 
+    // Pull transport capacity out of the abilities list so the renderer
+    // can show it in its own dedicated "Transport" section instead of
+    // mixing it with regular unit abilities.
+    //
+    // Two encoding shapes appear in BSData:
+    //   (a) Orks vehicles use <profile typeName="Transport"> with a
+    //       single <characteristic name="Capacity">; the parser tags
+    //       these abilities with _typeName="Transport".
+    //   (b) Adeptus Astartes vehicles (Land Raider, Repulsor, …) ship
+    //       a regular <profile typeName="Abilities" name="Transport">
+    //       whose Description characteristic carries the capacity
+    //       prose; the parser tags those abilities with
+    //       _typeName="Abilities" and name="Transport".
+    // Either shape collapses into a single transportCapacity string.
+    const transportEntries = allAbilities.filter(a => {
+      const tn = String(a._typeName || '').toLowerCase();
+      if (tn === 'transport') return true;
+      if (a.name && a.name.trim().toLowerCase() === 'transport') return true;
+      return false;
+    });
+    const transportCapacity = transportEntries.length > 0
+      ? transportEntries.map(a => (a.description || '').trim()).filter(Boolean).join('\n\n')
+      : null;
+
+    // Drop wound-band internal profiles ("Damaged: 1-4 Wounds Remaining"
+    // etc.) from the abilities list. 10e BSData vehicles don't actually
+    // run degrading statlines, so these surface as orphan ability prose
+    // that clutters the unit card without adding usable info.
+    const DAMAGED_RE = /^damaged:\s*\d+\s*-\s*\d+\s*wounds?\s+remaining$/i;
+
     const abilities = allAbilities
       .filter(a => !/invulnerable\s+save/i.test(a.name))
+      .filter(a => !DAMAGED_RE.test(a.name || ''))
+      // Transport content is moved to unit.transportCapacity above.
+      .filter(a => !transportEntries.includes(a))
       .filter(a => !a.isCore || !weaponKeywordNames.has(a.name.toLowerCase()))
+      // Drop chapter-locked rules (Templar Vows etc.) when the current
+      // faction isn't the matching chapter. See CHAPTER_LOCKED_RULES.
+      .filter(a => isChapterLockedRuleApplicable(a.name, factionName))
       // Some heroes (Roboute Guilliman is the canonical case) ship their
       // choose-from-N toggles as ONE ability profile whose description
       // is a multi-paragraph string — parent paragraph + N "Heading:
@@ -142,7 +223,9 @@
     return {
       id, name, type,
       stats,
+      modelStats,
       invulnSave,
+      transportCapacity,
       weapons,
       abilities,
       keywords,

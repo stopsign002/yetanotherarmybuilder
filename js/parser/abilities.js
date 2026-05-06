@@ -32,9 +32,11 @@
         if (!name || /^new\s/i.test(name)) return;
         if (I.isCrusadeSection(name)) return;
         // Match the parseDirectProfiles fallback: prefer Description,
-        // fall back to Effect for primarch / warlord-trait shapes.
+        // fall back to Effect for primarch / warlord-trait shapes, and
+        // Capacity for Ork transport profiles.
         const descEl = profile.querySelector('characteristic[name="Description"]')
-                    || profile.querySelector('characteristic[name="Effect"]');
+                    || profile.querySelector('characteristic[name="Effect"]')
+                    || profile.querySelector('characteristic[name="Capacity"]');
         const tn = I.getAttr(profile, 'typeName', '');
         abilities.push({
           name,
@@ -70,6 +72,19 @@
     entryEl.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
       if (I.isCrusadeSection(I.getAttr(child, 'name', ''))) return;
       collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
+        .forEach(a => abilities.push(a));
+    });
+
+    // <infoGroups>/<infoGroup> wraps a named bundle of <profiles>
+    // and <infoLinks> (Orks: Ghazghkull, Warboss-class characters'
+    // "Leader" block; Tau: bounty-hunting / pilot blocks). The
+    // recursive call resolves the inner profiles+infoLinks via the
+    // same :scope queries used at the entry level. Without this,
+    // Ghazghkull Thraka was missing his entire Leader block (the
+    // list of units he can be attached to).
+    entryEl.querySelectorAll(':scope > infoGroups > infoGroup').forEach(ig => {
+      if (I.isCrusadeSection(I.getAttr(ig, 'name', ''))) return;
+      collectAbilities(ig, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
         .forEach(a => abilities.push(a));
     });
 

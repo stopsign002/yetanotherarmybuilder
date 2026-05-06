@@ -41,6 +41,16 @@
 
   // Icons that live inline in the bottom toolbar (undo/redo only).
   const BOTTOM_INLINE_ICON_IDS = new Set(['yaab-btn-undo', 'yaab-btn-redo']);
+  // IDs that are allowed to render in the top-bar icon shelf next to the
+  // mode tabs. Everything else with region:'icon' is dropped from the
+  // shelf to keep it uncluttered (those features are still reachable via
+  // the Settings drawer / Action Center). Add to this set when a feature
+  // genuinely belongs in the persistent top-bar shelf.
+  const TOPBAR_SHELF_IDS = new Set([
+    'yaab-btn-auth',
+    'yaab-btn-bug-report',
+    'yaab-btn-changelog',
+  ]);
 
   // Map known toolbar action IDs to Action Center sections.
   // Sections: 'game-day' | 'analyze' | 'export' | 'browse' | 'collection' | 'settings'
@@ -152,6 +162,35 @@
     return btn;
   }
 
+  // Top-bar shelf buttons sit next to Settings / Help / Account in the
+  // topbar — they need the standard `.topbar-action-btn` chrome (border,
+  // hover state, glyph + uppercase label spans) defined in css/topbar.css.
+  // Action shape adds an optional `glyph` (icon character / HTML entity)
+  // alongside the existing `label` (the uppercase text shown beside it).
+  function buildTopbarShelfButton(a) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'topbar-action-btn';
+    if (a.id)        btn.id = a.id;
+    if (a.title)     btn.title = a.title;
+    if (a.ariaLabel) btn.setAttribute('aria-label', a.ariaLabel);
+    if (a.glyph) {
+      const g = document.createElement('span');
+      g.className = 'topbar-action-glyph';
+      g.setAttribute('aria-hidden', 'true');
+      g.textContent = a.glyph;
+      btn.appendChild(g);
+    }
+    if (a.label) {
+      const l = document.createElement('span');
+      l.className = 'topbar-action-label';
+      l.textContent = a.label;
+      btn.appendChild(l);
+    }
+    if (typeof a.onClick === 'function') btn.addEventListener('click', a.onClick);
+    return btn;
+  }
+
   function buildExportMenuButton(a) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -203,16 +242,17 @@
         return;
       }
 
-      // Icons: undo/redo dock in the bottom toolbar; the auth button keeps
-      // its slot in the top-bar shelf; everything else (legends, install,
-      // teef, sound, voice, …) is reachable from the Settings drawer instead
-      // of cluttering the top bar. The hook onClicks are still invoked
-      // directly via clickToolbarBtn's fallback in settings-drawer.js.
+      // Icons: undo/redo dock in the bottom toolbar; the auth, bug-report,
+      // and changelog buttons keep their slot in the top-bar shelf;
+      // everything else (legends, install, teef, sound, voice, …) is
+      // reachable from the Settings drawer instead of cluttering the top
+      // bar. The hook onClicks are still invoked directly via
+      // clickToolbarBtn's fallback in settings-drawer.js.
       if (region === 'icon') {
         if (BOTTOM_INLINE_ICON_IDS.has(a.id) && undoRedo) {
           undoRedo.appendChild(buildIconButton({ ...a, className: 'btn btn-sm btn-outline btn-icon' }));
-        } else if (a.id === 'yaab-btn-auth' && topIcons) {
-          topIcons.appendChild(buildIconButton(a));
+        } else if (TOPBAR_SHELF_IDS.has(a.id) && topIcons) {
+          topIcons.appendChild(buildTopbarShelfButton(a));
         }
         return;
       }

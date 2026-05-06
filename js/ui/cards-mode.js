@@ -828,6 +828,21 @@
     return html;
   }
 
+  // Dedicated TRANSPORT section: surfaces unit.transportCapacity in its
+  // own card block instead of letting the prose mix with regular
+  // abilities or — worse — fall through subAbilitySectionKey() into a
+  // PRIMARCH-styled box (older Ork Trukk regression).
+  function renderTransportBlock(unit) {
+    if (!unit || !unit.transportCapacity) return '';
+    if (display.abilities === false) return '';
+    return `<div class="dcc-section dcc-abilities dcc-abilities-transport">
+      <div class="dcc-section-head"><span class="dcc-section-label">TRANSPORT</span></div>
+      <div class="dcc-abilities-body">
+        <div class="dcc-ability-row">${esc(formatStructuredText(unit.transportCapacity))}</div>
+      </div>
+    </div>`;
+  }
+
   function renderUnitCard(entry) {
     const unit = entry.unitData || {};
     const stats = unit.stats || {};
@@ -895,6 +910,7 @@
       ${display.ranged ? renderWeaponsBlock(ranged, 'ranged') : ''}
       ${display.melee  ? renderWeaponsBlock(melee, 'melee')   : ''}
       ${renderAbilitiesBlock(unit)}
+      ${renderTransportBlock(unit)}
       ${renderWargearBlock(unit)}
       ${enhancementHtml}
       ${footerHtml}`;

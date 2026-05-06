@@ -286,7 +286,10 @@
 
   // ----- hook registration -------------------------------------------------
 
-  App.hooks.detailActions.push(starAction);
+  // Star button removed from the unit-detail header. Favorites remain
+  // toggleable from the faction-row star (see roster.js) and drive the
+  // Favorites / Recents chip filters; only the in-detail action is gone.
+  // App.hooks.detailActions.push(starAction);
 
   App.hooks.bootstrap.push(function (state) {
     loadPersisted();

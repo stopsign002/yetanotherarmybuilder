@@ -185,7 +185,134 @@ Delete any user's image (moderation override).
 - **Response 200** or 204 on success.
 - **Response 404** if the id doesn't exist.
 
-## 5. Bootstrap checklist
+### `GET /api/admin/users/pending-count`
+
+Lightweight summary used by the admin-only "pending approvals" banner
+in [js/app/pending-approval-banner.js](../js/app/pending-approval-banner.js).
+Polled every 60 s while an admin is signed in.
+
+- **Response 200**:
+  ```json
+  { "count": 3 }
+  ```
+  Just the integer count of users with `approved = FALSE AND revoked = FALSE`.
+  The client falls back to fetching `/api/admin/users` and counting
+  pending rows itself if this endpoint is missing — implementing it is
+  recommended (the fallback is a heavier request) but optional.
+
+## 5. Bug reports
+
+User-submitted reports collected via the topbar bug-report icon
+([js/app/bug-report.js](../js/app/bug-report.js)) and reviewed in the
+admin panel's Reports tab ([js/app/admin.js](../js/app/admin.js)).
+
+### Schema
+
+```sql
+CREATE TABLE bug_reports (
+  id           BIGSERIAL PRIMARY KEY,
+  username     TEXT        NOT NULL,
+  title        TEXT        NOT NULL,
+  description  TEXT        NOT NULL,
+  diagnostics  TEXT        NULL,
+  fixed        BOOLEAN     NOT NULL DEFAULT FALSE,
+  fixed_at     TIMESTAMPTZ NULL,
+  fixed_by     TEXT        NULL,
+  fixed_note   TEXT        NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX bug_reports_created_at_desc ON bug_reports (created_at DESC);
+CREATE INDEX bug_reports_open            ON bug_reports (fixed) WHERE fixed = FALSE;
+```
+
+`username` is the submitter at the time of the report — store it
+literally (don't FK to `users.username`) so the row survives revoke /
+deletion of the original user.
+
+### `POST /api/bugs` (auth required, NOT admin-only)
+
+Submit a bug report. Sender must be signed in (`approved = TRUE`,
+`revoked = FALSE`).
+
+- **Body**:
+  ```json
+  {
+    "title":       "Wardens of Ultramar shows wrong stats",
+    "description": "Multi-stage repro …",
+    "diagnostics": "App version: …\nDate/time: …\n…"
+  }
+  ```
+  - Server should cap each string (`title` 200 chars, `description`
+    4000, `diagnostics` 16000) and reject empty `title` / `description`
+    with 400.
+- **Response 200**:
+  ```json
+  { "id": 42 }
+  ```
+- **Response 401** if not signed in (the client clears the session and
+  prompts re-login; see `App.Auth.handleSessionExpired`).
+
+### `GET /api/admin/bugs`
+
+List every report, newest first. Admin only.
+
+- **Response 200**: array of records:
+  ```json
+  [
+    {
+      "id": 42,
+      "username": "alice",
+      "title": "Wardens of Ultramar shows wrong stats",
+      "description": "…",
+      "diagnostics": "…",
+      "fixed": false,
+      "fixed_at": null,
+      "fixed_by": null,
+      "fixed_note": null,
+      "created_at": 1730937600000
+    },
+    ...
+  ]
+  ```
+  - Timestamps are millisecond epoch (the client uses
+    `new Date(ms).toLocaleString()`).
+  - Server-side sort by `created_at DESC` is preferred; the client
+    sorts defensively as well.
+- Filter shape (`?status=open|fixed|all`) is **not** required —
+  the client filters in-memory between the three Open / Fixed / All
+  tabs. Adding a server-side filter is fine if the table grows large.
+
+### `POST /api/admin/bugs/:id/fix`
+
+Mark a report fixed. Admin only.
+
+- **Body** (optional):
+  ```json
+  { "note": "fixed in commit 4939e8e" }
+  ```
+- Sets `fixed = TRUE`, `fixed_at = now()`, `fixed_by = <admin-username>`,
+  `fixed_note = body.note ?? NULL`.
+- **Response 200**: either `{ "ok": true }` or the updated record (the
+  client merges in whatever it receives, falling back to a local patch
+  if the response is just `{ ok: true }`).
+- **Response 404** if the id doesn't exist.
+
+### `POST /api/admin/bugs/:id/unfix`
+
+Reopen a previously-fixed report.
+
+- Sets `fixed = FALSE`, `fixed_at = NULL`, `fixed_by = NULL`,
+  `fixed_note = NULL`.
+- **Response 200**: same shape as `/fix`.
+
+### `DELETE /api/admin/bugs/:id`
+
+Permanently delete a report (used to purge spam / duplicates).
+
+- **Response 200** or 204.
+- **Response 404** if the id doesn't exist.
+
+## 6. Bootstrap checklist
 
 1. Run the schema migration in §1.
 2. Manually `UPDATE users SET is_admin=TRUE, approved=TRUE WHERE
@@ -197,7 +324,7 @@ Delete any user's image (moderation override).
 6. Test the 403 paths for `pending_approval` and `revoked` with
    curl.
 
-## 6. Curl examples
+## 7. Curl examples
 
 ```sh
 # As stopsign002 (after signing in via the normal /login flow):
@@ -219,9 +346,29 @@ curl -b cookies.txt https://yaab.example/api/admin/images
 # Delete an image (any owner)
 curl -b cookies.txt -X DELETE \
   https://yaab.example/api/admin/images/17
+
+# Pending-approval count (banner uses this)
+curl -b cookies.txt https://yaab.example/api/admin/users/pending-count
+
+# List bug reports
+curl -b cookies.txt https://yaab.example/api/admin/bugs
+
+# Mark report 42 fixed with a note
+curl -b cookies.txt -X POST -H 'Content-Type: application/json' \
+  -d '{"note":"fixed in commit 4939e8e"}' \
+  https://yaab.example/api/admin/bugs/42/fix
+
+# Reopen report 42
+curl -b cookies.txt -X POST \
+  https://yaab.example/api/admin/bugs/42/unfix
+
+# Submit a bug report (any signed-in user)
+curl -b cookies.txt -X POST -H 'Content-Type: application/json' \
+  -d '{"title":"…","description":"…","diagnostics":"…"}' \
+  https://yaab.example/api/bugs
 ```
 
-## 7. Things explicitly NOT in scope
+## 8. Things explicitly NOT in scope
 
 - **Email notifications** when someone registers (no email infra).
   Site admins notice via the admin panel's "Pending" tab. Could be

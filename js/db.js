@@ -99,7 +99,51 @@ window.YaabDB = (() => {
   // and the group's <selectionEntries> children, so Victrix surfaced
   // with empty stats. Stale v21 cache still has the empty stats; drop
   // on upgrade.
-  const DB_VERSION = 22;
+  // v23: parser now emits unit.modelStats — array of distinct statlines
+  // per unit. Multi-profile units (Marneus Calgar + Victrix Honour
+  // Guard, Wardens of Ultramar Sergeant vs body, Terminator Assault
+  // Squad TH/SS vs LC) lost their second profile to Object.assign
+  // overwrite; v22 caches were wrong (Calgar surfaced with Victrix's
+  // T=4 W=3 instead of his own T=6 W=6). Drop the cache.
+  // v24: bsdata.js Phase 1.5 now preloads EVERY catalogue's shared
+  // content into the parser index, not just files matching
+  // /\blibrary\b/i. Cross-catalogue sharedProfile references — e.g.
+  // Wolf Priest's "Litany of Hate" infoLink targeting a profile that
+  // lives in `Imperium - Space Marines.cat` — used to fail to resolve
+  // during parallel Phase 2 parsing, silently dropping the ability.
+  // v23 caches are missing those abilities; drop on upgrade so the
+  // next session reparses with the fully-populated shared index.
+  // v25: parser now surfaces Ork transport profiles (typeName="Transport"
+  // with a single <characteristic name="Capacity">, which had no
+  // matching path through classifyProfile / parseDirectProfiles) and
+  // the detachment-level roll tables some factions encode as <profile>
+  // siblings of the detachment <rule> (Dread Mob's "Try Dat Button!"
+  // D6 table). Drop the cache so the new fields surface.
+  // v26: parser now extracts transport capacity into a dedicated
+  // unit.transportCapacity field (renderer puts it in its own
+  // "Transport" section) and drops the orphan "Damaged: X Wounds
+  // Remaining" wound-band profiles from the abilities list — 10e
+  // BSData vehicles don't actually use degrading statlines, so those
+  // were just clutter on Land Raider, Repulsor, etc.
+  // v27: parser now blocks the abilities walker from descending into
+  // Crusade-only "Weapon Modifications" hooks and per-detachment
+  // "X Enhancements" sibling groups. Every Land Raider / Predator /
+  // Repulsor in v26 caches was accidentally inheriting Precise /
+  // Precision / Lethal Hits as core abilities (and the Headhunter
+  // Task Force's four enhancements) because the walker followed those
+  // entryLinks. catalogue.js gains a Pattern C that re-extracts
+  // detachment enhancements from the standalone sibling groups so
+  // detachments like Headhunter Task Force still surface their list.
+  // v28: parser walks <infoGroup> elements (Orks: Ghazghkull / Warboss
+  // "Leader" block, Tau bounty/pilot blocks) so the inner profile +
+  // rule infoLinks reach the unit. Ghazghkull Thraka was missing his
+  // entire Leader → "attached to Boyz / Meganobz / Nobz" entry.
+  // Also drops chapter-locked army rules (Templar Vows) when the
+  // current faction isn't the matching chapter — every non-Templar
+  // chapter's Land Raider / Predator / Intercessor was inheriting
+  // Templar Vows because the parent SM file hardcodes the infoLink
+  // on every unit with no conditional hide modifier.
+  const DB_VERSION = 28;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

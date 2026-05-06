@@ -143,28 +143,44 @@ window.BSData = (() => {
     const total = catFiles.length;
     let done = 0;
 
-    // ── Phase 1.5: load library catalogues into shared index ─────────────────
-    // Library catalogues (e.g. "Library - Tyranids.cat",
-    // "Imperium - Imperial Knights - Library.cat") contain shared unit
-    // definitions referenced by entryLink or importRootEntries catalogueLinks.
-    // Loading them into the shared index before Phase 2 ensures their entries
-    // and root entryLinks are resolvable during parallel catalogue parsing.
-    // Match any name containing the word "library" (case-insensitive) to catch
-    // both "Library - X" and "X - Library" naming conventions.
-    const libFiles = catFiles.filter(f => /\blibrary\b/i.test(f.name));
-    for (const lib of libFiles) {
-      try {
-        let xml = null;
-        try { xml = await YaabDB.getGst(lib.name); } catch (_) {}
-        if (!xml) {
-          xml = await fetchFile(lib.path);
-          try { await YaabDB.putGst(lib.name, xml); } catch (_) {}
+    // ── Phase 1.5: preload every catalogue's shared content into the index ──
+    // Originally this loop filtered for filenames matching /\blibrary\b/i,
+    // but BSData also stores cross-catalogue shared profiles/rules in
+    // regular parent catalogues — e.g. "Litany of Hate" lives in
+    // `Imperium - Space Marines.cat` (library="false") as a
+    // <sharedProfiles>/<profile>, referenced by every chapter catalogue
+    // (Space Wolves' Wolf Priest, Blood Angels' chaplains, etc.) via
+    // <infoLink type="profile">. Without preloading those parent
+    // catalogues, the infoLinks fail to resolve during the parallel
+    // Phase 2 parses and abilities silently drop.
+    //
+    // We now seed the shared index from EVERY catalogue. addToSharedIndex
+    // is a passive scan (it pulls sharedProfiles / sharedRules /
+    // sharedSelectionEntries / sharedSelectionEntryGroups / root
+    // entryLinks) and is idempotent, so feeding it library-named files
+    // again is harmless. Phase 2 still parses each catalogue normally;
+    // its own `buildIndexes` overlays catalogue-local shared entries on
+    // top of this preloaded index, so per-catalogue resolution still
+    // wins where it should.
+    const sharedCursor = { i: 0 };
+    async function sharedIndexLoader() {
+      while (sharedCursor.i < catFiles.length) {
+        if (signal && signal.aborted) return;
+        const file = catFiles[sharedCursor.i++];
+        try {
+          let xml = null;
+          try { xml = await YaabDB.getGst(file.name); } catch (_) {}
+          if (!xml) {
+            xml = await fetchFile(file.path);
+            try { await YaabDB.putGst(file.name, xml); } catch (_) {}
+          }
+          WahapediaParser.addToSharedIndex(xml);
+        } catch (e) {
+          console.warn('[BSData] Shared-index preload failed for "' + file.name + '":', e.message);
         }
-        WahapediaParser.addToSharedIndex(xml);
-      } catch (e) {
-        console.warn('[BSData] Failed to load library "' + lib.name + '":', e.message);
       }
     }
+    await Promise.all(Array.from({ length: 6 }, sharedIndexLoader));
 
     let cursor = 0;
 

@@ -172,3 +172,130 @@ body.admin-modal-open { overflow: hidden; }
   color: #8c92a0;
 }
 .admin-img .admin-btn { margin-top: 4px; }
+
+/* ── Reports tab ─────────────────────────────────────────────────────── */
+.admin-bug-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.admin-filter {
+  background: transparent;
+  color: #c8ccd6;
+  border: 1px solid #2a2f38;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.admin-filter:hover { border-color: #4b566c; }
+.admin-filter.is-active {
+  background: #2a3142;
+  border-color: #5b6580;
+  color: #fff;
+}
+.admin-bug-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.admin-bug-card {
+  background: #1a1d24;
+  border: 1px solid #2a2f38;
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+.admin-bug-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.admin-bug-title {
+  font-weight: 600;
+  font-size: 15px;
+  flex: 1;
+  min-width: 0;
+}
+.admin-bug-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #8c92a0;
+  margin-bottom: 8px;
+}
+.admin-bug-desc {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: #cbd0db;
+}
+.admin-bug-diag-wrap {
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #8c92a0;
+}
+.admin-bug-diag-wrap > summary {
+  cursor: pointer;
+  user-select: none;
+}
+.admin-bug-diag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  background: #0f1217;
+  border: 1px solid #2a2f38;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre;
+}
+.admin-bug-fixed-meta {
+  font-size: 12px;
+  color: #7fb88a;
+  margin-bottom: 8px;
+}
+.admin-btn-outline {
+  background: transparent;
+  color: #cbd0db;
+  border: 1px solid #4b566c;
+}
+.admin-btn-outline:hover { background: #2a3142; }
+
+/* ── Admin-only "pending approvals" banner ───────────────────────────── */
+.admin-pending-banner {
+  background: linear-gradient(90deg, #5a3f1a, #6b4a1f);
+  color: #f7e8c2;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+}
+.admin-pending-banner-text { flex: 1; }
+.admin-pending-banner-btn {
+  background: #f0d39c;
+  color: #2a1a05;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-pending-banner-btn:hover { background: #fce5b8; }
+.admin-pending-banner-close {
+  background: transparent;
+  color: inherit;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.75;
+}
+.admin-pending-banner-close:hover { opacity: 1; }

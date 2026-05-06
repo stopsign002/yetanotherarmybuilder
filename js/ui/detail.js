@@ -255,11 +255,28 @@
     `;
 
     const STAT_ORDER = ['M', 'T', 'SV', 'W', 'LD', 'OC'];
-    const presentStats = STAT_ORDER.filter(k => getStatVal(k) !== '—');
+
+    // Multi-statline units (Marneus Calgar + Victrix Honour Guard,
+    // Wardens of Ultramar, Terminator Assault Squad TH/SS vs LC) carry
+    // an array of distinct stat profiles. Render one row per profile;
+    // fall back to the legacy single `stats` dict when modelStats is
+    // absent (older cached factions, units that genuinely have one
+    // statline).
+    const profilesToRender = (Array.isArray(unit.modelStats) && unit.modelStats.length > 0)
+      ? unit.modelStats
+      : [{ name: '', ...stats }];
+
+    const presentStats = STAT_ORDER.filter(k =>
+      profilesToRender.some(p => {
+        const aliases = UI._STAT_ALIASES[k] || [k];
+        return aliases.some(a => p[a]);
+      })
+    );
 
     if (presentStats.length > 0) {
-      const renderPillar = k => {
-        const v = getStatVal(k);
+      const renderPillar = (k, prof) => {
+        const aliases = UI._STAT_ALIASES[k] || [k];
+        const v = aliases.map(a => prof[a]).find(x => x) || '—';
         if (k === 'SV' && unit.invulnSave && v !== '—') {
           return `<div class="detail-stat-cell detail-stat-pillar detail-stat-pillar-sv">
             <span class="stat-name detail-stat-pillar-label">SV</span>
@@ -273,11 +290,17 @@
         </div>`;
       };
 
-      html += `<div class="detail-section detail-stats-section">
-        <div class="detail-stats-row detail-stat-strip" style="grid-template-columns:repeat(${presentStats.length},1fr)">
-          ${presentStats.map(renderPillar).join('')}
-        </div>
-      </div>`;
+      html += `<div class="detail-section detail-stats-section">`;
+      profilesToRender.forEach(prof => {
+        const label = profilesToRender.length > 1 && prof.name
+          ? `<div class="detail-stat-rowlabel" style="font-size:11px;color:var(--text-muted);margin:4px 0 2px">${esc(prof.name)}</div>`
+          : '';
+        html += label;
+        html += `<div class="detail-stats-row detail-stat-strip" style="grid-template-columns:repeat(${presentStats.length},1fr)">
+            ${presentStats.map(k => renderPillar(k, prof)).join('')}
+          </div>`;
+      });
+      html += `</div>`;
     }
 
     // Prefer GDC weapons when available — they're pre-bucketed into ranged
@@ -394,6 +417,13 @@
         <div class="core-abilities-list">
           ${coreAbilities.map(a => `<span class="core-ability-tag"${a.description ? ` data-tooltip="${esc(a.description)}"` : ''}>${esc(a.name)}</span>`).join('')}
         </div>
+      </div>`;
+    }
+
+    if (unit.transportCapacity) {
+      html += `<div class="detail-section detail-transport-section">
+        <div class="detail-section-title">Transport</div>
+        <div class="detail-ability-desc">${esc(unit.transportCapacity)}</div>
       </div>`;
     }
 

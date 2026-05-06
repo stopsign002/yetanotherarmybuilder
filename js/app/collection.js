@@ -190,33 +190,16 @@
   }
 
   // Inject (or update) the widget inside #unit-detail-panel. Idempotent.
+  // The collection-status widget has been removed from the unit-detail
+  // panel by request — collection status is set per-unit from the
+  // Collect mode page instead. Keep this function as a no-op (and
+  // strip any stale widget from older renders) so the existing
+  // observer/selectionChange wiring stays valid without a rewrite.
   function injectDetailWidget() {
     const panel = document.getElementById('unit-detail-panel');
     if (!panel) return;
-    const content = panel.querySelector('.unit-detail-content');
-    const unit = getSelectedUnit();
     const existing = panel.querySelector('.collection-detail-widget');
-    if (!content || !unit || !unit.id) {
-      if (existing) existing.remove();
-      return;
-    }
-    // If the widget exists and is for the same unit, just sync the active state.
-    if (existing && existing.dataset.unitId === unit.id) {
-      const status = getStatus(unit.id);
-      existing.querySelectorAll('.collection-status-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.status === status);
-      });
-      return;
-    }
     if (existing) existing.remove();
-    const widget = buildDetailWidget(unit);
-    // Try to place just after the "Add to Army" section; fall back to top.
-    const addSection = content.querySelector('.detail-add-section');
-    if (addSection && addSection.parentNode === content) {
-      addSection.insertAdjacentElement('afterend', widget);
-    } else {
-      content.insertBefore(widget, content.firstChild);
-    }
   }
 
   // Public-ish hook for the single-source-of-truth setStatus path.

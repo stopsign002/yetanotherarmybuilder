@@ -114,7 +114,7 @@
         const t = I.getAttr(entry, 'type', '');
         if (t !== 'unit' && t !== 'model') return;
         if (I.isCrusadeSection(I.getAttr(entry, 'name', ''))) return;
-        const unit = I.parseEntry(entry, entriesById, profilesById, rulesById);
+        const unit = I.parseEntry(entry, entriesById, profilesById, rulesById, factionName);
         if (unit && !seenIds.has(unit.id)) {
           seenIds.add(unit.id);
           units.push(unit);
@@ -137,7 +137,7 @@
         // Previously filtered out entirely; now let the flag flow through so the Legends toggle works.
         // if (linkName.includes('[Legends]') || targetName.includes('[Legends]')) return;
         const linkIsLegends = linkName.includes('[Legends]') || targetName.includes('[Legends]');
-        const unit = I.parseEntry(target, entriesById, profilesById, rulesById);
+        const unit = I.parseEntry(target, entriesById, profilesById, rulesById, factionName);
         if (unit && !seenIds.has(unit.id)) {
           if (linkIsLegends) unit.isLegends = true;
           seenIds.add(unit.id);
@@ -164,7 +164,7 @@
           const targetName = I.getAttr(target, 'name', '');
           if (I.isCrusadeSection(targetName) || I.isCrusadeSection(linkName)) return;
           const linkIsLegends = linkName.includes('[Legends]') || targetName.includes('[Legends]');
-          const unit = I.parseEntry(target, entriesById, profilesById, rulesById);
+          const unit = I.parseEntry(target, entriesById, profilesById, rulesById, factionName);
           if (unit && !seenIds.has(unit.id)) {
             if (linkIsLegends) unit.isLegends = true;
             seenIds.add(unit.id);
@@ -294,6 +294,55 @@
             detachmentRuleNames.add(rName.toLowerCase());
           });
 
+          // Roll-table / sub-profile children of the detachment entry.
+          // Some detachments (Dread Mob's "Try Dat Button!") encode a
+          // D6 table as siblings of <rules>/<rule>: a group of
+          // <profile> elements whose typeName matches a profileType
+          // declared at the catalogue level (e.g. "Try Dat Button! - D6")
+          // and whose name is the roll range ("1-2", "3-4", "5-6"). The
+          // payload sits in a single non-Description characteristic
+          // (e.g. "Button Effect"). Without scooping these in here the
+          // rule prose surfaces but the table is silently dropped.
+          // Group profiles by typeName and append them to the rule whose
+          // name the typeName starts with; fall back to appending to the
+          // last-pushed rule when no name match exists.
+          const profsByType = new Map();
+          entry.querySelectorAll(':scope > profiles > profile').forEach(p => {
+            if (I.getAttr(p, 'hidden', 'false') === 'true') return;
+            const tn = I.getAttr(p, 'typeName', '').trim();
+            if (!tn) return;
+            if (!profsByType.has(tn)) profsByType.set(tn, []);
+            profsByType.get(tn).push(p);
+          });
+          if (profsByType.size > 0) {
+            profsByType.forEach((profs, tn) => {
+              const rows = profs.map(p => {
+                const rowName = I.getAttr(p, 'name', '').trim();
+                const valEls = p.querySelectorAll(':scope > characteristics > characteristic');
+                const val = Array.from(valEls)
+                  .map(c => I.cleanText(c.textContent || ''))
+                  .filter(Boolean)
+                  .join(' / ');
+                return rowName && val ? rowName + ': ' + val : '';
+              }).filter(Boolean);
+              if (rows.length === 0) return;
+              const tableText = rows.join('\n');
+              // Pick the rule this table belongs to: typeName usually
+              // starts with the rule name (e.g. typeName "Try Dat
+              // Button! - D6" → rule "Try Dat Button!"). Fallback to
+              // the last rule pushed.
+              const lcTn = tn.toLowerCase();
+              let target = rules.find(r => lcTn.startsWith(r.name.toLowerCase()));
+              if (!target) target = rules[rules.length - 1];
+              if (target) {
+                target.description = (target.description ? target.description + '\n\n' : '')
+                  + tableText;
+              } else {
+                rules.push({ name: tn, description: tableText });
+              }
+            });
+          }
+
           // Stratagems (best-effort): scan inline <rules>/<rule> children of
           // the detachment selectionEntry that we did NOT count as the
           // detachment's main rule. BSData usually omits stratagems entirely
@@ -395,6 +444,36 @@
           pushEnhancement(detName, enh);
         });
       });
+
+      // Pattern C: standalone shared selectionEntryGroups whose name ends
+      // with " Enhancements" (e.g. "Headhunter Task Force Enhancements"
+      // sits at the catalogue root, NOT inside the main "Enhancements"
+      // group). Without this fallback those detachments lose every
+      // enhancement, because the loop above only walks subgroups of
+      // groups exactly named "Enhancements". Both shared (root-level)
+      // and inline (catalogue-level) shared groups are scanned.
+      const seenStandaloneGroups = new Set();
+      const standaloneSelectors = [
+        ':scope > sharedSelectionEntryGroups > selectionEntryGroup',
+        ':scope > selectionEntryGroups > selectionEntryGroup',
+      ];
+      standaloneSelectors.forEach(sel => {
+        root.querySelectorAll(sel).forEach(group => {
+          if (seenEnhGroups.has(group.getAttribute('id'))) return;
+          if (seenStandaloneGroups.has(group.getAttribute('id'))) return;
+          const groupName = I.getAttr(group, 'name', '').trim();
+          if (!/\s+Enhancements$/i.test(groupName)) return;
+          // Skip the canonical "Enhancements" group itself (already handled).
+          if (/^Enhancements$/i.test(groupName)) return;
+          seenStandaloneGroups.add(group.getAttribute('id'));
+          const detName = groupName.replace(/\s+Enhancements$/i, '').trim();
+          group.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
+            const enh = extractEnhancementEntry(entry);
+            if (enh) pushEnhancement(detName, enh);
+          });
+        });
+      });
+
       detachments.forEach(d => { d.enhancements = enhancementsByDetachment[d.name] || []; });
 
       // ── Army Rules ──

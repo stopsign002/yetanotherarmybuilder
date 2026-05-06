@@ -28,6 +28,11 @@ Each `Unit`:
   name:           string,
   type:           string,                    // "unit" | "model"
   stats:          { [name]: string },        // M, T, SV, W, LD, OC, INV, ...
+                                             //   from the FIRST stats profile (matches modelStats[0])
+  modelStats:     [{ name, M, T, SV, W, LD, OC, ... }, ...],
+                                             //   one entry per distinct statline; multi-profile
+                                             //   units (Marneus Calgar + Victrix Honour Guard,
+                                             //   Terminator Assault Squad TH/SS vs LC) carry 2+
   invulnSave:     string | null,             // e.g. "4+"
   weapons:        Weapon[],                  // plain objects; `_typeName`, `_keywordDefs` present
   abilities:      Ability[],                 // { name, description, isCore? }
@@ -48,7 +53,7 @@ Do not change this shape without bumping `DB_VERSION` in `js/db.js`. Parsed fact
 |---|---|
 | `shared-index.js` | Three `Map`s (`sharedProfilesById`, `sharedRulesById`, `sharedEntriesById`) + `addToSharedIndex(xml)` / `releaseSharedIndex()`. Attaches to `P._internal`. |
 | `classify.js` | `cleanText` (strips `**`, `^^`, `__`, `~~`), `isCrusadeSection`, `getAttr`, `classifyProfile` (→ `'stats'` / `'weapon'` / `'ability'` / `'other'`). |
-| `stats.js` | `parseCharacteristics`, `parseDirectProfiles`, `statsFromInfoLinks`, `findStats` (recurses into child `model`/`unit` entries and through `entryLinks`, depth-capped at 4). |
+| `stats.js` | `parseCharacteristics`, `parseDirectProfiles`, `statsFromInfoLinks`, `findStats` (recurses into child `model`/`unit` entries and through `entryLinks`, depth-capped at 4). Plus `parseDirectStatProfiles` / `statProfilesFromInfoLinks` / `findStatProfiles` which return the array of all stat profiles instead of merging — feeds `unit.modelStats` for multi-statline units. `findStats` is now a thin wrapper around `findStatProfiles[0]`, so the FIRST profile wins instead of the last (the previous Object.assign-merge silently corrupted Marneus Calgar's stats with Victrix Honour Guard's). |
 | `weapons.js` | `collectWeapons` (recurses children/entryLinks, depth-capped at 6, visited-set breaks cycles). `findWeaponKeywordDesc` handles parameterized keywords like `"Sustained Hits 2"`, `"Anti-Titanic 4+"` (strip trailing digits/+), and `"Melta "` trailing-dash prefixes. |
 | `abilities.js` | `collectAbilities` (depth-capped at 3). Pulls direct profile abilities, `infoLink type="profile"` into shared profiles, and `infoLink type="rule"` into shared rules (flagged `isCore: true` — this is how Deep Strike / Deadly Demise surface). Supports `modifier field="name" type="append"` on rule infoLinks. |
 | `wargear.js` | Two categories: **Category A** model-variant groups (squad-sizing constraint + contained model entries) walked to surface per-model `subOptions`. **Category B** direct `selectionEntryGroup` choice groups at unit level. Filters hidden, Crusade, and `New ...` placeholders. |
