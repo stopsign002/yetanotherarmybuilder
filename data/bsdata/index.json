@@ -1,0 +1,338 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-06T20:26:46.860Z",
+  "sourceRepo": "BSData/wh40k-10e",
+  "sourceBranch": "main",
+  "sourceCommit": "2350f914ef702fb6e607e48c94da1b413a588a58",
+  "files": [
+    {
+      "path": "Aeldari - Aeldari Library.cat",
+      "name": "Aeldari - Aeldari Library",
+      "type": "catalogue",
+      "sha": "c3de633bcf0f3223bdf6ef7d4d88e70254668e15",
+      "size": 3539434
+    },
+    {
+      "path": "Aeldari - Craftworlds.cat",
+      "name": "Aeldari - Craftworlds",
+      "type": "catalogue",
+      "sha": "f1e1b87ce9da3016736a9cc9524d790e3c36aeef",
+      "size": 16713
+    },
+    {
+      "path": "Aeldari - Drukhari.cat",
+      "name": "Aeldari - Drukhari",
+      "type": "catalogue",
+      "sha": "7df3cebd39f5c920f06ca6849ebcde03d9f486a4",
+      "size": 8339
+    },
+    {
+      "path": "Aeldari - Ynnari.cat",
+      "name": "Aeldari - Ynnari",
+      "type": "catalogue",
+      "sha": "b4afcd53b645f0f475cd738d4535bc24ca8c14e7",
+      "size": 16204
+    },
+    {
+      "path": "Chaos - Chaos Daemons Library.cat",
+      "name": "Chaos - Chaos Daemons Library",
+      "type": "catalogue",
+      "sha": "14a42367db4fcea7c3dbe9e17d8a341d053652b5",
+      "size": 1370220
+    },
+    {
+      "path": "Chaos - Chaos Daemons.cat",
+      "name": "Chaos - Chaos Daemons",
+      "type": "catalogue",
+      "sha": "124c965f9721fd586c6640977a750bfc2d3b9f89",
+      "size": 49207
+    },
+    {
+      "path": "Chaos - Chaos Knights Library.cat",
+      "name": "Chaos - Chaos Knights Library",
+      "type": "catalogue",
+      "sha": "c65adc041c8db79d5d67bf1e597acc0743d0a6e1",
+      "size": 663541
+    },
+    {
+      "path": "Chaos - Chaos Knights.cat",
+      "name": "Chaos - Chaos Knights",
+      "type": "catalogue",
+      "sha": "2a01138452c11cc04115f779c5800bb0cd4a7eee",
+      "size": 34834
+    },
+    {
+      "path": "Chaos - Chaos Space Marines.cat",
+      "name": "Chaos - Chaos Space Marines",
+      "type": "catalogue",
+      "sha": "21c3722b5f117b89f0e4125d8daeb250f6859ea3",
+      "size": 2532811
+    },
+    {
+      "path": "Chaos - Death Guard.cat",
+      "name": "Chaos - Death Guard",
+      "type": "catalogue",
+      "sha": "ae41062248651bec5eda1c8e43a65520c6dc00b4",
+      "size": 1314004
+    },
+    {
+      "path": "Chaos - Emperor's Children.cat",
+      "name": "Chaos - Emperor's Children",
+      "type": "catalogue",
+      "sha": "8e1baf55cf198f7f82b3e11147da7a34f6cfd507",
+      "size": 785863
+    },
+    {
+      "path": "Chaos - Thousand Sons.cat",
+      "name": "Chaos - Thousand Sons",
+      "type": "catalogue",
+      "sha": "626cf509d39bd953c429b5c8d320748c43443ecf",
+      "size": 1223384
+    },
+    {
+      "path": "Chaos - Titanicus Traitoris.cat",
+      "name": "Chaos - Titanicus Traitoris",
+      "type": "catalogue",
+      "sha": "93e2e5dd24c7a4d9603cac258855dfdbb661c79d",
+      "size": 5028
+    },
+    {
+      "path": "Chaos - World Eaters.cat",
+      "name": "Chaos - World Eaters",
+      "type": "catalogue",
+      "sha": "c447784652deb6bde05b8f6f1259bf8bebcc6085",
+      "size": 1042034
+    },
+    {
+      "path": "Genestealer Cults.cat",
+      "name": "Genestealer Cults",
+      "type": "catalogue",
+      "sha": "8bb823f1908345a119a61e9c18b5ad907382de41",
+      "size": 931168
+    },
+    {
+      "path": "Imperium - Adepta Sororitas.cat",
+      "name": "Imperium - Adepta Sororitas",
+      "type": "catalogue",
+      "sha": "5fbfe66c51cb81f5e704d36d6d65c9dd604d227d",
+      "size": 1057342
+    },
+    {
+      "path": "Imperium - Adeptus Custodes.cat",
+      "name": "Imperium - Adeptus Custodes",
+      "type": "catalogue",
+      "sha": "ee6d829f306a7b71a44b092846cf71ee380c6b58",
+      "size": 816315
+    },
+    {
+      "path": "Imperium - Adeptus Mechanicus.cat",
+      "name": "Imperium - Adeptus Mechanicus",
+      "type": "catalogue",
+      "sha": "2b5cc7b9ec463ac9524b08ce71d2ca736ba2ddf1",
+      "size": 1087403
+    },
+    {
+      "path": "Imperium - Adeptus Titanicus.cat",
+      "name": "Imperium - Adeptus Titanicus",
+      "type": "catalogue",
+      "sha": "3a6ac7d38ac8c6c62a41db93634907b7ddcaeefe",
+      "size": 4795
+    },
+    {
+      "path": "Imperium - Agents of the Imperium.cat",
+      "name": "Imperium - Agents of the Imperium",
+      "type": "catalogue",
+      "sha": "27eebcf87e85fe87e6210f07d2d0e415e320b72f",
+      "size": 1646624
+    },
+    {
+      "path": "Imperium - Astra Militarum - Library.cat",
+      "name": "Imperium - Astra Militarum - Library",
+      "type": "catalogue",
+      "sha": "e5d440289c311c8185d6b12457e74f997585bb54",
+      "size": 2941779
+    },
+    {
+      "path": "Imperium - Astra Militarum.cat",
+      "name": "Imperium - Astra Militarum",
+      "type": "catalogue",
+      "sha": "02060564db2fd58ac036de85abaf7a4ec5a082a8",
+      "size": 55210
+    },
+    {
+      "path": "Imperium - Black Templars.cat",
+      "name": "Imperium - Black Templars",
+      "type": "catalogue",
+      "sha": "62cf3e240e0528b2abcc83a1f535de62786a95b3",
+      "size": 388557
+    },
+    {
+      "path": "Imperium - Blood Angels.cat",
+      "name": "Imperium - Blood Angels",
+      "type": "catalogue",
+      "sha": "a4f12cedfdfbc6772eb2fdbcb6e604f9f6c2bd17",
+      "size": 431543
+    },
+    {
+      "path": "Imperium - Dark Angels.cat",
+      "name": "Imperium - Dark Angels",
+      "type": "catalogue",
+      "sha": "7dd8ded584905a6f194e248fff7d82396e1bc45c",
+      "size": 392610
+    },
+    {
+      "path": "Imperium - Deathwatch.cat",
+      "name": "Imperium - Deathwatch",
+      "type": "catalogue",
+      "sha": "d033c087b53bb53c54ee197002a54842e7f2cf61",
+      "size": 490471
+    },
+    {
+      "path": "Imperium - Grey Knights.cat",
+      "name": "Imperium - Grey Knights",
+      "type": "catalogue",
+      "sha": "2837d2b1e5392795889fa5e8b951680ac92ca5db",
+      "size": 926149
+    },
+    {
+      "path": "Imperium - Imperial Fists.cat",
+      "name": "Imperium - Imperial Fists",
+      "type": "catalogue",
+      "sha": "82ca7d96ac1b548b1780762648e6c12c7c89bb94",
+      "size": 25954
+    },
+    {
+      "path": "Imperium - Imperial Knights - Library.cat",
+      "name": "Imperium - Imperial Knights - Library",
+      "type": "catalogue",
+      "sha": "7141b140b129b252a064b862d7f1d38a13ac91f7",
+      "size": 651744
+    },
+    {
+      "path": "Imperium - Imperial Knights.cat",
+      "name": "Imperium - Imperial Knights",
+      "type": "catalogue",
+      "sha": "62b202fdf517ceb5442ae2cdd0b9ace12db995bb",
+      "size": 6672
+    },
+    {
+      "path": "Imperium - Iron Hands.cat",
+      "name": "Imperium - Iron Hands",
+      "type": "catalogue",
+      "sha": "eb941dc8c30c31764628b6db8db6416c65043716",
+      "size": 20729
+    },
+    {
+      "path": "Imperium - Raven Guard.cat",
+      "name": "Imperium - Raven Guard",
+      "type": "catalogue",
+      "sha": "d2ea75ffb8fafbf87ebd0c0aba14d8743f63343b",
+      "size": 20054
+    },
+    {
+      "path": "Imperium - Salamanders.cat",
+      "name": "Imperium - Salamanders",
+      "type": "catalogue",
+      "sha": "3908777a70c4816d97eb9881a4e38ac990b59661",
+      "size": 18616
+    },
+    {
+      "path": "Imperium - Space Marines.cat",
+      "name": "Imperium - Space Marines",
+      "type": "catalogue",
+      "sha": "43dc8f824845f81b5ab7adc30bb947abedcc1fae",
+      "size": 3797563
+    },
+    {
+      "path": "Imperium - Space Wolves.cat",
+      "name": "Imperium - Space Wolves",
+      "type": "catalogue",
+      "sha": "8f4c72efbd0827418b2495014e928016c1f71250",
+      "size": 840683
+    },
+    {
+      "path": "Imperium - Ultramarines.cat",
+      "name": "Imperium - Ultramarines",
+      "type": "catalogue",
+      "sha": "ac702c0f36b30d1b50856eaa364e7c3d12d67721",
+      "size": 198371
+    },
+    {
+      "path": "Imperium - White Scars.cat",
+      "name": "Imperium - White Scars",
+      "type": "catalogue",
+      "sha": "f5271464453f44981a0a3cb2e99f17aec4eb2760",
+      "size": 20795
+    },
+    {
+      "path": "Leagues of Votann.cat",
+      "name": "Leagues of Votann",
+      "type": "catalogue",
+      "sha": "ca9892f1e76933a88c0bfed729ac65db1d22b083",
+      "size": 953217
+    },
+    {
+      "path": "Library - Astartes Heresy Legends.cat",
+      "name": "Library - Astartes Heresy Legends",
+      "type": "catalogue",
+      "sha": "d01d4834febb032366502fefab6d558ccd206830",
+      "size": 535044
+    },
+    {
+      "path": "Library - Titans.cat",
+      "name": "Library - Titans",
+      "type": "catalogue",
+      "sha": "012320252cfa4436b42400102c6c0da26606bae4",
+      "size": 127915
+    },
+    {
+      "path": "Library - Tyranids.cat",
+      "name": "Library - Tyranids",
+      "type": "catalogue",
+      "sha": "d7595817f9209cc07ef48542af835225ad134197",
+      "size": 644919
+    },
+    {
+      "path": "Necrons.cat",
+      "name": "Necrons",
+      "type": "catalogue",
+      "sha": "207acc56e5b73e2778101511d426f2178b858dee",
+      "size": 1157665
+    },
+    {
+      "path": "Orks.cat",
+      "name": "Orks",
+      "type": "catalogue",
+      "sha": "e2b92c387ec80d34a06a120d7c837a92c9c8037e",
+      "size": 1974163
+    },
+    {
+      "path": "T'au Empire.cat",
+      "name": "T'au Empire",
+      "type": "catalogue",
+      "sha": "32194a69ccc795db2fe2faa6656172a0cd5c0e31",
+      "size": 1702793
+    },
+    {
+      "path": "Tyranids.cat",
+      "name": "Tyranids",
+      "type": "catalogue",
+      "sha": "f2d4f3f7fdb62515069cb9685d228f062336c4d1",
+      "size": 650413
+    },
+    {
+      "path": "Unaligned Forces.cat",
+      "name": "Unaligned Forces",
+      "type": "catalogue",
+      "sha": "154bf5d607cf99c3467aa424ecc51485cd2b3856",
+      "size": 200294
+    },
+    {
+      "path": "Warhammer 40,000.gst",
+      "name": "Warhammer 40,000",
+      "type": "gamesystem",
+      "sha": "074b1f9336cc71fb08a0e8a815d6c39f8ced1596",
+      "size": 699581
+    }
+  ]
+}
