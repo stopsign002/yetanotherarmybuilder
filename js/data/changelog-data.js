@@ -26,10 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.06-3',
-    lastUpdated: '2026-05-06T03:00:00Z',
+    version:     '2026.05.06-4',
+    lastUpdated: '2026-05-06T20:15:00Z',
     entries: [
       // ── 2026-05-06 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-06', kind: 'change',
+        title: 'Faster faction loading: BSData now served from our own server',
+        description:
+          'Faction data used to be downloaded straight from GitHub on every ' +
+          'visit, which was slow on flaky networks and could fail when too ' +
+          'many users hit GitHub\'s public rate limit at once. We now mirror ' +
+          'the BattleScribe XML on our own server and refresh it every 6 ' +
+          'hours, so first-load is quicker and no longer affected by GitHub ' +
+          'rate limits. If our mirror is ever unavailable the app still ' +
+          'falls back to GitHub automatically.',
+      },
       {
         date: '2026-05-06', kind: 'fix',
         title: 'Ghazghkull Thraka: Leader (attached units) restored',
