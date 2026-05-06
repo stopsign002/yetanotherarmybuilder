@@ -26,10 +26,33 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.05-5',
-    lastUpdated: '2026-05-05T22:00:00Z',
+    version:     '2026.05.05-6',
+    lastUpdated: '2026-05-05T23:00:00Z',
     entries: [
       // ── 2026-05-05 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-05', kind: 'fix',
+        title: 'Orks: vehicle transport capacities now surface',
+        description:
+          'Battlewagon, Trukk, Stompa, Gorkanaut, Morkanaut, Kill Rig, ' +
+          'Hunta Rig, Big\'ed Bossbunka, and the various Legends ' +
+          'transports all carry their capacity rules in a typeName=' +
+          '"Transport" profile that the parser was silently dropping ' +
+          '(neither "Description" nor "Effect" matched its lone ' +
+          '"Capacity" characteristic). The capacity text now shows on ' +
+          'the unit card.',
+      },
+      {
+        date: '2026-05-05', kind: 'fix',
+        title: 'Orks: Dread Mob "Try Dat Button!" D6 table now surfaces',
+        description:
+          'The Dread Mob detachment encodes its weapon-buff D6 roll ' +
+          'table as <profile> siblings of the detachment rule rather ' +
+          'than inside the rule prose. The parser now appends those ' +
+          'sub-profiles to the matching rule, so the 1-2 / 3-4 / 5-6 ' +
+          'rows show under Try Dat Button!. Future faction roll-table ' +
+          'detachments encoded the same way will pick this up too.',
+      },
       {
         date: '2026-05-05', kind: 'fix',
         title: 'Cross-catalogue abilities now surface',

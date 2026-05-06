@@ -294,6 +294,55 @@
             detachmentRuleNames.add(rName.toLowerCase());
           });
 
+          // Roll-table / sub-profile children of the detachment entry.
+          // Some detachments (Dread Mob's "Try Dat Button!") encode a
+          // D6 table as siblings of <rules>/<rule>: a group of
+          // <profile> elements whose typeName matches a profileType
+          // declared at the catalogue level (e.g. "Try Dat Button! - D6")
+          // and whose name is the roll range ("1-2", "3-4", "5-6"). The
+          // payload sits in a single non-Description characteristic
+          // (e.g. "Button Effect"). Without scooping these in here the
+          // rule prose surfaces but the table is silently dropped.
+          // Group profiles by typeName and append them to the rule whose
+          // name the typeName starts with; fall back to appending to the
+          // last-pushed rule when no name match exists.
+          const profsByType = new Map();
+          entry.querySelectorAll(':scope > profiles > profile').forEach(p => {
+            if (I.getAttr(p, 'hidden', 'false') === 'true') return;
+            const tn = I.getAttr(p, 'typeName', '').trim();
+            if (!tn) return;
+            if (!profsByType.has(tn)) profsByType.set(tn, []);
+            profsByType.get(tn).push(p);
+          });
+          if (profsByType.size > 0) {
+            profsByType.forEach((profs, tn) => {
+              const rows = profs.map(p => {
+                const rowName = I.getAttr(p, 'name', '').trim();
+                const valEls = p.querySelectorAll(':scope > characteristics > characteristic');
+                const val = Array.from(valEls)
+                  .map(c => I.cleanText(c.textContent || ''))
+                  .filter(Boolean)
+                  .join(' / ');
+                return rowName && val ? rowName + ': ' + val : '';
+              }).filter(Boolean);
+              if (rows.length === 0) return;
+              const tableText = rows.join('\n');
+              // Pick the rule this table belongs to: typeName usually
+              // starts with the rule name (e.g. typeName "Try Dat
+              // Button! - D6" → rule "Try Dat Button!"). Fallback to
+              // the last rule pushed.
+              const lcTn = tn.toLowerCase();
+              let target = rules.find(r => lcTn.startsWith(r.name.toLowerCase()));
+              if (!target) target = rules[rules.length - 1];
+              if (target) {
+                target.description = (target.description ? target.description + '\n\n' : '')
+                  + tableText;
+              } else {
+                rules.push({ name: tn, description: tableText });
+              }
+            });
+          }
+
           // Stratagems (best-effort): scan inline <rules>/<rule> children of
           // the detachment selectionEntry that we did NOT count as the
           // detachment's main rule. BSData usually omits stratagems entirely

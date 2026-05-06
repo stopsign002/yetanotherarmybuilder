@@ -39,13 +39,17 @@
     // toggles, Magnus / Mortarion equivalents) instead use a
     // <characteristic name="Effect"> and a typeName that's the parent
     // ability's name — e.g. typeName="Primarch of the First Legion".
-    // Treat both shapes as 'ability' so they reach the renderer.
+    // Ork transport profiles (Battlewagon, Trukk, Stompa, …) carry the
+    // capacity prose in a <characteristic name="Capacity"> instead.
+    // Treat all three shapes as 'ability' so they reach the renderer.
     if (profile.querySelector('characteristic[name="Description"]')) return 'ability';
     if (profile.querySelector('characteristic[name="Effect"]'))      return 'ability';
+    if (profile.querySelector('characteristic[name="Capacity"]'))    return 'ability';
 
     if (typeName.includes('abilit') || typeName === 'leader' ||
         typeName.includes('power') || typeName.includes('trait') ||
         typeName === 'invulnerable save' ||
+        typeName === 'transport' ||
         typeName.startsWith('primarch of ')) return 'ability';
 
     return 'other';

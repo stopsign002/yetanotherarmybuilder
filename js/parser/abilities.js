@@ -32,9 +32,11 @@
         if (!name || /^new\s/i.test(name)) return;
         if (I.isCrusadeSection(name)) return;
         // Match the parseDirectProfiles fallback: prefer Description,
-        // fall back to Effect for primarch / warlord-trait shapes.
+        // fall back to Effect for primarch / warlord-trait shapes, and
+        // Capacity for Ork transport profiles.
         const descEl = profile.querySelector('characteristic[name="Description"]')
-                    || profile.querySelector('characteristic[name="Effect"]');
+                    || profile.querySelector('characteristic[name="Effect"]')
+                    || profile.querySelector('characteristic[name="Capacity"]');
         const tn = I.getAttr(profile, 'typeName', '');
         abilities.push({
           name,

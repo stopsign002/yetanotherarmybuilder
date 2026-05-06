@@ -28,13 +28,16 @@
       } else if (kind === 'weapon') {
         if (name) weapons.push({ name, _typeName: I.getAttr(profile, 'typeName', ''), ...chars });
       } else if (kind === 'ability') {
-        // 10e BSData uses two characteristic names for ability prose:
-        // <characteristic name="Description"> for vanilla abilities, and
+        // 10e BSData uses several characteristic names for ability prose:
+        // <characteristic name="Description"> for vanilla abilities,
         // <characteristic name="Effect"> for primarch sub-abilities and
-        // some warlord-trait-style profiles. Fall back to Effect so
+        // some warlord-trait-style profiles, and
+        // <characteristic name="Capacity"> for Ork transport profiles
+        // (Battlewagon, Trukk, Stompa, …). Fall through all three so
         // those reach the renderer.
         const descEl = profile.querySelector('characteristic[name="Description"]')
-                    || profile.querySelector('characteristic[name="Effect"]');
+                    || profile.querySelector('characteristic[name="Effect"]')
+                    || profile.querySelector('characteristic[name="Capacity"]');
         // Capture typeName too — primarch sub-ability profiles ship with
         // typeName like "Primarch of the First Legion" instead of the
         // generic "Abilities", which is the only way to tell them apart

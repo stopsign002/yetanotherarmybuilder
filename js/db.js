@@ -113,7 +113,13 @@ window.YaabDB = (() => {
   // during parallel Phase 2 parsing, silently dropping the ability.
   // v23 caches are missing those abilities; drop on upgrade so the
   // next session reparses with the fully-populated shared index.
-  const DB_VERSION = 24;
+  // v25: parser now surfaces Ork transport profiles (typeName="Transport"
+  // with a single <characteristic name="Capacity">, which had no
+  // matching path through classifyProfile / parseDirectProfiles) and
+  // the detachment-level roll tables some factions encode as <profile>
+  // siblings of the detachment <rule> (Dread Mob's "Try Dat Button!"
+  // D6 table). Drop the cache so the new fields surface.
+  const DB_VERSION = 25;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
