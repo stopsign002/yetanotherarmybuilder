@@ -444,6 +444,36 @@
           pushEnhancement(detName, enh);
         });
       });
+
+      // Pattern C: standalone shared selectionEntryGroups whose name ends
+      // with " Enhancements" (e.g. "Headhunter Task Force Enhancements"
+      // sits at the catalogue root, NOT inside the main "Enhancements"
+      // group). Without this fallback those detachments lose every
+      // enhancement, because the loop above only walks subgroups of
+      // groups exactly named "Enhancements". Both shared (root-level)
+      // and inline (catalogue-level) shared groups are scanned.
+      const seenStandaloneGroups = new Set();
+      const standaloneSelectors = [
+        ':scope > sharedSelectionEntryGroups > selectionEntryGroup',
+        ':scope > selectionEntryGroups > selectionEntryGroup',
+      ];
+      standaloneSelectors.forEach(sel => {
+        root.querySelectorAll(sel).forEach(group => {
+          if (seenEnhGroups.has(group.getAttribute('id'))) return;
+          if (seenStandaloneGroups.has(group.getAttribute('id'))) return;
+          const groupName = I.getAttr(group, 'name', '').trim();
+          if (!/\s+Enhancements$/i.test(groupName)) return;
+          // Skip the canonical "Enhancements" group itself (already handled).
+          if (/^Enhancements$/i.test(groupName)) return;
+          seenStandaloneGroups.add(group.getAttribute('id'));
+          const detName = groupName.replace(/\s+Enhancements$/i, '').trim();
+          group.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(entry => {
+            const enh = extractEnhancementEntry(entry);
+            if (enh) pushEnhancement(detName, enh);
+          });
+        });
+      });
+
       detachments.forEach(d => { d.enhancements = enhancementsByDetachment[d.name] || []; });
 
       // ── Army Rules ──

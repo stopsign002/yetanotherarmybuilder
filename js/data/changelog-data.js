@@ -26,10 +26,25 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.06-1',
-    lastUpdated: '2026-05-06T00:30:00Z',
+    version:     '2026.05.06-2',
+    lastUpdated: '2026-05-06T01:00:00Z',
     entries: [
       // ── 2026-05-06 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-06', kind: 'fix',
+        title: 'Vehicles: stop weapon-keyword bleed into core abilities',
+        description:
+          'Every Marine vehicle had Precise, Precision, and Lethal Hits ' +
+          'showing up as core abilities (visible on Land Raider, Predator, ' +
+          'Repulsor, Impulsor, etc.). The parser was descending into the ' +
+          'Crusade-only "Weapon Modifications" upgrade hook on each ' +
+          'wargear weapon and pulling the modification rules in as if ' +
+          'they were unit abilities. The walker now skips that hook. ' +
+          'Same fix also stops per-detachment "X Enhancements" groups ' +
+          '(Headhunter Task Force) from leaking enhancements onto every ' +
+          'unit; the affected detachments still extract their own ' +
+          'enhancement lists correctly.',
+      },
       {
         date: '2026-05-06', kind: 'change',
         title: 'Vehicles: dedicated Transport section',

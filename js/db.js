@@ -125,7 +125,16 @@ window.YaabDB = (() => {
   // Remaining" wound-band profiles from the abilities list — 10e
   // BSData vehicles don't actually use degrading statlines, so those
   // were just clutter on Land Raider, Repulsor, etc.
-  const DB_VERSION = 26;
+  // v27: parser now blocks the abilities walker from descending into
+  // Crusade-only "Weapon Modifications" hooks and per-detachment
+  // "X Enhancements" sibling groups. Every Land Raider / Predator /
+  // Repulsor in v26 caches was accidentally inheriting Precise /
+  // Precision / Lethal Hits as core abilities (and the Headhunter
+  // Task Force's four enhancements) because the walker followed those
+  // entryLinks. catalogue.js gains a Pattern C that re-extracts
+  // detachment enhancements from the standalone sibling groups so
+  // detachments like Headhunter Task Force still surface their list.
+  const DB_VERSION = 27;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
