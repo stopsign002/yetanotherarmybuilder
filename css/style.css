@@ -1904,6 +1904,20 @@ ul { list-style: none; }
   border-color: rgba(168,232,138,0.55);
   color: #d4f5bb;
 }
+/* Tri-state: a second click on a chip excludes (red strike-through) any
+   units carrying that keyword. Third click clears it. */
+.filter-chip.excluded {
+  background: rgba(231, 76, 60, 0.18);
+  border-color: rgba(231, 76, 60, 0.55);
+  color: #f5b8b1;
+  text-decoration: line-through;
+  text-decoration-color: rgba(231, 76, 60, 0.7);
+  text-decoration-thickness: 1.5px;
+}
+.filter-chip.excluded:hover {
+  background: rgba(231, 76, 60, 0.28);
+  color: #ffd6cf;
+}
 .filter-chips-clear {
   font-size: 14px;
   line-height: 1;

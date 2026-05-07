@@ -26,9 +26,36 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.06-4',
-    lastUpdated: '2026-05-06T20:15:00Z',
+    version:     '2026.05.07-1',
+    lastUpdated: '2026-05-07T12:00:00Z',
     entries: [
+      // ── 2026-05-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-07', kind: 'feature',
+        title: 'Click any pane header to expand it full-width',
+        description:
+          'Click the Army, Units, or Details title (or the new expand ' +
+          'icon next to it) to grow that pane across the entire 3-pane ' +
+          'area, with a smooth slide animation. Each pane gets a ' +
+          'dedicated full-screen layout: the Army pane splits into ' +
+          'setup + rules on the left and the entry list on the right; ' +
+          'the Units grid widens to show more cards at once; the ' +
+          'Details pane uses two columns so stats/abilities sit ' +
+          'alongside weapons/wargear. Click the header again or press ' +
+          'Escape to return to the 3-pane view.',
+      },
+      {
+        date: '2026-05-07', kind: 'feature',
+        title: 'Filter chips: click twice to exclude',
+        description:
+          'The role chips above the unit list (Battleline, Character, ' +
+          'Infantry, Vehicle, Monster, Psyker) now have three states. ' +
+          'First click turns the chip green and only shows units with ' +
+          'that keyword. A second click turns it red and hides every ' +
+          'unit with that keyword instead — handy for browsing only ' +
+          'non-Characters or only non-Vehicles. A third click clears ' +
+          'the chip.',
+      },
       // ── 2026-05-06 ──────────────────────────────────────────────────────
       {
         date: '2026-05-06', kind: 'change',

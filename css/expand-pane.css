@@ -1,0 +1,222 @@
+/* expand-pane.css — click-to-expand pane headers (Army / Units / Details).
+   Mounted by js/app/expand-pane.js. Desktop only (>820px); on mobile the
+   single-pane mobile layout already gives one panel the full screen. */
+
+@media (min-width: 821px) {
+
+  /* Smooth transition between 3-pane and full-screen pane. Modern browsers
+     interpolate grid-template-columns when the track count is unchanged. */
+  .app-main {
+    transition: grid-template-columns 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* When any pane is expanded, hide the resize handles and prevent input
+     on the collapsed siblings (which still occupy 0px of width). */
+  .app-main.pane-expanded-left,
+  .app-main.pane-expanded-center,
+  .app-main.pane-expanded-right {
+    --col-left: 0px;
+    --col-right: 0px;
+  }
+
+  .app-main.pane-expanded-left {
+    grid-template-columns: minmax(0, 1fr) 0 0 0 0 !important;
+  }
+  .app-main.pane-expanded-center {
+    grid-template-columns: 0 0 minmax(0, 1fr) 0 0 !important;
+  }
+  .app-main.pane-expanded-right {
+    grid-template-columns: 0 0 0 0 minmax(0, 1fr) !important;
+  }
+
+  /* Collapsed panels lose their min-width and fade out. */
+  .app-main.pane-expanded-left  > .panel-center,
+  .app-main.pane-expanded-left  > .panel-right,
+  .app-main.pane-expanded-center > .panel-left,
+  .app-main.pane-expanded-center > .panel-right,
+  .app-main.pane-expanded-right > .panel-left,
+  .app-main.pane-expanded-right > .panel-center {
+    min-width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+  }
+  .app-main.pane-expanded-left  > .resize-handle,
+  .app-main.pane-expanded-center > .resize-handle,
+  .app-main.pane-expanded-right > .resize-handle {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+
+  /* ── Expand-toggle button in panel headers ──────────────────── */
+  .panel-header h2 {
+    cursor: pointer;
+    user-select: none;
+  }
+  .panel-expand-btn {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--text-muted, #999);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-left: 4px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s, transform 0.2s;
+  }
+  .panel-expand-btn:hover {
+    color: var(--accent);
+    border-color: var(--border-light);
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .panel-expand-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    pointer-events: none;
+  }
+  .panel-expand-btn .expand-icon-collapse { display: none; }
+  .panel-expanded > .panel-header .panel-expand-btn {
+    color: var(--accent);
+  }
+  .panel-expanded > .panel-header .panel-expand-btn .expand-icon-expand { display: none; }
+  .panel-expanded > .panel-header .panel-expand-btn .expand-icon-collapse { display: inline; }
+
+  /* ── Layout pass: when expanded, reorganize the panel body into a
+       wider, grid-based layout that uses the extra real estate. ─────── */
+
+  /* Common: relax the panel-body so its inner grid can breathe. */
+  .panel-expanded > .panel-body {
+    padding: 24px clamp(20px, 4vw, 56px) 32px;
+  }
+  .panel-expanded > .panel-header {
+    padding: 16px clamp(20px, 4vw, 56px) 12px;
+  }
+  .panel-expanded > .panel-header h2 {
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+  .panel-expanded > .panel-controls {
+    padding: 12px clamp(20px, 4vw, 56px);
+  }
+
+  /* ── ARMY panel expanded ─────────────────────────────────────────
+     Two columns: setup + rules on the left, the army-entry list on the
+     right where it has room to breathe. */
+  .panel-left.panel-expanded > .panel-body {
+    display: grid;
+    grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+    gap: 18px clamp(28px, 4vw, 56px);
+    align-content: start;
+    align-items: start;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  .panel-left.panel-expanded .army-setup-section { grid-column: 1; grid-row: 1; }
+  .panel-left.panel-expanded .army-rules-collapsible { grid-column: 1; grid-row: 2; }
+  .panel-left.panel-expanded .points-summary-shadow { display: none !important; }
+
+  .panel-left.panel-expanded .army-entries-header,
+  .panel-left.panel-expanded .army-entry-list {
+    grid-column: 2;
+  }
+  .panel-left.panel-expanded .army-entries-header {
+    grid-row: 1;
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+  .panel-left.panel-expanded .army-entry-list {
+    grid-row: 2 / span 99;
+    gap: 6px;
+  }
+  .panel-left.panel-expanded .army-entry {
+    grid-template-columns: 1fr 60px 70px 60px 28px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  /* Rules section: when the army panel is fullscreen, also auto-open the
+     rules collapsible so the player sees their detachment rules + strats
+     without a second click. */
+  .panel-left.panel-expanded .army-rules-collapsible {
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  /* ── UNITS panel expanded ────────────────────────────────────────
+     Wider grid + more cards visible at once. The grid already uses
+     auto-fill minmax(200px, 1fr) so it fills naturally; we just make the
+     cards a bit larger so they don't look stranded in a sea of empty
+     space, and lift the search bar to a centered band. */
+  .panel-center.panel-expanded > .panel-body {
+    max-width: 1700px;
+    margin: 0 auto;
+  }
+  .panel-center.panel-expanded > .panel-controls {
+    max-width: 1700px;
+    margin: 0 auto;
+  }
+  .panel-center.panel-expanded .unit-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+  }
+  .panel-center.panel-expanded .unit-card {
+    padding: 14px;
+  }
+
+  /* ── DETAILS panel expanded ──────────────────────────────────────
+     Two columns: stats / abilities on the left, weapons / wargear on the
+     right. The detail.js render order is:
+       .detail-banner / .detail-header / .detail-add-section / .detail-section…
+     Each .detail-section gets a label class we can target. We use the
+     simpler approach of a CSS multi-column inside the content wrapper. */
+  .panel-right.panel-expanded > .panel-body {
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  .panel-right.panel-expanded .unit-detail-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: clamp(28px, 4vw, 56px);
+    row-gap: 14px;
+    align-items: start;
+  }
+  /* Banner / header / add-section / "add another" rows span the full
+     width so the player sees the summary above the two columns. */
+  .panel-right.panel-expanded .unit-detail-content > .detail-banner,
+  .panel-right.panel-expanded .unit-detail-content > .detail-header,
+  .panel-right.panel-expanded .unit-detail-content > .detail-add-section,
+  .panel-right.panel-expanded .unit-detail-content > .detail-stats-row,
+  .panel-right.panel-expanded .unit-detail-content > .detail-stats {
+    grid-column: 1 / -1;
+  }
+  /* Larger banner / stat cells when fullscreen. */
+  .panel-right.panel-expanded .detail-name {
+    font-size: 26px;
+  }
+  .panel-right.panel-expanded .detail-stat-cell .stat-value {
+    font-size: 18px;
+  }
+  /* Empty state stays centered. */
+  .panel-right.panel-expanded .unit-detail-empty {
+    grid-column: 1 / -1;
+    min-height: 50vh;
+  }
+
+  /* ── Visible click affordance on the title text ─────────────── */
+  .panel-header h2 {
+    transition: color 0.15s;
+  }
+  .panel-header h2:hover {
+    color: #fff;
+  }
+}
+
+/* Mobile: hide the expand toggle entirely — irrelevant on phones. */
+@media (max-width: 820px) {
+  .panel-expand-btn { display: none !important; }
+}
