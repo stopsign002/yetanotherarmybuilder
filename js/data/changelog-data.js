@@ -26,10 +26,25 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.07-3',
-    lastUpdated: '2026-05-07T15:00:00Z',
+    version:     '2026.05.07-4',
+    lastUpdated: '2026-05-07T16:00:00Z',
     entries: [
       // ── 2026-05-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-07', kind: 'change',
+        title: 'Details pane (expanded): cleaner full-screen layout',
+        description:
+          'Expanding the Details pane used to leave a lot of dead ' +
+          'space — the stats strip sat alone in the left column while ' +
+          'the weapons table claimed the right. Now the banner, the ' +
+          '"Add to Army" toolbar, and the M/T/SV/W/LD/OC stats span ' +
+          'the full width across the top with bigger numbers and a ' +
+          'slimmer add-to-army button, and the remaining sections ' +
+          '(weapons, abilities, leader, loadout, enhancements) flow ' +
+          'into a 2- or 3-column grid below depending on monitor ' +
+          'size. The weapons section spans 2 columns on very wide ' +
+          'screens so its wide table breathes.',
+      },
       {
         date: '2026-05-07', kind: 'feature',
         title: 'Army pane (expanded): card grid + auto-open rules',

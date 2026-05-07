@@ -266,11 +266,15 @@
   }
 
   /* ── DETAILS panel expanded ──────────────────────────────────────
-     Two columns: stats / abilities on the left, weapons / wargear on the
-     right. The detail.js render order is:
-       .detail-banner / .detail-header / .detail-add-section / .detail-section…
-     Each .detail-section gets a label class we can target. We use the
-     simpler approach of a CSS multi-column inside the content wrapper. */
+     Layout zones:
+       1. Banner (full-width):    name, faction tag, points, action icons
+       2. Add to Army (full-width, slim): qty input + button
+       3. Stats strip (full-width): big M / T / SV / W / LD / OC pillars
+       4. Body grid (2-col, or 3-col on huge screens): weapons,
+          abilities, core abilities, leader, led-by, loadout, etc.
+     The detail.js render emits each block as a direct child of
+     `.unit-detail-content`, so we can promote the top zones to span
+     the full grid width and let the rest auto-flow into columns. */
   .panel-right.panel-expanded > .panel-body {
     max-width: none;
     margin: 0;
@@ -279,30 +283,100 @@
   .panel-right.panel-expanded .unit-detail-content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: clamp(28px, 4vw, 64px);
-    row-gap: 16px;
+    column-gap: clamp(28px, 3vw, 56px);
+    row-gap: 18px;
     align-items: start;
+    grid-auto-flow: row dense;
   }
-  /* Banner / header / add-section / "add another" rows span the full
-     width so the player sees the summary above the two columns. */
+  /* On very wide monitors switch to 3 columns and let the weapons
+     section (which has a wide table) span two of them. */
+  @media (min-width: 1600px) {
+    .panel-right.panel-expanded .unit-detail-content {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .panel-right.panel-expanded .unit-detail-content > .detail-weapons-section {
+      grid-column: span 2;
+    }
+  }
+  /* Top zones span the full grid. */
   .panel-right.panel-expanded .unit-detail-content > .detail-banner,
   .panel-right.panel-expanded .unit-detail-content > .detail-header,
   .panel-right.panel-expanded .unit-detail-content > .detail-add-section,
-  .panel-right.panel-expanded .unit-detail-content > .detail-stats-row,
-  .panel-right.panel-expanded .unit-detail-content > .detail-stats {
+  .panel-right.panel-expanded .unit-detail-content > .detail-stats-section {
     grid-column: 1 / -1;
-  }
-  /* Larger banner / stat cells when fullscreen. */
-  .panel-right.panel-expanded .detail-name {
-    font-size: 26px;
-  }
-  .panel-right.panel-expanded .detail-stat-cell .stat-value {
-    font-size: 18px;
   }
   /* Empty state stays centered. */
   .panel-right.panel-expanded .unit-detail-empty {
     grid-column: 1 / -1;
     min-height: 50vh;
+  }
+
+  /* ── Banner: bigger name, more breathing room ─────────────────── */
+  .panel-right.panel-expanded .detail-banner {
+    padding: 16px 20px 18px;
+  }
+  .panel-right.panel-expanded .detail-name {
+    font-size: 30px;
+    line-height: 1.1;
+  }
+  .panel-right.panel-expanded .detail-banner-pts,
+  .panel-right.panel-expanded .detail-pts {
+    font-size: 22px;
+  }
+
+  /* ── Add to Army: slim toolbar, not a tall band ───────────────── */
+  .panel-right.panel-expanded .detail-add-section {
+    padding: 10px 14px;
+    margin: 0 0 4px;
+  }
+  .panel-right.panel-expanded .detail-add-row {
+    margin-top: 0;
+    align-items: center;
+    gap: 12px;
+  }
+  .panel-right.panel-expanded .detail-add-row .detail-qty-input,
+  .panel-right.panel-expanded .detail-add-row .form-input {
+    height: 40px;
+    width: 84px;
+  }
+  .panel-right.panel-expanded .detail-add-btn {
+    height: 40px !important;
+    padding: 0 24px;
+    font-size: 14px;
+  }
+
+  /* ── Stats strip: full-width pillars with bigger numbers ──────── */
+  .panel-right.panel-expanded .detail-stats-section {
+    margin: 0;
+  }
+  .panel-right.panel-expanded .detail-stats-row {
+    gap: 6px;
+  }
+  .panel-right.panel-expanded .detail-stat-pillar,
+  .panel-right.panel-expanded .detail-stat-cell {
+    padding: 16px 8px;
+  }
+  .panel-right.panel-expanded .detail-stat-pillar-value,
+  .panel-right.panel-expanded .detail-stat-cell .stat-value {
+    font-size: 24px;
+  }
+  .panel-right.panel-expanded .detail-stat-pillar-label,
+  .panel-right.panel-expanded .detail-stat-cell .stat-name {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+
+  /* ── Body sections ────────────────────────────────────────────── */
+  .panel-right.panel-expanded .detail-section {
+    margin: 0;
+    /* Avoid splitting a section across columns when grid auto-flow
+       reuses tracks with `dense`. */
+    break-inside: avoid;
+  }
+  .panel-right.panel-expanded .detail-section-title {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    margin-bottom: 10px;
   }
 
   /* ── Visible click affordance on the title text ─────────────── */
