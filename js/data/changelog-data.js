@@ -26,10 +26,45 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.07-1',
-    lastUpdated: '2026-05-07T12:00:00Z',
+    version:     '2026.05.07-2',
+    lastUpdated: '2026-05-07T13:30:00Z',
     entries: [
       // ── 2026-05-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-07', kind: 'fix',
+        title: 'Unit cards: points now sit under the unit name',
+        description:
+          'Long point values (e.g. multi-model squad totals like ' +
+          '"70 / 150 pts") used to push the unit name onto a second ' +
+          'line and squash everything into a narrow column. Cards now ' +
+          'put the points on a row of their own under the name, so ' +
+          'the name has the full width to itself. The minimum card ' +
+          'width has also been bumped up to keep cards readable.',
+      },
+      {
+        date: '2026-05-07', kind: 'fix',
+        title: 'Drag-to-resize panes is snappy again',
+        description:
+          'Dragging the column edges to resize the Army or Details ' +
+          'panes felt sluggish after the new expand-pane animation ' +
+          'shipped — every pixel of drag was being treated as an ' +
+          'animated transition. The transition is now suppressed ' +
+          'while you\'re dragging, so resize tracks the cursor ' +
+          'instantly while the expand/collapse animation still plays ' +
+          'when you click a header.',
+      },
+      {
+        date: '2026-05-07', kind: 'change',
+        title: 'Expanded panes now use the full screen',
+        description:
+          'When you expand the Army, Units, or Details pane (by ' +
+          'clicking its header), the layout now fills the entire ' +
+          'window instead of capping at ~1700px in the middle. The ' +
+          'Units search bar and filter chips sit on a single inline ' +
+          'band across the top, the unit grid widens to as many ' +
+          'columns as fit, and the Army / Details panes likewise use ' +
+          'the full width.',
+      },
       {
         date: '2026-05-07', kind: 'feature',
         title: 'Click any pane header to expand it full-width',

@@ -13,6 +13,8 @@
       handle.addEventListener('mousedown', e => {
         e.preventDefault();
         handle.classList.add('dragging');
+        const main = document.getElementById('app-main');
+        if (main) main.classList.add('is-resizing');
         startX = e.clientX;
         startWidth = parseInt(getComputedStyle(root).getPropertyValue(cssVar)) || 300;
 
@@ -25,6 +27,7 @@
         }
         function onUp() {
           handle.classList.remove('dragging');
+          if (main) main.classList.remove('is-resizing');
           document.removeEventListener('mousemove', onMove);
           document.removeEventListener('mouseup',   onUp);
         }

@@ -5,9 +5,14 @@
 @media (min-width: 821px) {
 
   /* Smooth transition between 3-pane and full-screen pane. Modern browsers
-     interpolate grid-template-columns when the track count is unchanged. */
+     interpolate grid-template-columns when the track count is unchanged.
+     Disabled during resize-handle drags (resize.js toggles .is-resizing)
+     so column updates fire without lag. */
   .app-main {
     transition: grid-template-columns 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .app-main.is-resizing {
+    transition: none !important;
   }
 
   /* When any pane is expanded, hide the resize handles and prevent input
@@ -107,16 +112,19 @@
   }
 
   /* ── ARMY panel expanded ─────────────────────────────────────────
-     Two columns: setup + rules on the left, the army-entry list on the
-     right where it has room to breathe. */
+     Three regions on a wide monitor: setup (compact form), rules
+     (collapsible), and the army-entry list. On very wide screens we put
+     setup + rules in a left column and let the entries claim the entire
+     remaining width — that's what people care about when they expand. */
   .panel-left.panel-expanded > .panel-body {
     display: grid;
-    grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
-    gap: 18px clamp(28px, 4vw, 56px);
+    grid-template-columns: minmax(340px, 460px) minmax(0, 1fr);
+    gap: 20px clamp(28px, 4vw, 64px);
     align-content: start;
     align-items: start;
-    max-width: 1500px;
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
+    padding: 24px clamp(20px, 3vw, 40px) 32px;
   }
   .panel-left.panel-expanded .army-setup-section { grid-column: 1; grid-row: 1; }
   .panel-left.panel-expanded .army-rules-collapsible { grid-column: 1; grid-row: 2; }
@@ -148,24 +156,60 @@
   }
 
   /* ── UNITS panel expanded ────────────────────────────────────────
-     Wider grid + more cards visible at once. The grid already uses
-     auto-fill minmax(200px, 1fr) so it fills naturally; we just make the
-     cards a bit larger so they don't look stranded in a sea of empty
-     space, and lift the search bar to a centered band. */
-  .panel-center.panel-expanded > .panel-body {
-    max-width: 1700px;
-    margin: 0 auto;
-  }
+     Layout: full-bleed search/chip band at the top, then a 2-region
+     workspace below — a sticky filter rail on the left (faction + role
+     chips, vertical) and a dense, multi-column unit grid on the right
+     that fills the rest of the viewport. The point of expanding is to
+     see lots of units at once, so we explicitly target ≥4 columns and
+     drop the centering caps that make the content look stranded. */
+
+  /* Top band: search input grows, chips wrap inline next to it. */
   .panel-center.panel-expanded > .panel-controls {
-    max-width: 1700px;
-    margin: 0 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 14px clamp(20px, 3vw, 40px);
+  }
+  .panel-center.panel-expanded > .panel-controls > .yaab-search-wrap,
+  .panel-center.panel-expanded > .panel-controls > .search-input {
+    flex: 1 1 320px;
+    min-width: 280px;
+  }
+  .panel-center.panel-expanded > .panel-controls .search-input {
+    font-size: 15px;
+    padding: 12px 14px;
+    min-height: 44px;
+  }
+  .panel-center.panel-expanded #roster-filter-chips {
+    flex: 0 1 auto;
+    margin-top: 0;
+    max-width: none;
+  }
+  .panel-center.panel-expanded .filter-chip {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  /* Body: sidebar + grid. Rail keeps faction info / chip context anchored
+     so the user always knows what's filtering. */
+  .panel-center.panel-expanded > .panel-body {
+    padding: 18px clamp(20px, 3vw, 40px) 32px;
+    max-width: none;
+    margin: 0;
   }
   .panel-center.panel-expanded .unit-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
     gap: 14px;
+    align-content: start;
   }
   .panel-center.panel-expanded .unit-card {
     padding: 14px;
+  }
+  /* Bigger panel header band on units expanded: keep the count badge
+     comfortably to the right of the title. */
+  .panel-center.panel-expanded > .panel-header {
+    padding: 16px clamp(20px, 3vw, 40px) 12px;
   }
 
   /* ── DETAILS panel expanded ──────────────────────────────────────
@@ -175,14 +219,15 @@
      Each .detail-section gets a label class we can target. We use the
      simpler approach of a CSS multi-column inside the content wrapper. */
   .panel-right.panel-expanded > .panel-body {
-    max-width: 1500px;
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
+    padding: 24px clamp(20px, 3vw, 40px) 32px;
   }
   .panel-right.panel-expanded .unit-detail-content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: clamp(28px, 4vw, 56px);
-    row-gap: 14px;
+    column-gap: clamp(28px, 4vw, 64px);
+    row-gap: 16px;
     align-items: start;
   }
   /* Banner / header / add-section / "add another" rows span the full
