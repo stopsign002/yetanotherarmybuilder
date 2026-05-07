@@ -63,6 +63,15 @@
     return modalEl;
   }
 
+  // Platform-aware hard-refresh shortcut. Mac uses Cmd; everything else
+   // uses Ctrl. Browsers send the keyboard event consistently with the
+   // user's platform, so the label should match what they have to press.
+  function refreshShortcutLabel() {
+    const isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform || '')
+                  || /Mac/i.test(navigator.userAgent || '');
+    return isMac ? '⌘⇧R' : 'Ctrl+Shift+R';
+  }
+
   function render() {
     ensureModal();
     const data = App.CHANGELOG || { version: '—', lastUpdated: null, entries: [] };
@@ -75,8 +84,19 @@
 
     const body = modalEl.querySelector('#changelog-body');
     const entries = Array.isArray(data.entries) ? data.entries : [];
+    // Hard-refresh tip. Browsers cache aggressively for static sites, so
+    // someone reading "What's new" on a stale tab won't see the new
+    // feature until they force a refresh. This banner tells them how.
+    const refreshTip =
+      '<div class="changelog-refresh-tip" role="note">' +
+        '<span class="changelog-refresh-tip-icon" aria-hidden="true">↻</span>' +
+        '<span class="changelog-refresh-tip-text">' +
+          'Don\'t see a new feature yet? Press <kbd>' + esc(refreshShortcutLabel()) + '</kbd> ' +
+          'to hard-refresh and pull the latest version.' +
+        '</span>' +
+      '</div>';
     if (entries.length === 0) {
-      body.innerHTML = '<p class="changelog-empty">No updates yet — check back soon.</p>';
+      body.innerHTML = refreshTip + '<p class="changelog-empty">No updates yet — check back soon.</p>';
       return;
     }
 
@@ -89,7 +109,7 @@
       groups[groupIdx.get(d)].items.push(entry);
     }
 
-    body.innerHTML = groups.map(g => {
+    body.innerHTML = refreshTip + groups.map(g => {
       const items = g.items.map(item => {
         const kind = (item.kind || 'change').toLowerCase();
         const kindLabel = kind === 'feature' ? 'New' : kind === 'fix' ? 'Fix' : 'Change';

@@ -81,6 +81,13 @@
       }
     });
     document.body.classList.remove('pane-is-expanded');
+    // If we auto-opened the army rules collapsible on expand, restore
+    // its previous closed state.
+    const rules = document.getElementById('army-rules-collapsible');
+    if (rules && rules.dataset.expandPaneAutoOpened === '1') {
+      rules.open = false;
+      delete rules.dataset.expandPaneAutoOpened;
+    }
   }
 
   function expandPanel(panelId) {
@@ -95,6 +102,17 @@
     if (btn) {
       btn.setAttribute('aria-expanded', 'true');
       btn.title = 'Collapse pane';
+    }
+    // Army pane: auto-open the rules+stratagems collapsible so the user
+    // sees their detachment rules and strats next to the army list
+    // without a second click. Setup section also gets opened in case
+    // it was previously collapsed.
+    if (panelId === 'panel-left') {
+      const rules = document.getElementById('army-rules-collapsible');
+      if (rules && !rules.open) {
+        rules.dataset.expandPaneAutoOpened = '1';
+        rules.open = true;
+      }
     }
   }
 

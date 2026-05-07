@@ -26,10 +26,30 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.07-2',
-    lastUpdated: '2026-05-07T13:30:00Z',
+    version:     '2026.05.07-3',
+    lastUpdated: '2026-05-07T15:00:00Z',
     entries: [
       // ── 2026-05-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-07', kind: 'feature',
+        title: 'Army pane (expanded): card grid + auto-open rules',
+        description:
+          'Expanding the Army pane now lays the entries out as a card ' +
+          'grid (similar to the Units pane) so most or all of your ' +
+          'army is visible on one screen, and the "Army rules & ' +
+          'stratagems" collapsible auto-opens so the relevant rules ' +
+          'sit alongside the list. Click the header again to collapse ' +
+          'back to the regular 3-pane view.',
+      },
+      {
+        date: '2026-05-07', kind: 'change',
+        title: 'Updates pane: hint about hard-refresh',
+        description:
+          'The "What\'s new" modal now shows a small banner at the ' +
+          'top reminding you that browsers can hold on to a stale ' +
+          'cached build. If a new feature doesn\'t show up yet, hit ' +
+          'Ctrl+Shift+R (⌘⇧R on Mac) to force a hard refresh.',
+      },
       {
         date: '2026-05-07', kind: 'fix',
         title: 'Unit cards: points now sit under the unit name',

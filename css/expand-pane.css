@@ -112,10 +112,9 @@
   }
 
   /* ── ARMY panel expanded ─────────────────────────────────────────
-     Three regions on a wide monitor: setup (compact form), rules
-     (collapsible), and the army-entry list. On very wide screens we put
-     setup + rules in a left column and let the entries claim the entire
-     remaining width — that's what people care about when they expand. */
+     Two columns: setup + rules on the left, the army-entry list on the
+     right rendered as a card grid (similar to the Units pane) so the
+     player can see most/all of their army at a glance. */
   .panel-left.panel-expanded > .panel-body {
     display: grid;
     grid-template-columns: minmax(340px, 460px) minmax(0, 1fr);
@@ -130,27 +129,81 @@
   .panel-left.panel-expanded .army-rules-collapsible { grid-column: 1; grid-row: 2; }
   .panel-left.panel-expanded .points-summary-shadow { display: none !important; }
 
-  .panel-left.panel-expanded .army-entries-header,
+  /* Right column = entries area. We hide the legacy column-grid header
+     row (Unit / Pts / Qty / Total) since the cards label their own stats
+     inline. */
+  .panel-left.panel-expanded .army-entries-header {
+    display: none !important;
+  }
   .panel-left.panel-expanded .army-entry-list {
     grid-column: 2;
+    grid-row: 1 / span 99;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    align-content: start;
   }
-  .panel-left.panel-expanded .army-entries-header {
-    grid-row: 1;
-    font-size: 11px;
-    padding: 8px 10px;
-  }
-  .panel-left.panel-expanded .army-entry-list {
-    grid-row: 2 / span 99;
+
+  /* Card-shape each entry: switch the entry from a horizontal flex row
+     to a stacked card (handle + body + remove become layered/aligned
+     for a compact card surface). */
+  .panel-left.panel-expanded .army-entry-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 14px 14px 18px;
+    min-height: 100px;
     gap: 6px;
   }
-  .panel-left.panel-expanded .army-entry {
-    grid-template-columns: 1fr 60px 70px 60px 28px;
-    padding: 8px 10px;
-    font-size: 13px;
+  /* Drag-reorder handle is moved to the card's top-right so it doesn't
+     consume the full-width name row inside the card. */
+  .panel-left.panel-expanded .army-entry-card .army-entry-handle {
+    position: absolute;
+    top: 8px;
+    right: 36px;
+    margin: 0;
+    padding: 0;
+    opacity: 0.35;
   }
-  /* Rules section: when the army panel is fullscreen, also auto-open the
-     rules collapsible so the player sees their detachment rules + strats
-     without a second click. */
+  .panel-left.panel-expanded .army-entry-card .army-entry-handle:hover {
+    opacity: 0.85;
+  }
+  /* Name takes the full card width and is allowed to wrap to two lines
+     if needed — better than truncating with ellipsis on a card. */
+  .panel-left.panel-expanded .army-entry-card .army-entry-name {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    padding-right: 56px; /* leave room for handle + remove */
+    display: block !important;
+    line-height: 1.25;
+  }
+  .panel-left.panel-expanded .army-entry-card .army-entry-title {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
+  /* Stats row: keep the inline "Pts X · Qty [1] · Total Y" layout but
+     give it a touch more breathing room inside the card. */
+  .panel-left.panel-expanded .army-entry-card .army-entry-stats {
+    margin-top: 4px;
+    gap: 10px 16px;
+    font-size: 12px;
+  }
+  .panel-left.panel-expanded .army-entry-card .army-entry-remove {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    margin: 0;
+  }
+  /* Empty-state list item should fill the whole grid column nicely. */
+  .panel-left.panel-expanded .army-list-empty {
+    grid-column: 1 / -1;
+    padding: 60px 20px;
+    text-align: center;
+  }
+  /* Rules section: when the army panel is fullscreen, the JS module
+     auto-opens it (see expand-pane.js). Add a bit of contrast so it
+     doesn't feel like an afterthought next to the setup form. */
   .panel-left.panel-expanded .army-rules-collapsible {
     background: rgba(255, 255, 255, 0.025);
   }
