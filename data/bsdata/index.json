@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-08T09:54:50.980Z",
+  "generatedAt": "2026-05-08T15:52:19.827Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "19e28d6d3930241cfb489bea587806f416f62491",
+  "sourceCommit": "8761913d8cf2ed8bbd5429aea298dbd964275a1d",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -149,7 +149,7 @@
       "path": "Imperium - Astra Militarum - Library.cat",
       "name": "Imperium - Astra Militarum - Library",
       "type": "catalogue",
-      "sha": "e5d440289c311c8185d6b12457e74f997585bb54",
+      "sha": "dadb3a6054c1042e735da951b1bba7f63ccc8311",
       "size": 2941779
     },
     {
@@ -303,8 +303,8 @@
       "path": "Orks.cat",
       "name": "Orks",
       "type": "catalogue",
-      "sha": "e2b92c387ec80d34a06a120d7c837a92c9c8037e",
-      "size": 1974163
+      "sha": "06289f88e8d75beba0d51f6710421cc989bca287",
+      "size": 1975715
     },
     {
       "path": "T'au Empire.cat",

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" library="false" id="a55f-b7b3-6c65-a05f" name="Xenos - Orks" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" revision="159" battleScribeVersion="2.03" type="catalogue" authorName="BSData Developers" authorContact="Dunamis55 &amp; AbonShell">
+<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" library="false" id="a55f-b7b3-6c65-a05f" name="Xenos - Orks" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" revision="160" battleScribeVersion="2.03" type="catalogue" authorName="BSData Developers" authorContact="Dunamis55 &amp; AbonShell">
   <sharedSelectionEntries>
     <selectionEntry type="upgrade" import="true" name="Warlord" id="8b5-898c-f79b-5a9c">
       <categoryLinks>
@@ -5306,6 +5306,7 @@ Designer’s Note: Place a Grot Helper token next to the bearer, removing it onc
         <selectionEntryGroup name="Crusade" id="9d3a-3796-cd9f-f492" hidden="false" sortIndex="1">
           <entryLinks>
             <entryLink import="true" name="Mighty Champions" hidden="false" id="4948-4519-169f-5e97" type="selectionEntryGroup" targetId="f842-6e90-bc5a-80f1"/>
+            <entryLink import="true" name="Waaagh!boss" hidden="false" id="16b9-da23-538e-ee59" type="selectionEntry" targetId="8bcd-4872-2581-37ca"/>
           </entryLinks>
         </selectionEntryGroup>
       </selectionEntryGroups>
@@ -9612,6 +9613,7 @@ Designer’s Note: Place a Grot Helper token next to the bearer, removing it onc
         <selectionEntryGroup name="Crusade" id="4f04-e27a-200b-fed8" hidden="false" sortIndex="1">
           <entryLinks>
             <entryLink import="true" name="Mighty Champions" hidden="false" id="6ab0-4f8f-4f1f-83f6" type="selectionEntryGroup" targetId="f842-6e90-bc5a-80f1"/>
+            <entryLink import="true" name="Waaagh!boss" hidden="false" id="6743-1dec-d6d4-269b" type="selectionEntry" targetId="8bcd-4872-2581-37ca"/>
           </entryLinks>
         </selectionEntryGroup>
       </selectionEntryGroups>
@@ -20908,6 +20910,7 @@ Designer’s Note: Place a Squig Mine token next to the model, removing it once 
         <selectionEntryGroup name="Crusade" id="2237-5eb1-5d61-d0dc" hidden="false" sortIndex="1">
           <entryLinks>
             <entryLink import="true" name="Mighty Champions" hidden="false" id="7417-2a51-6e33-2a18" type="selectionEntryGroup" targetId="f842-6e90-bc5a-80f1"/>
+            <entryLink import="true" name="Waaagh!boss" hidden="false" id="9249-5c99-0bf8-6914" type="selectionEntry" targetId="8bcd-4872-2581-37ca"/>
           </entryLinks>
         </selectionEntryGroup>
       </selectionEntryGroups>
@@ -21590,20 +21593,38 @@ Designer’s Note: Place a Squig Mine token next to the model, removing it once 
       </entryLinks>
     </selectionEntry>
     <selectionEntry type="upgrade" import="true" name="Waaagh!boss" hidden="false" id="8bcd-4872-2581-37ca">
-      <categoryLinks>
-        <categoryLink name="Waaagh!boss" hidden="false" id="4403-6b90-4d1d-86dd" targetId="3cd9-70a8-d77d-4e9c" primary="false"/>
-      </categoryLinks>
       <constraints>
         <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="8f96-ef57-948b-aa38" includeChildSelections="false"/>
         <constraint type="max" value="1" field="selections" scope="roster" shared="true" id="ebaa-8d5a-dafc-8aee" includeChildSelections="true"/>
       </constraints>
       <modifiers>
         <modifier type="set" value="true" field="hidden">
-          <conditions>
-            <condition type="notInstanceOf" value="1" field="selections" scope="ancestor" childId="47cc-4071-6fda-688e" shared="true"/>
-          </conditions>
+          <conditionGroups>
+            <conditionGroup type="and">
+              <conditions>
+                <condition type="notInstanceOf" value="1" field="selections" scope="ancestor" childId="47cc-4071-6fda-688e" shared="true"/>
+                <condition type="lessThan" value="1" field="selections" scope="root-entry" childId="ae9d-f74f-769c-5fc" shared="true" childName="Ghazghkull Thraka" includeChildSelections="true"/>
+              </conditions>
+            </conditionGroup>
+          </conditionGroups>
         </modifier>
       </modifiers>
+      <modifierGroups>
+        <modifierGroup type="and">
+          <modifiers>
+            <modifier type="add" value="3cd9-70a8-d77d-4e9c" field="category" scope="root-entry">
+              <conditions>
+                <condition type="lessThan" value="1" field="selections" scope="root-entry" childId="ae9d-f74f-769c-5fc" shared="true" childName="Ghazghkull Thraka" includeChildSelections="true"/>
+              </conditions>
+            </modifier>
+            <modifier type="add" value="3cd9-70a8-d77d-4e9c" field="category" scope="root-entry" affects="self.entries.ae9d-f74f-769c-5fc">
+              <conditions>
+                <condition type="atLeast" value="1" field="selections" scope="root-entry" childId="ae9d-f74f-769c-5fc" shared="true" childName="Ghazghkull Thraka" includeChildSelections="true"/>
+              </conditions>
+            </modifier>
+          </modifiers>
+        </modifierGroup>
+      </modifierGroups>
     </selectionEntry>
     <selectionEntry type="upgrade" import="true" name="Choppa of Da Great Waaagh! upgrade" hidden="false" id="106c-02ce-13d0-a7b3">
       <constraints>
