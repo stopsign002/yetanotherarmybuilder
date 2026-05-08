@@ -1,0 +1,942 @@
+# Module Reference
+
+Per-file deep dive for every JavaScript module in the repo. Each entry lists:
+
+- **Purpose** — one-line summary.
+- **Exports** — what the module attaches to a global (`window.App`, `window.UI`, `window.App.hooks`, etc.).
+- **Depends on** — globals the module reads from at call time.
+- **Storage** — every `localStorage` / `sessionStorage` / `IndexedDB` key the module owns or reads.
+- **DOM** — element ids / classes the module owns or queries.
+- **Notes** — gotchas, timing, browser quirks.
+
+Cross-cutting docs:
+- `CLAUDE.md` — feature → module table, project conventions, storage table.
+- `docs/ARCHITECTURE.md` — data flow, startup sequence, hook system, lazy-loading.
+- `docs/UI.md` — UI / App roles tables, "How to add X" recipes, public namespaces.
+- `docs/PARSER.md` — parser internals + classifier rules.
+- `docs/AUTH.md`, `docs/SYNC.md` — auth/sync wire formats.
+- `docs/ADMIN_API.md`, `docs/CARDS_IMAGES_API.md` — server contracts.
+
+---
+
+## Top-level (`js/`)
+
+### `js/db.js`
+- **Purpose:** `YaabDB` IndexedDB wrapper for parsed factions, raw `.gst` XML, GDC payloads, and user card-back images.
+- **Exports:** `window.YaabDB = { getFaction, putFaction, getAllFactions, clearFactions, getGst, putGst, clearGst, getGdc, putGdc, clearGdc, images: { LIMIT, list, count, add, remove, get } }`.
+- **Depends on:** native IndexedDB only.
+- **Storage:** IDB database `yaab`, version `DB_VERSION`. Stores: `factions`, `gst`, `gdc`, `cardBackImages`.
+- **DOM:** none.
+- **Notes:** `DB_VERSION` MUST be bumped when the parser output shape changes. On version bump, `onupgradeneeded` deletes all parsed-data stores — partial migrations are not supported. **Card-back image store is USER DATA and persists across `onupgradeneeded`** (do not include it in the parsed-shape drop). Image library capped at 30 per owner. Safari private mode + quota pressure can hang IDB puts; `bsdata.js` races these with timeouts.
+
+### `js/bsdata.js`
+- **Purpose:** Fetch BattleScribe XML; mirror-first (`data/bsdata/index.json` + `data/bsdata/files/...`) with GitHub raw fallback. Two-phase parallel catalogue loader with GDC merge.
+- **Exports:** `window.BSData = { fetchFileList, fetchFile, loadAllFactions, clearCache, clearFactionCache }`.
+- **Depends on:** `YaabDB`, `WahapediaParser`, `WahapediaParser.addToSharedIndex`, `WahapediaParser.releaseSharedIndex`, `App.state` (pushes factions), `App.GDC.loadAll` (Phase 3 hook), `UI.setLoadProgress`, `UI.updateFactionRules`, `UI.renderUnitDetail`.
+- **Storage:** sessionStorage `yaab_bsdata_filelist_10e_v2` (file listing + source). Reads legacy `yaab_bsf_*` / `yaab_gst_*` (old cache format). IDB `factions` / `gst` / `gdc` via `YaabDB`.
+- **DOM:** none directly (re-renders faction-rules + unit-detail after GDC overlay if visible).
+- **Notes:** Phase 1 preloads EVERY catalogue's shared content (`.gst` + non-Library catalogues that ship sharedRules/sharedProfiles) into the parser index — needed because cross-catalogue infoLinks resolve at parse time. Phase 1.5 then preloads all catalogues again in parallel before Phase 2 parses. Phase 3 fires `App.GDC.loadAll(factions)` to overlay GDC stratagems + unit data. Mirror → GitHub raw fallback on 404. Watchdog logs in-flight files >15s. GDC merge is defensive (failures don't break BSData). 6-worker concurrent pool. `releaseSharedIndex()` is called once after Phase 2 completes — frees tens of MB. `clearFactionCache` wipes legacy keys + IDB stores.
+
+### `js/gdc.js`
+- **Purpose:** Game-datacards-eu JSON integration; overlays stratagems + unit data (loadout, wargear, leader, weapons) onto BSData factions.
+- **Exports:** `App.GDC = { FACTION_TO_GDC, loadAll, mergeIntoFactions, mergeUnitDataIntoFactions, _rawCache, _projectStratagem, _nameKey }`.
+- **Depends on:** `YaabDB` (for cached payloads), `App.state.factions`, `fetch`.
+- **Storage:** IDB `gdc` store via `YaabDB` (per-faction JSON payloads).
+- **DOM:** none.
+- **Notes:** Space Marine chapters consult chapter-specific file FIRST (chapter entries win), then fall back to `space_marines.json`. Stratagem dedup by case-insensitive name. Unit name normalization via `nameKey()` (lowercased, curly quotes → ASCII, parens/brackets stripped, non-alphanumeric removed). Silent on GDC miss (non-fatal). Attaches to each unit: `gdcLoadout`, `gdcWargear`, `gdcComposition`, `gdcLeadBy`, `gdcMeleeWeapons`, `gdcRangedWeapons`. Must be loaded BEFORE any module that consumes `App.GDC` (script ordering in `index.html`).
+
+### `js/storage.js`
+- **Purpose:** Saved-armies localStorage layer + compact `YAAB1:` deflate-base64url export/import.
+- **Exports:** `window.Storage = { saveFactionData, loadFactionData, addFaction, removeFaction, exportArmyToString, importArmyFromString, exportArmyToText, exportArmyToCSV }`.
+- **Depends on:** `Army`, native `CompressionStream` / `pako` fallback (none currently bundled), `localStorage`.
+- **Storage:** `localStorage.yaab_armies` (Array of `Army.toJSON()`), legacy `yaab_factions` (kept for back-compat, unused on read path).
+- **DOM:** none.
+- **Notes:** `YAAB1:` v2 export format is contract — bookmarked share URLs depend on it. Don't break.
+
+### `js/army.js`
+- **Purpose:** Data model. `Army` (units + selections) + `ArmyManager` (CRUD over `localStorage.yaab_armies`).
+- **Exports:** `window.Army`, `window.ArmyManager`.
+- **Depends on:** `Storage.saveFactionData` / `loadFactionData`.
+- **Storage:** `localStorage.yaab_armies` (via Storage layer).
+- **DOM:** none.
+- **Notes:** `toJSON()` MUST include `createdAt` and `updatedAt`. The constructor MUST accept them. Every `fromJSON` path that drops the timestamps breaks cross-device sync (every load looks "newer" → uploads stale → clobbers other devices). See `docs/SYNC.md`.
+
+---
+
+## App modules (`js/app/`)
+
+### `js/app/state.js`
+- **Purpose:** Central state object + faction color palette + theme apply.
+- **Exports:** `App.state`, `App.VIRTUAL_PARENTS`, `App.FACTION_COLORS`, `App.DEFAULT_ACCENT`, `App.applyFactionColor`.
+- **Depends on:** none (must load early).
+- **Storage:** none directly.
+- **DOM:** sets CSS custom properties on `<html>` (`--accent`, `--accent-hover`, `--accent-rgb`, etc.). See `docs/ARCHITECTURE.md` "Things that look weird".
+- **Notes:** `applyFactionColor(null)` resets to default. Auto-contrast for `--accent-on` is computed.
+
+### `js/app/hooks.js`
+- **Purpose:** Extension registry so feature modules don't need to edit shared files.
+- **Exports:** `App.hooks = { bootstrap, armyChange, selectionChange, detailActions, armyToolbarActions, rosterFilters, cardClassContributors, modeChange }`. `App.fireBootstrap`, `App.fireArmyChange`, `App.fireSelectionChange`, `App.fireModeChange`.
+- **Depends on:** none.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Fire functions catch + console.warn per entry so one broken hook doesn't break others. `armyChange` callback signature `(army, kind?) => void`. `kind` values: `'add'`, `'remove'`, `'qty'`, `'enhancement'`, `'new'`, `'load'`, `'import'`, `'save'`, `'render'`. `rosterFilters` are AND-ed.
+
+### `js/app/index.js`
+- **Purpose:** `DOMContentLoaded` bootstrap. Init UI, restore army, kick off load, mount toolbar actions.
+- **Exports:** `App.mountArmyToolbarActions` (toolbar region routing).
+- **Depends on:** `UI.init`, `App.state`, `ArmyManager`, `App.renderAll`, `App.setupResizablePanels`, `App.wireEvents`, `App.fireBootstrap`, `App.autoLoadFromBSData`.
+- **Storage:** reads `localStorage.yaab_armies` via `ArmyManager`.
+- **DOM:** wires `#topbar-icons`, `#toolbar-extras`, `#tools-menu`, `#more-menu`, `#export-extras`.
+- **Notes:** Most-recently-updated saved army becomes `currentArmy`. Action Center routing maps action ids to sections. `TOPBAR_SHELF_IDS` whitelist: account, bug-report, changelog. `ICON_VISIBLE_IDS`: undo / redo / cmdp.
+
+### `js/app/filters.js`
+- **Purpose:** Faction/chapter resolution + `rebuildAllUnits` (by reference, not copy).
+- **Exports:** `App.rebuildAllUnits`, `App.buildChaptersMap`, `App.getVirtualParentOf`, `App.getEffectiveFilter`, `App.findUnit`, `App.getCurrentFaction`, `App.getDetachmentFaction`.
+- **Depends on:** `App.state`, `App.VIRTUAL_PARENTS`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** `rebuildAllUnits` stamps `_factionName` directly on parser units + pushes refs (NOT copies). Bumps `state.factionsVersion` — used by `ui/detail.js` to invalidate Led-By cache. Space marine chapters inherit detachments from generic Adeptus Astartes.
+
+### `js/app/render.js`
+- **Purpose:** Top-level render pipelines that combine filter + UI calls.
+- **Exports:** `App.renderAll`, `App.renderUnitRosterWithContext`.
+- **Depends on:** `UI.renderUnitRoster`, `UI.renderArmyList`, `UI.updateFactionFilter`, `UI.updateFactionRules`, `App.getEffectiveFilter`.
+- **Storage:** none.
+- **DOM:** indirect via UI.* calls.
+- **Notes:** `renderUnitRosterWithContext` is the canonical re-renderer used by every roster filter / chip toggle / search input.
+
+### `js/app/bsdata-load.js`
+- **Purpose:** Kicks off `BSData.loadAllFactions` + applies imported selections after restore.
+- **Exports:** `App.autoLoadFromBSData`.
+- **Depends on:** `BSData`, `App.state`, `App.rebuildAllUnits`, `App.buildChaptersMap`, `App.renderUnitRosterWithContext`, `App.applyImportedSelections`, `UI.setLoadProgress`, `UI.updateFactionFilter`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Calls `applyImportedSelections` per-faction-loaded so the user sees their selection sync the moment its data lands; final safety pass after load completes.
+
+### `js/app/selections.js`
+- **Purpose:** Chapter sub-dropdown + detachment dropdown population + import sync.
+- **Exports:** `App.updateChapterDropdown`, `App.updateDetachmentOptions`, `App.applyImportedSelections`.
+- **Depends on:** `App.state`, `App.getCurrentFaction`, `App.getDetachmentFaction`.
+- **Storage:** none.
+- **DOM:** `#army-chapter-group`, `#army-chapter-select`, `#army-detachment-select`.
+- **Notes:** Chapter dropdown only visible when faction is a `VIRTUAL_PARENT`. Changes cascade — selecting a faction wipes chapter & detachment.
+
+### `js/app/resize.js`
+- **Purpose:** Drag-to-resize handles for left/right panel widths.
+- **Exports:** `App.setupResizablePanels`.
+- **Depends on:** none.
+- **Storage:** none (widths are not persisted; reset on reload).
+- **DOM:** `#resize-left`, `#resize-right`, sets `--col-left` / `--col-right` on `<html>`.
+- **Notes:** Adds `is-resizing` class to `#app-main` during drag so `expand-pane.css`'s `transition` rule can be suppressed (otherwise the transition lags every drag pixel into a 420ms tween). See `js/app/expand-pane.js`.
+
+### `js/app/events.js`
+- **Purpose:** All event listeners (toolbar, dropdowns, unit grid, modals, faction/detachment dropdowns).
+- **Exports:** `App.wireEvents`.
+- **Depends on:** `App.state`, `App.findUnit`, `App.renderUnitRosterWithContext`, `App.applyFactionColor`, `App.updateChapterDropdown`, `App.updateDetachmentOptions`, `App.applyImportedSelections`, `Storage.*`, every `UI.show*Modal` / `UI.render*`, `UI.toast`.
+- **Storage:** none directly (delegates to Army/Storage/Sync).
+- **DOM:** delegates from `#unit-grid`, `#army-entry-list`, `#unit-detail-panel`, `#army-rules-section`, `#saved-army-list`. Direct on `#search-input`, `#army-name-input`, `#points-limit-input`, `#army-faction-select`, `#army-chapter-select`, `#army-detachment-select`, every `#btn-*`, `#modal-*-close`.
+- **Notes:** Double-click on a unit card adds 1× silently. On Load, races a 2s `App.Sync.pullAll()` so cloud-synced armies show up before the modal renders.
+
+### `js/app/topbar.js`
+- **Purpose:** Wires the top app bar (brand, mode tabs, search, Settings + Help, account chip mirror, ⌘K trigger, Action Center, status row).
+- **Exports:** none (event-listener IIFE).
+- **Depends on:** `App.state`, `App.hooks`, `App.Auth`, `UI.toast`, `App.Admin`.
+- **Storage:** none.
+- **DOM:** `#topbar`, `#topbar-mode-*`, `#topbar-icons`, `#topbar-settings`, `#topbar-help`.
+- **Notes:** Auth status drives account dropdown visibility; admin link gated by `App.Auth.isAdmin()`.
+
+### `js/app/sw-register.js`
+- **Purpose:** Defensive helper that proactively unregisters any leftover service worker.
+- **Exports:** none.
+- **Depends on:** `navigator.serviceWorker`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** The app-shell SW has been retired. `/sw.js` is now a kill-switch that self-unregisters and clears `yaab-shell-v*` caches. New visits do NOT register an SW. If you see "service worker disabled" comments, that's intentional.
+
+### `js/app/keyboard.js`
+- **Purpose:** Global keyboard shortcuts.
+- **Exports:** none.
+- **Depends on:** `App.state`, `UI.toast`.
+- **Storage:** none.
+- **DOM:** queries `.unit-card` / `.unit-card.selected`.
+- **Notes:** `/` focuses `#search-input`. ↑↓ move selection in visible cards. Enter opens. `a` adds to army. `?` shows help toast. Cmd/Ctrl+Z / Cmd+Shift+Z owned by `history.js`. Blocks input/textarea/select/contentEditable targets.
+
+### `js/app/command-palette.js`
+- **Purpose:** Cmd/Ctrl+K fuzzy command palette + `?` keyboard-help overlay.
+- **Exports:** `App.openCommandPalette`, `App.closeCommandPalette`, `App.openKeyboardHelp`, `App.closeKeyboardHelp`.
+- **Depends on:** `App.state`, `App.hooks`, `UI.toast`, `CSS.escape`.
+- **Storage:** none.
+- **DOM:** `cmdp-*` classes (backdrop, input, list, footer, help modal).
+- **Notes:** Results capped to 40, grouped (Actions, Factions, Detachments, Units). Tab cycles groups. Empty query suppresses the units flood. Help overlay stacks on top of palette (palette closes first on Escape).
+
+### `js/app/validation.js`
+- **Purpose:** Advisory 10e composition checks (Rule of Three, no warlord).
+- **Exports:** Validation checker + warnings UI.
+- **Depends on:** `App.state`, `App.hooks` (`armyChange`).
+- **Storage:** none.
+- **DOM:** `validation-*` classes.
+- **Notes:** Non-blocking. Warnings appear in left panel as a list.
+
+### `js/app/history.js`
+- **Purpose:** Undo/redo snapshot stack driven by `armyChange`.
+- **Exports:** Toolbar buttons (undo/redo).
+- **Depends on:** `App.state`, `App.hooks`, `Army.fromJSON`, `UI.renderArmyList`, `UI.toast`.
+- **Storage:** none (in-memory stacks).
+- **DOM:** `#yaab-btn-undo`, `#yaab-btn-redo`.
+- **Notes:** Snapshots debounced 500ms (replaces top of stack within window). Capped at 50. Redo stack clears on any non-undo mutation. Suppress flag prevents recursion on restore. Cmd/Ctrl+Z + Cmd/Ctrl+Shift+Z (only when not typing).
+
+### `js/app/url-share.js`
+- **Purpose:** `?a=YAAB1:...` encode/decode + Share Link button.
+- **Exports:** Toolbar action button.
+- **Depends on:** `App.state`, `Storage.exportArmyToString` / `importArmyFromString`, `UI.toast`, `navigator.clipboard`.
+- **Storage:** none.
+- **DOM:** `modal-url-share`.
+- **Notes:** Shared URL can be very long (deflate may not save much for tiny armies). Receiver decodes via the URL handler in `events.js`.
+
+### `js/app/qr-share.js`
+- **Purpose:** QR code for the current share URL (mobile-to-mobile).
+- **Exports:** Toolbar action button.
+- **Depends on:** `js/vendor/qrcode.min.js`, `App.state`, `Storage.exportArmyToString`.
+- **Storage:** none.
+- **DOM:** `modal-qr-share`.
+- **Notes:** Vendor lib is `defer`-loaded.
+
+### `js/app/pwa-install.js`
+- **Purpose:** `beforeinstallprompt` handler + mobile tab-bar wiring.
+- **Exports:** Toolbar action button + tab-bar setup. `App.setMobilePanel(panelName)`.
+- **Depends on:** `window.beforeinstallprompt`, `UI.toast`, `App.hooks`.
+- **Storage:** `localStorage.yaab_pwa_dismissed` (banner dismiss), `localStorage.yaab_mobile_panel` (last-active mobile tab).
+- **DOM:** `yaab-pwa-banner`, `.mobile-tabbar` buttons.
+- **Notes:** Event listener for `beforeinstallprompt` only fires once per session. Mobile tab bar has 4 tabs: Army / Units / Detail / More.
+
+### `js/app/auth.js`
+- **Purpose:** User session state + auth API calls.
+- **Exports:** `App.Auth = { onChange, getCurrentUser, isSignedIn, primeFromHint, init, isAdmin, register, login, logout, recover, changePassword, handleSessionExpired }`.
+- **Depends on:** `/api/auth/*` endpoints, `localStorage.yaab_auth_session_hint`.
+- **Storage:** `localStorage.yaab_auth_session_hint` (cosmetic only — cookie is source of truth).
+- **DOM:** none.
+- **Notes:** `init()` primes from hint then calls `/me` to verify. 401 mid-session calls `handleSessionExpired` which surfaces a re-login modal. See `docs/AUTH.md`.
+
+### `js/app/admin.js`
+- **Purpose:** Server-backed admin panel (account approvals, image moderation, bug-report review).
+- **Exports:** `App.Admin = { open, close, isAdmin }`.
+- **Depends on:** `App.Auth`, `UI.escapeHtml`, `UI.toast`, `/api/admin/*` endpoints.
+- **Storage:** none.
+- **DOM:** `yaab-admin-modal`, `admin-*` classes.
+- **Notes:** Server enforces admin gating; client gating is cosmetic. Each tab fetches separately. See `docs/ADMIN_API.md`.
+
+### `js/app/sync.js`
+- **Purpose:** Offline-first cloud sync (armies + KV bag).
+- **Exports:** `App.Sync = { pullAll, pushAll, isEnabled, isOnline, ... }`.
+- **Depends on:** `App.state`, `App.Auth`, `ArmyManager`, `/api/sync/*` endpoints.
+- **Storage:** `localStorage.yaab_sync_queue`, `yaab_sync_known`, `yaab_sync_state_at`.
+- **DOM:** `yaab-sync-banner`.
+- **Notes:** LWW (last-write-wins) by `updatedAt`. Queue coalesced on enqueue. Cleared on sign-out. See `docs/SYNC.md`.
+
+### `js/app/pending-approval-banner.js`
+- **Purpose:** Banner shown when signed-in user is pending admin approval; surfaces recovery code.
+- **Exports:** none (side-effect).
+- **Depends on:** `App.Auth`, `App.hooks`.
+- **Storage:** none.
+- **DOM:** `yaab-pending-approval-banner`.
+- **Notes:** Recovery code only shown once per session — back-up nag.
+
+### `js/app/autosave.js`
+- **Purpose:** Auto-persist current army on any mutation.
+- **Exports:** none (side-effect — registers `armyChange`).
+- **Depends on:** `App.state`, `App.hooks.armyChange`, `ArmyManager.saveArmy`.
+- **Storage:** writes via `ArmyManager` to `localStorage.yaab_armies`.
+- **DOM:** none.
+- **Notes:** Debounced 500ms. Skips placeholder name "New Army". Skips `kind: 'save' | 'delete'` to avoid recursion. Flushes on `beforeunload` / `visibilitychange`.
+
+### `js/app/details-persist.js`
+- **Purpose:** Remember which `<details>` boxes are open across reloads.
+- **Exports:** none.
+- **Depends on:** `App.hooks.bootstrap`, `localStorage`.
+- **Storage:** `localStorage.yaab_details_state` (`{ id: boolean }`).
+- **DOM:** `#army-setup-section`, `#army-rules-collapsible`.
+- **Notes:** `expand-pane.js` may transiently flip `army-rules-collapsible` open while the army pane is expanded; it tags the element with `data-expand-pane-auto-opened` so its prior state can be restored. `details-persist` writes happen on toggle event, so the auto-open won't pollute the saved state if the user collapses the pane normally.
+
+### `js/app/expand-pane.js`
+- **Purpose:** Click panel header to expand it full-width; click again or Escape to restore.
+- **Exports:** `App.PaneExpand = { expand, collapse, toggle, isExpanded }`.
+- **Depends on:** DOM queries only.
+- **Storage:** none.
+- **DOM:** `#panel-left`, `#panel-center`, `#panel-right`, `#app-main`. Injects `.panel-expand-btn` SVG buttons. Adds `pane-expanded-{left|center|right}` to `#app-main` + `panel-expanded` to the active panel + `pane-is-expanded` to `<body>`.
+- **Notes:** Auto-opens `#army-rules-collapsible` while the Army pane is expanded (tags with `data-expand-pane-auto-opened` to restore on collapse). Modal Escape doesn't conflict (early return when a `.modal-backdrop:not([hidden])` exists). Mobile (`max-width: 820px`): button is hidden.
+
+### `js/app/flavor.js`
+- **Purpose:** Faction flavor quotes on empty army + save toast.
+- **Exports:** none.
+- **Depends on:** `App.state`, `App.hooks`, `UI.toast`.
+- **Storage:** none.
+- **DOM:** `#army-list-empty`, `flavor-quote` class.
+- **Notes:** Save toast fires 450ms after save click to not collide with the actual save toast.
+
+### `js/app/nickname.js`
+- **Purpose:** Auto-suggested army nickname (placeholder text in the name input).
+- **Exports:** none.
+- **Depends on:** `App.state`, `App.hooks.selectionChange`.
+- **Storage:** none.
+- **DOM:** `#army-name-input`.
+- **Notes:** Sets `placeholder` only — never overwrites a user's value.
+
+### `js/app/hero-state.js`
+- **Purpose:** Empty-army hero CTA + Cmd+K hint badge + recent-faction chip row.
+- **Exports:** `App.heroState = { pushRecent, readRecents, rerender }`.
+- **Depends on:** `App.state`, `App.hooks`, `App.openStarterLists`, `App.starterListsRollRandom`.
+- **Storage:** `localStorage.yaab_recent_factions` (Array, cap 5).
+- **DOM:** `#yaab-hero-cta`, `.yaab-search-wrap`, `.yaab-kbd-hint`.
+- **Notes:** Wraps `#search-input` in `.yaab-search-wrap` so the Cmd+K badge can be absolutely positioned. The wrap's `width: 100%` is essential — `expand-pane.css` relies on it as a flex item.
+
+### `js/app/legends-toggle.js`
+- **Purpose:** Show/hide `[Legends]` units + corner badge.
+- **Exports:** Toolbar button + `rosterFilters` predicate + `cardClassContributors` (`.unit-legends`).
+- **Depends on:** `App.hooks`, `App.renderUnitRosterWithContext`.
+- **Storage:** `localStorage.yaab_show_legends` (`'1'` / `'0'`).
+- **DOM:** `#yaab-btn-legends`.
+- **Notes:** Detail panel gets a "LEGENDS — casual play" tag via MutationObserver on render.
+
+### `js/app/ork-math.js`
+- **Purpose:** Convert points display to "teef" when Orks selected.
+- **Exports:** none (DOM-replace via MutationObserver-style render hook).
+- **Depends on:** `App.state`, `App.hooks.selectionChange`.
+- **Storage:** `localStorage.yaab_ork_math` (toggle).
+- **DOM:** various points spans.
+- **Notes:** Cosmetic only — does not change the underlying army totals.
+
+### `js/app/points-override.js`
+- **Purpose:** Per-unit points override (dataslate edits).
+- **Exports:** `App.applyPointsOverrides` + detail-panel editable field.
+- **Depends on:** `App.state`, `App.hooks`, `UI.renderArmyList`.
+- **Storage:** `localStorage.yaab_points_overrides` (`{ unitId: newPoints }`).
+- **DOM:** `points-override-*` classes.
+- **Notes:** Applied when reading unit cost; original BSData value is preserved.
+
+### `js/app/favorites.js`
+- **Purpose:** Star/unstar units; Favorites + Recents chips on roster.
+- **Exports:** Roster chips + detail-panel star button (dynamic html getter).
+- **Depends on:** `App.state`, `App.hooks`, `UI.*`.
+- **Storage:** `localStorage.yaab_favorites` (Array of unit ids), `yaab_recents` (cap 10).
+- **DOM:** `.fav-chip`, `.recent-chip`, `.favorite-toggle`, `.fav-star`.
+- **Notes:** Star button uses property getter for `html` so the icon updates instantly. Recents diff on `armyChange` (snapshot ids) so renders/qty edits don't pollute it.
+
+### `js/app/collection.js`
+- **Purpose:** Owned/painted tracker; roster filter chips, progress bar, dashboard.
+- **Exports:** `App.collection = { getStatus, setStatus, STATUSES, openDashboard, closeDashboard }`.
+- **Depends on:** `App.state`, `App.hooks`, `UI.*`.
+- **Storage:** `localStorage.yaab_collection` (`{ unitId: status }`), `yaab_show_collection_badges` (BUILD-mode opt-in).
+- **DOM:** `.collection-detail-widget`, dashboard modal.
+- **Notes:** Mode-gated. Badge toggle persists & syncs cross-tab via `storage` event. Detail widget is hidden on mobile.
+
+### `js/app/starter-lists.js`
+- **Purpose:** Curated starter army gallery + "Surprise me" random.
+- **Exports:** `App.openStarterLists`, `App.starterListsRollRandom`, `App.surpriseMe`.
+- **Depends on:** `App.state`, `App.applyImportedSelections`, `UI.renderArmyList`, `UI.toast`, `js/data/starter-*.json`.
+- **Storage:** none.
+- **DOM:** `modal-starter-lists`.
+- **Notes:** Bridges to active army (saves current first, then loads).
+
+### `js/app/match-mode.js`
+- **Purpose:** Full-screen game-day overlay (CP, turns, phases, wounds, VP, timer, log).
+- **Exports:** Toolbar button + Cmd/Ctrl+Shift+M keybinding.
+- **Depends on:** `App.state`, `App.hooks`.
+- **Storage:** `localStorage.yaab_match_state`.
+- **DOM:** `yaab-match-*`.
+- **Notes:** Max 5 turns. CP/VP capped (50 / 15). Wounds per-entry-index. Timer persists elapsed across reloads. Army signature detects swap. Escape closes.
+
+### `js/app/kill-team.js`
+- **Purpose:** Small-format mode: cap points, filter roster, mission roller, faction templates.
+- **Exports:** Toolbar button. `App.toggleKillTeamMode`.
+- **Depends on:** `App.state`, `App.hooks`, `UI.toast`.
+- **Storage:** `localStorage.yaab_kt_mode` (active flag), `yaab_kt_mission` (last roll).
+- **DOM:** `kill-team-*` banner classes.
+- **Notes:** Suggests banner at 250pts.
+
+### `js/app/stratagems.js`
+- **Purpose:** Stratagem browser modal + per-detachment stratagem list rendering.
+- **Exports:** Toolbar button + detail-panel actions.
+- **Depends on:** `App.state`, `App.hooks`, `UI.renderUnitDetail`.
+- **Storage:** none directly (uses `match-mode`'s state for activation).
+- **DOM:** `modal-stratagems`, `stratagem-*`.
+- **Notes:** Pulls stratagems from BSData detachment block + `js/data/stratagems-data.js` (core/common).
+
+### `js/app/crusade.js`
+- **Purpose:** Crusade campaign tracker.
+- **Exports:** `App.crusade = { open, close, rosters, RANKS, HONOURS, SCARS, XP_PRESETS, rankForXP }`.
+- **Depends on:** `App.state`, `Army`, `UI.toast`.
+- **Storage:** `localStorage.yaab_crusade_rosters` (full roster state).
+- **DOM:** `crusade-*`.
+- **Notes:** 5 rank tiers. 18 honour types + custom. Battle-army flow bridges crusade ↔ active army.
+
+### `js/app/opponent.js`
+- **Purpose:** Opponent army state + paste-in parser (YAAB1 + plain text).
+- **Exports:** Toolbar button.
+- **Depends on:** `App.state`, `App.hooks`.
+- **Storage:** `localStorage.yaab_opponent`.
+- **DOM:** `yaab-opponent-*`.
+- **Notes:** Plain-text parser tries name fuzzy-matching against `App.state.allUnits`.
+
+### `js/app/army-diff.js`
+- **Purpose:** Labeled snapshots on save + two-version diff modal.
+- **Exports:** Toolbar action button.
+- **Depends on:** `App.state`, `Army.fromJSON`, `Storage.exportArmyToString`, `UI.renderArmyList`, `UI.toast`.
+- **Storage:** `localStorage.yaab_army_snapshots` (keyed by armyId, max 20).
+- **DOM:** `modal-army-diff`.
+- **Notes:** Dedupes snapshots (no-change skip). Reverts create a safety snapshot first.
+
+### `js/app/activity-log.js`
+- **Purpose:** Passive session change history.
+- **Exports:** Toolbar button.
+- **Depends on:** `App.state`, `App.hooks`, `UI.toast`.
+- **Storage:** `localStorage.yaab_activity_log` (per-day buckets `YYYY-MM-DD`, 30-day retention).
+- **DOM:** `modal-activity-log`.
+- **Notes:** Debounces same-kind entries 500ms. 200/session cap. Drops oldest day on quota errors.
+
+### `js/app/community-feed.js`
+- **Purpose:** Read-only browsable feed of curated army lists.
+- **Exports:** Toolbar button + bootstrap prefetch.
+- **Depends on:** `App.state`, `UI.renderArmyList`, `UI.toast`, `js/data/community-feed.json`.
+- **Storage:** none.
+- **DOM:** `modal-community-feed`.
+- **Notes:** Filters: faction, points, tags. Marks unavailable lists disabled when missing factions detected.
+
+### `js/app/lore.js`
+- **Purpose:** Faction lore browser modal.
+- **Exports:** `App.openFactionLore`. Toolbar button + detail-panel `.detail-faction` click delegation.
+- **Depends on:** `App.state`, `App.FACTION_LORE` (`js/data/lore-data.js`), `UI.escapeHtml`.
+- **Storage:** none.
+- **DOM:** `yaab-lore-modal`.
+- **Notes:** Faction guess: `selectedUnit → detachmentFaction → selectedChapter → factionFilter`.
+
+### `js/app/bug-report.js`
+- **Purpose:** Server-backed bug-report modal with auto-attached diagnostics.
+- **Exports:** `App.BugReport = { open }`.
+- **Depends on:** `App.state`, `App.Auth`, `Storage.exportArmyToString`, `UI.showAuthModal`, `UI.toast`, `/api/bugs`.
+- **Storage:** none.
+- **DOM:** `modal-bug-report`.
+- **Notes:** Auth-gated. Diag truncated to 16000 chars; body 4000.
+
+### `js/app/changelog.js`
+- **Purpose:** "What's new" modal driven by `App.CHANGELOG`.
+- **Exports:** `App.Changelog = { open, close }`. Toolbar (icon shelf) button.
+- **Depends on:** `App.CHANGELOG` (data in `js/data/changelog-data.js`), `UI.escapeHtml`, `UI.toast`.
+- **Storage:** `localStorage.yaab_changelog_seen` (last seen version → drives unseen-dot badge).
+- **DOM:** `modal-changelog`, `changelog-*`.
+- **Notes:** Renders a hard-refresh tip (Ctrl+Shift+R / ⌘⇧R, platform-detected) above entries. Every shippable change MUST add an entry.
+
+### `js/app/first-time-tour.js`
+- **Purpose:** Retired guided tour. Stub.
+- **Exports:** `App.replayTour`, `App.startTour` (both no-ops).
+- **Depends on:** none.
+- **Storage:** `localStorage.yaab_tour_seen` (legacy flag).
+- **DOM:** none.
+- **Notes:** Kept so `settings-drawer.js` "Replay onboarding tour" doesn't crash.
+
+### `js/app/lazy-modules.js`
+- **Purpose:** Defer feature modules until first user trigger; placeholder actions populate menus at boot.
+- **Exports:** Module registry.
+- **Depends on:** `App.hooks`, `UI.toast`.
+- **Storage:** none.
+- **DOM:** none directly.
+- **Notes:** Wired into `index.html` between `app/index.js` and the feature-modules block. Placeholder pushes onto `armyToolbarActions` BEFORE `mountArmyToolbarActions` runs. On first click, injects real `<script>`s in dependency order, awaits `load`, fires newly-registered `bootstrap` hooks, and rewires the in-DOM button.
+
+### `js/app/sound-fx.js`
+- **Purpose:** Opt-in synthesized WebAudio sfx.
+- **Exports:** `App.playSound(key)`, `App.isSoundEnabled()`.
+- **Depends on:** Web Audio API.
+- **Storage:** `localStorage.yaab_sound_enabled`.
+- **DOM:** none.
+- **Notes:** No sample files — all synthesized. Audio context may be suspended (user gesture required).
+
+### `js/app/voice-commands.js`
+- **Purpose:** Opt-in WebSpeech voice control.
+- **Exports:** Toolbar button.
+- **Depends on:** Web Speech API (Chrome / Edge only), `App.state`, `App.hooks`, `UI.toast`.
+- **Storage:** `localStorage.yaab_voice_enabled`.
+- **DOM:** `yaab-voice-*`.
+- **Notes:** Browser-dependent. Fuzzy unit-name matching.
+
+### `js/app/faction-fx.js`
+- **Purpose:** Faction-themed add-to-army stingers + particle bursts + hero-banner archetype class.
+- **Exports:** `App.factionFx = { playAddStinger, particleBurst, archetypeForFaction, syncBanner }`.
+- **Depends on:** Web Audio API, `App.state`, `App.hooks`, `App.isSoundEnabled`, `App.FACTION_COLORS`.
+- **Storage:** none directly.
+- **DOM:** `#yaab-fx-layer`. Sets `body[data-faction-banner]`.
+- **Notes:** 15 per-faction stinger shapes. Particles ~720ms TTL. Reduced-motion + sound-enabled gated.
+
+### `js/app/mobile-shell.js`
+- **Purpose:** Mobile-only chrome (sticky points pill, dynamic title, back arrow).
+- **Exports:** `App.setMobilePanel(panelName)`.
+- **Depends on:** `window.matchMedia`, `App.hooks`.
+- **Storage:** `localStorage.yaab_mobile_panel` (last-active tab).
+- **DOM:** `.mobile-pts-pill`, `.mobile-back-btn`, `body[data-mobile-panel]`.
+- **Notes:** Re-evaluates on resize. Desktop is untouched.
+
+### `js/app/mode-shell.js`
+- **Purpose:** Build / Collect / Play / Cards mode container switching.
+- **Exports:** `App.setMode(modeName)`, `App.getMode()`. Owns `App.fireModeChange`.
+- **Depends on:** `App.hooks.modeChange`.
+- **Storage:** `localStorage.yaab_mode`.
+- **DOM:** `body[data-mode]`, `.mode-page` elements (`#build-mode`, `#collect-mode`, `#play-mode`, `#cards-mode`).
+- **Notes:** Loaded first among the mode modules. Bootstrap fires modeChange so build/collect/play modules can build their panels lazily.
+
+### `js/app/points-filter.js`
+- **Purpose:** Comparator tokens in unit search bar (`<=200`, `>=100`, `=150`, etc.).
+- **Exports:** `App.PointsFilter = { TOKEN_RE, ... }`. Roster filter predicate.
+- **Depends on:** `App.hooks.rosterFilters`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** `roster.js` strips matching tokens before name/keyword fuzzy-match. Multiple comparators AND together. A unit passes if ANY of its squad/variant costs satisfies all comparators.
+
+### `js/app/settings-drawer.js`
+- **Purpose:** Slide-in Settings drawer (sound, voice, ork-math, legends, kill-team, collection badges, reduced motion + utilities).
+- **Exports:** Drawer open/close.
+- **Depends on:** every toggle module + `App.Auth`.
+- **Storage:** `localStorage.yaab_reduced_motion`. Reads many other keys.
+- **DOM:** `#settings-drawer-root`, `#settings-drawer-scrim`, `#settings-drawer-body`.
+- **Notes:** Reduced-motion override stacks on top of OS pref.
+
+---
+
+## UI modules (`js/ui/`)
+
+### `js/ui/index.js`
+- **Purpose:** Defines the `window.UI` namespace + `UI.init(state)`. Must load first among UI modules.
+- **Exports:** `window.UI = { init, _state, ... }` (extended by sibling modules).
+- **Depends on:** none.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** `UI.init(state)` stashes the state reference and calls `UI._initTooltip()`.
+
+### `js/ui/helpers.js`
+- **Purpose:** Shared utilities used across UI render paths.
+- **Exports:** `UI.escapeHtml`, `UI._STAT_ALIASES`, `UI._CARD_STAT_PREF`.
+- **Depends on:** none.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Pure utilities. `_STAT_ALIASES` resolves SV/Sv/sv → SV, etc.
+
+### `js/ui/tooltip.js`
+- **Purpose:** Document-level `[data-tooltip]` delegation + `#global-tooltip`.
+- **Exports:** `UI._initTooltip()`.
+- **Depends on:** none.
+- **Storage:** none.
+- **DOM:** `#global-tooltip` (created on first init), `[data-tooltip]` triggers anywhere.
+- **Notes:** `position: fixed` so it never gets clipped. Initialized by `UI.init()`.
+
+### `js/ui/toast.js`
+- **Purpose:** Transient popup notifications.
+- **Exports:** `UI.toast(message, type, duration)`.
+- **Depends on:** none.
+- **Storage:** none.
+- **DOM:** `.toast-container`.
+- **Notes:** Types: `info` / `success` / `error` / `warning`. Default 3s. Mobile lifts above the tab bar.
+
+### `js/ui/progress.js`
+- **Purpose:** Top-of-page slim bar + load-status badge in panel header.
+- **Exports:** `UI.setLoadProgress(done, total)`.
+- **Depends on:** none.
+- **Storage:** none.
+- **DOM:** `.page-progress-wrap`, `.page-progress-bar`, `#load-status`, `#load-status-text`, `#load-status-count`.
+- **Notes:** The visual bar is `display:none !important`; load status is communicated via the in-panel-header text/spinner.
+
+### `js/ui/modals.js`
+- **Purpose:** Load / Import / Export modal show + hide helpers.
+- **Exports:** `UI.showLoadModal`, `hideLoadModal`, `showImportModal`, `hideImportModal`, `showExportModal`, `hideExportModal`.
+- **Depends on:** `UI.escapeHtml`.
+- **Storage:** none.
+- **DOM:** `#modal-load`, `#modal-import`, `#modal-export`, `#saved-army-list`, `#import-json-textarea`, `#export-string-textarea`, `#export-string-size`.
+- **Notes:** Modals toggled via the `hidden` attribute. Shared Escape handler lives in `events.js`.
+
+### `js/ui/dropdown.js`
+- **Purpose:** Click-to-toggle dropdown menus + keyboard nav.
+- **Exports:** `UI.initDropdowns()`.
+- **Depends on:** none.
+- **Storage:** none.
+- **DOM:** `[role="menu"]` containers + their triggers (Tools / More / Export menus).
+- **Notes:** Esc closes. Arrow Up/Down navigate; Enter/Space selects.
+
+### `js/ui/faction-filter.js`
+- **Purpose:** Populate top-level faction `<select>` with alliance optgroups + virtual parents.
+- **Exports:** `UI.updateFactionFilter(factions, { hide, extras })`.
+- **Depends on:** `App.state.factions`, `App.CHAPTER_PARENTS`.
+- **Storage:** none.
+- **DOM:** `#army-faction-select`.
+- **Notes:** Hides chapter catalogues from the dropdown but keeps them in `state.factions` so units feed up under the parent. Alliance grouping by case-insensitive prefix (Chaos / Imperium / Xenos).
+
+### `js/ui/faction-rules.js`
+- **Purpose:** Render Army Rules + Detachment + Enhancements + Stratagems lists.
+- **Exports:** `UI.updateFactionRules(faction, detachment?)`.
+- **Depends on:** `App.state.selectedDetachment`, `App.CORE_STRATAGEMS`, GDC strats (`detachment.gdcStratagems`, `faction.gdcFactionStratagems`).
+- **Storage:** none.
+- **DOM:** `#army-rules-collapsible`, `#army-rules-section`, `#army-rules-subsection`, `#army-rules-list`, `#army-detachment-subsection`, `#army-detachment-rules-list`, `#army-stratagem-subsection`, `#army-stratagems-list`, `#army-strats-subsection`, `#army-strats-list`, `#army-strats-common-subsection`, `#army-strats-common-list`.
+- **Notes:** Strats split into detachment-specific (BSData rare + GDC) and common core. Dedup by lowercase name. Empty state placeholder when nothing selected.
+
+### `js/ui/roster.js`
+- **Purpose:** Center-panel unit grid with capped render + scroll-append; tri-state role chips.
+- **Exports:** `UI.renderUnitRoster`, `UI.createUnitCard`, `UI.renderStatCell`.
+- **Depends on:** `App.hooks.cardClassContributors`, `App.hooks.rosterFilters`, `App.PointsFilter.TOKEN_RE`.
+- **Storage:** none (module-local `R` state object holds chip state and rendered cursor).
+- **DOM:** `#unit-grid`, `#roster-empty`, `#unit-count-badge`, `#roster-filter-chips`.
+- **Notes:** `INITIAL_PAGE=120`, `APPEND_PAGE=80`, `SCROLL_APPEND_PX=400`. Role chips cycle `undefined → 'include' → 'exclude' → undefined`. Search AND-ed across name/keywords/faction. Strips points-comparator tokens before name matching.
+
+### `js/ui/detail.js`
+- **Purpose:** Right-panel unit + rule detail rendering. Owns Led-By reverse index.
+- **Exports:** `UI.renderUnitDetail`, `UI.renderRuleDetail`, `UI.clearUnitDetail`.
+- **Depends on:** `App.state` (allUnits for Led-By index, factionsVersion for cache invalidation), GDC unit data (`gdcLoadout`, `gdcWargear`, `gdcMeleeWeapons`, `gdcRangedWeapons`).
+- **Storage:** none.
+- **DOM:** `#unit-detail-panel`, `#unit-detail-empty`, rule-detail modals, `.detail-section.detail-stats-section`, `.detail-section.detail-weapons-section`, `.detail-banner`, `.detail-add-section`.
+- **Notes:** Lazy Led-By index rebuilt only when `state.factionsVersion` advances. Weapon keyword glossary harvested from every weapon's `_keywordDefs` for tooltip resolution. Stats aliases resolved per canonical name. Invuln save extracted from abilities if not in stats. Transport capacity pulled into dedicated section.
+
+### `js/ui/army-list.js`
+- **Purpose:** Left-panel army list + points summary.
+- **Exports:** `UI.renderArmyList`, `UI.createArmyEntryEl`.
+- **Depends on:** `UI.escapeHtml`, `App.fireArmyChange` (fires `'render'`).
+- **Storage:** none.
+- **DOM:** `#army-name-input`, `#points-limit-input`, `#points-current`, `#points-limit-display`, `#points-bar-pct`, `#points-bar-remaining`, `#points-bar`, `.points-summary`, `#unit-grid`, `.army-entry`, `.army-entry-card`, `.army-qty-input`, `.army-entry-remove`, `[data-build-hero="*"]` mirrors.
+- **Notes:** Dual-update path: legacy `#points-*` spans AND `[data-build-hero=*]` mirrors so `build-mode.js` doesn't lag a render behind. Enhancements rendered as badges under the name. Drag-handle stripe on the left, remove button top-right.
+
+### `js/ui/datasheet.js`
+- **Purpose:** GW-style datasheet print (single + whole-army bundle).
+- **Exports:** `UI.renderDatasheet`, `UI.renderArmyDatasheets`, `UI.printUnitDatasheet`, `UI.printArmyDatasheets`, `UI.printCurrentArmy`. Detail-action button.
+- **Depends on:** `App.state`, `App.hooks.detailActions`.
+- **Storage:** none.
+- **DOM:** datasheet-print container injected on demand.
+- **Notes:** Print CSS hides everything except datasheet content.
+
+### `js/ui/action-center.js`
+- **Purpose:** Slide-in sheet replacing Tools/More dropdowns. Sections: Game Day / Analyze / Print & Export / Browse / Collection / Settings.
+- **Exports:** `UI.actionCenter = { open, close, toggle, isOpen, registerAction, clearActions, render }`.
+- **Depends on:** `App.hooks.armyToolbarActions` (read at boot).
+- **Storage:** none.
+- **DOM:** `#action-center-root`, `#action-center-close`, `#action-center-scrim`, `#action-center-search`, `#action-center-body`, `#action-center-empty`.
+- **Notes:** Coexists with Tools/More dropdowns. Lazy-init on first `ensureInit()`. Esc to close. Search filters cards by label/title.
+
+### `js/ui/build-mode.js`
+- **Purpose:** Build-mode orchestrator: hero header, rules pinboard tab, roster polish.
+- **Exports:** none (hook-registered).
+- **Depends on:** `App.hooks.bootstrap`, `App.hooks.armyChange`, `UI.escapeHtml`, `App.state`.
+- **Storage:** none.
+- **DOM:** `#build-mode`, `#topbar-hero-slot`, `.build-hero` (created), `[data-build-hero="*"]` mirrors, `#unit-detail-panel`, `#rules-panel`.
+- **Notes:** Prefers `#topbar-hero-slot` mount; falls back to inside `#build-mode`. Two-way sync between hero name input and legacy `#army-name-input`. Updates mirrors on `armyChange`.
+
+### `js/ui/collect-mode.js`
+- **Purpose:** Collect mode page (Painting / Crusade / Kill Team sub-tabs).
+- **Exports:** none (hook-registered).
+- **Depends on:** `App.hooks.bootstrap`, `App.hooks.modeChange`.
+- **Storage:** reads `yaab_collection`, `yaab_crusade_rosters`, `yaab_kt_mode`. Owns `localStorage.yaab_collect_debug` (dev flag).
+- **DOM:** `#collect-mode` panel + sub-tabs.
+- **Notes:** Lazy-built on first activate.
+
+### `js/ui/play-mode.js`
+- **Purpose:** Play mode cockpit with 5 sub-tabs (match / strats / calc / opponent / deploy).
+- **Exports:** none (hook-registered).
+- **Depends on:** `App.hooks.bootstrap`, `App.hooks.modeChange`, `App.state`.
+- **Storage:** `localStorage.yaab_play_tab` (active sub-tab).
+- **DOM:** `#play-mode` panel + sub-tabs.
+- **Notes:** Owns the quick-stratagems drawer in this mode.
+
+### `js/ui/cards-mode.js`
+- **Purpose:** Printable data cards mode.
+- **Exports:** `UI.renderUnitCard`, `UI.renderRuleCard`, `UI.renderStratagemCard` + visibility toggles.
+- **Depends on:** `App.hooks`, `UI.escapeHtml`, localStorage.
+- **Storage:** `localStorage.yaab_cards_prefs` (display, texture, layout, typography, cardBack).
+- **DOM:** `#cards-mode` host, `#cards-texture-style` injected stylesheet.
+- **Notes:** `@media print` CSS hides everything else. Textures via inline SVG data URLs (`feTurbulence`). Card-back images stored in IDB (`YaabDB.images`), not in prefs. Typography multipliers 0.5 – 2.0×.
+
+### `js/ui/topbar-export.js`
+- **Purpose:** Top-bar Export ▾ button mirror.
+- **Exports:** none (hook-registered).
+- **Depends on:** `App.hooks.armyToolbarActions`.
+- **Storage:** none.
+- **DOM:** `#yaab-btn-export`, `#yaab-export-menu`. Programmatically clicks the original (now-hidden) panel-footer Export buttons.
+- **Notes:** Clicking the topbar items fires the original buttons' click handlers so existing wiring stays intact.
+
+### `js/ui/auth-button.js`
+- **Purpose:** Top-bar icon for sign-in / signed-in user menu.
+- **Exports:** none (hook-registered).
+- **Depends on:** `App.hooks.armyToolbarActions`, `UI.showAuthModal`, `App.Sync`.
+- **Storage:** none.
+- **DOM:** `#yaab-btn-auth`, `#yaab-auth-menu`, hidden legacy `#btn-new-army` / `#btn-save-army` / `#btn-load-army` / `#btn-import-string`.
+- **Notes:** Re-renders on `Auth.onChange`. Menu items click hidden legacy buttons for events.js compat.
+
+### `js/ui/auth-modal.js`
+- **Purpose:** Login / register / recover / recovery-code / change-password forms.
+- **Exports:** `UI.showAuthModal(mode)`.
+- **Depends on:** `window.Auth` API, `UI.escapeHtml`, `App.fireArmyChange('restore')`.
+- **Storage:** none.
+- **DOM:** `#modal-auth` backdrop + dynamic body.
+- **Notes:** All dynamic values escaped (security). Recovery codes shown as muted mono. See `docs/AUTH.md`.
+
+### `js/ui/dice-roller.js`
+- **Purpose:** Click any stat cell to roll a d6, shown as a floating badge.
+- **Exports:** none.
+- **Depends on:** `App.hooks.bootstrap`.
+- **Storage:** none.
+- **DOM:** delegated `.stat-cell` clicks; floating overlay badge.
+- **Notes:** Result persists until next click.
+
+### `js/ui/celebrations.js`
+- **Purpose:** Confetti, rolling-points tween, landing pulse, shimmer.
+- **Exports:** none.
+- **Depends on:** `App.hooks.armyChange`, `App.state`, `UI.escapeHtml`.
+- **Storage:** none.
+- **DOM:** `#points-current`, `#celebrations-container` overlay.
+- **Notes:** Confetti uses emoji particles. Reduced-motion aware.
+
+### `js/ui/scanline.js`
+- **Purpose:** Tactical-display scanline sweep on faction switch + body class for active-panel accent stripe.
+- **Exports:** none.
+- **Depends on:** `App.hooks.selectionChange`, `App.state.factionFilter`.
+- **Storage:** none.
+- **DOM:** `<body>` class toggle (`faction-<slug>`).
+- **Notes:** CSS-driven animation triggered on faction change.
+
+### `js/ui/save-pulse.js`
+- **Purpose:** Pulses the Save button when the army has unsaved mutations.
+- **Exports:** none.
+- **Depends on:** `App.hooks.armyChange`, `App.state.currentArmy.updatedAt`.
+- **Storage:** none.
+- **DOM:** `#btn-save-army`.
+- **Notes:** Compares `updatedAt` to last-saved timestamp.
+
+### `js/ui/animated-crest.js`
+- **Purpose:** Rotating hex crest in the empty unit-detail panel when a faction is selected.
+- **Exports:** none.
+- **Depends on:** `App.hooks.selectionChange`, `App.hooks.armyChange`, `App.hooks.bootstrap`.
+- **Storage:** none.
+- **DOM:** `#unit-detail-empty`.
+- **Notes:** MutationObserver watches detail panel visibility/class to re-sync. SVG uses `currentColor` for tinting.
+
+### `js/ui/cold-start.js`
+- **Purpose:** First-visit splash overlay + cold/warm-start detection during BSData load.
+- **Exports:** none.
+- **Depends on:** `App.hooks.bootstrap`.
+- **Storage:** sessionStorage `yaab_warmed_up`.
+- **DOM:** `#cold-start-overlay`, `#cold-start-close`.
+- **Notes:** **Orphan** — not currently in `index.html`.
+
+### `js/ui/list-coach.js`
+- **Purpose:** Heuristic list-coach modal (composition / threats / synergy scoring).
+- **Exports:** `UI.openListCoach`.
+- **Depends on:** `App.state.currentArmy`, `App.hooks.armyToolbarActions`.
+- **Storage:** none.
+- **DOM:** list-coach modal.
+- **Notes:** **Orphan** — not currently in `index.html`. Heuristic scoring only.
+
+### `js/ui/analytics.js`
+- **Purpose:** Army analytics dashboard modal. Live via `armyChange`.
+- **Exports:** `UI.openAnalytics`, `UI.closeAnalytics`, `UI.toggleAnalytics`.
+- **Depends on:** `App.hooks`, `App.state`, weapon keyword glossary.
+- **Storage:** none.
+- **DOM:** analytics modal.
+- **Notes:** Weapon multiplicity heuristic uses `(N)` parenthesized counts. Dice parsing (`D3` → 2, `D6` → 3.5). Units grouped by role.
+
+### `js/ui/damage-calc.js`
+- **Purpose:** 10e attack simulator (Σ button on detail header + toolbar).
+- **Exports:** `UI.openDamageCalc`.
+- **Depends on:** `App.hooks.detailActions`, `App.hooks.armyToolbarActions`, `App.state`.
+- **Storage:** none.
+- **DOM:** damage-calc modal.
+- **Notes:** Computes expected + min/max damage. Weapon keyword multipliers (Lethal Hits, Sustained Hits, Devastating Wounds, etc.).
+
+### `js/ui/matchup.js`
+- **Purpose:** Opponent paste-in modal + side-by-side matchup viewer.
+- **Exports:** `UI.openOpponentPaste`, `UI.openMatchup`.
+- **Depends on:** `Storage.importArmyFromString`, `App.state`.
+- **Storage:** none directly (uses `app/opponent.js`'s key).
+- **DOM:** matchup modal.
+- **Notes:** Pastes opponent YAAB1 code or JSON; imports + side-by-side panels.
+
+### `js/ui/deployment-planner.js`
+- **Purpose:** Drag-drop battlefield deployment planner per army.
+- **Exports:** `UI.deploymentPlanner = { open, close }`.
+- **Depends on:** `App.hooks.armyToolbarActions`, `App.hooks.armyChange`, localStorage.
+- **Storage:** `localStorage.yaab_deployments` keyed by `App.state.currentArmy.id`.
+- **DOM:** deployment planner modal + canvas/grid.
+- **Notes:** Drag/drop via touch + mouse.
+
+### `js/ui/synergy.js`
+- **Purpose:** Detects leader attachments + keyword combos in the current army.
+- **Exports:** none (hook-registered toolbar button).
+- **Depends on:** `App.hooks.armyChange`, `App.state`, ledBy + keyword index.
+- **Storage:** none.
+- **DOM:** synergy badges on army-entry items + modal.
+- **Notes:** Highlights `<CORE>` units under a CORE-granting leader, etc.
+
+### `js/ui/tournament-export.js`
+- **Purpose:** Tournament-prep multi-page PDF bundle.
+- **Exports:** none (hook-registered toolbar button).
+- **Depends on:** `js/vendor/html2pdf.bundle.min.js` (defer-loaded), `App.state.currentArmy`.
+- **Storage:** `localStorage.yaab_tournament_cfg` (user prefs).
+- **DOM:** tournament-export modal.
+- **Notes:** Uses `@media print` CSS for the PDF render pass.
+
+### `js/ui/faction-glyphs.js`
+- **Purpose:** Inline-SVG geometric faction glyphs + injection helpers.
+- **Exports:** `App._factionGlyphsInstalled`, `glyph()` helper.
+- **Depends on:** none.
+- **Storage:** none.
+- **DOM:** SVG injection into faction chips, roster cards, detail panel.
+- **Notes:** Original abstract geometry — no GW iconography (intentional).
+
+### `js/ui/role-icons.js`
+- **Purpose:** Role icon prefix on unit cards (Character / Vehicle / Monster / Battleline / Infantry / Psyker).
+- **Exports:** `App.classifyUnitRole(unit)`. `cardClassContributor`.
+- **Depends on:** `App.hooks.cardClassContributors`, `unit.keywords`.
+- **Storage:** none.
+- **DOM:** unit cards (mutated with role icon + class).
+- **Notes:** MutationObserver watches roster grid for new cards.
+
+### `js/ui/unit-card-themes.js`
+- **Purpose:** Adds `faction-<slug>` class to unit cards so `unit-card-themes.css` paints per-faction gradients.
+- **Exports:** `cardClassContributor`.
+- **Depends on:** `App.hooks.cardClassContributors`, `unit._factionName`.
+- **Storage:** none.
+- **DOM:** unit cards (class added).
+- **Notes:** Slug = last segment of `_factionName` after `" - "`.
+
+### `js/ui/flip-animations.js`
+- **Purpose:** FLIP-style add-to-army flight ghost + drag-to-reorder + micro-interactions.
+- **Exports:** none.
+- **Depends on:** `App.hooks`, requestAnimationFrame.
+- **Storage:** none.
+- **DOM:** army list + roster grid items.
+- **Notes:** Reduced-motion aware. Single-flight gate so concurrent clicks don't compound. FLIP captures element positions before + after the layout change, animates the delta.
+
+---
+
+## Parser (`js/parser/`)
+
+> See `docs/PARSER.md` for the full classifier rules + cost-pattern recipes.
+
+### `js/parser/shared-index.js`
+- **Purpose:** Module-level Maps of DOM nodes from `.gst` + Library `.cat` catalogues for cross-catalogue infoLink resolution.
+- **Exports:** `WahapediaParser._internal = { sharedProfilesById, sharedRulesById, sharedEntriesById, sharedRootEntryLinksByCatalogueId, addToSharedIndex, releaseSharedIndex }`.
+- **Depends on:** `DOMParser`.
+- **Storage:** none (in-memory only).
+- **DOM:** none.
+- **Notes:** DOM nodes held in Maps via their `ownerDocument`. Must call `releaseSharedIndex()` after bulk load to free XML memory (tens of MB). Loads first.
+
+### `js/parser/classify.js`
+- **Purpose:** Text helpers, Crusade-section filter, profile classifier.
+- **Exports:** `_internal.cleanText`, `_internal.isCrusadeSection`, `_internal.classifyProfile`, `_internal.getAttr`, `_internal.dedup`, `CRUSADE_RE`.
+- **Depends on:** none.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** `cleanText` trims, collapses whitespace, strips markdown. `isCrusadeSection` matches Crusade / Kill Team / Boarding Actions tags. `classifyProfile` checks characteristic names + typeName to bucket as stats / weapon / ability / transport / other.
+
+### `js/parser/stats.js`
+- **Purpose:** Extract unit stats + direct profiles (stats / weapons / abilities) from selectionEntry DOM.
+- **Exports:** `_internal.parseDirectProfiles`, `_internal.findStats`, `_internal.parseDirectStatProfiles`, `_internal.statProfilesFromInfoLinks`, `_internal.findStatProfiles`.
+- **Depends on:** `_internal.classifyProfile`, `_internal.getAttr`, `_internal.cleanText`, `_internal.isCrusadeSection`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Ability prose found in three characteristics: Description (vanilla), Effect (primarch), Capacity (Ork transport). Multi-profile units preserve all statlines.
+
+### `js/parser/weapons.js`
+- **Purpose:** Recursive weapon collection + parameterized-keyword lookup.
+- **Exports:** `_internal.collectWeapons`, `_internal.findWeaponKeywordDesc`.
+- **Depends on:** `_internal` helpers.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Weapon keyword rule text stashed in `_keywordDefs` so UI tooltips don't re-query.
+
+### `js/parser/abilities.js`
+- **Purpose:** Walk a unit entry collecting direct + linked abilities, including profile/rule infoLinks + recursion into model variants.
+- **Exports:** `_internal.collectAbilities`.
+- **Depends on:** `_internal.parseDirectProfiles`, `_internal.classifyProfile`, `_internal.getAttr`, `_internal.cleanText`, `_internal.isCrusadeSection`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Recursion depth 5 (Lion El'Jonson's primarch sub-abilities sit 4 levels deep). Visited set guards cycles. Walks selectionEntries regardless of type. Also walks `entryLinks` + `infoGroups` (Ghazghkull's Leader block — easily missed).
+
+### `js/parser/wargear.js`
+- **Purpose:** Two-flavour wargear-options list (model variants inside squad-size groups, and direct equipment-choice groups).
+- **Exports:** `_internal.collectWargearOptions`.
+- **Depends on:** `_internal.findCosts`, `_internal.getAttr`, `_internal.cleanText`, `_internal.isCrusadeSection`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Squad-size tiers detected via modifier conditions (`atLeast`, `equalTo`, `greaterThan`). Each tier takes the upper bound (next threshold − 1, or `maxModels`). Weapon keywords appended to variant names.
+
+### `js/parser/costs.js`
+- **Purpose:** Points/cost resolution. Handles four BSData author patterns + squad-size variants via modifier "set".
+- **Exports:** `_internal.findCosts`.
+- **Depends on:** `_internal.readCost`, `_internal.getAttr`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Patterns A: group-level `min`/`max`. B: per-model in a group. C: entry-level. D: per-model at entry. Different BSData authors use different patterns; tried in order. Don't collapse them.
+
+### `js/parser/keywords.js`
+- **Purpose:** `categoryLink`-based keyword extraction + dedup.
+- **Exports:** `_internal.parseKeywords`.
+- **Depends on:** `_internal.cleanText`, `_internal.isCrusadeSection`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Crusade-section keywords skipped.
+
+### `js/parser/entry.js`
+- **Purpose:** Assemble one unit object from a selectionEntry DOM node.
+- **Exports:** `_internal.parseEntry`.
+- **Depends on:** every leaf helper in `_internal`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Multi-paragraph choose-from-N ability split into parent + synthetic children (Guilliman). Chapter-locked rule filter (Templar Vows drops if not Black Templars). Weapon dedup on name + classification (ranged vs melee) — also strips Rapid Fire 1 → Rapid Fire suffix. Invuln save harvested from abilities if not in stats. Transport capacity pulled into dedicated field. Wound-band profiles dropped. Legends tag preserved.
+
+### `js/parser/catalogue.js`
+- **Purpose:** Top-level `parse()` — builds per-catalogue indexes, iterates units, extracts detachments + enhancements + army rules + stratagems.
+- **Exports:** `_internal.parse`.
+- **Depends on:** all `_internal` helpers + `sharedEntriesById` / `sharedRulesById` / `sharedProfilesById` from shared-index.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Four entry patterns: (A) `selectionEntries`, (B) root `entryLinks` → shared, (C) `catalogueLinks` `importRootEntries`, (D) detachment extraction. Stratagem heuristic: CP cost + "Stratagem" keyword. Detachment name dedup. Inline-rule vs `infoLink` rule paths both retained (Space Marines vs Necrons authoring style — do NOT collapse).
+
+### `js/parser/index.js`
+- **Purpose:** Public WahapediaParser API assembly. Loaded last.
+- **Exports:** `WahapediaParser.parse`, `addToSharedIndex`, `releaseSharedIndex`, `lastReport`.
+- **Depends on:** `WahapediaParser._internal` (populated by sibling modules).
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Must load AFTER all parser submodules.
+
+### `js/parser/report.js`
+- **Purpose:** Optional dev coverage report (opt-in).
+- **Exports:** `window._yaabParseReport` populated when enabled.
+- **Depends on:** `localStorage.yaab_parse_debug`.
+- **Storage:** reads `localStorage.yaab_parse_debug`.
+- **DOM:** none.
+- **Notes:** Non-shipping diagnostic. Logs empty units to `_yaabParseReport.emptyUnits` if enabled.
+
+Parser shared-index lifecycle:
+```
+Phase 1   .gst files        → addToSharedIndex
+Phase 1.5 Library *.cat     → addToSharedIndex
+Phase 2   faction catalogues → parse()  (buildIndexes copies refs)
+Done      releaseSharedIndex()           (frees XML Documents)
+```
+
+Parser output shape changes MUST bump `DB_VERSION` in `js/db.js`. The `factions` AND `gst` IDB stores are dropped together — no partial migration.
+
+---
+
+## Build / mirror tooling
+
+### `scripts/mirror-bsdata.mjs`
+- **Purpose:** Cron-driven Node 20 script that diffs `BSData/wh40k-10e` blob SHAs and downloads only changed files into `data/bsdata/`.
+- **Exports:** N/A (Node script).
+- **Depends on:** Node 20+ (no npm deps).
+- **Storage:** writes `data/bsdata/index.json` + `data/bsdata/files/<original/path>.xml`.
+- **Notes:** Triggered every 6h by `.github/workflows/mirror-bsdata.yml` and on manual workflow dispatch. Generated files; do not hand-edit.
+
+---
+
+## Conventions
+
+- **No build step.** No `import`/`export`. Plain `<script src>` in `index.html`. IIFE per file.
+- **Hook-first.** Feature modules MUST register via `App.hooks` — do NOT edit shared files (`events.js`, `detail.js`, `index.html` toolbar) to add a new feature.
+- **Storage namespacing.** Every persistent key starts with `yaab_`. List in `CLAUDE.md`'s Storage table.
+- **Don't break the namespaces:** `window.App`, `window.UI`, `window.Storage`, `window.Army`, `window.ArmyManager`, `window.BSData`, `window.WahapediaParser`, `window.YaabDB`, `App.hooks`.
+- **Don't break parser output shape** without bumping `DB_VERSION`.
+- **Don't break `Army.toJSON`/`fromJSON`** — saved armies must keep deserializing. Timestamps (`createdAt`, `updatedAt`) are required.
+- **Don't break the `YAAB1:` v2 export format** — bookmarked share URLs depend on it.
+- **Update `js/data/changelog-data.js`** for every shippable change.
