@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-07T05:42:24.356Z",
+  "generatedAt": "2026-05-08T09:54:50.980Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "214876a36b706ff5397f8f8f660f9903b0d70f7b",
+  "sourceCommit": "19e28d6d3930241cfb489bea587806f416f62491",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -79,8 +79,8 @@
       "path": "Chaos - Emperor's Children.cat",
       "name": "Chaos - Emperor's Children",
       "type": "catalogue",
-      "sha": "8e1baf55cf198f7f82b3e11147da7a34f6cfd507",
-      "size": 785863
+      "sha": "27b677408a0c5cd1aaed28aeea48e8e08dfb3cfe",
+      "size": 787005
     },
     {
       "path": "Chaos - Thousand Sons.cat",
