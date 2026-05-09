@@ -26,10 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-1',
-    lastUpdated: '2026-05-09T12:00:00Z',
+    version:     '2026.05.09-2',
+    lastUpdated: '2026-05-09T13:30:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'feature',
+        title: 'Mobile: back button now navigates inside the app',
+        description:
+          'On phones, hitting the device back button while you\'re on ' +
+          'the Details panel now slides you back to the Units list ' +
+          'instead of leaving the site. Tapping More opens the menu ' +
+          'as a back-trappable sheet too — one back press closes it. ' +
+          'Desktop is unaffected.',
+      },
       {
         date: '2026-05-09', kind: 'feature',
         title: 'Reserves: build from the units you actually own',
