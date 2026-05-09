@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-08T15:52:19.827Z",
+  "generatedAt": "2026-05-09T21:04:11.170Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "8761913d8cf2ed8bbd5429aea298dbd964275a1d",
+  "sourceCommit": "41bfc83edb0e804abffcd8781d1479367976ba97",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -303,8 +303,8 @@
       "path": "Orks.cat",
       "name": "Orks",
       "type": "catalogue",
-      "sha": "06289f88e8d75beba0d51f6710421cc989bca287",
-      "size": 1975715
+      "sha": "ea67ec35b2122e59baf3aa00d185a3d32395e01d",
+      "size": 1975592
     },
     {
       "path": "T'au Empire.cat",
