@@ -26,10 +26,34 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-4',
-    lastUpdated: '2026-05-09T16:30:00Z',
+    version:     '2026.05.09-5',
+    lastUpdated: '2026-05-09T17:30:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'fix',
+        title: 'Performance: smoother roster scrolling',
+        description:
+          'Reserves had two MutationObservers that were over-firing ' +
+          'on roster scroll: the unit-pane toggle observer was ' +
+          'rescanning on every card append (200+ times for a 200-unit ' +
+          'faction), and the per-card badge decorator was iterating ' +
+          'every card on every batch. The first is gone (we re-mount ' +
+          'the toggle from explicit hooks instead), and the second now ' +
+          'only decorates the newly-added cards. The page should feel ' +
+          'snappier when scrolling long faction rosters.',
+      },
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Cards: dropped the painting-status dot',
+        description:
+          'The little coloured dot in the top-right corner that ' +
+          'indicated painting status (unpainted / primed / WIP / done) ' +
+          'is gone. The Reserves "×N" badge in the same corner already ' +
+          'covers the ownership signal that matters while building, ' +
+          'and the painting status is still visible in the detail-pane ' +
+          'widget and Collect-mode dashboard.',
+      },
       {
         date: '2026-05-09', kind: 'fix',
         title: 'Reserves: count badge on cards, no more duplicates',

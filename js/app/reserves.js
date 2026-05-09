@@ -29,7 +29,6 @@
 
   let _view = VIEW_RESERVES;
   let _predicateRegistered = false;
-  let _toggleObserver = null;
   let _detailObserver = null;
   let _armyObserver = null;
   let _gridObserver = null;
@@ -563,6 +562,11 @@
   }
 
   function scheduleGridScan() {
+    // Reserved as a one-time fallback for cards that exist before the
+    // observer is installed. Subsequent card additions are decorated
+    // incrementally via the MutationObserver records (cheaper than a
+    // full grid re-scan, which previously made scroll-pagination
+    // O(N²)).
     if (_gridScanRaf) return;
     _gridScanRaf = requestAnimationFrame(() => {
       _gridScanRaf = 0;
@@ -576,28 +580,36 @@
     if (_gridObserver) return;
     const grid = document.getElementById('unit-grid');
     if (!grid) return;
+    // One initial scan for cards that may already be in the grid.
     scheduleGridScan();
     _gridObserver = new MutationObserver(records => {
       for (let i = 0; i < records.length; i++) {
-        if (records[i].addedNodes && records[i].addedNodes.length) {
-          scheduleGridScan();
-          return;
+        const added = records[i].addedNodes;
+        if (!added) continue;
+        for (let j = 0; j < added.length; j++) {
+          const node = added[j];
+          if (!node || node.nodeType !== 1) continue;
+          if (node.classList && node.classList.contains('unit-card')) {
+            decorateCardBadges(node);
+          }
         }
       }
     });
     _gridObserver.observe(grid, { childList: true, subtree: false });
   }
 
-  // ── toggle re-injection observer ─────────────────────────────────────
-  function installToggleObserver() {
-    if (_toggleObserver) return;
-    const center = document.getElementById('panel-center') || document.body;
+  // ── toggle re-injection ──────────────────────────────────────────────
+  // The toggle is mounted once at bootstrap into a static container
+  // (#panel-center .panel-controls). It doesn't get torn down by any
+  // current code path, so we only re-ensure it from explicit hooks
+  // (mode/selection change). A previous version of this module
+  // observed #panel-center with subtree:true to re-inject defensively
+  // — but that fired on every card append during scroll-pagination
+  // (200+ times for a 200-unit faction), which made the page feel
+  // sluggish. Same story for the empty-state note slot.
+  function ensureToggleAndNote() {
     ensureToggle();
-    _toggleObserver = new MutationObserver(() => {
-      ensureToggle();
-      ensureEmptyNote();
-    });
-    _toggleObserver.observe(center, { childList: true, subtree: true });
+    ensureEmptyNote();
   }
 
   // ── hook registrations ───────────────────────────────────────────────
@@ -606,7 +618,7 @@
   App.hooks.bootstrap.push(function () {
     loadPersisted();
     ensurePredicate();
-    installToggleObserver();
+    ensureToggleAndNote();
     installDetailObserver();
     installArmyObserver();
     installGridObserver();
@@ -628,6 +640,9 @@
 
   if (!Array.isArray(App.hooks.modeChange)) App.hooks.modeChange = [];
   App.hooks.modeChange.push(function () {
+    // Mode flips can rebuild panel surfaces — re-ensure the toggle and
+    // empty-state slot are still mounted, then re-render the roster.
+    ensureToggleAndNote();
     refreshEmptyNote();
     syncToggleActive();
     if (typeof App.renderUnitRosterWithContext === 'function') {
