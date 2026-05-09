@@ -1,11 +1,12 @@
 /* reserves.css — Reserves (owned-units) layer over the unit pane.
-   Adds: a Reserves/All view toggle in the panel controls, a per-card
-   quantity stepper, an empty-state hint, and a soft-warn badge on
-   army-list entries that exceed owned quantity. */
+   Adds: a Reserves/Requisitions/All view toggle in the panel controls,
+   a combined stockpile widget in the Details pane, an empty-state hint,
+   and a soft-warn badge on army-list entries that exceed owned qty. */
 
 :root {
   --reserves-accent: var(--accent, #c8c8c8);
   --reserves-warn:   #e6c7a8;
+  --requisitions-accent: #d39ec5; /* dusty pink — shared with requisitions.css */
 }
 
 /* ── view toggle (segmented control) ──────────────────────────────── */
@@ -125,101 +126,121 @@ body[data-units-view="requisitions"] #unit-grid #roster-empty {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text, #eee);
 }
-.reserves-empty-plus {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  text-align: center;
-  line-height: 16px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  font-size: 11px;
-  vertical-align: -2px;
-}
 
-/* ── per-card stepper ─────────────────────────────────────────────── */
-.unit-card .reserves-stepper {
-  position: absolute;
-  bottom: 6px;
-  right: 6px;
+/* ── combined stockpile widget in the Details pane ─────────────────── */
+.stockpile-detail-widget {
+  margin: 12px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius, 6px);
+  background: rgba(255, 255, 255, 0.02);
+}
+.stockpile-detail-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #9a9a9a);
+  margin-bottom: 8px;
+}
+.stockpile-detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stockpile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid transparent;
+  border-radius: 5px;
+}
+.stockpile-row-reserves.stockpile-has-qty,
+.stockpile-detail-widget.reserves-has-qty .stockpile-row-reserves {
+  border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.45);
+}
+.stockpile-detail-widget.requisitions-has-qty .stockpile-row-requisitions {
+  border-color: rgba(211, 158, 197, 0.55);
+}
+.stockpile-row-label {
   display: inline-flex;
-  align-items: stretch;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text, #ddd);
+}
+.stockpile-row-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  line-height: 1;
+}
+.stockpile-row-reserves .stockpile-row-icon { color: var(--reserves-accent); }
+.stockpile-row-requisitions .stockpile-row-icon { color: var(--requisitions-accent); }
+.stockpile-row-hint {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #888);
+  margin-left: 4px;
+}
+.stockpile-stepper {
+  display: inline-flex;
+  align-items: center;
   gap: 0;
   padding: 1px;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.16));
   border-radius: 14px;
-  z-index: 3;
   font-variant-numeric: tabular-nums;
-  /* Slight idle dim on cards with qty 0 so the visual weight is
-     reserved for owned cards; full opacity on hover/focus-within. */
-  opacity: 0.6;
-  transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
-.unit-card:hover .reserves-stepper,
-.unit-card .reserves-stepper:focus-within,
-.unit-card .reserves-stepper.has-qty {
-  opacity: 1;
-}
-.unit-card .reserves-stepper.has-qty {
-  background: rgba(20, 20, 20, 0.85);
-  border-color: var(--reserves-accent);
-}
-.reserves-step-btn {
+.stockpile-step {
   appearance: none;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border: none;
   background: transparent;
   color: var(--text, #eee);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
-  border-radius: 11px;
+  border-radius: 13px;
   transition: background 0.1s, color 0.1s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-.reserves-step-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--reserves-accent);
+.stockpile-step:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
-.reserves-step-btn:disabled {
+.stockpile-row-reserves .stockpile-step:hover { color: var(--reserves-accent); }
+.stockpile-row-requisitions .stockpile-step:hover { color: var(--requisitions-accent); }
+.stockpile-step:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
-.reserves-step-qty {
-  min-width: 22px;
+.stockpile-qty {
+  min-width: 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text, #eee);
-  padding: 0 2px;
+  padding: 0 4px;
 }
-.reserves-stepper.has-qty .reserves-step-qty {
+.stockpile-detail-widget.reserves-has-qty .stockpile-row-reserves .stockpile-qty {
   color: var(--reserves-accent);
 }
-
-/* "Owned" cards are signalled by the stepper's has-qty state (tinted
-   border + accent-coloured qty number). We deliberately don't add a
-   pseudo-element here because `.unit-card::before` is already the
-   selection accent (style.css) and `.unit-card::after` is taken by
-   collection.css's painting-status dot. */
-
-/* In Reserves view, hide the stepper opacity dim since every card has qty>0. */
-body[data-units-view="reserves"] .unit-card .reserves-stepper { opacity: 1; }
-
-/* The stepper is a Build-mode concept. The COLLECT mode page lives in
-   its own <section> so these rules don't reach it; this guard is just
-   a belt-and-braces for any future re-use. */
-body[data-mode="collect"] .unit-card .reserves-stepper,
-body[data-mode="play"]    .unit-card .reserves-stepper,
-body[data-mode="cards"]   .unit-card .reserves-stepper {
-  display: none;
+.stockpile-detail-widget.requisitions-has-qty .stockpile-row-requisitions .stockpile-qty {
+  color: var(--requisitions-accent);
 }
 
 /* ── soft-warn badge on army entries ───────────────────────────────── */
@@ -242,6 +263,6 @@ body[data-mode="cards"]   .unit-card .reserves-stepper {
 @media (max-width: 640px) {
   .reserves-view-btn { padding: 6px 10px; font-size: 12px; }
   .reserves-view-label { display: none; } /* icon + count only on phones */
-  .unit-card .reserves-stepper { bottom: 4px; right: 4px; }
-  .reserves-step-btn { width: 26px; height: 26px; font-size: 16px; }
+  .stockpile-step { width: 30px; height: 30px; font-size: 18px; }
+  .stockpile-qty { min-width: 30px; font-size: 14px; }
 }

@@ -26,10 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-2',
-    lastUpdated: '2026-05-09T13:30:00Z',
+    version:     '2026.05.09-3',
+    lastUpdated: '2026-05-09T15:00:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Reserves & Requisitions: controls moved to the Details pane',
+        description:
+          'The +/− steppers for owned-quantity (Reserves) and wishlist-' +
+          'quantity (Requisitions) used to overlay each unit card in ' +
+          'the Units pane. They now live in a single "Your stockpile" ' +
+          'widget inside the Details pane — click any unit card and ' +
+          'you\'ll see two rows (Reserves / Requisitions) with their ' +
+          'own steppers, right under the "Add to Army" row. The Units ' +
+          'pane is back to clean unit cards; the Reserves / ' +
+          'Requisitions / All toggle still controls what the pane ' +
+          'shows.',
+      },
       {
         date: '2026-05-09', kind: 'feature',
         title: 'Mobile: back button now navigates inside the app',

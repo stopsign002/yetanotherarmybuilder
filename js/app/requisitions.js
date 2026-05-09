@@ -1,12 +1,11 @@
 // app/requisitions.js — "Requisition Requests": the user's wishlist of
 // units they want to acquire (or paint) next. Sibling to reserves.js
-// (which tracks owned quantity). Reserves owns the unit-pane view toggle
-// (Reserves / Requisitions / All units); this module:
+// (which tracks owned quantity). Reserves owns the unit-pane view
+// toggle (Reserves / Requisitions / All units) AND the combined
+// stockpile widget in the Details pane; this module:
 //   - tracks per-unit requested quantity in localStorage
 //   - registers a roster predicate that activates only in BUILD mode
 //     when the requisitions view is selected
-//   - decorates each unit-card with a small heart-stepper alongside the
-//     reserves stepper
 //   - shows an inline empty-state when the requisitions view has no
 //     matching units in the current faction filter
 //
@@ -26,11 +25,9 @@
   const QTY = Object.create(null);
 
   let _predicateRegistered = false;
-  let _gridObserver = null;
-  let _gridScanRaf = 0;
   let _emptyNote = null;
 
-  // ── helpers ─────────────────────────────────────────────────────────
+  // ── helpers ──────────────────────────────────────────────────────────
   function getMode() {
     if (typeof App.getMode === 'function') return App.getMode();
     if (document.body && document.body.getAttribute) {
@@ -46,7 +43,7 @@
     return document.body && document.body.getAttribute('data-units-view');
   }
 
-  // ── persistence ─────────────────────────────────────────────────────
+  // ── persistence ──────────────────────────────────────────────────────
   function loadPersisted() {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -65,7 +62,18 @@
     catch (_) { /* quota — ignore */ }
   }
 
-  // ── public API ──────────────────────────────────────────────────────
+  // Push UI updates that depend on a qty change.
+  function notifyChanged() {
+    if (App.Reserves && typeof App.Reserves.syncToggle === 'function') {
+      App.Reserves.syncToggle();
+    }
+    if (App.Reserves && typeof App.Reserves.refreshDetailWidget === 'function') {
+      App.Reserves.refreshDetailWidget();
+    }
+    refreshEmptyNote();
+  }
+
+  // ── public API ───────────────────────────────────────────────────────
   function getQty(unitId) {
     if (!unitId) return 0;
     return QTY[unitId] || 0;
@@ -78,22 +86,7 @@
     if (qty === 0) delete QTY[unitId];
     else QTY[unitId] = qty;
     persist();
-    refreshAllSteppers(unitId);
-    refreshEmptyNote();
-    // Refresh the toggle's counter chip on the Reserves side.
-    if (App.Reserves && typeof App.Reserves.syncToggle === 'function') {
-      App.Reserves.syncToggle();
-    } else {
-      // Best-effort fallback: poke the count node directly.
-      const el = document.querySelector('[data-requisitions-count]');
-      if (el) {
-        const total = totalRequestedUnitTypes();
-        el.textContent = total > 0 ? String(total) : '';
-        el.classList.toggle('is-empty', total === 0);
-      }
-    }
-    // If requisitions view is active and the qty crossed 0, re-render
-    // the roster so the card appears or disappears.
+    notifyChanged();
     const crossedZero = (prev === 0) !== (qty === 0);
     if (crossedZero && getView() === VIEW_REQUISITIONS && isBuildMode() &&
         typeof App.renderUnitRosterWithContext === 'function') {
@@ -107,7 +100,7 @@
     return n;
   }
 
-  // ── predicate ──────────────────────────────────────────────────────
+  // ── predicate ────────────────────────────────────────────────────────
   function ensurePredicate() {
     if (_predicateRegistered) return;
     if (!Array.isArray(App.hooks.rosterFilters)) return;
@@ -123,7 +116,7 @@
     _predicateRegistered = true;
   }
 
-  // ── empty-state hint ───────────────────────────────────────────────
+  // ── empty-state hint ────────────────────────────────────────────────
   function ensureEmptyNote() {
     if (_emptyNote && document.body.contains(_emptyNote)) return _emptyNote;
     const grid = document.getElementById('unit-grid');
@@ -135,8 +128,8 @@
     note.innerHTML =
       '<div class="requisitions-empty-title">Your Requisition Requests are empty</div>' +
       '<div class="requisitions-empty-body">' +
-        'Switch to <button type="button" class="requisitions-empty-link" data-requisitions-switch="all">All units</button> ' +
-        'and click the <span class="requisitions-empty-heart" aria-hidden="true">♥</span> on any card to add it to your wishlist.' +
+        'Switch to <button type="button" class="requisitions-empty-link" data-requisitions-switch="all">All units</button>, ' +
+        'pick a unit, and use the <span class="requisitions-empty-heart" aria-hidden="true">♥</span> stepper in the Details pane to add it to your wishlist.' +
       '</div>';
     grid.parentNode.insertBefore(note, grid);
     note.addEventListener('click', e => {
@@ -169,112 +162,13 @@
     note.hidden = hasMatch;
   }
 
-  // ── per-card heart stepper ─────────────────────────────────────────
-  function decorateCard(card) {
-    if (!card || card.dataset.requisitionsDone === '1') return;
-    const unitId = card.dataset.unitId;
-    if (!unitId) return;
-    if (card.querySelector('.requisitions-stepper')) {
-      card.dataset.requisitionsDone = '1';
-      return;
-    }
-    const qty = getQty(unitId);
-    const wrap = document.createElement('div');
-    wrap.className = 'requisitions-stepper' + (qty > 0 ? ' has-qty' : '');
-    wrap.dataset.unitId = unitId;
-    wrap.innerHTML =
-      '<button type="button" class="requisitions-step-btn requisitions-dec" tabindex="-1" ' +
-        'aria-label="Remove one from Requisitions" title="Remove one">−</button>' +
-      '<span class="requisitions-step-icon" aria-hidden="true">♥</span>' +
-      '<span class="requisitions-step-qty" data-requisitions-qty>' + qty + '</span>' +
-      '<button type="button" class="requisitions-step-btn requisitions-inc" tabindex="-1" ' +
-        'aria-label="Add one to Requisitions" title="Add one">+</button>';
-    wrap.addEventListener('click', e => {
-      e.stopPropagation();
-      const inc = e.target.closest('.requisitions-inc');
-      const dec = e.target.closest('.requisitions-dec');
-      const icon = e.target.closest('.requisitions-step-icon');
-      if (inc) incQty(unitId, +1);
-      else if (dec) incQty(unitId, -1);
-      // Click on the heart toggles 0 ↔ 1 — quick "add to wishlist" affordance.
-      else if (icon) setQty(unitId, getQty(unitId) > 0 ? 0 : 1);
-    });
-    wrap.addEventListener('dblclick', e => { e.stopPropagation(); });
-    card.appendChild(wrap);
-    card.dataset.requisitionsDone = '1';
-    syncCardStepper(card, qty);
-  }
-
-  function syncCardStepper(card, qty) {
-    if (qty == null) qty = getQty(card.dataset.unitId);
-    const wrap = card.querySelector('.requisitions-stepper');
-    if (!wrap) return;
-    wrap.classList.toggle('has-qty', qty > 0);
-    const qEl = wrap.querySelector('[data-requisitions-qty]');
-    if (qEl) qEl.textContent = String(qty);
-    const dec = wrap.querySelector('.requisitions-dec');
-    if (dec) dec.disabled = qty <= 0;
-    card.classList.toggle('requisitions-wanted', qty > 0);
-  }
-
-  function refreshAllSteppers(unitId) {
-    if (unitId) {
-      const cards = document.querySelectorAll(
-        '.unit-card[data-unit-id="' + cssEsc(unitId) + '"]'
-      );
-      cards.forEach(card => syncCardStepper(card, getQty(unitId)));
-    } else {
-      document.querySelectorAll('.unit-card').forEach(card => {
-        syncCardStepper(card, getQty(card.dataset.unitId));
-      });
-    }
-  }
-
-  function cssEsc(s) {
-    if (window.CSS && typeof CSS.escape === 'function') return CSS.escape(s);
-    return String(s).replace(/["\\]/g, '\\$&');
-  }
-
-  function scanGrid() {
-    const grid = document.getElementById('unit-grid');
-    if (!grid) return;
-    grid.querySelectorAll('.unit-card').forEach(decorateCard);
-  }
-
-  function scheduleGridScan() {
-    if (_gridScanRaf) return;
-    _gridScanRaf = requestAnimationFrame(() => {
-      _gridScanRaf = 0;
-      scanGrid();
-      refreshEmptyNote();
-    });
-  }
-
-  function installGridObserver() {
-    if (_gridObserver) return;
-    const grid = document.getElementById('unit-grid');
-    if (!grid) return;
-    scheduleGridScan();
-    _gridObserver = new MutationObserver(records => {
-      for (let i = 0; i < records.length; i++) {
-        if (records[i].addedNodes && records[i].addedNodes.length) {
-          scheduleGridScan();
-          return;
-        }
-      }
-    });
-    _gridObserver.observe(grid, { childList: true, subtree: false });
-  }
-
-  // ── hook registrations ─────────────────────────────────────────────
+  // ── hook registrations ───────────────────────────────────────────────
   ensurePredicate();
 
   App.hooks.bootstrap.push(function () {
     loadPersisted();
     ensurePredicate();
-    installGridObserver();
     refreshEmptyNote();
-    // Nudge the Reserves toggle so its requisitions count chip renders.
     if (App.Reserves && typeof App.Reserves.syncToggle === 'function') {
       App.Reserves.syncToggle();
     }
@@ -289,7 +183,7 @@
     refreshEmptyNote();
   });
 
-  // Cross-tab sync for the requisitions list.
+  // Cross-tab sync.
   window.addEventListener('storage', function (e) {
     if (!e || e.key !== LS_KEY) return;
     Object.keys(QTY).forEach(k => delete QTY[k]);
@@ -302,11 +196,7 @@
         });
       }
     } catch (_) {}
-    refreshAllSteppers();
-    refreshEmptyNote();
-    if (App.Reserves && typeof App.Reserves.syncToggle === 'function') {
-      App.Reserves.syncToggle();
-    }
+    notifyChanged();
     if (getView() === VIEW_REQUISITIONS && isBuildMode() &&
         typeof App.renderUnitRosterWithContext === 'function') {
       App.renderUnitRosterWithContext();
