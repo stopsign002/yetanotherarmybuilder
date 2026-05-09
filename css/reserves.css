@@ -268,7 +268,7 @@ body[data-units-view="requisitions"] #unit-grid #roster-empty {
 }
 .unit-card .reserves-qty-badge {
   top: 6px;
-  left: 8px; /* offset past style.css's 3px ::before selection bar */
+  right: 6px;
   background: var(--reserves-accent);
   color: #111;
 }
