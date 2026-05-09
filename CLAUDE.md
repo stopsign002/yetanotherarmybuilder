@@ -35,9 +35,9 @@ Then open `http://localhost:8000/`. Cannot be opened via `file://` — the BSDat
 | `js/ui/auth-button.js` | Top-bar Sign-in / username button + dropdown menu (Sync now, Change password, Sign out). |
 | `js/data/` | Static JSON-ish data: lore, stratagems, community feed. |
 | `js/ui/` | DOM-rendering modules. Each attaches to `window.UI`. See `docs/UI.md`. |
-| `js/app/` | Bootstrap, state, events, and feature modules. Each attaches to `window.App`. See `docs/UI.md`. |
+| `js/app/` | Bootstrap, state, events, and feature modules. Each attaches to `window.App`. See `docs/UI.md` and `docs/MODULE-REFERENCE.md`. |
 | `js/vendor/` | `html2pdf.bundle.min.js`, `qrcode.min.js`, `fonts/cinzel-{400,600}.woff2`. |
-| `docs/` | Architecture / parser / UI reference. Read these before non-trivial changes. |
+| `docs/` | Architecture / parser / UI reference + per-module deep dive. Read `docs/MODULE-REFERENCE.md` first for an exhaustive per-file index. |
 
 ## Major features
 
@@ -103,6 +103,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Polish | Original geometric faction glyphs (inline SVG) | `js/ui/faction-glyphs.js` |
 | Polish | Role icon prefix on unit cards (Character / Vehicle / Monster …) | `js/ui/role-icons.js` |
 | Polish | Per-faction unit-card gradients (`faction-<slug>` class contributor) | `js/ui/unit-card-themes.js` |
+| Polish | Click pane header to expand it full-width (Army / Units / Details) — animated, with per-pane layout pass | `js/app/expand-pane.js`, `css/expand-pane.css` |
 
 ## Module conventions
 
@@ -161,6 +162,23 @@ The kill-switch in `sw.js` self-unregisters and clears any legacy `yaab-shell-v*
 ## Service worker (retired)
 
 The app-shell service worker has been retired. Existing installs are migrated by the kill-switch in `sw.js`: it deletes legacy `yaab-shell-v*` caches, unregisters itself, and navigates open clients so the next page load is SW-free. New visits don't register a SW. `js/app/sw-register.js` is a defensive helper that proactively unregisters anything still registered. Code updates ship live with the next reload — no SHELL bumping required.
+
+## Quick-reference for navigation
+
+Common questions and where to look first.
+
+| Question | Look here first |
+|---|---|
+| "Where is feature X?" | This file's "Major features" table — every feature row has the module path. If still unclear, `docs/MODULE-REFERENCE.md` has per-module exports + dependencies. |
+| "What hook should my new feature use?" | `docs/ARCHITECTURE.md` "Hook system" table. Cheat: `armyToolbarActions` for buttons, `armyChange` for "react when army mutates", `bootstrap` for late init, `rosterFilters` for "hide some units", `cardClassContributors` for "tag units with a CSS class". |
+| "What localStorage / IDB key does X own?" | The Storage table further down in this file (every key is listed). |
+| "Where do I add a top-bar icon?" | `docs/UI.md` "How to add X" → "Add a new toolbar action (inline)" or `App.hooks.armyToolbarActions.push({ region: 'icon', ... })`. The whitelist for which icons stay inline (vs. fall into More ▾) is `ICON_VISIBLE_IDS` in `js/app/index.js`. |
+| "How do I expose a new API route?" | `../api/CLAUDE.md` (sibling repo). Endpoints under `/api/*` are contract — paths and shapes are versioned. |
+| "Why isn't my new feature showing up?" | (1) Did you add the `<script>` tag to `index.html`? (2) Did the IIFE bail early (look for early returns guarding `App.hooks` or DOM nodes)? (3) Hard-refresh: Ctrl+Shift+R / ⌘⇧R — static-site caches stick. |
+| "Why does X re-render twice?" | `armyChange` fires on every mutation. If your renderer is also called by a button handler, the hook will refire it. Either gate the renderer with a "kind" check or use `selectionChange` instead. |
+| "Why is my parser change not visible?" | You forgot to bump `DB_VERSION` in `js/db.js`. Cached factions are served from IndexedDB; the new field is parsed correctly but never makes it into the DOM until the cache is dropped (which `onupgradeneeded` does on a version bump). |
+| "How do I make my module aware of mode (Build / Collect / Play)?" | `App.hooks.modeChange.push((newMode, prevMode) => { ... })`. Mode is also reflected as `body[data-mode]` for CSS. |
+| "Where do I add a changelog entry?" | `js/data/changelog-data.js`. Bump `version` + `lastUpdated`. EVERY user-visible change must add one (see editing guidance #6 below). |
 
 ## Editing guidance
 

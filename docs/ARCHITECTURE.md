@@ -42,7 +42,7 @@ localStorage `yaab_armies`
 10. `App.fireBootstrap(state)` runs every `App.hooks.bootstrap[]` entry.
 11. `App.autoLoadFromBSData()` returns immediately and starts the background load. Each faction, as it finishes parsing, is pushed into `state.factions`, triggering `rebuildAllUnits` + `buildChaptersMap` + `updateFactionFilter` + `renderUnitRosterWithContext`. First card appears a few hundred ms after the tree listing resolves.
 12. `topbar.js` IIFE runs (loaded after `app/index.js`) and wires the top-bar chip mirror, ⌘K trigger, Action Center button, status row.
-13. `sw-register.js` registers `/sw.js` after window load.
+13. `sw-register.js` defensively unregisters any leftover service worker. New visits do NOT register a SW (the app-shell SW was retired; `/sw.js` is now a kill-switch that self-unregisters and clears legacy `yaab-shell-v*` caches).
 
 ## Memory model
 
@@ -58,10 +58,10 @@ localStorage `yaab_armies`
 |---|---|---|
 | `yaab` IDB / `factions` | IndexedDB | Bump `DB_VERSION` in `js/db.js` when parser output shape changes; existing stores get dropped in `onupgradeneeded` |
 | `yaab` IDB / `gst` | IndexedDB | Same |
-| `yaab_bsdata_filelist_10e_v1` | sessionStorage | Bump suffix on GitHub tree-format shifts |
+| `yaab_bsdata_filelist_10e_v2` | sessionStorage | Bump suffix on cache-shape changes (current shape: `{ source: 'mirror'\|'github', files: [...] }`) |
 | `yaab_armies` | localStorage | User data — never invalidate silently |
 | `yaab_factions` | localStorage | Legacy — kept only for back-compat; not on the active read path |
-| `yaab-shell-v17` | Cache API | Bump `SHELL` in `sw.js` when any precached asset changes |
+| `yaab-shell-v*` | Cache API | Retired — the kill-switch in `sw.js` deletes any leftover `yaab-shell-*` cache on next visit. Do not add new precached assets here. |
 
 `BSData.clearFactionCache()` wipes legacy session keys + the IndexedDB `factions` and `gst` stores in one call.
 
@@ -114,7 +114,7 @@ A parallel slide-in **Action Center** (`js/ui/action-center.js`, `UI.actionCente
 
 ## Lazy-loading strategy
 
-Implemented in `js/app/lazy-modules.js` but **not yet wired into `index.html`** (the script tag is missing). When wired, the module:
+Implemented in `js/app/lazy-modules.js` (wired in `index.html` between `app/index.js` and the feature-modules block). When the placeholder fires, the module:
 
 1. Registers placeholder toolbar/detail actions BEFORE `mountArmyToolbarActions` runs at boot, so menus include the buttons.
 2. On first click, injects the real `<script>` (in dependency order, `async = false`), waits for `load`, then fires any newly-registered `bootstrap` hooks.

@@ -1,5 +1,42 @@
 /* css/changelog.css — "Updates" modal styling. */
 
+/* Hard-refresh tip banner at the top of the body. Static-site caches can
+   keep a stale tab pinned to an old build; this surface tells users how
+   to force a fresh fetch when a brand-new feature isn't showing up yet. */
+.changelog-refresh-tip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 0 0 16px;
+  background: rgba(var(--accent-rgb, 200, 200, 200), 0.08);
+  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.25);
+  border-left-width: 3px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text, #e0e0e0);
+}
+.changelog-refresh-tip-icon {
+  font-size: 16px;
+  line-height: 1;
+  color: var(--accent, #c8c8c8);
+  flex: 0 0 auto;
+}
+.changelog-refresh-tip kbd {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin: 0 2px;
+  color: var(--accent, #e6e6e6);
+  white-space: nowrap;
+}
+
+
 .changelog-modal {
   max-width: 640px;
   width: min(640px, 96vw);

@@ -26,9 +26,106 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.06-4',
-    lastUpdated: '2026-05-06T20:15:00Z',
+    version:     '2026.05.07-4',
+    lastUpdated: '2026-05-07T16:00:00Z',
     entries: [
+      // ── 2026-05-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-07', kind: 'change',
+        title: 'Details pane (expanded): cleaner full-screen layout',
+        description:
+          'Expanding the Details pane used to leave a lot of dead ' +
+          'space — the stats strip sat alone in the left column while ' +
+          'the weapons table claimed the right. Now the banner, the ' +
+          '"Add to Army" toolbar, and the M/T/SV/W/LD/OC stats span ' +
+          'the full width across the top with bigger numbers and a ' +
+          'slimmer add-to-army button, and the remaining sections ' +
+          '(weapons, abilities, leader, loadout, enhancements) flow ' +
+          'into a 2- or 3-column grid below depending on monitor ' +
+          'size. The weapons section spans 2 columns on very wide ' +
+          'screens so its wide table breathes.',
+      },
+      {
+        date: '2026-05-07', kind: 'feature',
+        title: 'Army pane (expanded): card grid + auto-open rules',
+        description:
+          'Expanding the Army pane now lays the entries out as a card ' +
+          'grid (similar to the Units pane) so most or all of your ' +
+          'army is visible on one screen, and the "Army rules & ' +
+          'stratagems" collapsible auto-opens so the relevant rules ' +
+          'sit alongside the list. Click the header again to collapse ' +
+          'back to the regular 3-pane view.',
+      },
+      {
+        date: '2026-05-07', kind: 'change',
+        title: 'Updates pane: hint about hard-refresh',
+        description:
+          'The "What\'s new" modal now shows a small banner at the ' +
+          'top reminding you that browsers can hold on to a stale ' +
+          'cached build. If a new feature doesn\'t show up yet, hit ' +
+          'Ctrl+Shift+R (⌘⇧R on Mac) to force a hard refresh.',
+      },
+      {
+        date: '2026-05-07', kind: 'fix',
+        title: 'Unit cards: points now sit under the unit name',
+        description:
+          'Long point values (e.g. multi-model squad totals like ' +
+          '"70 / 150 pts") used to push the unit name onto a second ' +
+          'line and squash everything into a narrow column. Cards now ' +
+          'put the points on a row of their own under the name, so ' +
+          'the name has the full width to itself. The minimum card ' +
+          'width has also been bumped up to keep cards readable.',
+      },
+      {
+        date: '2026-05-07', kind: 'fix',
+        title: 'Drag-to-resize panes is snappy again',
+        description:
+          'Dragging the column edges to resize the Army or Details ' +
+          'panes felt sluggish after the new expand-pane animation ' +
+          'shipped — every pixel of drag was being treated as an ' +
+          'animated transition. The transition is now suppressed ' +
+          'while you\'re dragging, so resize tracks the cursor ' +
+          'instantly while the expand/collapse animation still plays ' +
+          'when you click a header.',
+      },
+      {
+        date: '2026-05-07', kind: 'change',
+        title: 'Expanded panes now use the full screen',
+        description:
+          'When you expand the Army, Units, or Details pane (by ' +
+          'clicking its header), the layout now fills the entire ' +
+          'window instead of capping at ~1700px in the middle. The ' +
+          'Units search bar and filter chips sit on a single inline ' +
+          'band across the top, the unit grid widens to as many ' +
+          'columns as fit, and the Army / Details panes likewise use ' +
+          'the full width.',
+      },
+      {
+        date: '2026-05-07', kind: 'feature',
+        title: 'Click any pane header to expand it full-width',
+        description:
+          'Click the Army, Units, or Details title (or the new expand ' +
+          'icon next to it) to grow that pane across the entire 3-pane ' +
+          'area, with a smooth slide animation. Each pane gets a ' +
+          'dedicated full-screen layout: the Army pane splits into ' +
+          'setup + rules on the left and the entry list on the right; ' +
+          'the Units grid widens to show more cards at once; the ' +
+          'Details pane uses two columns so stats/abilities sit ' +
+          'alongside weapons/wargear. Click the header again or press ' +
+          'Escape to return to the 3-pane view.',
+      },
+      {
+        date: '2026-05-07', kind: 'feature',
+        title: 'Filter chips: click twice to exclude',
+        description:
+          'The role chips above the unit list (Battleline, Character, ' +
+          'Infantry, Vehicle, Monster, Psyker) now have three states. ' +
+          'First click turns the chip green and only shows units with ' +
+          'that keyword. A second click turns it red and hides every ' +
+          'unit with that keyword instead — handy for browsing only ' +
+          'non-Characters or only non-Vehicles. A third click clears ' +
+          'the chip.',
+      },
       // ── 2026-05-06 ──────────────────────────────────────────────────────
       {
         date: '2026-05-06', kind: 'change',

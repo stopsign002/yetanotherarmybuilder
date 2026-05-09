@@ -1,0 +1,394 @@
+/* expand-pane.css — click-to-expand pane headers (Army / Units / Details).
+   Mounted by js/app/expand-pane.js. Desktop only (>820px); on mobile the
+   single-pane mobile layout already gives one panel the full screen. */
+
+@media (min-width: 821px) {
+
+  /* Smooth transition between 3-pane and full-screen pane. Modern browsers
+     interpolate grid-template-columns when the track count is unchanged.
+     Disabled during resize-handle drags (resize.js toggles .is-resizing)
+     so column updates fire without lag. */
+  .app-main {
+    transition: grid-template-columns 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .app-main.is-resizing {
+    transition: none !important;
+  }
+
+  /* When any pane is expanded, hide the resize handles and prevent input
+     on the collapsed siblings (which still occupy 0px of width). */
+  .app-main.pane-expanded-left,
+  .app-main.pane-expanded-center,
+  .app-main.pane-expanded-right {
+    --col-left: 0px;
+    --col-right: 0px;
+  }
+
+  .app-main.pane-expanded-left {
+    grid-template-columns: minmax(0, 1fr) 0 0 0 0 !important;
+  }
+  .app-main.pane-expanded-center {
+    grid-template-columns: 0 0 minmax(0, 1fr) 0 0 !important;
+  }
+  .app-main.pane-expanded-right {
+    grid-template-columns: 0 0 0 0 minmax(0, 1fr) !important;
+  }
+
+  /* Collapsed panels lose their min-width and fade out. */
+  .app-main.pane-expanded-left  > .panel-center,
+  .app-main.pane-expanded-left  > .panel-right,
+  .app-main.pane-expanded-center > .panel-left,
+  .app-main.pane-expanded-center > .panel-right,
+  .app-main.pane-expanded-right > .panel-left,
+  .app-main.pane-expanded-right > .panel-center {
+    min-width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+  }
+  .app-main.pane-expanded-left  > .resize-handle,
+  .app-main.pane-expanded-center > .resize-handle,
+  .app-main.pane-expanded-right > .resize-handle {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+
+  /* ── Expand-toggle button in panel headers ──────────────────── */
+  .panel-header h2 {
+    cursor: pointer;
+    user-select: none;
+  }
+  .panel-expand-btn {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--text-muted, #999);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-left: 4px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s, transform 0.2s;
+  }
+  .panel-expand-btn:hover {
+    color: var(--accent);
+    border-color: var(--border-light);
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .panel-expand-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    pointer-events: none;
+  }
+  .panel-expand-btn .expand-icon-collapse { display: none; }
+  .panel-expanded > .panel-header .panel-expand-btn {
+    color: var(--accent);
+  }
+  .panel-expanded > .panel-header .panel-expand-btn .expand-icon-expand { display: none; }
+  .panel-expanded > .panel-header .panel-expand-btn .expand-icon-collapse { display: inline; }
+
+  /* ── Layout pass: when expanded, reorganize the panel body into a
+       wider, grid-based layout that uses the extra real estate. ─────── */
+
+  /* Common: relax the panel-body so its inner grid can breathe. */
+  .panel-expanded > .panel-body {
+    padding: 24px clamp(20px, 4vw, 56px) 32px;
+  }
+  .panel-expanded > .panel-header {
+    padding: 16px clamp(20px, 4vw, 56px) 12px;
+  }
+  .panel-expanded > .panel-header h2 {
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+  .panel-expanded > .panel-controls {
+    padding: 12px clamp(20px, 4vw, 56px);
+  }
+
+  /* ── ARMY panel expanded ─────────────────────────────────────────
+     Two columns: setup + rules on the left, the army-entry list on the
+     right rendered as a card grid (similar to the Units pane) so the
+     player can see most/all of their army at a glance. */
+  .panel-left.panel-expanded > .panel-body {
+    display: grid;
+    grid-template-columns: minmax(340px, 460px) minmax(0, 1fr);
+    gap: 20px clamp(28px, 4vw, 64px);
+    align-content: start;
+    align-items: start;
+    max-width: none;
+    margin: 0;
+    padding: 24px clamp(20px, 3vw, 40px) 32px;
+  }
+  .panel-left.panel-expanded .army-setup-section { grid-column: 1; grid-row: 1; }
+  .panel-left.panel-expanded .army-rules-collapsible { grid-column: 1; grid-row: 2; }
+  .panel-left.panel-expanded .points-summary-shadow { display: none !important; }
+
+  /* Right column = entries area. We hide the legacy column-grid header
+     row (Unit / Pts / Qty / Total) since the cards label their own stats
+     inline. */
+  .panel-left.panel-expanded .army-entries-header {
+    display: none !important;
+  }
+  .panel-left.panel-expanded .army-entry-list {
+    grid-column: 2;
+    grid-row: 1 / span 99;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    align-content: start;
+  }
+
+  /* Card-shape each entry: switch the entry from a horizontal flex row
+     to a stacked card (handle + body + remove become layered/aligned
+     for a compact card surface). */
+  .panel-left.panel-expanded .army-entry-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 14px 14px 18px;
+    min-height: 100px;
+    gap: 6px;
+  }
+  /* Drag-reorder handle is moved to the card's top-right so it doesn't
+     consume the full-width name row inside the card. */
+  .panel-left.panel-expanded .army-entry-card .army-entry-handle {
+    position: absolute;
+    top: 8px;
+    right: 36px;
+    margin: 0;
+    padding: 0;
+    opacity: 0.35;
+  }
+  .panel-left.panel-expanded .army-entry-card .army-entry-handle:hover {
+    opacity: 0.85;
+  }
+  /* Name takes the full card width and is allowed to wrap to two lines
+     if needed — better than truncating with ellipsis on a card. */
+  .panel-left.panel-expanded .army-entry-card .army-entry-name {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    padding-right: 56px; /* leave room for handle + remove */
+    display: block !important;
+    line-height: 1.25;
+  }
+  .panel-left.panel-expanded .army-entry-card .army-entry-title {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
+  /* Stats row: keep the inline "Pts X · Qty [1] · Total Y" layout but
+     give it a touch more breathing room inside the card. */
+  .panel-left.panel-expanded .army-entry-card .army-entry-stats {
+    margin-top: 4px;
+    gap: 10px 16px;
+    font-size: 12px;
+  }
+  .panel-left.panel-expanded .army-entry-card .army-entry-remove {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    margin: 0;
+  }
+  /* Empty-state list item should fill the whole grid column nicely. */
+  .panel-left.panel-expanded .army-list-empty {
+    grid-column: 1 / -1;
+    padding: 60px 20px;
+    text-align: center;
+  }
+  /* Rules section: when the army panel is fullscreen, the JS module
+     auto-opens it (see expand-pane.js). Add a bit of contrast so it
+     doesn't feel like an afterthought next to the setup form. */
+  .panel-left.panel-expanded .army-rules-collapsible {
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  /* ── UNITS panel expanded ────────────────────────────────────────
+     Layout: full-bleed search/chip band at the top, then a 2-region
+     workspace below — a sticky filter rail on the left (faction + role
+     chips, vertical) and a dense, multi-column unit grid on the right
+     that fills the rest of the viewport. The point of expanding is to
+     see lots of units at once, so we explicitly target ≥4 columns and
+     drop the centering caps that make the content look stranded. */
+
+  /* Top band: search input grows, chips wrap inline next to it. */
+  .panel-center.panel-expanded > .panel-controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 14px clamp(20px, 3vw, 40px);
+  }
+  .panel-center.panel-expanded > .panel-controls > .yaab-search-wrap,
+  .panel-center.panel-expanded > .panel-controls > .search-input {
+    flex: 1 1 320px;
+    min-width: 280px;
+  }
+  .panel-center.panel-expanded > .panel-controls .search-input {
+    font-size: 15px;
+    padding: 12px 14px;
+    min-height: 44px;
+  }
+  .panel-center.panel-expanded #roster-filter-chips {
+    flex: 0 1 auto;
+    margin-top: 0;
+    max-width: none;
+  }
+  .panel-center.panel-expanded .filter-chip {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  /* Body: sidebar + grid. Rail keeps faction info / chip context anchored
+     so the user always knows what's filtering. */
+  .panel-center.panel-expanded > .panel-body {
+    padding: 18px clamp(20px, 3vw, 40px) 32px;
+    max-width: none;
+    margin: 0;
+  }
+  .panel-center.panel-expanded .unit-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+    gap: 14px;
+    align-content: start;
+  }
+  .panel-center.panel-expanded .unit-card {
+    padding: 14px;
+  }
+  /* Bigger panel header band on units expanded: keep the count badge
+     comfortably to the right of the title. */
+  .panel-center.panel-expanded > .panel-header {
+    padding: 16px clamp(20px, 3vw, 40px) 12px;
+  }
+
+  /* ── DETAILS panel expanded ──────────────────────────────────────
+     Layout zones:
+       1. Banner (full-width):    name, faction tag, points, action icons
+       2. Add to Army (full-width, slim): qty input + button
+       3. Stats strip (full-width): big M / T / SV / W / LD / OC pillars
+       4. Body grid (2-col, or 3-col on huge screens): weapons,
+          abilities, core abilities, leader, led-by, loadout, etc.
+     The detail.js render emits each block as a direct child of
+     `.unit-detail-content`, so we can promote the top zones to span
+     the full grid width and let the rest auto-flow into columns. */
+  .panel-right.panel-expanded > .panel-body {
+    max-width: none;
+    margin: 0;
+    padding: 24px clamp(20px, 3vw, 40px) 32px;
+  }
+  .panel-right.panel-expanded .unit-detail-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: clamp(28px, 3vw, 56px);
+    row-gap: 18px;
+    align-items: start;
+    grid-auto-flow: row dense;
+  }
+  /* On very wide monitors switch to 3 columns and let the weapons
+     section (which has a wide table) span two of them. */
+  @media (min-width: 1600px) {
+    .panel-right.panel-expanded .unit-detail-content {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .panel-right.panel-expanded .unit-detail-content > .detail-weapons-section {
+      grid-column: span 2;
+    }
+  }
+  /* Top zones span the full grid. */
+  .panel-right.panel-expanded .unit-detail-content > .detail-banner,
+  .panel-right.panel-expanded .unit-detail-content > .detail-header,
+  .panel-right.panel-expanded .unit-detail-content > .detail-add-section,
+  .panel-right.panel-expanded .unit-detail-content > .detail-stats-section {
+    grid-column: 1 / -1;
+  }
+  /* Empty state stays centered. */
+  .panel-right.panel-expanded .unit-detail-empty {
+    grid-column: 1 / -1;
+    min-height: 50vh;
+  }
+
+  /* ── Banner: bigger name, more breathing room ─────────────────── */
+  .panel-right.panel-expanded .detail-banner {
+    padding: 16px 20px 18px;
+  }
+  .panel-right.panel-expanded .detail-name {
+    font-size: 30px;
+    line-height: 1.1;
+  }
+  .panel-right.panel-expanded .detail-banner-pts,
+  .panel-right.panel-expanded .detail-pts {
+    font-size: 22px;
+  }
+
+  /* ── Add to Army: slim toolbar, not a tall band ───────────────── */
+  .panel-right.panel-expanded .detail-add-section {
+    padding: 10px 14px;
+    margin: 0 0 4px;
+  }
+  .panel-right.panel-expanded .detail-add-row {
+    margin-top: 0;
+    align-items: center;
+    gap: 12px;
+  }
+  .panel-right.panel-expanded .detail-add-row .detail-qty-input,
+  .panel-right.panel-expanded .detail-add-row .form-input {
+    height: 40px;
+    width: 84px;
+  }
+  .panel-right.panel-expanded .detail-add-btn {
+    height: 40px !important;
+    padding: 0 24px;
+    font-size: 14px;
+  }
+
+  /* ── Stats strip: full-width pillars with bigger numbers ──────── */
+  .panel-right.panel-expanded .detail-stats-section {
+    margin: 0;
+  }
+  .panel-right.panel-expanded .detail-stats-row {
+    gap: 6px;
+  }
+  .panel-right.panel-expanded .detail-stat-pillar,
+  .panel-right.panel-expanded .detail-stat-cell {
+    padding: 16px 8px;
+  }
+  .panel-right.panel-expanded .detail-stat-pillar-value,
+  .panel-right.panel-expanded .detail-stat-cell .stat-value {
+    font-size: 24px;
+  }
+  .panel-right.panel-expanded .detail-stat-pillar-label,
+  .panel-right.panel-expanded .detail-stat-cell .stat-name {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+
+  /* ── Body sections ────────────────────────────────────────────── */
+  .panel-right.panel-expanded .detail-section {
+    margin: 0;
+    /* Avoid splitting a section across columns when grid auto-flow
+       reuses tracks with `dense`. */
+    break-inside: avoid;
+  }
+  .panel-right.panel-expanded .detail-section-title {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    margin-bottom: 10px;
+  }
+
+  /* ── Visible click affordance on the title text ─────────────── */
+  .panel-header h2 {
+    transition: color 0.15s;
+  }
+  .panel-header h2:hover {
+    color: #fff;
+  }
+}
+
+/* Mobile: hide the expand toggle entirely — irrelevant on phones. */
+@media (max-width: 820px) {
+  .panel-expand-btn { display: none !important; }
+}

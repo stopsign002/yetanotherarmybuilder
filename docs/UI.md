@@ -101,6 +101,11 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 | `mode-shell.js` | Build / Collect / Play mode container switching + persistence. Owns `yaab_mode` and the `App.hooks.modeChange` bus. Loads first among the mode modules so `build-mode` / `collect-mode` / `play-mode` can register their panels. |
 | `points-filter.js` | Comparator tokens in the unit search bar (`<=200`, `>=100`, `=150`, `<100`, `>50`, plus `≤`/`≥`). Multiple tokens AND together. A unit passes if ANY of its squad/variant costs satisfies the constraint. `roster.js` strips the same tokens before name/keyword matching. |
 | `settings-drawer.js` | Slide-in Settings drawer (triggered from `#topbar-settings`). Routes to existing toggles (sound, voice, ork-math, legends, kill-team, collection badges, reduced motion) + utility actions (replay tour, clear caches, sign out). Owns `yaab_reduced_motion`. |
+| `admin.js` | Server-backed admin panel (account approvals, image moderation, bug-report review). `App.Admin = { open, close, isAdmin }`. Visible only when `App.Auth.isAdmin()`. |
+| `pending-approval-banner.js` | Auth banner shown when the signed-in account hasn't been approved yet by an admin. Surfaces the user's recovery code so they can copy it before regaining access. |
+| `bug-report.js` | Server-backed bug report modal with auto-attached diagnostics (UA, viewport, SW status, faction count, current-army YAAB1 code). `App.BugReport = { open }`. Auth-gated; reports posted to `/api/bugs`. |
+| `changelog.js` | "What's new" modal driven by `App.CHANGELOG` (data lives in `js/data/changelog-data.js`). `App.Changelog = { open, close }`. Owns `yaab_changelog_seen` LS key + the unseen-version dot. Renders a hard-refresh tip banner (Ctrl+Shift+R / ⌘⇧R) above entries. |
+| `expand-pane.js` | Click any panel header (Army / Units / Details) or its expand icon to grow the pane to full width with a `grid-template-columns` transition; click again or press Escape to restore. Auto-opens the army-rules collapsible while the army pane is expanded. `App.PaneExpand = { expand, collapse, toggle, isExpanded }`. Toggles `pane-expanded-{left|center|right}` on `#app-main` + `panel-expanded` on the active panel. Disabled on mobile (`max-width: 820px`). |
 
 ## Public namespaces
 

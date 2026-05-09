@@ -18,8 +18,11 @@
     scrollContainer: null,
     scrollHandler: null,
     scrollRaf: 0,
-    // Active filter-chip keyword set (lowercased). Empty = no chip filter.
-    activeChips: Object.create(null),
+    // Active filter-chip keywords (lowercased). Each chip cycles through
+    // three states on click: undefined → 'include' (green) → 'exclude'
+    // (red) → undefined. Includes are AND-ed together; excludes filter
+    // any unit carrying the matching keyword.
+    chipState: Object.create(null),
     // Marker so we don't register the chip predicate more than once.
     _chipPredicateRegistered: false,
   };
@@ -172,10 +175,18 @@
       btn.className = 'filter-chip';
       btn.dataset.chipKw = c.kw;
       btn.textContent = c.label;
+      btn.title = 'Click to require ' + c.label + '; click again to exclude';
       btn.addEventListener('click', () => {
-        if (R.activeChips[c.kw]) delete R.activeChips[c.kw];
-        else R.activeChips[c.kw] = true;
-        btn.classList.toggle('active');
+        const cur = R.chipState[c.kw];
+        let next;
+        if (!cur)              next = 'include';
+        else if (cur === 'include') next = 'exclude';
+        else                   next = null;
+        if (next) R.chipState[c.kw] = next;
+        else      delete R.chipState[c.kw];
+        btn.classList.toggle('active',   next === 'include');
+        btn.classList.toggle('excluded', next === 'exclude');
+        btn.setAttribute('aria-pressed', next === 'include' ? 'true' : 'false');
         syncClearVisibility();
         if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
           App.renderUnitRosterWithContext();
@@ -189,8 +200,12 @@
     clear.textContent = '×';
     clear.title = 'Clear role filters';
     clear.addEventListener('click', () => {
-      Object.keys(R.activeChips).forEach(k => delete R.activeChips[k]);
-      bar.querySelectorAll('.filter-chip.active').forEach(el => el.classList.remove('active'));
+      Object.keys(R.chipState).forEach(k => delete R.chipState[k]);
+      bar.querySelectorAll('.filter-chip').forEach(el => {
+        el.classList.remove('active');
+        el.classList.remove('excluded');
+        el.setAttribute('aria-pressed', 'false');
+      });
       syncClearVisibility();
       if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
         App.renderUnitRosterWithContext();
@@ -208,7 +223,7 @@
     if (!bar) return;
     const clear = bar.querySelector('.filter-chips-clear');
     if (!clear) return;
-    clear.style.display = Object.keys(R.activeChips).length > 0 ? '' : 'none';
+    clear.style.display = Object.keys(R.chipState).length > 0 ? '' : 'none';
   }
 
   // Register a single chip predicate on App.hooks.rosterFilters (dedupe-safe).
@@ -216,12 +231,15 @@
     if (R._chipPredicateRegistered) return;
     if (!(window.App && App.hooks && Array.isArray(App.hooks.rosterFilters))) return;
     const pred = function chipFilterPredicate(unit) {
-      const keys = Object.keys(R.activeChips);
+      const keys = Object.keys(R.chipState);
       if (keys.length === 0) return true;
       const kws = (unit.keywords || []).map(k => k.toLowerCase());
-      // All active chips must be present (AND) — matches typical "Character + Infantry" intent.
       for (let i = 0; i < keys.length; i++) {
-        if (kws.indexOf(keys[i]) === -1) return false;
+        const k = keys[i];
+        const state = R.chipState[k];
+        const has = kws.indexOf(k) !== -1;
+        if (state === 'include' && !has) return false;
+        if (state === 'exclude' && has)  return false;
       }
       return true;
     };
