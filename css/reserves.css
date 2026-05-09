@@ -1,0 +1,247 @@
+/* reserves.css — Reserves (owned-units) layer over the unit pane.
+   Adds: a Reserves/All view toggle in the panel controls, a per-card
+   quantity stepper, an empty-state hint, and a soft-warn badge on
+   army-list entries that exceed owned quantity. */
+
+:root {
+  --reserves-accent: var(--accent, #c8c8c8);
+  --reserves-warn:   #e6c7a8;
+}
+
+/* ── view toggle (segmented control) ──────────────────────────────── */
+.reserves-view-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 0 0 8px;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  width: fit-content;
+}
+.reserves-view-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-muted, #aaa);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.reserves-view-btn:hover {
+  color: var(--text, #ddd);
+  background: rgba(255, 255, 255, 0.04);
+}
+.reserves-view-btn.active {
+  color: #111;
+  background: var(--reserves-accent);
+  border-color: var(--reserves-accent);
+  font-weight: 600;
+}
+.reserves-view-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+.reserves-view-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  margin-left: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  border-radius: 8px;
+}
+.reserves-view-btn.active .reserves-view-count {
+  background: rgba(0, 0, 0, 0.18);
+  color: #111;
+}
+.reserves-view-count.is-empty { display: none; }
+
+/* The toggle is a Build-mode concept. Hide in any other mode the
+   panel-controls might be reused under. */
+body[data-mode="collect"] .reserves-view-toggle,
+body[data-mode="play"]    .reserves-view-toggle,
+body[data-mode="cards"]   .reserves-view-toggle {
+  display: none;
+}
+
+/* In Reserves / Requisitions views, hide the legacy "Loading faction
+   data…" placeholder inside #unit-grid — it has stale text post-load,
+   and our own empty-state notes describe the actual situation. */
+body[data-units-view="reserves"] #unit-grid #roster-empty,
+body[data-units-view="requisitions"] #unit-grid #roster-empty {
+  display: none !important;
+}
+
+/* ── empty-state note (shown when Reserves view has nothing) ──────── */
+.reserves-empty-note {
+  margin: 0 0 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text, #ddd);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
+    rgba(0,0,0,0.15);
+  border: 1px dashed var(--border, rgba(255, 255, 255, 0.18));
+  border-radius: 6px;
+}
+.reserves-empty-note[hidden] { display: none; }
+.reserves-empty-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--reserves-accent);
+  margin-bottom: 4px;
+}
+.reserves-empty-body { color: var(--text-muted, #bbb); }
+.reserves-empty-link {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  color: var(--reserves-accent);
+  padding: 1px 8px;
+  border-radius: 4px;
+  font: inherit;
+  cursor: pointer;
+}
+.reserves-empty-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text, #eee);
+}
+.reserves-empty-plus {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  text-align: center;
+  line-height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  vertical-align: -2px;
+}
+
+/* ── per-card stepper ─────────────────────────────────────────────── */
+.unit-card .reserves-stepper {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 1px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  z-index: 3;
+  font-variant-numeric: tabular-nums;
+  /* Slight idle dim on cards with qty 0 so the visual weight is
+     reserved for owned cards; full opacity on hover/focus-within. */
+  opacity: 0.6;
+  transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.unit-card:hover .reserves-stepper,
+.unit-card .reserves-stepper:focus-within,
+.unit-card .reserves-stepper.has-qty {
+  opacity: 1;
+}
+.unit-card .reserves-stepper.has-qty {
+  background: rgba(20, 20, 20, 0.85);
+  border-color: var(--reserves-accent);
+}
+.reserves-step-btn {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--text, #eee);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 11px;
+  transition: background 0.1s, color 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.reserves-step-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--reserves-accent);
+}
+.reserves-step-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.reserves-step-qty {
+  min-width: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text, #eee);
+  padding: 0 2px;
+}
+.reserves-stepper.has-qty .reserves-step-qty {
+  color: var(--reserves-accent);
+}
+
+/* "Owned" cards are signalled by the stepper's has-qty state (tinted
+   border + accent-coloured qty number). We deliberately don't add a
+   pseudo-element here because `.unit-card::before` is already the
+   selection accent (style.css) and `.unit-card::after` is taken by
+   collection.css's painting-status dot. */
+
+/* In Reserves view, hide the stepper opacity dim since every card has qty>0. */
+body[data-units-view="reserves"] .unit-card .reserves-stepper { opacity: 1; }
+
+/* The stepper is a Build-mode concept. The COLLECT mode page lives in
+   its own <section> so these rules don't reach it; this guard is just
+   a belt-and-braces for any future re-use. */
+body[data-mode="collect"] .unit-card .reserves-stepper,
+body[data-mode="play"]    .unit-card .reserves-stepper,
+body[data-mode="cards"]   .unit-card .reserves-stepper {
+  display: none;
+}
+
+/* ── soft-warn badge on army entries ───────────────────────────────── */
+.army-entry .reserves-warn {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #1a1208;
+  background: var(--reserves-warn);
+  border-radius: 8px;
+  white-space: nowrap;
+  vertical-align: 1px;
+}
+
+/* ── mobile tightening ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .reserves-view-btn { padding: 6px 10px; font-size: 12px; }
+  .reserves-view-label { display: none; } /* icon + count only on phones */
+  .unit-card .reserves-stepper { bottom: 4px; right: 4px; }
+  .reserves-step-btn { width: 26px; height: 26px; font-size: 16px; }
+}

@@ -26,9 +26,36 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.07-4',
-    lastUpdated: '2026-05-07T16:00:00Z',
+    version:     '2026.05.09-1',
+    lastUpdated: '2026-05-09T12:00:00Z',
     entries: [
+      // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'feature',
+        title: 'Reserves: build from the units you actually own',
+        description:
+          'The Units pane now opens on a new "Reserves" view that lists ' +
+          'only the units you own, with a +/− stepper on each card to ' +
+          'set how many of each you have. Switch to "All units" to ' +
+          'browse the full faction roster and tap + on any card to add ' +
+          'it to your Reserves. Quantities sync across devices when ' +
+          'you\'re signed in. The army list also shows a soft warning ' +
+          'badge ("⚠ owns N") if you build with more copies of a unit ' +
+          'than you actually own — never blocks adding, just keeps you ' +
+          'honest.',
+      },
+      {
+        date: '2026-05-09', kind: 'feature',
+        title: 'Requisition Requests: a per-unit wishlist',
+        description:
+          'A third "Requisitions" tab in the Units pane tracks the ' +
+          'units you want to acquire (or paint) next. Each card gets ' +
+          'a small heart-stepper so you can wish for one or many ' +
+          'copies; the Requisitions view filters the roster down to ' +
+          'just your wishlist. Owned and wished-for stockpiles are ' +
+          'tracked separately, both sync to the cloud, and a unit can ' +
+          'be in both at once.',
+      },
       // ── 2026-05-07 ──────────────────────────────────────────────────────
       {
         date: '2026-05-07', kind: 'change',

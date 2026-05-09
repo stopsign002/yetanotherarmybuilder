@@ -22,6 +22,8 @@
     'yaab_favorites',
     'yaab_recents',
     'yaab_collection',
+    'yaab_reserves',
+    'yaab_requisitions',
     'yaab_crusade_rosters',
     'yaab_deployments',
     'yaab_points_overrides',
