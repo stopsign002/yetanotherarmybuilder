@@ -32,8 +32,13 @@
   let _toggleObserver = null;
   let _detailObserver = null;
   let _armyObserver = null;
+  let _gridObserver = null;
   let _emptyNote = null;
   let _armyScanRaf = 0;
+  let _gridScanRaf = 0;
+  // Dedupe set for the roster predicate; re-initialised at the start of
+  // each filter pass and cleared via microtask after the pass ends.
+  let _filterSeen = null;
 
   // ── mode helpers ──────────────────────────────────────────────────────
   function getMode() {
@@ -97,6 +102,7 @@
     persist();
     syncToggleActive();
     refreshDetailWidget(unitId);
+    refreshCardBadges(unitId);
     refreshArmyWarnings();
     refreshEmptyNote();
     // If reserves view is active and we crossed 0, re-render the roster
@@ -193,7 +199,17 @@
     return n;
   }
 
-  // ── roster filter predicate ──────────────────────────────────────────
+  // ── roster filter predicates ─────────────────────────────────────────
+  // Two predicates:
+  //   - qty filter (only owned units pass when in reserves view)
+  //   - dedupe (collapse duplicate unit-ids that come from BSData
+  //     sharedSelectionEntries — e.g. one Marine Captain reused across
+  //     every chapter catalogue would otherwise produce N identical
+  //     cards in Reserves / Requisitions views).
+  // Dedupe runs in BOTH reserves and requisitions views and is robust
+  // to any predicate ordering by re-checking qty itself before marking
+  // a unit-id as seen — so a stale "qty=0" variant can't poison the
+  // seen-set and hide the actual owned/wished one further along.
   function ensurePredicate() {
     if (_predicateRegistered) return;
     if (!Array.isArray(App.hooks.rosterFilters)) return;
@@ -206,6 +222,37 @@
     App.hooks.rosterFilters = App.hooks.rosterFilters
       .filter(fn => !fn._isReservesPredicate);
     App.hooks.rosterFilters.push(pred);
+
+    const dedupe = function reservesDedupe(unit) {
+      if (!isBuildMode()) return true;
+      let qty;
+      if (_view === VIEW_RESERVES) {
+        qty = getQty(unit && unit.id);
+      } else if (_view === VIEW_REQUISITIONS) {
+        qty = (App.Requisitions && App.Requisitions.getQty)
+          ? App.Requisitions.getQty(unit && unit.id) : 0;
+      } else {
+        return true; // 'all' view: no dedupe — every catalog variant is intentional
+      }
+      if (qty <= 0) return false; // also filters; redundant but order-safe
+      if (!unit || !unit.id) return true;
+      if (_filterSeen === null) {
+        _filterSeen = new Set();
+        if (typeof queueMicrotask === 'function') {
+          queueMicrotask(() => { _filterSeen = null; });
+        } else {
+          Promise.resolve().then(() => { _filterSeen = null; });
+        }
+      }
+      if (_filterSeen.has(unit.id)) return false;
+      _filterSeen.add(unit.id);
+      return true;
+    };
+    dedupe._isReservesDedupePredicate = true;
+    App.hooks.rosterFilters = App.hooks.rosterFilters
+      .filter(fn => !fn._isReservesDedupePredicate);
+    App.hooks.rosterFilters.push(dedupe);
+
     _predicateRegistered = true;
   }
 
@@ -465,6 +512,82 @@
     _armyObserver.observe(list, { childList: true, subtree: false });
   }
 
+  // ── card-corner quantity badges ──────────────────────────────────────
+  // Small "×N" pill on each unit card showing reserves count (top-left)
+  // and requisitions count (bottom-left). Lets the user see at a glance
+  // how many of a unit they own / want without opening the Details
+  // pane. Real DOM elements (not pseudo) to avoid clobbering
+  // collection.css's ::after paint dot or style.css's ::before
+  // selection accent.
+  function cssEsc(s) {
+    if (window.CSS && typeof CSS.escape === 'function') return CSS.escape(s);
+    return String(s).replace(/["\\]/g, '\\$&');
+  }
+
+  function applyBadge(card, kind, qty) {
+    const cls = kind + '-qty-badge';
+    let badge = card.querySelector('.' + cls);
+    if (qty > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = cls;
+        badge.setAttribute('aria-hidden', 'true');
+        card.appendChild(badge);
+      }
+      badge.textContent = '×' + qty;
+      badge.title = (kind === 'reserves' ? 'In your Reserves: ' : 'In your Requisitions: ') + qty;
+    } else if (badge) {
+      badge.remove();
+    }
+  }
+
+  function decorateCardBadges(card) {
+    if (!card) return;
+    const unitId = card.dataset.unitId;
+    if (!unitId) return;
+    applyBadge(card, 'reserves', getQty(unitId));
+    const reqQty = (App.Requisitions && typeof App.Requisitions.getQty === 'function')
+      ? App.Requisitions.getQty(unitId) : 0;
+    applyBadge(card, 'requisitions', reqQty);
+  }
+
+  function refreshCardBadges(unitId) {
+    if (unitId) {
+      const cards = document.querySelectorAll(
+        '.unit-card[data-unit-id="' + cssEsc(unitId) + '"]'
+      );
+      cards.forEach(decorateCardBadges);
+    } else {
+      document.querySelectorAll('.unit-card').forEach(decorateCardBadges);
+    }
+  }
+
+  function scheduleGridScan() {
+    if (_gridScanRaf) return;
+    _gridScanRaf = requestAnimationFrame(() => {
+      _gridScanRaf = 0;
+      const grid = document.getElementById('unit-grid');
+      if (!grid) return;
+      grid.querySelectorAll('.unit-card').forEach(decorateCardBadges);
+    });
+  }
+
+  function installGridObserver() {
+    if (_gridObserver) return;
+    const grid = document.getElementById('unit-grid');
+    if (!grid) return;
+    scheduleGridScan();
+    _gridObserver = new MutationObserver(records => {
+      for (let i = 0; i < records.length; i++) {
+        if (records[i].addedNodes && records[i].addedNodes.length) {
+          scheduleGridScan();
+          return;
+        }
+      }
+    });
+    _gridObserver.observe(grid, { childList: true, subtree: false });
+  }
+
   // ── toggle re-injection observer ─────────────────────────────────────
   function installToggleObserver() {
     if (_toggleObserver) return;
@@ -486,6 +609,7 @@
     installToggleObserver();
     installDetailObserver();
     installArmyObserver();
+    installGridObserver();
     syncToggleActive();
     refreshEmptyNote();
     refreshArmyWarnings();
@@ -527,6 +651,7 @@
       } catch (_) {}
       syncToggleActive();
       refreshDetailWidget();
+      refreshCardBadges();
       refreshArmyWarnings();
       refreshEmptyNote();
       if (_view === VIEW_RESERVES && isBuildMode() &&
@@ -559,5 +684,9 @@
     // Called by requisitions.js after it mutates wishlist qty so the
     // shared detail widget refreshes its requisitions row.
     refreshDetailWidget,
+    // Called by requisitions.js to refresh per-card badges (which
+    // include the requisitions count for cards owned by reserves.js's
+    // observer).
+    refreshCardBadges,
   };
 })();

@@ -63,12 +63,15 @@
   }
 
   // Push UI updates that depend on a qty change.
-  function notifyChanged() {
+  function notifyChanged(unitId) {
     if (App.Reserves && typeof App.Reserves.syncToggle === 'function') {
       App.Reserves.syncToggle();
     }
     if (App.Reserves && typeof App.Reserves.refreshDetailWidget === 'function') {
       App.Reserves.refreshDetailWidget();
+    }
+    if (App.Reserves && typeof App.Reserves.refreshCardBadges === 'function') {
+      App.Reserves.refreshCardBadges(unitId);
     }
     refreshEmptyNote();
   }
@@ -86,7 +89,7 @@
     if (qty === 0) delete QTY[unitId];
     else QTY[unitId] = qty;
     persist();
-    notifyChanged();
+    notifyChanged(unitId);
     const crossedZero = (prev === 0) !== (qty === 0);
     if (crossedZero && getView() === VIEW_REQUISITIONS && isBuildMode() &&
         typeof App.renderUnitRosterWithContext === 'function') {
@@ -196,7 +199,7 @@
         });
       }
     } catch (_) {}
-    notifyChanged();
+    notifyChanged();   // full refresh — undefined unitId means all cards
     if (getView() === VIEW_REQUISITIONS && isBuildMode() &&
         typeof App.renderUnitRosterWithContext === 'function') {
       App.renderUnitRosterWithContext();

@@ -243,6 +243,42 @@ body[data-units-view="requisitions"] #unit-grid #roster-empty {
   color: var(--requisitions-accent);
 }
 
+/* ── per-card quantity badges ──────────────────────────────────────────
+   Small "×N" pill on each unit card showing how many of that unit are
+   in your Reserves (top-left) or Requisitions (bottom-left). Real DOM
+   spans (NOT pseudo-elements) so they don't fight with collection.css's
+   ::after paint dot or style.css's ::before selection accent. */
+.unit-card .reserves-qty-badge,
+.unit-card .requisitions-qty-badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5),
+              0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.unit-card .reserves-qty-badge {
+  top: 6px;
+  left: 8px; /* offset past style.css's 3px ::before selection bar */
+  background: var(--reserves-accent);
+  color: #111;
+}
+.unit-card .requisitions-qty-badge {
+  bottom: 6px;
+  left: 8px;
+  background: var(--requisitions-accent);
+  color: #1a0d16;
+}
+
 /* ── soft-warn badge on army entries ───────────────────────────────── */
 .army-entry .reserves-warn {
   display: inline-flex;

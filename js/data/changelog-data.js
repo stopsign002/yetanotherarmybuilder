@@ -26,10 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-3',
-    lastUpdated: '2026-05-09T15:00:00Z',
+    version:     '2026.05.09-4',
+    lastUpdated: '2026-05-09T16:30:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'fix',
+        title: 'Reserves: count badge on cards, no more duplicates',
+        description:
+          'Cards now show a small "×N" badge in the top-left when a unit ' +
+          'is in your Reserves (and a matching pink badge in the bottom-' +
+          'left for Requisitions), so quantity is visible at a glance. ' +
+          'Also fixed a duplicate-cards issue: BattleScribe ships some ' +
+          'units (generic Marine Captain, generic Lieutenant, etc.) as ' +
+          'shared entries reused across every chapter catalogue, which ' +
+          'meant the Reserves view was rendering one card per faction ' +
+          'that shared the same id. The Reserves and Requisitions views ' +
+          'now collapse those duplicates so you see one card per unit.',
+      },
       {
         date: '2026-05-09', kind: 'change',
         title: 'Reserves & Requisitions: controls moved to the Details pane',
