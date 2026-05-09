@@ -1,1 +1,11 @@
 .claude/
+
+# Coverage harness artifacts (generated; re-run scripts/parser-coverage.mjs)
+scripts/parser-coverage-report.json
+scripts/parser-coverage-report.md
+
+# Ad-hoc npm artifacts from docker-run harnesses (linkedom is installed
+# transiently by scripts/parser-coverage.mjs)
+node_modules/
+package.json
+package-lock.json
