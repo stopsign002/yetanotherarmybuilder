@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" library="false" id="36d3-36bc-68dd-40ac" name="Imperium - Adeptus Astartes - Black Templars" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" revision="60" battleScribeVersion="2.03" type="catalogue" authorName="Acebaur">
+<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" library="false" id="36d3-36bc-68dd-40ac" name="Imperium - Adeptus Astartes - Black Templars" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" revision="61" battleScribeVersion="2.03" type="catalogue" authorName="Acebaur">
   <catalogueLinks>
     <catalogueLink type="catalogue" name="Imperium - Space Marines" id="2137-605d-109a-d3b2" targetId="e0af-67df-9d63-8fb7" importRootEntries="true"/>
   </catalogueLinks>
@@ -2065,6 +2065,8 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
       </profiles>
       <entryLinks>
         <entryLink import="true" name="Crusade" hidden="false" id="f3c1-7e2c-b260-e336" type="selectionEntryGroup" targetId="9a99-f13c-a667-e698" sortIndex="1"/>
+        <entryLink import="true" name="Tank Ace Character" hidden="false" id="2d68-a82e-5d0f-5c79" type="selectionEntry" targetId="8810-ebe3-94f2-8eab"/>
+        <entryLink import="true" name="Headhunter Task Force Enhancements" hidden="false" id="6d08-4bf2-94ba-7190" type="selectionEntryGroup" targetId="f545-8ae0-b440-8407"/>
       </entryLinks>
       <infoLinks>
         <infoLink name="Damaged: 1-4 Wounds Remaining" hidden="false" type="profile" id="8764-551d-2808-4ab6" targetId="ee64-aaaf-75df-8da9"/>
@@ -2262,6 +2264,18 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
           <comment>Crusade modifiers</comment>
         </modifierGroup>
       </modifierGroups>
+      <modifiers>
+        <modifier type="add" value="b6a1-a3f9-16eb-2d31" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="roster" childId="cf4f-5c50-4a22-6960" shared="true" includeChildSelections="true" includeChildForces="true" childName="Headhunter Task Force"/>
+          </conditions>
+        </modifier>
+        <modifier type="add" value="9cfd-1c32-585f-7d5c" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="parent" childId="8810-ebe3-94f2-8eab" shared="true" childName="Tank Ace Character" includeChildSelections="true" includeChildForces="true"/>
+          </conditions>
+        </modifier>
+      </modifiers>
     </selectionEntry>
     <selectionEntry type="model" import="true" name="Gladiator Reaper" hidden="false" id="bfb6-4320-74cf-bbda">
       <constraints>
@@ -2272,6 +2286,8 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
       </constraints>
       <entryLinks>
         <entryLink import="true" name="Crusade" hidden="false" id="fa2b-1e1d-a8e0-0744" type="selectionEntryGroup" targetId="9a99-f13c-a667-e698" sortIndex="1"/>
+        <entryLink import="true" name="Tank Ace Character" hidden="false" id="78eb-202d-7848-8fc2" type="selectionEntry" targetId="8810-ebe3-94f2-8eab"/>
+        <entryLink import="true" name="Headhunter Task Force Enhancements" hidden="false" id="9039-dfd7-249e-3259" type="selectionEntryGroup" targetId="f545-8ae0-b440-8407"/>
       </entryLinks>
       <infoLinks>
         <infoLink name="Damaged: 1-4 Wounds Remaining" hidden="false" type="profile" id="e246-a9bb-7fc6-6cbc" targetId="ee64-aaaf-75df-8da9"/>
@@ -2480,6 +2496,18 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
           <comment>Crusade modifiers</comment>
         </modifierGroup>
       </modifierGroups>
+      <modifiers>
+        <modifier type="add" value="b6a1-a3f9-16eb-2d31" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="roster" childId="cf4f-5c50-4a22-6960" shared="true" includeChildSelections="true" includeChildForces="true" childName="Headhunter Task Force"/>
+          </conditions>
+        </modifier>
+        <modifier type="add" value="9cfd-1c32-585f-7d5c" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="parent" childId="8810-ebe3-94f2-8eab" shared="true" childName="Tank Ace Character" includeChildSelections="true" includeChildForces="true"/>
+          </conditions>
+        </modifier>
+      </modifiers>
     </selectionEntry>
     <selectionEntry type="model" import="true" name="Gladiator Valiant" hidden="false" id="5704-ffe4-4a53-8789">
       <costs>
@@ -2519,6 +2547,8 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
       </profiles>
       <entryLinks>
         <entryLink import="true" name="Crusade" hidden="false" id="fd9e-7864-7b3d-8f99" type="selectionEntryGroup" targetId="9a99-f13c-a667-e698" sortIndex="1"/>
+        <entryLink import="true" name="Tank Ace Character" hidden="false" id="e95c-b125-da15-1585" type="selectionEntry" targetId="8810-ebe3-94f2-8eab"/>
+        <entryLink import="true" name="Headhunter Task Force Enhancements" hidden="false" id="46f9-7e70-7b60-8791" type="selectionEntryGroup" targetId="f545-8ae0-b440-8407"/>
       </entryLinks>
       <infoLinks>
         <infoLink name="Damaged: 1-4 Wounds Remaining" hidden="false" type="profile" id="254e-2e16-8c45-7347" targetId="ee64-aaaf-75df-8da9"/>
@@ -2681,6 +2711,18 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
           <comment>Crusade modifiers</comment>
         </modifierGroup>
       </modifierGroups>
+      <modifiers>
+        <modifier type="add" value="b6a1-a3f9-16eb-2d31" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="roster" childId="cf4f-5c50-4a22-6960" shared="true" includeChildSelections="true" includeChildForces="true" childName="Headhunter Task Force"/>
+          </conditions>
+        </modifier>
+        <modifier type="add" value="9cfd-1c32-585f-7d5c" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="parent" childId="8810-ebe3-94f2-8eab" shared="true" childName="Tank Ace Character" includeChildSelections="true" includeChildForces="true"/>
+          </conditions>
+        </modifier>
+      </modifiers>
     </selectionEntry>
     <selectionEntry type="model" import="true" name="Impulsor" hidden="false" id="fa27-4bc1-72c9-894f">
       <costs>
@@ -2737,6 +2779,8 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
       </infoLinks>
       <entryLinks>
         <entryLink import="true" name="Crusade" hidden="false" id="03ab-db31-5ded-2d98" type="selectionEntryGroup" targetId="9a99-f13c-a667-e698" sortIndex="1"/>
+        <entryLink import="true" name="Tank Ace Character" hidden="false" id="e47e-a90f-e02d-a7c8" type="selectionEntry" targetId="8810-ebe3-94f2-8eab"/>
+        <entryLink import="true" name="Headhunter Task Force Enhancements" hidden="false" id="de64-09a0-5308-5911" type="selectionEntryGroup" targetId="f545-8ae0-b440-8407"/>
       </entryLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="e447-8787-c657-e1a5" hidden="false" sortIndex="2">
@@ -2936,6 +2980,13 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
           <comment>Crusade modifiers</comment>
         </modifierGroup>
       </modifierGroups>
+      <modifiers>
+        <modifier type="add" value="9cfd-1c32-585f-7d5c" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="parent" childId="8810-ebe3-94f2-8eab" shared="true" childName="Tank Ace Character" includeChildSelections="true" includeChildForces="true"/>
+          </conditions>
+        </modifier>
+      </modifiers>
     </selectionEntry>
     <selectionEntry type="model" import="true" name="Repulsor" hidden="false" id="c3e8-3cde-8b39-4b19">
       <costs>
@@ -2994,6 +3045,8 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
       </infoLinks>
       <entryLinks>
         <entryLink import="true" name="Crusade" hidden="false" id="4bbc-fe99-0d96-955d" type="selectionEntryGroup" targetId="9a99-f13c-a667-e698" sortIndex="1"/>
+        <entryLink import="true" name="Tank Ace Character" hidden="false" id="be5c-ad45-eefd-4d1e" type="selectionEntry" targetId="8810-ebe3-94f2-8eab"/>
+        <entryLink import="true" name="Headhunter Task Force Enhancements" hidden="false" id="4255-bc78-19a9-d725" type="selectionEntryGroup" targetId="f545-8ae0-b440-8407"/>
       </entryLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="3555-4938-c643-e6eb" hidden="false" sortIndex="2">
@@ -3163,6 +3216,18 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
           <comment>Crusade modifiers</comment>
         </modifierGroup>
       </modifierGroups>
+      <modifiers>
+        <modifier type="add" value="b6a1-a3f9-16eb-2d31" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="roster" childId="cf4f-5c50-4a22-6960" shared="true" includeChildSelections="true" includeChildForces="true" childName="Headhunter Task Force"/>
+          </conditions>
+        </modifier>
+        <modifier type="add" value="9cfd-1c32-585f-7d5c" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="parent" childId="8810-ebe3-94f2-8eab" shared="true" childName="Tank Ace Character" includeChildSelections="true" includeChildForces="true"/>
+          </conditions>
+        </modifier>
+      </modifiers>
     </selectionEntry>
     <selectionEntry type="model" import="true" name="Repulsor Executioner" hidden="false" id="a344-192f-aae2-16e5">
       <costs>
@@ -3183,6 +3248,8 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
       </constraints>
       <entryLinks>
         <entryLink import="true" name="Crusade" hidden="false" id="1b66-8176-9b26-e5c4" type="selectionEntryGroup" targetId="9a99-f13c-a667-e698" sortIndex="1"/>
+        <entryLink import="true" name="Tank Ace Character" hidden="false" id="1ac3-6ae1-3e4b-d353" type="selectionEntry" targetId="8810-ebe3-94f2-8eab"/>
+        <entryLink import="true" name="Headhunter Task Force Enhancements" hidden="false" id="8e75-a878-7e30-d738" type="selectionEntryGroup" targetId="f545-8ae0-b440-8407"/>
       </entryLinks>
       <infoLinks>
         <infoLink name="Damaged: 1-5 Wounds Remaining" hidden="false" type="profile" id="7232-b839-6063-53b3" targetId="1aac-b083-4318-f750"/>
@@ -3423,6 +3490,18 @@ Water from the Stoup of Elucidation: Improve the Armour Penetration characterist
           <comment>Crusade modifiers</comment>
         </modifierGroup>
       </modifierGroups>
+      <modifiers>
+        <modifier type="add" value="b6a1-a3f9-16eb-2d31" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="roster" childId="cf4f-5c50-4a22-6960" shared="true" includeChildSelections="true" includeChildForces="true" childName="Headhunter Task Force"/>
+          </conditions>
+        </modifier>
+        <modifier type="add" value="9cfd-1c32-585f-7d5c" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="parent" childId="8810-ebe3-94f2-8eab" shared="true" childName="Tank Ace Character" includeChildSelections="true" includeChildForces="true"/>
+          </conditions>
+        </modifier>
+      </modifiers>
     </selectionEntry>
     <selectionEntry type="model" import="true" name="Castellan" hidden="false" id="f151-e676-d3b8-200c">
       <costs>
@@ -4348,6 +4427,8 @@ You can attach this model to one of the above units even if one Captain, Chapter
       </profiles>
       <entryLinks>
         <entryLink import="true" name="Crusade" hidden="false" id="bb32-9d96-cdc1-5926" type="selectionEntryGroup" targetId="9a99-f13c-a667-e698" sortIndex="1"/>
+        <entryLink import="true" name="Tank Ace Character" hidden="false" id="65c2-11b7-5ac9-af9d" type="selectionEntry" targetId="8810-ebe3-94f2-8eab"/>
+        <entryLink import="true" name="Headhunter Task Force Enhancements" hidden="false" id="6fbb-7980-b3a4-89bd" type="selectionEntryGroup" targetId="f545-8ae0-b440-8407"/>
       </entryLinks>
       <categoryLinks>
         <categoryLink name="Vehicle" hidden="false" id="cc5a-0640-d5b4-9580" targetId="dbd4-63-af05-998" primary="true"/>
@@ -4484,6 +4565,18 @@ You can attach this model to one of the above units even if one Captain, Chapter
           </entryLinks>
         </selectionEntryGroup>
       </selectionEntryGroups>
+      <modifiers>
+        <modifier type="add" value="b6a1-a3f9-16eb-2d31" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="roster" childId="cf4f-5c50-4a22-6960" shared="true" includeChildSelections="true" includeChildForces="true" childName="Headhunter Task Force"/>
+          </conditions>
+        </modifier>
+        <modifier type="add" value="9cfd-1c32-585f-7d5c" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="parent" childId="8810-ebe3-94f2-8eab" shared="true" childName="Tank Ace Character" includeChildSelections="true" includeChildForces="true"/>
+          </conditions>
+        </modifier>
+      </modifiers>
     </selectionEntry>
     <selectionEntry type="unit" import="true" name="Sternguard Veteran Squad" hidden="false" id="a499-86fa-4d0c-b06d">
       <constraints>

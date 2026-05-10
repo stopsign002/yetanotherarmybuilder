@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" id="e0af-67df-9d63-8fb7" name="Imperium - Adeptus Astartes - Space Marines" revision="208" battleScribeVersion="2.03" library="false" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" type="catalogue" authorName="Acebaur">
+<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" id="e0af-67df-9d63-8fb7" name="Imperium - Adeptus Astartes - Space Marines" revision="209" battleScribeVersion="2.03" library="false" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" type="catalogue" authorName="Acebaur">
   <categoryEntries>
     <categoryEntry id="5179-8ede-45e3-49a2" name="Tacticus" hidden="false"/>
     <categoryEntry id="930d-2875-125b-a65e" name="Bladeguard Veteran Squad" hidden="false"/>
@@ -17820,11 +17820,6 @@ Normal move. If it does so, until the end of the turn, this unit is not eligible
                             <entryLink import="true" name="Weapon Modifications" hidden="false" id="29ed-6aa1-eb23-868d" type="selectionEntryGroup" targetId="f9da-852a-d7f0-92e9"/>
                           </entryLinks>
                         </entryLink>
-                        <entryLink import="true" name="Storm bolter" hidden="false" id="377a-117e-bb17-7602" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
-                          <entryLinks>
-                            <entryLink import="true" name="Weapon Modifications" hidden="false" id="4976-45a3-27c8-3b04" type="selectionEntryGroup" targetId="f9da-852a-d7f0-92e9"/>
-                          </entryLinks>
-                        </entryLink>
                         <entryLink import="true" name="Power fist" hidden="false" id="a6b7-342b-d0e0-13df" type="selectionEntry" targetId="5d22-a8d8-8e57-b8ab">
                           <entryLinks>
                             <entryLink import="true" name="Weapon Modifications" hidden="false" id="de44-ddae-17f8-432c" type="selectionEntryGroup" targetId="f9da-852a-d7f0-92e9"/>
@@ -22339,6 +22334,7 @@ Normal move. If it does so, until the end of the turn, this unit is not eligible
       <entryLinks>
         <entryLink import="true" name="Crusade" hidden="false" id="3d14-5c19-6397-8901" type="selectionEntryGroup" targetId="9a99-f13c-a667-e698" sortIndex="1"/>
         <entryLink import="true" name="Headhunter Task Force Enhancements" hidden="false" id="3237-d7a4-07fb-6ed4" type="selectionEntryGroup" targetId="f545-8ae0-b440-8407"/>
+        <entryLink import="true" name="Tank Ace Character" hidden="false" id="e85f-d7a6-2347-c6b3" type="selectionEntry" targetId="8810-ebe3-94f2-8eab"/>
       </entryLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="cbe2-7302-9573-7f47" hidden="false" sortIndex="2">
@@ -22460,6 +22456,16 @@ Normal move. If it does so, until the end of the turn, this unit is not eligible
         <modifier type="set" value="true" field="hidden">
           <conditions>
             <condition type="instanceOf" value="1" field="selections" scope="primary-catalogue" childId="36d3-36bc-68dd-40ac" shared="true"/>
+          </conditions>
+        </modifier>
+        <modifier type="add" value="b6a1-a3f9-16eb-2d31" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="roster" childId="cf4f-5c50-4a22-6960" shared="true" includeChildSelections="true" includeChildForces="true" childName="Headhunter Task Force"/>
+          </conditions>
+        </modifier>
+        <modifier type="add" value="9cfd-1c32-585f-7d5c" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="parent" childId="8810-ebe3-94f2-8eab" shared="true" childName="Tank Ace Character" includeChildSelections="true" includeChildForces="true"/>
           </conditions>
         </modifier>
       </modifiers>
@@ -25703,7 +25709,7 @@ model is within 12&quot;.</characteristic>
     </selectionEntry>
     <selectionEntry type="upgrade" import="true" name="Absolvor bolt pistol" hidden="false" id="a490-361-c9c4-afeb">
       <profiles>
-        <profile name="Absolver bolt pistol" typeId="f77d-b953-8fa4-b762" typeName="Ranged Weapons" hidden="false" id="cb64-ddb1-cbc3-3621">
+        <profile name="Absolvor bolt pistol" typeId="f77d-b953-8fa4-b762" typeName="Ranged Weapons" hidden="false" id="cb64-ddb1-cbc3-3621">
           <characteristics>
             <characteristic name="Range" typeId="9896-9419-16a1-92fc">18&quot;</characteristic>
             <characteristic name="A" typeId="3bb-c35f-f54-fb08">1</characteristic>

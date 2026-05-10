@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-09T21:04:11.170Z",
+  "generatedAt": "2026-05-10T05:46:03.907Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "41bfc83edb0e804abffcd8781d1479367976ba97",
+  "sourceCommit": "21bd117071878b55f6c155788c9953ed2b81730f",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -163,15 +163,15 @@
       "path": "Imperium - Black Templars.cat",
       "name": "Imperium - Black Templars",
       "type": "catalogue",
-      "sha": "62cf3e240e0528b2abcc83a1f535de62786a95b3",
-      "size": 388557
+      "sha": "ba4298d7c7fa3059e97029c027360107cc255eac",
+      "size": 395778
     },
     {
       "path": "Imperium - Blood Angels.cat",
       "name": "Imperium - Blood Angels",
       "type": "catalogue",
-      "sha": "a4f12cedfdfbc6772eb2fdbcb6e604f9f6c2bd17",
-      "size": 431543
+      "sha": "908795efb1e245f9b041f5a3ff4d44575f790cb1",
+      "size": 432929
     },
     {
       "path": "Imperium - Dark Angels.cat",
@@ -240,8 +240,8 @@
       "path": "Imperium - Space Marines.cat",
       "name": "Imperium - Space Marines",
       "type": "catalogue",
-      "sha": "43dc8f824845f81b5ab7adc30bb947abedcc1fae",
-      "size": 3797563
+      "sha": "21c8a73ef3cd6518a330531a975c9c980a46aeb2",
+      "size": 3797974
     },
     {
       "path": "Imperium - Space Wolves.cat",

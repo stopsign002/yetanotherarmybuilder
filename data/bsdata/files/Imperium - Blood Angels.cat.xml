@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" library="false" id="4ef9-15ce-e3e6-36de" name="Imperium - Adeptus Astartes - Blood Angels" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" revision="79" battleScribeVersion="2.03" type="catalogue" authorName="Acebaur">
+<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" library="false" id="4ef9-15ce-e3e6-36de" name="Imperium - Adeptus Astartes - Blood Angels" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" revision="80" battleScribeVersion="2.03" type="catalogue" authorName="Acebaur">
   <catalogueLinks>
     <catalogueLink type="catalogue" name="Imperium - Space Marines" id="abd0-8ebd-6fbd-2d94" targetId="e0af-67df-9d63-8fb7" importRootEntries="true"/>
     <catalogueLink type="catalogue" name="Imperium - Imperial Knights - Library" id="9c08-8ffc-d746-7384" targetId="1b6d-dc06-5db9-c7d1" importRootEntries="true"/>
@@ -162,6 +162,8 @@
       </profiles>
       <entryLinks>
         <entryLink import="true" name="Crusade" hidden="false" id="e386-f517-4472-5100" type="selectionEntryGroup" targetId="9a99-f13c-a667-e698" sortIndex="1"/>
+        <entryLink import="true" name="Tank Ace Character" hidden="false" id="e70a-9007-294a-a103" type="selectionEntry" targetId="8810-ebe3-94f2-8eab"/>
+        <entryLink import="true" name="Headhunter Task Force Enhancements" hidden="false" id="86ee-3eb6-eae3-11d8" type="selectionEntryGroup" targetId="f545-8ae0-b440-8407"/>
       </entryLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="af3f-e75e-0a33-495f" hidden="false" sortIndex="2">
@@ -183,7 +185,7 @@
                 <entryLink import="true" name="Weapon Modifications" hidden="false" id="1ba7-6bb1-5fe7-430b" type="selectionEntryGroup" targetId="f9da-852a-d7f0-92e9"/>
               </entryLinks>
             </entryLink>
-            <entryLink import="true" name="Storm Bolter" hidden="false" id="f270-2255-9e6f-7382" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
+            <entryLink import="true" name="Storm bolter" hidden="false" id="f270-2255-9e6f-7382" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
               <constraints>
                 <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="6820-3445-c698-8640"/>
               </constraints>
@@ -389,6 +391,18 @@
           <comment>Crusade modifiers</comment>
         </modifierGroup>
       </modifierGroups>
+      <modifiers>
+        <modifier type="add" value="b6a1-a3f9-16eb-2d31" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="roster" childId="cf4f-5c50-4a22-6960" shared="true" includeChildSelections="true" includeChildForces="true" childName="Headhunter Task Force"/>
+          </conditions>
+        </modifier>
+        <modifier type="add" value="9cfd-1c32-585f-7d5c" field="category">
+          <conditions>
+            <condition type="atLeast" value="1" field="selections" scope="parent" childId="8810-ebe3-94f2-8eab" shared="true" childName="Tank Ace Character" includeChildSelections="true" includeChildForces="true"/>
+          </conditions>
+        </modifier>
+      </modifiers>
     </selectionEntry>
     <selectionEntry type="model" import="true" name="Brother Corbulo [Legends]" hidden="false" id="8d87-ee8a-6af4-3715">
       <costs>
@@ -870,7 +884,7 @@
       </modifiers>
       <entryLinks>
         <entryLink import="true" name="Warlord" hidden="false" type="selectionEntry" id="27f7-9d4c-d894-cc79" targetId="caa-f869-3cbd-b48e"/>
-        <entryLink import="true" name="Plasma Pistol" hidden="false" id="550d-06e6-7153-daf2" type="selectionEntry" targetId="72c9-4b92-5aed-2fbe">
+        <entryLink import="true" name="Plasma pistol" hidden="false" id="550d-06e6-7153-daf2" type="selectionEntry" targetId="72c9-4b92-5aed-2fbe">
           <constraints>
             <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="8147-ec13-33d2-4cd9"/>
             <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="7122-1367-ed66-cd4e"/>
@@ -1333,9 +1347,9 @@
                     <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="4e2c-f736-31a3-a4dd"/>
                   </constraints>
                   <entryLinks>
-                    <entryLink import="true" name="Power Fist" hidden="false" type="selectionEntry" id="b198-fd3c-1a46-b4c1" targetId="f8d8-7e77-4b71-faac"/>
+                    <entryLink import="true" name="Power fist" hidden="false" type="selectionEntry" id="b198-fd3c-1a46-b4c1" targetId="f8d8-7e77-4b71-faac"/>
                     <entryLink import="true" name="Thunder Hammer" hidden="false" type="selectionEntry" id="704a-7184-da47-4059" targetId="4913-96d4-2b1f-2c21"/>
-                    <entryLink import="true" name="Power Weapon" hidden="false" type="selectionEntry" id="f60c-8ff0-7084-492b" targetId="50dd-3e76-d993-4d1a"/>
+                    <entryLink import="true" name="Power weapon" hidden="false" type="selectionEntry" id="f60c-8ff0-7084-492b" targetId="50dd-3e76-d993-4d1a"/>
                   </entryLinks>
                 </selectionEntryGroup>
                 <selectionEntryGroup name="Pistol option" hidden="false" id="a9b9-681f-c9b1-4b3b">
@@ -1377,8 +1391,8 @@
                   <selectionEntryGroups>
                     <selectionEntryGroup name="Special Pistol" hidden="false" id="6bdf-2ee2-d8b8-2ecb">
                       <entryLinks>
-                        <entryLink import="true" name="Hand Flamer" hidden="false" type="selectionEntry" id="955c-f478-fb14-19d9" targetId="9dc6-6ad8-818e-db2e"/>
-                        <entryLink import="true" name="Plasma Pistol" hidden="false" type="selectionEntry" id="65db-d1f9-a618-8f0c" targetId="25c2-104f-fa0c-809e"/>
+                        <entryLink import="true" name="Hand flamer" hidden="false" type="selectionEntry" id="955c-f478-fb14-19d9" targetId="9dc6-6ad8-818e-db2e"/>
+                        <entryLink import="true" name="Plasma pistol" hidden="false" type="selectionEntry" id="65db-d1f9-a618-8f0c" targetId="25c2-104f-fa0c-809e"/>
                       </entryLinks>
                       <constraints>
                         <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="a64f-bb88-c82c-4cd6"/>
@@ -1415,8 +1429,8 @@
               <selectionEntryGroups>
                 <selectionEntryGroup name="Pistol option" hidden="false" id="328b-11c-b96e-f9ad">
                   <entryLinks>
-                    <entryLink import="true" name="Hand Flamer" hidden="false" type="selectionEntry" id="7491-bba9-6b61-97" targetId="9dc6-6ad8-818e-db2e"/>
-                    <entryLink import="true" name="Plasma Pistol" hidden="false" type="selectionEntry" id="4017-9b90-5cda-866d" targetId="25c2-104f-fa0c-809e"/>
+                    <entryLink import="true" name="Hand flamer" hidden="false" type="selectionEntry" id="7491-bba9-6b61-97" targetId="9dc6-6ad8-818e-db2e"/>
+                    <entryLink import="true" name="Plasma pistol" hidden="false" type="selectionEntry" id="4017-9b90-5cda-866d" targetId="25c2-104f-fa0c-809e"/>
                   </entryLinks>
                   <constraints>
                     <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="cb6e-b615-7698-b3ed"/>
@@ -1670,8 +1684,8 @@ If a Character unit from your army with the Leader ability can be attached to a
                           </constraints>
                           <entryLinks>
                             <entryLink import="true" name="Astartes Chainsword" hidden="false" type="selectionEntry" id="36c0-711a-50e7-ddba" targetId="efcd-180-d07-b4d6"/>
-                            <entryLink import="true" name="Power Fist" hidden="false" type="selectionEntry" id="a1f1-82d9-a54e-4565" targetId="f8d8-7e77-4b71-faac"/>
-                            <entryLink import="true" name="Power Weapon" hidden="false" type="selectionEntry" id="a629-6322-659d-fe70" targetId="50dd-3e76-d993-4d1a"/>
+                            <entryLink import="true" name="Power fist" hidden="false" type="selectionEntry" id="a1f1-82d9-a54e-4565" targetId="f8d8-7e77-4b71-faac"/>
+                            <entryLink import="true" name="Power weapon" hidden="false" type="selectionEntry" id="a629-6322-659d-fe70" targetId="50dd-3e76-d993-4d1a"/>
                           </entryLinks>
                         </selectionEntryGroup>
                         <selectionEntryGroup name="Pistol Option" hidden="false" id="2be0-9da2-2d5a-a872" defaultSelectionEntryId="2fdf-b222-d6a8-6af4">
@@ -1681,8 +1695,8 @@ If a Character unit from your army with the Leader ability can be attached to a
                           </constraints>
                           <entryLinks>
                             <entryLink import="true" name="Bolt pistol" hidden="false" type="selectionEntry" id="2fdf-b222-d6a8-6af4" targetId="18b0-8c2-173f-5"/>
-                            <entryLink import="true" name="Plasma Pistol" hidden="false" type="selectionEntry" id="de2-56ae-9256-5193" targetId="25c2-104f-fa0c-809e"/>
-                            <entryLink import="true" name="Hand Flamer" hidden="false" type="selectionEntry" id="d52b-e528-f242-31cc" targetId="9dc6-6ad8-818e-db2e"/>
+                            <entryLink import="true" name="Plasma pistol" hidden="false" type="selectionEntry" id="de2-56ae-9256-5193" targetId="25c2-104f-fa0c-809e"/>
+                            <entryLink import="true" name="Hand flamer" hidden="false" type="selectionEntry" id="d52b-e528-f242-31cc" targetId="9dc6-6ad8-818e-db2e"/>
                             <entryLink import="true" name="Inferno Pistol" hidden="false" type="selectionEntry" id="fb3f-558c-2bd2-9dbc" targetId="d8bf-e17f-d6fa-b7e8"/>
                           </entryLinks>
                         </selectionEntryGroup>
@@ -1898,7 +1912,7 @@ If a Character unit from your army with the Leader ability can be attached to a
                 <selectionEntryGroup name="Pistol Weapon" id="2bf2-4cf5-a4f3-9867" hidden="false" defaultSelectionEntryId="807b-c7cb-b04b-4194">
                   <entryLinks>
                     <entryLink import="true" name="Heavy Bolt Pistol" hidden="false" id="807b-c7cb-b04b-4194" type="selectionEntry" targetId="3b8f-1cb7-3c6e-4455"/>
-                    <entryLink import="true" name="Plasma Pistol" hidden="false" id="38be-33ce-c35a-b96c" type="selectionEntry" targetId="25c2-104f-fa0c-809e">
+                    <entryLink import="true" name="Plasma pistol" hidden="false" id="38be-33ce-c35a-b96c" type="selectionEntry" targetId="25c2-104f-fa0c-809e">
                       <constraints>
                         <constraint type="max" value="2" field="selections" scope="unit" shared="true" id="1c49-ce71-a3ea-cd31" includeChildSelections="true"/>
                       </constraints>
@@ -1916,7 +1930,7 @@ If a Character unit from your army with the Leader ability can be attached to a
                         </modifier>
                       </modifiers>
                     </entryLink>
-                    <entryLink import="true" name="Hand Flamer" hidden="false" id="2f6f-1dd8-9d13-e471" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e">
+                    <entryLink import="true" name="Hand flamer" hidden="false" id="2f6f-1dd8-9d13-e471" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e">
                       <constraints>
                         <constraint type="max" value="1" field="selections" scope="unit" shared="true" id="0d45-3676-5e1b-1b43" includeChildSelections="true"/>
                       </constraints>
@@ -2080,7 +2094,7 @@ If a Character unit from your army with the Leader ability can be attached to a
                 </selectionEntryGroup>
                 <selectionEntryGroup name="Melee Weapon" id="9068-ef9c-8583-ceb2" hidden="false" defaultSelectionEntryId="05ea-4b2e-bcbb-7c9b">
                   <entryLinks>
-                    <entryLink import="true" name="Power Weapon" hidden="false" id="bead-7f68-bd5c-5f80" type="selectionEntry" targetId="c4b5-68e-2266-f459">
+                    <entryLink import="true" name="Power weapon" hidden="false" id="bead-7f68-bd5c-5f80" type="selectionEntry" targetId="c4b5-68e-2266-f459">
                       <constraints>
                         <constraint type="max" value="2" field="selections" scope="unit" shared="true" id="3631-5441-fc6a-de48" includeChildSelections="true"/>
                       </constraints>
@@ -2097,7 +2111,7 @@ If a Character unit from your army with the Leader ability can be attached to a
                         </modifier>
                       </modifiers>
                     </entryLink>
-                    <entryLink import="true" name="Power Fist" hidden="false" id="c317-53c8-0d9e-c321" type="selectionEntry" targetId="f8d8-7e77-4b71-faac">
+                    <entryLink import="true" name="Power fist" hidden="false" id="c317-53c8-0d9e-c321" type="selectionEntry" targetId="f8d8-7e77-4b71-faac">
                       <constraints>
                         <constraint type="max" value="2" field="selections" scope="unit" shared="true" id="ebe8-6fbd-85e2-b08d" includeChildSelections="true"/>
                       </constraints>
@@ -2345,7 +2359,7 @@ If a Character unit from your army with the Leader ability can be attached to a
                         <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="62db-c92f-78d3-305"/>
                       </constraints>
                       <entryLinks>
-                        <entryLink import="true" name="Storm Bolter" hidden="false" id="c6d4-1e2-e431-dddc" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
+                        <entryLink import="true" name="Storm bolter" hidden="false" id="c6d4-1e2-e431-dddc" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
                           <entryLinks>
                             <entryLink import="true" name="Weapon Modifications" hidden="false" id="a818-65c7-e7ef-e79c" type="selectionEntryGroup" targetId="f9da-852a-d7f0-92e9"/>
                           </entryLinks>
@@ -2378,7 +2392,7 @@ If a Character unit from your army with the Leader ability can be attached to a
                         <constraint type="max" value="2" field="selections" scope="parent" shared="true" id="5113-36f3-aa2b-fce8"/>
                       </constraints>
                       <entryLinks>
-                        <entryLink import="true" name="Storm Bolter" hidden="false" id="fa86-4631-b0dc-edfb" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
+                        <entryLink import="true" name="Storm bolter" hidden="false" id="fa86-4631-b0dc-edfb" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
                           <constraints>
                             <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="30ae-7a29-36e3-c30f"/>
                             <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="20cb-2a90-8923-f61e"/>
@@ -2433,7 +2447,7 @@ If a Character unit from your army with the Leader ability can be attached to a
                         <constraint type="max" value="2" field="selections" scope="parent" shared="true" id="5113-36f3-aa2b-fce8"/>
                       </constraints>
                       <entryLinks>
-                        <entryLink import="true" name="Storm Bolter" hidden="false" id="46c7-1b00-3027-c45e" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
+                        <entryLink import="true" name="Storm bolter" hidden="false" id="46c7-1b00-3027-c45e" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
                           <constraints>
                             <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="30ae-7a29-36e3-c30f"/>
                             <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="20cb-2a90-8923-f61e"/>
@@ -3020,7 +3034,7 @@ horizontally away from all enemy models.</characteristic>
                 <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="9ddd-eaa9-84de-6583"/>
               </constraints>
               <entryLinks>
-                <entryLink import="true" name="Storm Bolter" hidden="false" id="3455-4eaa-3eff-1454" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
+                <entryLink import="true" name="Storm bolter" hidden="false" id="3455-4eaa-3eff-1454" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
                   <entryLinks>
                     <entryLink import="true" name="Weapon Modifications" hidden="false" id="d3eb-16c6-9c0f-1efb" type="selectionEntryGroup" targetId="f9da-852a-d7f0-92e9"/>
                   </entryLinks>
@@ -3451,7 +3465,10 @@ horizontally away from all enemy models.</characteristic>
 - **^^Infernus Squad^^**
 - **^^Intercessor Squad^^**
 - **^^Tactical Squad^^**
-- **^^Sternguard Veteran Squad^^**</characteristic>
+- **^^Sternguard Veteran Squad^^**
+
+
+You can attach this model to one of the above units, even if one **^^Captain, Chapter Master^^** or **^^Lieutenant**^^ model has already been attached to it. If you do, and that Bodyguard unit is destroyed, the Leader units attached to it become separate units, with their original Starting Strengths</characteristic>
           </characteristics>
         </profile>
       </profiles>
@@ -3540,7 +3557,7 @@ horizontally away from all enemy models.</characteristic>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="5822-0202-5c34-4f93" hidden="false" sortIndex="4">
           <entryLinks>
-            <entryLink import="true" name="Absolver Bolt Pistol" hidden="false" id="6962-990d-c53c-9af4" type="selectionEntry" targetId="a490-361-c9c4-afeb">
+            <entryLink import="true" name="Absolvor bolt pistol" hidden="false" id="6962-990d-c53c-9af4" type="selectionEntry" targetId="a490-361-c9c4-afeb">
               <constraints>
                 <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="82b7-8759-4a0a-f7fc"/>
                 <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="3646-cd5a-6620-5ecd"/>
@@ -3945,7 +3962,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                     </selectionEntryGroup>
                   </selectionEntryGroups>
                 </entryLink>
-                <entryLink import="true" name="Hand Flamer" hidden="false" id="5b2f-2447-6b8b-267e" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e">
+                <entryLink import="true" name="Hand flamer" hidden="false" id="5b2f-2447-6b8b-267e" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e">
                   <selectionEntryGroups>
                     <selectionEntryGroup name="Weapon Upgrades" id="6459-a44e-b0c5-21a6" hidden="false" flatten="true">
                       <entryLinks>
@@ -3975,7 +3992,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                     </selectionEntryGroup>
                   </selectionEntryGroups>
                 </entryLink>
-                <entryLink import="true" name="Plasma Pistol" hidden="false" id="d8b2-ad39-7e64-6101" type="selectionEntry" targetId="25c2-104f-fa0c-809e">
+                <entryLink import="true" name="Plasma pistol" hidden="false" id="d8b2-ad39-7e64-6101" type="selectionEntry" targetId="25c2-104f-fa0c-809e">
                   <selectionEntryGroups>
                     <selectionEntryGroup name="Weapon Upgrades" id="125f-3ea3-c146-b870" hidden="false" flatten="true">
                       <entryLinks>
@@ -3995,7 +4012,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                     </selectionEntryGroup>
                   </selectionEntryGroups>
                 </entryLink>
-                <entryLink import="true" name="Storm Bolter" hidden="false" id="ebf0-fa0f-a126-3efa" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
+                <entryLink import="true" name="Storm bolter" hidden="false" id="ebf0-fa0f-a126-3efa" type="selectionEntry" targetId="eb61-5cd0-5242-74cc">
                   <selectionEntryGroups>
                     <selectionEntryGroup name="Weapon Upgrades" id="6233-6290-89ae-a791" hidden="false" flatten="true">
                       <entryLinks>
@@ -4023,7 +4040,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                     </selectionEntryGroup>
                   </selectionEntryGroups>
                 </entryLink>
-                <entryLink import="true" name="Power Weapon" hidden="false" id="b9d0-695f-9601-ee96" type="selectionEntry" targetId="50dd-3e76-d993-4d1a">
+                <entryLink import="true" name="Power weapon" hidden="false" id="b9d0-695f-9601-ee96" type="selectionEntry" targetId="50dd-3e76-d993-4d1a">
                   <selectionEntryGroups>
                     <selectionEntryGroup name="Weapon Upgrades" id="63f5-5a0c-e315-d02a" hidden="false" flatten="true">
                       <entryLinks>
@@ -4075,7 +4092,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
             </selectionEntryGroup>
           </selectionEntryGroups>
           <entryLinks>
-            <entryLink import="true" name="Twin Boltgun" hidden="false" id="d938-6400-16f6-6778" type="selectionEntry" targetId="a578-8e45-2a54-509d">
+            <entryLink import="true" name="Twin boltgun" hidden="false" id="d938-6400-16f6-6778" type="selectionEntry" targetId="a578-8e45-2a54-509d">
               <constraints>
                 <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="33db-e687-ee6c-2d27"/>
                 <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="27e8-e984-16c3-bd4a"/>
@@ -4204,7 +4221,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
           <selectionEntryGroups>
             <selectionEntryGroup name="Melee" id="f88f-efee-7bdb-3008" hidden="false" defaultSelectionEntryId="8684-4762-7c7a-028e">
               <entryLinks>
-                <entryLink import="true" name="Power Fist" hidden="false" id="39a1-6da8-f5b3-864f" type="selectionEntry" targetId="99de-5985-8cb8-f571">
+                <entryLink import="true" name="Power fist" hidden="false" id="39a1-6da8-f5b3-864f" type="selectionEntry" targetId="99de-5985-8cb8-f571">
                   <selectionEntryGroups>
                     <selectionEntryGroup name="Weapon Upgrades" id="f0f9-6aea-ed49-80ed" hidden="false" flatten="true">
                       <entryLinks>
@@ -4264,7 +4281,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                 <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="0022-e3e0-f873-37b3" includeChildSelections="false"/>
               </constraints>
               <entryLinks>
-                <entryLink import="true" name="Inferno Pistol" hidden="false" id="65bf-a135-9120-ba15" type="selectionEntry" targetId="7628-8029-9230-b60f">
+                <entryLink import="true" name="Inferno pistol" hidden="false" id="65bf-a135-9120-ba15" type="selectionEntry" targetId="7628-8029-9230-b60f">
                   <selectionEntryGroups>
                     <selectionEntryGroup name="Weapon Upgrades" id="8d66-9482-0be1-4629" hidden="false" flatten="true">
                       <entryLinks>
@@ -4451,7 +4468,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
           <selectionEntryGroups>
             <selectionEntryGroup name="Melee" id="e43a-2cb2-b4ba-684d" hidden="false" defaultSelectionEntryId="8684-4762-7c7a-028e">
               <entryLinks>
-                <entryLink import="true" name="Power Fist" hidden="false" id="9538-8a8b-1312-719d" type="selectionEntry" targetId="99de-5985-8cb8-f571"/>
+                <entryLink import="true" name="Power fist" hidden="false" id="9538-8a8b-1312-719d" type="selectionEntry" targetId="99de-5985-8cb8-f571"/>
                 <entryLink import="true" name="Relic Weapon" hidden="false" id="19a8-7b47-bb46-cde7" type="selectionEntry" targetId="5baf-8a8a-b5ba-1223"/>
               </entryLinks>
               <constraints>
@@ -4482,7 +4499,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                 <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="8566-7f9e-9680-248e" includeChildSelections="false"/>
               </constraints>
               <entryLinks>
-                <entryLink import="true" name="Inferno Pistol" hidden="false" id="90e0-8579-9b11-1a78" type="selectionEntry" targetId="7628-8029-9230-b60f"/>
+                <entryLink import="true" name="Inferno pistol" hidden="false" id="90e0-8579-9b11-1a78" type="selectionEntry" targetId="7628-8029-9230-b60f"/>
               </entryLinks>
               <selectionEntries>
                 <selectionEntry type="upgrade" import="true" name="Heavy Bolt Pistol" hidden="false" id="3303-543b-9da9-2254">
@@ -4656,7 +4673,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
           <selectionEntryGroups>
             <selectionEntryGroup name="Melee" id="e456-2590-25bb-6dc2" hidden="false" defaultSelectionEntryId="5609-e509-a00f-2daf">
               <entryLinks>
-                <entryLink import="true" name="Power Fist" hidden="false" id="5fe7-0510-42bd-50d1" type="selectionEntry" targetId="99de-5985-8cb8-f571"/>
+                <entryLink import="true" name="Power fist" hidden="false" id="5fe7-0510-42bd-50d1" type="selectionEntry" targetId="99de-5985-8cb8-f571"/>
                 <entryLink import="true" name="Relic Weapon" hidden="false" id="2748-096a-c30a-638b" type="selectionEntry" targetId="5baf-8a8a-b5ba-1223"/>
                 <entryLink import="true" name="Astartes Chainsword" hidden="false" id="5609-e509-a00f-2daf" type="selectionEntry" targetId="ad25-473b-bb10-6863"/>
               </entryLinks>
@@ -4671,8 +4688,8 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                 <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="e858-677a-f0e0-007d" includeChildSelections="false"/>
               </constraints>
               <entryLinks>
-                <entryLink import="true" name="Hand Flamer" hidden="false" id="b9d1-111a-c8fa-00a9" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e"/>
-                <entryLink import="true" name="Plasma Pistol" hidden="false" id="90e0-ddc7-d99a-dc9c" type="selectionEntry" targetId="25c2-104f-fa0c-809e"/>
+                <entryLink import="true" name="Hand flamer" hidden="false" id="b9d1-111a-c8fa-00a9" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e"/>
+                <entryLink import="true" name="Plasma pistol" hidden="false" id="90e0-ddc7-d99a-dc9c" type="selectionEntry" targetId="25c2-104f-fa0c-809e"/>
               </entryLinks>
               <selectionEntries>
                 <selectionEntry type="upgrade" import="true" name="Heavy Bolt Pistol" hidden="false" id="7f25-57df-7ed0-df5c">
@@ -4870,7 +4887,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                   </constraints>
                   <entryLinks>
                     <entryLink import="true" name="Thunder Hammer" hidden="false" id="d21e-f281-5e3f-e0b2" type="selectionEntry" targetId="3acf-2a72-a5a2-84a2"/>
-                    <entryLink import="true" name="Power Weapon" hidden="false" id="6969-2b53-4bc9-6905" type="selectionEntry" targetId="c4b5-68e-2266-f459"/>
+                    <entryLink import="true" name="Power weapon" hidden="false" id="6969-2b53-4bc9-6905" type="selectionEntry" targetId="c4b5-68e-2266-f459"/>
                     <entryLink import="true" name="Astartes Chainsword" hidden="false" id="919f-6a34-9a92-f6b3" type="selectionEntry" targetId="efcd-180-d07-b4d6"/>
                   </entryLinks>
                   <modifiers>
@@ -4888,9 +4905,9 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                     <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="3729-130d-5f55-50cf" includeChildSelections="false"/>
                   </constraints>
                   <entryLinks>
-                    <entryLink import="true" name="Hand Flamer" hidden="false" id="c688-04d5-5b88-2efd" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e"/>
+                    <entryLink import="true" name="Hand flamer" hidden="false" id="c688-04d5-5b88-2efd" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e"/>
                     <entryLink import="true" name="Inferno Pistol" hidden="false" id="a442-5bfb-4a6e-a7db" type="selectionEntry" targetId="d8bf-e17f-d6fa-b7e8"/>
-                    <entryLink import="true" name="Plasma Pistol" hidden="false" id="7caa-84df-0e1c-cfb0" type="selectionEntry" targetId="25c2-104f-fa0c-809e"/>
+                    <entryLink import="true" name="Plasma pistol" hidden="false" id="7caa-84df-0e1c-cfb0" type="selectionEntry" targetId="25c2-104f-fa0c-809e"/>
                     <entryLink import="true" name="Astartes Chainsword" hidden="false" id="8896-afbc-724b-a018" type="selectionEntry" targetId="efcd-180-d07-b4d6"/>
                   </entryLinks>
                   <selectionEntries>
@@ -5186,7 +5203,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
               <selectionEntryGroups>
                 <selectionEntryGroup name="Replace Pistol" id="8b60-76dc-a440-ae23" hidden="false" defaultSelectionEntryId="a3b1-a4d1-6857-384c">
                   <entryLinks>
-                    <entryLink import="true" name="Hand Flamer" hidden="false" id="8520-b102-fa69-aefb" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e">
+                    <entryLink import="true" name="Hand flamer" hidden="false" id="8520-b102-fa69-aefb" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e">
                       <categoryLinks>
                         <categoryLink name="Pistol replacement" hidden="false" id="1194-ee45-4c41-dc10" targetId="f06c-dfec-c720-57f1" primary="false"/>
                       </categoryLinks>
@@ -5196,7 +5213,7 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                         <categoryLink name="Pistol replacement" hidden="false" id="471d-b32a-3937-40b7" targetId="f06c-dfec-c720-57f1" primary="false"/>
                       </categoryLinks>
                     </entryLink>
-                    <entryLink import="true" name="Plasma Pistol" hidden="false" id="11cb-48d5-14ac-1916" type="selectionEntry" targetId="25c2-104f-fa0c-809e">
+                    <entryLink import="true" name="Plasma pistol" hidden="false" id="11cb-48d5-14ac-1916" type="selectionEntry" targetId="25c2-104f-fa0c-809e">
                       <categoryLinks>
                         <categoryLink name="Pistol replacement" hidden="false" id="4dca-64f5-dc6a-9fb4" targetId="f06c-dfec-c720-57f1" primary="false"/>
                       </categoryLinks>
@@ -5234,13 +5251,13 @@ You can attach this model to one of the above units, even if one Captain, Chapt
                         <categoryLink name="DCo Weapon Swap" hidden="false" id="1205-d6bd-43e1-bfc6" targetId="78e1-92d6-d2d8-0509" primary="false"/>
                       </categoryLinks>
                     </entryLink>
-                    <entryLink import="true" name="Power Weapon" hidden="false" id="773e-a671-ad57-aa08" type="selectionEntry" targetId="c4b5-68e-2266-f459">
+                    <entryLink import="true" name="Power weapon" hidden="false" id="773e-a671-ad57-aa08" type="selectionEntry" targetId="c4b5-68e-2266-f459">
                       <categoryLinks>
                         <categoryLink name="DCo Weapon Swap" hidden="false" id="d6e8-c4d4-8704-9328" targetId="78e1-92d6-d2d8-0509" primary="false"/>
                       </categoryLinks>
                     </entryLink>
                     <entryLink import="true" name="Astartes Chainsword" hidden="false" id="8b85-90a0-8aca-7fbe" type="selectionEntry" targetId="efcd-180-d07-b4d6"/>
-                    <entryLink import="true" name="Power Fist" hidden="false" id="9115-74d2-2830-8f27" type="selectionEntry" targetId="f8d8-7e77-4b71-faac">
+                    <entryLink import="true" name="Power fist" hidden="false" id="9115-74d2-2830-8f27" type="selectionEntry" targetId="f8d8-7e77-4b71-faac">
                       <categoryLinks>
                         <categoryLink name="DCo Weapon Swap" hidden="false" id="70b5-7c55-5fbd-8027" targetId="78e1-92d6-d2d8-0509" primary="false"/>
                       </categoryLinks>
@@ -5457,7 +5474,7 @@ Engagement Range of that enemy unit. A model cannot make a Driven by Fury move w
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="6871-d837-3213-0889" hidden="false" sortIndex="2">
           <entryLinks>
-            <entryLink import="true" name="Twin Icarus Ironhail Heavy Stubber" hidden="false" id="174a-2bd6-c569-00d6" type="selectionEntry" targetId="6c9-da5-cea7-f3c9">
+            <entryLink import="true" name="Twin Icarus ironhail heavy stubber" hidden="false" id="174a-2bd6-c569-00d6" type="selectionEntry" targetId="6c9-da5-cea7-f3c9">
               <constraints>
                 <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="c9ea-ffef-634f-6fbd"/>
                 <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="73f0-abb3-60f0-c3f8"/>
@@ -5552,8 +5569,8 @@ Engagement Range of that enemy unit. A model cannot make a Driven by Fury move w
             </selectionEntryGroup>
             <selectionEntryGroup name="Ranged Weapon Option" id="0594-cce0-43e8-a8cb" hidden="false" defaultSelectionEntryId="e99e-b2c0-4c80-779b">
               <entryLinks>
-                <entryLink import="true" name="Twin Heavy Bolter" hidden="false" id="283d-01d2-30bd-8d3b" type="selectionEntry" targetId="d107-1e89-9d3f-c9c7"/>
-                <entryLink import="true" name="Twin Multi-melta" hidden="false" id="d865-d29d-90d2-1db4" type="selectionEntry" targetId="6fad-2d0d-8ff9-5f8f"/>
+                <entryLink import="true" name="Twin heavy bolter" hidden="false" id="283d-01d2-30bd-8d3b" type="selectionEntry" targetId="d107-1e89-9d3f-c9c7"/>
+                <entryLink import="true" name="Twin multi-melta" hidden="false" id="d865-d29d-90d2-1db4" type="selectionEntry" targetId="6fad-2d0d-8ff9-5f8f"/>
               </entryLinks>
               <constraints>
                 <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="67c0-c106-a057-b0c7"/>
@@ -5739,8 +5756,8 @@ If a Character unit from your army with the Leader ability can be attached to a
                           </constraints>
                           <entryLinks>
                             <entryLink import="true" name="Astartes Chainsword" hidden="false" id="ecb0-c2bf-e9c6-04ec" type="selectionEntry" targetId="efcd-180-d07-b4d6"/>
-                            <entryLink import="true" name="Power Fist" hidden="false" id="c7f3-4233-9b58-89bf" type="selectionEntry" targetId="f8d8-7e77-4b71-faac"/>
-                            <entryLink import="true" name="Power Weapon" hidden="false" id="b685-5d31-6822-64c5" type="selectionEntry" targetId="50dd-3e76-d993-4d1a"/>
+                            <entryLink import="true" name="Power fist" hidden="false" id="c7f3-4233-9b58-89bf" type="selectionEntry" targetId="f8d8-7e77-4b71-faac"/>
+                            <entryLink import="true" name="Power weapon" hidden="false" id="b685-5d31-6822-64c5" type="selectionEntry" targetId="50dd-3e76-d993-4d1a"/>
                           </entryLinks>
                         </selectionEntryGroup>
                         <selectionEntryGroup name="Pistol Option" id="ef85-db55-0fc3-5b69" hidden="false" defaultSelectionEntryId="2fdf-b222-d6a8-6af4">
@@ -5750,8 +5767,8 @@ If a Character unit from your army with the Leader ability can be attached to a
                           </constraints>
                           <entryLinks>
                             <entryLink import="true" name="Bolt pistol" hidden="false" id="b836-f673-e4e7-dc53" type="selectionEntry" targetId="18b0-8c2-173f-5"/>
-                            <entryLink import="true" name="Plasma Pistol" hidden="false" id="c3bd-d900-be28-a917" type="selectionEntry" targetId="25c2-104f-fa0c-809e"/>
-                            <entryLink import="true" name="Hand Flamer" hidden="false" id="c8bc-a499-053e-38f5" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e"/>
+                            <entryLink import="true" name="Plasma pistol" hidden="false" id="c3bd-d900-be28-a917" type="selectionEntry" targetId="25c2-104f-fa0c-809e"/>
+                            <entryLink import="true" name="Hand flamer" hidden="false" id="c8bc-a499-053e-38f5" type="selectionEntry" targetId="9dc6-6ad8-818e-db2e"/>
                             <entryLink import="true" name="Inferno Pistol" hidden="false" id="9ca1-5366-1001-4878" type="selectionEntry" targetId="d8bf-e17f-d6fa-b7e8"/>
                           </entryLinks>
                         </selectionEntryGroup>
