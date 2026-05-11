@@ -26,10 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-6',
-    lastUpdated: '2026-05-09T18:30:00Z',
+    version:     '2026.05.09-7',
+    lastUpdated: '2026-05-09T19:00:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Cards: requisitions count moved to bottom-right',
+        description:
+          'The "×N" Requisitions badge on unit cards now sits in the ' +
+          'bottom-right corner instead of the bottom-left, mirroring the ' +
+          'Reserves badge in the top-right.',
+      },
       {
         date: '2026-05-09', kind: 'fix',
         title: 'Units pane: empty Reserves no longer looks like a broken page',

@@ -512,8 +512,8 @@
   }
 
   // ── card-corner quantity badges ──────────────────────────────────────
-  // Small "×N" pill on each unit card showing reserves count (top-left)
-  // and requisitions count (bottom-left). Lets the user see at a glance
+  // Small "×N" pill on each unit card showing reserves count (top-right)
+  // and requisitions count (bottom-right). Lets the user see at a glance
   // how many of a unit they own / want without opening the Details
   // pane. Real DOM elements (not pseudo) to avoid clobbering
   // collection.css's ::after paint dot or style.css's ::before

@@ -272,7 +272,7 @@ body[data-units-view="requisitions"] #unit-grid #roster-empty {
 
 /* ── per-card quantity badges ──────────────────────────────────────────
    Small "×N" pill on each unit card showing how many of that unit are
-   in your Reserves (top-left) or Requisitions (bottom-left). Real DOM
+   in your Reserves (top-right) or Requisitions (bottom-right). Real DOM
    spans (NOT pseudo-elements) so they don't fight with collection.css's
    ::after paint dot or style.css's ::before selection accent. */
 .unit-card .reserves-qty-badge,
@@ -301,7 +301,7 @@ body[data-units-view="requisitions"] #unit-grid #roster-empty {
 }
 .unit-card .requisitions-qty-badge {
   bottom: 6px;
-  left: 8px;
+  right: 8px;
   background: var(--requisitions-accent);
   color: #1a0d16;
 }
