@@ -26,10 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-9',
-    lastUpdated: '2026-05-09T20:30:00Z',
+    version:     '2026.05.09-10',
+    lastUpdated: '2026-05-09T21:00:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'fix',
+        title: 'Layout: panels now fill the screen even when the Units pane is empty',
+        description:
+          'The three panels (Army / Units / Details) were collapsing to ' +
+          'the height of whichever had the most content, leaving a big ' +
+          'dark band below — most obvious with an empty Reserves view. ' +
+          'Root cause: the build-mode wrapper is a 2-row grid sized for ' +
+          'a hero row that now lives in the top bar, so the panel grid ' +
+          'was auto-placed into the "shrink-to-content" row. Pinned it ' +
+          'to the full-height row so the panels always reach the bottom ' +
+          'of the window.',
+      },
       {
         date: '2026-05-09', kind: 'change',
         title: 'Units pane is now sorted by faction, then A→Z',

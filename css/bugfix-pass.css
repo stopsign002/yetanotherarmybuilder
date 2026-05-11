@@ -65,6 +65,15 @@ body.build-mode-enhanced #app-main > .build-hero {
   body.build-mode-enhanced #app-main {
     height: 100% !important;
     min-height: 0 !important;
+    /* #build-mode is a 2-row grid (`auto 1fr`) — that layout assumed
+       the build-hero was a child of #build-mode (row 1) and #app-main
+       was row 2. But the hero now lives in the topbar (#topbar-hero-slot),
+       so #app-main is #build-mode's ONLY grid item and auto-placement
+       drops it into the `auto` row — collapsing it to the panels'
+       content height and leaving a dark void below (very visible when
+       the Units pane is short, e.g. an empty Reserves view). Pin it to
+       the `1fr` row so it fills the full mode-page height. */
+    grid-row: 2 !important;
   }
 }
 
