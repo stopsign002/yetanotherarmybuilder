@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" id="b984-7317-81cc-20f" name="Xenos - Tyranids" revision="123" battleScribeVersion="2.03" library="false" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" type="catalogue" authorName="Dunamis55">
+<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" id="b984-7317-81cc-20f" name="Xenos - Tyranids" revision="124" battleScribeVersion="2.03" library="false" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" type="catalogue" authorName="Dunamis55">
   <categoryEntries>
     <categoryEntry id="dc7d-ba0f-e6e-8599" name="The Swarmlord" hidden="false"/>
     <categoryEntry id="f75-65-2121-87b5" name="Broodlord" hidden="false"/>
@@ -116,6 +116,7 @@
     <entryLink import="true" name="Spore Mines (Biovore)" hidden="false" id="8106-c7cc-f5d1-57a5" targetId="80c2-aecc-5b59-7345" type="selectionEntry"/>
     <entryLink import="true" name="Ripper Swarms (Parasite of Mortrex)" hidden="false" id="06b7-a4b1-ab30-7dd9" type="selectionEntry" targetId="4390-b3c7-64d2-c1b8"/>
     <entryLink import="true" name="Mucolid Spores (Sporocyst)" hidden="false" id="4d65-b3c0-b075-e79e" targetId="9943-934a-221b-e0c0" type="selectionEntry"/>
+    <entryLink import="true" name="The Red Terror" hidden="false" id="d1a5-352d-83ad-9b58" targetId="7173-1bd9-b60b-6555" type="selectionEntry"/>
   </entryLinks>
   <sharedSelectionEntries>
     <selectionEntry id="cd6d-87b3-125a-f372" name="Tervigon" hidden="false" collective="false" import="true" type="model">

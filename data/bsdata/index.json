@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-10T15:14:44.543Z",
+  "generatedAt": "2026-05-11T21:42:18.427Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "a46c84c8e50b79fe3afbdf64cd1e051e26184f50",
+  "sourceCommit": "933fdadc5ec46513edc19332957fbc5eb834a4d4",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -107,8 +107,8 @@
       "path": "Genestealer Cults.cat",
       "name": "Genestealer Cults",
       "type": "catalogue",
-      "sha": "8bb823f1908345a119a61e9c18b5ad907382de41",
-      "size": 931168
+      "sha": "c4e96ee7bacd78ab4af041ff04d64b0c5da60d7d",
+      "size": 932883
     },
     {
       "path": "Imperium - Adepta Sororitas.cat",
@@ -128,8 +128,8 @@
       "path": "Imperium - Adeptus Mechanicus.cat",
       "name": "Imperium - Adeptus Mechanicus",
       "type": "catalogue",
-      "sha": "2b5cc7b9ec463ac9524b08ce71d2ca736ba2ddf1",
-      "size": 1087403
+      "sha": "2892c06eb9754b560da63cd198f892283efc6481",
+      "size": 1087081
     },
     {
       "path": "Imperium - Adeptus Titanicus.cat",
@@ -149,15 +149,15 @@
       "path": "Imperium - Astra Militarum - Library.cat",
       "name": "Imperium - Astra Militarum - Library",
       "type": "catalogue",
-      "sha": "dadb3a6054c1042e735da951b1bba7f63ccc8311",
-      "size": 2941779
+      "sha": "e7776de172e3705c5dd47df38c2b3a9c0f8b1f18",
+      "size": 2981558
     },
     {
       "path": "Imperium - Astra Militarum.cat",
       "name": "Imperium - Astra Militarum",
       "type": "catalogue",
-      "sha": "02060564db2fd58ac036de85abaf7a4ec5a082a8",
-      "size": 55210
+      "sha": "463f71efc4bb55e2204c3ea2fcdb6b0bb2938759",
+      "size": 55360
     },
     {
       "path": "Imperium - Black Templars.cat",
@@ -205,8 +205,8 @@
       "path": "Imperium - Imperial Knights - Library.cat",
       "name": "Imperium - Imperial Knights - Library",
       "type": "catalogue",
-      "sha": "7141b140b129b252a064b862d7f1d38a13ac91f7",
-      "size": 651744
+      "sha": "38d974cffa601c5852b567f004333687920e458e",
+      "size": 652094
     },
     {
       "path": "Imperium - Imperial Knights.cat",
@@ -289,8 +289,8 @@
       "path": "Library - Tyranids.cat",
       "name": "Library - Tyranids",
       "type": "catalogue",
-      "sha": "d7595817f9209cc07ef48542af835225ad134197",
-      "size": 644919
+      "sha": "41d9567a0a02ec1ec4cdb8bb73e89d032be32611",
+      "size": 655952
     },
     {
       "path": "Necrons.cat",
@@ -317,8 +317,8 @@
       "path": "Tyranids.cat",
       "name": "Tyranids",
       "type": "catalogue",
-      "sha": "f2d4f3f7fdb62515069cb9685d228f062336c4d1",
-      "size": 650413
+      "sha": "ac954279fe8098a6b67ffa2608821017a796df55",
+      "size": 650559
     },
     {
       "path": "Unaligned Forces.cat",
