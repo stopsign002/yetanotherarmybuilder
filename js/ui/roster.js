@@ -281,6 +281,18 @@
       }));
     }
 
+    // Sort: group by faction name, then alphabetically by unit name within
+    // each faction. `.slice()` so we never mutate the caller's array
+    // (state.allUnits). Locale-aware, case-insensitive.
+    filtered = filtered.slice().sort((a, b) => {
+      const fa = (a && a._factionName) || '';
+      const fb = (b && b._factionName) || '';
+      if (fa !== fb) return fa.localeCompare(fb, undefined, { sensitivity: 'base' });
+      const na = (a && a.name) || '';
+      const nb = (b && b.name) || '';
+      return na.localeCompare(nb, undefined, { sensitivity: 'base' });
+    });
+
     badge.textContent = `${filtered.length} unit${filtered.length !== 1 ? 's' : ''}`;
 
     // Clear old cards but preserve #roster-empty (a static child of the grid).

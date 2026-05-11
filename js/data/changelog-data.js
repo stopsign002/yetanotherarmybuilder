@@ -26,10 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-8',
-    lastUpdated: '2026-05-09T19:30:00Z',
+    version:     '2026.05.09-9',
+    lastUpdated: '2026-05-09T20:30:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Units pane is now sorted by faction, then A→Z',
+        description:
+          'The unit roster used to render in BattleScribe file order. ' +
+          'It\'s now grouped by faction and sorted alphabetically by ' +
+          'unit name within each faction — handy in the "All units" / ' +
+          '"All Factions" view, and consistent everywhere else.',
+      },
       {
         date: '2026-05-09', kind: 'feature',
         title: 'Reserves: points total for your collection',
