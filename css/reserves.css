@@ -89,12 +89,39 @@ body[data-units-view="requisitions"] #unit-grid #roster-empty {
   display: none !important;
 }
 
+/* ── empty-state layout ────────────────────────────────────────────────
+   Make the Units panel body a flex column so the Reserves /
+   Requisitions empty-state notes can fill the available height and read
+   as a deliberate "nothing here yet" state instead of a half-loaded
+   page (the default view is Reserves, which is empty for a new user).
+   The unit grid keeps its natural content height and overflows into the
+   body's own scroll when populated; min-height:0 is what lets that
+   overflow actually scroll inside the flex parent. */
+#panel-center .panel-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+#panel-center .panel-body > #unit-grid {
+  flex: 0 0 auto;
+}
+.reserves-empty-note:not([hidden]),
+.requisitions-empty-note:not([hidden]) {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+}
+
 /* ── empty-state note (shown when Reserves view has nothing) ──────── */
 .reserves-empty-note {
-  margin: 0 0 10px;
-  padding: 14px 16px;
+  margin: 0;
+  padding: 28px 24px;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--text, #ddd);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
@@ -104,14 +131,14 @@ body[data-units-view="requisitions"] #unit-grid #roster-empty {
 }
 .reserves-empty-note[hidden] { display: none; }
 .reserves-empty-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--reserves-accent);
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
-.reserves-empty-body { color: var(--text-muted, #bbb); }
+.reserves-empty-body { color: var(--text-muted, #bbb); max-width: 32em; }
 .reserves-empty-link {
   appearance: none;
   background: transparent;

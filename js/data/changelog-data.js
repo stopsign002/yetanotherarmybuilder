@@ -26,10 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-5',
-    lastUpdated: '2026-05-09T17:30:00Z',
+    version:     '2026.05.09-6',
+    lastUpdated: '2026-05-09T18:30:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'fix',
+        title: 'Units pane: empty Reserves no longer looks like a broken page',
+        description:
+          'When the Reserves (or Requisitions) view had nothing in it, ' +
+          'the Units panel showed a thin "empty" banner at the top and ' +
+          'a big dark void below — which read as the page failing to ' +
+          'finish loading. The panel body is now a flex column so the ' +
+          'empty-state message fills the available height and is ' +
+          'centred, making it clearly a deliberate "nothing here yet" ' +
+          'state. Scrolling a populated roster is unaffected.',
+      },
       {
         date: '2026-05-09', kind: 'fix',
         title: 'Performance: smoother roster scrolling',

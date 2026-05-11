@@ -24,10 +24,10 @@
 
 /* ── empty-state note (for the requisitions view) ─────────────────── */
 .requisitions-empty-note {
-  margin: 0 0 10px;
-  padding: 14px 16px;
+  margin: 0;
+  padding: 28px 24px;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--text, #ddd);
   background:
     linear-gradient(180deg, rgba(211, 158, 197, 0.06), rgba(211, 158, 197, 0.02)),
@@ -37,14 +37,14 @@
 }
 .requisitions-empty-note[hidden] { display: none; }
 .requisitions-empty-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--requisitions-accent);
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
-.requisitions-empty-body { color: var(--text-muted, #bbb); }
+.requisitions-empty-body { color: var(--text-muted, #bbb); max-width: 32em; }
 .requisitions-empty-link {
   appearance: none;
   background: transparent;
