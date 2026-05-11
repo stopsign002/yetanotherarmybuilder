@@ -331,7 +331,7 @@ body[data-mode="cards"]   .reserves-pts-badge {
 }
 .unit-card .requisitions-qty-badge {
   bottom: 6px;
-  right: 8px;
+  right: 6px; /* mirror the Reserves badge in the top-right corner */
   background: var(--requisitions-accent);
   color: #1a0d16;
 }
