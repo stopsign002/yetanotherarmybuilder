@@ -83,12 +83,15 @@
     }
 
     select.innerHTML = '<option value="">— Select Detachment —</option>';
-    detachments.forEach(d => {
-      const opt = document.createElement('option');
-      opt.value = d.name;
-      opt.textContent = d.name;
-      select.appendChild(opt);
-    });
+    detachments
+      .slice()
+      .sort((a, b) => String(a && a.name || '').localeCompare(String(b && b.name || ''), undefined, { sensitivity: 'base' }))
+      .forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.name;
+        opt.textContent = d.name;
+        select.appendChild(opt);
+      });
   };
 
   App.applyImportedSelections = function (factionName, chapter, detachment) {

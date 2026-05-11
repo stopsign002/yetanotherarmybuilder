@@ -26,10 +26,30 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-6',
-    lastUpdated: '2026-05-09T18:30:00Z',
+    version:     '2026.05.09-7',
+    lastUpdated: '2026-05-09T19:30:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'feature',
+        title: 'Reserves: points total for your collection',
+        description:
+          'The Units pane header now shows an "≈ N pts" badge next to ' +
+          'the unit count whenever the Reserves (or Requisitions) view ' +
+          'is active — the summed points value of every owned (or ' +
+          'wished-for) unit that matches the army/faction you currently ' +
+          'have selected. It uses each unit\'s base cost, so variable-' +
+          'size units could field for a bit more; hover the badge for ' +
+          'the breakdown.',
+      },
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Detachment dropdown is now sorted alphabetically',
+        description:
+          'The detachment picker in the Army setup panel used to list ' +
+          'detachments in BattleScribe file order; it\'s now sorted ' +
+          'A→Z so the one you want is easier to find.',
+      },
       {
         date: '2026-05-09', kind: 'fix',
         title: 'Units pane: empty Reserves no longer looks like a broken page',

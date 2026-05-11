@@ -104,6 +104,7 @@
     refreshCardBadges(unitId);
     refreshArmyWarnings();
     refreshEmptyNote();
+    refreshPtsBadge();
     // If reserves view is active and we crossed 0, re-render the roster
     // so the unit appears or disappears.
     const crossedZero = (prev === 0) !== (qty === 0);
@@ -114,6 +115,121 @@
   }
 
   function incQty(unitId, delta) { setQty(unitId, getQty(unitId) + (delta || 1)); }
+
+  // ── reserves / requisitions points total ─────────────────────────────
+  // "Total points you have in your collection for that army": sum, over
+  // every owned (or wished-for) unit that matches the current faction
+  // filter, of unitBasePoints × quantity. Deduped by unit-id so shared
+  // BSData entries don't double-count.
+  function unitBasePoints(unit) {
+    if (!unit) return 0;
+    if (Number.isFinite(unit.points) && unit.points > 0) return unit.points;
+    const opts = Array.isArray(unit.pointsOptions)
+      ? unit.pointsOptions.filter(p => Number.isFinite(p) && p > 0) : [];
+    if (opts.length) return Math.min.apply(null, opts);
+    const sq = Array.isArray(unit.squadOptions)
+      ? unit.squadOptions.map(o => o && o.pts).filter(p => Number.isFinite(p) && p > 0) : [];
+    if (sq.length) return Math.min.apply(null, sq);
+    return 0;
+  }
+
+  function formatPts(n) {
+    n = Math.round(Number(n) || 0);
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function effectiveFactionFilter() {
+    if (typeof App.getEffectiveFilter === 'function') {
+      const ef = App.getEffectiveFilter() || {};
+      return {
+        factionFilter: ef.factionFilter || 'all',
+        linkedFactions: Array.isArray(ef.linkedFactions) ? ef.linkedFactions : [],
+      };
+    }
+    const f = (App.state && App.state.factionFilter) || 'all';
+    return { factionFilter: f, linkedFactions: [] };
+  }
+
+  function factionShortLabel() {
+    const { factionFilter } = effectiveFactionFilter();
+    if (!factionFilter || factionFilter === 'all') return 'all factions';
+    return factionFilter.indexOf(' - ') !== -1
+      ? factionFilter.split(' - ').pop().trim()
+      : factionFilter;
+  }
+
+  // Returns { pts, types, total } for the active view, or null if the
+  // active view doesn't carry a stockpile total ('all' view).
+  function computeViewTotal() {
+    let qtyMap;
+    if (_view === VIEW_RESERVES) qtyMap = QTY;
+    else if (_view === VIEW_REQUISITIONS) {
+      qtyMap = (App.Requisitions && typeof App.Requisitions.getAll === 'function')
+        ? App.Requisitions.getAll() : {};
+    } else return null;
+
+    const state = App.state || {};
+    const allUnits = state.allUnits || [];
+    const { factionFilter, linkedFactions } = effectiveFactionFilter();
+    let pts = 0, types = 0, total = 0;
+    const counted = new Set();
+    for (let i = 0; i < allUnits.length; i++) {
+      const u = allUnits[i];
+      if (!u || !u.id) continue;
+      const qty = qtyMap[u.id] || 0;
+      if (qty <= 0) continue;
+      if (factionFilter !== 'all' &&
+          u._factionName !== factionFilter &&
+          linkedFactions.indexOf(u._factionName) === -1) continue;
+      if (counted.has(u.id)) continue;
+      counted.add(u.id);
+      pts += unitBasePoints(u) * qty;
+      types += 1;
+      total += qty;
+    }
+    return { pts, types, total };
+  }
+
+  function ensurePtsBadge() {
+    let badge = document.getElementById('reserves-pts-badge');
+    if (badge) return badge;
+    const header = document.querySelector('#panel-center .panel-header');
+    if (!header) return null;
+    badge = document.createElement('span');
+    badge.id = 'reserves-pts-badge';
+    badge.className = 'reserves-pts-badge';
+    badge.hidden = true;
+    const countBadge = header.querySelector('#unit-count-badge');
+    if (countBadge && countBadge.parentNode === header) {
+      header.insertBefore(badge, countBadge.nextSibling);
+    } else {
+      header.appendChild(badge);
+    }
+    return badge;
+  }
+
+  function refreshPtsBadge() {
+    const badge = ensurePtsBadge();
+    if (!badge) return;
+    if (!isBuildMode() || (_view !== VIEW_RESERVES && _view !== VIEW_REQUISITIONS)) {
+      badge.hidden = true;
+      badge.textContent = '';
+      return;
+    }
+    const r = computeViewTotal();
+    if (!r || r.pts <= 0) {
+      badge.hidden = true;
+      badge.textContent = '';
+      return;
+    }
+    badge.hidden = false;
+    badge.textContent = '≈ ' + formatPts(r.pts) + ' pts';
+    const what = _view === VIEW_REQUISITIONS ? 'Requisition Requests' : 'Reserves';
+    badge.title = 'Approx. points value of your ' + what + ' for ' + factionShortLabel() +
+      ' — ' + r.types + ' unit' + (r.types !== 1 ? 's' : '') +
+      (r.total !== r.types ? ' (' + r.total + ' total counting quantities)' : '') +
+      '. Uses each unit’s base cost; variable-size units may field for more.';
+  }
 
   // ── view toggle (segmented control in #panel-center .panel-controls) ─
   function ensureToggle() {
@@ -187,6 +303,7 @@
     applyViewBodyAttr();
     syncToggleActive();
     refreshEmptyNote();
+    refreshPtsBadge();
     if (typeof App.renderUnitRosterWithContext === 'function') {
       App.renderUnitRosterWithContext();
     }
@@ -610,6 +727,7 @@
   function ensureToggleAndNote() {
     ensureToggle();
     ensureEmptyNote();
+    ensurePtsBadge();
   }
 
   // ── hook registrations ───────────────────────────────────────────────
@@ -624,15 +742,21 @@
     installGridObserver();
     syncToggleActive();
     refreshEmptyNote();
+    refreshPtsBadge();
     refreshArmyWarnings();
   });
 
   App.hooks.armyChange.push(function () {
     scheduleArmyScan();
+    // Army load can change the faction filter (and BSData finishing its
+    // parse triggers a render via armyChange too), so recompute the
+    // stockpile total whenever the army changes.
+    refreshPtsBadge();
   });
 
   App.hooks.selectionChange.push(function () {
     refreshEmptyNote();
+    refreshPtsBadge();
     // Selection change can fire after detail.js re-renders; re-inject
     // in case the observer missed the swap.
     injectDetailWidget();
@@ -644,6 +768,7 @@
     // empty-state slot are still mounted, then re-render the roster.
     ensureToggleAndNote();
     refreshEmptyNote();
+    refreshPtsBadge();
     syncToggleActive();
     if (typeof App.renderUnitRosterWithContext === 'function') {
       App.renderUnitRosterWithContext();
@@ -669,6 +794,7 @@
       refreshCardBadges();
       refreshArmyWarnings();
       refreshEmptyNote();
+      refreshPtsBadge();
       if (_view === VIEW_RESERVES && isBuildMode() &&
           typeof App.renderUnitRosterWithContext === 'function') {
         App.renderUnitRosterWithContext();
@@ -703,5 +829,9 @@
     // include the requisitions count for cards owned by reserves.js's
     // observer).
     refreshCardBadges,
+    // Called by requisitions.js so the points-total badge in the Units
+    // header recomputes when the wishlist changes (it's the active
+    // total when the Requisitions view is showing).
+    refreshPtsBadge,
   };
 })();

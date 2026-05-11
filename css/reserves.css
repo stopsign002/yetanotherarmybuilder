@@ -270,6 +270,36 @@ body[data-units-view="requisitions"] #unit-grid #roster-empty {
   color: var(--requisitions-accent);
 }
 
+/* ── points total in the Units panel header ────────────────────────────
+   "Total points you have in your collection for this army": shown next
+   to the "N units" badge whenever the Reserves or Requisitions view is
+   active. Tinted with each stockpile's accent. */
+.reserves-pts-badge {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  background: rgba(var(--accent-rgb, 200, 200, 200), 0.14);
+  color: var(--accent, #c8c8c8);
+  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.32);
+}
+.reserves-pts-badge[hidden] { display: none; }
+body[data-units-view="requisitions"] .reserves-pts-badge {
+  background: rgba(211, 158, 197, 0.14);
+  color: var(--requisitions-accent, #d39ec5);
+  border-color: rgba(211, 158, 197, 0.4);
+}
+/* Only meaningful in BUILD; the header isn't reused elsewhere but guard
+   anyway. */
+body[data-mode="collect"] .reserves-pts-badge,
+body[data-mode="play"]    .reserves-pts-badge,
+body[data-mode="cards"]   .reserves-pts-badge {
+  display: none;
+}
+
 /* ── per-card quantity badges ──────────────────────────────────────────
    Small "×N" pill on each unit card showing how many of that unit are
    in your Reserves (top-left) or Requisitions (bottom-left). Real DOM

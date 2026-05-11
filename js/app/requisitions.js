@@ -73,6 +73,9 @@
     if (App.Reserves && typeof App.Reserves.refreshCardBadges === 'function') {
       App.Reserves.refreshCardBadges(unitId);
     }
+    if (App.Reserves && typeof App.Reserves.refreshPtsBadge === 'function') {
+      App.Reserves.refreshPtsBadge();
+    }
     refreshEmptyNote();
   }
 
