@@ -26,7 +26,7 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-7',
+    version:     '2026.05.09-8',
     lastUpdated: '2026-05-09T19:30:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
@@ -49,6 +49,14 @@
           'The detachment picker in the Army setup panel used to list ' +
           'detachments in BattleScribe file order; it\'s now sorted ' +
           'A→Z so the one you want is easier to find.',
+      },
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Cards: requisitions count moved to bottom-right',
+        description:
+          'The "×N" Requisitions badge on unit cards now sits in the ' +
+          'bottom-right corner instead of the bottom-left, mirroring the ' +
+          'Reserves badge in the top-right.',
       },
       {
         date: '2026-05-09', kind: 'fix',
