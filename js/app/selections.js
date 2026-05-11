@@ -65,15 +65,32 @@
     }
 
     let detachments = (detFaction.detachments || []);
-    // Strip detachments that belong to other Space Marine chapters before
-    // the user sees the dropdown. The selected chapter is whichever of
-    // selectedChapter / factionFilter is non-empty (chapter dropdown is
-    // currently hidden because BSData flattened sub-chapters to top-level
-    // factions, so factionFilter is the live signal — see state.js
-    // VIRTUAL_PARENTS comment).
+
+    // Catalogue-gated filter: the SM parent catalogue bundles every
+    // chapter's detachments (Sons of Sanguinius, Inner Circle Task
+    // Force, Champions of Fenris, Blade of Ultramar, …) and tags the
+    // chapter-exclusive ones with `onlyCatalogues` / `notCatalogues`
+    // (BSData "hide unless primary-catalogue is X" conditions — parsed
+    // in js/parser/catalogue.js). Filter against the SELECTED faction's
+    // own catalogueId, not the detachment-list faction's (which may be
+    // the SM parent we fell back to for the list itself).
+    const selFaction = App.getCurrentFaction();
+    const selCatId = selFaction && selFaction.catalogueId;
+    if (selCatId) {
+      detachments = detachments.filter(d => {
+        if (Array.isArray(d.onlyCatalogues) && d.onlyCatalogues.length &&
+            d.onlyCatalogues.indexOf(selCatId) === -1) return false;
+        if (Array.isArray(d.notCatalogues) && d.notCatalogues.indexOf(selCatId) !== -1) return false;
+        return true;
+      });
+    }
+
+    // Legacy token-based blocklist — kept as a backstop for any chapter
+    // that lacks its own catalogue (so getCurrentFaction has no
+    // catalogueId) or detachments parsed before the v29 DB bump.
     const chapter = state.selectedChapter
       || (state.factionFilter && state.factionFilter !== 'all' ? state.factionFilter : null);
-    if (chapter) {
+    if (chapter && typeof App.filterSMDetachmentsForChapter === 'function') {
       detachments = App.filterSMDetachmentsForChapter(detachments, chapter);
     }
 

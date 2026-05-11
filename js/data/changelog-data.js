@@ -26,10 +26,31 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-10',
-    lastUpdated: '2026-05-09T21:00:00Z',
+    version:     '2026.05.09-11',
+    lastUpdated: '2026-05-09T22:00:00Z',
     entries: [
       // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'fix',
+        title: 'Detachments: chapters only show the ones they can actually take',
+        description:
+          'The detachment dropdown used to list every Space Marine ' +
+          'detachment for every chapter (Inner Circle Task Force on a ' +
+          'Blood Angels army, Champions of Fenris on Ultramarines, …). ' +
+          'It now reads the chapter restrictions straight out of the ' +
+          'BattleScribe data, so each chapter sees only its own ' +
+          'detachments plus the generic Codex: Space Marines ones — and ' +
+          'Black Templars correctly lose Librarius Conclave / 1st ' +
+          'Company Task Force, etc.',
+      },
+      {
+        date: '2026-05-09', kind: 'feature',
+        title: 'Search box: click the × to clear it',
+        description:
+          'The unit-search box now shows a small × on the right when ' +
+          'it has text in it — click it to clear the search without ' +
+          'reaching for the keyboard.',
+      },
       {
         date: '2026-05-09', kind: 'fix',
         title: 'Layout: panels now fill the screen even when the Units pane is empty',
