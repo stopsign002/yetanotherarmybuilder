@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-11T21:42:18.427Z",
+  "generatedAt": "2026-05-12T05:48:09.058Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "933fdadc5ec46513edc19332957fbc5eb834a4d4",
+  "sourceCommit": "dfc10b5389bc56c3e0f35ac8aa7bf3667496d81d",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -37,8 +37,8 @@
       "path": "Chaos - Chaos Daemons Library.cat",
       "name": "Chaos - Chaos Daemons Library",
       "type": "catalogue",
-      "sha": "14a42367db4fcea7c3dbe9e17d8a341d053652b5",
-      "size": 1370220
+      "sha": "70722fc80222a19a6b1444dec6c9c437a55b78f4",
+      "size": 1369155
     },
     {
       "path": "Chaos - Chaos Daemons.cat",
