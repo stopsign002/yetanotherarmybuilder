@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-12T05:48:09.058Z",
+  "generatedAt": "2026-05-12T21:40:56.347Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "dfc10b5389bc56c3e0f35ac8aa7bf3667496d81d",
+  "sourceCommit": "a6d5ba8c2719f5cb40d73a6192610cd9c539d82b",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
       "name": "Aeldari - Aeldari Library",
       "type": "catalogue",
-      "sha": "c3de633bcf0f3223bdf6ef7d4d88e70254668e15",
-      "size": 3539434
+      "sha": "56eaeabed59558ab901d1fcedcaa88825608b6e6",
+      "size": 3543954
     },
     {
       "path": "Aeldari - Craftworlds.cat",
@@ -331,8 +331,8 @@
       "path": "Warhammer 40,000.gst",
       "name": "Warhammer 40,000",
       "type": "gamesystem",
-      "sha": "7fc58a9884c9f2989223292106de01ab8ef04401",
-      "size": 699585
+      "sha": "1f398a12be0975ddb381d4f671188dc9e13493e5",
+      "size": 699595
     }
   ]
 }
