@@ -97,6 +97,9 @@
       const root        = doc.documentElement;
       const factionName = I.getAttr(root, 'name') ||
         filename.replace(/\.(cat|xml)$/i, '').replace(/[-_]/g, ' ');
+      // BSData catalogue id — stable per faction file. Used to filter
+      // chapter-exclusive detachments (see the detachment loop below).
+      const catalogueId = I.getAttr(root, 'id', '');
 
       const linkedCatalogues = [];
       root.querySelectorAll(':scope > catalogueLinks > catalogueLink[type="catalogue"]').forEach(lnk => {
@@ -374,7 +377,32 @@
             stratagems.push(strat);
           });
 
-          detachments.push({ name, rules, stratagems });
+          // Catalogue-gating: BSData hides chapter-exclusive detachments via
+          // a `hidden` modifier whose condition checks the primary catalogue:
+          //   <condition field="selections" scope="primary-catalogue"
+          //              type="notInstanceOf" childId="<cat-id>">
+          //     → detachment is EXCLUSIVE to catalogue <cat-id>
+          //   <condition ... type="instanceOf" childId="<cat-id>">
+          //     → detachment is FORBIDDEN for catalogue <cat-id>
+          // Multiple conditions in one group → "any of these" (only) /
+          // "none of these" (not). We collect them flat — for detachments
+          // that's the right behaviour in practice.
+          const onlyCatalogues = [];
+          const notCatalogues  = [];
+          entry.querySelectorAll('condition[scope="primary-catalogue"][field="selections"]').forEach(c => {
+            const cid = I.getAttr(c, 'childId', '');
+            if (!cid) return;
+            const ty = I.getAttr(c, 'type', '');
+            if (ty === 'notInstanceOf') {
+              if (onlyCatalogues.indexOf(cid) === -1) onlyCatalogues.push(cid);
+            } else if (ty === 'instanceOf') {
+              if (notCatalogues.indexOf(cid) === -1) notCatalogues.push(cid);
+            }
+          });
+          const det = { name, rules, stratagems };
+          if (onlyCatalogues.length) det.onlyCatalogues = onlyCatalogues;
+          if (notCatalogues.length)  det.notCatalogues  = notCatalogues;
+          detachments.push(det);
         });
       });
 
@@ -514,7 +542,7 @@
         factionStratagems.push(strat);
       });
 
-      return { factionName, filename, unitCount: units.length, units, armyRules, detachments, factionStratagems, linkedCatalogues };
+      return { factionName, catalogueId, filename, unitCount: units.length, units, armyRules, detachments, factionStratagems, linkedCatalogues };
 
     } catch (err) {
       console.error('[Parser] Error in', filename, err);

@@ -1,0 +1,361 @@
+/* reserves.css — Reserves (owned-units) layer over the unit pane.
+   Adds: a Reserves/Requisitions/All view toggle in the panel controls,
+   a combined stockpile widget in the Details pane, an empty-state hint,
+   and a soft-warn badge on army-list entries that exceed owned qty. */
+
+:root {
+  --reserves-accent: var(--accent, #c8c8c8);
+  --reserves-warn:   #e6c7a8;
+  --requisitions-accent: #d39ec5; /* dusty pink — shared with requisitions.css */
+}
+
+/* ── view toggle (segmented control) ──────────────────────────────── */
+.reserves-view-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 0 0 8px;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  width: fit-content;
+}
+.reserves-view-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-muted, #aaa);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.reserves-view-btn:hover {
+  color: var(--text, #ddd);
+  background: rgba(255, 255, 255, 0.04);
+}
+.reserves-view-btn.active {
+  color: #111;
+  background: var(--reserves-accent);
+  border-color: var(--reserves-accent);
+  font-weight: 600;
+}
+.reserves-view-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+.reserves-view-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  margin-left: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  border-radius: 8px;
+}
+.reserves-view-btn.active .reserves-view-count {
+  background: rgba(0, 0, 0, 0.18);
+  color: #111;
+}
+.reserves-view-count.is-empty { display: none; }
+
+/* The toggle is a Build-mode concept. Hide in any other mode the
+   panel-controls might be reused under. */
+body[data-mode="collect"] .reserves-view-toggle,
+body[data-mode="play"]    .reserves-view-toggle,
+body[data-mode="cards"]   .reserves-view-toggle {
+  display: none;
+}
+
+/* In Reserves / Requisitions views, hide the legacy "Loading faction
+   data…" placeholder inside #unit-grid — it has stale text post-load,
+   and our own empty-state notes describe the actual situation. */
+body[data-units-view="reserves"] #unit-grid #roster-empty,
+body[data-units-view="requisitions"] #unit-grid #roster-empty {
+  display: none !important;
+}
+
+/* ── empty-state layout ────────────────────────────────────────────────
+   Make the Units panel body a flex column so the Reserves /
+   Requisitions empty-state notes can fill the available height and read
+   as a deliberate "nothing here yet" state instead of a half-loaded
+   page (the default view is Reserves, which is empty for a new user).
+   The unit grid keeps its natural content height and overflows into the
+   body's own scroll when populated; min-height:0 is what lets that
+   overflow actually scroll inside the flex parent. */
+#panel-center .panel-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+#panel-center .panel-body > #unit-grid {
+  flex: 0 0 auto;
+}
+.reserves-empty-note:not([hidden]),
+.requisitions-empty-note:not([hidden]) {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+}
+
+/* ── empty-state note (shown when Reserves view has nothing) ──────── */
+.reserves-empty-note {
+  margin: 0;
+  padding: 28px 24px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text, #ddd);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
+    rgba(0,0,0,0.15);
+  border: 1px dashed var(--border, rgba(255, 255, 255, 0.18));
+  border-radius: 6px;
+}
+.reserves-empty-note[hidden] { display: none; }
+.reserves-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--reserves-accent);
+  margin-bottom: 0;
+}
+.reserves-empty-body { color: var(--text-muted, #bbb); max-width: 32em; }
+.reserves-empty-link {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  color: var(--reserves-accent);
+  padding: 1px 8px;
+  border-radius: 4px;
+  font: inherit;
+  cursor: pointer;
+}
+.reserves-empty-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text, #eee);
+}
+
+/* ── combined stockpile widget in the Details pane ─────────────────── */
+.stockpile-detail-widget {
+  margin: 12px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius, 6px);
+  background: rgba(255, 255, 255, 0.02);
+}
+.stockpile-detail-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #9a9a9a);
+  margin-bottom: 8px;
+}
+.stockpile-detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stockpile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid transparent;
+  border-radius: 5px;
+}
+.stockpile-row-reserves.stockpile-has-qty,
+.stockpile-detail-widget.reserves-has-qty .stockpile-row-reserves {
+  border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.45);
+}
+.stockpile-detail-widget.requisitions-has-qty .stockpile-row-requisitions {
+  border-color: rgba(211, 158, 197, 0.55);
+}
+.stockpile-row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text, #ddd);
+}
+.stockpile-row-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  line-height: 1;
+}
+.stockpile-row-reserves .stockpile-row-icon { color: var(--reserves-accent); }
+.stockpile-row-requisitions .stockpile-row-icon { color: var(--requisitions-accent); }
+.stockpile-row-hint {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #888);
+  margin-left: 4px;
+}
+.stockpile-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 1px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.16));
+  border-radius: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.stockpile-step {
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--text, #eee);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 13px;
+  transition: background 0.1s, color 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.stockpile-step:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.stockpile-row-reserves .stockpile-step:hover { color: var(--reserves-accent); }
+.stockpile-row-requisitions .stockpile-step:hover { color: var(--requisitions-accent); }
+.stockpile-step:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.stockpile-qty {
+  min-width: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #eee);
+  padding: 0 4px;
+}
+.stockpile-detail-widget.reserves-has-qty .stockpile-row-reserves .stockpile-qty {
+  color: var(--reserves-accent);
+}
+.stockpile-detail-widget.requisitions-has-qty .stockpile-row-requisitions .stockpile-qty {
+  color: var(--requisitions-accent);
+}
+
+/* ── points total in the Units panel header ────────────────────────────
+   "Total points you have in your collection for this army": shown next
+   to the "N units" badge whenever the Reserves or Requisitions view is
+   active. Tinted with each stockpile's accent. */
+.reserves-pts-badge {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  background: rgba(var(--accent-rgb, 200, 200, 200), 0.14);
+  color: var(--accent, #c8c8c8);
+  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.32);
+}
+.reserves-pts-badge[hidden] { display: none; }
+body[data-units-view="requisitions"] .reserves-pts-badge {
+  background: rgba(211, 158, 197, 0.14);
+  color: var(--requisitions-accent, #d39ec5);
+  border-color: rgba(211, 158, 197, 0.4);
+}
+/* Only meaningful in BUILD; the header isn't reused elsewhere but guard
+   anyway. */
+body[data-mode="collect"] .reserves-pts-badge,
+body[data-mode="play"]    .reserves-pts-badge,
+body[data-mode="cards"]   .reserves-pts-badge {
+  display: none;
+}
+
+/* ── per-card quantity badges ──────────────────────────────────────────
+   Small "×N" pill on each unit card showing how many of that unit are
+   in your Reserves (top-right) or Requisitions (bottom-right). Real DOM
+   spans (NOT pseudo-elements) so they don't fight with collection.css's
+   ::after paint dot or style.css's ::before selection accent. */
+.unit-card .reserves-qty-badge,
+.unit-card .requisitions-qty-badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5),
+              0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.unit-card .reserves-qty-badge {
+  top: 6px;
+  right: 6px;
+  background: var(--reserves-accent);
+  color: #111;
+}
+.unit-card .requisitions-qty-badge {
+  bottom: 6px;
+  right: 6px; /* mirror the Reserves badge in the top-right corner */
+  background: var(--requisitions-accent);
+  color: #1a0d16;
+}
+
+/* ── soft-warn badge on army entries ───────────────────────────────── */
+.army-entry .reserves-warn {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #1a1208;
+  background: var(--reserves-warn);
+  border-radius: 8px;
+  white-space: nowrap;
+  vertical-align: 1px;
+}
+
+/* ── mobile tightening ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .reserves-view-btn { padding: 6px 10px; font-size: 12px; }
+  .reserves-view-label { display: none; } /* icon + count only on phones */
+  .stockpile-step { width: 30px; height: 30px; font-size: 18px; }
+  .stockpile-qty { min-width: 30px; font-size: 14px; }
+}

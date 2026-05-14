@@ -26,9 +26,181 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.07-4',
-    lastUpdated: '2026-05-07T16:00:00Z',
+    version:     '2026.05.09-11',
+    lastUpdated: '2026-05-09T22:00:00Z',
     entries: [
+      // ── 2026-05-09 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-09', kind: 'fix',
+        title: 'Detachments: chapters only show the ones they can actually take',
+        description:
+          'The detachment dropdown used to list every Space Marine ' +
+          'detachment for every chapter (Inner Circle Task Force on a ' +
+          'Blood Angels army, Champions of Fenris on Ultramarines, …). ' +
+          'It now reads the chapter restrictions straight out of the ' +
+          'BattleScribe data, so each chapter sees only its own ' +
+          'detachments plus the generic Codex: Space Marines ones — and ' +
+          'Black Templars correctly lose Librarius Conclave / 1st ' +
+          'Company Task Force, etc.',
+      },
+      {
+        date: '2026-05-09', kind: 'feature',
+        title: 'Search box: click the × to clear it',
+        description:
+          'The unit-search box now shows a small × on the right when ' +
+          'it has text in it — click it to clear the search without ' +
+          'reaching for the keyboard.',
+      },
+      {
+        date: '2026-05-09', kind: 'fix',
+        title: 'Layout: panels now fill the screen even when the Units pane is empty',
+        description:
+          'The three panels (Army / Units / Details) were collapsing to ' +
+          'the height of whichever had the most content, leaving a big ' +
+          'dark band below — most obvious with an empty Reserves view. ' +
+          'Root cause: the build-mode wrapper is a 2-row grid sized for ' +
+          'a hero row that now lives in the top bar, so the panel grid ' +
+          'was auto-placed into the "shrink-to-content" row. Pinned it ' +
+          'to the full-height row so the panels always reach the bottom ' +
+          'of the window.',
+      },
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Units pane is now sorted by faction, then A→Z',
+        description:
+          'The unit roster used to render in BattleScribe file order. ' +
+          'It\'s now grouped by faction and sorted alphabetically by ' +
+          'unit name within each faction — handy in the "All units" / ' +
+          '"All Factions" view, and consistent everywhere else.',
+      },
+      {
+        date: '2026-05-09', kind: 'feature',
+        title: 'Reserves: points total for your collection',
+        description:
+          'The Units pane header now shows an "≈ N pts" badge next to ' +
+          'the unit count whenever the Reserves (or Requisitions) view ' +
+          'is active — the summed points value of every owned (or ' +
+          'wished-for) unit that matches the army/faction you currently ' +
+          'have selected. It uses each unit\'s base cost, so variable-' +
+          'size units could field for a bit more; hover the badge for ' +
+          'the breakdown.',
+      },
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Detachment dropdown is now sorted alphabetically',
+        description:
+          'The detachment picker in the Army setup panel used to list ' +
+          'detachments in BattleScribe file order; it\'s now sorted ' +
+          'A→Z so the one you want is easier to find.',
+      },
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Cards: requisitions count moved to bottom-right',
+        description:
+          'The "×N" Requisitions badge on unit cards now sits in the ' +
+          'bottom-right corner instead of the bottom-left, mirroring the ' +
+          'Reserves badge in the top-right.',
+      },
+      {
+        date: '2026-05-09', kind: 'fix',
+        title: 'Units pane: empty Reserves no longer looks like a broken page',
+        description:
+          'When the Reserves (or Requisitions) view had nothing in it, ' +
+          'the Units panel showed a thin "empty" banner at the top and ' +
+          'a big dark void below — which read as the page failing to ' +
+          'finish loading. The panel body is now a flex column so the ' +
+          'empty-state message fills the available height and is ' +
+          'centred, making it clearly a deliberate "nothing here yet" ' +
+          'state. Scrolling a populated roster is unaffected.',
+      },
+      {
+        date: '2026-05-09', kind: 'fix',
+        title: 'Performance: smoother roster scrolling',
+        description:
+          'Reserves had two MutationObservers that were over-firing ' +
+          'on roster scroll: the unit-pane toggle observer was ' +
+          'rescanning on every card append (200+ times for a 200-unit ' +
+          'faction), and the per-card badge decorator was iterating ' +
+          'every card on every batch. The first is gone (we re-mount ' +
+          'the toggle from explicit hooks instead), and the second now ' +
+          'only decorates the newly-added cards. The page should feel ' +
+          'snappier when scrolling long faction rosters.',
+      },
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Cards: dropped the painting-status dot',
+        description:
+          'The little coloured dot in the top-right corner that ' +
+          'indicated painting status (unpainted / primed / WIP / done) ' +
+          'is gone. The Reserves "×N" badge in the same corner already ' +
+          'covers the ownership signal that matters while building, ' +
+          'and the painting status is still visible in the detail-pane ' +
+          'widget and Collect-mode dashboard.',
+      },
+      {
+        date: '2026-05-09', kind: 'fix',
+        title: 'Reserves: count badge on cards, no more duplicates',
+        description:
+          'Cards now show a small "×N" badge in the top-left when a unit ' +
+          'is in your Reserves (and a matching pink badge in the bottom-' +
+          'left for Requisitions), so quantity is visible at a glance. ' +
+          'Also fixed a duplicate-cards issue: BattleScribe ships some ' +
+          'units (generic Marine Captain, generic Lieutenant, etc.) as ' +
+          'shared entries reused across every chapter catalogue, which ' +
+          'meant the Reserves view was rendering one card per faction ' +
+          'that shared the same id. The Reserves and Requisitions views ' +
+          'now collapse those duplicates so you see one card per unit.',
+      },
+      {
+        date: '2026-05-09', kind: 'change',
+        title: 'Reserves & Requisitions: controls moved to the Details pane',
+        description:
+          'The +/− steppers for owned-quantity (Reserves) and wishlist-' +
+          'quantity (Requisitions) used to overlay each unit card in ' +
+          'the Units pane. They now live in a single "Your stockpile" ' +
+          'widget inside the Details pane — click any unit card and ' +
+          'you\'ll see two rows (Reserves / Requisitions) with their ' +
+          'own steppers, right under the "Add to Army" row. The Units ' +
+          'pane is back to clean unit cards; the Reserves / ' +
+          'Requisitions / All toggle still controls what the pane ' +
+          'shows.',
+      },
+      {
+        date: '2026-05-09', kind: 'feature',
+        title: 'Mobile: back button now navigates inside the app',
+        description:
+          'On phones, hitting the device back button while you\'re on ' +
+          'the Details panel now slides you back to the Units list ' +
+          'instead of leaving the site. Tapping More opens the menu ' +
+          'as a back-trappable sheet too — one back press closes it. ' +
+          'Desktop is unaffected.',
+      },
+      {
+        date: '2026-05-09', kind: 'feature',
+        title: 'Reserves: build from the units you actually own',
+        description:
+          'The Units pane now opens on a new "Reserves" view that lists ' +
+          'only the units you own, with a +/− stepper on each card to ' +
+          'set how many of each you have. Switch to "All units" to ' +
+          'browse the full faction roster and tap + on any card to add ' +
+          'it to your Reserves. Quantities sync across devices when ' +
+          'you\'re signed in. The army list also shows a soft warning ' +
+          'badge ("⚠ owns N") if you build with more copies of a unit ' +
+          'than you actually own — never blocks adding, just keeps you ' +
+          'honest.',
+      },
+      {
+        date: '2026-05-09', kind: 'feature',
+        title: 'Requisition Requests: a per-unit wishlist',
+        description:
+          'A third "Requisitions" tab in the Units pane tracks the ' +
+          'units you want to acquire (or paint) next. Each card gets ' +
+          'a small heart-stepper so you can wish for one or many ' +
+          'copies; the Requisitions view filters the roster down to ' +
+          'just your wishlist. Owned and wished-for stockpiles are ' +
+          'tracked separately, both sync to the cloud, and a unit can ' +
+          'be in both at once.',
+      },
       // ── 2026-05-07 ──────────────────────────────────────────────────────
       {
         date: '2026-05-07', kind: 'change',
