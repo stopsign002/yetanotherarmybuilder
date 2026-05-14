@@ -26,10 +26,25 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.14-5',
-    lastUpdated: '2026-05-14T15:00:00Z',
+    version:     '2026.05.14-6',
+    lastUpdated: '2026-05-14T18:00:00Z',
     entries: [
       // ── 2026-05-14 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-14', kind: 'feature',
+        title: 'Cards mode: army-rule spillover + optional mid-section splitting',
+        description:
+          'Long army-rule and detachment-rule cards can now overflow ' +
+          'onto the back of the card the same way unit cards do. Because ' +
+          'rule cards have a single body section, this is gated behind a ' +
+          'new "Split sections mid-content" checkbox under Spillover ' +
+          'handling — turn it on and the rule text splits paragraph-by-' +
+          'paragraph between primary and continuation. The same toggle ' +
+          'also lets dense unit sections (long ability lists, deep ' +
+          'weapon tables) break across primary and continuation instead ' +
+          'of moving the whole section to the back, so primary cards ' +
+          'fill up before anything spills.',
+      },
       {
         date: '2026-05-14', kind: 'fix',
         title: 'World Eaters: Jakhals show the right squad sizes (10 / 20)',
