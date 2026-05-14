@@ -157,7 +157,16 @@ window.YaabDB = (() => {
   // any weapon keyword starts with "anti-" — Knight Castellan's
   // shieldbreaker missile launcher was leaking "Anti-" into the core
   // abilities row.
-  const DB_VERSION = 30;
+  // v31: composition parser now (a) sums inner <selectionEntries>
+  // <selectionEntry type="model"> children of Pattern F upgrade-style
+  // composition picks (Jakhals' "N mauler chainblades, M chainblades"
+  // picks dropped the mauler count) and (b) honours a sibling
+  // <modifier type="set"> targeting an automatic group constraint so
+  // conditionally-bumped group max/min counts reach the model total
+  // (Jakhals' Dishonoured group bumps from 1 to 2 on the large
+  // compositions). Jakhals now correctly show 10 / 20 models instead
+  // of 9 / 19.
+  const DB_VERSION = 31;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

@@ -26,10 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.14-4',
-    lastUpdated: '2026-05-14T14:00:00Z',
+    version:     '2026.05.14-5',
+    lastUpdated: '2026-05-14T15:00:00Z',
     entries: [
       // ── 2026-05-14 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'World Eaters: Jakhals show the right squad sizes (10 / 20)',
+        description:
+          'Jakhals were offering "9 models — 65 pts" and "19 models — ' +
+          '140 pts" in the size dropdown instead of the correct 10 / 20. ' +
+          'Two parser gaps were stacking: large composition picks (e.g. ' +
+          '"2 mauler chainblades, 15 chainblades") encode the mauler ' +
+          'count as an inner model entry that the composition walker ' +
+          'wasn\'t summing, AND the Dishonoured sub-group\'s max is ' +
+          'conditionally bumped from 1 to 2 by a set-modifier that the ' +
+          'count walker ignored. Both are handled now.',
+      },
       {
         date: '2026-05-14', kind: 'fix',
         title: 'T’au: Mont’ka detachment now shows its stratagems',
