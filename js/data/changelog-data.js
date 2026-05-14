@@ -26,10 +26,33 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.14-3',
-    lastUpdated: '2026-05-14T13:30:00Z',
+    version:     '2026.05.14-4',
+    lastUpdated: '2026-05-14T14:00:00Z',
     entries: [
       // ── 2026-05-14 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'T’au: Mont’ka detachment now shows its stratagems',
+        description:
+          'The Mont’ka detachment’s stratagem list was empty in the ' +
+          'rules pinboard. The stratagem source uses a curly apostrophe ' +
+          '(Mont’ka) while the BattleScribe detachment name uses a ' +
+          'straight apostrophe (Mont\'ka), so the two never matched. ' +
+          'Detachment matching now folds curly→straight apostrophes and ' +
+          'ignores punctuation/spacing, so any apostrophe-bearing ' +
+          'detachment (Kau’yon, etc.) gets its stratagems too.',
+      },
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'Rule detail: "ARMY RULE" / "DETACHMENT RULE" subtitle bumped to a readable size',
+        description:
+          'The all-caps subtitle under an army-rule, detachment-rule, ' +
+          'enhancement, or stratagem name was rendering at 10px — small ' +
+          'enough to feel like a stray label rather than the rule kind. ' +
+          'Bumped to 13px (matching the rest of the detail meta row) and ' +
+          'gave the · phase suffix the same treatment so stratagem ' +
+          'phase tags read clearly too.',
+      },
       {
         date: '2026-05-14', kind: 'fix',
         title: 'Cards mode: continuation spillover now rides on the card’s back',
