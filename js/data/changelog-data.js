@@ -26,10 +26,27 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.14-6',
-    lastUpdated: '2026-05-14T18:00:00Z',
+    version:     '2026.05.14-7',
+    lastUpdated: '2026-05-14T19:00:00Z',
     entries: [
       // ── 2026-05-14 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'Dark Angels: Wrath of the Rock (and other chapter-exclusive detachments) show their stratagems',
+        description:
+          'Wrath of the Rock had no stratagems in the army-rules pinboard or ' +
+          'the stratagem browser. BSData defines the detachment inside the ' +
+          'parent Space Marines catalogue (gated to the Dark Angels chapter), ' +
+          'while the GDC ships its stratagems under the Dark Angels file — ' +
+          'the merge step only matched each faction’s stratagems against ' +
+          'its own detachment list, so DA’s stratagems tried to attach to ' +
+          'an empty list and SM’s "Wrath of the Rock" detachment got ' +
+          'nothing. The merge now also indexes the chapter’s parent ' +
+          'detachments, so chapter-exclusive detachments (Wrath of the Rock, ' +
+          'Inner Circle Task Force, Lion’s Blade Task Force, Unforgiven ' +
+          'Task Force, Company of Hunters, and any equivalent on other ' +
+          'chapters) get their stratagems attached correctly.',
+      },
       {
         date: '2026-05-14', kind: 'feature',
         title: 'Cards mode: army-rule spillover + optional mid-section splitting',
