@@ -1019,10 +1019,19 @@
   }
 
   // Build a back page that mirrors the cell grid of the front it follows.
-  // `frontCount` is how many cells on the corresponding front are filled
-  // (the rest become empty padders so the grid alignment matches when the
-  // sheet is flipped through the printer).
-  function buildBackPage(layout, frontCount, pageNum) {
+  // `frontCards` is the slice of cards on the corresponding front page
+  // (one per cell, possibly fewer than cardsPerPage — the rest become
+  // empty padders so the grid alignment matches when the sheet is
+  // flipped through the printer).
+  //
+  // For each filled slot we pick one of three renderings, in priority order:
+  //   1. The primary's `continuationHtml` (spillover, 'continuation' mode)
+  //      — the overflow rides on the back of its own primary, so when
+  //      the user prints odds, flips the stack, and prints evens, each
+  //      card has its own continuation on its reverse side.
+  //   2. The user's decorative card-back image (`cardBack.src`, duplex on).
+  //   3. An empty placeholder when neither applies.
+  function buildBackPage(layout, frontCards, pageNum) {
     const cardsPerPage = layout.cols * layout.rows;
     const frame = document.createElement('div');
     frame.className = 'dcc-page-frame';
@@ -1049,7 +1058,13 @@
 
     for (let i = 0; i < cardsPerPage; i++) {
       const cell = document.createElement('article');
-      if (i < frontCount && cardBack.src) {
+      const fc = frontCards[i];
+      if (fc && fc.continuationHtml) {
+        let cls = 'dcc-card dcc-card-' + fc.kind;
+        if (fc.continuationClasses) cls += ' ' + fc.continuationClasses;
+        cell.className = cls;
+        cell.innerHTML = fc.continuationHtml;
+      } else if (fc && cardBack.src) {
         cell.className = 'dcc-card dcc-card-back';
         cell.innerHTML = '<img class="dcc-back-img" alt="card back" src="'
           + cardBack.src.replace(/"/g, '&quot;') + '" style="' + imgVars + '">';
@@ -1196,6 +1211,19 @@
       }
 
       const primary = Object.assign({}, card, { html: firstHTML });
+      if (spilloverMode === 'continuation') {
+        // Continuation mode: the overflow rides on the BACK of its
+        // primary's slot instead of taking a fresh front-grid slot.
+        // This lets evens/odds duplex printing pair primary↔continuation
+        // automatically — print fronts, flip the stack, print backs, and
+        // each card's overflow lands on its own reverse side. Without
+        // this the continuation went to the next front slot and was
+        // backed by a (now redundant) decorative card-back, leaving the
+        // primary backed by an unrelated decorative back.
+        primary.continuationHtml = contHtml;
+        primary.continuationClasses = contClasses;
+        return [primary];
+      }
       const cont = Object.assign({}, card, {
         html: contHtml,
         isContinuation: true,
@@ -1242,9 +1270,15 @@
         pageNum++;
         frag.appendChild(buildPageElement(g.layout, slice, pageNum));
         pageCount++;
-        if (backsOn) {
+        // Emit a back page when either decorative backs are turned on
+        // OR any card on this slice carries a spillover continuation
+        // (which renders on the back of its primary's slot — see
+        // measureAndMaybeSplit). Without the continuation check the
+        // overflow would silently drop when card backs are disabled.
+        const sliceHasCont = slice.some(c => c && c.continuationHtml);
+        if (backsOn || sliceHasCont) {
           pageNum++;
-          frag.appendChild(buildBackPage(g.layout, slice.length, pageNum));
+          frag.appendChild(buildBackPage(g.layout, slice, pageNum));
           pageCount++;
         }
       }

@@ -26,10 +26,25 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.14-1',
-    lastUpdated: '2026-05-14T12:00:00Z',
+    version:     '2026.05.14-2',
+    lastUpdated: '2026-05-14T13:00:00Z',
     entries: [
       // ── 2026-05-14 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'Cards mode: continuation spillover now rides on the card’s back',
+        description:
+          'When a unit’s text overflowed and you had spillover set to ' +
+          '"Continuation card", the printout produced a primary front, a ' +
+          'decorative back, then the continuation as a separate card with ' +
+          'its own decorative back — two backs in a row, breaking the ' +
+          'evens/odds duplex workflow. The continuation now replaces the ' +
+          'decorative back of its own primary, so each card has its ' +
+          'overflow on its own reverse side. A back page is now also ' +
+          'generated for pages that have continuations even when card ' +
+          'backs are turned off. "Full card" spillover keeps the old ' +
+          'behaviour (separate front card with its own back).',
+      },
       {
         date: '2026-05-14', kind: 'fix',
         title: 'Imperial Knights Armigers: composition now shows "1 model"',
