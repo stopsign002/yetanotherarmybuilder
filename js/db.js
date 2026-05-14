@@ -143,7 +143,18 @@ window.YaabDB = (() => {
   // chapter's Land Raider / Predator / Intercessor was inheriting
   // Templar Vows because the parent SM file hardcodes the infoLink
   // on every unit with no conditional hide modifier.
-  const DB_VERSION = 28;
+  // v29: costs.js Pattern C now skips scope="force" constraints in
+  // addition to scope="roster" — those are force-/army-wide caps
+  // (rule-of-three style), not per-unit model counts. Imperial Knights
+  // Armigers carry a `<constraint type="max" value="3" field="selections"
+  // scope="force">` that previously made their composition show "3
+  // models" instead of "1 model". Also tightens the abilities filter in
+  // entry.js so the 10e core "Anti-" rule (literally named "Anti-" with
+  // a trailing hyphen) is recognised as a weapon-keyword family when
+  // any weapon keyword starts with "anti-" — Knight Castellan's
+  // shieldbreaker missile launcher was leaking "Anti-" into the core
+  // abilities row.
+  const DB_VERSION = 29;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

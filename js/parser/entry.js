@@ -205,7 +205,23 @@
       .filter(a => !DAMAGED_RE.test(a.name || ''))
       // Transport content is moved to unit.transportCapacity above.
       .filter(a => !transportEntries.includes(a))
-      .filter(a => !a.isCore || !weaponKeywordNames.has(a.name.toLowerCase()))
+      .filter(a => {
+        if (!a.isCore) return true;
+        const aName = (a.name || '').toLowerCase();
+        if (weaponKeywordNames.has(aName)) return false;
+        // The 10e core "Anti-" rule is literally named "Anti-" (with trailing
+        // hyphen) while weapon keywords are "Anti-Titanic 4+", "Anti-Infantry
+        // 4+", etc. — the arity strip above produces "anti-titanic", never the
+        // bare stem. Catch any trailing-hyphen rule name by prefix-matching
+        // against the weapon keywords (Knight Castellan's shieldbreaker missile
+        // launcher leaked "Anti-" into the core abilities row otherwise).
+        if (aName.endsWith('-')) {
+          for (const wk of weaponKeywordNames) {
+            if (wk.startsWith(aName)) return false;
+          }
+        }
+        return true;
+      })
       // Drop chapter-locked rules (Templar Vows etc.) when the current
       // faction isn't the matching chapter. See CHAPTER_LOCKED_RULES.
       .filter(a => isChapterLockedRuleApplicable(a.name, factionName))

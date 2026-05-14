@@ -26,9 +26,32 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.07-4',
-    lastUpdated: '2026-05-07T16:00:00Z',
+    version:     '2026.05.14-1',
+    lastUpdated: '2026-05-14T12:00:00Z',
     entries: [
+      // ── 2026-05-14 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'Imperial Knights Armigers: composition now shows "1 model"',
+        description:
+          'Armiger Warglaives, Helverins, and Moirax were showing "3 ' +
+          'models" in their composition line — that came from the ' +
+          'force-wide rule-of-three cap on the entry rather than a ' +
+          'real model count. Single-model unit entries with a ' +
+          'force-scope selection cap now correctly fall back to "1 ' +
+          'model" instead of inheriting the cap.',
+      },
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'Knight Castellan: stray "Anti-" tag removed from abilities',
+        description:
+          'The Knight Castellan was showing a bare "Anti-" entry in ' +
+          'its core abilities row, picked up from the shieldbreaker ' +
+          'missile launcher\'s weapon keyword family. The abilities ' +
+          'filter now recognises that the universal "Anti-" rule ' +
+          'belongs to whichever Anti-X weapon keyword the unit carries, ' +
+          'and keeps it off the core-abilities chip line.',
+      },
       // ── 2026-05-07 ──────────────────────────────────────────────────────
       {
         date: '2026-05-07', kind: 'change',
