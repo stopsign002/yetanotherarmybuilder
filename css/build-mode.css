@@ -689,9 +689,14 @@ body.build-mode-enhanced .army-entry-remove:hover {
     var(--panel-alt, #1a1a1a);
 }
 .unit-detail-rule .detail-rule-kind {
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--accent, #c8c8c8);
   font-weight: 700;
+}
+.unit-detail-rule .detail-rule-phase {
+  font-size: 13px;
+  color: var(--text-muted, #aaa);
+  font-weight: 600;
 }

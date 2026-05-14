@@ -176,16 +176,26 @@
       const payload = rawCache.get(file);
       if (!payload) return;
       const strats = Array.isArray(payload.stratagems) ? payload.stratagems : [];
-      const detNames = new Set((faction.detachments || []).map(d => d.name.toLowerCase()));
+      // Match on relaxed name key (curly→straight apostrophe folded,
+      // punctuation/spaces stripped). BSData decodes &apos; to a straight
+      // ASCII apostrophe ("Mont'ka") while GDC typically uses the curly
+      // form ("Mont’ka"); a plain lowercase compare misses them — Mont'ka
+      // Kau'yon, and any other apostrophe-bearing detachment lost their
+      // stratagems silently.
+      const detKeyToName = new Map();
+      (faction.detachments || []).forEach(d => {
+        detKeyToName.set(nameKey(d.name), d.name);
+      });
       const byDetachment = {};
       const factionWide = [];
       strats.forEach(raw => {
         const proj = projectStratagem(raw);
         if (!proj) return;
-        const dKey = (proj.detachment || '').toLowerCase();
-        if (dKey && detNames.has(dKey)) {
+        const dRaw = (proj.detachment || '').trim();
+        const dKey = nameKey(dRaw);
+        if (dKey && detKeyToName.has(dKey)) {
           (byDetachment[dKey] = byDetachment[dKey] || []).push(proj);
-        } else if (!dKey || dKey === 'core') {
+        } else if (!dRaw || dRaw.toLowerCase() === 'core') {
           factionWide.push(proj);
         } else {
           // The strat references a detachment this faction doesn't own.
@@ -194,7 +204,7 @@
         }
       });
       (faction.detachments || []).forEach(d => {
-        const list = byDetachment[d.name.toLowerCase()];
+        const list = byDetachment[nameKey(d.name)];
         if (list && list.length > 0) d.gdcStratagems = list;
       });
       if (factionWide.length > 0) faction.gdcFactionStratagems = factionWide;
