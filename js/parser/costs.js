@@ -39,6 +39,14 @@
       // Pattern F (composition picks): group contains upgrade entries that each
       // represent a "unit comp" choice whose entryLinks target model/unit entries
       // and carry the real per-option min/max. Squighog Boyz / Gretchin pattern.
+      //
+      // We also sum any inner <selectionEntries><selectionEntry type="model">
+      // children of the composition pick — Jakhals encode their large-size
+      // options ("1 mauler chainblade, 7 chainblades", "2 mauler chainblades,
+      // 15 chainblades", etc.) as an upgrade pick whose inner model entry
+      // carries the mauler count and whose entryLink covers the rest. Without
+      // walking the inner model the option dropped its mauler count and the
+      // total composition came up short.
       const compEntries = group.querySelectorAll(':scope > selectionEntries > selectionEntry[type="upgrade"]');
       if (compEntries.length > 0) {
         const compSizes = [];
@@ -57,6 +65,15 @@
               }
             });
           });
+          opt.querySelectorAll(':scope > selectionEntries > selectionEntry[type="model"]').forEach(model => {
+            model.querySelectorAll(':scope > constraints > constraint').forEach(c => {
+              const val = Math.round(parseFloat(I.getAttr(c, 'value', '0')));
+              if (!isNaN(val) && val > 0) {
+                if (I.getAttr(c, 'type') === 'min') oMin = (oMin || 0) + val;
+                if (I.getAttr(c, 'type') === 'max') oMax = (oMax || 0) + val;
+              }
+            });
+          });
           if (oMin !== null || oMax !== null) compSizes.push({ min: oMin, max: oMax });
         });
         if (compSizes.length > 0) {
@@ -67,14 +84,32 @@
         }
       }
 
-      // Pattern A
+      // Pattern A. When a constraint has automatic="true", its static value is
+      // a placeholder that a sibling <modifier type="set" field="<constraintId>">
+      // can override. Jakhals' "Dishonoured" group keeps a static max=1 and uses
+      // a conditional set-modifier to bump max to 2 when one of the large
+      // composition picks is selected; without honouring that we under-count by
+      // 1 on the big-size variant. We take the larger reachable value for max
+      // and the smaller for min so the final groupMin/groupMax span the actual
+      // count range across modifier conditions.
       if (groupMin === null && groupMax === null) {
         group.querySelectorAll(':scope > constraints > constraint').forEach(c => {
           const val = Math.round(parseFloat(I.getAttr(c, 'value', '0')));
-          if (!isNaN(val) && val > 0) {
-            if (I.getAttr(c, 'type') === 'min') groupMin = val;
-            if (I.getAttr(c, 'type') === 'max') groupMax = val;
+          if (isNaN(val) || val <= 0) return;
+          const cType = I.getAttr(c, 'type', '');
+          const cId   = I.getAttr(c, 'id', '');
+          let effective = val;
+          if (cId && I.getAttr(c, 'automatic', 'false') === 'true') {
+            group.querySelectorAll(':scope > modifiers > modifier[type="set"]').forEach(m => {
+              if (I.getAttr(m, 'field', '') !== cId) return;
+              const mv = Math.round(parseFloat(I.getAttr(m, 'value', '0')));
+              if (isNaN(mv) || mv <= 0) return;
+              if (cType === 'max') effective = Math.max(effective, mv);
+              else if (cType === 'min') effective = Math.min(effective, mv);
+            });
           }
+          if (cType === 'min') groupMin = effective;
+          if (cType === 'max') groupMax = effective;
         });
       }
 
