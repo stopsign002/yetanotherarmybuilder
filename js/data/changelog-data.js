@@ -26,9 +26,47 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.09-11',
-    lastUpdated: '2026-05-09T22:00:00Z',
+    version:     '2026.05.14-3',
+    lastUpdated: '2026-05-14T13:30:00Z',
     entries: [
+      // ── 2026-05-14 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'Cards mode: continuation spillover now rides on the card’s back',
+        description:
+          'When a unit’s text overflowed and you had spillover set to ' +
+          '"Continuation card", the printout produced a primary front, a ' +
+          'decorative back, then the continuation as a separate card with ' +
+          'its own decorative back — two backs in a row, breaking the ' +
+          'evens/odds duplex workflow. The continuation now replaces the ' +
+          'decorative back of its own primary, so each card has its ' +
+          'overflow on its own reverse side. A back page is now also ' +
+          'generated for pages that have continuations even when card ' +
+          'backs are turned off. "Full card" spillover keeps the old ' +
+          'behaviour (separate front card with its own back).',
+      },
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'Imperial Knights Armigers: composition now shows "1 model"',
+        description:
+          'Armiger Warglaives, Helverins, and Moirax were showing "3 ' +
+          'models" in their composition line — that came from the ' +
+          'force-wide rule-of-three cap on the entry rather than a ' +
+          'real model count. Single-model unit entries with a ' +
+          'force-scope selection cap now correctly fall back to "1 ' +
+          'model" instead of inheriting the cap.',
+      },
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'Knight Castellan: stray "Anti-" tag removed from abilities',
+        description:
+          'The Knight Castellan was showing a bare "Anti-" entry in ' +
+          'its core abilities row, picked up from the shieldbreaker ' +
+          'missile launcher\'s weapon keyword family. The abilities ' +
+          'filter now recognises that the universal "Anti-" rule ' +
+          'belongs to whichever Anti-X weapon keyword the unit carries, ' +
+          'and keeps it off the core-abilities chip line.',
+      },
       // ── 2026-05-09 ──────────────────────────────────────────────────────
       {
         date: '2026-05-09', kind: 'fix',

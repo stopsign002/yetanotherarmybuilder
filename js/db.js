@@ -146,7 +146,18 @@ window.YaabDB = (() => {
   // v29: parser now stores `catalogueId` on each faction and
   // `onlyCatalogues` / `notCatalogues` on chapter-exclusive detachments
   // (drives the detachment dropdown filter in selections.js).
-  const DB_VERSION = 29;
+  // v30: costs.js Pattern C now skips scope="force" constraints in
+  // addition to scope="roster" — those are force-/army-wide caps
+  // (rule-of-three style), not per-unit model counts. Imperial Knights
+  // Armigers carry a `<constraint type="max" value="3" field="selections"
+  // scope="force">` that previously made their composition show "3
+  // models" instead of "1 model". Also tightens the abilities filter in
+  // entry.js so the 10e core "Anti-" rule (literally named "Anti-" with
+  // a trailing hyphen) is recognised as a weapon-keyword family when
+  // any weapon keyword starts with "anti-" — Knight Castellan's
+  // shieldbreaker missile launcher was leaking "Anti-" into the core
+  // abilities row.
+  const DB_VERSION = 30;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

@@ -135,10 +135,14 @@
     // Pattern C — fallback for single-model units / characters that express their count
     // as entry-level constraints when groups and direct model children both yield nothing.
     // Restrict to field="selections" to avoid Crusade constraints (Battle Honours, etc.).
-    // Skip scope="roster" — those are army-wide caps (Rule of Three), not model counts.
+    // Skip scope="roster" / scope="force" — those are army-/force-wide caps
+    // (Rule of Three style), not per-unit model counts. Imperial Knights' Armigers
+    // carry a scope="force" max=3 cap that previously made composition show "3 models"
+    // instead of "1 model".
     if (minModels === null && maxModels === null) {
       entryEl.querySelectorAll(':scope > constraints > constraint[field="selections"]').forEach(c => {
-        if (I.getAttr(c, 'scope', '') === 'roster') return;
+        const scope = I.getAttr(c, 'scope', '');
+        if (scope === 'roster' || scope === 'force') return;
         const val = Math.round(parseFloat(I.getAttr(c, 'value', '0')));
         if (!isNaN(val) && val > 0) {
           if (I.getAttr(c, 'type') === 'min') minModels = val;
