@@ -107,9 +107,11 @@
 }
 
 /* ===========================================================================
-   Selected / active state — accent border + tint + corner dot.
-   Component CSS already styles .unit-card.selected; we add the corner dot
-   without overriding the existing border treatment.
+   Selected / active state — accent border + tint.
+   The accent border + selection ring is the only "you picked this" cue;
+   a previous version of this file added a small ::after dot at the
+   top-right corner, but that conflicted with the Reserves "×N" badge
+   anchored to the same corner. Per design call, the ring is enough.
    ========================================================================= */
 .yaab-card.is-selected,
 .yaab-card.selected,
@@ -123,24 +125,6 @@
     transparent 60%
   ),
   var(--yaab-card-bg-hover);
-}
-
-.yaab-card.is-selected::after,
-.yaab-card.selected::after,
-.unit-card.selected::after,
-.community-card.is-selected::after,
-.starter-card.is-selected::after {
-  content: '';
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--yaab-card-accent);
-  box-shadow: 0 0 6px rgba(var(--yaab-card-accent-rgb), 0.9);
-  pointer-events: none;
-  z-index: 2;
 }
 
 /* ===========================================================================

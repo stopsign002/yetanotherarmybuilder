@@ -1,0 +1,67 @@
+/* requisitions.css — Requisition Requests (wishlist) layer.
+   The actual stepper UI lives in the Details pane (rendered by
+   reserves.js's stockpile widget — the two stockpiles share one
+   widget). This stylesheet only owns:
+     - tinting for the Requisitions tab in the shared toggle
+     - the empty-state hint inside the unit pane */
+
+:root {
+  --requisitions-accent: #d39ec5; /* dusty pink */
+}
+
+/* The shared toggle tab gets a wishlist-pink active state. */
+.reserves-view-btn[data-view="requisitions"].active {
+  background: var(--requisitions-accent);
+  border-color: var(--requisitions-accent);
+  color: #1a0d16;
+}
+.reserves-view-btn[data-view="requisitions"] .reserves-view-icon {
+  color: var(--requisitions-accent);
+}
+.reserves-view-btn[data-view="requisitions"].active .reserves-view-icon {
+  color: #1a0d16;
+}
+
+/* ── empty-state note (for the requisitions view) ─────────────────── */
+.requisitions-empty-note {
+  margin: 0;
+  padding: 28px 24px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text, #ddd);
+  background:
+    linear-gradient(180deg, rgba(211, 158, 197, 0.06), rgba(211, 158, 197, 0.02)),
+    rgba(0, 0, 0, 0.15);
+  border: 1px dashed var(--requisitions-accent);
+  border-radius: 6px;
+}
+.requisitions-empty-note[hidden] { display: none; }
+.requisitions-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--requisitions-accent);
+  margin-bottom: 0;
+}
+.requisitions-empty-body { color: var(--text-muted, #bbb); max-width: 32em; }
+.requisitions-empty-link {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  color: var(--requisitions-accent);
+  padding: 1px 8px;
+  border-radius: 4px;
+  font: inherit;
+  cursor: pointer;
+}
+.requisitions-empty-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text, #eee);
+}
+.requisitions-empty-heart {
+  display: inline-block;
+  color: var(--requisitions-accent);
+  font-size: 13px;
+  vertical-align: -1px;
+}

@@ -8,45 +8,15 @@
   --coll-done:      #a8e6b7;
 }
 
-/* ── card badge: tiny dot top-right of each unit card ───────────────── */
-.unit-card {
-  position: relative; /* badge is absolutely positioned relative to card */
-}
-.unit-card.collection-none::after { content: none; }
-.unit-card.collection-unpainted::after,
-.unit-card.collection-primed::after,
-.unit-card.collection-painting::after,
-.unit-card.collection-done::after {
-  content: "";
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.35), 0 0 3px rgba(0,0,0,0.45);
-  pointer-events: none;
-  z-index: 2;
-}
-.unit-card.collection-unpainted::after { background: var(--coll-unpainted); }
-.unit-card.collection-primed::after    { background: var(--coll-primed);    }
-.unit-card.collection-painting::after  { background: var(--coll-painting);  }
-.unit-card.collection-done::after      { background: var(--coll-done);      }
-
-/* ── BUILD-mode cleanup ─────────────────────────────────────────────
-   Hide collection-only UI in BUILD mode. The user opts back into the
-   card status dots via Settings → "Show painting status badges on
-   cards" (which sets body.yaab-build-badges-on via collection.js).
-   COLLECT mode is a separate <section> so these rules never apply
-   there. The detail-panel widget (.collection-detail-widget) is
-   intentionally excluded — it's only visible per selected unit and
-   is useful while building. */
-body[data-mode="build"]:not(.yaab-build-badges-on) .unit-card.collection-unpainted::after,
-body[data-mode="build"]:not(.yaab-build-badges-on) .unit-card.collection-primed::after,
-body[data-mode="build"]:not(.yaab-build-badges-on) .unit-card.collection-painting::after,
-body[data-mode="build"]:not(.yaab-build-badges-on) .unit-card.collection-done::after {
-  content: none;
-}
+/* The per-card painting-status dot was retired — the Reserves "×N"
+   badge already conveys the only ownership signal users care about
+   while building, and the dot's ::after pseudo conflicted with both
+   legends-toggle.css's "LEGENDS" badge and (when we briefly tried
+   them) reserves badges in the same corner. The four .collection-*
+   classes are still applied to cards by js/app/collection.js and
+   surfaced inside the detail widget + Collect-mode dashboard, so
+   the data layer is unchanged.
+   .unit-card itself keeps `position: relative` from style.css. */
 
 /* Belt-and-suspenders for chips/notes/progress — collection.js also
    skips creating these in BUILD, but if a stale node is mid-tear-down

@@ -86,6 +86,8 @@ Grouped by user intent. One module per row; module path is the search target.
 | Browse | Community feed (curated army lists) | `js/app/community-feed.js`, `js/data/community-feed.json` |
 | Browse | First-time guided tour (retired; `js/app/first-time-tour.js` is a no-op stub — `App.replayTour` and `App.startTour` are empty so callers in `settings-drawer.js` don't crash. The Settings drawer "Replay onboarding tour" entry is still present but does nothing.) | `js/app/first-time-tour.js` |
 | Collection | Owned/painted tracker (per unit) | `js/app/collection.js` |
+| Collection | Reserves: owned-units stockpile w/ quantity, default unit-pane view | `js/app/reserves.js` |
+| Collection | Requisition Requests: wishlist of units w/ quantity | `js/app/requisitions.js` |
 | Polish | Confetti / save pulse / scanline / animated crest | `js/ui/celebrations.js`, `js/ui/save-pulse.js`, `js/ui/scanline.js`, `js/ui/animated-crest.js` |
 | Polish | Faction flavor quotes on empty army | `js/app/flavor.js` |
 | Polish | Hero CTA + Cmd+K hint + recent factions chip | `js/app/hero-state.js` |
@@ -128,6 +130,9 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_favorites` | localStorage | `favorites.js` | Starred unit ids | User data |
 | `yaab_recents` | localStorage | `favorites.js` | Recently-viewed unit ids | User data |
 | `yaab_collection` | localStorage | `collection.js` | Per-unit owned/painted status | User data |
+| `yaab_reserves` | localStorage | `reserves.js` | Per-unit owned quantity (`{unitId: qty}`); cloud-synced | User data |
+| `yaab_requisitions` | localStorage | `requisitions.js` | Per-unit wishlist quantity (`{unitId: qty}`); cloud-synced | User data |
+| `yaab_units_view` | localStorage | `reserves.js` | Active unit-pane view (`'reserves'` / `'requisitions'` / `'all'`) | User pref |
 | `yaab_crusade_rosters` | localStorage | `crusade.js` | Crusade rosters + XP + battle log | User data |
 | `yaab_match_state` | localStorage | `match-mode.js`, `stratagems.js` | Active match (CP, turn, VP) | Game-day state |
 | `yaab_opponent` | localStorage | `opponent.js` | Last-pasted opponent army | User data |

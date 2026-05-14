@@ -143,7 +143,10 @@ window.YaabDB = (() => {
   // chapter's Land Raider / Predator / Intercessor was inheriting
   // Templar Vows because the parent SM file hardcodes the infoLink
   // on every unit with no conditional hide modifier.
-  // v29: costs.js Pattern C now skips scope="force" constraints in
+  // v29: parser now stores `catalogueId` on each faction and
+  // `onlyCatalogues` / `notCatalogues` on chapter-exclusive detachments
+  // (drives the detachment dropdown filter in selections.js).
+  // v30: costs.js Pattern C now skips scope="force" constraints in
   // addition to scope="roster" — those are force-/army-wide caps
   // (rule-of-three style), not per-unit model counts. Imperial Knights
   // Armigers carry a `<constraint type="max" value="3" field="selections"
@@ -154,7 +157,7 @@ window.YaabDB = (() => {
   // any weapon keyword starts with "anti-" — Knight Castellan's
   // shieldbreaker missile launcher was leaking "Anti-" into the core
   // abilities row.
-  const DB_VERSION = 29;
+  const DB_VERSION = 30;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
