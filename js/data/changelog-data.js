@@ -26,26 +26,29 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.14-8',
-    lastUpdated: '2026-05-14T20:00:00Z',
+    version:     '2026.05.15-1',
+    lastUpdated: '2026-05-15T12:00:00Z',
     entries: [
-      // ── 2026-05-14 ──────────────────────────────────────────────────────
+      // ── 2026-05-15 ──────────────────────────────────────────────────────
       {
-        date: '2026-05-14', kind: 'change',
-        title: 'Cards mode: new defaults for corner rounding and typography + adjustable subtitle',
+        date: '2026-05-15', kind: 'change',
+        title: 'Cards mode: new 100% baseline for typography + softer default corners + subtitle slider',
         description:
-          'Corner rounding defaults are now 3mm card frame, 2mm header ' +
-          'corners, 2mm stat blocks, 2mm section heads — softer than the ' +
-          'old R4 / 1mm mix and consistent across the inner chrome. ' +
-          'Typography defaults nudged up too: unit name 120%, weapons ' +
-          '130%, section heads 130% (other groups unchanged). Existing ' +
-          'saved card prefs aren’t touched — only fresh installs see the ' +
-          'new defaults, and the "Reset" buttons under each panel still ' +
-          'snap back to defaults if you want them. The Typography panel ' +
-          'also gains a new "Subtitles" slider that scales the subtitle ' +
-          'line (ARMY RULE, DETACHMENT RULE, CORE / FACTION / ' +
-          'DETACHMENT STRATAGEM, PHASE: <name>, unit role / type) ' +
-          'independently of body and section-head sizes.',
+          'The print-tuned typography sizes that used to require pushing ' +
+          'each slider to 120–150% are now baked into the CSS bases, so ' +
+          '100% on every slider is the new readable-by-default size. ' +
+          'Sliders all default to 100%; the "Reset typography" button ' +
+          'snaps back there too. Saved prefs are auto-migrated on load — ' +
+          'your old 120 / 150 / 130 / 120 / 130 / 120 set lands at exactly ' +
+          '100% across the board (the new baseline), and any custom ' +
+          'tuning above or below those values is preserved as relative ' +
+          'offset from the new baseline. The Typography panel also gains ' +
+          'a new "Subtitles" slider that scales the subtitle line (ARMY ' +
+          'RULE, DETACHMENT RULE, CORE / FACTION / DETACHMENT STRATAGEM, ' +
+          'PHASE: <name>, unit role / type) independently of body and ' +
+          'section-head sizes. Corner-rounding defaults are also softer ' +
+          '(3mm card frame, 2mm header / stat-pills / section-heads) for ' +
+          'a more consistent look across the inner chrome.',
       },
       {
         date: '2026-05-14', kind: 'fix',

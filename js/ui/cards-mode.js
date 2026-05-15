@@ -178,9 +178,28 @@
           });
         }
         if (p.typography && typeof p.typography === 'object') {
-          ['nameSize','statSize','weaponSize','bodySize','headingSize','fineSize','subSize'].forEach(k => {
+          // v2 prefs migration: the pre-v2 CSS bases were tuned at the
+          // sliders' old defaults (name 1.20, stat 1.50, weapon 1.30,
+          // body 1.20, heading 1.30, fine 1.20, sub 1.00). We baked those
+          // into the CSS, so old saved values now over-scale. Divide each
+          // saved value by its bake factor on load; users who never moved
+          // a slider land on 100% (the new baseline), users who tuned
+          // higher/lower keep their relative preference intact.
+          const isV2 = p.prefsVersion === 2;
+          const BAKE = {
+            nameSize:    1.20,
+            statSize:    1.50,
+            weaponSize:  1.30,
+            bodySize:    1.20,
+            headingSize: 1.30,
+            fineSize:    1.20,
+            subSize:     1.00,
+          };
+          Object.keys(BAKE).forEach(k => {
             const n = parseFloat(p.typography[k]);
-            if (!Number.isNaN(n) && n > 0) typography[k] = Math.max(0.5, Math.min(2.0, n));
+            if (Number.isNaN(n) || n <= 0) return;
+            const v = isV2 ? n : (n / BAKE[k]);
+            typography[k] = Math.max(0.5, Math.min(2.0, v));
           });
           if (typeof p.typography.bold === 'boolean') typography.bold = p.typography.bold;
         }
@@ -210,6 +229,7 @@
     if (_suppressSave) return;
     try {
       const p = {
+        prefsVersion: 2,
         display: Object.assign({}, display),
         textureId, textureIntensity, borderColor,
         cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,
@@ -314,19 +334,20 @@
   // sits flush with the section body.
   let sectionHeadRadiusMm = 2;
   // Typography multipliers — each scales a group of font sizes by the
-  // user's chosen multiplier (0.8 → 1.5). Defaults bias slightly larger
-  // than the original baseline because the base sizes were tuned for
-  // screen + don't always print readably.
+  // user's chosen multiplier (0.8 → 1.5). 100% (1.0) is the tuned base
+  // size for printed legibility, picked after dialling things in on
+  // real prints; the multipliers exist so users can nudge any single
+  // group up or down without touching CSS.
   // `bold` adds weight 600 to the thin elements (.dcc-w-kw, .dcc-keywords,
   // .dcc-section-cols) so small printed text doesn't ghost.
   let typography = {
-    nameSize:    1.20,   // .dcc-name (the big card title)
-    statSize:    1.50,   // .dcc-stat-key + .dcc-stat-val
-    weaponSize:  1.30,   // .dcc-w-table (numbers, names, keywords)
-    bodySize:    1.20,   // .dcc-abilities-body, .dcc-wargear-body, .dcc-rule-text
-    headingSize: 1.30,   // .dcc-section-head (RANGED WEAPONS / ABILITIES / WARGEAR / etc.)
-    fineSize:    1.20,   // .dcc-keywords (footer) + .dcc-section-cols (col labels)
-    subSize:     1.00,   // .dcc-sub-line (rule-kind, stratagem-type, PHASE: tags)
+    nameSize:    1.00,
+    statSize:    1.00,
+    weaponSize:  1.00,
+    bodySize:    1.00,
+    headingSize: 1.00,
+    fineSize:    1.00,
+    subSize:     1.00,
     bold:        true,
   };
   const TYPOGRAPHY_DEFAULTS = JSON.parse(JSON.stringify(typography));
