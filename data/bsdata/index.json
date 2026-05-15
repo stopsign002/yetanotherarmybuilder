@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-15T06:04:52.646Z",
+  "generatedAt": "2026-05-15T10:38:22.797Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "117d5208dcf760f86f69ae321c422dc76c2bb9cb",
+  "sourceCommit": "85650e6691bfa5087b447dafd32a89521f20f58e",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -296,8 +296,8 @@
       "path": "Necrons.cat",
       "name": "Necrons",
       "type": "catalogue",
-      "sha": "0f671dec6f7b2b4d61751a1661c3c2701a122ffb",
-      "size": 1157665
+      "sha": "196275b039f1b19239df601f9cbf118065eb1414",
+      "size": 1159547
     },
     {
       "path": "Orks.cat",
