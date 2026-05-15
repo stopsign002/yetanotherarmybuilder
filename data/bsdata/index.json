@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-13T05:57:53.181Z",
+  "generatedAt": "2026-05-15T06:04:52.646Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "c425991ebb75c715771119498662e06abfac0d04",
+  "sourceCommit": "117d5208dcf760f86f69ae321c422dc76c2bb9cb",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -37,8 +37,8 @@
       "path": "Chaos - Chaos Daemons Library.cat",
       "name": "Chaos - Chaos Daemons Library",
       "type": "catalogue",
-      "sha": "70722fc80222a19a6b1444dec6c9c437a55b78f4",
-      "size": 1369155
+      "sha": "c8b14130ddffd31fa403d6a8f069e3ee25f06e37",
+      "size": 1369991
     },
     {
       "path": "Chaos - Chaos Daemons.cat",
@@ -268,8 +268,8 @@
       "path": "Leagues of Votann.cat",
       "name": "Leagues of Votann",
       "type": "catalogue",
-      "sha": "ca9892f1e76933a88c0bfed729ac65db1d22b083",
-      "size": 953217
+      "sha": "ce92002f1acd51d98e36dc4071479d83587b899f",
+      "size": 953100
     },
     {
       "path": "Library - Astartes Heresy Legends.cat",
