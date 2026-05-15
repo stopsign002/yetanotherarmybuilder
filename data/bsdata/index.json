@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-15T10:38:22.797Z",
+  "generatedAt": "2026-05-15T16:16:45.617Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "85650e6691bfa5087b447dafd32a89521f20f58e",
+  "sourceCommit": "b9932fb8257e7baeb2ddeac2110d74b6f090f9af",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -100,8 +100,8 @@
       "path": "Chaos - World Eaters.cat",
       "name": "Chaos - World Eaters",
       "type": "catalogue",
-      "sha": "c447784652deb6bde05b8f6f1259bf8bebcc6085",
-      "size": 1042034
+      "sha": "e73a767040c1d527afb8a2060261e5d51932b8a6",
+      "size": 1041806
     },
     {
       "path": "Genestealer Cults.cat",
