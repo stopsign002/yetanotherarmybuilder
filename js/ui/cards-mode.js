@@ -178,15 +178,20 @@
           });
         }
         if (p.typography && typeof p.typography === 'object') {
-          // v2 prefs migration: the pre-v2 CSS bases were tuned at the
-          // sliders' old defaults (name 1.20, stat 1.50, weapon 1.30,
-          // body 1.20, heading 1.30, fine 1.20, sub 1.00). We baked those
-          // into the CSS, so old saved values now over-scale. Divide each
-          // saved value by its bake factor on load; users who never moved
-          // a slider land on 100% (the new baseline), users who tuned
-          // higher/lower keep their relative preference intact.
-          const isV2 = p.prefsVersion === 2;
-          const BAKE = {
+          // Stepwise typography-prefs migration. Each time we bake a
+          // slider default into the CSS base, we bump prefsVersion and
+          // add a divide-by-factor step here. Loading older prefs walks
+          // through every step their version hasn't been through yet, so
+          // a user lands at the same rendered size as before regardless
+          // of which migration era their save predates.
+          //   v1 → v2 (typography baseline bake — name/stat/weapon/body/
+          //            heading/fine retuned to their slider preferences):
+          //     name 1.20 / stat 1.50 / weapon 1.30 / body 1.20 /
+          //     heading 1.30 / fine 1.20 / sub 1.00 (no change yet).
+          //   v2 → v3 (subtitle baseline bake to 130%):
+          //     sub 1.30.
+          const ver = (typeof p.prefsVersion === 'number' && p.prefsVersion > 0) ? p.prefsVersion : 1;
+          const BAKE_V2 = {
             nameSize:    1.20,
             statSize:    1.50,
             weaponSize:  1.30,
@@ -195,10 +200,13 @@
             fineSize:    1.20,
             subSize:     1.00,
           };
-          Object.keys(BAKE).forEach(k => {
+          const BAKE_V3 = { subSize: 1.30 };
+          Object.keys(BAKE_V2).forEach(k => {
             const n = parseFloat(p.typography[k]);
             if (Number.isNaN(n) || n <= 0) return;
-            const v = isV2 ? n : (n / BAKE[k]);
+            let v = n;
+            if (ver < 2 && BAKE_V2[k]) v = v / BAKE_V2[k];
+            if (ver < 3 && BAKE_V3[k]) v = v / BAKE_V3[k];
             typography[k] = Math.max(0.5, Math.min(2.0, v));
           });
           if (typeof p.typography.bold === 'boolean') typography.bold = p.typography.bold;
@@ -229,7 +237,7 @@
     if (_suppressSave) return;
     try {
       const p = {
-        prefsVersion: 2,
+        prefsVersion: 3,
         display: Object.assign({}, display),
         textureId, textureIntensity, borderColor,
         cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,

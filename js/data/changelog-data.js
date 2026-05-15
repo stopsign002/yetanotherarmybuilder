@@ -26,10 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-2',
-    lastUpdated: '2026-05-15T13:00:00Z',
+    version:     '2026.05.15-3',
+    lastUpdated: '2026-05-15T14:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Cards mode: subtitle baseline baked at 130%',
+        description:
+          'The Subtitles slider now treats 130% as the new 100%. The ' +
+          'CSS base for the subtitle line was scaled up to match, and ' +
+          'saved prefs are auto-migrated on load (prefsVersion stepped ' +
+          '2 → 3) — a user whose slider was at 130% lands at 100%, ' +
+          'custom tunes above or below stay as a relative offset.',
+      },
       {
         date: '2026-05-15', kind: 'change',
         title: 'Cards mode: stratagem subtitle bolded',
