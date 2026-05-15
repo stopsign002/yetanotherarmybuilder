@@ -26,10 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-1',
-    lastUpdated: '2026-05-15T12:00:00Z',
+    version:     '2026.05.15-2',
+    lastUpdated: '2026-05-15T13:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Cards mode: stratagem subtitle bolded',
+        description:
+          'The stratagem-card subtitle (CORE / FACTION / DETACHMENT ' +
+          'STRATAGEM + PHASE: <name>) now renders at weight 700 so it ' +
+          'reads cleanly against the bronze CP pill. Rule and unit ' +
+          'subtitles are unchanged.',
+      },
       {
         date: '2026-05-15', kind: 'change',
         title: 'Cards mode: new 100% baseline for typography + softer default corners + subtitle slider',

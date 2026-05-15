@@ -710,6 +710,11 @@
   margin-left: auto;
 }
 .dcc-strat-phase { margin-left: auto; opacity: 0.85; }
+/* Stratagem subtitle (CORE / FACTION / DETACHMENT STRATAGEM + PHASE: …)
+ * is the only header label that has to fight a busy bronze CP pill for
+ * attention, so it gets weight 700 unconditionally. Rule + unit
+ * subtitles stay at the .dcc-sub-line default weight. */
+.dcc-head-strat .dcc-sub-line { font-weight: 700; }
 
 /* Stratagem CP pill */
 .dcc-head-strat .dcc-cp {
