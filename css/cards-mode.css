@@ -693,7 +693,7 @@
 }
 .dcc-sub-line {
   display: flex; align-items: center; gap: 1.6mm;
-  font-size: 2.2mm;
+  font-size: calc(2.2mm * var(--dcc-sub-mul, 1));
   margin-top: 0.6mm;
   color: #d8d8d2;
   text-transform: uppercase;

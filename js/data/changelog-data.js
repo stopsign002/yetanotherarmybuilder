@@ -26,10 +26,27 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.14-7',
-    lastUpdated: '2026-05-14T19:00:00Z',
+    version:     '2026.05.14-8',
+    lastUpdated: '2026-05-14T20:00:00Z',
     entries: [
       // ── 2026-05-14 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-14', kind: 'change',
+        title: 'Cards mode: new defaults for corner rounding and typography + adjustable subtitle',
+        description:
+          'Corner rounding defaults are now 3mm card frame, 2mm header ' +
+          'corners, 2mm stat blocks, 2mm section heads — softer than the ' +
+          'old R4 / 1mm mix and consistent across the inner chrome. ' +
+          'Typography defaults nudged up too: unit name 120%, weapons ' +
+          '130%, section heads 130% (other groups unchanged). Existing ' +
+          'saved card prefs aren’t touched — only fresh installs see the ' +
+          'new defaults, and the "Reset" buttons under each panel still ' +
+          'snap back to defaults if you want them. The Typography panel ' +
+          'also gains a new "Subtitles" slider that scales the subtitle ' +
+          'line (ARMY RULE, DETACHMENT RULE, CORE / FACTION / ' +
+          'DETACHMENT STRATAGEM, PHASE: <name>, unit role / type) ' +
+          'independently of body and section-head sizes.',
+      },
       {
         date: '2026-05-14', kind: 'fix',
         title: 'Dark Angels: Wrath of the Rock (and other chapter-exclusive detachments) show their stratagems',

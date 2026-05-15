@@ -121,6 +121,7 @@
       '  --dcc-body-mul: '    + t.bodySize    + ';',
       '  --dcc-heading-mul: ' + t.headingSize + ';',
       '  --dcc-fine-mul: '    + t.fineSize    + ';',
+      '  --dcc-sub-mul: '     + t.subSize     + ';',
       '}',
       // When `bold` is on, push thin text from weight 400 to 600 so it
       // survives at-size print rendering.
@@ -177,7 +178,7 @@
           });
         }
         if (p.typography && typeof p.typography === 'object') {
-          ['nameSize','statSize','weaponSize','bodySize','headingSize','fineSize'].forEach(k => {
+          ['nameSize','statSize','weaponSize','bodySize','headingSize','fineSize','subSize'].forEach(k => {
             const n = parseFloat(p.typography[k]);
             if (!Number.isNaN(n) && n > 0) typography[k] = Math.max(0.5, Math.min(2.0, n));
           });
@@ -279,9 +280,11 @@
   // <style id="cards-texture-style"> element managed by applyTextureStyle().
   let textureId        = DEFAULT_TEXTURE;
   let textureIntensity = DEFAULT_INTENSITY;
-  // Card corner radius in mm. Default 4mm (R4 — matches the most common
-  // physical corner-cutter setting for trading cards).
-  let cornerRadiusMm = 4;
+  // Card corner radius in mm. Default 3mm — slightly tighter than the
+  // classic R4 corner-cutter setting; pairs well with the 2mm inner
+  // radii below so the title bar, stat pills, and section heads share
+  // a consistent soft-rectangle feel.
+  let cornerRadiusMm = 3;
   // Spillover handling for unit cards whose content overflows:
   //   'continuation' — partial parchment overlay sized to content,
   //                    user's card-back art bleeds through underneath
@@ -303,13 +306,13 @@
   // Title-bar header corner radius in mm. Independent of the card-frame
   // radius so users can tune the dark-bar shape (square / softly
   // rounded / matching-the-card) without affecting the gilded frame.
-  let headerRadiusMm = 3;
+  let headerRadiusMm = 2;
   // Stat-cell pill rounding (M / T / SV / W / LD / OC blocks).
-  let statRadiusMm = 1;
+  let statRadiusMm = 2;
   // Category-header bar rounding (RANGED WEAPONS / ABILITIES / WARGEAR
   // bronze bars). Only top-left + top-right are visible — the bottom
   // sits flush with the section body.
-  let sectionHeadRadiusMm = 1;
+  let sectionHeadRadiusMm = 2;
   // Typography multipliers — each scales a group of font sizes by the
   // user's chosen multiplier (0.8 → 1.5). Defaults bias slightly larger
   // than the original baseline because the base sizes were tuned for
@@ -317,12 +320,13 @@
   // `bold` adds weight 600 to the thin elements (.dcc-w-kw, .dcc-keywords,
   // .dcc-section-cols) so small printed text doesn't ghost.
   let typography = {
-    nameSize:    1.10,   // .dcc-name (the big card title)
+    nameSize:    1.20,   // .dcc-name (the big card title)
     statSize:    1.50,   // .dcc-stat-key + .dcc-stat-val
-    weaponSize:  1.25,   // .dcc-w-table (numbers, names, keywords)
+    weaponSize:  1.30,   // .dcc-w-table (numbers, names, keywords)
     bodySize:    1.20,   // .dcc-abilities-body, .dcc-wargear-body, .dcc-rule-text
-    headingSize: 1.20,   // .dcc-section-head (RANGED WEAPONS / ABILITIES / WARGEAR / etc.)
+    headingSize: 1.30,   // .dcc-section-head (RANGED WEAPONS / ABILITIES / WARGEAR / etc.)
     fineSize:    1.20,   // .dcc-keywords (footer) + .dcc-section-cols (col labels)
+    subSize:     1.00,   // .dcc-sub-line (rule-kind, stratagem-type, PHASE: tags)
     bold:        true,
   };
   const TYPOGRAPHY_DEFAULTS = JSON.parse(JSON.stringify(typography));
@@ -1694,6 +1698,7 @@
           ['bodySize',    'Body text (abilities, wargear, rule text)'],
           ['headingSize', 'Section heads (RANGED WEAPONS / ABILITIES / etc.)'],
           ['fineSize',    'Fine print (footer keywords, column labels)'],
+          ['subSize',     'Subtitles (ARMY RULE, CORE STRATAGEM, PHASE: …)'],
         ].map(([k, label]) => {
           const pct = Math.round(typography[k] * 100);
           return `
