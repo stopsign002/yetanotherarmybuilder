@@ -28,6 +28,7 @@
     'yaab_deployments',
     'yaab_points_overrides',
     'yaab_cards_prefs',
+    'yaab_cards_presets',
   ];
   const BAG_KEY_SET = new Set(SYNCED_BAG_KEYS);
 

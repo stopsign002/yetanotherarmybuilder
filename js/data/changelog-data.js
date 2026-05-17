@@ -26,10 +26,35 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-3',
-    lastUpdated: '2026-05-15T14:00:00Z',
+    version:     '2026.05.15-4',
+    lastUpdated: '2026-05-15T15:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'feature',
+        title: 'Cards mode: save and recall named presets',
+        description:
+          'A new Presets section at the top of the Layout sub-tab lets ' +
+          'you save the current colours, typography, layout, spillover ' +
+          'settings, and back-image selection under a name (e.g. ' +
+          '“steve orks”). Pick a preset from the dropdown to snap every ' +
+          'setting back the next time you print a second batch for the ' +
+          'same customer. Save as new, update the active preset, ' +
+          'rename, and delete are all available. Presets sync across ' +
+          'your devices when you’re signed in.',
+      },
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Cards mode: preview no longer blanks after tab-switching back',
+        description:
+          'Tabbing away from the browser and coming back made the card ' +
+          'preview show "Nothing selected yet" until you flipped to ' +
+          'another mode and back. The visibilitychange-triggered cloud ' +
+          'sync was firing an armyChange that reset the picker’s ' +
+          'include sets to null without re-defaulting them. The handler ' +
+          'now re-runs syncIncludeDefaults() before redrawing, so the ' +
+          'preview stays populated.',
+      },
       {
         date: '2026-05-15', kind: 'change',
         title: 'Cards mode: subtitle baseline baked at 130%',

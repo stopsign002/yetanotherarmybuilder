@@ -169,6 +169,7 @@
           spilloverMode = p.spilloverMode;
         }
         if (typeof p.allowPartialSection === 'boolean') allowPartialSection = p.allowPartialSection;
+        if (typeof p.activePresetId === 'string' || p.activePresetId === null) activePresetId = p.activePresetId;
         if (typeof p.activeLayoutId === 'string')   activeLayoutId   = p.activeLayoutId;
         if (p.layoutByKind && typeof p.layoutByKind === 'object') {
           ['unit','rule','strat'].forEach(k => {
@@ -243,6 +244,7 @@
         cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,
         spilloverMode,
         allowPartialSection,
+        activePresetId,
         activeLayoutId,
         layoutByKind: Object.assign({}, layoutByKind),
         typography: Object.assign({}, typography),
@@ -255,6 +257,130 @@
       };
       localStorage.setItem(PREFS_KEY, JSON.stringify(p));
     } catch (_) {}
+  }
+
+  // ── Presets ───────────────────────────────────────────────────────────
+  // Named snapshots of every card-render setting, so the user can save a
+  // tuned look ("steve orks", "leah eldar", …) and re-apply it later when
+  // they print a second batch for the same commission. The preset stores
+  // every value that affects rendering — texture, border colour, corner
+  // radii, typography, spillover, layout, display toggles, card-back
+  // image (by ImageStore id + name, plus offsets/scale). The image
+  // bytes live in ImageStore so we don't bloat the localStorage budget;
+  // if the user deletes the image from their library, the preset still
+  // applies everything else and just falls back to "no image".
+  //
+  // The presets array is synced across devices via sync.js's bag layer
+  // (yaab_cards_presets is in SYNCED_BAG_KEYS), so a preset tuned on
+  // the laptop is available the next time the user signs in on the
+  // print machine.
+  const PRESETS_KEY = 'yaab_cards_presets';
+  let presets = [];           // array of { id, name, createdAt, updatedAt, settings }
+  let activePresetId = null;  // last-applied preset's id; tracks the dropdown selection
+
+  function loadPresets() {
+    try {
+      const raw = localStorage.getItem(PRESETS_KEY);
+      if (!raw) { presets = []; return; }
+      const parsed = JSON.parse(raw);
+      presets = Array.isArray(parsed) ? parsed.filter(p => p && p.id && p.name) : [];
+    } catch (_) { presets = []; }
+  }
+  function savePresets() {
+    try { localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); } catch (_) {}
+  }
+  function nowIso() { return new Date().toISOString(); }
+  function newPresetId() {
+    return 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  // Snapshot every render setting into a plain JSON-able object.
+  function captureSettings() {
+    return {
+      display:             Object.assign({}, display),
+      textureId, textureIntensity, borderColor,
+      cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,
+      spilloverMode, allowPartialSection,
+      activeLayoutId,
+      layoutByKind:        Object.assign({}, layoutByKind),
+      typography:          Object.assign({}, typography),
+      cardBack: {
+        enabled:  cardBack.enabled,
+        scale:    cardBack.scale,
+        offsetX:  cardBack.offsetX,
+        offsetY:  cardBack.offsetY,
+        activeId: cardBack.activeId,
+        name:     cardBack.name,
+      },
+    };
+  }
+  // Apply a captured-settings object onto module state. Permissive: any
+  // missing field falls back to the current value, so an older-shape
+  // preset (one saved before a new setting was added) still applies
+  // cleanly without nuking the newer settings.
+  function applySettings(s) {
+    if (!s || typeof s !== 'object') return;
+    if (s.display && typeof s.display === 'object') {
+      Object.keys(DEFAULT_DISPLAY).forEach(k => {
+        if (typeof s.display[k] === 'boolean') display[k] = s.display[k];
+      });
+    }
+    if (typeof s.textureId === 'string')         textureId         = s.textureId;
+    if (typeof s.textureIntensity === 'number')  textureIntensity  = s.textureIntensity;
+    if (typeof s.borderColor === 'string')       borderColor       = s.borderColor;
+    if (typeof s.cornerRadiusMm === 'number')    cornerRadiusMm    = s.cornerRadiusMm;
+    if (typeof s.headerRadiusMm === 'number')    headerRadiusMm    = s.headerRadiusMm;
+    if (typeof s.statRadiusMm === 'number')      statRadiusMm      = s.statRadiusMm;
+    if (typeof s.sectionHeadRadiusMm === 'number') sectionHeadRadiusMm = s.sectionHeadRadiusMm;
+    if (s.spilloverMode === 'continuation' || s.spilloverMode === 'fullCard') spilloverMode = s.spilloverMode;
+    if (typeof s.allowPartialSection === 'boolean') allowPartialSection = s.allowPartialSection;
+    if (typeof s.activeLayoutId === 'string')    activeLayoutId    = s.activeLayoutId;
+    if (s.layoutByKind && typeof s.layoutByKind === 'object') {
+      ['unit','rule','strat'].forEach(k => {
+        if (s.layoutByKind[k] === null || typeof s.layoutByKind[k] === 'string') {
+          layoutByKind[k] = s.layoutByKind[k];
+        }
+      });
+    }
+    if (s.typography && typeof s.typography === 'object') {
+      ['nameSize','statSize','weaponSize','bodySize','headingSize','fineSize','subSize'].forEach(k => {
+        const n = parseFloat(s.typography[k]);
+        if (!Number.isNaN(n) && n > 0) typography[k] = Math.max(0.5, Math.min(2.0, n));
+      });
+      if (typeof s.typography.bold === 'boolean') typography.bold = s.typography.bold;
+    }
+    if (s.cardBack && typeof s.cardBack === 'object') {
+      if (typeof s.cardBack.enabled === 'boolean') cardBack.enabled = s.cardBack.enabled;
+      if (typeof s.cardBack.scale   === 'number')  cardBack.scale   = s.cardBack.scale;
+      if (typeof s.cardBack.offsetX === 'number')  cardBack.offsetX = s.cardBack.offsetX;
+      if (typeof s.cardBack.offsetY === 'number')  cardBack.offsetY = s.cardBack.offsetY;
+      if (s.cardBack.activeId != null) {
+        // Resolve the image dataUrl from the loaded library. If the
+        // preset's image was deleted, fall back to no image (everything
+        // else still applies). reloadSavedImages() runs at mount + on
+        // auth change, so savedImages is usually warm here.
+        const img = savedImages.find(i => String(i.id) === String(s.cardBack.activeId));
+        if (img) {
+          cardBack.activeId = img.id;
+          cardBack.src      = img.dataUrl;
+          cardBack.name     = img.name || s.cardBack.name || '';
+        } else {
+          cardBack.activeId = null;
+          cardBack.src      = '';
+          cardBack.name     = '';
+        }
+      } else {
+        cardBack.activeId = null;
+        cardBack.src      = '';
+        cardBack.name     = '';
+      }
+    }
+  }
+
+  function findPreset(id) { return presets.find(p => p.id === id) || null; }
+  function getActivePresetName() {
+    const p = findPreset(activePresetId);
+    return p ? p.name : '';
   }
 
   // ── Display toggles ──────────────────────────────────────────────────────
@@ -1588,6 +1714,35 @@
       </label>`;
     const html = `
       <div class="cards-layout-section">
+        <div class="cards-disp-heading">Presets</div>
+        <p class="cards-help">
+          Save the current colours, typography, layout, and back-image
+          selection as a named preset. Useful when you print a second
+          batch for the same customer months later — pick the preset
+          to snap every setting back. Presets sync across your devices
+          when you're signed in.
+        </p>
+        <label class="cards-field">
+          <span class="cards-field-label">Active preset</span>
+          <select class="cards-select" id="cards-preset-select">
+            <option value="">— None —</option>
+            ${presets.map(p =>
+              `<option value="${esc(p.id)}"${p.id === activePresetId ? ' selected' : ''}>${esc(p.name)}</option>`
+            ).join('')}
+          </select>
+        </label>
+        <div class="cards-field" style="padding:6px 12px 0; display:flex; flex-wrap:wrap; gap:6px;">
+          <button type="button" class="cards-link-btn" id="cards-preset-new">Save current as new…</button>
+          <button type="button" class="cards-link-btn" id="cards-preset-update"
+                  ${activePresetId ? '' : 'disabled'}>Update “${esc(getActivePresetName() || '…')}”</button>
+          <button type="button" class="cards-link-btn" id="cards-preset-rename"
+                  ${activePresetId ? '' : 'disabled'}>Rename…</button>
+          <button type="button" class="cards-link-btn" id="cards-preset-delete"
+                  ${activePresetId ? '' : 'disabled'} style="color:#d97a7a;">Delete</button>
+        </div>
+      </div>
+
+      <div class="cards-layout-section">
         <div class="cards-disp-heading">Default sheet</div>
         <p class="cards-help">Used for any category that doesn't set its own override below.</p>
         <label class="cards-field">
@@ -1898,6 +2053,20 @@
   }
 
   function onSidebarChange(e) {
+    // Preset dropdown — auto-apply on selection.
+    if (e.target && e.target.id === 'cards-preset-select') {
+      const id = e.target.value || null;
+      activePresetId = id;
+      if (id) {
+        const p = findPreset(id);
+        if (p) applySettings(p.settings);
+      }
+      applyDynamicStyle();
+      refreshSidebar();
+      refreshPreview();
+      refreshSummary();
+      return;
+    }
     // Layout: global preset
     if (e.target && e.target.id === 'cards-layout-global') {
       activeLayoutId = e.target.value || DEFAULT_LAYOUT;
@@ -2097,6 +2266,56 @@
     }
   }
   function onSidebarClick(e) {
+    // Preset buttons (save / update / rename / delete).
+    if (e.target && e.target.id === 'cards-preset-new') {
+      const name = (window.prompt('Name this preset (e.g. "steve orks")') || '').trim();
+      if (!name) return;
+      const p = {
+        id: newPresetId(),
+        name,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+        settings: captureSettings(),
+      };
+      presets.push(p);
+      activePresetId = p.id;
+      savePresets();
+      refreshSidebar();
+      if (UI && UI.toast) UI.toast('Saved preset “' + name + '”', 'success');
+      return;
+    }
+    if (e.target && e.target.id === 'cards-preset-update') {
+      const p = findPreset(activePresetId);
+      if (!p) return;
+      if (!window.confirm('Overwrite preset “' + p.name + '” with the current settings?')) return;
+      p.settings  = captureSettings();
+      p.updatedAt = nowIso();
+      savePresets();
+      refreshSidebar();
+      if (UI && UI.toast) UI.toast('Updated preset “' + p.name + '”', 'success');
+      return;
+    }
+    if (e.target && e.target.id === 'cards-preset-rename') {
+      const p = findPreset(activePresetId);
+      if (!p) return;
+      const name = (window.prompt('Rename preset', p.name) || '').trim();
+      if (!name || name === p.name) return;
+      p.name      = name;
+      p.updatedAt = nowIso();
+      savePresets();
+      refreshSidebar();
+      return;
+    }
+    if (e.target && e.target.id === 'cards-preset-delete') {
+      const p = findPreset(activePresetId);
+      if (!p) return;
+      if (!window.confirm('Delete preset “' + p.name + '”? This can\'t be undone.')) return;
+      presets = presets.filter(x => x.id !== activePresetId);
+      activePresetId = null;
+      savePresets();
+      refreshSidebar();
+      return;
+    }
     // Inner category tabs (Pick cards: Units/Rules/Stratagems)
     const catTab = e.target.closest('.cards-cat-tab');
     if (catTab) {
@@ -2356,6 +2575,7 @@
     // Hydrate prefs from localStorage (sync.js pulled the bag into LS by
     // the time bootstrap fires for already-signed-in users).
     loadPrefs();
+    loadPresets();
     applyDynamicStyle();
     // Kick off saved-image load in the background so it's ready by the
     // time the user opens the Layout sub-tab.
@@ -2367,6 +2587,7 @@
     if (App.Auth && typeof App.Auth.onChange === 'function') {
       App.Auth.onChange(() => {
         loadPrefs();
+        loadPresets();
         applyDynamicStyle();
         reloadSavedImages().then(() => {
           if (mounted) {
@@ -2379,8 +2600,9 @@
     }
     // Re-load prefs when localStorage changes from another tab.
     window.addEventListener('storage', e => {
-      if (e.key === PREFS_KEY) {
-        loadPrefs();
+      if (e.key === PREFS_KEY || e.key === PRESETS_KEY) {
+        if (e.key === PREFS_KEY)    loadPrefs();
+        if (e.key === PRESETS_KEY)  loadPresets();
         applyDynamicStyle();
         if (mounted) {
           refreshSidebar();
@@ -2431,6 +2653,7 @@
       // resolves between bootstrap and the user's first click on the
       // Cards tab).
       loadPrefs();
+      loadPresets();
       applyDynamicStyle();
       renderHost();
     });
@@ -2439,6 +2662,16 @@
     App.hooks.armyChange.push(() => {
       include = { units: null, rules: null, strats: null };
       if (mounted && App.getMode && App.getMode() === 'cards') {
+        // Repopulate include sets from the new army before redrawing —
+        // otherwise refreshPreview sees `include.units === null`, treats
+        // every card as deselected, and shows the empty-state "Nothing
+        // selected yet" message until the user mode-switches (which
+        // calls renderHost → syncIncludeDefaults). This was the
+        // disappearing-cards-after-tab-switch bug: sync.js's
+        // visibilitychange listener pulls fresh server state, the army
+        // manager fires armyChange even when nothing changed, and the
+        // preview blanked because of the un-defaulted include.
+        syncIncludeDefaults();
         refreshSidebar(); refreshPreview(); refreshSummary();
       }
     });
@@ -2446,6 +2679,7 @@
   if (Array.isArray(App.hooks.selectionChange)) {
     App.hooks.selectionChange.push(() => {
       if (mounted && App.getMode && App.getMode() === 'cards') {
+        syncIncludeDefaults();
         refreshSidebar(); refreshPreview(); refreshSummary();
       }
     });
