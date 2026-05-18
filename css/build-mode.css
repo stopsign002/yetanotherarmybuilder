@@ -530,16 +530,36 @@ body.build-mode-enhanced .army-entry-name {
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--text, #ddd);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* The outer name row stays flex (title + squad label side by side),
+     but content is allowed to wrap — the title element inside owns the
+     2-line clamp. Removing the single-line ellipsis at this level was
+     needed so a long title isn't truncated by THIS box's overflow
+     rules before the inner -webkit-line-clamp gets a turn. */
   display: flex;
   align-items: baseline;
   gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 body.build-mode-enhanced .army-entry-title {
+  /* 2-line clamp: long names ("Brôkhyr Iron-master", "Canoptek
+     Cryptothralls", "Necron Warriors") wrap to a second line + ellipsis
+     past line 2 instead of truncating to "NE…" on the first. min-width:0
+     lets the clamp engage inside a flex parent (default min-width is
+     the intrinsic content width, which prevents shrinkage).
+     The non-prefixed `line-clamp` keeps modern browsers + spec parity
+     while -webkit-* covers the older box-orient implementation. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+          line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.15;
+  word-break: break-word;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 body.build-mode-enhanced .army-entry-squad {
   font-family: var(--ui-font, system-ui, sans-serif);

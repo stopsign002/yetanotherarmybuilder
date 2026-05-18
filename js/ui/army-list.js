@@ -27,8 +27,16 @@
     const enhBadges = (entry.enhancements || []).map(e =>
       `<span class="army-enh-badge" title="${esc(e.description || '')}">${esc(e.name)}</span>`
     ).join('');
-    const attachedPill = attachedSubtotal > 0
-      ? `<span class="army-entry-attached-pill" title="Combined points of attached units">+${attachedSubtotal} attached</span>`
+    // Pill emits as its OWN row below the name (not inside the name's
+    // flex row) so the title gets the full header width — no more
+    // "Necron Warriors" truncating to "NE..." just because the pill
+    // was eating ~80 px of the name's flex track. Wrapper renders only
+    // when there's actually a subtotal so unattached entries look
+    // identical to pre-feature.
+    const attachedPillRow = attachedSubtotal > 0
+      ? `<div class="army-entry-attached-pill-row">
+           <span class="army-entry-attached-pill" title="Combined points of attached units">+${attachedSubtotal} attached</span>
+         </div>`
       : '';
     // New richer markup. Preserves the original element classes + data-* attrs
     // that events.js delegates on (.army-entry, .army-qty-input,
@@ -49,8 +57,8 @@
         <div class="army-entry-name" title="${esc(entry.unitName)}">
           <span class="army-entry-title">${esc(entry.unitName)}</span>
           ${squadHtml}
-          ${attachedPill}
         </div>
+        ${attachedPillRow}
         ${enhBadges ? `<div class="army-enh-badges">${enhBadges}</div>` : ''}
         <div class="army-entry-stats">
           <span class="army-entry-stat army-entry-stat-pts">

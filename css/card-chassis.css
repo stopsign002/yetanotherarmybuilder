@@ -218,28 +218,70 @@
    parent-child relationship reads at a glance. */
 .army-entry-attachments {
   list-style: none;
+  /* Tighter indent + thinner tether than the originally-shipped 18px / 2px:
+     reclaims ~10px of horizontal space per nesting level so the nested
+     cards have room for their name and stats row. The 1px line still
+     reads visually as an ownership tether. */
   margin: 8px 0 2px;
-  padding: 0 0 0 18px;
-  border-left: 2px solid rgba(var(--yaab-card-accent-rgb), 0.45);
+  padding: 0 0 0 10px;
+  border-left: 1px solid rgba(var(--yaab-card-accent-rgb), 0.45);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 .army-entry-attached {
   font-size: 0.92em;
   opacity: 0.96;
+  /* The drag handle widget eats ~24px of chrome that attached cards
+     can't afford. Drag still activates from the card body (see
+     flip-animations.js:374–395 — the only exemptions are inputs and
+     the remove button), so hiding the handle is purely cosmetic. */
+  padding-left: 10px;
 }
+.army-entry-attached > .army-entry-handle { display: none; }
 /* Hide the big accent stripe on nested cards; the tether line on the
    .army-entry-attachments container already conveys the ownership
    relationship. */
 .army-entry-attached > .army-entry-stripe { display: none; }
 
-/* Small "+125 attached" pill rendered on the leader's body when it
-   has children. Shows the combined points of the entire attached
-   cluster so the user can scan group totals without doing the math. */
+/* Inline-row stats on attached cards: collapse the labelled 3-cell
+   grid (Pts / Qty / Total) into a single compact line. The values
+   stay legible, the "Pts / Qty / Total" labels go (the numbers are
+   self-explanatory in context). Saves ~50px and prevents stat-row
+   wrapping that pushed the card to 3+ lines on Necron stacks. */
+.army-entry-attached .army-entry-stats {
+  gap: 8px;
+  font-size: 10.5px;
+  flex-wrap: nowrap;
+}
+.army-entry-attached .army-entry-stat-label { display: none; }
+.army-entry-attached .army-entry-qty input {
+  width: 30px;
+  padding: 0 3px;
+}
+
+/* Smaller remove (×) on attached cards. The button is still a hit
+   target — just less visually prominent — so deleting a nested
+   bodyguard from the leader's cluster stays one click away. */
+.army-entry-attached .army-entry-remove {
+  font-size: 13px;
+  padding: 2px 4px;
+  margin-left: 4px;
+}
+
+/* "+N attached" pill row.
+   Pill placement moved out of `.army-entry-name`'s flex row into a
+   dedicated row below the title (see army-list.js: `attachedPillRow`).
+   The name now has the full header width, so long titles like
+   "Necron Warriors" stop truncating just because the pill was
+   competing for space. The row only renders when a subtotal exists
+   (root entries without attachments are unaffected). */
+.army-entry-attached-pill-row {
+  display: flex;
+  margin: 1px 0 4px 0;
+}
 .army-entry-attached-pill {
   display: inline-block;
-  margin-left: 6px;
   padding: 1px 7px;
   font-size: 0.78em;
   font-weight: 600;
@@ -248,6 +290,8 @@
   color: var(--yaab-card-accent);
   vertical-align: middle;
   border: 1px solid rgba(var(--yaab-card-accent-rgb), 0.4);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .army-entry-handle {

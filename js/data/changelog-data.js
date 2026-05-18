@@ -26,10 +26,32 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-9',
-    lastUpdated: '2026-05-15T20:00:00Z',
+    version:     '2026.05.15-10',
+    lastUpdated: '2026-05-15T21:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Army list: attached-unit cards no longer truncate names to "NE…"',
+        description:
+          'After the attach-units feature shipped, nested bodyguard cards ' +
+          'were cramming a drag handle, a 3-cell stats grid, a "+N attached" ' +
+          'pill and the unit name into ~220 px of horizontal space — so ' +
+          '"Necron Warriors" read as "NE…", "Technomancer" as "TECHNOMANC…", ' +
+          'etc. Four tightenings reclaim the budget: (1) unit names now ' +
+          'wrap to a second line when they don\'t fit on one (instead of ' +
+          'truncating to a few letters); (2) the leader\'s "+N attached" ' +
+          'pill moves to its own row below the title so the name gets the ' +
+          'full header width; (3) the cosmetic drag-handle widget is ' +
+          'hidden on attached cards (drag still works from anywhere on the ' +
+          'card body, so no functional change); (4) the labelled Pts / Qty ' +
+          '/ Total stats grid on attached cards collapses to a single ' +
+          'compact inline row. Nested-attachment indent + tether line also ' +
+          'tightened from 18 px / 2 px to 10 px / 1 px per level. Root ' +
+          'cards without attachments look identical to before; the 2-line ' +
+          'wrap rule applies everywhere so long-named root entries also ' +
+          'stop truncating.',
+      },
       {
         date: '2026-05-15', kind: 'feature',
         title: 'Army list: attach units to other units (Leader / Bodyguard / Necron multi-attach)',
