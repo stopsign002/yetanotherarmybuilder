@@ -532,6 +532,20 @@
       }
       if (App && typeof App.renderAll === 'function') App.renderAll();
 
+      // Re-sync the Build-mode dropdowns (faction / chapter / detachment)
+      // to the post-pull currentArmy. Without this, replacing currentArmy
+      // with a newer-from-cloud copy that has different selections leaves
+      // the dropdowns showing the OLD picks (or, more visibly, can leave
+      // the detachment list empty if the visibility-change pull lands
+      // while the user happens to be on the placeholder). Skip when the
+      // selections module isn't ready yet.
+      try {
+        const cur2 = App.state && App.state.currentArmy;
+        if (cur2 && typeof App.applyImportedSelections === 'function') {
+          App.applyImportedSelections(cur2.factionName, cur2.chapter, cur2.detachmentName);
+        }
+      } catch (_) { /* dropdown re-sync is best-effort */ }
+
       // 5. Toast + drain.
       if (window.UI && UI.toast) {
         const parts = [];

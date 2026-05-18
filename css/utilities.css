@@ -187,13 +187,24 @@
   margin: 4px 0 4px;
 }
 .bug-report-summary,
-.bug-report-desc {
+.bug-report-desc,
+.bug-report-kind,
+.bug-report-attach {
   width: 100%;
 }
 .bug-report-desc {
   resize: vertical;
   min-height: 120px;
   font-family: inherit;
+}
+.bug-report-attach {
+  padding: 4px 0;
+}
+.bug-report-attach-info {
+  font-size: 12px;
+  color: var(--text-muted, #aaa);
+  min-height: 16px;
+  margin: 2px 0 6px;
 }
 .bug-report-diag-wrap {
   font-size: 12px;

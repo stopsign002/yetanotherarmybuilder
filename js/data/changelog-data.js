@@ -26,10 +26,50 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-4',
-    lastUpdated: '2026-05-15T15:00:00Z',
+    version:     '2026.05.15-5',
+    lastUpdated: '2026-05-15T16:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Parser: wargear-granted abilities now surface on the unit',
+        description:
+          'Units whose abilities are granted via wargear (Big Mek in ' +
+          'Mega Armour\'s Grot Oiler, etc.) were missing those abilities ' +
+          'from their datasheet. The parser walked the unit\'s top-level ' +
+          'wargear group but stopped before its nested sub-groups, so ' +
+          'every ability-bearing wargear option one level deeper got ' +
+          'skipped. walkSelectionEntryGroup now recurses, and the IDB ' +
+          'cache version was bumped (32) so the fix takes effect on ' +
+          'next reload.',
+      },
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Detachment dropdown stays populated after tab refocus',
+        description:
+          'Tabbing away and back could leave the detachment dropdown ' +
+          'empty until you flipped the faction selector — the ' +
+          'visibility-change cloud pull was firing a re-render before ' +
+          'state.factions was fully hydrated, and updateDetachmentOptions ' +
+          'cleared the list down to the "Select faction first" placeholder. ' +
+          'The function now leaves an already-populated list alone while ' +
+          'factions are still warming up, and sync.pullAll re-applies the ' +
+          'current army\'s faction / chapter / detachment to the dropdowns ' +
+          'once the pull completes.',
+      },
+      {
+        date: '2026-05-15', kind: 'feature',
+        title: 'Bug report: 50 MB image / video uploads + bug vs feature toggle',
+        description:
+          'The Report icon in the topbar now opens a "Send feedback" ' +
+          'modal with a Type dropdown (Bug report or Feature request) ' +
+          'and a file picker that accepts a single image or video up ' +
+          'to 50 MB. The modal\'s title, prompts, and submit button ' +
+          'wording all adapt to the chosen type. Attachment-bearing ' +
+          'submissions send as multipart/form-data; the attachment-free ' +
+          'path still posts plain JSON so it keeps working with the ' +
+          'pre-update server.',
+      },
       {
         date: '2026-05-15', kind: 'feature',
         title: 'Cards mode: save and recall named presets',

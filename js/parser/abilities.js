@@ -99,9 +99,21 @@
     });
 
     entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      walkSelectionEntryGroup(group);
+    });
+
+    // Walks a <selectionEntryGroup>: pulls abilities from its direct
+    // selectionEntries + entryLinks, and recurses into any NESTED
+    // <selectionEntryGroups> chain. The recursion matters for units
+    // like Big Mek in Mega Armour, where the top-level "Wargear" group
+    // has no direct selectionEntries — it contains nested groups
+    // ("Grot Oiler", "Additional Options", "Kustom-mega Blaster", …)
+    // whose selectionEntries hold the ability profiles ("Grot Oiler"
+    // grants its model an ability via wargear, not via a direct
+    // profile on the unit). The pre-fix walker stopped at one level
+    // of group and missed every wargear-granted ability.
+    function walkSelectionEntryGroup(group) {
       if (I.isCrusadeSection(I.getAttr(group, 'name', ''))) return;
-      // Same widening as above — walk every selectionEntry inside the
-      // group regardless of `type`.
       group.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
         if (I.isCrusadeSection(I.getAttr(child, 'name', ''))) return;
         collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
@@ -122,7 +134,13 @@
         collectAbilities(target, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
           .forEach(a => abilities.push(a));
       });
-    });
+      // Recurse one level deeper: nested wargear sub-groups (Big Mek
+      // in Mega Armour's "Wargear" wraps a "Grot Oiler" sub-group whose
+      // entry profile is the ability we need to surface).
+      group.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(sub => {
+        walkSelectionEntryGroup(sub);
+      });
+    }
 
     return abilities;
   }

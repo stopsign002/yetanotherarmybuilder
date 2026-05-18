@@ -166,7 +166,10 @@ window.YaabDB = (() => {
   // (Jakhals' Dishonoured group bumps from 1 to 2 on the large
   // compositions). Jakhals now correctly show 10 / 20 models instead
   // of 9 / 19.
-  const DB_VERSION = 31;
+  // v32: walkSelectionEntryGroup recurses into nested wargear sub-groups
+  // so abilities granted by wargear (Big Mek in Mega Armour's Grot Oiler,
+  // etc.) surface on the unit.
+  const DB_VERSION = 32;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
