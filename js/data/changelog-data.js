@@ -26,10 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-7',
-    lastUpdated: '2026-05-15T18:30:00Z',
+    version:     '2026.05.15-8',
+    lastUpdated: '2026-05-15T19:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Updates modal: entries no longer show yesterday\'s date for non-UTC viewers',
+        description:
+          'A YYYY-MM-DD entry date was being parsed as UTC midnight then ' +
+          'rendered in local time, so anyone west of UTC saw every entry ' +
+          'one day earlier than the author wrote (e.g. a 2026-05-15 entry ' +
+          'showing as "May 14, 2026"). Now built from y/m/d parts so the ' +
+          'date the author wrote is the date the reader sees.',
+      },
       {
         date: '2026-05-15', kind: 'fix',
         title: 'Parser sweep: characters get their wargear pickers + several silent omissions fixed',
