@@ -26,10 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-11',
-    lastUpdated: '2026-05-15T22:00:00Z',
+    version:     '2026.05.15-12',
+    lastUpdated: '2026-05-15T23:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Army pane is ~10% wider by default',
+        description:
+          'The left army pane now defaults to 330 px (was 300 px) and ' +
+          '290 px on narrow viewports (was 260 px). Gives the recently-' +
+          'shipped attached-unit clusters more horizontal breathing room ' +
+          'on top of the in-pane density tightenings. Drag-to-resize ' +
+          'still works the same way — your manual width preference takes ' +
+          'precedence until you reload.',
+      },
       {
         date: '2026-05-15', kind: 'fix',
         title: 'Units pane stops jumping back to the top when you scroll',

@@ -15,7 +15,7 @@
 body.build-mode-enhanced #app-main:not(:has(> #build-mode)) {
   display: grid;
   grid-template-rows: auto 1fr;
-  grid-template-columns: var(--col-left, 300px) 4px 1fr 4px var(--col-right, 420px);
+  grid-template-columns: var(--col-left, 330px) 4px 1fr 4px var(--col-right, 420px);
   height: 100vh;
   overflow: hidden;
   gap: 0;
