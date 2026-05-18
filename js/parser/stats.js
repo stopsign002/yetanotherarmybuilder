@@ -20,12 +20,18 @@
 
     el.querySelectorAll(':scope > profiles > profile').forEach(profile => {
       const kind  = I.classifyProfile(profile);
-      const name  = I.getAttr(profile, 'name');
+      const rawName = I.getAttr(profile, 'name');
       const chars = parseCharacteristics(profile);
 
       if (kind === 'stats') {
         Object.assign(stats, chars);
       } else if (kind === 'weapon') {
+        // BSData multi-profile weapons (Buri Aegnirssen's "Bane", a chunk of
+        // 10e strike/sweep weapons, plasma supercharge/standard variants)
+        // prefix each variant with "➤ " so they sort under the parent
+        // entry in the editor. The glyph reads as line noise on the
+        // datasheet — strip it so the row says "Bane - strike" instead.
+        const name = I.stripVariantPrefix(rawName);
         if (name) weapons.push({ name, _typeName: I.getAttr(profile, 'typeName', ''), ...chars });
       } else if (kind === 'ability') {
         // 10e BSData uses several characteristic names for ability prose:
@@ -43,8 +49,8 @@
         // generic "Abilities", which is the only way to tell them apart
         // from regular abilities at render time.
         const tn = I.getAttr(profile, 'typeName', '');
-        if (name) abilities.push({
-          name,
+        if (rawName) abilities.push({
+          name: rawName,
           description: descEl ? I.cleanText(descEl.textContent) : '',
           _typeName: tn,
         });

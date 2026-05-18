@@ -169,7 +169,16 @@ window.YaabDB = (() => {
   // v32: walkSelectionEntryGroup recurses into nested wargear sub-groups
   // so abilities granted by wargear (Big Mek in Mega Armour's Grot Oiler,
   // etc.) surface on the unit.
-  const DB_VERSION = 32;
+  // v33: parser coverage sweep — wargear sub-groups recurse for both
+  // pickers and default weapons (every Votann character had empty wargear
+  // panes), enhancement detachment-keying is diacritic-folded (Needgaârd
+  // Oathband now shows its 4 enhancements), weapon "➤ X - foo" profile
+  // glyph is stripped (Buri Aegnirssen's Bane reads "Bane - strike"),
+  // shared profiles with a conditional hide-modifier no longer leak
+  // onto unrelated units (Hekaton's Firebase Control), sharedInfoGroups
+  // + infoLink type="infoGroup" are resolved, cost-tier scanning
+  // descends into modifierGroups, primaryKeyword is captured.
+  const DB_VERSION = 33;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

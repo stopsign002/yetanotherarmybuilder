@@ -198,16 +198,35 @@
       // selector matched only `atLeast`, so non-atLeast tiers had threshold
       // NaN and fell through to maxModels — Ripper Swarms (basePts=25,
       // equalTo=2 → 40, atLeast=3 → 50, max=3) surfaced as "1 / 3 / 3".
+      //
+      // We scan both `:scope > modifiers > modifier` AND modifiers wrapped in
+      // `:scope > modifierGroups > modifierGroup > modifiers > modifier`. Most
+      // factions use the flat shape but Votann (and a couple of others) wrap
+      // every per-unit modifier in modifierGroups; pre-fix, tier modifiers
+      // for those units silently fell through. Also accepts `type="increment"`
+      // for cumulative-tier shapes (e.g. Crucible-mode +5 / +5 / +5 ladders)
+      // by adding the increment to the unit's base cost.
       const tiers = []; // [{ pts, threshold, exact }]
       const condGroupPrefixes = [
         ':scope > conditions > ',
         ':scope > conditionGroups > conditionGroup > conditions > ',
       ];
       const condTypes = ['atLeast', 'greaterThan', 'equalTo'];
-      entryEl.querySelectorAll(':scope > modifiers > modifier').forEach(mod => {
-        if (I.getAttr(mod, 'type') !== 'set' || I.getAttr(mod, 'field') !== ptsTypeId) return;
+      const modSelectors = [
+        ':scope > modifiers > modifier',
+        ':scope > modifierGroups > modifierGroup > modifiers > modifier',
+      ];
+      const seenMods = new Set();
+      modSelectors.forEach(sel => entryEl.querySelectorAll(sel).forEach(mod => {
+        if (seenMods.has(mod)) return;
+        seenMods.add(mod);
+        const modType = I.getAttr(mod, 'type');
+        if (modType !== 'set' && modType !== 'increment') return;
+        if (I.getAttr(mod, 'field') !== ptsTypeId) return;
         const val = parseFloat(I.getAttr(mod, 'value', '0'));
-        if (isNaN(val) || val <= 0 || val === basePts) return;
+        if (isNaN(val) || val <= 0) return;
+        const tierPts = (modType === 'increment') ? basePts + val : val;
+        if (tierPts === basePts) return;
         let threshold = NaN;
         let exact = false;
         outer: for (const prefix of condGroupPrefixes) {
@@ -222,8 +241,8 @@
             break outer;
           }
         }
-        tiers.push({ pts: val, threshold, exact });
-      });
+        tiers.push({ pts: tierPts, threshold, exact });
+      }));
       // Second pass: convert each tier into its displayed model count. Range
       // tiers (atLeast / greaterThan) cover threshold..(next-1) — display
       // the upper bound, matching Lokhust's flat-priced 4-6 = "6 models".

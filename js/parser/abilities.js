@@ -31,6 +31,16 @@
         const name = I.getAttr(profile, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         if (I.isCrusadeSection(name)) return;
+        // Honour modifier-driven hide. Many shared aura profiles
+        // (e.g. Votann's "Firebase Control (Aura)") carry a
+        // `<modifier type="set" field="hidden" value="true">` whose
+        // condition gates visibility on a specific detachment. The
+        // parser can't evaluate the condition (it's force/roster-scoped
+        // BSData expressions referencing detachment childIds), but the
+        // intent is clearly "don't surface me unless that detachment is
+        // picked". Default to skipping — the alternative was the aura
+        // leaking onto every unit that referenced the profile.
+        if (profile.querySelector(':scope > modifiers > modifier[type="set"][field="hidden"][value="true"]')) return;
         // Match the parseDirectProfiles fallback: prefer Description,
         // fall back to Effect for primarch / warlord-trait shapes, and
         // Capacity for Ork transport profiles.
@@ -58,6 +68,20 @@
         });
         const descEl = rule.querySelector(':scope > description');
         abilities.push({ name, description: descEl ? I.cleanText(descEl.textContent) : '', isCore: true });
+
+      } else if (linkType === 'infoGroup') {
+        // Resolve to a shared <infoGroup> (Votann + a couple of other
+        // factions use these for detachment-gated aura bundles).
+        // collectAbilities already supports an `<infoGroup>` node kind
+        // via the inline `:scope > infoGroups > infoGroup` walker
+        // below, so we just route the resolved element through the
+        // same recursion.
+        const sharedInfoGroupsById = I.sharedInfoGroupsById || new Map();
+        const group = sharedInfoGroupsById.get(targetId);
+        if (!group) return;
+        if (I.isCrusadeSection(I.getAttr(group, 'name', ''))) return;
+        collectAbilities(group, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
+          .forEach(a => abilities.push(a));
       }
     });
 

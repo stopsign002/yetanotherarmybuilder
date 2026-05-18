@@ -50,6 +50,46 @@
     return el.getAttribute(attr) || fallback;
   }
 
+  // Strip BSData "display variant" prefix (e.g. "➤ Plasma pistol - supercharge").
+  // Used when a single weapon entry exposes multiple profiles (krak/frag,
+  // supercharge/standard, strike/sweep, …) and the profile names start with a
+  // bullet glyph. The unstripped names render as ugly "➤ Bane - strike" rows
+  // on the datasheet; stripping leaves "Bane - strike" which reads like a
+  // proper multi-stance weapon profile.
+  const VARIANT_PREFIX_RE = /^[➤▶►▸>]\s*/;
+  function stripVariantPrefix(name) {
+    if (!name) return '';
+    return String(name).replace(VARIANT_PREFIX_RE, '').trim();
+  }
+  // Returns true when at least one profile in `list` carries the variant
+  // glyph — caller uses this to decide whether to group them under the
+  // parent selectionEntry name.
+  function hasVariantPrefix(profiles) {
+    for (const p of profiles) {
+      if (VARIANT_PREFIX_RE.test(getAttr(p, 'name', ''))) return true;
+    }
+    return false;
+  }
+
+  // Fold diacritics + lowercase for fuzzy name keying. Used in catalogue.js
+  // to match enhancement <comment> spellings against detachment names
+  // (BSData spells "Needgaârd Oathband" on the detachment but plain
+  // "Needgaard" on the enhancement comment — exact-match dropped 4
+  // enhancements until this fold was added).
+  function foldKey(s) {
+    if (!s) return '';
+    let out = String(s);
+    if (typeof out.normalize === 'function') {
+      try {
+        // U+0300–U+036F is the Combining Diacritical Marks block;
+        // NFD splits an accented character into base + combining mark, so
+        // stripping the marks leaves the base ASCII / Latin letter.
+        out = out.normalize('NFD').replace(/[̀-ͯ]/g, '');
+      } catch (_) {}
+    }
+    return out.toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
   const WEAPON_TYPES = new Set(['weapon', 'ranged weapons', 'melee weapons', 'ranged', 'melee']);
   const UNIT_TYPES   = new Set(['unit', 'model']);
 
@@ -80,9 +120,12 @@
     return 'other';
   }
 
-  P._internal.cleanText        = cleanText;
-  P._internal.CRUSADE_RE       = CRUSADE_RE;
-  P._internal.isCrusadeSection = isCrusadeSection;
-  P._internal.getAttr          = getAttr;
-  P._internal.classifyProfile  = classifyProfile;
+  P._internal.cleanText          = cleanText;
+  P._internal.CRUSADE_RE         = CRUSADE_RE;
+  P._internal.isCrusadeSection   = isCrusadeSection;
+  P._internal.getAttr            = getAttr;
+  P._internal.classifyProfile    = classifyProfile;
+  P._internal.stripVariantPrefix = stripVariantPrefix;
+  P._internal.hasVariantPrefix   = hasVariantPrefix;
+  P._internal.foldKey            = foldKey;
 })();

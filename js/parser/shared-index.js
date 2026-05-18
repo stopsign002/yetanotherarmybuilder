@@ -10,6 +10,7 @@
   const _sharedProfilesById              = new Map();
   const _sharedRulesById                 = new Map();
   const _sharedEntriesById               = new Map();
+  const _sharedInfoGroupsById            = new Map();
   // Root-level entryLinks keyed by catalogue ID — populated for library
   // catalogues so that Pattern C in catalogue.js can resolve importRootEntries.
   const _sharedRootEntryLinksByCatalogueId = new Map();
@@ -35,6 +36,15 @@
         const id = el.getAttribute('id');
         if (id) _sharedEntriesById.set(id, el);
       });
+      // sharedInfoGroups — referenced from unit entries via
+      // `infoLink type="infoGroup"` (Votann + a few other factions wrap
+      // detachment-specific aura bundles this way). Without indexing
+      // these the abilities walker has nothing to resolve them to and
+      // silently drops the contents.
+      root.querySelectorAll(':scope > sharedInfoGroups > infoGroup').forEach(g => {
+        const id = g.getAttribute('id');
+        if (id) _sharedInfoGroupsById.set(id, g);
+      });
 
       // Store root entryLinks so Pattern C can resolve importRootEntries links.
       const catalogueId = root.getAttribute('id');
@@ -54,12 +64,14 @@
     _sharedProfilesById.clear();
     _sharedRulesById.clear();
     _sharedEntriesById.clear();
+    _sharedInfoGroupsById.clear();
     _sharedRootEntryLinksByCatalogueId.clear();
   }
 
   P._internal.sharedProfilesById                = _sharedProfilesById;
   P._internal.sharedRulesById                   = _sharedRulesById;
   P._internal.sharedEntriesById                 = _sharedEntriesById;
+  P._internal.sharedInfoGroupsById              = _sharedInfoGroupsById;
   P._internal.sharedRootEntryLinksByCatalogueId = _sharedRootEntryLinksByCatalogueId;
   P._internal.addToSharedIndex                  = addToSharedIndex;
   P._internal.releaseSharedIndex                = releaseSharedIndex;

@@ -52,12 +52,8 @@
       return minVal;
     }
 
-    // Strip BSData "display variant" prefix (e.g. "➤ Plasma pistol - supercharge").
-    // When a single weapon entry exposes multiple profiles (krak/frag, supercharge/standard,
-    // etc.) we want the parent selectionEntry's name, not the profile sub-variants.
-    function stripVariantPrefix(name) {
-      return name.replace(/^[➤▶►▸>]\s*/, '').trim();
-    }
+    // stripVariantPrefix moved to classify.js so weapons.js can share it.
+    const stripVariantPrefix = I.stripVariantPrefix;
 
     // Returns true iff the resolved entry has at least one weapon-typed profile,
     // either directly on it or one of its profile children. We walk only the entry
@@ -172,13 +168,22 @@
         if (resolved) names.push(resolved);
       });
 
-      // (c) defaultSelectionEntryId on weapon-option groups directly under the model.
-      el.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
-        if (I.getAttr(group, 'hidden', 'false') === 'true') return;
-        if (I.isCrusadeSection(I.getAttr(group, 'name', ''))) return;
-        const defaultName = getGroupDefaultWeaponName(group);
-        if (defaultName) names.push(defaultName);
-      });
+      // (c) defaultSelectionEntryId on weapon-option groups under the model —
+      // recursive across nested selectionEntryGroups so a "Wargear" wrapper
+      // containing inner groups ("Weapon", "Crest", "Main weapon", …) still
+      // surfaces each inner group's default. The Hearthkyn Theyn's
+      // pre-selected Autoch-pattern bolter lived one nesting level deeper
+      // than the single-level walk reached and was therefore being lost.
+      function walkGroupsForDefault(parentEl) {
+        parentEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+          if (I.getAttr(group, 'hidden', 'false') === 'true') return;
+          if (I.isCrusadeSection(I.getAttr(group, 'name', ''))) return;
+          const defaultName = getGroupDefaultWeaponName(group);
+          if (defaultName) names.push(defaultName);
+          walkGroupsForDefault(group);
+        });
+      }
+      walkGroupsForDefault(el);
 
       return [...new Set(names)];
     }
@@ -231,15 +236,29 @@
       if (I.isCrusadeSection(modelName)) return;
 
       const subOptions = [];
-      modelEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
-        if (I.getAttr(group, 'hidden', 'false') === 'true') return;
-        const gName = I.getAttr(group, 'name', '').trim();
-        if (!gName || /^new\s/i.test(gName)) return;
-        if (I.isCrusadeSection(gName)) return;
-        const choices = getChoices(group);
-        if (choices.length === 0) return;
-        subOptions.push({ name: gName, choices, max: getMaxConstraint(group) });
-      });
+      // Walk every wargear sub-group, including INNER sub-groups nested under
+      // a wrapper. Many character entries put their actual weapon-pickers
+      // (Crest / Melee weapon / Ranged weapon / Main weapon) one level deeper
+      // than the visible "Wargear" wrapper — without this recursion the
+      // wrapper appears empty and the user sees no pickers at all.
+      function walkGroupsForOptions(parentEl) {
+        parentEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+          if (I.getAttr(group, 'hidden', 'false') === 'true') return;
+          const gName = I.getAttr(group, 'name', '').trim();
+          if (!gName || /^new\s/i.test(gName)) return;
+          if (I.isCrusadeSection(gName)) return;
+          const choices = getChoices(group);
+          if (choices.length > 0) {
+            subOptions.push({ name: gName, choices, max: getMaxConstraint(group) });
+          }
+          // Recurse — inner sub-groups commonly carry the real pickers when
+          // the outer group is just a wrapper. BSData generally uses one OR
+          // the other, so producing both is rare; when it does happen the
+          // outer's choices and the inner groups are both legitimate.
+          walkGroupsForOptions(group);
+        });
+      }
+      walkGroupsForOptions(modelEl);
 
       const ownModelMax = getMaxConstraint(modelEl);
       const ownModelMin = getMinConstraint(modelEl);

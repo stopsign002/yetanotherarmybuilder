@@ -26,10 +26,43 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-6',
-    lastUpdated: '2026-05-15T17:00:00Z',
+    version:     '2026.05.15-7',
+    lastUpdated: '2026-05-15T18:30:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Parser sweep: characters get their wargear pickers + several silent omissions fixed',
+        description:
+          'A deep audit of how the parser walks BattleScribe XML turned ' +
+          'up nine separate omissions that quietly cost users datasheet ' +
+          'content. All fixes are in shared parser code, so every faction ' +
+          'with the same XML shape benefits — Votann was the audit subject ' +
+          'but Primaris characters, Eldar Phoenix Lords, Custodes Achillus ' +
+          'dreadnoughts, and any future detachment with a diacritic in its ' +
+          'name were vulnerable too. Specifically: (1) Needgaârd Oathband ' +
+          'and any other diacritic-bearing detachment now picks up its ' +
+          'enhancements (the BSData enhancement <comment> keys were ' +
+          'spelled without the accent — exact-string match dropped them); ' +
+          '(2) every character whose wargear sits under a "Wargear" wrapper ' +
+          'with inner Crest / Melee / Ranged sub-groups now shows those ' +
+          'pickers (Votann Kâhl, Einhyr Champion, Iron-master + analogues ' +
+          'across factions); (3) default weapons one nesting level deep ' +
+          '(Hearthkyn Theyn\'s bolter, every multi-slot leader model\'s ' +
+          'pre-selected kit) are recognised; (4) multi-stance weapons like ' +
+          'Buri Aegnirssen\'s "Bane" render as "Bane - strike" / "Bane - ' +
+          'sweep" instead of two ugly "➤ Bane - strike" rows; (5) shared ' +
+          '<infoGroup> elements (Votann detachment aura bundles) are now ' +
+          'indexed; (6) conditional-hide modifiers on shared profiles are ' +
+          'honoured, so Hekaton Land Fortress\'s "Firebase Control (Aura)" ' +
+          'no longer leaks onto every Transport in non-Brandfast ' +
+          'detachments; (7) cost-tier modifiers wrapped in <modifierGroups> ' +
+          '(plus the increment-type tiers used by Crucible mode) now ' +
+          'register; (8) parsed units carry a new primaryKeyword field for ' +
+          'role-aware UI; (9) zero-enhancement detachments and surviving ' +
+          '"➤" weapon glyphs are now flagged by the parse coverage probe ' +
+          'so regressions show up in the developer console.',
+      },
       {
         date: '2026-05-15', kind: 'fix',
         title: 'Reserves, requisitions, and favorites no longer wipe after sync',

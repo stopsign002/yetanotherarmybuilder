@@ -122,7 +122,8 @@
       return (w.name || '') + '|' + cls;
     });
     const allAbilities = I.dedup(I.collectAbilities(entryEl, entriesById, profilesById, rulesById), 'name');
-    const keywords     = I.parseKeywords(entryEl);
+    const keywords       = I.parseKeywords(entryEl);
+    const primaryKeyword = I.findPrimaryKeyword(entryEl);
     const wargearOptions = I.collectWargearOptions(entryEl, entriesById);
     const { points, pointsOptions, squadOptions } = I.findCosts(entryEl, entriesById);
     const descEl = entryEl.querySelector(':scope > description');
@@ -245,6 +246,7 @@
       weapons,
       abilities,
       keywords,
+      primaryKeyword,
       wargearOptions,
       points,
       pointsOptions,
