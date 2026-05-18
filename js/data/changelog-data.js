@@ -26,10 +26,34 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-8',
-    lastUpdated: '2026-05-15T19:00:00Z',
+    version:     '2026.05.15-9',
+    lastUpdated: '2026-05-15T20:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'feature',
+        title: 'Army list: attach units to other units (Leader / Bodyguard / Necron multi-attach)',
+        description:
+          'You can now drag a unit card onto another in the army list to ' +
+          'attach it — the dropped unit nests inside its host with a ' +
+          'tether line and a small "+N attached" subtotal pill on the ' +
+          'leader. The middle of an entry registers as an ATTACH drop ' +
+          'zone; the top / bottom edges still trigger normal reorder. ' +
+          'Multiple characters and non-character units (Necron Canoptek ' +
+          'Cryptothralls, Tomb Sentinel, …) can all attach to a single ' +
+          'bodyguard unit — drop them one by one. Drop targets light up ' +
+          'green when the data (GDC `gdcLeadBy` first, BSData "can be ' +
+          'attached to" prose as a backup) confirms the pairing, amber ' +
+          'when neither source lists it — amber drops still succeed with ' +
+          'a warning toast, so faction-data gaps can\'t prevent a legal ' +
+          'attachment. Dragging a nested card out into the gap between ' +
+          'root entries detaches it; reordering inside the parent works ' +
+          'too. Points totals and Rule-of-3 still count each entry ' +
+          'independently — the nesting is purely visual + reflects the ' +
+          'in-game leader relationship. Share URLs and saved armies round-' +
+          'trip the attachment graph; older saves render flat with no ' +
+          'change in behaviour.',
+      },
       {
         date: '2026-05-15', kind: 'fix',
         title: 'Updates modal: entries no longer show yesterday\'s date for non-UTC viewers',

@@ -2,11 +2,23 @@
 (function () {
   const UI = window.UI = window.UI || {};
 
-  UI.createArmyEntryEl = function (entry, index) {
+  // Single entry → DOM. `attachedSubtotal` is the combined points of
+  // every child attached to this entry (rendered as a small "+N
+  // attached" pill on the leader's body). `isAttached` flips on the
+  // mini-card styling for nested children.
+  UI.createArmyEntryEl = function (entry, index, opts) {
+    opts = opts || {};
+    const isAttached       = !!opts.isAttached;
+    const attachedSubtotal = opts.attachedSubtotal || 0;
     const esc = UI.escapeHtml;
     const li = document.createElement('li');
-    li.className = 'army-entry army-entry-card';
+    li.className = 'army-entry army-entry-card' + (isAttached ? ' army-entry-attached' : '');
     li.dataset.index = index;
+    // entryId is the stable handle the attachment graph + drag-to-
+    // attach use; data-index is still here for legacy click handlers
+    // (events.js delegates on it) and for drag-to-reorder which works
+    // off the array index.
+    if (entry.entryId) li.dataset.entryId = entry.entryId;
     const pts    = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
     const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
     const total  = pts * entry.count + enhPts;
@@ -15,6 +27,9 @@
     const enhBadges = (entry.enhancements || []).map(e =>
       `<span class="army-enh-badge" title="${esc(e.description || '')}">${esc(e.name)}</span>`
     ).join('');
+    const attachedPill = attachedSubtotal > 0
+      ? `<span class="army-entry-attached-pill" title="Combined points of attached units">+${attachedSubtotal} attached</span>`
+      : '';
     // New richer markup. Preserves the original element classes + data-* attrs
     // that events.js delegates on (.army-entry, .army-qty-input,
     // .army-entry-remove, data-index). The grid is replaced by a flex layout
@@ -22,7 +37,7 @@
     // sub-elements via class name when build-mode.css is absent.
     li.innerHTML = `
       <span class="army-entry-stripe" aria-hidden="true"></span>
-      <span class="army-entry-handle" aria-hidden="true" title="Drag to reorder">
+      <span class="army-entry-handle" aria-hidden="true" title="Drag to reorder or attach">
         <span class="army-entry-handle-dot"></span>
         <span class="army-entry-handle-dot"></span>
         <span class="army-entry-handle-dot"></span>
@@ -34,6 +49,7 @@
         <div class="army-entry-name" title="${esc(entry.unitName)}">
           <span class="army-entry-title">${esc(entry.unitName)}</span>
           ${squadHtml}
+          ${attachedPill}
         </div>
         ${enhBadges ? `<div class="army-enh-badges">${enhBadges}</div>` : ''}
         <div class="army-entry-stats">
@@ -57,6 +73,16 @@
     `;
     return li;
   };
+
+  // Cluster-points helper: sum of an entry's own total + every
+  // descendant's total. Used for the leader's "+N attached" pill so the
+  // user can see what a Leader + bodyguard + bodyguard-extras cluster
+  // costs without doing the math.
+  function _entryTotalPts(entry) {
+    const pts    = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
+    const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
+    return pts * entry.count + enhPts;
+  }
 
   UI.renderArmyList = function (army) {
     if (window.App && typeof App.fireArmyChange === 'function') App.fireArmyChange('render');
@@ -117,8 +143,65 @@
       return;
     }
 
-    army.entries.forEach((entry, index) => {
-      list.appendChild(UI.createArmyEntryEl(entry, index));
+    // Hierarchical render: walk array order, but emit each root entry's
+    // direct children as a nested <ul.army-entry-attachments> inside
+    // the root's body. Order of children mirrors their array order, so
+    // dragging a child entry to reorder among siblings still works (the
+    // existing reorder splice in flip-animations.js stays untouched).
+    // `Army.entries` is NOT mutated by attachment ops — only the
+    // `attachedToEntryId` field — so the array index that legacy click
+    // handlers depend on stays stable.
+    const childrenByParent = new Map(); // parentEntryId → entry[]
+    army.entries.forEach(e => {
+      if (!e || !e.attachedToEntryId) return;
+      const arr = childrenByParent.get(e.attachedToEntryId) || [];
+      arr.push(e);
+      childrenByParent.set(e.attachedToEntryId, arr);
+    });
+
+    // Depth cap: render up to 3 levels of nesting so a pathological
+    // chain doesn't blow out the layout. The data model allows deeper
+    // chains; the renderer just flattens anything past depth 3 into
+    // the depth-3 container.
+    const MAX_DEPTH = 3;
+
+    function totalForCluster(entry) {
+      let sum = _entryTotalPts(entry);
+      const kids = childrenByParent.get(entry.entryId) || [];
+      kids.forEach(k => { sum += totalForCluster(k); });
+      return sum;
+    }
+
+    function renderEntry(entry, depth) {
+      const index   = army.entries.indexOf(entry);
+      const kids    = childrenByParent.get(entry.entryId) || [];
+      // The pill shows only the IMMEDIATE attached subtotal — depth-1
+      // sum, not the full cluster total — so it stays readable on
+      // dense clusters.
+      let pillSubtotal = 0;
+      kids.forEach(k => { pillSubtotal += totalForCluster(k); });
+      const li = UI.createArmyEntryEl(entry, index, {
+        isAttached:       depth > 0,
+        attachedSubtotal: pillSubtotal,
+      });
+      if (kids.length > 0 && depth < MAX_DEPTH) {
+        const subList = document.createElement('ul');
+        subList.className = 'army-entry-attachments';
+        kids.forEach(child => subList.appendChild(renderEntry(child, depth + 1)));
+        // Place children INSIDE the parent's body so the visual nesting
+        // reads as ownership, not just adjacency. CSS handles the indent
+        // and the connector line.
+        const body = li.querySelector('.army-entry-body');
+        if (body) body.appendChild(subList);
+        else li.appendChild(subList);
+      }
+      return li;
+    }
+
+    army.entries.forEach(entry => {
+      if (!entry) return;
+      if (entry.attachedToEntryId) return;   // Children rendered by their parent.
+      list.appendChild(renderEntry(entry, 0));
     });
   };
 })();

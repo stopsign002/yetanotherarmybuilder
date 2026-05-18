@@ -194,6 +194,62 @@
   box-shadow: 0 2px 0 0 var(--yaab-card-accent) inset;
 }
 
+/* Drag-to-attach drop indicators.
+   `--ok` (green) fires when App.Attachments.canAttach returned true —
+   GDC data confirms the pairing. `--soft` (amber) fires when the data
+   doesn't list this pairing but the drop is still allowed (soft
+   enforcement). Both replace whatever reorder-band paint was in
+   progress on the same row. */
+.army-entry.is-attach-target--ok {
+  outline: 2px solid #4caf50;
+  outline-offset: -2px;
+  box-shadow: 0 0 12px rgba(76, 175, 80, 0.55) inset,
+              0 0 0 1px rgba(76, 175, 80, 0.7);
+}
+.army-entry.is-attach-target--soft {
+  outline: 2px dashed #d8a838;
+  outline-offset: -2px;
+  box-shadow: 0 0 10px rgba(216, 168, 56, 0.45) inset,
+              0 0 0 1px rgba(216, 168, 56, 0.65);
+}
+
+/* Nested attached children. Indented under the leader with a thin
+   tether line down the left edge in the faction accent colour so the
+   parent-child relationship reads at a glance. */
+.army-entry-attachments {
+  list-style: none;
+  margin: 8px 0 2px;
+  padding: 0 0 0 18px;
+  border-left: 2px solid rgba(var(--yaab-card-accent-rgb), 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.army-entry-attached {
+  font-size: 0.92em;
+  opacity: 0.96;
+}
+/* Hide the big accent stripe on nested cards; the tether line on the
+   .army-entry-attachments container already conveys the ownership
+   relationship. */
+.army-entry-attached > .army-entry-stripe { display: none; }
+
+/* Small "+125 attached" pill rendered on the leader's body when it
+   has children. Shows the combined points of the entire attached
+   cluster so the user can scan group totals without doing the math. */
+.army-entry-attached-pill {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  font-size: 0.78em;
+  font-weight: 600;
+  border-radius: 10px;
+  background: rgba(var(--yaab-card-accent-rgb), 0.18);
+  color: var(--yaab-card-accent);
+  vertical-align: middle;
+  border: 1px solid rgba(var(--yaab-card-accent-rgb), 0.4);
+}
+
 .army-entry-handle {
   cursor: grab;
 }

@@ -309,6 +309,12 @@
     list.dataset.yaabDragWired = '1';
 
     const DRAG_THRESHOLD_PX = 6; // must move this far before drag activates
+    // The vertical band on each side of an entry that registers as a
+    // BETWEEN-SIBLINGS gap drop instead of an ATTACH-ONTO-BODY drop.
+    // Top GAP_PX and bottom GAP_PX = reorder. Middle = attach. Tuned by
+    // eye against the entry-card height in build-mode.css; 14 px reads
+    // as "near the edge" on a ~64 px card.
+    const GAP_PX = 14;
 
     let candidate = null;      // <li> the user pressed on (drag not yet active)
     let dragging = null;       // <li> actively being dragged
@@ -316,14 +322,46 @@
     let pointerId = null;
     let startY = 0;
     let lastDropTarget = null;
-    let lastDropPos = null;    // 'before' | 'after'
+    let lastDropPos = null;    // 'before' | 'after' | 'attach'
+    let lastAttachOk = null;   // last canAttach result (drives green/amber)
 
     function clearDropMarkers() {
-      list.querySelectorAll('.is-drop-target-before, .is-drop-target-after').forEach(el => {
-        el.classList.remove('is-drop-target-before', 'is-drop-target-after');
+      list.querySelectorAll(
+        '.is-drop-target-before, .is-drop-target-after, ' +
+        '.is-attach-target, .is-attach-target--ok, .is-attach-target--soft'
+      ).forEach(el => {
+        el.classList.remove(
+          'is-drop-target-before', 'is-drop-target-after',
+          'is-attach-target', 'is-attach-target--ok', 'is-attach-target--soft'
+        );
       });
       lastDropTarget = null;
       lastDropPos = null;
+      lastAttachOk = null;
+    }
+
+    // Walk up the ancestor chain in the attachment graph and return
+    // the set of entryIds the dragged entry MAY NOT attach to (itself
+    // + every descendant — those would form a cycle).
+    function forbiddenAttachTargets(draggingLi) {
+      const set = new Set();
+      const army = getArmy();
+      if (!army || !draggingLi) return set;
+      const dragId = draggingLi.dataset.entryId;
+      if (!dragId) return set;
+      set.add(dragId);
+      // Walk descendants.
+      const queue = [dragId];
+      while (queue.length) {
+        const id = queue.shift();
+        army.entries.forEach(e => {
+          if (e && e.attachedToEntryId === id && !set.has(e.entryId)) {
+            set.add(e.entryId);
+            queue.push(e.entryId);
+          }
+        });
+      }
+      return set;
     }
 
     function activateDrag() {
@@ -340,7 +378,11 @@
       // Don't start drag from interactive controls (input/remove button).
       if (t.closest('input, button, select, textarea, .army-entry-remove')) return;
       const li = t.closest('.army-entry');
-      if (!li || li.parentNode !== list) return;
+      // The list now contains BOTH root <li>s and nested children inside
+      // `.army-entry-attachments`. Both are valid drag sources — use
+      // contains() instead of a direct parentNode === list check so
+      // attached entries can be dragged out of their parents.
+      if (!li || !list.contains(li)) return;
 
       candidate = li;
       dragIndex = parseInt(li.dataset.index, 10);
@@ -363,25 +405,62 @@
       const dy = e.clientY - startY;
       dragging.style.transform = `translateY(${dy}px)`;
 
-      // Hit-test against sibling rows.
+      // Hit-test every entry card (root AND nested children). Three
+      // possible drop modes per hovered row:
+      //   · top edge band  → reorder BEFORE (gap drop)
+      //   · bottom edge band → reorder AFTER (gap drop)
+      //   · middle of the body → ATTACH source as child of target
+      //
+      // We test rows in document order; the FIRST row whose rect
+      // contains the pointer wins. That keeps a child card under its
+      // parent winning over the parent's own body when the user aims
+      // at the child (mouse-over precedence).
       const rows = Array.from(list.querySelectorAll('.army-entry'));
+      const forbidden = forbiddenAttachTargets(dragging);
       let target = null;
       let pos = null;
       for (const row of rows) {
         if (row === dragging) continue;
+        // Skip descendants of the dragging entry — they get visually
+        // ripped out when the parent is mid-flight and shouldn't be
+        // drop targets.
+        if (row.dataset.entryId && forbidden.has(row.dataset.entryId)) continue;
         const r = row.getBoundingClientRect();
-        if (e.clientY >= r.top && e.clientY <= r.bottom) {
-          target = row;
-          pos = (e.clientY < r.top + r.height / 2) ? 'before' : 'after';
-          break;
+        if (e.clientY < r.top || e.clientY > r.bottom) continue;
+        if (e.clientY < r.top + GAP_PX)        { target = row; pos = 'before'; break; }
+        if (e.clientY > r.bottom - GAP_PX)     { target = row; pos = 'after';  break; }
+        target = row; pos = 'attach'; break;
+      }
+
+      // Paint the drop indicator. Attach drops also colour by
+      // canAttach() result — green for "data confirms compatibility",
+      // amber for "data doesn't list this but we'll allow anyway".
+      let attachOk = null;
+      if (target && pos === 'attach') {
+        const army = getArmy();
+        const dragEntry   = army && Number.isFinite(dragIndex) ? army.entries[dragIndex] : null;
+        const targetEntry = army && target.dataset.entryId
+          ? army.findByEntryId(target.dataset.entryId) : null;
+        if (window.App && App.Attachments && dragEntry && targetEntry) {
+          const verdict = App.Attachments.canAttach(dragEntry.unitData, targetEntry.unitData);
+          attachOk = !!(verdict && verdict.ok);
+        } else {
+          attachOk = false;
         }
       }
-      if (target !== lastDropTarget || pos !== lastDropPos) {
+
+      if (target !== lastDropTarget || pos !== lastDropPos || attachOk !== lastAttachOk) {
         clearDropMarkers();
         if (target) {
-          target.classList.add(pos === 'before' ? 'is-drop-target-before' : 'is-drop-target-after');
+          if (pos === 'before')      target.classList.add('is-drop-target-before');
+          else if (pos === 'after')  target.classList.add('is-drop-target-after');
+          else /* attach */ {
+            target.classList.add('is-attach-target');
+            target.classList.add(attachOk ? 'is-attach-target--ok' : 'is-attach-target--soft');
+          }
           lastDropTarget = target;
           lastDropPos = pos;
+          lastAttachOk = attachOk;
         }
       }
     }
@@ -417,20 +496,45 @@
 
       const army = getArmy();
       if (army && Array.isArray(army.entries) && target) {
-        let toIdx = parseInt(target.dataset.index, 10);
-        if (!Number.isNaN(toIdx) && toIdx !== fromIdx) {
-          if (pos === 'after') toIdx += 1;
-          // Adjust for the removal shift.
-          if (toIdx > fromIdx) toIdx -= 1;
-          if (toIdx !== fromIdx && toIdx >= 0 && toIdx <= army.entries.length) {
-            const [moved] = army.entries.splice(fromIdx, 1);
-            army.entries.splice(toIdx, 0, moved);
-            // Touch the updatedAt timestamp the same way Army's mutators do.
-            try { army.updatedAt = new Date().toISOString(); } catch (_) {}
-            if (window.UI && typeof UI.renderArmyList === 'function') {
-              UI.renderArmyList(army);
+        const dragEntry   = army.entries[fromIdx];
+        const targetEntry = target.dataset.entryId ? army.findByEntryId(target.dataset.entryId) : null;
+
+        if (pos === 'attach' && dragEntry && targetEntry && dragEntry !== targetEntry) {
+          // Attach mode: set the parent pointer. We DON'T move the
+          // entry in `Army.entries` — array order stays stable so
+          // existing legacy index-based handlers (events.js,
+          // count input) keep working, and the renderer derives the
+          // visual tree from `attachedToEntryId` each frame.
+          const verdict = window.App && App.Attachments
+            ? App.Attachments.canAttach(dragEntry.unitData, targetEntry.unitData)
+            : { ok: false, source: 'unknown' };
+          dragEntry.attachedToEntryId = targetEntry.entryId;
+          try { army.updatedAt = new Date().toISOString(); } catch (_) {}
+          if (window.UI && typeof UI.renderArmyList === 'function') UI.renderArmyList(army);
+          if (window.UI && typeof UI.toast === 'function') {
+            if (verdict.ok) {
+              UI.toast(`Attached ${dragEntry.unitName} to ${targetEntry.unitName}.`, 'success', 2200);
+            } else {
+              UI.toast(`Attached ${dragEntry.unitName} to ${targetEntry.unitName} — BSData doesn't list this as a valid pairing.`, 'warning', 3500);
             }
           }
+        } else if ((pos === 'before' || pos === 'after') && dragEntry) {
+          // Reorder mode. If the dragged entry was attached to something,
+          // drop-in-gap detaches it (moves back to root level). Then
+          // splice to the target position as before.
+          if (dragEntry.attachedToEntryId) dragEntry.attachedToEntryId = null;
+          let toIdx = parseInt(target.dataset.index, 10);
+          if (!Number.isNaN(toIdx) && toIdx !== fromIdx) {
+            if (pos === 'after') toIdx += 1;
+            // Adjust for the removal shift.
+            if (toIdx > fromIdx) toIdx -= 1;
+            if (toIdx !== fromIdx && toIdx >= 0 && toIdx <= army.entries.length) {
+              const [moved] = army.entries.splice(fromIdx, 1);
+              army.entries.splice(toIdx, 0, moved);
+              try { army.updatedAt = new Date().toISOString(); } catch (_) {}
+            }
+          }
+          if (window.UI && typeof UI.renderArmyList === 'function') UI.renderArmyList(army);
         }
       }
 

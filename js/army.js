@@ -2,6 +2,16 @@
  * army.js - Army data model
  */
 
+// Mint a short random id for an army-entry. Stable per-entry handle that
+// drag-to-reorder + the attachment graph reference instead of array
+// indexes (which shift on every reorder, breaking parent-pointers).
+function _mintEntryId() {
+  // 8 hex chars + a one-char counter for first-frame collision avoidance
+  // when addUnit() is called repeatedly inside one microtask.
+  _mintEntryId._n = (_mintEntryId._n || 0) + 1;
+  return Math.random().toString(16).slice(2, 10) + _mintEntryId._n.toString(36);
+}
+
 window.Army = class Army {
   constructor({ id, name, factionName, chapter, detachmentName, pointsLimit, entries, createdAt, updatedAt } = {}) {
     this.id = id || Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
@@ -10,7 +20,15 @@ window.Army = class Army {
     this.chapter = chapter || null;
     this.detachmentName = detachmentName || null;
     this.pointsLimit = pointsLimit || 2000;
-    this.entries = entries || []; // [{unitId, unitName, unitData, count}]
+    this.entries = entries || []; // [{unitId, unitName, unitData, count, entryId, attachedToEntryId?}]
+    // Every entry must carry a stable entryId — minted on add, preserved
+    // through fromJSON/toJSON, and used by the attachment graph
+    // (attachedToEntryId points UP to a parent entry's entryId). Legacy
+    // pre-feature armies have neither field; mint ids defensively here
+    // so the rest of the codebase can assume every entry has one.
+    this.entries.forEach(e => {
+      if (e && typeof e === 'object' && !e.entryId) e.entryId = _mintEntryId();
+    });
     // Preserve timestamps when rehydrating from JSON (localStorage or cloud).
     // Resetting these to "now" on every fromJSON breaks sync — every load
     // would mark this device's local copy as newer than cloud, triggering
@@ -43,9 +61,17 @@ window.Army = class Army {
         selectedPts,
         squadLabel,
         enhancements: enhancements || [],
+        entryId: _mintEntryId(),
+        attachedToEntryId: null,
       });
     }
     this.updatedAt = new Date().toISOString();
+  }
+
+  // Convenience accessor for the attachment graph.
+  findByEntryId(entryId) {
+    if (!entryId) return null;
+    return this.entries.find(e => e && e.entryId === entryId) || null;
   }
 
   setEnhancements(index, enhancements) {
@@ -56,7 +82,17 @@ window.Army = class Army {
   }
 
   removeEntry(index) {
+    const victim = this.entries[index];
     this.entries.splice(index, 1);
+    // Re-root any children whose parent we just removed. Without this,
+    // saved-army JSON would carry orphaned attachedToEntryId pointers
+    // and the renderer would silently drop those entries (they'd
+    // neither render as roots nor under any visible parent).
+    if (victim && victim.entryId) {
+      this.entries.forEach(e => {
+        if (e && e.attachedToEntryId === victim.entryId) e.attachedToEntryId = null;
+      });
+    }
     this.updatedAt = new Date().toISOString();
   }
 
@@ -111,8 +147,23 @@ window.Army = class Army {
             selectedPts: Number.isFinite(e.selectedPts) ? e.selectedPts : undefined,
             squadLabel:  typeof e.squadLabel === 'string' ? e.squadLabel : null,
             enhancements: Array.isArray(e.enhancements) ? e.enhancements : [],
+            // entryId / attachedToEntryId carry the attachment graph.
+            // Missing entryId on a legacy entry is fine — the Army
+            // constructor mints one on rehydration. attachedToEntryId
+            // null/missing means "root-level", which is the safe
+            // default for any pre-feature saved army.
+            entryId:            typeof e.entryId === 'string' && e.entryId ? e.entryId : undefined,
+            attachedToEntryId:  typeof e.attachedToEntryId === 'string' && e.attachedToEntryId ? e.attachedToEntryId : null,
           }))
       : [];
+    // Drop orphan parent pointers — any attachedToEntryId that doesn't
+    // resolve to a sibling entry. Without this guard a crafted payload
+    // or a half-migrated localStorage row could leave entries that
+    // neither render as roots nor under any parent.
+    const knownIds = new Set(safeEntries.map(e => e.entryId).filter(Boolean));
+    safeEntries.forEach(e => {
+      if (e.attachedToEntryId && !knownIds.has(e.attachedToEntryId)) e.attachedToEntryId = null;
+    });
     return new Army({
       id:             typeof data.id === 'string' ? data.id : undefined,
       name:           typeof data.name === 'string' ? data.name : undefined,
