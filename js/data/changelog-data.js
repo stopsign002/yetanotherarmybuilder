@@ -26,10 +26,26 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-5',
-    lastUpdated: '2026-05-15T16:00:00Z',
+    version:     '2026.05.15-6',
+    lastUpdated: '2026-05-15T17:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Reserves, requisitions, and favorites no longer wipe after sync',
+        description:
+          'A long-standing data-loss bug: when sync pulled a fresh bag ' +
+          'from the cloud, the reserves / wishlist / favorites / collection ' +
+          'modules kept a stale in-memory copy of their store. The next ' +
+          'time you nudged a single unit, the module persisted that stale ' +
+          'snapshot back to localStorage — wiping every entry the pull had ' +
+          'just brought in — and then pushed the shrunken bag to cloud, ' +
+          'overwriting the server copy too. Sync now fires a synthetic ' +
+          '`storage` event for every key it pulls so the existing per-' +
+          'module storage listeners re-hydrate in the same tab; the ' +
+          'favorites and points-override modules also gained the listener ' +
+          'they were missing.',
+      },
       {
         date: '2026-05-15', kind: 'fix',
         title: 'Parser: wargear-granted abilities now surface on the unit',
