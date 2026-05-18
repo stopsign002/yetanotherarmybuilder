@@ -26,10 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-12',
-    lastUpdated: '2026-05-15T23:00:00Z',
+    version:     '2026.05.15-13',
+    lastUpdated: '2026-05-16T00:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Army-list card: model count moved to its own line below the name',
+        description:
+          'The squad-size label (e.g. "20 models") used to share the ' +
+          'title row with the unit name, squeezing long names like ' +
+          '"Necron Warriors". It now lives on a dedicated sub-line below ' +
+          'the title, sharing that row with the "+N attached" pill when ' +
+          'a leader is attached. Long names get the full header width to ' +
+          'themselves, and the model count + cluster-total pill line up ' +
+          'nicely side-by-side. Entries with no model count and no ' +
+          'attachments are unchanged.',
+      },
       {
         date: '2026-05-15', kind: 'change',
         title: 'Army pane is ~10% wider by default',

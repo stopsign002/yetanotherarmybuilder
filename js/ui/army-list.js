@@ -23,20 +23,29 @@
     const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
     const total  = pts * entry.count + enhPts;
     const squadHtml = entry.squadLabel
-      ? `<span class="army-entry-squad">(${esc(entry.squadLabel)})</span>` : '';
+      ? `<span class="army-entry-squad">${esc(entry.squadLabel)}</span>` : '';
     const enhBadges = (entry.enhancements || []).map(e =>
       `<span class="army-enh-badge" title="${esc(e.description || '')}">${esc(e.name)}</span>`
     ).join('');
-    // Pill emits as its OWN row below the name (not inside the name's
-    // flex row) so the title gets the full header width — no more
-    // "Necron Warriors" truncating to "NE..." just because the pill
-    // was eating ~80 px of the name's flex track. Wrapper renders only
-    // when there's actually a subtotal so unattached entries look
-    // identical to pre-feature.
-    const attachedPillRow = attachedSubtotal > 0
-      ? `<div class="army-entry-attached-pill-row">
-           <span class="army-entry-attached-pill" title="Combined points of attached units">+${attachedSubtotal} attached</span>
-         </div>`
+    // The squad-label (e.g. "20 models") and the "+N attached" pill
+    // share a SUB-ROW immediately below the unit name. Keeping them
+    // on a dedicated line means:
+    //   · The title row gets the FULL header width — long names
+    //     ("Necron Warriors", "Canoptek Cryptothralls") aren't
+    //     squeezed by the model count + pill competing in the same
+    //     flex track ("NE…", "TECHNOMANC…").
+    //   · The squad label and the pill, when both present (typical
+    //     for a Warriors squad with a leader attached), naturally
+    //     line up side-by-side with a separator — both are short
+    //     enough that they coexist comfortably.
+    // The row is emitted only when at least ONE of the two pieces
+    // exists; entries with neither (e.g. a Captain with no attached
+    // bodyguard) get no extra row and look identical to pre-feature.
+    const attachedPillHtml = attachedSubtotal > 0
+      ? `<span class="army-entry-attached-pill" title="Combined points of attached units">+${attachedSubtotal} attached</span>`
+      : '';
+    const subRow = (squadHtml || attachedPillHtml)
+      ? `<div class="army-entry-subline">${squadHtml}${attachedPillHtml}</div>`
       : '';
     // New richer markup. Preserves the original element classes + data-* attrs
     // that events.js delegates on (.army-entry, .army-qty-input,
@@ -56,9 +65,8 @@
       <div class="army-entry-body">
         <div class="army-entry-name" title="${esc(entry.unitName)}">
           <span class="army-entry-title">${esc(entry.unitName)}</span>
-          ${squadHtml}
         </div>
-        ${attachedPillRow}
+        ${subRow}
         ${enhBadges ? `<div class="army-enh-badges">${enhBadges}</div>` : ''}
         <div class="army-entry-stats">
           <span class="army-entry-stat army-entry-stat-pts">

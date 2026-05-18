@@ -269,16 +269,38 @@
   margin-left: 4px;
 }
 
-/* "+N attached" pill row.
-   Pill placement moved out of `.army-entry-name`'s flex row into a
-   dedicated row below the title (see army-list.js: `attachedPillRow`).
-   The name now has the full header width, so long titles like
-   "Necron Warriors" stop truncating just because the pill was
-   competing for space. The row only renders when a subtotal exists
-   (root entries without attachments are unaffected). */
-.army-entry-attached-pill-row {
+/* Sub-line row.
+   Hosts the squad-size label (e.g. "20 models") and / or the "+N
+   attached" cluster pill on a dedicated line beneath the unit title.
+   Keeping both pieces out of the title's flex row gives long names
+   (e.g. "Necron Warriors", "Canoptek Cryptothralls") the full header
+   width — otherwise the pill + label would compete for space and
+   force "NE…" / "TECHNOMANC…" truncation. The row is emitted only
+   when at least one piece exists, so unsized non-attached entries
+   look identical to pre-feature. Squad label leads, pill follows;
+   `align-items: center` keeps the pill's bordered chip vertically
+   centered on the muted-grey model count. */
+.army-entry-subline {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   margin: 1px 0 4px 0;
+  font-family: var(--ui-font, system-ui, sans-serif);
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.army-entry-subline .army-entry-squad {
+  /* The squad label was previously inside the title flex row where
+     it inherited the Cinzel display font + larger size. Now that it
+     lives on its own UI row, restore the muted, plain-text styling
+     used for secondary metadata everywhere else in the build pane. */
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
 }
 .army-entry-attached-pill {
   display: inline-block;
