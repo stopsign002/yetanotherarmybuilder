@@ -25,6 +25,13 @@
     chipState: Object.create(null),
     // Marker so we don't register the chip predicate more than once.
     _chipPredicateRegistered: false,
+    // Last filter signature — used by renderUnitRoster to decide whether
+    // to reset scrollTop. Re-renders driven by armyChange / autosave /
+    // sync that don't actually change the filtered set should keep the
+    // user where they were on the page; only an honest filter change
+    // (search input, faction switch, role chip, points filter) snaps
+    // back to the top.
+    lastFilterSig: null,
   };
 
   // Chips: label shown to the user -> keyword matched against unit.keywords.
@@ -258,6 +265,27 @@
     const badge = document.getElementById('unit-count-badge');
     const empty = document.getElementById('roster-empty');
 
+    // Compute a signature of every input that actually changes which
+    // units are shown. selectedUnitId is intentionally EXCLUDED — it
+    // only affects card highlighting, never the filtered set. armyChange
+    // hooks (autosave + sync notifications) re-call this function with
+    // the same filter args after every army edit; without the signature
+    // check below the unconditional `scrollTop = 0` at the end would
+    // snap the user to the top of the roster every time they added a
+    // unit, hovered something that touched state, or sync pulled in
+    // the background — including mid-scroll, which is what surfaced
+    // the "units pane keeps jumping to the top" bug.
+    const chipSig = Object.keys(R.chipState).sort().map(k => k + ':' + R.chipState[k]).join(',');
+    const filterSig = JSON.stringify({
+      s: searchTerm || '',
+      f: factionFilter || '',
+      l: (linkedFactions || []).slice().sort(),
+      c: chipSig,
+      n: (units && units.length) || 0,
+    });
+    const filterChanged = filterSig !== R.lastFilterSig;
+    R.lastFilterSig = filterSig;
+
     let filtered = units || [];
     if (factionFilter && factionFilter !== 'all') {
       filtered = filtered.filter(u =>
@@ -311,11 +339,35 @@
     }
     if (empty) empty.style.display = 'none';
 
-    // Reset scroll on filter change so the user sees the top of the new set.
+    // Reset scroll on filter change so the user sees the top of the new
+    // set. Skip the reset when the filter hasn't actually changed (army
+    // edits, autosave, sync pulls all hit this code path with the same
+    // filter args) so mid-scroll re-renders don't yank the user back to
+    // the top.
     const sc = getScrollContainer(grid);
-    if (sc) sc.scrollTop = 0;
+    const savedScrollTop = (!filterChanged && sc) ? sc.scrollTop : 0;
+    if (filterChanged && sc) sc.scrollTop = 0;
 
     appendBatch(grid, INITIAL_PAGE);
+    // Same-filter re-render: keep appending batches until the rendered
+    // content is tall enough to cover where the user was scrolled to.
+    // Otherwise INITIAL_PAGE cards alone wouldn't reach the user's
+    // cached scrollTop and the browser would clamp them to the bottom
+    // of the (short) new grid — surfacing as "the roster jumped" on
+    // any user scrolled past page 1. Cap iterations defensively so we
+    // can't spin forever if scrollHeight stops growing.
+    if (!filterChanged && sc && savedScrollTop > 0) {
+      const targetBottom = savedScrollTop + sc.clientHeight;
+      let guard = 0;
+      while (R.rendered < R.filtered.length &&
+             sc.scrollHeight < targetBottom &&
+             guard < 20) {
+        appendBatch(grid, APPEND_PAGE);
+        guard++;
+      }
+      const max = sc.scrollHeight - sc.clientHeight;
+      sc.scrollTop = Math.min(savedScrollTop, Math.max(0, max));
+    }
     ensureScrollListener(grid);
   };
 })();

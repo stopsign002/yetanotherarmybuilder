@@ -26,10 +26,26 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-10',
-    lastUpdated: '2026-05-15T21:00:00Z',
+    version:     '2026.05.15-11',
+    lastUpdated: '2026-05-15T22:00:00Z',
     entries: [
       // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Units pane stops jumping back to the top when you scroll',
+        description:
+          'The middle units pane was snapping back to the top whenever ' +
+          'a re-render fired — autosave after adding a unit, cloud sync ' +
+          'pulling fresh state on tab refocus, drag-to-attach saving — ' +
+          'because every render unconditionally reset scrollTop to 0. ' +
+          'The reset now fires ONLY when the visible filter actually ' +
+          'changed (search input, faction switch, role chip, points ' +
+          'filter); a re-render with the same filter preserves the ' +
+          'user\'s scroll position. If the user was scrolled past the ' +
+          'first batch of cards, the lazy-paginator now keeps appending ' +
+          'batches until the rendered content is tall enough to land ' +
+          'them where they were.',
+      },
       {
         date: '2026-05-15', kind: 'change',
         title: 'Army list: attached-unit cards no longer truncate names to "NE…"',
