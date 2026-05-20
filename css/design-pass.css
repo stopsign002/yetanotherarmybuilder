@@ -83,7 +83,7 @@
 #tools-dropdown-menu,
 #more-dropdown-menu,
 #export-dropdown-menu {
-  max-width: calc(var(--col-left, 300px) - 20px);
+  max-width: calc(var(--col-left, 330px) - 20px);
 }
 
 /* ── Toolbar buttons: tighter, more uniform height ───────────────────── */

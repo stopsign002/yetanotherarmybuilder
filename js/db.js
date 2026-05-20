@@ -166,7 +166,23 @@ window.YaabDB = (() => {
   // (Jakhals' Dishonoured group bumps from 1 to 2 on the large
   // compositions). Jakhals now correctly show 10 / 20 models instead
   // of 9 / 19.
-  const DB_VERSION = 31;
+  // v32: walkSelectionEntryGroup recurses into nested wargear sub-groups
+  // so abilities granted by wargear (Big Mek in Mega Armour's Grot Oiler,
+  // etc.) surface on the unit.
+  // v33: parser coverage sweep — wargear sub-groups recurse for both
+  // pickers and default weapons (every Votann character had empty wargear
+  // panes), enhancement detachment-keying is diacritic-folded (Needgaârd
+  // Oathband now shows its 4 enhancements), weapon "➤ X - foo" profile
+  // glyph is stripped (Buri Aegnirssen's Bane reads "Bane - strike"),
+  // shared profiles with a conditional hide-modifier no longer leak
+  // onto unrelated units (Hekaton's Firebase Control), sharedInfoGroups
+  // + infoLink type="infoGroup" are resolved, cost-tier scanning
+  // descends into modifierGroups, primaryKeyword is captured.
+  // v34: findStatProfiles aggregates ALL model statlines instead of
+  // returning the first — multi-statline squads (Beast Snagga Boyz =
+  // Boy + Nob, Kommandos = Boy + Nob + Bomb Squig, etc.) now carry
+  // every distinct line in modelStats.
+  const DB_VERSION = 34;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

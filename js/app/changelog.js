@@ -22,9 +22,17 @@
 
   function fmtDate(iso) {
     if (!iso) return '';
-    // Accept either a YYYY-MM-DD or a full ISO timestamp.
+    // Accept either a YYYY-MM-DD or a full ISO timestamp. For the
+    // date-only form we MUST build a local-midnight Date — `new
+    // Date('2026-05-15')` and `new Date('2026-05-15T00:00:00Z')` both
+    // parse as UTC midnight, which `toLocaleDateString` then shifts
+    // back to May 14 for every viewer west of UTC. Construct from
+    // parts so the date the author wrote is the date the reader sees.
     try {
-      const d = new Date(iso.length <= 10 ? iso + 'T00:00:00Z' : iso);
+      let d;
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+      if (m) d = new Date(+m[1], +m[2] - 1, +m[3]);
+      else   d = new Date(iso);
       if (isNaN(d.getTime())) return iso;
       return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
     } catch (_) { return iso; }

@@ -269,6 +269,19 @@
     }).observe(center, { childList: true, subtree: true });
   });
 
+  // Re-hydrate when the cloud-sync layer pulls a fresh bag (or another
+  // tab updates the key). Without this the in-memory `overrides` object
+  // stays stale after pull, and the next setOverride / removeOverride
+  // would overwrite localStorage with the stale snapshot — wiping every
+  // entry that came from cloud.
+  window.addEventListener('storage', function (e) {
+    if (!e || e.key !== LS_KEY) return;
+    Object.keys(overrides).forEach(k => delete overrides[k]);
+    const fresh = loadOverrides();
+    Object.keys(fresh).forEach(k => { overrides[k] = fresh[k]; });
+    if (typeof App.applyPointsOverrides === 'function') App.applyPointsOverrides();
+  });
+
   // Factions load asynchronously; reapply once any overridden unit has shown
   // up but hasn't had a snapshot taken yet.
   App.hooks.armyChange.push(function () {

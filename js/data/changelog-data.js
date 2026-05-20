@@ -26,10 +26,306 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.14-5',
-    lastUpdated: '2026-05-14T15:00:00Z',
+    version:     '2026.05.16-1',
+    lastUpdated: '2026-05-16T01:00:00Z',
     entries: [
-      // ── 2026-05-14 ──────────────────────────────────────────────────────
+      // ── 2026-05-16 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-16', kind: 'fix',
+        title: 'Multi-statline units (Beast Snagga Boyz, etc.) now show every model\'s stats',
+        description:
+          'Squads where the boss model has a different statline from the ' +
+          'troopers — Beast Snagga Boyz (Boy vs Nob), Kommandos (Boy / ' +
+          'Nob / Bomb Squig) and similar — were only showing the first ' +
+          'model\'s stats. The parser stopped at the first statline it ' +
+          'found instead of collecting them all; it now aggregates every ' +
+          'distinct model statline (identical lines still collapse to ' +
+          'one). The unit detail panel and the printable data cards both ' +
+          'render one labelled stat row per model now. Bumped the cached-' +
+          'data version so the fix takes effect on next load.',
+      },
+      // ── 2026-05-15 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Army-list card: model count moved to its own line below the name',
+        description:
+          'The squad-size label (e.g. "20 models") used to share the ' +
+          'title row with the unit name, squeezing long names like ' +
+          '"Necron Warriors". It now lives on a dedicated sub-line below ' +
+          'the title, sharing that row with the "+N attached" pill when ' +
+          'a leader is attached. Long names get the full header width to ' +
+          'themselves, and the model count + cluster-total pill line up ' +
+          'nicely side-by-side. Entries with no model count and no ' +
+          'attachments are unchanged.',
+      },
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Army pane is ~10% wider by default',
+        description:
+          'The left army pane now defaults to 330 px (was 300 px) and ' +
+          '290 px on narrow viewports (was 260 px). Gives the recently-' +
+          'shipped attached-unit clusters more horizontal breathing room ' +
+          'on top of the in-pane density tightenings. Drag-to-resize ' +
+          'still works the same way — your manual width preference takes ' +
+          'precedence until you reload.',
+      },
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Units pane stops jumping back to the top when you scroll',
+        description:
+          'The middle units pane was snapping back to the top whenever ' +
+          'a re-render fired — autosave after adding a unit, cloud sync ' +
+          'pulling fresh state on tab refocus, drag-to-attach saving — ' +
+          'because every render unconditionally reset scrollTop to 0. ' +
+          'The reset now fires ONLY when the visible filter actually ' +
+          'changed (search input, faction switch, role chip, points ' +
+          'filter); a re-render with the same filter preserves the ' +
+          'user\'s scroll position. If the user was scrolled past the ' +
+          'first batch of cards, the lazy-paginator now keeps appending ' +
+          'batches until the rendered content is tall enough to land ' +
+          'them where they were.',
+      },
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Army list: attached-unit cards no longer truncate names to "NE…"',
+        description:
+          'After the attach-units feature shipped, nested bodyguard cards ' +
+          'were cramming a drag handle, a 3-cell stats grid, a "+N attached" ' +
+          'pill and the unit name into ~220 px of horizontal space — so ' +
+          '"Necron Warriors" read as "NE…", "Technomancer" as "TECHNOMANC…", ' +
+          'etc. Four tightenings reclaim the budget: (1) unit names now ' +
+          'wrap to a second line when they don\'t fit on one (instead of ' +
+          'truncating to a few letters); (2) the leader\'s "+N attached" ' +
+          'pill moves to its own row below the title so the name gets the ' +
+          'full header width; (3) the cosmetic drag-handle widget is ' +
+          'hidden on attached cards (drag still works from anywhere on the ' +
+          'card body, so no functional change); (4) the labelled Pts / Qty ' +
+          '/ Total stats grid on attached cards collapses to a single ' +
+          'compact inline row. Nested-attachment indent + tether line also ' +
+          'tightened from 18 px / 2 px to 10 px / 1 px per level. Root ' +
+          'cards without attachments look identical to before; the 2-line ' +
+          'wrap rule applies everywhere so long-named root entries also ' +
+          'stop truncating.',
+      },
+      {
+        date: '2026-05-15', kind: 'feature',
+        title: 'Army list: attach units to other units (Leader / Bodyguard / Necron multi-attach)',
+        description:
+          'You can now drag a unit card onto another in the army list to ' +
+          'attach it — the dropped unit nests inside its host with a ' +
+          'tether line and a small "+N attached" subtotal pill on the ' +
+          'leader. The middle of an entry registers as an ATTACH drop ' +
+          'zone; the top / bottom edges still trigger normal reorder. ' +
+          'Multiple characters and non-character units (Necron Canoptek ' +
+          'Cryptothralls, Tomb Sentinel, …) can all attach to a single ' +
+          'bodyguard unit — drop them one by one. Drop targets light up ' +
+          'green when the data (GDC `gdcLeadBy` first, BSData "can be ' +
+          'attached to" prose as a backup) confirms the pairing, amber ' +
+          'when neither source lists it — amber drops still succeed with ' +
+          'a warning toast, so faction-data gaps can\'t prevent a legal ' +
+          'attachment. Dragging a nested card out into the gap between ' +
+          'root entries detaches it; reordering inside the parent works ' +
+          'too. Points totals and Rule-of-3 still count each entry ' +
+          'independently — the nesting is purely visual + reflects the ' +
+          'in-game leader relationship. Share URLs and saved armies round-' +
+          'trip the attachment graph; older saves render flat with no ' +
+          'change in behaviour.',
+      },
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Updates modal: entries no longer show yesterday\'s date for non-UTC viewers',
+        description:
+          'A YYYY-MM-DD entry date was being parsed as UTC midnight then ' +
+          'rendered in local time, so anyone west of UTC saw every entry ' +
+          'one day earlier than the author wrote (e.g. a 2026-05-15 entry ' +
+          'showing as "May 14, 2026"). Now built from y/m/d parts so the ' +
+          'date the author wrote is the date the reader sees.',
+      },
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Parser sweep: characters get their wargear pickers + several silent omissions fixed',
+        description:
+          'A deep audit of how the parser walks BattleScribe XML turned ' +
+          'up nine separate omissions that quietly cost users datasheet ' +
+          'content. All fixes are in shared parser code, so every faction ' +
+          'with the same XML shape benefits — Votann was the audit subject ' +
+          'but Primaris characters, Eldar Phoenix Lords, Custodes Achillus ' +
+          'dreadnoughts, and any future detachment with a diacritic in its ' +
+          'name were vulnerable too. Specifically: (1) Needgaârd Oathband ' +
+          'and any other diacritic-bearing detachment now picks up its ' +
+          'enhancements (the BSData enhancement <comment> keys were ' +
+          'spelled without the accent — exact-string match dropped them); ' +
+          '(2) every character whose wargear sits under a "Wargear" wrapper ' +
+          'with inner Crest / Melee / Ranged sub-groups now shows those ' +
+          'pickers (Votann Kâhl, Einhyr Champion, Iron-master + analogues ' +
+          'across factions); (3) default weapons one nesting level deep ' +
+          '(Hearthkyn Theyn\'s bolter, every multi-slot leader model\'s ' +
+          'pre-selected kit) are recognised; (4) multi-stance weapons like ' +
+          'Buri Aegnirssen\'s "Bane" render as "Bane - strike" / "Bane - ' +
+          'sweep" instead of two ugly "➤ Bane - strike" rows; (5) shared ' +
+          '<infoGroup> elements (Votann detachment aura bundles) are now ' +
+          'indexed; (6) conditional-hide modifiers on shared profiles are ' +
+          'honoured, so Hekaton Land Fortress\'s "Firebase Control (Aura)" ' +
+          'no longer leaks onto every Transport in non-Brandfast ' +
+          'detachments; (7) cost-tier modifiers wrapped in <modifierGroups> ' +
+          '(plus the increment-type tiers used by Crucible mode) now ' +
+          'register; (8) parsed units carry a new primaryKeyword field for ' +
+          'role-aware UI; (9) zero-enhancement detachments and surviving ' +
+          '"➤" weapon glyphs are now flagged by the parse coverage probe ' +
+          'so regressions show up in the developer console.',
+      },
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Reserves, requisitions, and favorites no longer wipe after sync',
+        description:
+          'A long-standing data-loss bug: when sync pulled a fresh bag ' +
+          'from the cloud, the reserves / wishlist / favorites / collection ' +
+          'modules kept a stale in-memory copy of their store. The next ' +
+          'time you nudged a single unit, the module persisted that stale ' +
+          'snapshot back to localStorage — wiping every entry the pull had ' +
+          'just brought in — and then pushed the shrunken bag to cloud, ' +
+          'overwriting the server copy too. Sync now fires a synthetic ' +
+          '`storage` event for every key it pulls so the existing per-' +
+          'module storage listeners re-hydrate in the same tab; the ' +
+          'favorites and points-override modules also gained the listener ' +
+          'they were missing.',
+      },
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Parser: wargear-granted abilities now surface on the unit',
+        description:
+          'Units whose abilities are granted via wargear (Big Mek in ' +
+          'Mega Armour\'s Grot Oiler, etc.) were missing those abilities ' +
+          'from their datasheet. The parser walked the unit\'s top-level ' +
+          'wargear group but stopped before its nested sub-groups, so ' +
+          'every ability-bearing wargear option one level deeper got ' +
+          'skipped. walkSelectionEntryGroup now recurses, and the IDB ' +
+          'cache version was bumped (32) so the fix takes effect on ' +
+          'next reload.',
+      },
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Detachment dropdown stays populated after tab refocus',
+        description:
+          'Tabbing away and back could leave the detachment dropdown ' +
+          'empty until you flipped the faction selector — the ' +
+          'visibility-change cloud pull was firing a re-render before ' +
+          'state.factions was fully hydrated, and updateDetachmentOptions ' +
+          'cleared the list down to the "Select faction first" placeholder. ' +
+          'The function now leaves an already-populated list alone while ' +
+          'factions are still warming up, and sync.pullAll re-applies the ' +
+          'current army\'s faction / chapter / detachment to the dropdowns ' +
+          'once the pull completes.',
+      },
+      {
+        date: '2026-05-15', kind: 'feature',
+        title: 'Bug report: 50 MB image / video uploads + bug vs feature toggle',
+        description:
+          'The Report icon in the topbar now opens a "Send feedback" ' +
+          'modal with a Type dropdown (Bug report or Feature request) ' +
+          'and a file picker that accepts a single image or video up ' +
+          'to 50 MB. The modal\'s title, prompts, and submit button ' +
+          'wording all adapt to the chosen type. Attachment-bearing ' +
+          'submissions send as multipart/form-data; the attachment-free ' +
+          'path still posts plain JSON so it keeps working with the ' +
+          'pre-update server.',
+      },
+      {
+        date: '2026-05-15', kind: 'feature',
+        title: 'Cards mode: save and recall named presets',
+        description:
+          'A new Presets section at the top of the Layout sub-tab lets ' +
+          'you save the current colours, typography, layout, spillover ' +
+          'settings, and back-image selection under a name (e.g. ' +
+          '“steve orks”). Pick a preset from the dropdown to snap every ' +
+          'setting back the next time you print a second batch for the ' +
+          'same customer. Save as new, update the active preset, ' +
+          'rename, and delete are all available. Presets sync across ' +
+          'your devices when you’re signed in.',
+      },
+      {
+        date: '2026-05-15', kind: 'fix',
+        title: 'Cards mode: preview no longer blanks after tab-switching back',
+        description:
+          'Tabbing away from the browser and coming back made the card ' +
+          'preview show "Nothing selected yet" until you flipped to ' +
+          'another mode and back. The visibilitychange-triggered cloud ' +
+          'sync was firing an armyChange that reset the picker’s ' +
+          'include sets to null without re-defaulting them. The handler ' +
+          'now re-runs syncIncludeDefaults() before redrawing, so the ' +
+          'preview stays populated.',
+      },
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Cards mode: subtitle baseline baked at 130%',
+        description:
+          'The Subtitles slider now treats 130% as the new 100%. The ' +
+          'CSS base for the subtitle line was scaled up to match, and ' +
+          'saved prefs are auto-migrated on load (prefsVersion stepped ' +
+          '2 → 3) — a user whose slider was at 130% lands at 100%, ' +
+          'custom tunes above or below stay as a relative offset.',
+      },
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Cards mode: stratagem subtitle bolded',
+        description:
+          'The stratagem-card subtitle (CORE / FACTION / DETACHMENT ' +
+          'STRATAGEM + PHASE: <name>) now renders at weight 700 so it ' +
+          'reads cleanly against the bronze CP pill. Rule and unit ' +
+          'subtitles are unchanged.',
+      },
+      {
+        date: '2026-05-15', kind: 'change',
+        title: 'Cards mode: new 100% baseline for typography + softer default corners + subtitle slider',
+        description:
+          'The print-tuned typography sizes that used to require pushing ' +
+          'each slider to 120–150% are now baked into the CSS bases, so ' +
+          '100% on every slider is the new readable-by-default size. ' +
+          'Sliders all default to 100%; the "Reset typography" button ' +
+          'snaps back there too. Saved prefs are auto-migrated on load — ' +
+          'your old 120 / 150 / 130 / 120 / 130 / 120 set lands at exactly ' +
+          '100% across the board (the new baseline), and any custom ' +
+          'tuning above or below those values is preserved as relative ' +
+          'offset from the new baseline. The Typography panel also gains ' +
+          'a new "Subtitles" slider that scales the subtitle line (ARMY ' +
+          'RULE, DETACHMENT RULE, CORE / FACTION / DETACHMENT STRATAGEM, ' +
+          'PHASE: <name>, unit role / type) independently of body and ' +
+          'section-head sizes. Corner-rounding defaults are also softer ' +
+          '(3mm card frame, 2mm header / stat-pills / section-heads) for ' +
+          'a more consistent look across the inner chrome.',
+      },
+      {
+        date: '2026-05-14', kind: 'fix',
+        title: 'Dark Angels: Wrath of the Rock (and other chapter-exclusive detachments) show their stratagems',
+        description:
+          'Wrath of the Rock had no stratagems in the army-rules pinboard or ' +
+          'the stratagem browser. BSData defines the detachment inside the ' +
+          'parent Space Marines catalogue (gated to the Dark Angels chapter), ' +
+          'while the GDC ships its stratagems under the Dark Angels file — ' +
+          'the merge step only matched each faction’s stratagems against ' +
+          'its own detachment list, so DA’s stratagems tried to attach to ' +
+          'an empty list and SM’s "Wrath of the Rock" detachment got ' +
+          'nothing. The merge now also indexes the chapter’s parent ' +
+          'detachments, so chapter-exclusive detachments (Wrath of the Rock, ' +
+          'Inner Circle Task Force, Lion’s Blade Task Force, Unforgiven ' +
+          'Task Force, Company of Hunters, and any equivalent on other ' +
+          'chapters) get their stratagems attached correctly.',
+      },
+      {
+        date: '2026-05-14', kind: 'feature',
+        title: 'Cards mode: army-rule spillover + optional mid-section splitting',
+        description:
+          'Long army-rule and detachment-rule cards can now overflow ' +
+          'onto the back of the card the same way unit cards do. Because ' +
+          'rule cards have a single body section, this is gated behind a ' +
+          'new "Split sections mid-content" checkbox under Spillover ' +
+          'handling — turn it on and the rule text splits paragraph-by-' +
+          'paragraph between primary and continuation. The same toggle ' +
+          'also lets dense unit sections (long ability lists, deep ' +
+          'weapon tables) break across primary and continuation instead ' +
+          'of moving the whole section to the back, so primary cards ' +
+          'fill up before anything spills.',
+      },
       {
         date: '2026-05-14', kind: 'fix',
         title: 'World Eaters: Jakhals show the right squad sizes (10 / 20)',

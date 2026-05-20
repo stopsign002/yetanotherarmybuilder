@@ -62,9 +62,10 @@
   }
 
   function buildIndexes(root) {
-    const entriesById  = new Map(I.sharedEntriesById);
-    const profilesById = new Map(I.sharedProfilesById);
-    const rulesById    = new Map(I.sharedRulesById);
+    const entriesById    = new Map(I.sharedEntriesById);
+    const profilesById   = new Map(I.sharedProfilesById);
+    const rulesById      = new Map(I.sharedRulesById);
+    const infoGroupsById = new Map(I.sharedInfoGroupsById);
 
     root.querySelectorAll(
       ':scope > sharedSelectionEntries > selectionEntry, ' +
@@ -84,7 +85,12 @@
       if (id) rulesById.set(id, r);
     });
 
-    return { entriesById, profilesById, rulesById };
+    root.querySelectorAll(':scope > sharedInfoGroups > infoGroup').forEach(g => {
+      const id = g.getAttribute('id');
+      if (id) infoGroupsById.set(id, g);
+    });
+
+    return { entriesById, profilesById, rulesById, infoGroupsById };
   }
 
   function parse(xmlString, filename) {
@@ -426,6 +432,15 @@
 
       function extractEnhancementEntry(entry) {
         if (I.getAttr(entry, 'hidden', 'false') === 'true') return null;
+        // Defensive: skip enhancements with an unconditional hide
+        // modifier (rare — most hide-modifiers carry a detachment
+        // condition that gates visibility, which is fine because we
+        // route enhancements by <comment> anyway). An UNCONDITIONAL
+        // hide means "never visible", e.g. retired or placeholder rows.
+        const hideMods = entry.querySelectorAll(':scope > modifiers > modifier[type="set"][field="hidden"][value="true"]');
+        for (const m of hideMods) {
+          if (!m.querySelector(':scope > conditions > condition, :scope > conditionGroups')) return null;
+        }
         const name = I.getAttr(entry, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return null;
         if (I.isCrusadeSection(name)) return null;
@@ -440,12 +455,22 @@
         return { name, pts, description };
       }
 
+      // Key enhancements by a fold-key (diacritics stripped, lowercased,
+      // whitespace collapsed) so BSData spelling mismatches between the
+      // detachment name and the enhancement's <comment> don't drop
+      // enhancements on the floor. Votann hit this with "Needgaârd
+      // Oathband" (detachment, with â) vs. "Needgaard" (enhancement
+      // comment, plain a) — exact-string match silently dropped 4
+      // enhancements. Same pattern is latent in any future faction with
+      // a diacritic-bearing detachment.
       function pushEnhancement(detName, enh) {
         if (!detName || !enh) return;
-        const list = enhancementsByDetachment[detName] || [];
+        const key = I.foldKey(detName);
+        if (!key) return;
+        const list = enhancementsByDetachment[key] || [];
         if (list.some(e => e.name === enh.name)) return;
         list.push(enh);
-        enhancementsByDetachment[detName] = list;
+        enhancementsByDetachment[key] = list;
       }
 
       enhGroups.forEach(enhGroup => {
@@ -502,7 +527,7 @@
         });
       });
 
-      detachments.forEach(d => { d.enhancements = enhancementsByDetachment[d.name] || []; });
+      detachments.forEach(d => { d.enhancements = enhancementsByDetachment[I.foldKey(d.name)] || []; });
 
       // ── Army Rules ──
       const armyRules = [];

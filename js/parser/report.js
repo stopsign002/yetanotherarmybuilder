@@ -56,6 +56,41 @@
           }
         });
       }
+
+      // Detachments with zero enhancements. Almost every 10e detachment
+      // ships ≥ 3 enhancements; an empty list is overwhelmingly the
+      // diacritic-mismatch class of bug (Needgaârd → Needgaard) rather
+      // than legitimate. Flagging zero-enhancement detachments turns
+      // those into a noisy warning instead of silent loss.
+      const detachments = (result && result.detachments) || [];
+      detachments.forEach(d => {
+        if (!d || !Array.isArray(d.enhancements)) return;
+        if (d.enhancements.length === 0) {
+          report.warnings.push({
+            factionName,
+            reason: 'detachment-no-enhancements',
+            detachment: d.name,
+          });
+        }
+      });
+
+      // Weapon-profile names that still start with the "➤" variant glyph.
+      // stats.js strips this when parsing; surviving entries indicate a
+      // path that bypasses parseDirectProfiles (custom collector, future
+      // BSData encoding change, etc.).
+      const variantRe = /^[➤▶►▸>]/;
+      let variantPrefixed = 0;
+      units.forEach(u => {
+        if (!u || !Array.isArray(u.weapons)) return;
+        u.weapons.forEach(w => { if (w && variantRe.test(w.name || '')) variantPrefixed++; });
+      });
+      if (variantPrefixed > 0) {
+        report.warnings.push({
+          factionName,
+          reason: 'weapons-with-variant-glyph',
+          count: variantPrefixed,
+        });
+      }
     } catch (_) {}
     return result;
   };

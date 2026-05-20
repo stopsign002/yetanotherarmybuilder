@@ -121,6 +121,7 @@
       '  --dcc-body-mul: '    + t.bodySize    + ';',
       '  --dcc-heading-mul: ' + t.headingSize + ';',
       '  --dcc-fine-mul: '    + t.fineSize    + ';',
+      '  --dcc-sub-mul: '     + t.subSize     + ';',
       '}',
       // When `bold` is on, push thin text from weight 400 to 600 so it
       // survives at-size print rendering.
@@ -167,6 +168,8 @@
         if (p.spilloverMode === 'continuation' || p.spilloverMode === 'fullCard') {
           spilloverMode = p.spilloverMode;
         }
+        if (typeof p.allowPartialSection === 'boolean') allowPartialSection = p.allowPartialSection;
+        if (typeof p.activePresetId === 'string' || p.activePresetId === null) activePresetId = p.activePresetId;
         if (typeof p.activeLayoutId === 'string')   activeLayoutId   = p.activeLayoutId;
         if (p.layoutByKind && typeof p.layoutByKind === 'object') {
           ['unit','rule','strat'].forEach(k => {
@@ -176,9 +179,36 @@
           });
         }
         if (p.typography && typeof p.typography === 'object') {
-          ['nameSize','statSize','weaponSize','bodySize','headingSize','fineSize'].forEach(k => {
+          // Stepwise typography-prefs migration. Each time we bake a
+          // slider default into the CSS base, we bump prefsVersion and
+          // add a divide-by-factor step here. Loading older prefs walks
+          // through every step their version hasn't been through yet, so
+          // a user lands at the same rendered size as before regardless
+          // of which migration era their save predates.
+          //   v1 → v2 (typography baseline bake — name/stat/weapon/body/
+          //            heading/fine retuned to their slider preferences):
+          //     name 1.20 / stat 1.50 / weapon 1.30 / body 1.20 /
+          //     heading 1.30 / fine 1.20 / sub 1.00 (no change yet).
+          //   v2 → v3 (subtitle baseline bake to 130%):
+          //     sub 1.30.
+          const ver = (typeof p.prefsVersion === 'number' && p.prefsVersion > 0) ? p.prefsVersion : 1;
+          const BAKE_V2 = {
+            nameSize:    1.20,
+            statSize:    1.50,
+            weaponSize:  1.30,
+            bodySize:    1.20,
+            headingSize: 1.30,
+            fineSize:    1.20,
+            subSize:     1.00,
+          };
+          const BAKE_V3 = { subSize: 1.30 };
+          Object.keys(BAKE_V2).forEach(k => {
             const n = parseFloat(p.typography[k]);
-            if (!Number.isNaN(n) && n > 0) typography[k] = Math.max(0.5, Math.min(2.0, n));
+            if (Number.isNaN(n) || n <= 0) return;
+            let v = n;
+            if (ver < 2 && BAKE_V2[k]) v = v / BAKE_V2[k];
+            if (ver < 3 && BAKE_V3[k]) v = v / BAKE_V3[k];
+            typography[k] = Math.max(0.5, Math.min(2.0, v));
           });
           if (typeof p.typography.bold === 'boolean') typography.bold = p.typography.bold;
         }
@@ -208,10 +238,13 @@
     if (_suppressSave) return;
     try {
       const p = {
+        prefsVersion: 3,
         display: Object.assign({}, display),
         textureId, textureIntensity, borderColor,
         cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,
         spilloverMode,
+        allowPartialSection,
+        activePresetId,
         activeLayoutId,
         layoutByKind: Object.assign({}, layoutByKind),
         typography: Object.assign({}, typography),
@@ -224,6 +257,130 @@
       };
       localStorage.setItem(PREFS_KEY, JSON.stringify(p));
     } catch (_) {}
+  }
+
+  // ── Presets ───────────────────────────────────────────────────────────
+  // Named snapshots of every card-render setting, so the user can save a
+  // tuned look ("steve orks", "leah eldar", …) and re-apply it later when
+  // they print a second batch for the same commission. The preset stores
+  // every value that affects rendering — texture, border colour, corner
+  // radii, typography, spillover, layout, display toggles, card-back
+  // image (by ImageStore id + name, plus offsets/scale). The image
+  // bytes live in ImageStore so we don't bloat the localStorage budget;
+  // if the user deletes the image from their library, the preset still
+  // applies everything else and just falls back to "no image".
+  //
+  // The presets array is synced across devices via sync.js's bag layer
+  // (yaab_cards_presets is in SYNCED_BAG_KEYS), so a preset tuned on
+  // the laptop is available the next time the user signs in on the
+  // print machine.
+  const PRESETS_KEY = 'yaab_cards_presets';
+  let presets = [];           // array of { id, name, createdAt, updatedAt, settings }
+  let activePresetId = null;  // last-applied preset's id; tracks the dropdown selection
+
+  function loadPresets() {
+    try {
+      const raw = localStorage.getItem(PRESETS_KEY);
+      if (!raw) { presets = []; return; }
+      const parsed = JSON.parse(raw);
+      presets = Array.isArray(parsed) ? parsed.filter(p => p && p.id && p.name) : [];
+    } catch (_) { presets = []; }
+  }
+  function savePresets() {
+    try { localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); } catch (_) {}
+  }
+  function nowIso() { return new Date().toISOString(); }
+  function newPresetId() {
+    return 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  // Snapshot every render setting into a plain JSON-able object.
+  function captureSettings() {
+    return {
+      display:             Object.assign({}, display),
+      textureId, textureIntensity, borderColor,
+      cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,
+      spilloverMode, allowPartialSection,
+      activeLayoutId,
+      layoutByKind:        Object.assign({}, layoutByKind),
+      typography:          Object.assign({}, typography),
+      cardBack: {
+        enabled:  cardBack.enabled,
+        scale:    cardBack.scale,
+        offsetX:  cardBack.offsetX,
+        offsetY:  cardBack.offsetY,
+        activeId: cardBack.activeId,
+        name:     cardBack.name,
+      },
+    };
+  }
+  // Apply a captured-settings object onto module state. Permissive: any
+  // missing field falls back to the current value, so an older-shape
+  // preset (one saved before a new setting was added) still applies
+  // cleanly without nuking the newer settings.
+  function applySettings(s) {
+    if (!s || typeof s !== 'object') return;
+    if (s.display && typeof s.display === 'object') {
+      Object.keys(DEFAULT_DISPLAY).forEach(k => {
+        if (typeof s.display[k] === 'boolean') display[k] = s.display[k];
+      });
+    }
+    if (typeof s.textureId === 'string')         textureId         = s.textureId;
+    if (typeof s.textureIntensity === 'number')  textureIntensity  = s.textureIntensity;
+    if (typeof s.borderColor === 'string')       borderColor       = s.borderColor;
+    if (typeof s.cornerRadiusMm === 'number')    cornerRadiusMm    = s.cornerRadiusMm;
+    if (typeof s.headerRadiusMm === 'number')    headerRadiusMm    = s.headerRadiusMm;
+    if (typeof s.statRadiusMm === 'number')      statRadiusMm      = s.statRadiusMm;
+    if (typeof s.sectionHeadRadiusMm === 'number') sectionHeadRadiusMm = s.sectionHeadRadiusMm;
+    if (s.spilloverMode === 'continuation' || s.spilloverMode === 'fullCard') spilloverMode = s.spilloverMode;
+    if (typeof s.allowPartialSection === 'boolean') allowPartialSection = s.allowPartialSection;
+    if (typeof s.activeLayoutId === 'string')    activeLayoutId    = s.activeLayoutId;
+    if (s.layoutByKind && typeof s.layoutByKind === 'object') {
+      ['unit','rule','strat'].forEach(k => {
+        if (s.layoutByKind[k] === null || typeof s.layoutByKind[k] === 'string') {
+          layoutByKind[k] = s.layoutByKind[k];
+        }
+      });
+    }
+    if (s.typography && typeof s.typography === 'object') {
+      ['nameSize','statSize','weaponSize','bodySize','headingSize','fineSize','subSize'].forEach(k => {
+        const n = parseFloat(s.typography[k]);
+        if (!Number.isNaN(n) && n > 0) typography[k] = Math.max(0.5, Math.min(2.0, n));
+      });
+      if (typeof s.typography.bold === 'boolean') typography.bold = s.typography.bold;
+    }
+    if (s.cardBack && typeof s.cardBack === 'object') {
+      if (typeof s.cardBack.enabled === 'boolean') cardBack.enabled = s.cardBack.enabled;
+      if (typeof s.cardBack.scale   === 'number')  cardBack.scale   = s.cardBack.scale;
+      if (typeof s.cardBack.offsetX === 'number')  cardBack.offsetX = s.cardBack.offsetX;
+      if (typeof s.cardBack.offsetY === 'number')  cardBack.offsetY = s.cardBack.offsetY;
+      if (s.cardBack.activeId != null) {
+        // Resolve the image dataUrl from the loaded library. If the
+        // preset's image was deleted, fall back to no image (everything
+        // else still applies). reloadSavedImages() runs at mount + on
+        // auth change, so savedImages is usually warm here.
+        const img = savedImages.find(i => String(i.id) === String(s.cardBack.activeId));
+        if (img) {
+          cardBack.activeId = img.id;
+          cardBack.src      = img.dataUrl;
+          cardBack.name     = img.name || s.cardBack.name || '';
+        } else {
+          cardBack.activeId = null;
+          cardBack.src      = '';
+          cardBack.name     = '';
+        }
+      } else {
+        cardBack.activeId = null;
+        cardBack.src      = '';
+        cardBack.name     = '';
+      }
+    }
+  }
+
+  function findPreset(id) { return presets.find(p => p.id === id) || null; }
+  function getActivePresetName() {
+    const p = findPreset(activePresetId);
+    return p ? p.name : '';
   }
 
   // ── Display toggles ──────────────────────────────────────────────────────
@@ -277,9 +434,11 @@
   // <style id="cards-texture-style"> element managed by applyTextureStyle().
   let textureId        = DEFAULT_TEXTURE;
   let textureIntensity = DEFAULT_INTENSITY;
-  // Card corner radius in mm. Default 4mm (R4 — matches the most common
-  // physical corner-cutter setting for trading cards).
-  let cornerRadiusMm = 4;
+  // Card corner radius in mm. Default 3mm — slightly tighter than the
+  // classic R4 corner-cutter setting; pairs well with the 2mm inner
+  // radii below so the title bar, stat pills, and section heads share
+  // a consistent soft-rectangle feel.
+  let cornerRadiusMm = 3;
   // Spillover handling for unit cards whose content overflows:
   //   'continuation' — partial parchment overlay sized to content,
   //                    user's card-back art bleeds through underneath
@@ -288,29 +447,41 @@
   //                    primary, just with the cloned header and the
   //                    overflowing sections.
   let spilloverMode = 'continuation';
+  // When false (default), spillover splits only at whole-section
+  // boundaries: a section either fits on the primary or moves entirely
+  // to the continuation. Rule cards (single-section bodies) therefore
+  // can't split and would clip.
+  // When true, the splitter is allowed to break mid-section: rule-card
+  // text splits paragraph-by-paragraph onto the continuation, and a
+  // unit-card section that doesn't fit at its boundary will spill its
+  // overflowing rows/items onto the continuation instead of being
+  // moved entirely.
+  let allowPartialSection = false;
   // Title-bar header corner radius in mm. Independent of the card-frame
   // radius so users can tune the dark-bar shape (square / softly
   // rounded / matching-the-card) without affecting the gilded frame.
-  let headerRadiusMm = 3;
+  let headerRadiusMm = 2;
   // Stat-cell pill rounding (M / T / SV / W / LD / OC blocks).
-  let statRadiusMm = 1;
+  let statRadiusMm = 2;
   // Category-header bar rounding (RANGED WEAPONS / ABILITIES / WARGEAR
   // bronze bars). Only top-left + top-right are visible — the bottom
   // sits flush with the section body.
-  let sectionHeadRadiusMm = 1;
+  let sectionHeadRadiusMm = 2;
   // Typography multipliers — each scales a group of font sizes by the
-  // user's chosen multiplier (0.8 → 1.5). Defaults bias slightly larger
-  // than the original baseline because the base sizes were tuned for
-  // screen + don't always print readably.
+  // user's chosen multiplier (0.8 → 1.5). 100% (1.0) is the tuned base
+  // size for printed legibility, picked after dialling things in on
+  // real prints; the multipliers exist so users can nudge any single
+  // group up or down without touching CSS.
   // `bold` adds weight 600 to the thin elements (.dcc-w-kw, .dcc-keywords,
   // .dcc-section-cols) so small printed text doesn't ghost.
   let typography = {
-    nameSize:    1.10,   // .dcc-name (the big card title)
-    statSize:    1.50,   // .dcc-stat-key + .dcc-stat-val
-    weaponSize:  1.25,   // .dcc-w-table (numbers, names, keywords)
-    bodySize:    1.20,   // .dcc-abilities-body, .dcc-wargear-body, .dcc-rule-text
-    headingSize: 1.20,   // .dcc-section-head (RANGED WEAPONS / ABILITIES / WARGEAR / etc.)
-    fineSize:    1.20,   // .dcc-keywords (footer) + .dcc-section-cols (col labels)
+    nameSize:    1.00,
+    statSize:    1.00,
+    weaponSize:  1.00,
+    bodySize:    1.00,
+    headingSize: 1.00,
+    fineSize:    1.00,
+    subSize:     1.00,
     bold:        true,
   };
   const TYPOGRAPHY_DEFAULTS = JSON.parse(JSON.stringify(typography));
@@ -845,8 +1016,20 @@
 
   function renderUnitCard(entry) {
     const unit = entry.unitData || {};
+    // Multi-statline units (Beast Snagga Boyz = Boy + Nob, Marneus
+    // Calgar + Victrix Honour Guard, Terminator Assault Squad TH/SS vs
+    // LC) carry an array of distinct stat profiles in `modelStats`.
+    // Render one stat row per profile, labelled with the model name
+    // when there's more than one. Fall back to the legacy single
+    // `stats` dict for older cached factions / genuinely single-line
+    // units. The present-columns set is the UNION across every profile
+    // so the rows stay column-aligned even when one model lacks a stat.
     const stats = unit.stats || {};
-    const presentStats = STAT_ORDER.filter(k => getStatVal(stats, k) !== '—');
+    const statProfiles = (Array.isArray(unit.modelStats) && unit.modelStats.length > 0)
+      ? unit.modelStats
+      : [{ name: '', ...stats }];
+    const presentStats = STAT_ORDER.filter(k =>
+      statProfiles.some(p => getStatVal(p, k) !== '—'));
     const { ranged, melee } = classifyWeapons(unit);
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     const ptsLabel = entry.selectedPts != null ? entry.selectedPts : (ptsOpts.length ? ptsOpts[0] : null);
@@ -874,15 +1057,16 @@
     const showSubLine = !!role;
     const showInvuln = !!(display.invuln && unit.invulnSave);
 
-    const statsHtml = (display.stats && presentStats.length > 0)
-      ? `<div class="dcc-stats" style="--dcc-stat-cols:${presentStats.length}">
+    const multiStat = statProfiles.length > 1;
+    function renderStatRow(prof) {
+      return `<div class="dcc-stats" style="--dcc-stat-cols:${presentStats.length}">
           ${presentStats.map(k => {
-            const v = String(getStatVal(stats, k));
+            const v = String(getStatVal(prof, k));
             // Combine the invulnerable save into the SV cell as `2+ / 4++`
             // so it lives where players' eyes already go for saves.
             // Adds a `dcc-stat-val-combo` modifier that scales the value
             // font-size down so the longer string still fits the cell.
-            if (k === 'SV' && showInvuln) {
+            if (k === 'SV' && showInvuln && v !== '—') {
               return `
                 <div class="dcc-stat-cell dcc-stat-cell-sv">
                   <span class="dcc-stat-key">${esc(k)}</span>
@@ -895,7 +1079,15 @@
                 <span class="dcc-stat-val">${esc(v)}</span>
               </div>`;
           }).join('')}
-        </div>`
+        </div>`;
+    }
+    const statsHtml = (display.stats && presentStats.length > 0)
+      ? statProfiles.map(prof => {
+          const label = (multiStat && prof.name)
+            ? `<div class="dcc-stat-rowlabel">${esc(prof.name)}</div>`
+            : '';
+          return label + renderStatRow(prof);
+        }).join('')
       : '';
 
     return `
@@ -1153,84 +1345,53 @@
       const reservePx = mmToPx(reserveMm);
       const usable = cardClient - headerH - footerH - reservePx;
 
+      // Walk sections in order, fitting whole sections until one
+      // overflows. When `allowPartialSection` is on we additionally try
+      // to break the overflowing section's children between primary and
+      // continuation, so dense sections (long ability lists, deep weapon
+      // tables) don't pop entirely to the back.
       let running = 0;
       const fits = [];
-      const overflow = [];
-      for (const c of middle) {
-        // Sections are display:flex blocks; offsetHeight already includes
-        // their internal padding and section-head bar.
+      let partialFitHtml = null;
+      const overflowParts = [];
+      for (let i = 0; i < middle.length; i++) {
+        const c = middle[i];
         const h = c.offsetHeight + 4;  // ~1mm gap between sections
-        if (overflow.length === 0 && running + h <= usable) {
+        if (running + h <= usable) {
           fits.push(c); running += h;
-        } else {
-          overflow.push(c);
+          continue;
         }
+        if (allowPartialSection) {
+          const partial = splitSectionPartial(c, usable - running);
+          if (partial) {
+            partialFitHtml = partial.fitHtml;
+            overflowParts.push(partial.overflowHtml);
+            for (let j = i + 1; j < middle.length; j++) overflowParts.push(middle[j].outerHTML);
+            break;
+          }
+        }
+        for (let j = i; j < middle.length; j++) overflowParts.push(middle[j].outerHTML);
+        break;
       }
 
       // If even one middle section won't fit alongside the header, give
       // up and let the card clip — the alternative is an empty primary
       // card with all content on the continuation, which looks broken.
-      if (fits.length === 0) return [card];
-      if (overflow.length === 0) return [card];
+      if (fits.length === 0 && !partialFitHtml) return [card];
+      if (overflowParts.length === 0) return [card];
 
       // Build primary card: header + fits + footer. The footer
       // (FACTION KEYWORDS / KEYWORDS lines) is pinned to the first
       // card always — it identifies the unit and shouldn't get
       // shuffled to a continuation that the user might cut apart from
       // its primary.
-      const firstHTML = header.outerHTML + fits.map(n => n.outerHTML).join('') + (footer ? footer.outerHTML : '');
-      // Continuation card: cloned header + overflowing middle.
-      // Visual handling depends on `spilloverMode`:
-      //   · 'continuation' — partial parchment overlay sized to content
-      //     with the user's card-back art bleeding through underneath
-      //     (or page background when no art is set). Triggers the
-      //     .dcc-card-cont CSS rules.
-      //   · 'fullCard'     — a regular full-parchment card identical
-      //     to the primary, just with the cloned header and the
-      //     overflowing sections.
+      const fitsHTML = fits.map(n => n.outerHTML).join('') + (partialFitHtml || '');
+      const firstHTML = header.outerHTML + fitsHTML + (footer ? footer.outerHTML : '');
       const clonedHead = header.outerHTML.replace('class="dcc-head"', 'class="dcc-head dcc-head-cont"');
-      const overflowHTML = overflow.map(n => n.outerHTML).join('');
-      let contHtml, contClasses;
-      if (spilloverMode === 'fullCard') {
-        contHtml = clonedHead + overflowHTML;
-        contClasses = '';                // no special continuation chrome
-      } else {
-        contClasses = backsOn ? 'dcc-card-cont dcc-card-cont-art' : 'dcc-card-cont';
-        const backImg = backsOn
-          ? '<img class="dcc-cont-bg" alt="" src="' + (cardBack.src || '').replace(/"/g, '&quot;') + '"' +
-            ' style="--dcc-back-scale:' + cardBack.scale +
-            ';--dcc-back-x:' + cardBack.offsetX + '%' +
-            ';--dcc-back-y:' + cardBack.offsetY + '%;">'
-          : '';
-        contHtml =
-          backImg +
-          '<div class="dcc-cont-overlay">' +
-            clonedHead +
-            overflowHTML +
-          '</div>';
-      }
+      const overflowHTML = overflowParts.join('');
+      const { contHtml, contClasses } = buildContinuationChrome(clonedHead + overflowHTML, backsOn);
 
-      const primary = Object.assign({}, card, { html: firstHTML });
-      if (spilloverMode === 'continuation') {
-        // Continuation mode: the overflow rides on the BACK of its
-        // primary's slot instead of taking a fresh front-grid slot.
-        // This lets evens/odds duplex printing pair primary↔continuation
-        // automatically — print fronts, flip the stack, print backs, and
-        // each card's overflow lands on its own reverse side. Without
-        // this the continuation went to the next front slot and was
-        // backed by a (now redundant) decorative card-back, leaving the
-        // primary backed by an unrelated decorative back.
-        primary.continuationHtml = contHtml;
-        primary.continuationClasses = contClasses;
-        return [primary];
-      }
-      const cont = Object.assign({}, card, {
-        html: contHtml,
-        isContinuation: true,
-        contClasses: contClasses,
-        label: (card.label || 'Unit') + ' (cont.)',
-      });
-      return [primary, cont];
+      return emitSplit(card, firstHTML, contHtml, contClasses, 'Unit');
     } finally {
       stage.removeChild(host);
     }
@@ -1240,6 +1401,204 @@
     return mm * 96 / 25.4;
   }
 
+  // Wrap (cloned-head + content) HTML with the spillover chrome the
+  // user picked: parchment overlay + optional back-art image, or — in
+  // 'fullCard' mode — nothing at all (the continuation is rendered as
+  // a plain full-parchment card).
+  function buildContinuationChrome(innerHtml, backsOn) {
+    if (spilloverMode === 'fullCard') {
+      return { contHtml: innerHtml, contClasses: '' };
+    }
+    const contClasses = backsOn ? 'dcc-card-cont dcc-card-cont-art' : 'dcc-card-cont';
+    const backImg = backsOn
+      ? '<img class="dcc-cont-bg" alt="" src="' + (cardBack.src || '').replace(/"/g, '&quot;') + '"' +
+        ' style="--dcc-back-scale:' + cardBack.scale +
+        ';--dcc-back-x:' + cardBack.offsetX + '%' +
+        ';--dcc-back-y:' + cardBack.offsetY + '%;">'
+      : '';
+    return {
+      contHtml: backImg + '<div class="dcc-cont-overlay">' + innerHtml + '</div>',
+      contClasses,
+    };
+  }
+
+  // Common return-shape helper used by every splitter. In 'continuation'
+  // mode the overflow rides on the BACK of its primary's slot (duplex
+  // print works automatically — print fronts, flip stack, print backs).
+  // In 'fullCard' mode it takes a fresh front-grid slot of its own.
+  function emitSplit(card, primaryHtml, contHtml, contClasses, kindLabel) {
+    const primary = Object.assign({}, card, { html: primaryHtml });
+    if (spilloverMode === 'continuation') {
+      primary.continuationHtml = contHtml;
+      primary.continuationClasses = contClasses;
+      return [primary];
+    }
+    const cont = Object.assign({}, card, {
+      html: contHtml,
+      isContinuation: true,
+      contClasses,
+      label: (card.label || kindLabel || 'Card') + ' (cont.)',
+    });
+    return [primary, cont];
+  }
+
+  // Partial-section splitter for unit cards. Used only when the user
+  // enables `allowPartialSection`. Given a section element that doesn't
+  // fit in `availPx`, splits its body children between a primary clone
+  // (kept) and a continuation clone (overflow). Returns null when the
+  // section can't be split usefully (single child, head-only, etc.).
+  function splitSectionPartial(sectionEl, availPx) {
+    const head = sectionEl.querySelector(':scope > .dcc-section-head');
+    const candidates = Array.from(sectionEl.children).filter(c => c !== head);
+    if (candidates.length === 0) return null;
+    // Walk into single-child wrappers (e.g. <table> → <tbody>) until we
+    // reach a multi-child node to split.
+    let splitParent = candidates[0];
+    while (splitParent && splitParent.children && splitParent.children.length === 1) {
+      splitParent = splitParent.children[0];
+    }
+    if (!splitParent || !splitParent.children || splitParent.children.length < 2) return null;
+
+    const items = Array.from(splitParent.children);
+    const headH = head ? head.offsetHeight : 0;
+    let running = headH + 4;  // section head + body padding budget
+    const fitItems = [], overflowItems = [];
+    for (const it of items) {
+      const h = it.offsetHeight + 2;
+      if (overflowItems.length === 0 && running + h <= availPx) {
+        fitItems.push(it); running += h;
+      } else {
+        overflowItems.push(it);
+      }
+    }
+    if (fitItems.length === 0 || overflowItems.length === 0) return null;
+
+    // Resolve the same splitParent inside a deep clone by replaying the
+    // child-index path from the section root.
+    const path = [];
+    for (let n = splitParent; n !== sectionEl; n = n.parentNode) {
+      path.unshift(Array.from(n.parentNode.children).indexOf(n));
+    }
+    function buildClone(itemsArr) {
+      const clone = sectionEl.cloneNode(true);
+      let target = clone;
+      for (const idx of path) target = target.children[idx];
+      while (target.firstChild) target.removeChild(target.firstChild);
+      itemsArr.forEach(it => target.appendChild(it.cloneNode(true)));
+      return clone.outerHTML;
+    }
+    return {
+      fitHtml: buildClone(fitItems),
+      overflowHtml: buildClone(overflowItems),
+    };
+  }
+
+  // Rule-card spillover. Rule cards have a single body section (the
+  // `<div class="dcc-rule-text">` blob), so they can only overflow
+  // when partial-section splitting is enabled. With the flag off we
+  // leave the card untouched and let it clip — matching the default
+  // behaviour for everything else.
+  function splitOverflowingRuleCards(ruleCards, layout) {
+    if (!allowPartialSection || ruleCards.length === 0) return ruleCards;
+    const { w: cardW, h: cardH } = cardSizeFor(layout);
+    const stage = document.createElement('div');
+    stage.style.cssText =
+      'position:fixed;top:-99999px;left:0;width:auto;height:auto;visibility:hidden;z-index:-9999;pointer-events:none;';
+    stage.className = 'dcc-measure-stage';
+    document.body.appendChild(stage);
+    try {
+      const out = [];
+      const backsOn = !!(cardBack.enabled && cardBack.src);
+      for (const card of ruleCards) {
+        measureAndMaybeSplitRule(card, cardW, cardH, stage, backsOn).forEach(c => out.push(c));
+      }
+      return out;
+    } finally {
+      document.body.removeChild(stage);
+    }
+  }
+  function measureAndMaybeSplitRule(card, cardW, cardH, stage, backsOn) {
+    const host = document.createElement('div');
+    host.style.cssText = 'width:' + cardW + 'mm; height:' + cardH + 'mm;';
+    const cardEl = document.createElement('article');
+    cardEl.className = 'dcc-card dcc-card-rule';
+    cardEl.style.cssText = 'width:100%;height:100%;box-sizing:border-box;';
+    cardEl.innerHTML = card.html;
+    host.appendChild(cardEl);
+    stage.appendChild(host);
+    try {
+      if (cardEl.scrollHeight <= cardEl.clientHeight + 2) return [card];
+
+      const header = cardEl.querySelector('.dcc-head');
+      const textEl = cardEl.querySelector('.dcc-rule-text');
+      if (!header || !textEl) return [card];
+      const fullText = textEl.textContent || '';
+      if (!fullText.trim()) return [card];
+
+      // Tokenise so we can rebuild any prefix without losing whitespace:
+      // double-newline → paragraph, single-newline → soft break, words +
+      // their trailing whitespace otherwise. Binary search finds the
+      // largest prefix whose rendered card still fits.
+      const tokens = [];
+      const paraParts = fullText.split(/(\n\n+)/);
+      for (const seg of paraParts) {
+        if (/^\n{2,}$/.test(seg)) { tokens.push(seg); continue; }
+        const lineParts = seg.split(/(\n)/);
+        for (const lp of lineParts) {
+          if (lp === '\n') { tokens.push(lp); continue; }
+          if (!lp) continue;
+          const wordParts = lp.split(/(\s+)/);
+          for (const wp of wordParts) if (wp) tokens.push(wp);
+        }
+      }
+      if (tokens.length < 2) return [card];
+
+      let lo = 1, hi = tokens.length, bestFit = 0;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        textEl.textContent = tokens.slice(0, mid).join('').replace(/\s+$/, '');
+        if (cardEl.scrollHeight <= cardEl.clientHeight + 2) {
+          bestFit = mid; lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+      if (bestFit === 0 || bestFit >= tokens.length) return [card];
+
+      const fitText      = tokens.slice(0, bestFit).join('').replace(/\s+$/, '');
+      const overflowText = tokens.slice(bestFit).join('').replace(/^\s+/, '');
+      if (!overflowText) return [card];
+
+      // Re-inject the split text by swapping the dcc-rule-text contents
+      // in the original card HTML — keeps every other class / attribute
+      // intact (display.kindLabel subtitle, custom radii, etc.).
+      function withRuleText(html, newText) {
+        return html.replace(
+          /(<div class="dcc-rule-text">)[\s\S]*?(<\/div>)/,
+          '$1' + esc(newText) + '$2'
+        );
+      }
+      const primaryHtml = withRuleText(card.html, fitText);
+      const overflowOnlyHtml = withRuleText(card.html, overflowText);
+
+      // Continuation: rebuild from the overflow-only HTML, marking the
+      // cloned head as a continuation so the "(cont.)" pseudo-element
+      // shows up. Strip the footerless rule card's outer header wrapper
+      // and reuse it directly.
+      const clonedHead = '<header class="dcc-head dcc-head-rule dcc-head-cont">' +
+        (header.innerHTML || '') + '</header>';
+      // The continuation body keeps the same .dcc-rule-body wrapper from
+      // overflowOnlyHtml — we just splice in the cloned head.
+      const overflowBodyHtml = overflowOnlyHtml.replace(/^[\s\S]*?<\/header>/, '');
+      const inner = clonedHead + overflowBodyHtml;
+      const { contHtml, contClasses } = buildContinuationChrome(inner, backsOn);
+
+      return emitSplit(card, primaryHtml, contHtml, contClasses, 'Rule');
+    } finally {
+      stage.removeChild(host);
+    }
+  }
+
   function buildPagesDOM() {
     const all = selectedCards();
 
@@ -1247,14 +1606,16 @@
     // its target physical size. Rule and stratagem cards aren't split —
     // they're typically short and benefit from staying contiguous.
     const unitsRaw  = all.filter(c => c.kind === 'unit');
-    const rules     = all.filter(c => c.kind === 'rule');
+    const rulesRaw  = all.filter(c => c.kind === 'rule');
     const strats    = all.filter(c => c.kind === 'strat');
     const unitsLayout = getLayoutFor('unit');
+    const rulesLayout = getLayoutFor('rule');
     const units = splitOverflowingUnitCards(unitsRaw, unitsLayout);
+    const rules = splitOverflowingRuleCards(rulesRaw, rulesLayout);
 
     const groups = [
       { kind: 'unit',  cards: units,  layout: unitsLayout            },
-      { kind: 'rule',  cards: rules,  layout: getLayoutFor('rule')   },
+      { kind: 'rule',  cards: rules,  layout: rulesLayout            },
       { kind: 'strat', cards: strats, layout: getLayoutFor('strat')  },
     ];
 
@@ -1373,6 +1734,35 @@
         </select>
       </label>`;
     const html = `
+      <div class="cards-layout-section">
+        <div class="cards-disp-heading">Presets</div>
+        <p class="cards-help">
+          Save the current colours, typography, layout, and back-image
+          selection as a named preset. Useful when you print a second
+          batch for the same customer months later — pick the preset
+          to snap every setting back. Presets sync across your devices
+          when you're signed in.
+        </p>
+        <label class="cards-field">
+          <span class="cards-field-label">Active preset</span>
+          <select class="cards-select" id="cards-preset-select">
+            <option value="">— None —</option>
+            ${presets.map(p =>
+              `<option value="${esc(p.id)}"${p.id === activePresetId ? ' selected' : ''}>${esc(p.name)}</option>`
+            ).join('')}
+          </select>
+        </label>
+        <div class="cards-field" style="padding:6px 12px 0; display:flex; flex-wrap:wrap; gap:6px;">
+          <button type="button" class="cards-link-btn" id="cards-preset-new">Save current as new…</button>
+          <button type="button" class="cards-link-btn" id="cards-preset-update"
+                  ${activePresetId ? '' : 'disabled'}>Update “${esc(getActivePresetName() || '…')}”</button>
+          <button type="button" class="cards-link-btn" id="cards-preset-rename"
+                  ${activePresetId ? '' : 'disabled'}>Rename…</button>
+          <button type="button" class="cards-link-btn" id="cards-preset-delete"
+                  ${activePresetId ? '' : 'disabled'} style="color:#d97a7a;">Delete</button>
+        </div>
+      </div>
+
       <div class="cards-layout-section">
         <div class="cards-disp-heading">Default sheet</div>
         <p class="cards-help">Used for any category that doesn't set its own override below.</p>
@@ -1513,6 +1903,7 @@
           ['bodySize',    'Body text (abilities, wargear, rule text)'],
           ['headingSize', 'Section heads (RANGED WEAPONS / ABILITIES / etc.)'],
           ['fineSize',    'Fine print (footer keywords, column labels)'],
+          ['subSize',     'Subtitles (ARMY RULE, CORE STRATAGEM, PHASE: …)'],
         ].map(([k, label]) => {
           const pct = Math.round(typography[k] * 100);
           return `
@@ -1590,6 +1981,18 @@
                  ${spilloverMode === 'fullCard' ? 'checked' : ''}>
           <span><strong>Full second card</strong>
             <span class="cards-help" style="display:block; margin:2px 0 0">Same full parchment as the primary.</span>
+          </span>
+        </label>
+        <label class="cards-row" style="margin: 8px 12px 4px">
+          <input type="checkbox" id="cards-allow-partial-section"
+                 ${allowPartialSection ? 'checked' : ''}>
+          <span><strong>Split sections mid-content</strong>
+            <span class="cards-help" style="display:block; margin:2px 0 0">
+              Required for army-rule overflow (single-section body). Also
+              lets dense unit sections (abilities, weapons) break across
+              primary &amp; continuation instead of moving the whole
+              section.
+            </span>
           </span>
         </label>
       </div>`;
@@ -1671,6 +2074,20 @@
   }
 
   function onSidebarChange(e) {
+    // Preset dropdown — auto-apply on selection.
+    if (e.target && e.target.id === 'cards-preset-select') {
+      const id = e.target.value || null;
+      activePresetId = id;
+      if (id) {
+        const p = findPreset(id);
+        if (p) applySettings(p.settings);
+      }
+      applyDynamicStyle();
+      refreshSidebar();
+      refreshPreview();
+      refreshSummary();
+      return;
+    }
     // Layout: global preset
     if (e.target && e.target.id === 'cards-layout-global') {
       activeLayoutId = e.target.value || DEFAULT_LAYOUT;
@@ -1694,6 +2111,12 @@
         spilloverMode = v;
         refreshPreview();
       }
+      return;
+    }
+    // Split-sections-mid-content checkbox
+    if (e.target && e.target.id === 'cards-allow-partial-section') {
+      allowPartialSection = !!e.target.checked;
+      refreshPreview();
       return;
     }
     // Border color picker
@@ -1864,6 +2287,56 @@
     }
   }
   function onSidebarClick(e) {
+    // Preset buttons (save / update / rename / delete).
+    if (e.target && e.target.id === 'cards-preset-new') {
+      const name = (window.prompt('Name this preset (e.g. "steve orks")') || '').trim();
+      if (!name) return;
+      const p = {
+        id: newPresetId(),
+        name,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+        settings: captureSettings(),
+      };
+      presets.push(p);
+      activePresetId = p.id;
+      savePresets();
+      refreshSidebar();
+      if (UI && UI.toast) UI.toast('Saved preset “' + name + '”', 'success');
+      return;
+    }
+    if (e.target && e.target.id === 'cards-preset-update') {
+      const p = findPreset(activePresetId);
+      if (!p) return;
+      if (!window.confirm('Overwrite preset “' + p.name + '” with the current settings?')) return;
+      p.settings  = captureSettings();
+      p.updatedAt = nowIso();
+      savePresets();
+      refreshSidebar();
+      if (UI && UI.toast) UI.toast('Updated preset “' + p.name + '”', 'success');
+      return;
+    }
+    if (e.target && e.target.id === 'cards-preset-rename') {
+      const p = findPreset(activePresetId);
+      if (!p) return;
+      const name = (window.prompt('Rename preset', p.name) || '').trim();
+      if (!name || name === p.name) return;
+      p.name      = name;
+      p.updatedAt = nowIso();
+      savePresets();
+      refreshSidebar();
+      return;
+    }
+    if (e.target && e.target.id === 'cards-preset-delete') {
+      const p = findPreset(activePresetId);
+      if (!p) return;
+      if (!window.confirm('Delete preset “' + p.name + '”? This can\'t be undone.')) return;
+      presets = presets.filter(x => x.id !== activePresetId);
+      activePresetId = null;
+      savePresets();
+      refreshSidebar();
+      return;
+    }
     // Inner category tabs (Pick cards: Units/Rules/Stratagems)
     const catTab = e.target.closest('.cards-cat-tab');
     if (catTab) {
@@ -2123,6 +2596,7 @@
     // Hydrate prefs from localStorage (sync.js pulled the bag into LS by
     // the time bootstrap fires for already-signed-in users).
     loadPrefs();
+    loadPresets();
     applyDynamicStyle();
     // Kick off saved-image load in the background so it's ready by the
     // time the user opens the Layout sub-tab.
@@ -2134,6 +2608,7 @@
     if (App.Auth && typeof App.Auth.onChange === 'function') {
       App.Auth.onChange(() => {
         loadPrefs();
+        loadPresets();
         applyDynamicStyle();
         reloadSavedImages().then(() => {
           if (mounted) {
@@ -2146,8 +2621,9 @@
     }
     // Re-load prefs when localStorage changes from another tab.
     window.addEventListener('storage', e => {
-      if (e.key === PREFS_KEY) {
-        loadPrefs();
+      if (e.key === PREFS_KEY || e.key === PRESETS_KEY) {
+        if (e.key === PREFS_KEY)    loadPrefs();
+        if (e.key === PRESETS_KEY)  loadPresets();
         applyDynamicStyle();
         if (mounted) {
           refreshSidebar();
@@ -2198,6 +2674,7 @@
       // resolves between bootstrap and the user's first click on the
       // Cards tab).
       loadPrefs();
+      loadPresets();
       applyDynamicStyle();
       renderHost();
     });
@@ -2206,6 +2683,16 @@
     App.hooks.armyChange.push(() => {
       include = { units: null, rules: null, strats: null };
       if (mounted && App.getMode && App.getMode() === 'cards') {
+        // Repopulate include sets from the new army before redrawing —
+        // otherwise refreshPreview sees `include.units === null`, treats
+        // every card as deselected, and shows the empty-state "Nothing
+        // selected yet" message until the user mode-switches (which
+        // calls renderHost → syncIncludeDefaults). This was the
+        // disappearing-cards-after-tab-switch bug: sync.js's
+        // visibilitychange listener pulls fresh server state, the army
+        // manager fires armyChange even when nothing changed, and the
+        // preview blanked because of the un-defaulted include.
+        syncIncludeDefaults();
         refreshSidebar(); refreshPreview(); refreshSummary();
       }
     });
@@ -2213,6 +2700,7 @@
   if (Array.isArray(App.hooks.selectionChange)) {
     App.hooks.selectionChange.push(() => {
       if (mounted && App.getMode && App.getMode() === 'cards') {
+        syncIncludeDefaults();
         refreshSidebar(); refreshPreview(); refreshSummary();
       }
     });

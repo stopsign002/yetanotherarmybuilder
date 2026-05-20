@@ -16,7 +16,11 @@
         const main = document.getElementById('app-main');
         if (main) main.classList.add('is-resizing');
         startX = e.clientX;
-        startWidth = parseInt(getComputedStyle(root).getPropertyValue(cssVar)) || 300;
+        // Fallback matches the :root default in style.css (--col-left: 330px,
+        // --col-right: 420px). Only fires when the computed var resolves
+        // to empty, which shouldn't happen in practice but is defensive.
+        const fallback = cssVar === '--col-right' ? 420 : 330;
+        startWidth = parseInt(getComputedStyle(root).getPropertyValue(cssVar)) || fallback;
 
         function onMove(e) {
           const delta = e.clientX - startX;

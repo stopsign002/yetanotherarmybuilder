@@ -88,13 +88,25 @@ window.Storage = (() => {
     if (factionName)    data.f = factionName;
     if (chapter)        data.c = chapter;
     if (detachmentName) data.d = detachmentName;
+    // Detect whether ANY entry carries an attachment. Armies without
+    // attachments encode identically to pre-feature v2 — no 5th tuple
+    // slot, no bloat. Armies with attachments emit `[entryId, parentId
+    // |0]` as the 5th slot on every entry so the decoder can resolve
+    // parent pointers from imported tuples.
+    const hasAttachments = (army.entries || []).some(e => e && e.attachedToEntryId);
     data.e = (army.entries || []).map(entry => {
       const tuple = [entry.unitId, entry.count];
       const enhs = (entry.enhancements || []).map(e => [e.name, e.pts || 0]);
       const hasEnh = enhs.length > 0;
       const hasPts = entry.selectedPts != null;
-      if (hasPts || hasEnh) tuple.push(hasPts ? entry.selectedPts : null);
-      if (hasEnh)           tuple.push(enhs);
+      // Slots are positional; if attachments are present we have to
+      // emit selectedPts + enhPairs as placeholders even when empty so
+      // the 5th slot lands at index 4.
+      if (hasAttachments || hasPts || hasEnh) tuple.push(hasPts ? entry.selectedPts : null);
+      if (hasAttachments || hasEnh)           tuple.push(hasEnh ? enhs : null);
+      if (hasAttachments) {
+        tuple.push([entry.entryId || null, entry.attachedToEntryId || 0]);
+      }
       return tuple;
     });
     return data;
@@ -123,7 +135,7 @@ window.Storage = (() => {
     const lookupOrder = [chapter, factionName];
     const displayFaction = chapter || factionName || '(unknown)';
     const entries = (data.e || []).map(tuple => {
-      const [unitId, count = 1, selectedPts = null, enhPairs = null] = tuple;
+      const [unitId, count = 1, selectedPts = null, enhPairs = null, attachPair = null] = tuple;
       const unitData = _findUnit(factions, lookupOrder, unitId);
       if (!unitData) {
         throw new Error(`Unit "${unitId}" from "${displayFaction}" is not loaded yet. Wait for background loading to finish, then try again.`);
@@ -137,6 +149,12 @@ window.Storage = (() => {
             ? { name: p[0], pts: p[1] || 0, description: '' }
             : { name: String(p), pts: 0, description: '' })
         : [];
+      // attachPair is `[entryId, parentEntryId|0]` when present.
+      let entryId = undefined, attachedToEntryId = null;
+      if (Array.isArray(attachPair)) {
+        if (typeof attachPair[0] === 'string' && attachPair[0]) entryId = attachPair[0];
+        if (typeof attachPair[1] === 'string' && attachPair[1]) attachedToEntryId = attachPair[1];
+      }
       return {
         unitId,
         unitName: unitData.name,
@@ -145,6 +163,8 @@ window.Storage = (() => {
         selectedPts: resolvedPts,
         squadLabel,
         enhancements,
+        entryId,
+        attachedToEntryId,
       };
     });
     const army = new Army({

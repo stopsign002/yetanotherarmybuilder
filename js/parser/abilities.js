@@ -31,6 +31,16 @@
         const name = I.getAttr(profile, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         if (I.isCrusadeSection(name)) return;
+        // Honour modifier-driven hide. Many shared aura profiles
+        // (e.g. Votann's "Firebase Control (Aura)") carry a
+        // `<modifier type="set" field="hidden" value="true">` whose
+        // condition gates visibility on a specific detachment. The
+        // parser can't evaluate the condition (it's force/roster-scoped
+        // BSData expressions referencing detachment childIds), but the
+        // intent is clearly "don't surface me unless that detachment is
+        // picked". Default to skipping — the alternative was the aura
+        // leaking onto every unit that referenced the profile.
+        if (profile.querySelector(':scope > modifiers > modifier[type="set"][field="hidden"][value="true"]')) return;
         // Match the parseDirectProfiles fallback: prefer Description,
         // fall back to Effect for primarch / warlord-trait shapes, and
         // Capacity for Ork transport profiles.
@@ -58,6 +68,20 @@
         });
         const descEl = rule.querySelector(':scope > description');
         abilities.push({ name, description: descEl ? I.cleanText(descEl.textContent) : '', isCore: true });
+
+      } else if (linkType === 'infoGroup') {
+        // Resolve to a shared <infoGroup> (Votann + a couple of other
+        // factions use these for detachment-gated aura bundles).
+        // collectAbilities already supports an `<infoGroup>` node kind
+        // via the inline `:scope > infoGroups > infoGroup` walker
+        // below, so we just route the resolved element through the
+        // same recursion.
+        const sharedInfoGroupsById = I.sharedInfoGroupsById || new Map();
+        const group = sharedInfoGroupsById.get(targetId);
+        if (!group) return;
+        if (I.isCrusadeSection(I.getAttr(group, 'name', ''))) return;
+        collectAbilities(group, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
+          .forEach(a => abilities.push(a));
       }
     });
 
@@ -99,9 +123,21 @@
     });
 
     entryEl.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(group => {
+      walkSelectionEntryGroup(group);
+    });
+
+    // Walks a <selectionEntryGroup>: pulls abilities from its direct
+    // selectionEntries + entryLinks, and recurses into any NESTED
+    // <selectionEntryGroups> chain. The recursion matters for units
+    // like Big Mek in Mega Armour, where the top-level "Wargear" group
+    // has no direct selectionEntries — it contains nested groups
+    // ("Grot Oiler", "Additional Options", "Kustom-mega Blaster", …)
+    // whose selectionEntries hold the ability profiles ("Grot Oiler"
+    // grants its model an ability via wargear, not via a direct
+    // profile on the unit). The pre-fix walker stopped at one level
+    // of group and missed every wargear-granted ability.
+    function walkSelectionEntryGroup(group) {
       if (I.isCrusadeSection(I.getAttr(group, 'name', ''))) return;
-      // Same widening as above — walk every selectionEntry inside the
-      // group regardless of `type`.
       group.querySelectorAll(':scope > selectionEntries > selectionEntry').forEach(child => {
         if (I.isCrusadeSection(I.getAttr(child, 'name', ''))) return;
         collectAbilities(child, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
@@ -122,7 +158,13 @@
         collectAbilities(target, entriesById, profilesById, rulesById, depth + 1, new Set(visited))
           .forEach(a => abilities.push(a));
       });
-    });
+      // Recurse one level deeper: nested wargear sub-groups (Big Mek
+      // in Mega Armour's "Wargear" wraps a "Grot Oiler" sub-group whose
+      // entry profile is the ability we need to surface).
+      group.querySelectorAll(':scope > selectionEntryGroups > selectionEntryGroup').forEach(sub => {
+        walkSelectionEntryGroup(sub);
+      });
+    }
 
     return abilities;
   }

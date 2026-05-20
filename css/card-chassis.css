@@ -194,6 +194,128 @@
   box-shadow: 0 2px 0 0 var(--yaab-card-accent) inset;
 }
 
+/* Drag-to-attach drop indicators.
+   `--ok` (green) fires when App.Attachments.canAttach returned true —
+   GDC data confirms the pairing. `--soft` (amber) fires when the data
+   doesn't list this pairing but the drop is still allowed (soft
+   enforcement). Both replace whatever reorder-band paint was in
+   progress on the same row. */
+.army-entry.is-attach-target--ok {
+  outline: 2px solid #4caf50;
+  outline-offset: -2px;
+  box-shadow: 0 0 12px rgba(76, 175, 80, 0.55) inset,
+              0 0 0 1px rgba(76, 175, 80, 0.7);
+}
+.army-entry.is-attach-target--soft {
+  outline: 2px dashed #d8a838;
+  outline-offset: -2px;
+  box-shadow: 0 0 10px rgba(216, 168, 56, 0.45) inset,
+              0 0 0 1px rgba(216, 168, 56, 0.65);
+}
+
+/* Nested attached children. Indented under the leader with a thin
+   tether line down the left edge in the faction accent colour so the
+   parent-child relationship reads at a glance. */
+.army-entry-attachments {
+  list-style: none;
+  /* Tighter indent + thinner tether than the originally-shipped 18px / 2px:
+     reclaims ~10px of horizontal space per nesting level so the nested
+     cards have room for their name and stats row. The 1px line still
+     reads visually as an ownership tether. */
+  margin: 8px 0 2px;
+  padding: 0 0 0 10px;
+  border-left: 1px solid rgba(var(--yaab-card-accent-rgb), 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.army-entry-attached {
+  font-size: 0.92em;
+  opacity: 0.96;
+  /* The drag handle widget eats ~24px of chrome that attached cards
+     can't afford. Drag still activates from the card body (see
+     flip-animations.js:374–395 — the only exemptions are inputs and
+     the remove button), so hiding the handle is purely cosmetic. */
+  padding-left: 10px;
+}
+.army-entry-attached > .army-entry-handle { display: none; }
+/* Hide the big accent stripe on nested cards; the tether line on the
+   .army-entry-attachments container already conveys the ownership
+   relationship. */
+.army-entry-attached > .army-entry-stripe { display: none; }
+
+/* Inline-row stats on attached cards: collapse the labelled 3-cell
+   grid (Pts / Qty / Total) into a single compact line. The values
+   stay legible, the "Pts / Qty / Total" labels go (the numbers are
+   self-explanatory in context). Saves ~50px and prevents stat-row
+   wrapping that pushed the card to 3+ lines on Necron stacks. */
+.army-entry-attached .army-entry-stats {
+  gap: 8px;
+  font-size: 10.5px;
+  flex-wrap: nowrap;
+}
+.army-entry-attached .army-entry-stat-label { display: none; }
+.army-entry-attached .army-entry-qty input {
+  width: 30px;
+  padding: 0 3px;
+}
+
+/* Smaller remove (×) on attached cards. The button is still a hit
+   target — just less visually prominent — so deleting a nested
+   bodyguard from the leader's cluster stays one click away. */
+.army-entry-attached .army-entry-remove {
+  font-size: 13px;
+  padding: 2px 4px;
+  margin-left: 4px;
+}
+
+/* Sub-line row.
+   Hosts the squad-size label (e.g. "20 models") and / or the "+N
+   attached" cluster pill on a dedicated line beneath the unit title.
+   Keeping both pieces out of the title's flex row gives long names
+   (e.g. "Necron Warriors", "Canoptek Cryptothralls") the full header
+   width — otherwise the pill + label would compete for space and
+   force "NE…" / "TECHNOMANC…" truncation. The row is emitted only
+   when at least one piece exists, so unsized non-attached entries
+   look identical to pre-feature. Squad label leads, pill follows;
+   `align-items: center` keeps the pill's bordered chip vertically
+   centered on the muted-grey model count. */
+.army-entry-subline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 1px 0 4px 0;
+  font-family: var(--ui-font, system-ui, sans-serif);
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.army-entry-subline .army-entry-squad {
+  /* The squad label was previously inside the title flex row where
+     it inherited the Cinzel display font + larger size. Now that it
+     lives on its own UI row, restore the muted, plain-text styling
+     used for secondary metadata everywhere else in the build pane. */
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+.army-entry-attached-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  font-size: 0.78em;
+  font-weight: 600;
+  border-radius: 10px;
+  background: rgba(var(--yaab-card-accent-rgb), 0.18);
+  color: var(--yaab-card-accent);
+  vertical-align: middle;
+  border: 1px solid rgba(var(--yaab-card-accent-rgb), 0.4);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .army-entry-handle {
   cursor: grab;
 }

@@ -28,6 +28,7 @@
     'yaab_deployments',
     'yaab_points_overrides',
     'yaab_cards_prefs',
+    'yaab_cards_presets',
   ];
   const BAG_KEY_SET = new Set(SYNCED_BAG_KEYS);
 
@@ -480,8 +481,12 @@
         try {
           const cloudBag = JSON.parse(cloudState.payload);
           const updatedKeys = [];
+          const updatedOld = {};
           for (const k of SYNCED_BAG_KEYS) {
             if (Object.prototype.hasOwnProperty.call(cloudBag, k)) {
+              updatedOld[k] = (function () {
+                try { return localStorage.getItem(k); } catch (_) { return null; }
+              })();
               if (cloudBag[k] == null) rawRemove(k);
               else rawSet(k, cloudBag[k]);
               updatedKeys.push(k);
@@ -492,15 +497,41 @@
           // rawSet/rawRemove suppress the localStorage monkey-patch (so
           // we don't loop the writes back into the queue), and same-tab
           // writes don't fire the native `storage` event either. Modules
-          // hydrating from these keys (cards-mode reads yaab_cards_prefs
-          // on mount) would otherwise have no way to know the bag just
-          // changed under them. Emit a custom event so they can re-read.
+          // hydrating from these keys would otherwise have no way to know
+          // the bag just changed under them. The reserves / requisitions
+          // / favorites / collection / … modules each keep an in-memory
+          // copy of their key's contents and their next write would
+          // clobber the freshly-pulled cloud bag with the stale memory
+          // copy. So we:
+          //   · dispatch a custom yaab-bag-pulled event for modules that
+          //     opted into the new event,
+          //   · ALSO fire a synthetic `storage` event for each updated
+          //     key so the per-module storage listeners (which already
+          //     handle cross-tab cloud-sync correctly) re-hydrate in this
+          //     same tab. This is the surgical fix for "reserves /
+          //     wishlist got wiped after a sync" — without it, the
+          //     module's in-memory state stayed stale and the next mutation
+          //     persisted only that stale slice to localStorage, then
+          //     pushed the shrunken bag to cloud.
           if (bagWasPulled) {
             try {
               window.dispatchEvent(new CustomEvent('yaab-bag-pulled', {
                 detail: { keys: updatedKeys },
               }));
             } catch (_) {}
+            for (const k of updatedKeys) {
+              try {
+                const newValue = (function () {
+                  try { return localStorage.getItem(k); } catch (_) { return null; }
+                })();
+                window.dispatchEvent(new StorageEvent('storage', {
+                  key: k,
+                  oldValue: updatedOld[k],
+                  newValue: newValue,
+                  storageArea: localStorage,
+                }));
+              } catch (_) {}
+            }
           }
         } catch (_) {}
       } else if (!cloudState || !cloudBagTs) {
@@ -530,6 +561,20 @@
         mgr.currentArmy = sorted[0];
       }
       if (App && typeof App.renderAll === 'function') App.renderAll();
+
+      // Re-sync the Build-mode dropdowns (faction / chapter / detachment)
+      // to the post-pull currentArmy. Without this, replacing currentArmy
+      // with a newer-from-cloud copy that has different selections leaves
+      // the dropdowns showing the OLD picks (or, more visibly, can leave
+      // the detachment list empty if the visibility-change pull lands
+      // while the user happens to be on the placeholder). Skip when the
+      // selections module isn't ready yet.
+      try {
+        const cur2 = App.state && App.state.currentArmy;
+        if (cur2 && typeof App.applyImportedSelections === 'function') {
+          App.applyImportedSelections(cur2.factionName, cur2.chapter, cur2.detachmentName);
+        }
+      } catch (_) { /* dropdown re-sync is best-effort */ }
 
       // 5. Toast + drain.
       if (window.UI && UI.toast) {

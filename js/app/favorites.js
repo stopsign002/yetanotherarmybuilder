@@ -304,6 +304,38 @@
     syncChipCounts();
   });
 
+  // Re-hydrate from localStorage whenever the cloud-sync layer pulls a
+  // fresh bag (or another tab updates either key). Without this, the
+  // in-memory STATE.favorites / STATE.recents stay stale after pull, and
+  // the next toggleFavorite / pushRecent call would overwrite localStorage
+  // with that stale slice — wiping the freshly-pulled entries.
+  window.addEventListener('storage', function (e) {
+    if (!e) return;
+    if (e.key !== LS_FAV && e.key !== LS_RECENT) return;
+    // Clear and re-load. We re-clear the Set / array in-place so any
+    // closures already holding `STATE` see the new contents.
+    if (e.key === LS_FAV) {
+      STATE.favorites = new Set();
+      try {
+        const arr = e.newValue ? JSON.parse(e.newValue) : null;
+        if (Array.isArray(arr)) STATE.favorites = new Set(arr.filter(x => typeof x === 'string'));
+      } catch (_) {}
+    } else if (e.key === LS_RECENT) {
+      STATE.recents = [];
+      try {
+        const arr = e.newValue ? JSON.parse(e.newValue) : null;
+        if (Array.isArray(arr)) {
+          STATE.recents = arr.filter(r => r && typeof r.unitId === 'string').slice(0, RECENT_CAP);
+        }
+      } catch (_) {}
+    }
+    refreshDetailStar({ animate: false });
+    syncChipCounts();
+    if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
+      App.renderUnitRosterWithContext();
+    }
+  });
+
   App.hooks.armyChange.push(handleArmyChange);
 
   App.hooks.selectionChange.push(function () {

@@ -210,11 +210,15 @@ admin panel's Reports tab ([js/app/admin.js](../js/app/admin.js)).
 
 ```sql
 CREATE TABLE bug_reports (
-  id           BIGSERIAL PRIMARY KEY,
-  username     TEXT        NOT NULL,
-  title        TEXT        NOT NULL,
-  description  TEXT        NOT NULL,
-  diagnostics  TEXT        NULL,
+  id              BIGSERIAL PRIMARY KEY,
+  username        TEXT        NOT NULL,
+  kind            TEXT        NOT NULL DEFAULT 'bug',  -- 'bug' | 'feature'
+  title           TEXT        NOT NULL,
+  description     TEXT        NOT NULL,
+  diagnostics     TEXT        NULL,
+  attachment_url  TEXT        NULL,                    -- public URL of stored upload, or NULL
+  attachment_mime TEXT        NULL,                    -- e.g. image/png, video/webm
+  attachment_size BIGINT      NULL,                    -- bytes
   fixed        BOOLEAN     NOT NULL DEFAULT FALSE,
   fixed_at     TIMESTAMPTZ NULL,
   fixed_by     TEXT        NULL,
@@ -229,28 +233,49 @@ CREATE INDEX bug_reports_open            ON bug_reports (fixed) WHERE fixed = FA
 literally (don't FK to `users.username`) so the row survives revoke /
 deletion of the original user.
 
+`kind` discriminates bug reports from feature requests; the admin
+panel can filter or group on it. Default `'bug'` preserves the shape
+for callers that don't send the field (legacy clients).
+
 ### `POST /api/bugs` (auth required, NOT admin-only)
 
-Submit a bug report. Sender must be signed in (`approved = TRUE`,
-`revoked = FALSE`).
+Submit a bug report or feature request. Sender must be signed in
+(`approved = TRUE`, `revoked = FALSE`).
 
-- **Body**:
-  ```json
-  {
-    "title":       "Wardens of Ultramar shows wrong stats",
-    "description": "Multi-stage repro …",
-    "diagnostics": "App version: …\nDate/time: …\n…"
-  }
-  ```
-  - Server should cap each string (`title` 200 chars, `description`
-    4000, `diagnostics` 16000) and reject empty `title` / `description`
-    with 400.
+Two request shapes:
+
+**a) No attachment — JSON**:
+
+```json
+{
+  "kind":        "bug",
+  "title":       "Wardens of Ultramar shows wrong stats",
+  "description": "Multi-stage repro …",
+  "diagnostics": "App version: …\nDate/time: …\n…"
+}
+```
+
+`kind` is `"bug"` or `"feature"`; missing/unknown values default to
+`"bug"`. Server should cap each string (`title` 200 chars,
+`description` 4000, `diagnostics` 16000) and reject empty
+`title` / `description` with 400.
+
+**b) With attachment — `multipart/form-data`**:
+
+Text fields `kind`, `title`, `description`, `diagnostics` as above,
+plus an optional file part named `attachment`. The file MUST be an
+image or video; reject any other MIME with 415. Cap at 50 MB; reject
+larger uploads with 413. Persist to your file store (S3 / disk) and
+record the public URL + MIME + size on the row.
+
 - **Response 200**:
   ```json
   { "id": 42 }
   ```
 - **Response 401** if not signed in (the client clears the session and
   prompts re-login; see `App.Auth.handleSessionExpired`).
+- **Response 413** if the attachment exceeds the 50 MB cap.
+- **Response 415** if the attachment isn't an image or video.
 
 ### `GET /api/admin/bugs`
 
@@ -262,9 +287,13 @@ List every report, newest first. Admin only.
     {
       "id": 42,
       "username": "alice",
+      "kind": "bug",
       "title": "Wardens of Ultramar shows wrong stats",
       "description": "…",
       "diagnostics": "…",
+      "attachment_url": "https://files.yaab.example/bug-42.png",
+      "attachment_mime": "image/png",
+      "attachment_size": 184320,
       "fixed": false,
       "fixed_at": null,
       "fixed_by": null,
@@ -274,6 +303,10 @@ List every report, newest first. Admin only.
     ...
   ]
   ```
+  - `kind` is `"bug"` or `"feature"`. Rows from before the column
+    existed should default to `"bug"`.
+  - `attachment_url` / `_mime` / `_size` are `null` when no file was
+    uploaded.
   - Timestamps are millisecond epoch (the client uses
     `new Date(ms).toLocaleString()`).
   - Server-side sort by `created_at DESC` is preferred; the client

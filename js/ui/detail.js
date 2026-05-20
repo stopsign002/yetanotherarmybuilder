@@ -2,11 +2,6 @@
 (function () {
   const UI = window.UI = window.UI || {};
 
-  // Lazy reverse-index: unitNameLower -> Set<leaderUnitObj>. Rebuilt only when
-  // state.factionsVersion advances (i.e. a new faction was loaded).
-  let _ledByCache = null;
-  let _ledByVersion = -1;
-
   // Weapon-keyword color class resolver. Matches by lowercase prefix or
   // exact lowercase name. Falls through to default (no class = neutral gray).
   function weaponKwClass(raw) {
@@ -26,47 +21,13 @@
     return '';
   }
 
-  function buildLedByIndex(allUnits) {
-    const idx = new Map();
-    for (let i = 0; i < allUnits.length; i++) {
-      const leader = allUnits[i];
-      const abilities = leader.abilities || [];
-      for (let j = 0; j < abilities.length; j++) {
-        const a = abilities[j];
-        const desc = a && a.description;
-        if (!desc || !/can be attached to/i.test(desc)) continue;
-        const attachText = desc.replace(/^.*?can be attached to[^:]*:/i, '').trim();
-        const names = attachText.split(/[,■\n●•]+/);
-        for (let k = 0; k < names.length; k++) {
-          const n = names[k].trim().toLowerCase();
-          if (!n) continue;
-          let bucket = idx.get(n);
-          if (!bucket) { bucket = []; idx.set(n, bucket); }
-          // Dedupe per leader (same leader may list the unit multiple times).
-          if (bucket[bucket.length - 1] !== leader) bucket.push(leader);
-        }
-      }
-    }
-    return idx;
-  }
-
+  // "Led By" lookup is delegated to `App.Attachments.candidateLeadersFor`
+  // (js/app/attachments.js). That module owns the reverse-index — both
+  // GDC-structured `gdcLeadBy` reads AND the prose-scan fallback — so
+  // the detail panel and drag-to-attach share a single source of truth.
   function getLedByFor(unit) {
-    const state = UI._state;
-    if (!state) return [];
-    const version = state.factionsVersion || 0;
-    if (_ledByCache === null || _ledByVersion !== version) {
-      _ledByCache = buildLedByIndex(state.allUnits || []);
-      _ledByVersion = version;
-    }
-    const bucket = _ledByCache.get(unit.name.toLowerCase());
-    if (!bucket) return [];
-    const out = [];
-    for (let i = 0; i < bucket.length; i++) {
-      const u = bucket[i];
-      if (u.id === unit.id) continue;
-      out.push({ name: u.name, factionName: u._factionName });
-    }
-    return out;
+    if (!unit || !window.App || !App.Attachments) return [];
+    return App.Attachments.candidateLeadersFor(unit);
   }
 
   // Lazy global map of weapon keyword → rule text, harvested from every

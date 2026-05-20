@@ -105,7 +105,12 @@ ul { list-style: none; }
 
 /* ── Main Layout ─────────────────────────────────────────── */
 :root {
-  --col-left:  300px;
+  /* Left pane (army list) widened ~10% from the original 300px so the
+     attached-unit cluster cards have room to breathe — Necron multi-
+     attach was the worst case but every leader+bodyguard cluster
+     benefits. Drag-to-resize (js/app/resize.js) still lets the user
+     widen further or tighten back down. */
+  --col-left:  330px;
   --col-right: 420px;
 }
 
@@ -1528,7 +1533,7 @@ ul { list-style: none; }
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1200px) {
-  :root { --col-left: 260px; --col-right: 360px; }
+  :root { --col-left: 290px; --col-right: 360px; }
 }
 
 /* Legacy stacked-panel responsive layout for the narrow tablet band
@@ -2177,6 +2182,6 @@ ul { list-style: none; }
 }
 /* Don't let the dropdown menu demand more than the panel width. */
 .dropdown-menu {
-  max-width: calc(var(--col-left, 300px) - 20px);
-  min-width: min(180px, calc(var(--col-left, 300px) - 20px));
+  max-width: calc(var(--col-left, 330px) - 20px);
+  min-width: min(180px, calc(var(--col-left, 330px) - 20px));
 }

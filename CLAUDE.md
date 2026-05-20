@@ -161,6 +161,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_show_collection_badges` | localStorage | `collection.js`, `settings-drawer.js` | Toggle for the painted-status badges on unit cards | User pref |
 | `yaab_collect_debug` | localStorage | `collect-mode.js` | Dev flag for verbose Collect-mode logging | Dev flag |
 | `yaab_changelog_seen` | localStorage | `changelog.js` | Last `App.CHANGELOG.version` the user has opened — drives the "unseen" red dot on the Updates icon | User pref |
+| `yaab_cards_presets` | localStorage | `cards-mode.js` | Named snapshots of every card-render setting (colours, typography, layout, back-image id, …); cloud-synced | User data |
 
 The kill-switch in `sw.js` self-unregisters and clears any legacy `yaab-shell-v*` caches; no Cache API entries are maintained anymore.
 
@@ -192,7 +193,15 @@ Common questions and where to look first.
 3. **Don't introduce a bundler, framework, or TypeScript.** Vanilla JS, IIFE, namespace globals. That's the deal.
 4. **Don't change `WahapediaParser.parse()` output shape** without bumping `DB_VERSION` in `js/db.js` AND clearing the IndexedDB stores in `onupgradeneeded`. Stale cached JSON will silently misrender.
 5. **Don't break the namespaces** (`window.App`, `window.UI`, `window.Storage`, `window.Army`, `window.ArmyManager`, `window.BSData`, `window.WahapediaParser`, `window.YaabDB`, `App.hooks`). External tabs reload through them.
-6. **Update the user-facing changelog on every shippable change.** Any new feature, visible bug fix, or data correction the user can notice MUST add an entry to `js/data/changelog-data.js` (and bump `version` + `lastUpdated`). The "What's new" button in the topbar (`js/app/changelog.js`) is the only place users see release notes — if it's missing from there, it didn't happen as far as they know. Skip entries only for pure refactors, internal-only behaviour, doc edits, and CI plumbing. See the comment at the top of `changelog-data.js` for the entry shape and the `feature` / `fix` / `change` `kind` values.
+6. **Update the user-facing changelog on every shippable change.** This is a HARD requirement. Any new feature, visible bug fix, or data correction the user can notice MUST add an entry to `js/data/changelog-data.js` (and bump `version` + `lastUpdated`) **in the same commit as the code change** — not a follow-up. The "What's new" button in the topbar (`js/app/changelog.js`) is the only place users see release notes; if your fix isn't there, the user thinks you forgot. Skip entries only for pure refactors, internal-only behaviour, doc edits, and CI plumbing. See the comment at the top of `changelog-data.js` for the entry shape and the `feature` / `fix` / `change` `kind` values.
+
+   Before every `git commit` of a user-visible change, run through this checklist:
+   - [ ] Opened `js/data/changelog-data.js`.
+   - [ ] Added a `{ date, kind, title, description }` entry at the TOP of `entries:` (newest first).
+   - [ ] Bumped the top-of-file `version` and `lastUpdated` fields.
+   - [ ] Staged `js/data/changelog-data.js` alongside the code change so they ship together.
+
+   If you don't do this, the change does not exist as far as the user is concerned. Treat a missing changelog entry the same as a broken build.
 
 ## Don't break
 
@@ -204,3 +213,4 @@ Common questions and where to look first.
 - `YAAB1:` v2 export format (`storage.js`). Bookmarked share URLs depend on it.
 - The hook iteration in `App.fireBootstrap` / `fireArmyChange` / `fireSelectionChange` — they wrap each call in try/catch, so one broken module shouldn't break others. Keep that pattern.
 - `releaseSharedIndex()` is called once in `bsdata.js` after Phase 2. Don't hold DOM refs alive past that point — it leaks tens of MB.
+- The changelog-entry rule (editing guidance #6). Shipping a user-visible change without an entry is a regression — the user can't find out about the fix, can't tell whether their report was addressed, and will reasonably assume nothing happened. Every commit that touches user-facing behaviour stages `js/data/changelog-data.js` too.

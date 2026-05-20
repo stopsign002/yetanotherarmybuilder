@@ -170,6 +170,9 @@
   // so that BSData-derived strats (rare but possible — Tyranids in particular)
   // remain identifiable.
   function mergeIntoFactions(factions) {
+    const CHAPTER_PARENTS = (App && App.CHAPTER_PARENTS) || {};
+    const factionByName = new Map();
+    factions.forEach(f => factionByName.set(f.factionName, f));
     factions.forEach(faction => {
       const file = FACTION_TO_GDC[faction.factionName];
       if (!file) return;
@@ -182,10 +185,29 @@
       // form ("Mont’ka"); a plain lowercase compare misses them — Mont'ka
       // Kau'yon, and any other apostrophe-bearing detachment lost their
       // stratagems silently.
-      const detKeyToName = new Map();
-      (faction.detachments || []).forEach(d => {
-        detKeyToName.set(nameKey(d.name), d.name);
-      });
+      //
+      // For SM chapters (Dark Angels, Blood Angels, etc.), chapter-
+      // exclusive detachments like "Wrath of the Rock" are parsed into
+      // the PARENT Space Marines faction (BSData defines them there
+      // gated by a primary-catalogue childId condition), but the GDC
+      // ships them under the chapter file. We index the parent's
+      // detachments too so chapter stratagems land on the SM-faction
+      // detachment object that the running app actually surfaces via
+      // App.getDetachmentFaction().
+      const detKeyToTargets = new Map();
+      function indexDetachments(f) {
+        if (!f || !Array.isArray(f.detachments)) return;
+        f.detachments.forEach(d => {
+          const k = nameKey(d.name);
+          if (!k) return;
+          if (!detKeyToTargets.has(k)) detKeyToTargets.set(k, []);
+          detKeyToTargets.get(k).push(d);
+        });
+      }
+      indexDetachments(faction);
+      const parentName = CHAPTER_PARENTS[faction.factionName];
+      if (parentName) indexDetachments(factionByName.get(parentName));
+
       const byDetachment = {};
       const factionWide = [];
       strats.forEach(raw => {
@@ -193,7 +215,7 @@
         if (!proj) return;
         const dRaw = (proj.detachment || '').trim();
         const dKey = nameKey(dRaw);
-        if (dKey && detKeyToName.has(dKey)) {
+        if (dKey && detKeyToTargets.has(dKey)) {
           (byDetachment[dKey] = byDetachment[dKey] || []).push(proj);
         } else if (!dRaw || dRaw.toLowerCase() === 'core') {
           factionWide.push(proj);
@@ -203,9 +225,24 @@
           // that don't apply when the parent itself is selected. Skip silently.
         }
       });
-      (faction.detachments || []).forEach(d => {
-        const list = byDetachment[nameKey(d.name)];
-        if (list && list.length > 0) d.gdcStratagems = list;
+      // Attach by name, concatenating with any existing list (the parent
+      // SM faction may already have had its own GDC strats attached on a
+      // prior iteration). Dedupe by lowercased stratagem name so a strat
+      // duplicated across two GDC files doesn't render twice.
+      detKeyToTargets.forEach((targets, key) => {
+        const list = byDetachment[key];
+        if (!list || list.length === 0) return;
+        targets.forEach(d => {
+          const existing = Array.isArray(d.gdcStratagems) ? d.gdcStratagems : [];
+          const seen = new Set(existing.map(s => (s && s.name || '').toLowerCase()));
+          list.forEach(s => {
+            const k = (s && s.name || '').toLowerCase();
+            if (!k || seen.has(k)) return;
+            seen.add(k);
+            existing.push(s);
+          });
+          if (existing.length > 0) d.gdcStratagems = existing;
+        });
       });
       if (factionWide.length > 0) faction.gdcFactionStratagems = factionWide;
     });

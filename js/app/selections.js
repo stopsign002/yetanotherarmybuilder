@@ -60,6 +60,14 @@
     state.detachmentFaction = detFaction;
 
     if (!detFaction) {
+      // Don't blow away an already-populated dropdown while the factions
+      // list is still warming up (e.g. a visibility-change-triggered
+      // re-render fires before state.factions has finished hydrating).
+      // The user otherwise watches their detachment options vanish for
+      // no apparent reason when they tab back into the window.
+      const factionsReady = Array.isArray(state.factions) && state.factions.length > 0;
+      const dropdownHasOptions = select && select.options && select.options.length > 1;
+      if (!factionsReady && dropdownHasOptions) return;
       select.innerHTML = '<option value="">— Select Faction First —</option>';
       return;
     }
