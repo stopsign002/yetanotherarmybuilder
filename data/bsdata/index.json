@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-15T16:16:45.617Z",
+  "generatedAt": "2026-05-20T11:21:02.316Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "b9932fb8257e7baeb2ddeac2110d74b6f090f9af",
+  "sourceCommit": "984259514be9c9d9a7f9f5eed802e18fb4d309a7",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -331,8 +331,8 @@
       "path": "Warhammer 40,000.gst",
       "name": "Warhammer 40,000",
       "type": "gamesystem",
-      "sha": "1f398a12be0975ddb381d4f671188dc9e13493e5",
-      "size": 699595
+      "sha": "9299ff084106d7375f4ab04d077f3ddddcf34a4d",
+      "size": 699033
     }
   ]
 }
