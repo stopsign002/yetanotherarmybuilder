@@ -178,7 +178,11 @@ window.YaabDB = (() => {
   // onto unrelated units (Hekaton's Firebase Control), sharedInfoGroups
   // + infoLink type="infoGroup" are resolved, cost-tier scanning
   // descends into modifierGroups, primaryKeyword is captured.
-  const DB_VERSION = 33;
+  // v34: findStatProfiles aggregates ALL model statlines instead of
+  // returning the first — multi-statline squads (Beast Snagga Boyz =
+  // Boy + Nob, Kommandos = Boy + Nob + Bomb Squig, etc.) now carry
+  // every distinct line in modelStats.
+  const DB_VERSION = 34;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

@@ -738,6 +738,19 @@
   gap: 0.6mm;
   margin-top: 0.6mm;
 }
+/* Per-statline label for multi-profile units (Beast Snagga Boy vs Nob,
+   etc.). Sits just above its stat row; only emitted when a card has
+   more than one statline. Scales with the stat-block typography slider
+   via --dcc-stat-mul so it tracks the row it labels. */
+.dcc-stat-rowlabel {
+  font-size: calc(2.0mm * var(--dcc-stat-mul, 1));
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5a3f1a;
+  margin: 0.9mm 0 0.2mm;
+}
+.dcc-stat-rowlabel:first-child { margin-top: 0.3mm; }
 .dcc-stat-cell {
   background: linear-gradient(180deg, #1a1308 0%, #2a1f0e 100%);
   color: #f4ead2;

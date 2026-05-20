@@ -1016,8 +1016,20 @@
 
   function renderUnitCard(entry) {
     const unit = entry.unitData || {};
+    // Multi-statline units (Beast Snagga Boyz = Boy + Nob, Marneus
+    // Calgar + Victrix Honour Guard, Terminator Assault Squad TH/SS vs
+    // LC) carry an array of distinct stat profiles in `modelStats`.
+    // Render one stat row per profile, labelled with the model name
+    // when there's more than one. Fall back to the legacy single
+    // `stats` dict for older cached factions / genuinely single-line
+    // units. The present-columns set is the UNION across every profile
+    // so the rows stay column-aligned even when one model lacks a stat.
     const stats = unit.stats || {};
-    const presentStats = STAT_ORDER.filter(k => getStatVal(stats, k) !== '—');
+    const statProfiles = (Array.isArray(unit.modelStats) && unit.modelStats.length > 0)
+      ? unit.modelStats
+      : [{ name: '', ...stats }];
+    const presentStats = STAT_ORDER.filter(k =>
+      statProfiles.some(p => getStatVal(p, k) !== '—'));
     const { ranged, melee } = classifyWeapons(unit);
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     const ptsLabel = entry.selectedPts != null ? entry.selectedPts : (ptsOpts.length ? ptsOpts[0] : null);
@@ -1045,15 +1057,16 @@
     const showSubLine = !!role;
     const showInvuln = !!(display.invuln && unit.invulnSave);
 
-    const statsHtml = (display.stats && presentStats.length > 0)
-      ? `<div class="dcc-stats" style="--dcc-stat-cols:${presentStats.length}">
+    const multiStat = statProfiles.length > 1;
+    function renderStatRow(prof) {
+      return `<div class="dcc-stats" style="--dcc-stat-cols:${presentStats.length}">
           ${presentStats.map(k => {
-            const v = String(getStatVal(stats, k));
+            const v = String(getStatVal(prof, k));
             // Combine the invulnerable save into the SV cell as `2+ / 4++`
             // so it lives where players' eyes already go for saves.
             // Adds a `dcc-stat-val-combo` modifier that scales the value
             // font-size down so the longer string still fits the cell.
-            if (k === 'SV' && showInvuln) {
+            if (k === 'SV' && showInvuln && v !== '—') {
               return `
                 <div class="dcc-stat-cell dcc-stat-cell-sv">
                   <span class="dcc-stat-key">${esc(k)}</span>
@@ -1066,7 +1079,15 @@
                 <span class="dcc-stat-val">${esc(v)}</span>
               </div>`;
           }).join('')}
-        </div>`
+        </div>`;
+    }
+    const statsHtml = (display.stats && presentStats.length > 0)
+      ? statProfiles.map(prof => {
+          const label = (multiStat && prof.name)
+            ? `<div class="dcc-stat-rowlabel">${esc(prof.name)}</div>`
+            : '';
+          return label + renderStatRow(prof);
+        }).join('')
       : '';
 
     return `

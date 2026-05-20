@@ -26,9 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.15-13',
-    lastUpdated: '2026-05-16T00:00:00Z',
+    version:     '2026.05.16-1',
+    lastUpdated: '2026-05-16T01:00:00Z',
     entries: [
+      // ── 2026-05-16 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-16', kind: 'fix',
+        title: 'Multi-statline units (Beast Snagga Boyz, etc.) now show every model\'s stats',
+        description:
+          'Squads where the boss model has a different statline from the ' +
+          'troopers — Beast Snagga Boyz (Boy vs Nob), Kommandos (Boy / ' +
+          'Nob / Bomb Squig) and similar — were only showing the first ' +
+          'model\'s stats. The parser stopped at the first statline it ' +
+          'found instead of collecting them all; it now aggregates every ' +
+          'distinct model statline (identical lines still collapse to ' +
+          'one). The unit detail panel and the printable data cards both ' +
+          'render one labelled stat row per model now. Bumped the cached-' +
+          'data version so the fix takes effect on next load.',
+      },
       // ── 2026-05-15 ──────────────────────────────────────────────────────
       {
         date: '2026-05-15', kind: 'change',
