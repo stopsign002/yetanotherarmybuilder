@@ -558,6 +558,12 @@
     padding: 0 !important;
     align-items: stretch;
     justify-content: stretch;
+    /* The mobile tab bar is z-index:1200 (bumped to sit above the settings
+       drawer). A full-screen modal is z-index:1000 by default, so the fixed
+       tab bar overlaid the modal's bottom — hiding the .modal-footer and its
+       submit button (e.g. "Send report"). Lift modals above the tab bar; the
+       full-screen modal covers it cleanly while open. */
+    z-index: 1300 !important;
   }
   .modal {
     width: 100% !important;

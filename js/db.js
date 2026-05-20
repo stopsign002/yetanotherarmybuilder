@@ -182,7 +182,10 @@ window.YaabDB = (() => {
   // returning the first — multi-statline squads (Beast Snagga Boyz =
   // Boy + Nob, Kommandos = Boy + Nob + Bomb Squig, etc.) now carry
   // every distinct line in modelStats.
-  const DB_VERSION = 34;
+  // v35: composition model-count (costs.js) no longer mistakes a
+  // wargear group's selection constraint for a model count — the Ork
+  // Deff Dread's "pick 4 weapons" group made it report "4 models".
+  const DB_VERSION = 35;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';
