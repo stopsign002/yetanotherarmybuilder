@@ -28,6 +28,45 @@
       }
     });
 
+    // A selectionEntryGroup only contributes to the MODEL count when its
+    // subtree actually selects models. Wargear/weapon-option groups carry
+    // the same field="selections" constraints as composition groups — e.g.
+    // the Ork Deff Dread's "Wargear Options" group forces exactly 4 weapons
+    // (min=max=4) — so reading those as a model count made the Deff Dread
+    // report "4 models" (and inflated many single-model vehicles/monsters).
+    //
+    // We test the WHOLE subtree (a descendant query, not just direct
+    // children) so it stays correct whether the models sit directly in the
+    // group, inside an upgrade composition-pick, or in a nested sub-group
+    // (Necron Skorpekh Destroyers' "Unit Composition" → "Bodies").
+    const _concernsCache = new WeakMap();
+    function groupConcernsModels(group) {
+      if (_concernsCache.has(group)) return _concernsCache.get(group);
+      let result = false;
+      // A model/unit selectionEntry ANYWHERE in this group's subtree means
+      // the group governs a body count — whether the models are direct
+      // children, wrapped in an upgrade composition-pick ("12 Models" →
+      // Wolf Scout Pack Leader + Hunting Wolf + Wolf Scout), or nested in a
+      // sub-group (Skorpekh "Unit Composition" → "Bodies"). Wargear groups
+      // (Deff Dread "Wargear Options", every weapon-pick group) hold only
+      // weapon/upgrade entries, so they match nothing here and are skipped.
+      if (group.querySelector('selectionEntry[type="model"], selectionEntry[type="unit"]')) {
+        result = true;
+      } else {
+        // …or an entryLink that resolves to a model/unit entry — squads
+        // that reference a shared body by link (Burna Boyz' "Burna Boy").
+        const links = group.querySelectorAll('entryLink');
+        for (const link of links) {
+          if (I.getAttr(link, 'type') !== 'selectionEntry') continue;
+          const tgt = entriesById.get(I.getAttr(link, 'targetId'));
+          const tt  = tgt && I.getAttr(tgt, 'type', '');
+          if (tt === 'model' || tt === 'unit') { result = true; break; }
+        }
+      }
+      _concernsCache.set(group, result);
+      return result;
+    }
+
     // Returns [groupMin, groupMax] for a selectionEntryGroup.
     // Tries Patterns F → A → B in order; recurses into child groups if all yield
     // nothing.  This handles factions like Necrons (Skorpekh Destroyers) that wrap
@@ -35,6 +74,14 @@
     // carries no constraints itself.
     function processGroup(group) {
       let groupMin = null, groupMax = null;
+
+      // Wargear-only groups never contribute to the model count, and we must
+      // NOT recurse into them either (their sub-groups are weapon mods, not
+      // bodies). Bailing out here keeps single-model units (Deff Dread, every
+      // battlesuit / vehicle with a "pick N weapons" group) from being read
+      // as N-model squads, without disturbing real composition groups whose
+      // models may sit in a nested sub-group.
+      if (!groupConcernsModels(group)) return [null, null];
 
       // Pattern F (composition picks): group contains upgrade entries that each
       // represent a "unit comp" choice whose entryLinks target model/unit entries

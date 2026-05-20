@@ -26,9 +26,40 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.16-1',
-    lastUpdated: '2026-05-16T01:00:00Z',
+    version:     '2026.05.20-1',
+    lastUpdated: '2026-05-20T00:00:00Z',
     entries: [
+      // ── 2026-05-20 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-20', kind: 'fix',
+        title: 'Deff Dread no longer shows "4 models"',
+        description:
+          'The Ork Deff Dread (and other single models that must take a ' +
+          'fixed number of weapons) reported the wrong model count: its ' +
+          '"pick 4 weapons" wargear group was being read as a 4-model unit. ' +
+          'Composition now only counts groups that actually choose models, ' +
+          'so the Deff Dread reads as one model. Bumped the cached-data ' +
+          'version so the fix takes effect on next load.',
+      },
+      {
+        date: '2026-05-20', kind: 'fix',
+        title: 'Saved army\'s faction & detachment restore correctly on reload',
+        description:
+          'Reopening the app sometimes left the faction, chapter and ' +
+          'detachment dropdowns blank even though the saved army had them ' +
+          'set. The first restore attempt could fire before the detachment ' +
+          'list had finished loading and, in doing so, wiped the saved ' +
+          'picks. The app now keeps a snapshot of the saved selections and ' +
+          're-applies them once everything has loaded.',
+      },
+      {
+        date: '2026-05-20', kind: 'fix',
+        title: 'Feedback form\'s submit button is reachable on mobile',
+        description:
+          'On phones the bottom tab bar was covering the "Send report" / ' +
+          '"Send request" button at the bottom of the feedback form, making ' +
+          'it impossible to submit. The form now sits above the tab bar.',
+      },
       // ── 2026-05-16 ──────────────────────────────────────────────────────
       {
         date: '2026-05-16', kind: 'fix',
