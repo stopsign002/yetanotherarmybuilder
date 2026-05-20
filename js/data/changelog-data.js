@@ -26,10 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.20-1',
-    lastUpdated: '2026-05-20T00:00:00Z',
+    version:     '2026.05.20-2',
+    lastUpdated: '2026-05-20T18:30:00Z',
     entries: [
       // ── 2026-05-20 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-20', kind: 'fix',
+        title: 'Fixes now reach you on a normal reload — no more hard-refresh',
+        description:
+          'Some recently-fixed datasheet issues (e.g. the Votann "Firebase ' +
+          'Control" / "Guerrilla Adepts" auras showing outside their ' +
+          'detachment, or the Hekaton Land Fortress\'s Pan-spectral scanner) ' +
+          'could keep appearing for anyone whose browser had cached the old ' +
+          'app code, hiding the fix until a manual hard-refresh. The site ' +
+          'now tells browsers to re-check the app code on every visit and ' +
+          'tags each release with a version stamp, so a fix goes live for ' +
+          'everyone on the next ordinary page load.',
+      },
       {
         date: '2026-05-20', kind: 'fix',
         title: 'Deff Dread no longer shows "4 models"',

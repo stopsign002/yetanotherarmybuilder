@@ -169,6 +169,15 @@ The kill-switch in `sw.js` self-unregisters and clears any legacy `yaab-shell-v*
 
 The app-shell service worker has been retired. Existing installs are migrated by the kill-switch in `sw.js`: it deletes legacy `yaab-shell-v*` caches, unregisters itself, and navigates open clients so the next page load is SW-free. New visits don't register a SW. `js/app/sw-register.js` is a defensive helper that proactively unregisters anything still registered. Code updates ship live with the next reload — no SHELL bumping required.
 
+## HTTP caching / cache-busting
+
+Two layers keep a parser/datasheet fix from getting stuck behind a browser's cached copy of the old code (the failure mode behind the kind of "I already fixed this but a user still reports it" bug):
+
+1. **Revalidation headers (the guarantee).** The host Caddy config (`~/sites/base/conf.d/yetanotherarmybuilder.caddy`) serves `/`, `*.html`, `*.js`, and `*.css` with `Cache-Control: no-cache`. The browser keeps its copy but must revalidate with an `If-None-Match` on every load; Caddy answers `304` when the file is unchanged (one tiny round-trip) and `200` with fresh bytes when it changed. So a fix goes live on the next *ordinary* reload — no hard-refresh. Deliberately **not** applied to `data/bsdata/**` (multi-MB XML the app caches itself via IndexedDB + `index.json` SHAs) or the woff2 fonts (immutable).
+2. **Version stamp (belt-and-suspenders).** `scripts/stamp-assets.mjs` appends `?v=<App.CHANGELOG.version>` to every local `js/`+`css/` reference in `index.html`, so the URLs themselves change each release — covering heuristic/proxy caches that ignore `no-cache`. The version is read from `js/data/changelog-data.js`, so there is one source of truth. **After bumping the changelog version, run `node scripts/stamp-assets.mjs`** (or `--check` in CI to fail on a stale stamp). Re-running is idempotent; font preloads are intentionally skipped so they keep matching the CSS `@font-face` URLs.
+
+Because layer 1 guarantees freshness on its own, forgetting layer 2 degrades gracefully (you just lose the proxy-cache coverage) — it never reintroduces the stale-fix bug.
+
 ## Quick-reference for navigation
 
 Common questions and where to look first.
@@ -199,6 +208,7 @@ Common questions and where to look first.
    - [ ] Opened `js/data/changelog-data.js`.
    - [ ] Added a `{ date, kind, title, description }` entry at the TOP of `entries:` (newest first).
    - [ ] Bumped the top-of-file `version` and `lastUpdated` fields.
+   - [ ] Ran `node scripts/stamp-assets.mjs` so the cache-bust `?v=` in `index.html` matches the new version (see "HTTP caching / cache-busting" above). Staged the updated `index.html` too.
    - [ ] Staged `js/data/changelog-data.js` alongside the code change so they ship together.
 
    If you don't do this, the change does not exist as far as the user is concerned. Treat a missing changelog entry the same as a broken build.
