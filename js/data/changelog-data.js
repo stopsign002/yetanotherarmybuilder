@@ -26,10 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.20-2',
-    lastUpdated: '2026-05-20T18:30:00Z',
+    version:     '2026.05.20-3',
+    lastUpdated: '2026-05-20T21:00:00Z',
     entries: [
       // ── 2026-05-20 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-20', kind: 'fix',
+        title: 'Text export now shows attached leaders under their unit',
+        description:
+          'When you attach a character to a unit (e.g. a Royal Warden led ' +
+          'into an Immortals squad), the "Copy as text" export flattened ' +
+          'everything into one list, losing the attachment. Attached units ' +
+          'are now indented beneath the unit they\'re attached to — matching ' +
+          'how they nest in the Army list — so a leader + its squad reads as ' +
+          'one cluster. Enhancements stay listed under their own unit.',
+      },
       {
         date: '2026-05-20', kind: 'fix',
         title: 'Fixes now reach you on a normal reload — no more hard-refresh',

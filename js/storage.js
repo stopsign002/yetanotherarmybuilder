@@ -222,15 +222,45 @@ window.Storage = (() => {
     lines.push(`Points Limit: ${army.pointsLimit}`);
     lines.push('');
 
-    army.entries.forEach(entry => {
+    const entries = Array.isArray(army.entries) ? army.entries : [];
+
+    // Group attached children under their parent, mirroring the army-list
+    // renderer (which nests entries by `attachedToEntryId` → parent `entryId`).
+    // A leader attached to a unit is emitted indented one level under it, so
+    // e.g. a Royal Warden reads as belonging to its Immortals squad.
+    const validIds = new Set(entries.map(e => e && e.entryId).filter(Boolean));
+    const childrenByParent = new Map(); // parentEntryId → entry[]
+    entries.forEach(e => {
+      if (!e || !e.attachedToEntryId || !validIds.has(e.attachedToEntryId)) return;
+      const arr = childrenByParent.get(e.attachedToEntryId) || [];
+      arr.push(e);
+      childrenByParent.set(e.attachedToEntryId, arr);
+    });
+
+    const seen = new Set(); // cycle guard for malformed attachment chains
+    function emit(entry, depth) {
+      if (!entry) return;
+      if (entry.entryId && seen.has(entry.entryId)) return;
+      if (entry.entryId) seen.add(entry.entryId);
+      const indent = '  '.repeat(depth);
       const pts    = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
       const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
       const total  = pts * entry.count + enhPts;
       const squad  = entry.squadLabel ? ` (${entry.squadLabel})` : '';
-      lines.push(`${entry.count}x ${entry.unitName}${squad} [${total} pts]`);
+      lines.push(`${indent}${entry.count}x ${entry.unitName}${squad} [${total} pts]`);
       (entry.enhancements || []).forEach(enh => {
-        lines.push(`  + ${enh.name} [${enh.pts} pts]`);
+        lines.push(`${indent}  + ${enh.name} [${enh.pts} pts]`);
       });
+      (childrenByParent.get(entry.entryId) || []).forEach(child => emit(child, depth + 1));
+    }
+
+    entries.forEach(entry => {
+      if (!entry) return;
+      // Children are emitted under their parent above. An entry whose parent
+      // is missing (e.g. the leader was deleted) falls through to root level
+      // so it's never silently dropped from the export.
+      if (entry.attachedToEntryId && validIds.has(entry.attachedToEntryId)) return;
+      emit(entry, 0);
     });
 
     lines.push('');
