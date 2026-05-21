@@ -26,10 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.21-1',
-    lastUpdated: '2026-05-21T00:00:00Z',
+    version:     '2026.05.21-2',
+    lastUpdated: '2026-05-21T16:00:00Z',
     entries: [
       // ── 2026-05-21 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-21', kind: 'fix',
+        title: 'Saved armies now pick up datasheet fixes on reload',
+        description:
+          'Units in a saved army stored their own copy of the datasheet from ' +
+          'when they were added, so corrections (like the Core Abilities fix ' +
+          'below) only showed on freshly-added units — existing armies kept ' +
+          'the old version until you removed and re-added the unit. Armies ' +
+          'now refresh each unit\'s datasheet from the latest data on load, ' +
+          'keeping your choices (count, points, enhancements, attachments) ' +
+          'intact, so future fixes apply automatically.',
+      },
       {
         date: '2026-05-21', kind: 'fix',
         title: 'Detachment rules no longer pollute a unit\'s Core Abilities',
