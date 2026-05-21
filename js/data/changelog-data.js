@@ -26,9 +26,25 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.20-3',
-    lastUpdated: '2026-05-20T21:00:00Z',
+    version:     '2026.05.21-1',
+    lastUpdated: '2026-05-21T00:00:00Z',
     entries: [
+      // ── 2026-05-21 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-21', kind: 'fix',
+        title: 'Detachment rules no longer pollute a unit\'s Core Abilities',
+        description:
+          'Necron units were listing every detachment rule (Annihilation ' +
+          'Protocol, Command Protocols, Hyperphasing, Power Matrix, Worthy ' +
+          'Foes, Technosorcerous Augmentations, Cold Fervour, Cosmic ' +
+          'Distortion) under Core Abilities, no matter which detachment was ' +
+          'picked. These come from a shared "Detachment Rules" list that ' +
+          'BSData hides per-detachment; the parser now honours that gating ' +
+          'for rule links the same way it already did for aura profiles, so ' +
+          'only true core abilities (e.g. Reanimation Protocols) remain on ' +
+          'the unit. Bumped the cached-data version so the fix applies on ' +
+          'next load.',
+      },
       // ── 2026-05-20 ──────────────────────────────────────────────────────
       {
         date: '2026-05-20', kind: 'fix',

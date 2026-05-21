@@ -185,7 +185,11 @@ window.YaabDB = (() => {
   // v35: composition model-count (costs.js) no longer mistakes a
   // wargear group's selection constraint for a model count — the Ork
   // Deff Dread's "pick 4 weapons" group made it report "4 models".
-  const DB_VERSION = 35;
+  // v36: detachment-gated rule infoLinks (BSData's shared "Detachment
+  // Rules" infoGroup, linked by ~every unit) no longer leak onto units
+  // as Core Abilities — the `rule` branch in abilities.js now honours the
+  // conditional `set hidden=true` modifier, matching the profile branch.
+  const DB_VERSION = 36;
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

@@ -57,6 +57,19 @@
       } else if (linkType === 'rule') {
         const rule = rulesById.get(targetId);
         if (!rule) return;
+        // Detachment-gated rule. Same shape as the aura profiles above:
+        // BSData ships a shared "Detachment Rules" infoGroup (linked by
+        // ~every unit) that lists every detachment's rule as a rule
+        // infoLink carrying `<modifier set hidden=true>` whose condition
+        // is "this detachment isn't selected" — a force-scoped expression
+        // the parser can't evaluate. Without this guard all of them leak
+        // onto every unit as Core Abilities (the "core abilities infected
+        // by detachment rules" bug). Default to skipping, matching the
+        // profile branch; the rule still surfaces in the detachment panel.
+        // The modifier rides on the infoLink (`link`) here, not the target
+        // rule, but check both to cover either encoding.
+        const HIDE_SEL = ':scope > modifiers > modifier[type="set"][field="hidden"][value="true"]';
+        if (link.querySelector(HIDE_SEL) || rule.querySelector(HIDE_SEL)) return;
         let name = I.getAttr(rule, 'name', '').trim();
         if (!name || /^new\s/i.test(name)) return;
         if (I.isCrusadeSection(name)) return;
