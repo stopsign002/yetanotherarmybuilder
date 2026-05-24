@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-24T15:34:00.128Z",
+  "generatedAt": "2026-05-24T21:12:26.084Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "95052cfa06e1bf226ea774cca4b1302b96d07eec",
+  "sourceCommit": "110a314ac06763028cd0e382f24c57b12b56da62",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -86,7 +86,7 @@
       "path": "Chaos - Thousand Sons.cat",
       "name": "Chaos - Thousand Sons",
       "type": "catalogue",
-      "sha": "626cf509d39bd953c429b5c8d320748c43443ecf",
+      "sha": "3c1a943029901a16515b3cffcd7d939ef19daf93",
       "size": 1223384
     },
     {
@@ -240,8 +240,8 @@
       "path": "Imperium - Space Marines.cat",
       "name": "Imperium - Space Marines",
       "type": "catalogue",
-      "sha": "21c8a73ef3cd6518a330531a975c9c980a46aeb2",
-      "size": 3797974
+      "sha": "7c4bd85776a33b6b07026fde895347be5e311915",
+      "size": 3798420
     },
     {
       "path": "Imperium - Space Wolves.cat",
