@@ -26,10 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.27-2',
-    lastUpdated: '2026-05-27T21:30:00Z',
+    version:     '2026.05.27-3',
+    lastUpdated: '2026-05-27T22:15:00Z',
     entries: [
       // ── 2026-05-27 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-27', kind: 'fix',
+        title: 'Data cards: weapon stat headers now line up with their columns',
+        description:
+          'On printed/preview data cards, the weapon stat letters (Range, ' +
+          'A, BS/WS, S, AP, D) were offset from the numbers beneath them — ' +
+          'the header row and the value table were laid out independently. ' +
+          'The columns are now a fixed, shared width (with Range and Damage ' +
+          'given the extra room they need), so each heading sits centred ' +
+          'over its values.',
+      },
       {
         date: '2026-05-27', kind: 'fix',
         title: 'Cards mode: saved presets now sync to other devices',

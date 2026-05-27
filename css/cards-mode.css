@@ -810,9 +810,16 @@
 }
 .dcc-section-cols {
   margin-left: auto;
+  /* Cancel the section-head's 1.4mm right padding so the column block's
+     right edge meets the weapons table's right edge below it; without this
+     every letter sits ~1.4mm left of the values it labels. */
+  margin-right: -1.4mm;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 1mm;
+  /* Must match .dcc-w-table's fixed columns exactly (Range widest, Damage
+     next, the other four narrow) so each header letter sits centred over
+     its column of values. Total = 36mm = the table's stat region. */
+  grid-template-columns: 8mm 5.5mm 5.5mm 5.5mm 5.5mm 6mm;
+  gap: 0;
   width: 36mm;
   text-align: center;
   /* Same base size as `.dcc-section-head` (2.47mm) and same multiplier
@@ -829,6 +836,11 @@
 .dcc-w-table {
   width: 100%;
   border-collapse: collapse;
+  /* Fixed layout so the stat columns are exactly the widths declared on
+     .dcc-num* below (not content-driven) — that's what lets the header
+     letters in .dcc-section-cols line up over their values. The name
+     column takes the remaining width. */
+  table-layout: fixed;
   font-size: calc(2.86mm * var(--dcc-w-mul, 1));
 }
 .dcc-w-table tr { border-bottom: 0.15mm solid rgba(60, 40, 16, 0.32); }
@@ -844,10 +856,15 @@
 }
 .dcc-num {
   text-align: center;
-  width: 6mm;
+  width: 5.5mm;
   font-feature-settings: "tnum";
   font-variant-numeric: tabular-nums;
 }
+/* Range (e.g. `Melee`, `48"`) and Damage (`D6+2`) carry the widest values;
+   widths here sum with the four 5.5mm stat columns to the 36mm region that
+   .dcc-section-cols mirrors. */
+.dcc-num-range { width: 8mm; }
+.dcc-num-dmg   { width: 6mm; }
 
 /* Primarch section — gold-rich gradient + thicker rims so the
  * choose-from-N abilities read as a distinct "pick two" block at a

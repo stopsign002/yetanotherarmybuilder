@@ -818,7 +818,16 @@
       : ['Range', 'A', 'WS', 'S', 'AP', 'D'];
     const label = type === 'ranged' ? 'RANGED WEAPONS' : 'MELEE WEAPONS';
     const rows = list.map(w => {
-      const cells = COLS.map(c => `<td class="dcc-num">${esc(w[c] != null && w[c] !== '' ? w[c] : '—')}</td>`).join('');
+      // Range is the widest stat (e.g. `Melee`, `24"`) and Damage the next
+      // (`D6+2`); the rest are 1–2 chars. Tagging them lets the fixed-layout
+      // table give each column a width that matches the header letters above
+      // it — see `.dcc-num-range` / `.dcc-num-dmg` in cards-mode.css.
+      const cells = COLS.map((c, i) => {
+        const extra = c === 'Range' ? ' dcc-num-range'
+                    : (i === COLS.length - 1) ? ' dcc-num-dmg'
+                    : '';
+        return `<td class="dcc-num${extra}">${esc(w[c] != null && w[c] !== '' ? w[c] : '—')}</td>`;
+      }).join('');
       const kw = (display.weaponKw && w.Keywords) ? `<div class="dcc-w-kw">${esc(w.Keywords)}</div>` : '';
       return `<tr class="dcc-w-row">
         <td class="dcc-w-name">${esc(w.name)}${kw}</td>
