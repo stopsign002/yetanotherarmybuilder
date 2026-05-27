@@ -2654,8 +2654,17 @@
     // until a manual reload.
     window.addEventListener('yaab-bag-pulled', e => {
       const keys = (e && e.detail && e.detail.keys) || null;
-      if (keys && keys.indexOf(PREFS_KEY) === -1) return;  // bag pulled but our key wasn't in it
-      loadPrefs();
+      // A null keys list means "assume everything changed". Otherwise only
+      // react if one of OUR two keys was in the pull — but check both:
+      // yaab_cards_prefs (live settings) AND yaab_cards_presets (named
+      // snapshots). The old code only looked at PREFS_KEY and never
+      // reloaded presets, so presets saved on one device never surfaced
+      // when you signed in on another until a full reload.
+      const prefsPulled   = !keys || keys.indexOf(PREFS_KEY)   !== -1;
+      const presetsPulled = !keys || keys.indexOf(PRESETS_KEY) !== -1;
+      if (!prefsPulled && !presetsPulled) return;
+      if (prefsPulled)   loadPrefs();
+      if (presetsPulled) loadPresets();
       applyDynamicStyle();
       if (mounted) {
         refreshSidebar();

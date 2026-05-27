@@ -26,10 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.27-1',
-    lastUpdated: '2026-05-27T20:00:00Z',
+    version:     '2026.05.27-2',
+    lastUpdated: '2026-05-27T21:30:00Z',
     entries: [
       // ── 2026-05-27 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-27', kind: 'fix',
+        title: 'Cards mode: saved presets now sync to other devices',
+        description:
+          'Named card-printing presets are stored in your synced account ' +
+          'bag, but when you signed in on a second browser they often ' +
+          'didn\'t appear until a manual reload — the code that reacts to ' +
+          'a fresh cloud pull only reloaded the live card settings, not ' +
+          'your saved presets. Both now refresh as soon as the pull lands, ' +
+          'so your presets show up right after signing in elsewhere.',
+      },
       {
         date: '2026-05-27', kind: 'fix',
         title: 'Cards mode: preview no longer jumps to the top when you tweak settings',
