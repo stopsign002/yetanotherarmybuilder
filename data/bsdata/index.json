@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-24T21:12:26.084Z",
+  "generatedAt": "2026-05-27T11:49:53.415Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "110a314ac06763028cd0e382f24c57b12b56da62",
+  "sourceCommit": "211a6b715a0365e1f7d3082d4c10e89b59755ae2",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -65,7 +65,7 @@
       "path": "Chaos - Chaos Space Marines.cat",
       "name": "Chaos - Chaos Space Marines",
       "type": "catalogue",
-      "sha": "28b0605d33970326caeae8ba45aef815a455f1fb",
+      "sha": "fa06ff904f319854b10a9803fd52069848aca925",
       "size": 2533042
     },
     {
@@ -100,7 +100,7 @@
       "path": "Chaos - World Eaters.cat",
       "name": "Chaos - World Eaters",
       "type": "catalogue",
-      "sha": "e73a767040c1d527afb8a2060261e5d51932b8a6",
+      "sha": "bbfc17db66fc3ecf836abe2b1a6d12b449a6b1fb",
       "size": 1041806
     },
     {
@@ -114,50 +114,50 @@
       "path": "Imperium - Adepta Sororitas.cat",
       "name": "Imperium - Adepta Sororitas",
       "type": "catalogue",
-      "sha": "5fbfe66c51cb81f5e704d36d6d65c9dd604d227d",
-      "size": 1057342
+      "sha": "99c6a3b71687788226e10f785c3ce3e4309b6231",
+      "size": 1057499
     },
     {
       "path": "Imperium - Adeptus Custodes.cat",
       "name": "Imperium - Adeptus Custodes",
       "type": "catalogue",
-      "sha": "ee6d829f306a7b71a44b092846cf71ee380c6b58",
-      "size": 816315
+      "sha": "642314c2f5117e129021730680ff7ac638013e42",
+      "size": 818639
     },
     {
       "path": "Imperium - Adeptus Mechanicus.cat",
       "name": "Imperium - Adeptus Mechanicus",
       "type": "catalogue",
-      "sha": "2892c06eb9754b560da63cd198f892283efc6481",
-      "size": 1087081
+      "sha": "0da86cc0358ec9c67dae174a1052e767f11cb4f9",
+      "size": 1087076
     },
     {
       "path": "Imperium - Adeptus Titanicus.cat",
       "name": "Imperium - Adeptus Titanicus",
       "type": "catalogue",
-      "sha": "3a6ac7d38ac8c6c62a41db93634907b7ddcaeefe",
-      "size": 4795
+      "sha": "e566c50700203a3f32925b7c9d70a939674d8901",
+      "size": 4952
     },
     {
       "path": "Imperium - Agents of the Imperium.cat",
       "name": "Imperium - Agents of the Imperium",
       "type": "catalogue",
-      "sha": "27eebcf87e85fe87e6210f07d2d0e415e320b72f",
-      "size": 1646624
+      "sha": "6e189d66827e5af2a68fa46f3ce232bd857504df",
+      "size": 1646781
     },
     {
       "path": "Imperium - Astra Militarum - Library.cat",
       "name": "Imperium - Astra Militarum - Library",
       "type": "catalogue",
-      "sha": "e7776de172e3705c5dd47df38c2b3a9c0f8b1f18",
-      "size": 2981558
+      "sha": "d6f8e22d9c65552a83d233b9530ed6c371db4559",
+      "size": 2990398
     },
     {
       "path": "Imperium - Astra Militarum.cat",
       "name": "Imperium - Astra Militarum",
       "type": "catalogue",
-      "sha": "463f71efc4bb55e2204c3ea2fcdb6b0bb2938759",
-      "size": 55360
+      "sha": "702431e28db8b2045d8d365ec9d5055ff9b3d1a8",
+      "size": 55517
     },
     {
       "path": "Imperium - Black Templars.cat",
@@ -191,8 +191,8 @@
       "path": "Imperium - Grey Knights.cat",
       "name": "Imperium - Grey Knights",
       "type": "catalogue",
-      "sha": "2837d2b1e5392795889fa5e8b951680ac92ca5db",
-      "size": 926149
+      "sha": "2a76f7a71052ce7bdfabb6a7c965bf38c1ab6f4d",
+      "size": 927064
     },
     {
       "path": "Imperium - Imperial Fists.cat",
@@ -205,8 +205,8 @@
       "path": "Imperium - Imperial Knights - Library.cat",
       "name": "Imperium - Imperial Knights - Library",
       "type": "catalogue",
-      "sha": "38d974cffa601c5852b567f004333687920e458e",
-      "size": 652094
+      "sha": "dd3fd68e0e9499f7c45e199e2665037369e4ad56",
+      "size": 652055
     },
     {
       "path": "Imperium - Imperial Knights.cat",
@@ -240,8 +240,8 @@
       "path": "Imperium - Space Marines.cat",
       "name": "Imperium - Space Marines",
       "type": "catalogue",
-      "sha": "7c4bd85776a33b6b07026fde895347be5e311915",
-      "size": 3798420
+      "sha": "547b01a361d0f1f52f2e1132091fc150d2bdd2b2",
+      "size": 3798577
     },
     {
       "path": "Imperium - Space Wolves.cat",
@@ -289,8 +289,8 @@
       "path": "Library - Tyranids.cat",
       "name": "Library - Tyranids",
       "type": "catalogue",
-      "sha": "41d9567a0a02ec1ec4cdb8bb73e89d032be32611",
-      "size": 655952
+      "sha": "3443ce5889e94ec19a2d551937ae1e7d24b40523",
+      "size": 656435
     },
     {
       "path": "Necrons.cat",
@@ -310,8 +310,8 @@
       "path": "T'au Empire.cat",
       "name": "T'au Empire",
       "type": "catalogue",
-      "sha": "32194a69ccc795db2fe2faa6656172a0cd5c0e31",
-      "size": 1702793
+      "sha": "5cd8a9ab6f5ec953e9c84e60c7703fa4923032cd",
+      "size": 1702229
     },
     {
       "path": "Tyranids.cat",
@@ -331,8 +331,8 @@
       "path": "Warhammer 40,000.gst",
       "name": "Warhammer 40,000",
       "type": "gamesystem",
-      "sha": "9299ff084106d7375f4ab04d077f3ddddcf34a4d",
-      "size": 699033
+      "sha": "576537b414cad9c95febc0fe531d616eb5cb2f15",
+      "size": 720625
     }
   ]
 }
