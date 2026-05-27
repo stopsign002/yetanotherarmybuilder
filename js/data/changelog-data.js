@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.21-2',
-    lastUpdated: '2026-05-21T16:00:00Z',
+    version:     '2026.05.27-1',
+    lastUpdated: '2026-05-27T20:00:00Z',
     entries: [
+      // ── 2026-05-27 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-27', kind: 'fix',
+        title: 'Cards mode: preview no longer jumps to the top when you tweak settings',
+        description:
+          'In Cards mode, every settings change (toggling a section, dragging ' +
+          'an intensity slider, picking a border colour or layout) rebuilds ' +
+          'the card preview — which was snapping you back to the top of the ' +
+          'preview each time, making it painful to fine-tune cards while ' +
+          'scrolled down. The preview now keeps your scroll position across ' +
+          'these updates.',
+      },
       // ── 2026-05-21 ──────────────────────────────────────────────────────
       {
         date: '2026-05-21', kind: 'fix',

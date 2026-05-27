@@ -2494,6 +2494,15 @@
   function refreshPreview() {
     const out = hostEl && hostEl.querySelector('#cards-preview');
     if (!out) return;
+    // Preserve scroll position across the rebuild. refreshPreview() fires on
+    // virtually every sidebar interaction (toggles, sliders, colour swatches,
+    // layout tweaks); since a styling change doesn't alter which cards are
+    // shown, a full innerHTML rebuild would otherwise snap the preview back to
+    // the top mid-scroll — the "data cards keep jumping to the top" bug. Save
+    // the scroller's offset, rebuild, then restore it (clamped to the new
+    // content height in case the card set genuinely shrank).
+    const scroller = out.closest('.cards-preview-wrap');
+    const prevTop = scroller ? scroller.scrollTop : 0;
     out.innerHTML = '';
     const { frag, cardCount } = buildPagesDOM();
     if (cardCount === 0) {
@@ -2501,6 +2510,10 @@
       return;
     }
     out.appendChild(frag);
+    if (scroller && prevTop > 0) {
+      const max = scroller.scrollHeight - scroller.clientHeight;
+      scroller.scrollTop = Math.min(prevTop, Math.max(0, max));
+    }
   }
   function refreshSummary() {
     const sum = hostEl && hostEl.querySelector('#cards-summary');
