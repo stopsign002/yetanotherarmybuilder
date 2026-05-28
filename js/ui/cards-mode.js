@@ -838,7 +838,7 @@
       <div class="dcc-section dcc-weapons dcc-weapons-${type}">
         <div class="dcc-section-head">
           <span class="dcc-section-label">${label}</span>
-          <span class="dcc-section-cols">${COLS.map(c => `<span>${c}</span>`).join('')}</span>
+          <span class="dcc-section-cols">${COLS.map(c => `<span>${c === 'Range' ? 'R' : c}</span>`).join('')}</span>
         </div>
         <table class="dcc-w-table">
           <tbody>${rows}</tbody>

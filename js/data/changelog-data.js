@@ -26,9 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.27-3',
-    lastUpdated: '2026-05-27T22:15:00Z',
+    version:     '2026.05.28-1',
+    lastUpdated: '2026-05-28T00:00:00Z',
     entries: [
+      // ── 2026-05-28 ──────────────────────────────────────────────────────
+      {
+        date: '2026-05-28', kind: 'change',
+        title: 'Data cards: weapon "Range" header shortened to "R"',
+        description:
+          'The "Range" column heading on weapon tables is now just "R" so ' +
+          'it no longer crowds the "A" (Attacks) heading next to it. The ' +
+          'values in the column are unchanged.',
+      },
       // ── 2026-05-27 ──────────────────────────────────────────────────────
       {
         date: '2026-05-27', kind: 'fix',
