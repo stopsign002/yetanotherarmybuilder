@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-28T11:51:01.992Z",
+  "generatedAt": "2026-05-29T11:41:46.183Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "0011117b971ea7343308a682287b6105290ddc4a",
+  "sourceCommit": "3503b72e1b124beab7fcc13fdeee7d1ebe8ceb80",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -107,8 +107,8 @@
       "path": "Genestealer Cults.cat",
       "name": "Genestealer Cults",
       "type": "catalogue",
-      "sha": "26b26d6c5cc1635aad37021139f019aeda415cb2",
-      "size": 933050
+      "sha": "50a9626fb6a22ff9c3e7a013471ef5a42cd3c78c",
+      "size": 935623
     },
     {
       "path": "Imperium - Adepta Sororitas.cat",
@@ -289,8 +289,8 @@
       "path": "Library - Tyranids.cat",
       "name": "Library - Tyranids",
       "type": "catalogue",
-      "sha": "3443ce5889e94ec19a2d551937ae1e7d24b40523",
-      "size": 656435
+      "sha": "630f88d194212236c77fb711ec05151f93642d24",
+      "size": 654867
     },
     {
       "path": "Necrons.cat",
