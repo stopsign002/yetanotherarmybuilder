@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-29T11:41:46.183Z",
+  "generatedAt": "2026-06-01T19:25:46.906Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "3503b72e1b124beab7fcc13fdeee7d1ebe8ceb80",
+  "sourceCommit": "b08610d8752a496a87657dd9cffaf3ff9b270cd2",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -107,8 +107,8 @@
       "path": "Genestealer Cults.cat",
       "name": "Genestealer Cults",
       "type": "catalogue",
-      "sha": "50a9626fb6a22ff9c3e7a013471ef5a42cd3c78c",
-      "size": 935623
+      "sha": "5a17b8e2377cec19924336cbe71d42bb23b53298",
+      "size": 935633
     },
     {
       "path": "Imperium - Adepta Sororitas.cat",
