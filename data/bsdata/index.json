@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-01T19:25:46.906Z",
+  "generatedAt": "2026-06-02T22:28:20.650Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "b08610d8752a496a87657dd9cffaf3ff9b270cd2",
+  "sourceCommit": "ff2c5b4a954c8b925252d9ebf7e7161b56d91864",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -240,8 +240,8 @@
       "path": "Imperium - Space Marines.cat",
       "name": "Imperium - Space Marines",
       "type": "catalogue",
-      "sha": "547b01a361d0f1f52f2e1132091fc150d2bdd2b2",
-      "size": 3798577
+      "sha": "90133287b486e073b37b9056d93364062a42fa49",
+      "size": 3819987
     },
     {
       "path": "Imperium - Space Wolves.cat",
