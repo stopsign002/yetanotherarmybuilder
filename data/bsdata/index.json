@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-02T22:28:20.650Z",
+  "generatedAt": "2026-06-03T07:13:40.513Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "ff2c5b4a954c8b925252d9ebf7e7161b56d91864",
+  "sourceCommit": "799153a4be8e76341c7ff4043d4020029f4ef734",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
       "name": "Aeldari - Aeldari Library",
       "type": "catalogue",
-      "sha": "56eaeabed59558ab901d1fcedcaa88825608b6e6",
-      "size": 3543954
+      "sha": "75a09737f01637f2970dc8a95c9edba5f27d9a1c",
+      "size": 3544114
     },
     {
       "path": "Aeldari - Craftworlds.cat",
@@ -72,8 +72,8 @@
       "path": "Chaos - Death Guard.cat",
       "name": "Chaos - Death Guard",
       "type": "catalogue",
-      "sha": "ae41062248651bec5eda1c8e43a65520c6dc00b4",
-      "size": 1314004
+      "sha": "f451e0e600512f7bdf40d9d3ebcf7f04d00b7493",
+      "size": 1315478
     },
     {
       "path": "Chaos - Emperor's Children.cat",
@@ -247,8 +247,8 @@
       "path": "Imperium - Space Wolves.cat",
       "name": "Imperium - Space Wolves",
       "type": "catalogue",
-      "sha": "8f4c72efbd0827418b2495014e928016c1f71250",
-      "size": 840683
+      "sha": "d48a6b17d7dea7a127153215ac2e1d5f8a562a1e",
+      "size": 829292
     },
     {
       "path": "Imperium - Ultramarines.cat",
@@ -268,8 +268,8 @@
       "path": "Leagues of Votann.cat",
       "name": "Leagues of Votann",
       "type": "catalogue",
-      "sha": "ce92002f1acd51d98e36dc4071479d83587b899f",
-      "size": 953100
+      "sha": "0a3f5e7a527e585465a4984d67ef6cc4fe98d705",
+      "size": 952964
     },
     {
       "path": "Library - Astartes Heresy Legends.cat",
