@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-05T11:36:28.454Z",
+  "generatedAt": "2026-06-06T21:18:36.632Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "7a58ddbe7b5df3394affade5ca90c694bbe035af",
+  "sourceCommit": "ce91ba85fae2fabcfd184cf10e020b232d129bde",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
       "name": "Aeldari - Aeldari Library",
       "type": "catalogue",
-      "sha": "75a09737f01637f2970dc8a95c9edba5f27d9a1c",
-      "size": 3544114
+      "sha": "a42e759a78a582ea5075b5f1753a3e25f9748e2f",
+      "size": 3544827
     },
     {
       "path": "Aeldari - Craftworlds.cat",
@@ -107,8 +107,8 @@
       "path": "Genestealer Cults.cat",
       "name": "Genestealer Cults",
       "type": "catalogue",
-      "sha": "5a17b8e2377cec19924336cbe71d42bb23b53298",
-      "size": 935633
+      "sha": "d3b52e0af1ebcf9792d20cb41561c2c207ea02db",
+      "size": 935634
     },
     {
       "path": "Imperium - Adepta Sororitas.cat",
@@ -121,15 +121,15 @@
       "path": "Imperium - Adeptus Custodes.cat",
       "name": "Imperium - Adeptus Custodes",
       "type": "catalogue",
-      "sha": "642314c2f5117e129021730680ff7ac638013e42",
-      "size": 818639
+      "sha": "75992b4fa358f529574a551591c2214e35b2ac40",
+      "size": 818642
     },
     {
       "path": "Imperium - Adeptus Mechanicus.cat",
       "name": "Imperium - Adeptus Mechanicus",
       "type": "catalogue",
-      "sha": "0da86cc0358ec9c67dae174a1052e767f11cb4f9",
-      "size": 1087076
+      "sha": "43781745f9c60762253013fdb623b17b2f00efe2",
+      "size": 1087077
     },
     {
       "path": "Imperium - Adeptus Titanicus.cat",
@@ -149,8 +149,8 @@
       "path": "Imperium - Astra Militarum - Library.cat",
       "name": "Imperium - Astra Militarum - Library",
       "type": "catalogue",
-      "sha": "d6f8e22d9c65552a83d233b9530ed6c371db4559",
-      "size": 2990398
+      "sha": "e623d3584b0ec59696f9ae2ae799d39bd88f46a0",
+      "size": 2990399
     },
     {
       "path": "Imperium - Astra Militarum.cat",
@@ -163,8 +163,8 @@
       "path": "Imperium - Black Templars.cat",
       "name": "Imperium - Black Templars",
       "type": "catalogue",
-      "sha": "ba4298d7c7fa3059e97029c027360107cc255eac",
-      "size": 395778
+      "sha": "01fafa72d41dda0516425da8271d3a3a6ca9b71a",
+      "size": 395779
     },
     {
       "path": "Imperium - Blood Angels.cat",
@@ -205,7 +205,7 @@
       "path": "Imperium - Imperial Knights - Library.cat",
       "name": "Imperium - Imperial Knights - Library",
       "type": "catalogue",
-      "sha": "dd3fd68e0e9499f7c45e199e2665037369e4ad56",
+      "sha": "d9d9094c6c2a5c6ebed1f64c6a74716408eaadff",
       "size": 652055
     },
     {
@@ -226,8 +226,8 @@
       "path": "Imperium - Raven Guard.cat",
       "name": "Imperium - Raven Guard",
       "type": "catalogue",
-      "sha": "d2ea75ffb8fafbf87ebd0c0aba14d8743f63343b",
-      "size": 20054
+      "sha": "7d813988eed751ea769452b119d798e64e21bd45",
+      "size": 20055
     },
     {
       "path": "Imperium - Salamanders.cat",
@@ -240,7 +240,7 @@
       "path": "Imperium - Space Marines.cat",
       "name": "Imperium - Space Marines",
       "type": "catalogue",
-      "sha": "90133287b486e073b37b9056d93364062a42fa49",
+      "sha": "9be4f979210b1010ae0395c43296b3e8eaba62e3",
       "size": 3819987
     },
     {
