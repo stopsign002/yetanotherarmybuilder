@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-06T21:18:36.632Z",
+  "generatedAt": "2026-06-07T21:36:41.193Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "ce91ba85fae2fabcfd184cf10e020b232d129bde",
+  "sourceCommit": "f4811443fcd2dfdb3c317c1eeba899c2b9174bc9",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -37,7 +37,7 @@
       "path": "Chaos - Chaos Daemons Library.cat",
       "name": "Chaos - Chaos Daemons Library",
       "type": "catalogue",
-      "sha": "c8b14130ddffd31fa403d6a8f069e3ee25f06e37",
+      "sha": "94344dbaedb6cfc95e0886b2ceba49569fa75797",
       "size": 1369991
     },
     {
@@ -65,8 +65,8 @@
       "path": "Chaos - Chaos Space Marines.cat",
       "name": "Chaos - Chaos Space Marines",
       "type": "catalogue",
-      "sha": "fa06ff904f319854b10a9803fd52069848aca925",
-      "size": 2533042
+      "sha": "a510bf30eee2f15a6e0a0fb8e2d34a2548d24ea0",
+      "size": 2534295
     },
     {
       "path": "Chaos - Death Guard.cat",
