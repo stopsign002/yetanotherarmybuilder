@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.28-1',
-    lastUpdated: '2026-05-28T00:00:00Z',
+    version:     '2026.06.05-1',
+    lastUpdated: '2026-06-05T00:00:00Z',
     entries: [
+      // ── 2026-06-05 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-05', kind: 'fix',
+        title: 'Deleted armies no longer reappear after a sync',
+        description:
+          'When you deleted a saved army while signed in, the next time the ' +
+          'app pulled from the cloud (on tab focus, re-sign-in, or another ' +
+          'device check-in) it would re-upload the still-local copy and the ' +
+          'army would come back. The sync layer now recognises that a ' +
+          'previously-synced army that\'s missing from the cloud means it ' +
+          'was deleted on another device, and propagates the deletion ' +
+          'locally instead of resurrecting it.',
+      },
       // ── 2026-05-28 ──────────────────────────────────────────────────────
       {
         date: '2026-05-28', kind: 'change',

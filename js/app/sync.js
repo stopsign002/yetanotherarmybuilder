@@ -401,12 +401,36 @@
       }
 
       // 2. Both sides have it → compare timestamps.
+      let deletedFromCloud = 0;
       for (const local of localArmies) {
         const summ = cloudIndex.get(local.id);
         if (!summ) {
-          // Local-only → enqueue putArmy.
-          enqueue({ op: 'putArmy', id: local.id });
-          uploadedLocal++;
+          // Local has it, cloud doesn't. Mirror of loop 1's known-set
+          // discriminator: if we've previously synced this id to cloud
+          // (knownAtPull has it) and cloud is now missing it, another
+          // device deleted it — propagate the delete locally instead of
+          // re-uploading. Without this, every pullAll after a remote
+          // delete enqueues a putArmy that resurrects the army on cloud,
+          // and on the next round-trip the other device adopts it back.
+          // If it's NOT in known, it's genuinely new on this device
+          // (created offline, etc.) and should be uploaded.
+          if (knownAtPull[local.id]) {
+            if (mgr) {
+              const idx = mgr.armies.findIndex(a => a.id === local.id);
+              if (idx >= 0) mgr.armies.splice(idx, 1);
+              const k = known();
+              delete k[local.id];
+              setKnown(k);
+              if (local.id === currentId && App.state) {
+                App.state.currentArmy = mgr.newArmy();
+                mgr.currentArmy = App.state.currentArmy;
+              }
+              deletedFromCloud++;
+            }
+          } else {
+            enqueue({ op: 'putArmy', id: local.id });
+            uploadedLocal++;
+          }
           continue;
         }
         const localTs = local.updatedAt || '';
@@ -581,6 +605,7 @@
         const parts = [];
         if (mergedFromCloud) parts.push(`${mergedFromCloud} from cloud`);
         if (uploadedLocal)   parts.push(`${uploadedLocal} uploading`);
+        if (deletedFromCloud) parts.push(`${deletedFromCloud} deleted elsewhere`);
         if (parts.length) UI.toast(`Synced: ${parts.join(', ')}.`, 'info', 3500);
       }
       drainQueue();
