@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-07T21:36:41.193Z",
+  "generatedAt": "2026-06-10T22:20:25.484Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "f4811443fcd2dfdb3c317c1eeba899c2b9174bc9",
+  "sourceCommit": "3e8d74b3e7c5fc4c69719d9923714a684a8b7403",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -149,8 +149,8 @@
       "path": "Imperium - Astra Militarum - Library.cat",
       "name": "Imperium - Astra Militarum - Library",
       "type": "catalogue",
-      "sha": "e623d3584b0ec59696f9ae2ae799d39bd88f46a0",
-      "size": 2990399
+      "sha": "9ef75a62b634effc151c2e13fbda6f3c5d572240",
+      "size": 2990424
     },
     {
       "path": "Imperium - Astra Militarum.cat",
