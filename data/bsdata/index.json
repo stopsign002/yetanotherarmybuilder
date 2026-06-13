@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-10T22:20:25.484Z",
+  "generatedAt": "2026-06-13T10:39:04.120Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "3e8d74b3e7c5fc4c69719d9923714a684a8b7403",
+  "sourceCommit": "9e3bb4b947c6fcc429dac3518d6fc8f74c095024",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
       "name": "Aeldari - Aeldari Library",
       "type": "catalogue",
-      "sha": "a42e759a78a582ea5075b5f1753a3e25f9748e2f",
-      "size": 3544827
+      "sha": "5710233d85a0c10b1a0d324517c0a58fe48c395c",
+      "size": 3552291
     },
     {
       "path": "Aeldari - Craftworlds.cat",
