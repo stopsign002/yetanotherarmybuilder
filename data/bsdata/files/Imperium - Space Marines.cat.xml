@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" id="e0af-67df-9d63-8fb7" name="Imperium - Adeptus Astartes - Space Marines" revision="213" battleScribeVersion="2.03" library="false" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" type="catalogue" authorName="Acebaur">
+<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" id="e0af-67df-9d63-8fb7" name="Imperium - Adeptus Astartes - Space Marines" revision="215" battleScribeVersion="2.03" library="false" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" type="catalogue" authorName="Acebaur">
   <categoryEntries>
     <categoryEntry id="5179-8ede-45e3-49a2" name="Tacticus" hidden="false"/>
     <categoryEntry id="930d-2875-125b-a65e" name="Bladeguard Veteran Squad" hidden="false"/>
@@ -39391,18 +39391,6 @@ than the Toughness characteristic of your unit or your unit has the ^^**Titus^^
             </rule>
           </rules>
         </selectionEntry>
-        <selectionEntry type="upgrade" import="true" name="Armoured Speartip" hidden="false" id="187b-6ef3-33dd-fe0d">
-          <rules>
-            <rule name="Rapid Deployment" id="b867-8297-a69a-4065" hidden="false">
-              <description>Each time an Adeptus Astartes unit from your army disembarks from a Transport (excluding Fly) that made a Normal or Advance move this phase (excluding those that arrived from Strategic Reserves), that disembarked unit can
-make a Normal move of up to D6&quot;, or a Normal move of up to D3+3&quot; instead if that Transport is a Heavy Transport
-(see below).
-
-
-Adeptus Astartes Transport units from your army (excluding FLY) that have a Wounds characteristic of 14+ have the Heavy Transport keyword.</description>
-            </rule>
-          </rules>
-        </selectionEntry>
         <selectionEntry type="upgrade" import="true" name="Headhunter Task Force" hidden="false" id="cf4f-5c50-4a22-6960">
           <rules>
             <rule name="Target Sighted" id="6f1b-5e9c-ff8c-4704" hidden="false">
@@ -39420,6 +39408,9 @@ Designer’s Note: This means that the selected units can be given  enhancemen
           </rules>
         </selectionEntry>
       </selectionEntries>
+      <entryLinks>
+        <entryLink targetId="187b-6ef3-33dd-fe0d" id="c954-90bc-7ba8-e7c2" type="selectionEntry" name="Armoured Speartip" hidden="false"/>
+      </entryLinks>
     </selectionEntryGroup>
     <selectionEntryGroup name="Enhancements" hidden="false" id="9e5d-de4c-c5d1-1d3e" collapsible="true">
       <selectionEntryGroups>
@@ -51833,64 +51824,9 @@ Until the end of the phase, this model&apos;s melee weapons have that ability.</
           </selectionEntries>
         </selectionEntryGroup>
         <selectionEntryGroup name="Legendary Relics" id="d3ee-012e-46cb-ab75" hidden="false" sortIndex="3">
-          <selectionEntries>
-            <selectionEntry type="upgrade" import="true" name="The Tyrant&apos;s Standard" hidden="false" id="4c77-bf52-15d1-5080">
-              <profiles>
-                <profile name="The Tyrant&apos;s Standard" typeId="9cc3-6d83-4dd3-9b64" typeName="Abilities" hidden="false" id="9a9a-2ac8-c4f6-1f2e">
-                  <characteristics>
-                    <characteristic name="Description" typeId="9b8f-694b-e5e-b573">Add 1 to the Attacks characteristic of weapons equipped by the bearer, and each time the bearer makes an attack, you can re-roll the Wound roll. In addition, each time the bearer&apos;s unit destroys an enemy unit, if your Crusade force is undertaking an Oathsworn Campaign, you gain 1 Honour point.</characteristic>
-                  </characteristics>
-                </profile>
-              </profiles>
-              <constraints>
-                <constraint type="max" value="1" field="selections" scope="roster" shared="true" id="714f-1729-a521-742e" includeChildForces="true" includeChildSelections="true"/>
-              </constraints>
-              <modifiers>
-                <modifier type="set" value="true" field="hidden">
-                  <conditionGroups>
-                    <conditionGroup type="or">
-                      <conditionGroups>
-                        <conditionGroup type="and">
-                          <conditions>
-                            <condition type="atLeast" value="1" field="selections" scope="roster" childId="4c77-bf52-15d1-5080" shared="true" includeChildForces="true" includeChildSelections="true"/>
-                            <condition type="lessThan" value="1" field="selections" scope="parent" childId="4c77-bf52-15d1-5080" shared="true" includeChildForces="true" includeChildSelections="true"/>
-                          </conditions>
-                        </conditionGroup>
-                      </conditionGroups>
-                      <conditions>
-                        <condition type="lessThan" value="51" field="a623-fe74-1d33-cddf" scope="root-entry" childId="any" shared="true" includeChildSelections="true"/>
-                      </conditions>
-                    </conditionGroup>
-                  </conditionGroups>
-                </modifier>
-                <modifier type="set" value="2" field="b03b-c239-15a5-da55">
-                  <conditions>
-                    <condition type="instanceOf" value="1" field="selections" scope="ancestor" childId="5929-ad51-d006-e008" shared="true"/>
-                  </conditions>
-                </modifier>
-              </modifiers>
-              <costs>
-                <cost name="pts" typeId="51b2-306e-1021-d207" value="0"/>
-                <cost name="Crusade Points" typeId="b03b-c239-15a5-da55" value="3"/>
-                <cost name="Crusade: Battle Honours" typeId="75bb-ded1-c86d-bdf0" value="1"/>
-                <cost name="Diplomatic Power" typeId="4d7c-04b6-8a79-837f" value="0"/>
-                <cost name="Military Power" typeId="1cbe-d9c9-86a8-2d41" value="0"/>
-              </costs>
-              <modifierGroups>
-                <modifierGroup type="and">
-                  <modifiers>
-                    <modifier type="append" value="The Tyrant&apos;s Standard" field="annotation" join=", " affects="self.entries.recursive.profiles.Ranged Weapons" scope="model"/>
-                    <modifier type="increment" value="1" field="3bb-c35f-f54-fb08" affects="self.entries.recursive.profiles.Ranged Weapons" scope="model" join=", "/>
-                    <modifier type="decrement" value="1" field="3bb-c35f-f54-fb08" affects="self.entries.recursive.84c4-6d1e-e724-bd6e.profiles.Ranged Weapons" scope="model" join=", "/>
-                    <modifier type="append" value="The Tyrant&apos;s Standard" field="annotation" join=", " affects="self.entries.recursive.profiles.Melee Weapons" scope="model"/>
-                    <modifier type="increment" value="1" field="2337-daa1-6682-b110" affects="self.entries.recursive.profiles.Melee Weapons" scope="model" join=", "/>
-                    <modifier type="decrement" value="1" field="2337-daa1-6682-b110" affects="self.entries.recursive.84c4-6d1e-e724-bd6e.profiles.Melee Weapons" scope="model" join=", "/>
-                    <modifier type="add" value="8ff0-ffd2-4e40-ee75" field="category" scope="root-entry" join=", "/>
-                  </modifiers>
-                </modifierGroup>
-              </modifierGroups>
-            </selectionEntry>
-          </selectionEntries>
+          <entryLinks>
+            <entryLink targetId="4c77-bf52-15d1-5080" id="2f4a-59ac-bc46-0f9e" type="selectionEntry" name="The Tyrant&apos;s Standard" hidden="false"/>
+          </entryLinks>
         </selectionEntryGroup>
         <selectionEntryGroup name="Artificer Relics" id="31d1-3aaa-ef7c-327f" hidden="false" sortIndex="1">
           <selectionEntries>
@@ -54142,44 +54078,6 @@ Vehicle unit is within 6&quot; of the bearer, ranged weapons equipped by models
       </characteristicTypes>
     </profileType>
   </profileTypes>
-  <sharedRules>
-    <rule name="Oath of Moment" id="3b76-4053-ece9-6e7d" hidden="false">
-      <description>If your Army Faction is **^^Adeptus Astartes^^**, at the start of your Command phase, select one unit from your opponent’s army. Until the start of your next Command phase, that enemy unit is your Oath of Moment target. Each time a model with this ability makes an attack that targets your Oath of Moment target:
-■ You can reroll the Hit roll
-■ If you are using a Codex: Space Marines Detachment and your army does not include one or more units with the **^^Blood Angels^^**, **^^Dark Angels^^**, **^^Deathwatch^^** or **^^Space Wolves^^** keywords, add 1 to the Wound roll as well.</description>
-      <modifiers>
-        <modifier type="set" value="true" field="hidden">
-          <conditions>
-            <condition type="instanceOf" value="1" field="selections" scope="primary-catalogue" childId="36d3-36bc-68dd-40ac" shared="true"/>
-          </conditions>
-        </modifier>
-      </modifiers>
-    </rule>
-    <rule name="Templar Vows" id="f26c-4b28-aaea-40cf" hidden="false">
-      <description>If your Army Faction is **^^Adeptus Astartes^^**, at the start of the first battle round, select one of the following Vows to be active for **^^Adeptus Astartes^^** units from your army. While a Vow is active for your army, that unit has the associated ability below. 
-
-**Abhor the Witch, Destroy the Witch**
-■ Each time this unit declares a charge, if one or more targets of that charge have the **^^Psyker^^** keyword, you can re-roll the Charge roll. Melee weapons equipped by models in this unit have the **[PRECISION]** ability while targeting **^^Psyker^^** units. 
-
-**Accept Any Challenge, No Matter the Odds**
-■ Each time a model in this unit makes a melee attack, if the Strength characteristic of that attack is less than or equal to the Toughness characteristic of the target, add 1 to the wound roll
-
-**Suffer Not the Unclean to Live**
-■ This unit is eligible to declare a charge in a turn in which it Fell Back, and each time a model in this unit makes a Pile-in or Consolidation move, it does not need to end that move closer to the closest enemy model, provided it ends that move as close as possible to the nearest enemy unit. 
-
-**Uphold the Honour of the Emperor**
-If this unit has the **^^Infantry^^** keyword:
-■ At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control until your opponent&apos;s level of control over that objective marker is greater than yours at the end of the phase. 
-■ If the mission you are playing features Actions, this unit is eligible to start to perform an Action in a turn in which it Advanced.</description>
-      <modifiers>
-        <modifier type="set" value="true" field="hidden">
-          <conditions>
-            <condition type="notInstanceOf" value="1" field="selections" scope="primary-catalogue" childId="36d3-36bc-68dd-40ac" shared="true"/>
-          </conditions>
-        </modifier>
-      </modifiers>
-    </rule>
-  </sharedRules>
   <infoLinks>
     <infoLink name="Oath of Moment" id="001d-723a-56e2-f202" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
     <infoLink name="Templar Vows" id="19ab-a61f-9a09-a0f0" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>

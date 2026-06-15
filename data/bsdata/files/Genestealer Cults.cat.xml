@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" library="false" id="3bdf-a114-5035-c6ac" name="Xenos - Genestealer Cults" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" revision="121" battleScribeVersion="2.03" type="catalogue">
+<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" library="false" id="3bdf-a114-5035-c6ac" name="Xenos - Genestealer Cults" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" revision="122" battleScribeVersion="2.03" type="catalogue">
   <sharedSelectionEntries>
     <selectionEntry type="upgrade" import="false" name="Detachment" hidden="false" id="b96c-3fb6-1ee9-15ae">
       <constraints>
@@ -5092,7 +5092,7 @@ You can attach this model to an ACOLYTE HYBRIDS or NEOPHYTE HYBRID unit, even if
                             </entryLink>
                           </entryLinks>
                         </entryLink>
-                        <entryLink import="true" name="Autopistol" hidden="false" id="5305-946c-df01-b210" type="selectionEntry" targetId="ffd4-af63-eb03-4bb5">
+                        <entryLink import="true" name="Autopistol" hidden="false" id="5305-946c-df01-b210" type="selectionEntry" targetId="c213-e6c4-7183-4041">
                           <constraints>
                             <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="f166-62a8-edff-db11"/>
                             <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="4c97-1754-7d80-e0ba"/>
@@ -5140,7 +5140,7 @@ You can attach this model to an ACOLYTE HYBRIDS or NEOPHYTE HYBRID unit, even if
                             </entryLink>
                           </entryLinks>
                         </entryLink>
-                        <entryLink import="true" name="Autopistol" hidden="false" id="79a7-b668-8582-a230" type="selectionEntry" targetId="ffd4-af63-eb03-4bb5">
+                        <entryLink import="true" name="Autopistol" hidden="false" id="79a7-b668-8582-a230" type="selectionEntry" targetId="c213-e6c4-7183-4041">
                           <constraints>
                             <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="083e-2407-6f68-a752"/>
                             <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="871b-8c2a-acfd-348d"/>
@@ -5225,7 +5225,7 @@ You can attach this model to an ACOLYTE HYBRIDS or NEOPHYTE HYBRID unit, even if
                             </entryLink>
                           </entryLinks>
                         </entryLink>
-                        <entryLink import="true" name="Autopistol" hidden="false" id="ab92-5151-962d-a998" type="selectionEntry" targetId="ffd4-af63-eb03-4bb5">
+                        <entryLink import="true" name="Autopistol" hidden="false" id="ab92-5151-962d-a998" type="selectionEntry" targetId="c213-e6c4-7183-4041">
                           <constraints>
                             <constraint type="min" value="1" field="selections" scope="parent" shared="true" id="9bec-bbf2-ca3c-19e8"/>
                             <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="1650-6952-d18f-73c4"/>
@@ -6852,6 +6852,10 @@ You can attach this model to an ACOLYTE HYBRIDS or NEOPHYTE HYBRID unit, even if
         <infoLink name="Pistol" hidden="false" type="rule" id="10e8-5547-7ac9-d492" targetId="8bf7-8812-923d-29e4"/>
       </infoLinks>
       <comment>BS4+</comment>
+      <categoryLinks>
+        <categoryLink name="Ranged Weapon" hidden="false" id="ed23-8ea6-3a7f-5e24" targetId="eeda-8544-a2f3-3fab" primary="false"/>
+        <categoryLink name="Pistol Weapon" hidden="false" id="bb59-728c-e219-ebe2" targetId="1db0-c6b5-19db-8d0c" primary="false"/>
+      </categoryLinks>
     </selectionEntry>
     <selectionEntry type="upgrade" import="true" name="Hand flamer" hidden="false" id="2847-d130-817-7064" collective="true">
       <profiles>
@@ -7072,6 +7076,7 @@ You can attach this model to an ACOLYTE HYBRIDS or NEOPHYTE HYBRID unit, even if
       <comment>BS3+</comment>
       <categoryLinks>
         <categoryLink name="Ranged Weapon" hidden="false" id="dbb4-3cb8-49d1-cb2c" targetId="eeda-8544-a2f3-3fab" primary="false"/>
+        <categoryLink name="Pistol Weapon" hidden="false" id="1145-c032-3676-ee01" targetId="1db0-c6b5-19db-8d0c" primary="false"/>
       </categoryLinks>
     </selectionEntry>
     <selectionEntry type="upgrade" import="true" name="Hybrid firearm" hidden="false" id="d4c5-b426-bb28-1ec3" collective="true">

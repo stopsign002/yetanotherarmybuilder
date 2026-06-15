@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" id="ac3b-689c-4ad4-70cb" name="Library - Astartes Heresy Legends" revision="27" battleScribeVersion="2.03" library="true" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" type="catalogue">
+<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" id="ac3b-689c-4ad4-70cb" name="Library - Astartes Heresy Legends" revision="29" battleScribeVersion="2.03" library="true" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" type="catalogue">
   <categoryEntries>
     <categoryEntry id="39b9-56da-6787-1880" name="Kratos" hidden="false">
       <constraints>
@@ -214,6 +214,8 @@
             <modifier type="append" field="name" value="D6"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="96f4-ad49-5e7b-bb4a" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="40a1-4791-dcf2-47fa" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <categoryLinks>
         <categoryLink id="3fe8-ae33-8d62-cb0b" name="Vehicle" hidden="false" targetId="dbd4-63-af05-998" primary="true"/>
@@ -844,6 +846,8 @@
             <modifier type="append" field="name" value="D3"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="e210-758d-5093-dfa8" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="fe69-43eb-9961-8bc4" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <categoryLinks>
         <categoryLink id="842a-388f-edc-46ad" name="Vehicle" hidden="false" targetId="dbd4-63-af05-998" primary="true"/>
@@ -1117,6 +1121,8 @@
             <modifier type="append" field="name" value="1"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="46a5-cd53-4e05-a340" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="9728-b945-c26d-5be2" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <categoryLinks>
         <categoryLink id="3f70-a4ef-11ce-2d90" name="Vehicle" hidden="false" targetId="dbd4-63-af05-998" primary="true"/>
@@ -1559,6 +1565,8 @@
           </modifiers>
         </infoLink>
         <infoLink id="afe9-730e-f387-b5bd" name="Damaged: 1-4 wounds remaining" hidden="false" targetId="d44e-2f5-cadf-9eb" type="profile"/>
+        <infoLink name="Oath of Moment" id="9414-9568-3a1a-f6e6" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="ba74-49cd-42a8-0887" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <categoryLinks>
         <categoryLink id="4b1c-60c2-5653-6b14" name="Vehicle" hidden="false" targetId="dbd4-63-af05-998" primary="true"/>
@@ -1905,6 +1913,8 @@
           </modifiers>
         </infoLink>
         <infoLink id="dfa0-6d62-958f-b7d0" name="Deep Strike" hidden="false" targetId="7cb5-dd6b-dd87-ad3b" type="rule"/>
+        <infoLink name="Oath of Moment" id="9ca8-bd67-83a6-8236" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="50f8-cf9b-5662-4ca9" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <categoryLinks>
         <categoryLink id="1c8c-c534-f1c-7b04" name="Faction: Adeptus Astartes" hidden="false" targetId="6e7-40c-58d9-e402" primary="false"/>
@@ -2088,6 +2098,8 @@
           </modifiers>
         </infoLink>
         <infoLink id="65d8-d096-21d4-5bc3" name="Deep Strike" hidden="false" targetId="7cb5-dd6b-dd87-ad3b" type="rule"/>
+        <infoLink name="Oath of Moment" id="6554-e4fb-7227-5558" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="305e-605c-89a2-8674" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <categoryLinks>
         <categoryLink id="2d66-be8b-cb6e-af23" name="Faction: Adeptus Astartes" hidden="false" targetId="6e7-40c-58d9-e402" primary="false"/>
@@ -2212,6 +2224,8 @@
           </modifiers>
         </infoLink>
         <infoLink name="Assault Ramp" hidden="false" type="profile" id="ee14-d596-8d49-cbab" targetId="b1c6-8391-4b18-5d57"/>
+        <infoLink name="Oath of Moment" id="78f9-cb8c-da3b-be74" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="f95e-0c6e-41da-baf7" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <categoryLinks>
         <categoryLink id="ad28-994e-e12e-f40a" name="Vehicle" hidden="false" targetId="dbd4-63-af05-998" primary="true"/>
@@ -2345,6 +2359,8 @@
           </modifiers>
         </infoLink>
         <infoLink name="Assault Ramp" hidden="false" type="profile" id="bad9-3e05-e4d9-1a39" targetId="b1c6-8391-4b18-5d57"/>
+        <infoLink name="Oath of Moment" id="b437-bf72-70a1-8ba5" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="ee72-6075-0199-c142" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <profiles>
         <profile name="Land Raider Achilles" typeId="c547-1836-d8a-ff4f" typeName="Unit" hidden="false" id="3840-3383-117-6f16">
@@ -2611,6 +2627,8 @@
             <modifier type="append" field="name" value="D3"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="cb2c-b0b8-0dbe-90eb" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="525a-739e-75be-f6d4" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="4be6-a7f7-b99d-7c9f" hidden="false">
@@ -2761,6 +2779,8 @@
             <modifier type="append" field="name" value="D3"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="cd65-b175-8526-6bfd" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="b0d7-30eb-ba9c-e4e4" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="ea08-1d06-ea63-dea7" hidden="false">
@@ -2912,6 +2932,8 @@
             <modifier type="append" field="name" value="D3"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="99e7-9845-3b36-2b1e" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="cbf5-4fec-1626-2cb7" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="6ee8-4fa5-d884-daa8" hidden="false">
@@ -3060,6 +3082,8 @@
             <modifier type="append" field="name" value="D3"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="4c5b-3abc-8802-7b93" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="808f-75c5-f7c7-98f6" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="0c80-96c0-f086-2ed2" hidden="false">
@@ -3210,6 +3234,8 @@
             <modifier type="append" field="name" value="D3"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="9d4b-2b45-e74d-304a" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="482b-5a05-182f-322a" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="fa0b-208b-3fe1-c97c" hidden="false">
@@ -3536,6 +3562,10 @@
           </conditions>
         </modifier>
       </modifiers>
+      <infoLinks>
+        <infoLink name="Oath of Moment" id="f71d-237b-c6ca-ac6b" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="d795-e42e-c4a6-dad6" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
+      </infoLinks>
     </selectionEntry>
     <selectionEntry type="model" import="true" name="Whirlwind Scorpius [Legends]" hidden="false" id="97dc-f0c8-1354-88fb">
       <costs>
@@ -3570,6 +3600,8 @@
             <modifier type="append" field="name" value="D3"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="3c9d-bfda-1293-6d98" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="c5ba-1e57-aa16-1410" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <modifiers>
         <modifier type="set" value="true" field="hidden">
@@ -3689,6 +3721,8 @@
             <modifier type="append" field="name" value="D3"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="169a-777e-caa2-6090" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="12de-8ddc-e34e-2f3c" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <modifiers>
         <modifier type="set" value="true" field="hidden">
@@ -3807,6 +3841,8 @@
           </modifiers>
         </infoLink>
         <infoLink name="Deep Strike" hidden="false" type="rule" id="71f5-5bd2-ad5b-8a0d" targetId="7cb5-dd6b-dd87-ad3b"/>
+        <infoLink name="Oath of Moment" id="d26a-a254-b06d-1e66" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="a1b6-3151-2886-ad71" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
     </selectionEntry>
     <selectionEntry type="model" import="true" name="Terrax-pattern Termite [Legends]" hidden="false" id="3d36-e9d7-54c5-deb7">
@@ -3849,6 +3885,8 @@
           </modifiers>
         </infoLink>
         <infoLink id="c64-9d84-5fa6-fc4" name="Deep Strike" hidden="false" targetId="7cb5-dd6b-dd87-ad3b" type="rule"/>
+        <infoLink name="Oath of Moment" id="ad55-9c9b-659a-2c9a" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="9ebe-40e7-b047-f187" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="f74f-f978-58c8-11cd" hidden="false">
@@ -4002,6 +4040,8 @@
             <modifier type="append" field="name" value="D3"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="4205-4ba1-8316-fb5a" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="e11f-ed05-fd86-a9cc" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <profiles>
         <profile name="Xiphon Interceptor" typeId="c547-1836-d8a-ff4f" typeName="Unit" hidden="false" id="2db5-e971-7955-a8dd">
@@ -4121,6 +4161,8 @@
         </infoLink>
         <infoLink name="Damaged: 1-6 wounds remaining" hidden="false" type="profile" id="ea61-a62-d344-4a43" targetId="8edb-b088-4c26-2fef"/>
         <infoLink name="Hover" hidden="false" type="rule" id="8734-cf-7c0f-8c36" targetId="eec5-5f54-9c03-c305"/>
+        <infoLink name="Oath of Moment" id="6323-a739-374f-1c57" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="312d-36f0-b398-baa1" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <profiles>
         <profile name="Storm Eagle Gunship" typeId="c547-1836-d8a-ff4f" typeName="Unit" hidden="false" id="d799-d629-bc45-b538">
@@ -4385,6 +4427,8 @@
         </infoLink>
         <infoLink name="Damaged: 1-6 wounds remaining" hidden="false" type="profile" id="e911-f0de-4589-9667" targetId="8edb-b088-4c26-2fef"/>
         <infoLink name="Hover" hidden="false" type="rule" id="ead2-1a0a-a2c9-9ccb" targetId="eec5-5f54-9c03-c305"/>
+        <infoLink name="Oath of Moment" id="c0f0-787d-2e79-765d" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="56c2-4285-174a-8855" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <profiles>
         <profile name="Fire Raptor Gunship" typeId="c547-1836-d8a-ff4f" typeName="Unit" hidden="false" id="aceb-b5f8-6466-e7f">
@@ -4570,6 +4614,8 @@
             <modifier type="append" field="name" value="D6"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="7551-6bb0-e730-97a1" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="df68-a0c6-1207-b5e5" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <profiles>
         <profile name="Typhon" typeId="c547-1836-d8a-ff4f" typeName="Unit" hidden="false" id="b256-1281-20b4-40ce">
@@ -4725,6 +4771,8 @@
             <modifier type="append" field="name" value="D6"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="9c4a-65fb-434f-3e2c" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="cb6f-49f3-f252-4518" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <profiles>
         <profile name="Cerberus" typeId="c547-1836-d8a-ff4f" typeName="Unit" hidden="false" id="8f48-aa83-ac12-d189">
@@ -4874,6 +4922,8 @@
           </modifiers>
         </infoLink>
         <infoLink name="Assault Ramp" id="4e12-9921-d987-73e1" hidden="false" type="profile" targetId="b1c6-8391-4b18-5d57"/>
+        <infoLink name="Oath of Moment" id="6b4e-1d25-131d-204b" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="57e2-1358-b334-d9ec" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <profiles>
         <profile name="Spartan" typeId="c547-1836-d8a-ff4f" typeName="Unit" hidden="false" id="a505-dd5a-c385-b98b">
@@ -5048,6 +5098,8 @@
           </modifiers>
         </infoLink>
         <infoLink name="Damaged: 1-8 wounds remaining" hidden="false" type="profile" id="30ca-c49a-f1bb-6530" targetId="4362-2036-1522-de2e"/>
+        <infoLink name="Oath of Moment" id="0eb3-4ecd-bdbf-0ba2" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="43b9-d529-724b-b07a" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <profiles>
         <profile name="Fellblade" typeId="c547-1836-d8a-ff4f" typeName="Unit" hidden="false" id="29c3-8beb-50c2-6c57">
@@ -5134,9 +5186,14 @@
                   </characteristics>
                   <modifiers>
                     <modifier type="append" value="+0" field="3bb-c35f-f54-fb08" join="">
-                      <conditions>
-                        <condition type="atLeast" value="1" field="selections" scope="self" childId="2801-9f1c-645d-cb3d" shared="true" includeChildSelections="true"/>
-                      </conditions>
+                      <conditionGroups>
+                        <conditionGroup type="or">
+                          <conditions>
+                            <condition type="atLeast" value="1" field="selections" scope="self" childId="2801-9f1c-645d-cb3d" shared="true" includeChildSelections="true"/>
+                            <condition type="atLeast" value="1" field="selections" scope="root-entry" childId="4c77-bf52-15d1-5080" shared="true" includeChildSelections="true" childName="The Tyrant&apos;s Standard"/>
+                          </conditions>
+                        </conditionGroup>
+                      </conditionGroups>
                     </modifier>
                   </modifiers>
                 </profile>
@@ -5319,6 +5376,8 @@
           </modifiers>
         </infoLink>
         <infoLink name="Damaged: 1-8 wounds remaining" hidden="false" type="profile" id="e3d9-5c39-4f7b-a48f" targetId="4362-2036-1522-de2e"/>
+        <infoLink name="Oath of Moment" id="f2b1-7bf3-99f9-7cdc" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="fb62-0417-993f-36cf" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <profiles>
         <profile name="Falchion" typeId="c547-1836-d8a-ff4f" typeName="Unit" hidden="false" id="1fe1-8c84-5af1-4609">
@@ -5516,6 +5575,8 @@
             <modifier type="append" value="2D6" field="name"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="649f-0210-5dbe-6b8e" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="2fff-4107-46ad-64f7" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <profiles>
         <profile name="Damaged: 1-10 wounds remaining" typeId="9cc3-6d83-4dd3-9b64" typeName="Abilities" hidden="false" id="6a33-178-237b-66f2">
@@ -5748,6 +5809,8 @@
             <modifier type="append" value="2D6" field="name"/>
           </modifiers>
         </infoLink>
+        <infoLink name="Oath of Moment" id="f169-59ab-0752-8fa4" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="d4f4-42e8-cbe3-5a78" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
       </infoLinks>
       <categoryLinks>
         <categoryLink targetId="dbd4-63-af05-998" id="9866-669d-fc6c-4ed1" primary="true" name="Vehicle"/>
@@ -5943,6 +6006,10 @@
           </conditions>
         </modifier>
       </modifiers>
+      <infoLinks>
+        <infoLink name="Oath of Moment" id="6bd9-5bc1-5e5c-f6bd" hidden="false" type="rule" targetId="3b76-4053-ece9-6e7d"/>
+        <infoLink name="Templar Vows" id="8c62-69d8-410d-93c9" hidden="false" type="rule" targetId="f26c-4b28-aaea-40cf"/>
+      </infoLinks>
     </selectionEntry>
     <selectionEntry type="model" import="true" name="Decimator [Legends]" hidden="false" id="7e7a-96f6-cad0-50ec">
       <costs>
@@ -7271,6 +7338,76 @@
         <constraint type="max" value="1" field="selections" scope="parent" shared="true" id="201c-6561-d212-d59e" includeChildSelections="false"/>
       </constraints>
     </selectionEntry>
+    <selectionEntry type="upgrade" import="true" name="The Tyrant&apos;s Standard" hidden="false" id="4c77-bf52-15d1-5080">
+      <profiles>
+        <profile name="The Tyrant&apos;s Standard" typeId="9cc3-6d83-4dd3-9b64" typeName="Abilities" hidden="false" id="9a9a-2ac8-c4f6-1f2e">
+          <characteristics>
+            <characteristic name="Description" typeId="9b8f-694b-e5e-b573">Add 1 to the Attacks characteristic of weapons equipped by the bearer, and each time the bearer makes an attack, you can re-roll the Wound roll. In addition, each time the bearer&apos;s unit destroys an enemy unit, if your Crusade force is undertaking an Oathsworn Campaign, you gain 1 Honour point.</characteristic>
+          </characteristics>
+        </profile>
+      </profiles>
+      <constraints>
+        <constraint type="max" value="1" field="selections" scope="roster" shared="true" id="714f-1729-a521-742e" includeChildForces="true" includeChildSelections="true"/>
+      </constraints>
+      <modifiers>
+        <modifier type="set" value="true" field="hidden">
+          <conditionGroups>
+            <conditionGroup type="or">
+              <conditionGroups>
+                <conditionGroup type="and">
+                  <conditions>
+                    <condition type="atLeast" value="1" field="selections" scope="roster" childId="4c77-bf52-15d1-5080" shared="true" includeChildForces="true" includeChildSelections="true"/>
+                    <condition type="lessThan" value="1" field="selections" scope="parent" childId="4c77-bf52-15d1-5080" shared="true" includeChildForces="true" includeChildSelections="true"/>
+                  </conditions>
+                </conditionGroup>
+              </conditionGroups>
+              <conditions>
+                <condition type="lessThan" value="51" field="a623-fe74-1d33-cddf" scope="root-entry" childId="any" shared="true" includeChildSelections="true"/>
+              </conditions>
+            </conditionGroup>
+          </conditionGroups>
+        </modifier>
+        <modifier type="set" value="2" field="b03b-c239-15a5-da55">
+          <conditions>
+            <condition type="instanceOf" value="1" field="selections" scope="ancestor" childId="5929-ad51-d006-e008" shared="true"/>
+          </conditions>
+        </modifier>
+      </modifiers>
+      <costs>
+        <cost name="pts" typeId="51b2-306e-1021-d207" value="0"/>
+        <cost name="Crusade Points" typeId="b03b-c239-15a5-da55" value="3"/>
+        <cost name="Crusade: Battle Honours" typeId="75bb-ded1-c86d-bdf0" value="1"/>
+        <cost name="Diplomatic Power" typeId="4d7c-04b6-8a79-837f" value="0"/>
+        <cost name="Military Power" typeId="1cbe-d9c9-86a8-2d41" value="0"/>
+      </costs>
+      <modifierGroups>
+        <modifierGroup type="and">
+          <modifiers>
+            <modifier type="append" value="The Tyrant&apos;s Standard" field="annotation" join=", " affects="self.entries.recursive.profiles.Ranged Weapons" scope="model"/>
+            <modifier type="increment" value="1" field="3bb-c35f-f54-fb08" affects="self.entries.recursive.profiles.Ranged Weapons" scope="model" join=", " position="-1"/>
+            <modifier type="decrement" value="1" field="3bb-c35f-f54-fb08" affects="self.entries.recursive.84c4-6d1e-e724-bd6e.profiles.Ranged Weapons" scope="model" join=", " position="-1"/>
+            <modifier type="append" value="The Tyrant&apos;s Standard" field="annotation" join=", " affects="self.entries.recursive.profiles.Melee Weapons" scope="model"/>
+            <modifier type="increment" value="1" field="2337-daa1-6682-b110" affects="self.entries.recursive.profiles.Melee Weapons" scope="model" join=", " position="-1"/>
+            <modifier type="decrement" value="1" field="2337-daa1-6682-b110" affects="self.entries.recursive.84c4-6d1e-e724-bd6e.profiles.Melee Weapons" scope="model" join=", " position="-1"/>
+            <modifier type="add" value="8ff0-ffd2-4e40-ee75" field="category" scope="root-entry" join=", "/>
+          </modifiers>
+        </modifierGroup>
+      </modifierGroups>
+      <comment>Crusade content - Moved to top level library for logic support</comment>
+    </selectionEntry>
+    <selectionEntry type="upgrade" import="true" name="Armoured Speartip" hidden="false" id="187b-6ef3-33dd-fe0d">
+      <rules>
+        <rule name="Rapid Deployment" id="b867-8297-a69a-4065" hidden="false">
+          <description>Each time an Adeptus Astartes unit from your army disembarks from a Transport (excluding Fly) that made a Normal or Advance move this phase (excluding those that arrived from Strategic Reserves), that disembarked unit can
+make a Normal move of up to D6&quot;, or a Normal move of up to D3+3&quot; instead if that Transport is a Heavy Transport
+(see below).
+
+
+Adeptus Astartes Transport units from your army (excluding FLY) that have a Wounds characteristic of 14+ have the Heavy Transport keyword.</description>
+        </rule>
+      </rules>
+      <comment>Moved to top level library for logic support</comment>
+    </selectionEntry>
   </sharedSelectionEntries>
   <sharedProfiles>
     <profile id="8edb-b088-4c26-2fef" name="Damaged: 1-6 wounds remaining" hidden="false" typeId="9cc3-6d83-4dd3-9b64" typeName="Abilities">
@@ -7315,4 +7452,51 @@
       <description>Each time an attack made with this weapon targets a unit more than 12&quot; from the bearer, an unmodified successful Hit roll of 4+ scores a Critical Hit.</description>
     </rule>
   </sharedRules>
+  <rules>
+    <rule name="Templar Vows" id="f26c-4b28-aaea-40cf" hidden="false">
+      <description>If your Army Faction is **^^Adeptus Astartes^^**, at the start of the first battle round, select one of the following Vows to be active for **^^Adeptus Astartes^^** units from your army. While a Vow is active for your army, that unit has the associated ability below. 
+
+**Abhor the Witch, Destroy the Witch**
+■ Each time this unit declares a charge, if one or more targets of that charge have the **^^Psyker^^** keyword, you can re-roll the Charge roll. Melee weapons equipped by models in this unit have the **[PRECISION]** ability while targeting **^^Psyker^^** units. 
+
+**Accept Any Challenge, No Matter the Odds**
+■ Each time a model in this unit makes a melee attack, if the Strength characteristic of that attack is less than or equal to the Toughness characteristic of the target, add 1 to the wound roll
+
+**Suffer Not the Unclean to Live**
+■ This unit is eligible to declare a charge in a turn in which it Fell Back, and each time a model in this unit makes a Pile-in or Consolidation move, it does not need to end that move closer to the closest enemy model, provided it ends that move as close as possible to the nearest enemy unit. 
+
+**Uphold the Honour of the Emperor**
+If this unit has the **^^Infantry^^** keyword:
+■ At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control until your opponent&apos;s level of control over that objective marker is greater than yours at the end of the phase. 
+■ If the mission you are playing features Actions, this unit is eligible to start to perform an Action in a turn in which it Advanced.</description>
+      <modifiers>
+        <modifier type="set" value="true" field="hidden">
+          <conditions>
+            <condition type="notInstanceOf" value="1" field="selections" scope="primary-catalogue" childId="36d3-36bc-68dd-40ac" shared="true"/>
+          </conditions>
+        </modifier>
+      </modifiers>
+    </rule>
+    <rule name="Oath of Moment" id="3b76-4053-ece9-6e7d" hidden="false">
+      <description>If your Army Faction is **^^Adeptus Astartes^^**, at the start of your Command phase, select one unit from your opponent’s army. Until the start of your next Command phase, that enemy unit is your Oath of Moment target. Each time a model with this ability makes an attack that targets your Oath of Moment target:
+■ You can reroll the Hit roll
+■ If you are using a Codex: Space Marines Detachment and your army does not include one or more units with the **^^Blood Angels^^**, **^^Dark Angels^^**, **^^Deathwatch^^** or **^^Space Wolves^^** keywords, add 1 to the Wound roll as well.</description>
+      <modifiers>
+        <modifier type="set" value="true" field="hidden">
+          <conditionGroups>
+            <conditionGroup type="or">
+              <conditions>
+                <condition type="instanceOf" value="1" field="selections" scope="primary-catalogue" childId="36d3-36bc-68dd-40ac" shared="true"/>
+                <condition type="instanceOf" value="1" field="selections" scope="primary-catalogue" childId="c8da-e875-58f7-f6d6" shared="true" childName="Chaos - Chaos Space Marines"/>
+                <condition type="instanceOf" value="1" field="selections" scope="primary-catalogue" childId="5108-f98-63c2-53cb" shared="true" childName="Chaos - Death Guard"/>
+                <condition type="instanceOf" value="1" field="selections" scope="primary-catalogue" childId="03fe-a162-4c02-f07b" shared="true" childName="Chaos - Emperor&apos;s Children"/>
+                <condition type="instanceOf" value="1" field="selections" scope="primary-catalogue" childId="1069-10ff-3ba9-873b" shared="true" childName="Chaos - Thousand Sons"/>
+                <condition type="instanceOf" value="1" field="selections" scope="primary-catalogue" childId="df9a-59b2-f464-59ad" shared="true" childName="Chaos - World Eaters"/>
+              </conditions>
+            </conditionGroup>
+          </conditionGroups>
+        </modifier>
+      </modifiers>
+    </rule>
+  </rules>
 </catalogue>

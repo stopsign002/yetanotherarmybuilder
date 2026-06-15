@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" library="false" id="50c4-3e83-fe54-97c4" name="Imperium - Grey Knights" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" revision="106" battleScribeVersion="2.03" type="catalogue">
+<catalogue xmlns="http://www.battlescribe.net/schema/catalogueSchema" library="false" id="50c4-3e83-fe54-97c4" name="Imperium - Grey Knights" gameSystemId="sys-352e-adc2-7639-d6a9" gameSystemRevision="1" revision="107" battleScribeVersion="2.03" type="catalogue">
   <catalogueLinks>
     <catalogueLink type="catalogue" name="Imperium - Imperial Knights - Library" id="f3e4-7fc3-8f57-6303" importRootEntries="true" targetId="1b6d-dc06-5db9-c7d1"/>
     <catalogueLink type="catalogue" name="Imperium - Agents of the Imperium" id="575c-d0f9-7fdc-2ddb" targetId="b00-cd86-4b4c-97ba" importRootEntries="true"/>
@@ -1901,16 +1901,17 @@
         <profile name="Leader" typeId="9cc3-6d83-4dd3-9b64" typeName="Abilities" hidden="false" id="ecd8-2298-e581-30d1">
           <characteristics>
             <characteristic name="Description" typeId="9b8f-694b-e5e-b573">This model can be attached to the following units:
-■ Brotherhood Terminator Squad
-■ Paladin Squad</characteristic>
+- **^^Brotherhood Terminator Squad^^**
+- **^^Paladin Squad^^**</characteristic>
           </characteristics>
         </profile>
       </profiles>
       <infoLinks>
-        <infoLink name="Deep Strike" hidden="false" type="rule" id="14-5133-4c03-b851" targetId="7cb5-dd6b-dd87-ad3b"/>
+        <infoLink name="Leader" hidden="false" type="rule" id="14-5133-4c03-b851" targetId="b4dd-3e1f-41cb-218f"/>
         <infoLink name="Invulnerable Save (4+)" hidden="false" type="profile" id="c3ec-3c2e-bfc9-8c11" targetId="5b77-29f8-7b77-75e3"/>
         <infoLink name="Gate of Infinity" id="2626-7524-ad0a-4a47" hidden="false" type="rule" targetId="6a5e-1316-2d87-93c5"/>
         <infoLink name="Warrior Strategist" id="2b7b-2f15-5798-f6e3" hidden="false" type="profile" targetId="cb03-8115-df85-19ac"/>
+        <infoLink name="Deep Strike" hidden="false" type="rule" id="2c28-11e4-1ac6-bfed" targetId="7cb5-dd6b-dd87-ad3b"/>
       </infoLinks>
       <selectionEntryGroups>
         <selectionEntryGroup name="Wargear" id="5edd-f343-28c5-7b2c" hidden="false" sortIndex="4">
@@ -2032,6 +2033,7 @@
             <modifier type="increment" value="1" field="9f25-6292-2d8c-4a2f">
               <conditions>
                 <condition type="atLeast" value="1" field="selections" scope="self" childId="43ea-7f95-0f84-2680" shared="true" includeChildSelections="true"/>
+                <condition type="lessThan" value="1" field="selections" scope="parent" childId="any" shared="true" includeChildSelections="false"/>
               </conditions>
             </modifier>
           </modifiers>

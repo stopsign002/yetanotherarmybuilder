@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-14T11:08:54.602Z",
+  "generatedAt": "2026-06-15T14:35:19.051Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "801555bb361c7b144be35a6b7f183dedde103546",
+  "sourceCommit": "fe18e530d473f5d5d956a3317ab55736a4d73ec0",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -107,8 +107,8 @@
       "path": "Genestealer Cults.cat",
       "name": "Genestealer Cults",
       "type": "catalogue",
-      "sha": "d3b52e0af1ebcf9792d20cb41561c2c207ea02db",
-      "size": 935634
+      "sha": "da99a8462ad2e395e544c800e5ea2fafa3b83c4d",
+      "size": 936075
     },
     {
       "path": "Imperium - Adepta Sororitas.cat",
@@ -191,8 +191,8 @@
       "path": "Imperium - Grey Knights.cat",
       "name": "Imperium - Grey Knights",
       "type": "catalogue",
-      "sha": "2a76f7a71052ce7bdfabb6a7c965bf38c1ab6f4d",
-      "size": 927064
+      "sha": "4a9bbeebfa4d983a3bf512811081fbd2b6294faf",
+      "size": 927341
     },
     {
       "path": "Imperium - Imperial Fists.cat",
@@ -240,8 +240,8 @@
       "path": "Imperium - Space Marines.cat",
       "name": "Imperium - Space Marines",
       "type": "catalogue",
-      "sha": "9be4f979210b1010ae0395c43296b3e8eaba62e3",
-      "size": 3819987
+      "sha": "eea274c8d23ccd0948deedb517cfff3d137369d8",
+      "size": 3811883
     },
     {
       "path": "Imperium - Space Wolves.cat",
@@ -275,8 +275,8 @@
       "path": "Library - Astartes Heresy Legends.cat",
       "name": "Library - Astartes Heresy Legends",
       "type": "catalogue",
-      "sha": "d01d4834febb032366502fefab6d558ccd206830",
-      "size": 535044
+      "sha": "e3440cde2502686d386e3da25b97ab09f1b3c574",
+      "size": 551911
     },
     {
       "path": "Library - Titans.cat",
