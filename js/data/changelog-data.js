@@ -26,10 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.17-4',
+    version:     '2026.06.17-5',
     lastUpdated: '2026-06-17T00:00:00Z',
     entries: [
       // ── 2026-06-17 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-17', kind: 'fix',
+        title: 'Updated to confirmed 11th-edition launch points',
+        description:
+          'The first 11th-edition cut used provisional pre-launch point ' +
+          'estimates. Refreshed to the confirmed launch values, so most ' +
+          'points are now final (e.g. Khârn 100→115, Angron 340→350). ' +
+          'Also pulled in a lot more stratagems and enhancements. A handful ' +
+          'of units are still provisional and will firm up.',
+      },
       {
         date: '2026-06-17', kind: 'change',
         title: '⚔ Now running on 11th edition data (new data source)',
