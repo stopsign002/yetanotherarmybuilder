@@ -106,11 +106,36 @@ window.Army = class Army {
   }
 
   getTotalPoints() {
-    return this.entries.reduce((total, entry) => {
-      const pts    = (entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0));
+    // Base: squad-size cost × count + enhancements, per entry.
+    let total = 0;
+    const copiesByUnit = new Map();   // unitId -> total copies fielded (for ordinal)
+    const ordinalByUnit = new Map();  // unitId -> { fromCount, surcharge }
+    for (const entry of this.entries) {
+      const pts    = (entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData && entry.unitData.points || 0));
       const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
-      return total + pts * entry.count + enhPts;
-    }, 0);
+      total += pts * entry.count + enhPts;
+      const uid = entry.unitId;
+      if (uid) {
+        copiesByUnit.set(uid, (copiesByUnit.get(uid) || 0) + (entry.count || 0));
+        const ord = entry.unitData && entry.unitData.ordinal;
+        if (ord && ord.surcharge && !ordinalByUnit.has(uid)) ordinalByUnit.set(uid, ord);
+      }
+    }
+    // 11e per-army-ordinal surcharge: each copy of a datasheet at/after its
+    // threshold count costs `surcharge` more (flat). Counted across all entries
+    // of that datasheet, since the ordinal is per-datasheet, not per-squad.
+    total += this.getOrdinalSurcharge(copiesByUnit, ordinalByUnit);
+    return total;
+  }
+
+  getOrdinalSurcharge(copiesByUnit, ordinalByUnit) {
+    let extra = 0;
+    for (const [uid, ord] of ordinalByUnit) {
+      const copies = copiesByUnit.get(uid) || 0;
+      const surcharged = Math.max(0, copies - (ord.fromCount - 1));
+      extra += surcharged * (ord.surcharge || 0);
+    }
+    return extra;
   }
 
   toJSON() {

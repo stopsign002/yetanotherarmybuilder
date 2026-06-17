@@ -135,6 +135,31 @@
     return out;
   }
 
+  // English ordinal: 1 -> "1st", 2 -> "2nd", 3 -> "3rd", 4 -> "4th".
+  function ordSuffix(n) {
+    const s = ['th', 'st', 'nd', 'rd'], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+  // Explicit-tier note for 11e per-army-ordinal ("scaling") pricing.
+  // unit.ordinal = { fromCount, surcharge }; surcharge is flat per copy.
+  function ordinalNoteHtml(unit) {
+    const o = unit && unit.ordinal;
+    if (!o || !o.surcharge) return '';
+    const esc = UI.escapeHtml;
+    const sq = (unit.squadOptions && unit.squadOptions.length) ? unit.squadOptions : [{ models: null, pts: unit.points || 0 }];
+    const multi = sq.length > 1;
+    const fmt = (add) => sq.map(s => {
+      const c = (s.pts || 0) + add;
+      return multi && s.models ? `${c} (${s.models})` : `${c}`;
+    }).join(' / ');
+    const lower = o.fromCount <= 2 ? '1st' : `1st–${ordSuffix(o.fromCount - 1)}`;
+    const upper = `${ordSuffix(o.fromCount)}+`;
+    return `<div class="detail-ordinal" title="Munitorum per-army pricing: each copy of this datasheet from your ${esc(ordSuffix(o.fromCount))} in the army costs ${esc(String(o.surcharge))} more.">
+      <div class="ordinal-row"><span class="ordinal-band">${esc(lower)} in army</span><span class="ordinal-cost">${esc(fmt(0))} pts</span></div>
+      <div class="ordinal-row ordinal-up"><span class="ordinal-band">${esc(upper)} in army</span><span class="ordinal-cost">${esc(fmt(o.surcharge))} pts</span></div>
+    </div>`;
+  }
+
   UI.renderUnitDetail = function (unit, detachmentEnhancements = [], selectedEnhancements = []) {
     const esc = UI.escapeHtml;
     const panel = document.getElementById('unit-detail-panel');
@@ -177,6 +202,7 @@
           <div class="detail-name">${esc(unit.name)}</div>
           ${flavorHtml}
           ${ptsOpts.length > 0 ? `<div class="detail-pts detail-banner-pts detail-pts-line">${ptsOpts.join(' / ')} pts</div>` : ''}
+          ${ordinalNoteHtml(unit)}
           <div class="detail-meta detail-banner-subtitle">
             ${subtitleParts.join('')}
           </div>

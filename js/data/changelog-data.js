@@ -26,10 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.17-7',
+    version:     '2026.06.17-8',
     lastUpdated: '2026-06-17T00:00:00Z',
     entries: [
       // ── 2026-06-17 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-17', kind: 'feature',
+        title: 'Scaling (per-army) points costs are now shown and counted',
+        description:
+          'Some 11th-edition datasheets cost more for extra copies (e.g. your ' +
+          '3rd one onward). The unit detail now spells out both price bands ' +
+          '(“1st–2nd in army” vs “3rd+ in army”), the squad dropdown no longer ' +
+          'shows confusing duplicate sizes, and your army total automatically ' +
+          'charges the higher cost for copies past the threshold — counted ' +
+          'across your whole list.',
+      },
       {
         date: '2026-06-17', kind: 'fix',
         title: 'Unit detail: points moved under the name',

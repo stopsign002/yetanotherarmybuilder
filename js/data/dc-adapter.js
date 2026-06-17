@@ -107,10 +107,13 @@
     const profiles = u.profiles && u.profiles.length ? u.profiles : [{ name: u.name }];
     const modelStats = profiles.map(profileStats);
     const first = profiles[0] || {};
-    const costs = (u.points || []).map((p) => p.cost).filter((c) => c != null);
-    const squadOptions = (u.points || [])
-      .map((p) => ({ pts: p.cost, models: p.models || null }))
-      .sort((a, b) => a.pts - b.pts);
+    // 11e points have two independent dimensions in points[]:
+    //   - squad size (`models`): 5 for X, 10 for Y
+    //   - per-army-ordinal (`unit_count_min/max`): your 1st-2nd cost base, 3rd+
+    //     cost more. Absent (the common case) = cost applies to every copy.
+    // Split them: squadOptions carries one BASE cost per distinct size; the
+    // ordinal surcharge (flat per unit across sizes) goes in `ordinal`.
+    const { squadOptions, pointsOptions, ordinal } = parsePoints(u.points || []);
     const abilities = (uv.abilities || []).map((a) => ({
       name: abilityName(a), description: textFor(a.id), isCore: false,
     })).filter((a) => a.name);
@@ -126,13 +129,47 @@
       abilities,
       keywords: (u.keywords || []).concat(u.faction_keywords || []),
       wargearOptions: [],
-      points: costs.length ? Math.min.apply(null, costs) : 0,
-      pointsOptions: costs.slice().sort((a, b) => a - b),
+      points: pointsOptions.length ? pointsOptions[0] : 0,
+      pointsOptions,
       squadOptions,
+      ordinal,                       // { fromCount, surcharge } or null
       description: '',
       isLegends: !!u.is_legend,
       _provisional: !!u.points_provisional,
     };
+  }
+
+  // Parse 40kdc points[] into { squadOptions (base cost per size), pointsOptions
+  // (sorted unique base costs), ordinal: {fromCount, surcharge}|null }.
+  function parsePoints(rawPts) {
+    const bySize = new Map(); // models -> { base, surcharged }
+    let fromCount = null;
+    for (const p of rawPts) {
+      if (p.cost == null) continue;
+      const isBase = p.unit_count_min == null || p.unit_count_min === 1;
+      const cur = bySize.get(p.models) || { base: null, surcharged: null };
+      if (isBase) cur.base = (cur.base == null) ? p.cost : Math.min(cur.base, p.cost);
+      else        cur.surcharged = (cur.surcharged == null) ? p.cost : Math.min(cur.surcharged, p.cost);
+      bySize.set(p.models, cur);
+      if (p.unit_count_min != null && p.unit_count_min > 1 && fromCount == null) {
+        fromCount = p.unit_count_min;     // start of the pricier band
+      }
+    }
+    const squadOptions = [...bySize.entries()]
+      .map(([models, c]) => ({ models: models || null, pts: c.base != null ? c.base : c.surcharged }))
+      .filter((o) => o.pts != null)
+      .sort((a, b) => a.pts - b.pts);
+    // Flat per-unit surcharge = surcharged - base (same across squad sizes in the data)
+    let ordinal = null;
+    if (fromCount != null) {
+      let surcharge = 0;
+      for (const c of bySize.values()) {
+        if (c.base != null && c.surcharged != null) { surcharge = c.surcharged - c.base; break; }
+      }
+      if (surcharge > 0) ordinal = { fromCount, surcharge };
+    }
+    const pointsOptions = [...new Set(squadOptions.map((o) => o.pts))].sort((a, b) => a - b);
+    return { squadOptions, pointsOptions, ordinal };
   }
 
   // ── detachment: 40kdc detachment → yaab detachment {name, rules, enhancements}
