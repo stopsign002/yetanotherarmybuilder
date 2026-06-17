@@ -1882,6 +1882,14 @@ ul { list-style: none; }
   color: var(--text-muted);
   margin-left: 2px;
 }
+/* "▲N" marker on an army entry total: extra pts from 11e per-army scaling. */
+.army-scaling-pts {
+  font-size: 9px;
+  color: var(--accent);
+  margin-left: 3px;
+  cursor: help;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── Stratagem detail view ───────────────────────────────── */
 .strat-detail-row {

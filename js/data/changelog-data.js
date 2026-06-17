@@ -26,10 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.17-8',
+    version:     '2026.06.17-9',
     lastUpdated: '2026-06-17T00:00:00Z',
     entries: [
       // ── 2026-06-17 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-17', kind: 'fix',
+        title: 'Army list: per-unit total now includes the scaling surcharge',
+        description:
+          'For datasheets with per-army scaling costs (e.g. 2 Canoptek Wraiths ' +
+          '= 95 + 115 = 210), the army-list line showed only the base × count ' +
+          '(190) even though the army total was right. Each line now includes ' +
+          'its scaling surcharge — marked with a small ▲ — so the per-unit ' +
+          'totals add up to the army total.',
+      },
       {
         date: '2026-06-17', kind: 'feature',
         title: 'Scaling (per-army) points costs are now shown and counted',

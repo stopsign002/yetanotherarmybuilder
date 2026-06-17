@@ -21,7 +21,11 @@
     if (entry.entryId) li.dataset.entryId = entry.entryId;
     const pts    = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
     const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
-    const total  = pts * entry.count + enhPts;
+    // Ordinal-aware per-entry total (matches the army total). `surcharge` is the
+    // extra this entry pays for copies past the datasheet's per-army threshold.
+    const army      = opts.army;
+    const surcharge = (army && typeof army.getEntryOrdinalSurcharge === 'function') ? army.getEntryOrdinalSurcharge(index) : 0;
+    const total     = (army && typeof army.getEntryPoints === 'function') ? army.getEntryPoints(index) : (pts * entry.count + enhPts);
     const squadHtml = entry.squadLabel
       ? `<span class="army-entry-squad">${esc(entry.squadLabel)}</span>` : '';
     const enhBadges = (entry.enhancements || []).map(e =>
@@ -81,7 +85,7 @@
           </span>
           <span class="army-entry-stat army-entry-stat-total">
             <span class="army-entry-stat-label">Total</span>
-            <span class="army-entry-total">${total}</span>
+            <span class="army-entry-total">${total}${surcharge > 0 ? `<span class="army-scaling-pts" title="Includes +${surcharge} pts scaling cost for copies past your first ${(entry.unitData && entry.unitData.ordinal ? entry.unitData.ordinal.fromCount - 1 : 1)}">▲${surcharge}</span>` : ''}</span>
           </span>
         </div>
       </div>
@@ -199,6 +203,7 @@
       const li = UI.createArmyEntryEl(entry, index, {
         isAttached:       depth > 0,
         attachedSubtotal: pillSubtotal,
+        army,
       });
       if (kids.length > 0 && depth < MAX_DEPTH) {
         const subList = document.createElement('ul');
