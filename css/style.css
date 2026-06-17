@@ -1131,6 +1131,13 @@ ul { list-style: none; }
   /* No margin-left:auto — the parent .detail-header-actions handles
      spacing via flex-gap; auto-margin pushed siblings out of line. */
 }
+/* Points readout moved onto its own line directly under the unit name, so a
+   multi-tier cost string can't overflow the header's flex action row. */
+.detail-pts-line {
+  display: block;
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
 
 .detail-add-section {
   background: rgba(var(--accent-rgb),0.07);

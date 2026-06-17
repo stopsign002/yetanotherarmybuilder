@@ -176,12 +176,12 @@
         <div class="detail-header-main">
           <div class="detail-name">${esc(unit.name)}</div>
           ${flavorHtml}
+          ${ptsOpts.length > 0 ? `<div class="detail-pts detail-banner-pts detail-pts-line">${ptsOpts.join(' / ')} pts</div>` : ''}
           <div class="detail-meta detail-banner-subtitle">
             ${subtitleParts.join('')}
           </div>
         </div>
         <div class="detail-header-actions detail-banner-actions">
-          ${ptsOpts.length > 0 ? `<span class="detail-pts detail-banner-pts">${ptsOpts.join(' / ')} pts</span>` : ''}
           ${(window.App && App.hooks && App.hooks.detailActions || []).map(a =>
             `<button class="detail-action-btn" data-action-id="${esc(a.id)}" title="${esc(a.title || '')}">${a.html || esc(a.label || '')}</button>`
           ).join('')}

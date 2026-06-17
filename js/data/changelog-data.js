@@ -26,10 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.17-6',
+    version:     '2026.06.17-7',
     lastUpdated: '2026-06-17T00:00:00Z',
     entries: [
       // ── 2026-06-17 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-17', kind: 'fix',
+        title: 'Unit detail: points moved under the name',
+        description:
+          'The points cost now sits on its own line directly under the unit ' +
+          'name instead of crowding the buttons in the top-right — multi-tier ' +
+          'costs no longer overflow the header.',
+      },
       {
         date: '2026-06-17', kind: 'feature',
         title: 'Better stratagem coverage (11th-edition first)',
