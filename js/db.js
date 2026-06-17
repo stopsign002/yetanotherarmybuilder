@@ -189,7 +189,7 @@ window.YaabDB = (() => {
   // Rules" infoGroup, linked by ~every unit) no longer leak onto units
   // as Core Abilities — the `rule` branch in abilities.js now honours the
   // conditional `set hidden=true` modifier, matching the profile branch.
-  const DB_VERSION = 36;
+  const DB_VERSION = 37; // 40kdc 11e cutover — drops stale 10e BSData faction cache
   const STORE_FACTIONS = 'factions';
   const STORE_GST      = 'gst';
   const STORE_GDC      = 'gdc';

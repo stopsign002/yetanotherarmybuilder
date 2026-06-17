@@ -38,6 +38,18 @@
   const DEFAULT_LAYOUT  = '4x6-portrait';
   const PAGE_MARGIN_MM  = 5;
   const CARD_GUTTER_MM  = 3;
+  // ── Borderless print tuning ───────────────────────────────────────────────
+  // `safeMarginMm` insets card CONTENT (text + data) away from the card edge
+  // while the background/frame still bleeds to the edge — so a borderless
+  // printer that overprints/enlarges the page doesn't clip the text. It's
+  // injected as --dcc-safe and folded into every card's padding (and the
+  // full-bleed stencil header's bleed offset) in cards-mode.css.
+  // `bleedToEdge` drops the sheet margin + inter-card gutter to 0 so the card
+  // background reaches the paper edge (true 1-up borderless).
+  let safeMarginMm = 0;
+  let bleedToEdge  = false;
+  function pageMargin() { return bleedToEdge ? 0 : PAGE_MARGIN_MM; }
+  function cardGutter() { return bleedToEdge ? 0 : CARD_GUTTER_MM; }
 
   // ── Texture presets ──────────────────────────────────────────────────────
   // Each preset overrides the .dcc-card background. `base` is the parchment-
@@ -69,6 +81,63 @@
   ];
   const DEFAULT_TEXTURE   = 'parchment';
   const DEFAULT_INTENSITY = 100;
+
+  // ── Templates (card skins) ────────────────────────────────────────────────
+  // A template is the overall VISUAL SKIN of every card — frame, header
+  // plate, section bars, stat blocks, palette, and ink. It is orthogonal to
+  // the texture/border/typography/display knobs (those carry over when you
+  // switch templates) and to presets (a preset snapshots every setting,
+  // including which template is active).
+  //
+  // Each template is applied by tagging every rendered card cell with a
+  // `dcc-tpl-<id>` class; the matching skin lives in css/cards-mode.css
+  // under the "Template skins" section. `classic` is the original
+  // gilded-parchment GW look and needs no CSS overrides — it's the base
+  // `.dcc-*` chrome. `swatch` is a CSS background used to preview the
+  // template in the Layout-panel picker (dark header band + thin gold
+  // rule + body colour).
+  const TEMPLATES = [
+    { id: 'classic',  label: 'Gilded Parchment',
+      swatch: 'linear-gradient(180deg, #15140f 0 30%, #b89052 30% 33%, #ecdfb9 33% 100%)' },
+    { id: 'grimdark', label: 'Grimdark Iron',
+      swatch: 'linear-gradient(180deg, #0a0805 0 30%, #c39a45 30% 33%, #141109 33% 100%)' },
+    { id: 'stencil',  label: 'Industrial Stencil',
+      swatch: 'linear-gradient(180deg, #29251f 0 26%, #74c043 26% 30%, #ece5d6 30% 100%)' },
+  ];
+  const DEFAULT_TEMPLATE = 'classic';
+  function isTemplateId(id) { return TEMPLATES.some(t => t.id === id); }
+  function templateClass() {
+    return 'dcc-tpl-' + (isTemplateId(templateId) ? templateId : DEFAULT_TEMPLATE);
+  }
+  function isStencil() { return templateId === 'stencil'; }
+
+  // ── Faction accent (drives the Industrial Stencil skin) ──────────────────
+  // The stencil template is themed by a single accent colour (header rule,
+  // shield/CP badges, pills, section ticks, footer label). We auto-derive it
+  // from the current army's faction via App.FACTION_COLORS — the saturated
+  // "dark" entry (index 2) reads best on cream paper — and inject it as
+  // --dcc-accent on each .dcc-page so the CSS can color-mix every tint from
+  // it. Harmless to the other templates (they don't reference it). Falls
+  // back to the design's Necron green when the faction is unknown.
+  const STENCIL_DEFAULT_ACCENT = '#74c043';
+  function currentFactionName() {
+    const f = (typeof getFaction === 'function') ? getFaction() : null;
+    if (f && f.factionName) return f.factionName;
+    const a = (typeof getCurrentArmy === 'function') ? getCurrentArmy() : null;
+    return (a && a.factionName) ? a.factionName : '';
+  }
+  function currentFactionShort() {
+    const fac = currentFactionName();
+    return fac.includes(' - ') ? fac.split(' - ').pop().trim() : fac.trim();
+  }
+  function currentAccent() {
+    const fc = window.App && App.FACTION_COLORS;
+    if (fc) {
+      const entry = fc[currentFactionShort()] || fc[currentFactionName()];
+      if (entry && entry[2]) return entry[2];
+    }
+    return STENCIL_DEFAULT_ACCENT;
+  }
 
   function buildGrainUrl(grain, intensity) {
     if (!grain || intensity <= 0) return null;
@@ -106,11 +175,15 @@
     }
     const radius = Math.max(0, Math.min(20, cornerRadiusMm || 0));
     const headRadius = Math.max(0, Math.min(20, headerRadiusMm || 0));
+    const safe = Math.max(0, Math.min(10, safeMarginMm || 0));
     const t = typography;
     const css = [
       textureCSS(textureId, textureIntensity),
       '.dcc-card {',
       '  border-radius: ' + radius + 'mm;',
+      // Borderless safe margin — folded into every card's content padding
+      // (and the full-bleed stencil header's bleed offset) in cards-mode.css.
+      '  --dcc-safe: ' + safe + 'mm;',
       // Header radius cascades into .dcc-head via var(--dcc-head-radius).
       '  --dcc-head-radius: ' + headRadius + 'mm;',
       '  --dcc-stat-radius: ' + Math.max(0, Math.min(8, statRadiusMm || 0)) + 'mm;',
@@ -160,11 +233,14 @@
         }
         if (typeof p.textureId === 'string')        textureId        = p.textureId;
         if (typeof p.textureIntensity === 'number') textureIntensity = p.textureIntensity;
+        if (typeof p.templateId === 'string' && isTemplateId(p.templateId)) templateId = p.templateId;
         if (typeof p.borderColor === 'string')      borderColor      = p.borderColor;
         if (typeof p.cornerRadiusMm === 'number')   cornerRadiusMm   = p.cornerRadiusMm;
         if (typeof p.headerRadiusMm === 'number')   headerRadiusMm   = p.headerRadiusMm;
         if (typeof p.statRadiusMm === 'number')     statRadiusMm     = p.statRadiusMm;
         if (typeof p.sectionHeadRadiusMm === 'number') sectionHeadRadiusMm = p.sectionHeadRadiusMm;
+        if (typeof p.safeMarginMm === 'number')     safeMarginMm     = p.safeMarginMm;
+        if (typeof p.bleedToEdge === 'boolean')     bleedToEdge      = p.bleedToEdge;
         if (p.spilloverMode === 'continuation' || p.spilloverMode === 'fullCard') {
           spilloverMode = p.spilloverMode;
         }
@@ -240,8 +316,9 @@
       const p = {
         prefsVersion: 3,
         display: Object.assign({}, display),
-        textureId, textureIntensity, borderColor,
+        textureId, textureIntensity, templateId, borderColor,
         cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,
+        safeMarginMm, bleedToEdge,
         spilloverMode,
         allowPartialSection,
         activePresetId,
@@ -298,8 +375,9 @@
   function captureSettings() {
     return {
       display:             Object.assign({}, display),
-      textureId, textureIntensity, borderColor,
+      textureId, textureIntensity, templateId, borderColor,
       cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,
+      safeMarginMm, bleedToEdge,
       spilloverMode, allowPartialSection,
       activeLayoutId,
       layoutByKind:        Object.assign({}, layoutByKind),
@@ -327,11 +405,14 @@
     }
     if (typeof s.textureId === 'string')         textureId         = s.textureId;
     if (typeof s.textureIntensity === 'number')  textureIntensity  = s.textureIntensity;
+    if (typeof s.templateId === 'string' && isTemplateId(s.templateId)) templateId = s.templateId;
     if (typeof s.borderColor === 'string')       borderColor       = s.borderColor;
     if (typeof s.cornerRadiusMm === 'number')    cornerRadiusMm    = s.cornerRadiusMm;
     if (typeof s.headerRadiusMm === 'number')    headerRadiusMm    = s.headerRadiusMm;
     if (typeof s.statRadiusMm === 'number')      statRadiusMm      = s.statRadiusMm;
     if (typeof s.sectionHeadRadiusMm === 'number') sectionHeadRadiusMm = s.sectionHeadRadiusMm;
+    if (typeof s.safeMarginMm === 'number')      safeMarginMm      = s.safeMarginMm;
+    if (typeof s.bleedToEdge === 'boolean')      bleedToEdge       = s.bleedToEdge;
     if (s.spilloverMode === 'continuation' || s.spilloverMode === 'fullCard') spilloverMode = s.spilloverMode;
     if (typeof s.allowPartialSection === 'boolean') allowPartialSection = s.allowPartialSection;
     if (typeof s.activeLayoutId === 'string')    activeLayoutId    = s.activeLayoutId;
@@ -434,6 +515,9 @@
   // <style id="cards-texture-style"> element managed by applyTextureStyle().
   let textureId        = DEFAULT_TEXTURE;
   let textureIntensity = DEFAULT_INTENSITY;
+  // Active card skin (see TEMPLATES). Persisted in prefs + captured in
+  // presets. Applied as a `dcc-tpl-<id>` class on every card cell.
+  let templateId       = DEFAULT_TEMPLATE;
   // Card corner radius in mm. Default 3mm — slightly tighter than the
   // classic R4 corner-cutter setting; pairs well with the 2mm inner
   // radii below so the title bar, stat pills, and section heads share
@@ -828,7 +912,15 @@
                     : '';
         return `<td class="dcc-num${extra}">${esc(w[c] != null && w[c] !== '' ? w[c] : '—')}</td>`;
       }).join('');
-      const kw = (display.weaponKw && w.Keywords) ? `<div class="dcc-w-kw">${esc(w.Keywords)}</div>` : '';
+      // Stencil renders each weapon keyword as a small accent pill after the
+      // name (the design's "Lethal Hits" chips); other templates keep the
+      // single italic keyword line.
+      const kw = (display.weaponKw && w.Keywords)
+        ? (isStencil()
+            ? String(w.Keywords).split(/\s*,\s*/).filter(Boolean)
+                .map(t => `<span class="dcc-w-tag">${esc(t)}</span>`).join('')
+            : `<div class="dcc-w-kw">${esc(w.Keywords)}</div>`)
+        : '';
       return `<tr class="dcc-w-row">
         <td class="dcc-w-name">${esc(w.name)}${kw}</td>
         ${cells}
@@ -969,6 +1061,36 @@
     const coreVisible = display.coreAbil && core.length > 0;
     if (!coreVisible && named.length === 0 && subGroups.size === 0) return '';
 
+    // Stencil template: the design renders each ability as a block — a
+    // category type-pill + name on one line, paragraph below — under a
+    // single "Abilities" section head. Core abilities (names only in this
+    // view) collapse into one "Core" pill block; sub-ability groups
+    // (PRIMARCH, etc.) keep their label as the pill.
+    if (isStencil()) {
+      let body = '';
+      if (coreVisible) {
+        body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">Core</span></div>`
+              + `<div class="dcc-ab-text">${core.map(a => esc(a.name)).join(', ')}</div></div>`;
+      }
+      named.forEach(a => {
+        body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">Ability</span>`
+              + `<span class="dcc-ab-name">${esc(a.name)}</span></div>`
+              + `<div class="dcc-ab-text">${esc(formatStructuredText(a.description || ''))}</div></div>`;
+      });
+      subGroups.forEach((rows, label) => {
+        rows.forEach(a => {
+          body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">${esc(label)}</span>`
+                + `<span class="dcc-ab-name">${esc(a.name)}</span></div>`
+                + `<div class="dcc-ab-text">${esc(formatStructuredText(a.description || ''))}</div></div>`;
+        });
+      });
+      if (!body) return '';
+      return `<div class="dcc-section dcc-abilities">
+        <div class="dcc-section-head"><span class="dcc-section-label">Abilities</span></div>
+        <div class="dcc-abilities-body">${body}</div>
+      </div>`;
+    }
+
     let html = '';
 
     // Regular ABILITIES section first — the "always on" rules players
@@ -1065,6 +1187,24 @@
     const ptsHtml = (display.points && ptsLabel != null) ? `<span class="dcc-pts">${esc(String(ptsLabel))} pts</span>` : '';
     const showSubLine = !!role;
     const showInvuln = !!(display.invuln && unit.invulnSave);
+    // Per-profile invuln: a BSData stat profile can carry its own
+    // invulnerable-save characteristic. Prefer it so a multi-statline sheet
+    // (e.g. the Silent King) shows the shield only on the line(s) that have
+    // one; otherwise fall back to the unit-wide invuln on every line (as the
+    // detail panel does).
+    const profInvuln = prof => {
+      const raw = prof && (prof['INV'] || prof['Invulnerable Save'] || prof['Inv'] || prof['Invuln']);
+      const s = raw == null ? '' : String(raw).trim();
+      return (s && s !== '-' && s !== '—') ? s : '';
+    };
+    const profInvs   = statProfiles.map(profInvuln);
+    const anyProfInv = profInvs.some(Boolean);
+    const hasInvuln  = !!unit.invulnSave || anyProfInv;
+    // Stencil shows the invuln as a SEPARATE faction-accent shield badge at
+    // the END OF EACH stat line; other templates fold the unit-wide invuln
+    // into the SV cell as `2+ / 4++`.
+    const shieldMode    = isStencil() && display.invuln && hasInvuln;
+    const combineInvuln = showInvuln && !shieldMode;
 
     const multiStat = statProfiles.length > 1;
     function renderStatRow(prof) {
@@ -1075,7 +1215,7 @@
             // so it lives where players' eyes already go for saves.
             // Adds a `dcc-stat-val-combo` modifier that scales the value
             // font-size down so the longer string still fits the cell.
-            if (k === 'SV' && showInvuln && v !== '—') {
+            if (k === 'SV' && combineInvuln && v !== '—') {
               return `
                 <div class="dcc-stat-cell dcc-stat-cell-sv">
                   <span class="dcc-stat-key">${esc(k)}</span>
@@ -1090,17 +1230,42 @@
           }).join('')}
         </div>`;
     }
+    function fmtInv(v) { return esc(String(v).replace(/\++$/, '') + '+'); }
+    function shieldFor(i) {
+      // The invuln beside profile i: its own profile invuln when any profile
+      // declares one, else the unit-wide invuln on every line. A spacer keeps
+      // the stat columns aligned on rows that have no shield.
+      const v = anyProfInv ? profInvs[i] : (unit.invulnSave || '');
+      return v
+        ? `<div class="dcc-invuln-shield"><span class="dcc-invuln-val">${fmtInv(v)}</span><span class="dcc-invuln-lbl">Inv</span></div>`
+        : '<div class="dcc-invuln-spacer"></div>';
+    }
     const statsHtml = (display.stats && presentStats.length > 0)
-      ? statProfiles.map(prof => {
+      ? statProfiles.map((prof, i) => {
           const label = (multiStat && prof.name)
             ? `<div class="dcc-stat-rowlabel">${esc(prof.name)}</div>`
             : '';
-          return label + renderStatRow(prof);
+          const row = renderStatRow(prof);
+          // Stencil: wrap each row with its OWN shield, flush at the end of
+          // that line, so the badge never stretches across multiple profiles.
+          return shieldMode
+            ? label + `<div class="dcc-statline">${row}${shieldFor(i)}</div>`
+            : label + row;
         }).join('')
       : '';
 
+    // Stencil header carries a faction "kicker" (eyebrow) above the name.
+    const factionShort = (function () {
+      const f = unit._factionName || '';
+      if (!f) return '';
+      return f.includes(' - ') ? f.split(' - ').pop().trim() : f.trim();
+    })();
+    const kickerHtml = (isStencil() && factionShort)
+      ? `<div class="dcc-kicker">${esc(factionShort)}</div>` : '';
+
     return `
       <header class="dcc-head">
+        ${kickerHtml}
         <div class="dcc-name-line">
           <h1 class="dcc-name">${esc(unit.name || entry.unitName || 'Unit')}</h1>
           ${ptsHtml}
@@ -1121,8 +1286,11 @@
     const r = item.rule || {};
     const kindLabel = item.kind === 'detachment' ? 'DETACHMENT RULE' : 'ARMY RULE';
     const subLine = display.kindLabel ? `<div class="dcc-sub-line"><span class="dcc-role">${kindLabel}</span></div>` : '';
+    const kickerHtml = (isStencil() && currentFactionShort())
+      ? `<div class="dcc-kicker">${esc(currentFactionShort())}</div>` : '';
     return `
       <header class="dcc-head dcc-head-rule">
+        ${kickerHtml}
         <div class="dcc-name-line">
           <h1 class="dcc-name">${esc(r.name || item.label)}</h1>
         </div>
@@ -1141,8 +1309,11 @@
     const typeHtml = display.type ? `<span class="dcc-role">${esc(typeLabel)} STRATAGEM</span>` : '';
     const phaseHtml = (display.phase && s.phase) ? `<span class="dcc-strat-phase">PHASE: ${esc(String(s.phase).toUpperCase())}</span>` : '';
     const subLine = (typeHtml || phaseHtml) ? `<div class="dcc-sub-line">${typeHtml}${phaseHtml}</div>` : '';
+    const kickerHtml = (isStencil() && currentFactionShort())
+      ? `<div class="dcc-kicker">${esc(currentFactionShort())}</div>` : '';
     return `
       <header class="dcc-head dcc-head-strat">
+        ${kickerHtml}
         <div class="dcc-name-line">
           <h1 class="dcc-name">${esc(s.name)}</h1>
           ${cpHtml}
@@ -1187,13 +1358,14 @@
     pageEl.className = 'dcc-page';
     pageEl.style.width  = layout.w + 'mm';
     pageEl.style.height = layout.h + 'mm';
-    pageEl.style.padding = PAGE_MARGIN_MM + 'mm';
+    pageEl.style.padding = pageMargin() + 'mm';
     pageEl.style.gridTemplateColumns = 'repeat(' + layout.cols + ', 1fr)';
     pageEl.style.gridTemplateRows    = 'repeat(' + layout.rows + ', 1fr)';
-    pageEl.style.gap = CARD_GUTTER_MM + 'mm';
+    pageEl.style.gap = cardGutter() + 'mm';
     // Sheet background fills any space outside the cards — reads as a
     // "card border" once printed borderless.
     pageEl.style.backgroundColor = borderColor;
+    pageEl.style.setProperty('--dcc-accent', currentAccent());
     pageEl.dataset.page = String(pageNum);
     pageEl.dataset.layout = layout.id;
 
@@ -1203,7 +1375,7 @@
       // for the partial-parchment overlay). When contClasses is the
       // empty string (spilloverMode='fullCard') the continuation is a
       // regular full-parchment card — no special class.
-      let cls = 'dcc-card dcc-card-' + card.kind;
+      let cls = 'dcc-card dcc-card-' + card.kind + ' ' + templateClass();
       if (card.isContinuation && card.contClasses) cls += ' ' + card.contClasses;
       cardEl.className = cls;
       cardEl.innerHTML = card.html;
@@ -1212,7 +1384,7 @@
     // Pad with empty grid placeholders so the last page keeps its layout.
     for (let k = cards.length; k < cardsPerPage; k++) {
       const ph = document.createElement('div');
-      ph.className = 'dcc-card dcc-card-empty';
+      ph.className = 'dcc-card dcc-card-empty ' + templateClass();
       pageEl.appendChild(ph);
     }
     frame.appendChild(pageEl);
@@ -1243,11 +1415,12 @@
     pageEl.className = 'dcc-page dcc-page-back';
     pageEl.style.width  = layout.w + 'mm';
     pageEl.style.height = layout.h + 'mm';
-    pageEl.style.padding = PAGE_MARGIN_MM + 'mm';
+    pageEl.style.padding = pageMargin() + 'mm';
     pageEl.style.gridTemplateColumns = 'repeat(' + layout.cols + ', 1fr)';
     pageEl.style.gridTemplateRows    = 'repeat(' + layout.rows + ', 1fr)';
-    pageEl.style.gap = CARD_GUTTER_MM + 'mm';
+    pageEl.style.gap = cardGutter() + 'mm';
     pageEl.style.backgroundColor = borderColor;
+    pageEl.style.setProperty('--dcc-accent', currentAccent());
     pageEl.dataset.page = String(pageNum);
     pageEl.dataset.layout = layout.id;
     pageEl.dataset.face = 'back';
@@ -1261,16 +1434,16 @@
       const cell = document.createElement('article');
       const fc = frontCards[i];
       if (fc && fc.continuationHtml) {
-        let cls = 'dcc-card dcc-card-' + fc.kind;
+        let cls = 'dcc-card dcc-card-' + fc.kind + ' ' + templateClass();
         if (fc.continuationClasses) cls += ' ' + fc.continuationClasses;
         cell.className = cls;
         cell.innerHTML = fc.continuationHtml;
       } else if (fc && cardBack.src) {
-        cell.className = 'dcc-card dcc-card-back';
+        cell.className = 'dcc-card dcc-card-back ' + templateClass();
         cell.innerHTML = '<img class="dcc-back-img" alt="card back" src="'
           + cardBack.src.replace(/"/g, '&quot;') + '" style="' + imgVars + '">';
       } else {
-        cell.className = 'dcc-card dcc-card-empty';
+        cell.className = 'dcc-card dcc-card-empty ' + templateClass();
       }
       pageEl.appendChild(cell);
     }
@@ -1296,8 +1469,8 @@
   // — the friend's "art continues underneath" idea.
   function cardSizeFor(layout) {
     return {
-      w: (layout.w - 2 * PAGE_MARGIN_MM - (layout.cols - 1) * CARD_GUTTER_MM) / layout.cols,
-      h: (layout.h - 2 * PAGE_MARGIN_MM - (layout.rows - 1) * CARD_GUTTER_MM) / layout.rows,
+      w: (layout.w - 2 * pageMargin() - (layout.cols - 1) * cardGutter()) / layout.cols,
+      h: (layout.h - 2 * pageMargin() - (layout.rows - 1) * cardGutter()) / layout.rows,
     };
   }
   function splitOverflowingUnitCards(unitCards, layout) {
@@ -1324,7 +1497,7 @@
     const host = document.createElement('div');
     host.style.cssText = 'width:' + cardW + 'mm; height:' + cardH + 'mm;';
     const cardEl = document.createElement('article');
-    cardEl.className = 'dcc-card dcc-card-unit';
+    cardEl.className = 'dcc-card dcc-card-unit ' + templateClass();
     cardEl.style.cssText = 'width:100%;height:100%;box-sizing:border-box;';
     cardEl.innerHTML = card.html;
     host.appendChild(cardEl);
@@ -1530,7 +1703,7 @@
     const host = document.createElement('div');
     host.style.cssText = 'width:' + cardW + 'mm; height:' + cardH + 'mm;';
     const cardEl = document.createElement('article');
-    cardEl.className = 'dcc-card dcc-card-rule';
+    cardEl.className = 'dcc-card dcc-card-rule ' + templateClass();
     cardEl.style.cssText = 'width:100%;height:100%;box-sizing:border-box;';
     cardEl.innerHTML = card.html;
     host.appendChild(cardEl);
@@ -1744,6 +1917,33 @@
       </label>`;
     const html = `
       <div class="cards-layout-section">
+        <div class="cards-disp-heading">Card template</div>
+        <p class="cards-help">
+          The overall visual style of every card — frame, header plate,
+          section bars, palette, and ink. <strong>Gilded Parchment</strong>
+          is the classic light GW-datasheet look (most printer-friendly).
+          <strong>Grimdark Iron</strong> is a dark, gothic-industrial skin.
+          Switching templates re-skins the whole card; your layout,
+          typography, and display toggles carry over.
+        </p>
+        <div class="cards-templates" role="listbox" aria-label="Card templates">
+          ${TEMPLATES.map(t => {
+            const isActive = t.id === templateId;
+            const styleAttr = ('background:' + t.swatch).replace(/"/g, '&quot;');
+            return `<button type="button"
+                          class="cards-template${isActive ? ' is-active' : ''}"
+                          data-template-id="${esc(t.id)}"
+                          title="${esc(t.label)}"
+                          aria-label="${esc(t.label)}"
+                          aria-selected="${isActive}"
+                          style="${styleAttr}">
+                    <span class="cards-template-label">${esc(t.label)}</span>
+                  </button>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div class="cards-layout-section">
         <div class="cards-disp-heading">Presets</div>
         <p class="cards-help">
           Save the current colours, typography, layout, and back-image
@@ -1895,6 +2095,30 @@
           <input type="range" min="0" max="6" step="0.25" value="${sectionHeadRadiusMm}"
                  id="cards-sect-radius" class="cards-range">
         </div>
+      </div>
+
+      <div class="cards-layout-section">
+        <div class="cards-disp-heading">Borderless &amp; bleed</div>
+        <p class="cards-help">
+          For borderless printing. <strong>Safe margin</strong> nudges all
+          text and data inward from the card edge while the background and
+          frame still bleed to the edge — so a borderless printer that
+          enlarges/overprints the page won't clip the text. <strong>Bleed
+          background to sheet edge</strong> drops the sheet margin and the
+          gaps between cards to zero so the card background reaches the paper
+          edge (best with one card per sheet).
+        </p>
+        <div class="cards-field" style="padding:4px 12px 0">
+          <span class="cards-field-label">Safe margin
+            <span class="cards-slider-val" id="cards-safe-margin-val">${safeMarginMm}mm</span>
+          </span>
+          <input type="range" min="0" max="10" step="0.5" value="${safeMarginMm}"
+                 id="cards-safe-margin" class="cards-range">
+        </div>
+        <label class="cards-row" style="margin: 8px 12px 0">
+          <input type="checkbox" id="cards-bleed-edge" ${bleedToEdge ? 'checked' : ''}>
+          <span><strong>Bleed background to sheet edge</strong></span>
+        </label>
       </div>
 
       <div class="cards-layout-section">
@@ -2180,6 +2404,24 @@
       applyDynamicStyle();
       return;
     }
+    // Safe-margin (borderless content inset) slider. Changing it resizes the
+    // content area, so a refreshPreview() is needed to re-run spillover.
+    if (e.target && e.target.id === 'cards-safe-margin') {
+      const v = parseFloat(e.target.value);
+      safeMarginMm = Number.isNaN(v) ? 0 : Math.max(0, Math.min(10, v));
+      const lbl = hostEl.querySelector('#cards-safe-margin-val');
+      if (lbl) lbl.textContent = safeMarginMm + 'mm';
+      applyDynamicStyle();
+      refreshPreview();
+      return;
+    }
+    // Bleed-to-sheet-edge toggle (zeroes sheet margin + card gutter).
+    if (e.target && e.target.id === 'cards-bleed-edge') {
+      bleedToEdge = !!e.target.checked;
+      refreshPreview();
+      refreshSummary();
+      return;
+    }
     // Typography multipliers
     if (e.target && e.target.matches && e.target.matches('input[data-typo]')) {
       const key = e.target.getAttribute('data-typo');
@@ -2351,6 +2593,21 @@
     if (catTab) {
       activeCardCat = catTab.dataset.cat || 'units';
       refreshSidebar();
+      return;
+    }
+    // Template (card skin) swatch — re-skin every card and re-tag the
+    // preview cells. The skin is a CSS class applied at build time, so a
+    // refreshPreview() (which rebuilds the page DOM) is what swaps it.
+    const tpl = e.target.closest('[data-template-id]');
+    if (tpl) {
+      const id = tpl.getAttribute('data-template-id');
+      templateId = isTemplateId(id) ? id : DEFAULT_TEMPLATE;
+      hostEl.querySelectorAll('[data-template-id]').forEach(b => {
+        const on = b.getAttribute('data-template-id') === templateId;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-selected', String(on));
+      });
+      refreshPreview();
       return;
     }
     // Texture swatch

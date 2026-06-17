@@ -36,7 +36,7 @@ Then open `http://localhost:8000/`. Cannot be opened via `file://` — the BSDat
 | `js/data/` | Static JSON-ish data: lore, stratagems, community feed. |
 | `js/ui/` | DOM-rendering modules. Each attaches to `window.UI`. See `docs/UI.md`. |
 | `js/app/` | Bootstrap, state, events, and feature modules. Each attaches to `window.App`. See `docs/UI.md` and `docs/MODULE-REFERENCE.md`. |
-| `js/vendor/` | `html2pdf.bundle.min.js`, `qrcode.min.js`, `fonts/cinzel-{400,600}.woff2`. |
+| `js/vendor/` | `html2pdf.bundle.min.js`, `qrcode.min.js`, `fonts/cinzel-{400,600}.woff2`, `fonts/ebgaramond{,-italic}.woff2` (EB Garamond — variable roman + italic, latin subset; body serif for the cards-mode "Industrial Stencil" template). |
 | `docs/` | Architecture / parser / UI reference + per-module deep dive. Read `docs/MODULE-REFERENCE.md` first for an exhaustive per-file index. |
 
 ## Major features
