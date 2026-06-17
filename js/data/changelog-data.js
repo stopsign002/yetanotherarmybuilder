@@ -26,9 +26,140 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.05.28-1',
-    lastUpdated: '2026-05-28T00:00:00Z',
+    version:     '2026.06.17-9',
+    lastUpdated: '2026-06-17T00:00:00Z',
     entries: [
+      // ── 2026-06-17 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-17', kind: 'fix',
+        title: 'Army list: per-unit total now includes the scaling surcharge',
+        description:
+          'For datasheets with per-army scaling costs (e.g. 2 Canoptek Wraiths ' +
+          '= 95 + 115 = 210), the army-list line showed only the base × count ' +
+          '(190) even though the army total was right. Each line now includes ' +
+          'its scaling surcharge — marked with a small ▲ — so the per-unit ' +
+          'totals add up to the army total.',
+      },
+      {
+        date: '2026-06-17', kind: 'feature',
+        title: 'Scaling (per-army) points costs are now shown and counted',
+        description:
+          'Some 11th-edition datasheets cost more for extra copies (e.g. your ' +
+          '3rd one onward). The unit detail now spells out both price bands ' +
+          '(“1st–2nd in army” vs “3rd+ in army”), the squad dropdown no longer ' +
+          'shows confusing duplicate sizes, and your army total automatically ' +
+          'charges the higher cost for copies past the threshold — counted ' +
+          'across your whole list.',
+      },
+      {
+        date: '2026-06-17', kind: 'fix',
+        title: 'Unit detail: points moved under the name',
+        description:
+          'The points cost now sits on its own line directly under the unit ' +
+          'name instead of crowding the buttons in the top-right — multi-tier ' +
+          'costs no longer overflow the header.',
+      },
+      {
+        date: '2026-06-17', kind: 'feature',
+        title: 'Better stratagem coverage (11th-edition first)',
+        description:
+          'Stratagems now come from the 11th-edition data first, falling back ' +
+          'to the older source only where the new text isn’t written yet. New ' +
+          '11th-edition detachments that previously showed no stratagems now ' +
+          'list them with full rules text, CP and phase. Coverage keeps ' +
+          'improving automatically as the 11th-edition data fills in.',
+      },
+      {
+        date: '2026-06-17', kind: 'fix',
+        title: 'Updated to confirmed 11th-edition launch points',
+        description:
+          'The first 11th-edition cut used provisional pre-launch point ' +
+          'estimates. Refreshed to the confirmed launch values, so most ' +
+          'points are now final (e.g. Khârn 100→115, Angron 340→350). ' +
+          'Also pulled in a lot more stratagems and enhancements. A handful ' +
+          'of units are still provisional and will firm up.',
+      },
+      {
+        date: '2026-06-17', kind: 'change',
+        title: '⚔ Now running on 11th edition data (new data source)',
+        description:
+          'Datasheets, points, weapons, abilities, detachments and enhancements ' +
+          'now come from the community 40kdc 11th-edition dataset instead of the ' +
+          '10th-edition BattleScribe data — so the whole roster is 11th edition. ' +
+          'Stratagem rules text is still filled in from the previous source where ' +
+          'it overlaps; brand-new 11th-edition detachments may be missing their ' +
+          'stratagem and detachment-rule text for now while that data fills in. ' +
+          'Some early-launch entries are provisional and will firm up. Spotted ' +
+          'something wrong? Use the in-app bug report — we are working through ' +
+          'issues as they surface.',
+      },
+      {
+        date: '2026-06-17', kind: 'fix',
+        title: 'Data cards: invuln shield on multi-statline units (Industrial Stencil)',
+        description:
+          'On the Industrial Stencil template, units with more than one stat ' +
+          'line (e.g. the Silent King) were stretching a single invulnerable-' +
+          'save shield down the side of both rows. The shield now sits at the ' +
+          'end of each stat line — shown on every line for a unit-wide invuln, ' +
+          'or only on the line that has it when a profile carries its own ' +
+          'invulnerable save.',
+      },
+      {
+        date: '2026-06-17', kind: 'feature',
+        title: 'Data cards: borderless safe-margin + full-bleed controls',
+        description:
+          'New under Cards → Layout → "Borderless & bleed". The Safe margin ' +
+          'slider nudges all text and data inward from the card edge while ' +
+          'the background and frame still run to the edge — so a borderless ' +
+          'printer that enlarges/overprints the page no longer clips your ' +
+          'text. "Bleed background to sheet edge" drops the sheet margin and ' +
+          'the gaps between cards to zero so the card background reaches the ' +
+          'paper edge (best with one card per sheet). Both are saved with ' +
+          'your presets.',
+      },
+      {
+        date: '2026-06-17', kind: 'feature',
+        title: 'Data cards: new Industrial Stencil template (faction-themed)',
+        description:
+          'A third card template, "Industrial Stencil" — cream cardstock with ' +
+          'a near-black header bar, a faction-coloured accent rule, and ' +
+          'Cinzel + EB Garamond lettering. It auto-themes to your army\'s ' +
+          'faction: the accent recolours the header rule, the invulnerable-' +
+          'save shield, weapon-ability pills, the stratagem CP hex badge, ' +
+          'section ticks, and the keyword labels. Invuln saves now show as a ' +
+          'distinct shield beside the stat line on this template, and weapon ' +
+          'abilities (Lethal Hits, etc.) render as little pills. Pick it under ' +
+          'Cards → Layout → Card template. It’s a light, ' +
+          'printer-friendly look alongside Gilded Parchment and Grimdark Iron.',
+      },
+      // ── 2026-06-16 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-16', kind: 'feature',
+        title: 'Data cards: switchable visual templates + new Grimdark Iron skin',
+        description:
+          'Cards mode now has a "Card template" picker (under Layout) that ' +
+          're-skins every card. "Gilded Parchment" is the original light ' +
+          'GW-datasheet look (now a named template, and the most ' +
+          'printer-friendly). "Grimdark Iron" is a new dark, ' +
+          'gothic-industrial skin — blackened-iron surface, oxidised-bronze ' +
+          'frames and bars, bone-coloured ink, and dried-blood CP/invuln ' +
+          'pips. Your layout, typography, and display toggles carry over ' +
+          'when you switch, and the chosen template is saved with your ' +
+          'presets so it follows you across devices.',
+      },
+      // ── 2026-06-05 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-05', kind: 'fix',
+        title: 'Deleted armies no longer reappear after a sync',
+        description:
+          'When you deleted a saved army while signed in, the next time the ' +
+          'app pulled from the cloud (on tab focus, re-sign-in, or another ' +
+          'device check-in) it would re-upload the still-local copy and the ' +
+          'army would come back. The sync layer now recognises that a ' +
+          'previously-synced army that\'s missing from the cloud means it ' +
+          'was deleted on another device, and propagates the deletion ' +
+          'locally instead of resurrecting it.',
+      },
       // ── 2026-05-28 ──────────────────────────────────────────────────────
       {
         date: '2026-05-28', kind: 'change',

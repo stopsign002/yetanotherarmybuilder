@@ -1131,6 +1131,33 @@ ul { list-style: none; }
   /* No margin-left:auto — the parent .detail-header-actions handles
      spacing via flex-gap; auto-margin pushed siblings out of line. */
 }
+/* Points readout moved onto its own line directly under the unit name, so a
+   multi-tier cost string can't overflow the header's flex action row. */
+.detail-pts-line {
+  display: block;
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+/* 11e per-army-ordinal ("scaling") pricing tiers, under the points line. */
+.detail-ordinal {
+  margin: 0 0 8px;
+  padding: 5px 8px;
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  background: rgba(var(--accent-rgb), 0.06);
+  font-size: 12px;
+  max-width: max-content;
+}
+.detail-ordinal .ordinal-row {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.detail-ordinal .ordinal-band { color: var(--text-muted); }
+.detail-ordinal .ordinal-cost { font-weight: 700; font-variant-numeric: tabular-nums; }
+.detail-ordinal .ordinal-up .ordinal-cost { color: var(--accent); }
 
 .detail-add-section {
   background: rgba(var(--accent-rgb),0.07);
@@ -1854,6 +1881,14 @@ ul { list-style: none; }
   font-size: 9px;
   color: var(--text-muted);
   margin-left: 2px;
+}
+/* "▲N" marker on an army entry total: extra pts from 11e per-army scaling. */
+.army-scaling-pts {
+  font-size: 9px;
+  color: var(--accent);
+  margin-left: 3px;
+  cursor: help;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Stratagem detail view ───────────────────────────────── */

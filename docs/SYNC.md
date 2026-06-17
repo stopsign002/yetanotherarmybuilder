@@ -23,7 +23,7 @@ The system is *offline-first*: every write hits localStorage first and the netwo
 
 - **Device prefs** — `yaab_sound_enabled`, `yaab_voice_enabled`, `yaab_reduced_motion` (if any), `yaab_pwa_dismissed`, `yaab_mobile_panel`. These are per-device by design.
 - **Ephemeral game-day state** — `yaab_match_state`, `yaab_opponent`. Live for one game and shouldn't bleed across devices.
-- **Parsed BSData** — sits in IndexedDB (`YaabDB.factions`, `YaabDB.gst`). It's a deterministic function of the upstream XML; re-parsing is cheaper than syncing a few MB.
+- **Faction game data** — comes from the embedded 40kdc bundle (`window.DC`, via `js/data/dc-adapter.js`), rebuilt locally each load. It's a deterministic function of the dataset, never user data, so it's never synced. (Sync is data-source-agnostic regardless.)
 - **Auth hint** — `yaab_auth_session_hint` is a UI hint, not user data. The cookie is the truth.
 
 If you add a new feature with a `yaab_*` localStorage key, decide deliberately: bag-synced (add to `SYNCED_BAG_KEYS`) or device-local (don't).

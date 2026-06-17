@@ -175,7 +175,7 @@ Create `js/app/<feature>.js` (or `js/ui/<feature>.js` if it owns DOM). IIFE that
 Then: add the `<script>` to `index.html` between the `FEATURE-MODULES-START`/`END` markers, add the path to `sw.js` PRECACHE, and bump `SHELL` in `sw.js`.
 
 ### Add a stat / field to the unit detail
-Edit `UI.renderUnitDetail` in `js/ui/detail.js`. If the field is parser-derived, add it to the returned object in `js/parser/entry.js` (see `docs/PARSER.md`) AND bump `DB_VERSION` in `js/db.js` so stale IndexedDB caches are dropped.
+Edit `UI.renderUnitDetail` in `js/ui/detail.js`. If the field is data-derived, add it to the unit object built in `js/data/dc-adapter.js` (the live data source — the `js/parser/` tree is dormant; see `docs/PARSER.md`). No `DB_VERSION` bump is needed: the adapter rebuilds factions from `window.DC` each load, so there's no faction cache to invalidate.
 
 ### Add a new modal
 Create the markup in JS (your feature module's IIFE, on first open). Don't add to `index.html`. Wire `Escape` either via the existing global handler in `events.js` or your own. Show/hide pattern: `removeAttribute('hidden')` / `setAttribute('hidden','')`.
@@ -192,8 +192,8 @@ Create `css/<feature>.css`, link it from `index.html` `<head>`, and add to `sw.j
 ### Add a service-worker-cached asset
 Add the URL to `PRECACHE` in `sw.js`. Bump `SHELL`. The activate handler will evict the prior cache.
 
-### Bump the parser cache
-Bump `DB_VERSION` in `js/db.js` whenever you change the parser output shape (anything in `entry.js`, `wargear.js`, `costs.js`, `keywords.js`, `abilities.js`, `weapons.js`). The `onupgradeneeded` handler drops both stores. NOT bumping leaves users reading stale cached JSON missing the new field.
+### Change faction data / unit fields
+Edit `js/data/dc-adapter.js` (the live data source mapping `window.DC` into the parser output shape). No `DB_VERSION` bump is needed — the adapter rebuilds factions on every load (no faction IndexedDB cache). Don't hand-edit `js/vendor/dc-bundle.js`; it's generated and auto-refreshed. The `js/parser/` tree is dormant. See `docs/PARSER.md`.
 
 ### Add a new virtual-parent faction grouping
 Edit `App.VIRTUAL_PARENTS` in `js/app/state.js`. Shape: `{ name, baseChapter }`. `buildChaptersMap` auto-populates `chaptersMap` / `chapterFactions` / `virtualBase` for any catalogue named `<name> - ...`.
@@ -227,5 +227,5 @@ The build mode is the historical 3-pane app; collect and play modes are alternat
 10. Export → copy `YAAB1:` → New → Import → paste → all selections restore.
 11. Cmd/Ctrl+Z (undo) and Cmd/Ctrl+Shift+Z (redo) → state mutates correctly.
 12. Cmd/Ctrl+K → command palette; type `analytics` → Enter → modal opens.
-13. Disable network in DevTools → reload → service worker serves the shell; BSData fetch fails gracefully (cached factions still present).
+13. Disable network in DevTools → reload → faction data still loads (it's embedded in `js/vendor/dc-bundle.js`, no fetch); only the live GDC fallback text degrades gracefully.
 14. Resize browser → left/right panel drag handles still work; unit grid reflows.

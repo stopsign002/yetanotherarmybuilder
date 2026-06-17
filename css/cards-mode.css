@@ -232,6 +232,47 @@
   pointer-events: none;
 }
 
+/* Template picker (inside the Layout sub-tab) — taller "card-shaped"
+ * swatches that preview each template's header band + body palette. */
+.cards-templates {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 8px 12px 0;
+}
+.cards-template {
+  aspect-ratio: 3 / 4;
+  border-radius: 4px;
+  border: 1px solid #2e323a;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(184, 144, 82, 0.3);
+}
+.cards-template:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(184, 144, 82, 0.55);
+}
+.cards-template.is-active {
+  border-color: var(--accent, #b89052);
+  box-shadow: 0 0 0 2px var(--accent, #b89052);
+}
+.cards-template-label {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.82) 100%);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 14px 4px 4px;
+  text-align: center;
+  line-height: 1.1;
+  pointer-events: none;
+}
+
 /* Border-colour controls (inside the Layout sub-tab) */
 .cards-color {
   width: 100%;
@@ -503,7 +544,10 @@
     inset 0 0 0 0.2mm #b89052,
     inset 0 0 0 0.45mm rgba(0,0,0,0.18);
   box-sizing: border-box;
-  padding: 1.6mm 2mm;
+  /* Content padding = base inset + the borderless "safe margin" (--dcc-safe,
+   * injected by cards-mode.js, default 0). Pushes text/data inward while the
+   * card background still fills to the edge — for borderless overprint. */
+  padding: calc(1.6mm + var(--dcc-safe, 0mm)) calc(2mm + var(--dcc-safe, 0mm));
   display: flex;
   flex-direction: column;
   gap: 1.2mm;
@@ -574,7 +618,7 @@
    * active texture preset, intensity, and corner radius all apply. */
   position: relative;
   z-index: 1;
-  padding: 1.6mm 2mm;
+  padding: calc(1.6mm + var(--dcc-safe, 0mm)) calc(2mm + var(--dcc-safe, 0mm));
   display: flex;
   flex-direction: column;
   gap: 1.2mm;
@@ -978,6 +1022,496 @@
   font-size: 3.0mm;
 }
 
+/* ── Template skins ───────────────────────────────────────────────────────
+ * A "template" is a full visual skin for the printable datacards, applied
+ * as a `.dcc-tpl-<id>` class on every `.dcc-card` cell (fronts, backs,
+ * continuations, empty padders, and the off-screen measure stage) by
+ * cards-mode.js.
+ *
+ * The DEFAULT look — gilded parchment, GW 10e style — is the un-suffixed
+ * chrome above. It is exposed in the UI as the `classic` template
+ * ("Gilded Parchment") and needs NO overrides here: `.dcc-tpl-classic`
+ * simply inherits the base `.dcc-*` rules unchanged.
+ *
+ * To add a template:
+ *   1. add an entry to the TEMPLATES array in js/ui/cards-mode.js
+ *      (id + label + a preview `swatch` gradient), and
+ *   2. add a `.dcc-card.dcc-tpl-<id>` skin block below.
+ * Nothing else changes — the renderer already tags every card cell with
+ * the active template class and the measure stage matches it.
+ *
+ * Specificity note: the texture system injects `.dcc-card { background }`
+ * (0,1,0) and `.dcc-card-cont .dcc-cont-overlay { background }` (0,2,0)
+ * at runtime via <style id="cards-texture-style">. A template that
+ * recolours the card SURFACE must out-specify those, hence the
+ * `.dcc-card.dcc-tpl-<id>` (0,2,0) and
+ * `.dcc-card.dcc-tpl-<id> .dcc-cont-overlay` (0,3,0) selectors. Plain
+ * ink/border overrides (e.g. `.dcc-tpl-<id> .dcc-rule-text`) already beat
+ * the static base rules on specificity, so source order doesn't matter.
+ * ========================================================================= */
+
+/* ===== Grimdark Iron =====================================================
+ * A full gothic-industrial REBUILD — not just a recolour. The skin
+ * restructures the card's SHAPES, not only its palette:
+ *   - the card is a cut-corner (octagonal-bevel) ARMOUR PLATE with a drawn
+ *     oxidised-bronze frame and corner rivets;
+ *   - the header is a bevelled BANNER with a double gilt edge + a gilt boss;
+ *   - stat cells are chamfered STAT PILLARS with a bronze top bevel;
+ *   - section bars are arrow-tailed riveted BANNERS;
+ *   - the footer carries an ornamental gilt STAR boss on its divider.
+ * Palette is the research "Imperial Gothic": blackened iron (near-black, NOT
+ * #000 — avoids halation + worst home-printer ink pooling), warm BONE ink
+ * (#e3dac9, never pure white), oxidised bronze/gold gilt, dried-blood pips.
+ * Every shape is CSS clip-path + gradients + inline-SVG (no external art) so
+ * it survives print; the print sheet already forces print-color-adjust:exact
+ * on .dcc-card / .dcc-head / .dcc-section-head / .dcc-stat-cell /
+ * .dcc-cont-overlay.
+ *
+ * Shape architecture (the load-bearing trick): the card element IS the gold
+ * plate — its background is the bronze metal, chamfered by clip-path. An
+ * inset ::before paints the IRON interior (also chamfered), so the gold only
+ * shows as a frame ring. Flow children are lifted to z-index:1 to sit above
+ * that iron ::before; ::after stamps the corner rivets. Continuation / back /
+ * empty cells opt OUT of the sandwich at the end of this block.
+ */
+.dcc-card.dcc-tpl-grimdark {
+  --gd-ink:         #e3dac9;   /* bone — primary body ink */
+  --gd-ink-strong:  #f6efda;   /* brighter bone for <strong> */
+  --gd-ink-muted:   #a2977f;   /* ash — fine print, sub-bullets */
+  --gd-gold:        #c39a45;   /* oxidised gold accent */
+  --gd-gold-bright: #e7c87a;
+  --gd-gold-deep:   #7c5a22;
+  --gd-rule:        rgba(195, 154, 69, 0.42);
+  --gd-iron:        #15120c;   /* interior fill, for matched corner cuts */
+  --gd-bezel:       2.6mm;     /* card corner cut */
+
+  color: var(--gd-ink);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: calc(1.5mm + var(--dcc-safe, 0mm)) calc(1.7mm + var(--dcc-safe, 0mm));
+  overflow: hidden;
+  /* The card background IS the bronze frame (a faceted gold/brown metal
+   * sweep). The iron interior is painted by ::before, inset by the frame
+   * width, so the gold reads as a gilt ring around the plate. */
+  background: linear-gradient(135deg,
+    #b98f3c 0%, #e7c87a 17%, #8a6a2a 37%, #caa24a 52%,
+    #6f5021 71%, #e7c87a 88%, #a87f33 100%);
+  /* Octagonal bevel — the signature "tech-plate" cut corner. */
+  clip-path: polygon(
+    var(--gd-bezel) 0, calc(100% - var(--gd-bezel)) 0,
+    100% var(--gd-bezel), 100% calc(100% - var(--gd-bezel)),
+    calc(100% - var(--gd-bezel)) 100%, var(--gd-bezel) 100%,
+    0 calc(100% - var(--gd-bezel)), 0 var(--gd-bezel));
+}
+.dcc-card.dcc-tpl-grimdark::before {
+  content: '';
+  position: absolute;
+  inset: 0.72mm;             /* frame width */
+  z-index: 0;
+  clip-path: polygon(
+    2.0mm 0, calc(100% - 2.0mm) 0,
+    100% 2.0mm, 100% calc(100% - 2.0mm),
+    calc(100% - 2.0mm) 100%, 2.0mm 100%,
+    0 calc(100% - 2.0mm), 0 2.0mm);
+  background:
+    radial-gradient(ellipse at 50% -12%, rgba(150,116,52,0.14) 0%, rgba(0,0,0,0) 55%),
+    radial-gradient(ellipse at 50% 120%, rgba(0,0,0,0.60) 0%, rgba(0,0,0,0) 60%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' seed='7'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>"),
+    linear-gradient(180deg, #1b1813 0%, #141109 55%, #0b0905 100%),
+    #120f08;
+  background-blend-mode: normal, normal, multiply, normal, normal;
+  box-shadow: inset 0 0 0 0.18mm rgba(0,0,0,0.7), inset 0 0 6mm rgba(0,0,0,0.5);
+}
+/* Lift all flow content above the iron ::before layer. */
+.dcc-card.dcc-tpl-grimdark > * { position: relative; z-index: 1; }
+/* Corner rivets — small domed bronze studs in each bevelled corner. */
+.dcc-card.dcc-tpl-grimdark::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 1.4mm 1.4mm,                       #f0d589 0 0.18mm, #6a4f1f 0.2mm 0.42mm, rgba(0,0,0,0.55) 0.46mm 0.6mm, transparent 0.62mm),
+    radial-gradient(circle at calc(100% - 1.4mm) 1.4mm,          #f0d589 0 0.18mm, #6a4f1f 0.2mm 0.42mm, rgba(0,0,0,0.55) 0.46mm 0.6mm, transparent 0.62mm),
+    radial-gradient(circle at 1.4mm calc(100% - 1.4mm),          #f0d589 0 0.18mm, #6a4f1f 0.2mm 0.42mm, rgba(0,0,0,0.55) 0.46mm 0.6mm, transparent 0.62mm),
+    radial-gradient(circle at calc(100% - 1.4mm) calc(100% - 1.4mm), #f0d589 0 0.18mm, #6a4f1f 0.2mm 0.42mm, rgba(0,0,0,0.55) 0.46mm 0.6mm, transparent 0.62mm);
+  background-repeat: no-repeat;
+}
+
+/* Header — a bevelled banner with a double gilt edge and a centred boss. */
+.dcc-tpl-grimdark .dcc-head {
+  margin: 0.2mm 0 1.0mm;
+  border-radius: 0;
+  padding: 1.3mm 2.2mm 1.5mm;
+  background: linear-gradient(180deg, #262219 0%, #16130c 52%, #0a0805 100%);
+  color: #efe3c4;
+  /* Octagonal banner — both top + bottom corners cut. */
+  clip-path: polygon(
+    1.4mm 0, calc(100% - 1.4mm) 0, 100% 1.0mm,
+    100% calc(100% - 1.0mm), calc(100% - 1.6mm) 100%,
+    1.6mm 100%, 0 calc(100% - 1.0mm), 0 1.0mm);
+  box-shadow: inset 0 0.32mm 0 var(--gd-gold), inset 0 -0.46mm 0 var(--gd-gold);
+}
+/* Base flourish/stripe pseudo-elements are clipped away — repurpose ::before
+ * as the banner boss and drop ::after. */
+.dcc-tpl-grimdark .dcc-head::after { display: none; }
+.dcc-tpl-grimdark .dcc-head::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0.18mm;
+  margin-left: -1.6mm;
+  width: 3.2mm;
+  height: 1.5mm;
+  background: linear-gradient(135deg, var(--gd-gold-bright) 0%, var(--gd-gold) 45%, var(--gd-gold-deep) 100%);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  z-index: 2;
+}
+/* Wide tracking + a cut shadow reads as stamped, engraved lettering. */
+.dcc-tpl-grimdark .dcc-name {
+  letter-spacing: 0.1em;
+  text-shadow: 0 0.12mm 0.2mm rgba(0,0,0,0.75);
+}
+
+/* Stat pillars — chamfered armour plates with a bronze top bevel (the gold
+ * shows through the ::before sandwich) and bone numerals. */
+.dcc-tpl-grimdark .dcc-stat-cell {
+  background: linear-gradient(180deg, #d8b25a 0%, #a07e34 45%, #6f5021 100%);
+  color: #f1e7c9;
+  border-radius: 0;
+  box-shadow: none;
+  clip-path: polygon(0 1.1mm, 1.1mm 0, calc(100% - 1.1mm) 0, 100% 1.1mm, 100% 100%, 0 100%);
+}
+.dcc-tpl-grimdark .dcc-stat-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0.24mm;
+  z-index: 0;
+  clip-path: polygon(0 1.0mm, 1.0mm 0, calc(100% - 1.0mm) 0, 100% 1.0mm, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, #2a2620 0%, #15120c 100%);
+}
+.dcc-tpl-grimdark .dcc-stat-cell > * { position: relative; z-index: 1; }
+.dcc-tpl-grimdark .dcc-stat-key { color: var(--gd-gold-bright); }
+.dcc-tpl-grimdark .dcc-stat-rowlabel { color: var(--gd-gold); }
+
+/* Section bars — arrow-tailed blackened-bronze banners with a left rivet. */
+.dcc-tpl-grimdark .dcc-section-head {
+  background: linear-gradient(180deg, #2b2417 0%, #1a160d 55%, #100d07 100%);
+  color: #e8dcb8;
+  border-radius: 0;
+  padding-left: 3.0mm;
+  position: relative;
+  clip-path: polygon(1.6mm 0, 100% 0, 100% 100%, 1.6mm 100%, 0 50%);
+  box-shadow: inset 0 0.18mm 0 var(--gd-gold), inset 0 -0.22mm 0 var(--gd-gold-deep);
+}
+.dcc-tpl-grimdark .dcc-section-head::before {
+  content: '';
+  position: absolute;
+  left: 1.8mm;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.9mm;
+  height: 0.9mm;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f0d589, #6a4f1f 70%, #2a1f0e);
+  z-index: 1;
+}
+
+/* Body ink: flip every dark-on-parchment colour to bone-on-iron. */
+.dcc-tpl-grimdark .dcc-abilities-body,
+.dcc-tpl-grimdark .dcc-wargear-body,
+.dcc-tpl-grimdark .dcc-rule-text { color: var(--gd-ink); }
+.dcc-tpl-grimdark .dcc-ability-row strong,
+.dcc-tpl-grimdark .dcc-wargear-line strong { color: var(--gd-ink-strong); }
+.dcc-tpl-grimdark .dcc-core-row { color: var(--gd-ink-muted); }
+.dcc-tpl-grimdark .dcc-wargear-sub li::before { color: var(--gd-gold); }
+.dcc-tpl-grimdark .dcc-w-kw { color: var(--gd-ink-muted); }
+.dcc-tpl-grimdark .dcc-w-table tr { border-bottom-color: rgba(227,218,201,0.14); }
+.dcc-tpl-grimdark .dcc-abilities-primarch .dcc-abilities-body { border-top-color: var(--gd-rule); }
+
+/* Footer keywords. */
+.dcc-tpl-grimdark .dcc-foot { border-top-color: var(--gd-rule); }
+.dcc-tpl-grimdark .dcc-foot::before {
+  background: linear-gradient(90deg,
+    rgba(195,154,69,0) 0%, var(--gd-gold) 30%, var(--gd-gold) 70%, rgba(195,154,69,0) 100%);
+}
+/* Ornamental gilt star boss centred on the footer divider — reads as a
+ * stamped Imperial seal / purity stud. */
+.dcc-tpl-grimdark .dcc-foot::after {
+  content: '';
+  position: absolute;
+  top: -1.0mm;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3.4mm;
+  height: 1.7mm;
+  z-index: 2;
+  background:
+    radial-gradient(circle at 50% 50%, #1a140a 0 0.28mm, transparent 0.32mm),
+    linear-gradient(135deg, var(--gd-gold-bright), var(--gd-gold) 50%, var(--gd-gold-deep));
+  clip-path: polygon(50% 0, 82% 30%, 100% 50%, 82% 70%, 50% 100%, 18% 70%, 0 50%, 18% 30%);
+}
+.dcc-tpl-grimdark .dcc-keywords { color: var(--gd-ink-muted); }
+.dcc-tpl-grimdark .dcc-keywords strong { color: var(--gd-ink); }
+
+/* Points pill → bronze; CP + invuln pips → dried blood. */
+.dcc-tpl-grimdark .dcc-pts {
+  background: linear-gradient(180deg, #3a2a10, #241a09);
+  color: #f1e3bf;
+  box-shadow: inset 0 0 0 0.1mm var(--gd-gold);
+}
+.dcc-tpl-grimdark .dcc-head-strat .dcc-cp,
+.dcc-tpl-grimdark .dcc-inv {
+  background: linear-gradient(180deg, #8a1717, #560505);
+  box-shadow: inset 0 0 0 0.12mm rgba(231,200,122,0.5);
+}
+
+/* Continuation / duplex-back / empty cells opt OUT of the plate sandwich:
+ * the iron ::before + bevel + rivets would fight their special content
+ * (a back image, a partial parchment overlay, or nothing). */
+.dcc-card.dcc-tpl-grimdark.dcc-card-cont,
+.dcc-card.dcc-tpl-grimdark.dcc-card-back,
+.dcc-card.dcc-tpl-grimdark.dcc-card-empty {
+  clip-path: none;
+}
+.dcc-card.dcc-tpl-grimdark.dcc-card-cont::before,
+.dcc-card.dcc-tpl-grimdark.dcc-card-cont::after,
+.dcc-card.dcc-tpl-grimdark.dcc-card-back::before,
+.dcc-card.dcc-tpl-grimdark.dcc-card-back::after,
+.dcc-card.dcc-tpl-grimdark.dcc-card-empty::before,
+.dcc-card.dcc-tpl-grimdark.dcc-card-empty::after {
+  display: none;
+}
+.dcc-card.dcc-tpl-grimdark.dcc-card-empty { background: transparent; }
+.dcc-card.dcc-tpl-grimdark.dcc-card-back { background: #15120c; }
+/* Continuation overlay keeps the iron surface (0,3,0 beats the runtime
+ * texture injection). Its own bevelled top echoes the plate. */
+.dcc-card.dcc-tpl-grimdark .dcc-cont-overlay {
+  background: linear-gradient(180deg, #1a1712, #0c0a06), #131009;
+  box-shadow: 0 2mm 3mm rgba(0,0,0,0.4);
+}
+.dcc-card.dcc-tpl-grimdark.dcc-card-cont:not(.dcc-card-cont-art) .dcc-cont-overlay {
+  border-bottom-color: #050402;
+}
+
+/* ===== Industrial Stencil =================================================
+ * Light, print-friendly skin recreated from the "Warhammer Datacard Design"
+ * handoff (its locked `stencil` renderVals spec). Cream cardstock, near-black
+ * ink, a full-bleed dark header bar with a faction-accent bottom rule, Cinzel
+ * display + EB Garamond body, ink-chip section heads with an accent diamond
+ * tick, faction-accent shield/hex badges, and accent pills. A single accent
+ * colour — `--dcc-accent`, auto-derived per faction by cards-mode.js (default
+ * Necron green #74c043) — recolours every accented element via color-mix.
+ *
+ * Tokens: paper #ece5d6 · panel #f5f0e3 · ink #29251f · muted #7c7360 ·
+ * dim #4a4337 · hairline = ink @ 24%. EB Garamond + Cinzel are vendored in
+ * css/typography.css, so the skin renders identically offline + in print.
+ *
+ * Several elements only exist on this template (emitted by cards-mode.js when
+ * templateId==='stencil'): .dcc-kicker, .dcc-statline(-rows), .dcc-invuln-
+ * shield/-val/-lbl, .dcc-w-tag, .dcc-ab-block/-head/-name/-text. The other
+ * templates never see them.
+ */
+.dcc-card.dcc-tpl-stencil {
+  --st-paper:  #ece5d6;
+  --st-panel:  #f5f0e3;
+  --st-ink:    #29251f;
+  --st-mut:    #7c7360;
+  --st-dim:    #4a4337;
+  --st-hair:   color-mix(in srgb, #29251f 24%, transparent);
+  --st-accent: var(--dcc-accent, #74c043);
+  --st-accent-dark: color-mix(in srgb, var(--st-accent) 58%, #29251f);
+  --st-pill:    color-mix(in srgb, var(--st-accent) 22%, transparent);
+  --st-pill-bd: color-mix(in srgb, var(--st-accent) 50%, transparent);
+  --st-body: 'EB Garamond', Georgia, 'Times New Roman', serif;
+
+  color: var(--st-ink);
+  background: var(--st-paper);
+  border: 0;
+  box-shadow: none;
+  font-family: var(--st-body);
+}
+
+/* Header — full-bleed dark bar with a faction-accent bottom rule. */
+.dcc-tpl-stencil .dcc-head {
+  /* Bleed the bar to the card edge by negating the full content padding
+   * (base + safe margin); pad the text back in by the same amount so it
+   * lines up with the body content and clears the borderless trim. */
+  margin: calc(-1.6mm - var(--dcc-safe, 0mm)) calc(-2mm - var(--dcc-safe, 0mm)) 1.4mm;
+  padding: calc(1.6mm + var(--dcc-safe, 0mm)) calc(2mm + var(--dcc-safe, 0mm));
+  background: var(--st-ink);
+  color: var(--st-panel);
+  border-radius: 0;
+  border-bottom: 0.7mm solid var(--st-accent);
+  box-shadow: none;
+}
+.dcc-tpl-stencil .dcc-head::before,
+.dcc-tpl-stencil .dcc-head::after { display: none; }
+.dcc-tpl-stencil .dcc-kicker {
+  font-family: var(--st-body);
+  font-size: calc(2.4mm * var(--dcc-sub-mul, 1));
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--st-accent) 90%, transparent);
+  margin-bottom: 0.5mm;
+}
+/* The design wraps long names onto a second line rather than truncating. */
+.dcc-tpl-stencil .dcc-name {
+  color: var(--st-panel);
+  letter-spacing: 0.04em;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.04;
+}
+.dcc-tpl-stencil .dcc-sub-line { color: color-mix(in srgb, var(--st-panel) 70%, transparent); }
+.dcc-tpl-stencil .dcc-pts {
+  background: var(--st-accent);
+  color: #1c1813;
+  border-radius: 0.5mm;
+  font-weight: 700;
+}
+
+/* Stat strip + per-line invuln shield. Each stat row is wrapped in its own
+ * .dcc-statline so the shield sits flush at the end of THAT line (not
+ * stretched across multiple profiles). Rows without an invuln carry a
+ * spacer of the shield's width so the six stat columns stay aligned. */
+.dcc-tpl-stencil .dcc-statline { display: flex; gap: 1.4mm; align-items: stretch; }
+.dcc-tpl-stencil .dcc-statline > .dcc-stats { flex: 1 1 auto; min-width: 0; margin-top: 0; }
+.dcc-tpl-stencil .dcc-statline + .dcc-statline,
+.dcc-tpl-stencil .dcc-stat-rowlabel + .dcc-statline { margin-top: 0.6mm; }
+.dcc-tpl-stencil .dcc-invuln-spacer { flex: 0 0 auto; width: 11mm; }
+.dcc-tpl-stencil .dcc-stat-cell {
+  background: var(--st-panel);
+  color: var(--st-ink);
+  border: 0.35mm solid var(--st-ink);
+  border-radius: 0.5mm;
+  box-shadow: none;
+}
+.dcc-tpl-stencil .dcc-stat-key { color: var(--st-mut); font-family: 'Cinzel', serif; }
+.dcc-tpl-stencil .dcc-stat-val { color: var(--st-ink); font-family: 'Cinzel', serif; }
+.dcc-tpl-stencil .dcc-stat-rowlabel { color: var(--st-accent-dark); }
+.dcc-tpl-stencil .dcc-invuln-shield {
+  flex: 0 0 auto;
+  width: 11mm;
+  align-self: stretch;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.2mm;
+  background: var(--st-accent);
+  color: #1b1712;
+  clip-path: polygon(50% 0, 100% 15%, 100% 58%, 50% 100%, 0 58%, 0 15%);
+}
+.dcc-tpl-stencil .dcc-invuln-val {
+  font-family: 'Cinzel', serif; font-weight: 700; line-height: 1; color: #1b1712;
+  font-size: calc(4mm * var(--dcc-stat-mul, 1));
+}
+.dcc-tpl-stencil .dcc-invuln-lbl {
+  font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.7mm;
+  letter-spacing: 0.08em; text-transform: uppercase; color: rgba(27,23,18,0.72);
+}
+
+/* Section heads — accent diamond tick + ink-chip label. (Keep the head's
+ * right padding so the weapon column letters stay aligned over the table.) */
+.dcc-tpl-stencil .dcc-section-head {
+  background: transparent;
+  color: var(--st-ink);
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0 1.4mm 0 0;
+  margin: 1.8mm 0 1.0mm;
+  gap: 1.4mm;
+  align-items: center;
+}
+.dcc-tpl-stencil .dcc-section-head::before {
+  content: '';
+  width: 1.5mm; height: 1.5mm;
+  background: var(--st-accent);
+  transform: rotate(45deg);
+  flex: 0 0 auto;
+}
+.dcc-tpl-stencil .dcc-section-label {
+  background: var(--st-ink);
+  color: var(--st-panel);
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  padding: 0.4mm 1.5mm;
+}
+.dcc-tpl-stencil .dcc-section-cols { color: var(--st-mut); }
+
+/* Weapon tables — hairline rows, Cinzel numerals, accent keyword pills. */
+.dcc-tpl-stencil .dcc-w-table tr { border-bottom-color: var(--st-hair); }
+.dcc-tpl-stencil .dcc-w-name { color: var(--st-ink); font-family: var(--st-body); font-weight: 600; }
+.dcc-tpl-stencil .dcc-num    { color: var(--st-ink); font-family: 'Cinzel', serif; font-weight: 600; }
+.dcc-tpl-stencil .dcc-w-tag {
+  display: inline-block;
+  font-family: var(--st-body);
+  font-size: calc(2.0mm * var(--dcc-w-mul, 1));
+  font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 0.1mm 0.9mm; margin-left: 1mm;
+  border-radius: 0.6mm;
+  background: var(--st-pill);
+  border: 0.2mm solid var(--st-pill-bd);
+  color: var(--st-ink);
+  white-space: nowrap; vertical-align: baseline;
+}
+
+/* Abilities — type-pill blocks. */
+.dcc-tpl-stencil .dcc-abilities-body { color: var(--st-dim); padding: 0.4mm 0 0; }
+.dcc-tpl-stencil .dcc-ab-block { margin-top: 1.3mm; }
+.dcc-tpl-stencil .dcc-ab-block:first-child { margin-top: 0.4mm; }
+.dcc-tpl-stencil .dcc-ab-head { display: flex; align-items: baseline; gap: 1.2mm; flex-wrap: wrap; margin-bottom: 0.4mm; }
+.dcc-tpl-stencil .dcc-type-pill {
+  font-family: var(--st-body);
+  font-size: 1.9mm; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 0.2mm 1.1mm; border-radius: 0.6mm;
+  background: var(--st-pill); border: 0.2mm solid var(--st-pill-bd); color: var(--st-ink);
+}
+.dcc-tpl-stencil .dcc-ab-name {
+  font-family: var(--st-body); font-weight: 700; color: var(--st-ink);
+  font-size: calc(2.7mm * var(--dcc-body-mul, 1));
+}
+.dcc-tpl-stencil .dcc-ab-text {
+  font-family: var(--st-body); color: var(--st-dim); line-height: 1.36; white-space: pre-line;
+  font-size: calc(2.5mm * var(--dcc-body-mul, 1));
+}
+
+/* Other body text (enhancement, wargear, transport, rule/strat). */
+.dcc-tpl-stencil .dcc-ability-row,
+.dcc-tpl-stencil .dcc-wargear-body,
+.dcc-tpl-stencil .dcc-rule-text { color: var(--st-dim); }
+.dcc-tpl-stencil .dcc-ability-row strong,
+.dcc-tpl-stencil .dcc-wargear-line strong { color: var(--st-ink); }
+.dcc-tpl-stencil .dcc-core-row { color: var(--st-mut); }
+.dcc-tpl-stencil .dcc-wargear-sub li::before { color: var(--st-accent-dark); }
+
+/* Footer keywords. */
+.dcc-tpl-stencil .dcc-foot { border-top-color: var(--st-hair); }
+.dcc-tpl-stencil .dcc-foot::before { display: none; }
+.dcc-tpl-stencil .dcc-keywords { color: var(--st-dim); font-family: var(--st-body); }
+.dcc-tpl-stencil .dcc-keywords strong { color: var(--st-accent-dark); letter-spacing: 0.08em; }
+
+/* Stratagem CP — faction-accent hex badge. */
+.dcc-tpl-stencil .dcc-head-strat .dcc-cp {
+  background: var(--st-accent);
+  color: #1b1712;
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  padding: 1.5mm 1.4mm;
+  align-self: center;
+}
+.dcc-tpl-stencil .dcc-cp-num { font-family: 'Cinzel', serif; color: #1b1712; }
+.dcc-tpl-stencil .dcc-cp-lbl { color: rgba(27,23,18,0.8); }
+.dcc-tpl-stencil .dcc-strat-phase,
+.dcc-tpl-stencil .dcc-role { color: color-mix(in srgb, var(--st-panel) 70%, transparent); }
+
+/* Continuation / back cells inherit the cream surface. */
+.dcc-card.dcc-tpl-stencil .dcc-cont-overlay { background: var(--st-paper); }
+.dcc-card.dcc-tpl-stencil.dcc-card-back { background: var(--st-panel); }
+
 /* Responsive: stack the rail above the preview on narrow viewports. */
 @media (max-width: 760px) {
   .cards-shell { flex-direction: column; height: auto; min-height: 100vh; }
@@ -1017,6 +1551,11 @@
   body.cards-printing .dcc-stat-cell,
   body.cards-printing .dcc-cp,
   body.cards-printing .dcc-inv,
+  body.cards-printing .dcc-invuln-shield,
+  body.cards-printing .dcc-section-label,
+  body.cards-printing .dcc-w-tag,
+  body.cards-printing .dcc-type-pill,
+  body.cards-printing .dcc-pts,
   body.cards-printing .dcc-foot::before {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

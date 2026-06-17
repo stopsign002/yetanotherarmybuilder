@@ -17,6 +17,26 @@
   src: url('../js/vendor/fonts/cinzel-600.woff2') format('woff2');
 }
 
+/* ── @font-face: vendored EB Garamond woff2 (offline-safe) ────────
+ * Body serif for the "Industrial Stencil" datacard template
+ * (css/cards-mode.css). Variable woff2 (latin subset) — one roman file
+ * covers the 400–700 range, one italic file. Bundled like Cinzel so the
+ * card skin renders identically offline and through the print pipeline. */
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../js/vendor/fonts/ebgaramond.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../js/vendor/fonts/ebgaramond-italic.woff2') format('woff2');
+}
+
 /* ── Display-font headings & names ───────────────────────────── */
 .panel-header h2,
 .detail-name,
