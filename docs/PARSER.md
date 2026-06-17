@@ -1,6 +1,10 @@
 # Parser (`js/parser/`)
 
-The parser is the riskiest part of the codebase to modify — every UI path, export format, and cache key depends on its output shape.
+> **DORMANT — kept for rollback.** The BattleScribe XML parser in `js/parser/` no longer runs at runtime. Live data now comes from the community 40kdc 11th-edition dataset (`js/vendor/dc-bundle.js` → `window.DC`), mapped by `js/data/dc-adapter.js`, which overrides `window.BSData.loadAllFactions`. The parser tree loads but is overridden before it ever parses.
+>
+> **The output shape documented in this file is still the authoritative contract.** `dc-adapter.js` emits exactly this Unit / faction object shape (plus a few new 11e fields — see "Adapter additions" below), so the reference here stays valid for every renderer.
+
+The (dormant) parser was the riskiest part of the codebase to modify — every UI path and export format depends on its output shape, which the adapter now reproduces.
 
 ## Input and output shape
 
@@ -45,7 +49,18 @@ Each `Unit`:
 }
 ```
 
-Do not change this shape without bumping `DB_VERSION` in `js/db.js`. Parsed factions are persisted in IndexedDB across sessions; the `onupgradeneeded` handler drops both `factions` and `gst` stores on a version bump. NOT bumping leaves users reading stale cached JSON that lacks the new field, and the mismatch will silently misrender.
+This shape is a contract every renderer consumes — `dc-adapter.js` emits it from `window.DC`. Don't break it. (There is no longer a faction IndexedDB cache: the adapter rebuilds faction objects from `window.DC` on every load, so changing a field does NOT require a `DB_VERSION` bump.)
+
+## Adapter additions (11th edition)
+
+`dc-adapter.js` emits the shape above plus these fields, all driven by 11e's two-dimensional points (squad size AND per-army-ordinal pricing):
+
+- **`unit.ordinal = { fromCount, surcharge } | null`** — 11e per-army scaling. ~24% of units cost a flat `surcharge` more per copy starting at the `fromCount`-th in your army (always 2 tiers: "your 1st–Nth cost base, (N+1)th+ cost base+surcharge"). `null` when the unit doesn't scale. Computed in `parsePoints()` from 40kdc `points[]` entries' `unit_count_min`/`unit_count_max`.
+- **`unit.squadOptions`** — now one BASE cost per distinct squad size (`{ pts, models }`), with the ordinal surcharge factored OUT into `unit.ordinal`. Sorted ascending.
+- **`unit.pointsOptions`** — sorted unique BASE costs (de-duped from `squadOptions`).
+- **`detachment.gdcStratagems`** — the reconciled stratagem list written back by `reconcileStrats()`, which runs AFTER the GDC overlay: it prefers 40kdc-authored text (`stratagem_ids` → `ability_id` → bundled text store), falls back to GDC's text where 40kdc hasn't authored it, and appends GDC-only strats. `js/ui/faction-rules.js` already renders this into `#army-strats-list`.
+
+The army model consumes `unit.ordinal`: `js/army.js` `getEntryPoints`/`getEntryOrdinalSurcharge` charge the surcharge on copies past the threshold (counted across all entries of a datasheet), and `js/ui/detail.js` shows an explicit two-band note for scaling units.
 
 ## Module map
 

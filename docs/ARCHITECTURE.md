@@ -2,18 +2,16 @@
 
 ## Data flow
 
-XML is fetched once per session (cached in IndexedDB across sessions), parsed to plain JSON faction objects, indexed by `App.state`, rendered through `UI.*`, and written back to `localStorage` through the `Army` model.
+The 40kdc 11e dataset is embedded in a committed browser bundle (`js/vendor/dc-bundle.js` → `window.DC`); `js/data/dc-adapter.js` builds faction objects from it on every load (no faction cache), indexes them by `App.state`, renders through `UI.*`, and writes user armies back to `localStorage` through the `Army` model.
 
 ```
-BSData repo
-   │  fetchFileList + fetchFile (js/bsdata.js, 6-worker pool)
+js/vendor/dc-bundle.js  (window.DC — embedded 40kdc 11e data, generated offline)
+   │  BSData.loadAllFactions  (OVERRIDDEN by js/data/dc-adapter.js)
+   │    builds faction objects from window.DC, parsePoints → squadOptions/ordinal
    ▼
-raw XML strings (transient) + .gst / library .cat in IndexedDB `gst` store
-   │  WahapediaParser.parse (js/parser/*)
-   ▼
-faction objects { factionName, units, armyRules, detachments, factionStratagems, ... }
-   │  cached into IndexedDB `factions` store
-   │  pushed into App.state.factions  (js/app/bsdata-load.js)
+faction objects { factionName, units, armyRules, detachments, ... }  (parser output shape)
+   │  GDC overlay (js/gdc.js) + reconcileStrats() → detachment.gdcStratagems
+   │  fires per-faction callback → pushed into App.state.factions  (js/app/bsdata-load.js)
    ▼
 App.rebuildAllUnits  (js/app/filters.js, bumps state.factionsVersion)
    │
@@ -40,15 +38,14 @@ localStorage `yaab_armies`
 8. `App.wireEvents()` attaches every direct/delegated listener in `js/app/events.js`.
 9. `App.mountArmyToolbarActions()` renders all hook-registered toolbar/icon-shelf/menu buttons. Reads `App.hooks.armyToolbarActions` and routes by `region`/`category`.
 10. `App.fireBootstrap(state)` runs every `App.hooks.bootstrap[]` entry.
-11. `App.autoLoadFromBSData()` returns immediately and starts the background load. Each faction, as it finishes parsing, is pushed into `state.factions`, triggering `rebuildAllUnits` + `buildChaptersMap` + `updateFactionFilter` + `renderUnitRosterWithContext`. First card appears a few hundred ms after the tree listing resolves.
+11. `App.autoLoadFromBSData()` returns immediately and starts the background load via `BSData.loadAllFactions` (overridden by `dc-adapter.js`). The adapter builds each faction from `window.DC`, runs the GDC overlay + `reconcileStrats()`, then fires the same per-faction callback — so each faction, as it's built, is pushed into `state.factions`, triggering `rebuildAllUnits` + `buildChaptersMap` + `updateFactionFilter` + `renderUnitRosterWithContext`. No XML fetch or DOM parsing happens; the only live network call is the GDC fallback text.
 12. `topbar.js` IIFE runs (loaded after `app/index.js`) and wires the top-bar chip mirror, ⌘K trigger, Action Center button, status row.
 13. `sw-register.js` defensively unregisters any leftover service worker. New visits do NOT register a SW (the app-shell SW was retired; `/sw.js` is now a kill-switch that self-unregisters and clears legacy `yaab-shell-v*` caches).
 
 ## Memory model
 
-- **XML text strings**: transient during fetch; parsed by `DOMParser` then discarded. Raw `.gst` and `Library *.cat` XML lives in IndexedDB (`gst` store), re-read once per cold load.
-- **`WahapediaParser._internal.sharedProfilesById / sharedRulesById / sharedEntriesById`**: `Map`s of DOM element references seeded from `.gst` + library `.cat` files (Phase 1/1.5 of `BSData.loadAllFactions`), consulted during catalogue parsing. Each retained element keeps its entire XML `Document` alive through `ownerDocument`. Released by `WahapediaParser.releaseSharedIndex()` once `loadAllFactions` finishes — frees tens of MB.
-- **`App.state.factions`**: full parsed faction objects (plain JSON). Single source of truth.
+- **`window.DC`**: the embedded 40kdc dataset (plain JS objects in `js/vendor/dc-bundle.js`). `dc-adapter.js` reads it directly to build faction objects each load — no XML, no `DOMParser`, no IndexedDB faction cache. (The dormant XML parser's shared-index / `releaseSharedIndex` memory machinery — DOM `Map`s held alive via `ownerDocument` — no longer runs; see the dormant note in `docs/PARSER.md`.)
+- **`App.state.factions`**: full faction objects (plain JSON, parser output shape). Single source of truth.
 - **`App.state.allUnits`**: array of REFERENCES into `state.factions[].units` (not spread copies). `_factionName` is stamped in-place. Rebuilt on every faction-loaded event in `App.rebuildAllUnits`. `state.factionsVersion` bumps each rebuild and is used to invalidate `ui/detail.js`'s Led-By cache.
 - **Unit grid**: capped-initial-render (120 cards) + scroll-append (80 more per scroll-to-bottom event, rAF-throttled). Keeps DOM under ~200 `.unit-card` nodes. See `INITIAL_PAGE`, `APPEND_PAGE`, `SCROLL_APPEND_PX` in `js/ui/roster.js`.
 
@@ -56,16 +53,18 @@ localStorage `yaab_armies`
 
 | Key | Store | When to invalidate |
 |---|---|---|
-| `yaab` IDB / `factions` | IndexedDB | Bump `DB_VERSION` in `js/db.js` when parser output shape changes; existing stores get dropped in `onupgradeneeded` |
-| `yaab` IDB / `gst` | IndexedDB | Same |
-| `yaab_bsdata_filelist_10e_v2` | sessionStorage | Bump suffix on cache-shape changes (current shape: `{ source: 'mirror'\|'github', files: [...] }`) |
+| `yaab` IDB / `factions` | IndexedDB | **No longer written by the active path** — `dc-adapter.js` rebuilds factions from `window.DC` each load. `DB_VERSION` is `37` (the 11e cutover bumped it once to drop the stale 10e cache). |
+| `yaab` IDB / `gst` | IndexedDB | (Dormant) only the old `bsdata.js` wrote this. Dropped on a `DB_VERSION` bump. |
+| `yaab_bsdata_filelist_10e_v2` | sessionStorage | **Unused** — dormant BattleScribe file listing. |
 | `yaab_armies` | localStorage | User data — never invalidate silently |
 | `yaab_factions` | localStorage | Legacy — kept only for back-compat; not on the active read path |
 | `yaab-shell-v*` | Cache API | Retired — the kill-switch in `sw.js` deletes any leftover `yaab-shell-*` cache on next visit. Do not add new precached assets here. |
 
 `BSData.clearFactionCache()` wipes legacy session keys + the IndexedDB `factions` and `gst` stores in one call.
 
-## Parser shared index lifecycle
+## Parser shared index lifecycle (DORMANT)
+
+> This describes the dormant `js/parser/` path, kept for rollback. The live load seam is `dc-adapter.js`'s `loadAllFactions` building factions from `window.DC` — no phased XML parse runs.
 
 ```
 Phase 1   — .gst files           → addToSharedIndex   (Maps fill)
@@ -125,7 +124,7 @@ Currently every feature module is also eager-loaded from `index.html` and from `
 
 ## Script load order rules
 
-- `db.js` → `bsdata.js` first so `YaabDB` and `BSData` are defined before anything that imports them.
+- `db.js` → `bsdata.js` first so `YaabDB` and `BSData` are defined before anything that imports them. Then `js/vendor/dc-bundle.js` (defines `window.DC`) → `js/data/dc-adapter.js`, which OVERRIDES `window.BSData.loadAllFactions` with the live 40kdc path. `gdc.js` must be loaded before the adapter's GDC overlay runs.
 - In `js/parser/`: `shared-index.js` first (populates `WahapediaParser._internal` with the Maps and helpers). Leaf helpers (`classify`, `stats`, `weapons`, `abilities`, `wargear`, `costs`, `keywords`) load in any order — they reference each other via `P._internal` at call time. Then `entry.js`, `catalogue.js`, `index.js` LAST (exposes the public surface).
 - `storage.js` → `army.js`.
 - `ui/index.js` first to define `UI.init`. Feature `ui/*` modules attach methods after.

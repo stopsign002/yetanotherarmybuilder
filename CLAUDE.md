@@ -2,7 +2,9 @@
 
 ## What this is
 
-A client-only static site (no build step) that fetches BattleScribe 10th-edition XML from a same-origin mirror at `data/bsdata/` (kept fresh by a 6-hourly GitHub Actions cron that pulls `BSData/wh40k-10e`), falls back to `raw.githubusercontent.com` if the mirror is missing, parses the XML in-browser with `DOMParser`, and lets a user build, share, and play 40k armies. Persists user data in `localStorage` and parsed faction data in IndexedDB. Optional username/password account with offline-first cloud sync of armies + a small KV bag (favorites, collection, crusade rosters, etc.) via the sibling `api/` backend.
+A client-only static site that sources Warhammer 40k **11th-edition** data from the community **40kdc dataset** (`wn-mitch/40kdc-data`) and lets a user build, share, and play 40k armies. The dataset is built offline into a single committed browser bundle, `js/vendor/dc-bundle.js`, which exposes a global `window.DC` (collections: units, factions, weapons, detachments, stratagems, enhancements, abilities, plus an embedded `abilityText` store). `js/data/dc-adapter.js` maps `window.DC` into the exact parser output shape the old BattleScribe parser emitted (see `docs/PARSER.md`) and **overrides `window.BSData`** at load — so every downstream renderer keeps working unchanged. 40kdc ships no rules prose, so `js/gdc.js` runs as a hybrid fallback for stratagem/unit text (a bundled ability-text store covers ~98% of unit abilities). Persists user data in `localStorage`. Optional username/password account with offline-first cloud sync of armies + a small KV bag (favorites, collection, crusade rosters, etc.) via the sibling `api/` backend.
+
+The **app's own JavaScript is still buildless** (plain `<script src>`, IIFEs, namespace globals, no framework/bundler/TS). The single exception is the offline data-bundle build under `build/` (esbuild → `js/vendor/dc-bundle.js`); its output is just a static `.js` asset loaded like any other. See `build/README.md`. The bundle is auto-refreshed + frozen, not live-fetched: `window.DC` data is embedded (no runtime network calls for 40kdc data; only the GDC fallback text is fetched live), and a server cron (`~/sites/base/refresh-40kdc.sh`) rebuilds + redeploys it daily→weekly, validating against the live adapter before deploying. Do NOT hand-edit `js/vendor/dc-bundle.js` or `build/abilities-index.json` — they're generated.
 
 ## Running it
 
@@ -10,7 +12,7 @@ A client-only static site (no build step) that fetches BattleScribe 10th-edition
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000/`. Cannot be opened via `file://` — the BSData fetch requires http(s).
+Then open `http://localhost:8000/`. Cannot be opened via `file://` — the GDC fallback fetch requires http(s).
 
 ## File map
 
@@ -21,12 +23,15 @@ Then open `http://localhost:8000/`. Cannot be opened via `file://` — the BSDat
 | `css/auth.css` | Auth UI styling (sign-in button, dropdown, auth modal). |
 | `sw.js` | Kill-switch for the retired app-shell service worker. Self-unregisters and clears legacy `yaab-shell-v*` caches. New visits don't register a SW. |
 | `manifest.json` | PWA manifest (installable). |
-| `js/db.js` | `YaabDB` IndexedDB wrapper: `factions` + `gst` stores. |
-| `js/bsdata.js` | Fetches BattleScribe XML — prefers the same-origin mirror at `data/bsdata/`, falls back to `raw.githubusercontent.com` if the mirror is missing. 6-worker bulk loader. Caches parsed factions in `YaabDB`. |
-| `data/bsdata/` | Server-side mirror of `BSData/wh40k-10e`. `index.json` lists the files (with source commit + per-blob SHA); `files/<original/path>.xml` holds each `.cat` / `.gst` payload. Generated; do not hand-edit. |
-| `scripts/mirror-bsdata.mjs` | Cron-driven Node 20 script that diffs against `BSData/wh40k-10e` by blob SHA and downloads only changed files into `data/bsdata/`. No deps. |
-| `.github/workflows/mirror-bsdata.yml` | Runs `scripts/mirror-bsdata.mjs` every 6h (and on manual dispatch); commits any changes back to the branch. |
-| `js/parser/` | BattleScribe XML → plain-object units. See `docs/PARSER.md`. |
+| `js/db.js` | `YaabDB` IndexedDB wrapper: `factions` + `gst` + `gdc` + `cardBackImages` stores. (The adapter does NOT cache factions here — they're rebuilt from `window.DC` each load.) |
+| `js/vendor/dc-bundle.js` | **Generated.** Embedded 40kdc 11e dataset + ability-text store, exposed as `window.DC`. Built offline by `build/`. Do not hand-edit. |
+| `js/data/dc-adapter.js` | **Live data source.** Maps `window.DC` into the parser output shape, overrides `window.BSData.loadAllFactions`, runs the GDC overlay + `reconcileStrats()`, and adds 11e two-dimensional points (`parsePoints` → `squadOptions` / `pointsOptions` / `unit.ordinal`). Stubs `WahapediaParser._internal.foldKey`. |
+| `build/` | The ONE build step: esbuild (`dc-entry.mjs` + `abilities-index.json`) → `js/vendor/dc-bundle.js`. See `build/README.md`. |
+| `js/bsdata.js` | **DORMANT — kept for rollback, overridden at runtime by `dc-adapter.js`.** Old BattleScribe XML fetcher (mirror-first, GitHub-raw fallback, 6-worker loader). Loads but never runs. |
+| `data/bsdata/` | **DORMANT — kept for rollback.** Server-side mirror of `BSData/wh40k-10e`. Still updated by the mirror Action but unread at runtime. |
+| `scripts/mirror-bsdata.mjs` | **DORMANT — kept for rollback.** Cron-driven Node 20 script that diffs `BSData/wh40k-10e` by blob SHA into `data/bsdata/`. No deps. |
+| `.github/workflows/mirror-bsdata.yml` | **DORMANT — kept for rollback.** Runs `scripts/mirror-bsdata.mjs` every 6h; updates an unread mirror. |
+| `js/parser/` | **DORMANT — kept for rollback, overridden at runtime by `dc-adapter.js`.** BattleScribe XML → plain-object units. Its `WahapediaParser.parse()` output shape is now the contract `dc-adapter.js` emits. See `docs/PARSER.md`. |
 | `js/storage.js` | `localStorage` armies + compact `YAAB1:` deflate-base64url export/import. |
 | `js/army.js` | `Army` + `ArmyManager` data model. |
 | `js/app/auth.js` | `App.Auth`: session state + auth API client. (See `docs/AUTH.md`.) |
@@ -109,7 +114,7 @@ Grouped by user intent. One module per row; module path is the search target.
 
 ## Module conventions
 
-- No build step. No `import`/`export`. Plain `<script src>` in `index.html`. Each file is an IIFE that attaches to `window.WahapediaParser`, `window.UI`, `window.App`, `window.YaabDB`, or one of the legacy globals (`Storage`, `Army`, `ArmyManager`, `BSData`).
+- No build step for APP code. No `import`/`export`. Plain `<script src>` in `index.html`. Each file is an IIFE that attaches to `window.WahapediaParser`, `window.UI`, `window.App`, `window.YaabDB`, or one of the legacy globals (`Storage`, `Army`, `ArmyManager`, `BSData`). The ONE exception is the offline data-bundle build under `build/` (esbuild → `js/vendor/dc-bundle.js`); its output is a static `.js` loaded like any other asset. Don't introduce a bundler/framework/TypeScript for the app itself.
 - **Hook-first architecture**. Feature modules MUST register via `App.hooks` — do NOT edit shared files (`events.js`, `detail.js`, `index.html` toolbar, etc.) to add a new feature. Push onto `App.hooks.armyToolbarActions`, `App.hooks.detailActions`, `App.hooks.bootstrap`, `App.hooks.armyChange`, `App.hooks.selectionChange`, `App.hooks.rosterFilters`, `App.hooks.cardClassContributors`, or `App.hooks.modeChange` from your new module's IIFE. See `js/app/hooks.js`.
 - **Toolbar regions**: `primary` (Tools menu by default), `icon` (top-bar icon shelf or More menu), `tools-menu`, `more-menu`, `export-menu`. See `js/app/index.js` for the routing rules.
 - **Lazy loading**: heavy feature modules can be deferred via `js/app/lazy-modules.js` placeholders. The placeholder registers a stub action; on first click it injects the real script(s) and rewires the in-DOM button. Currently ALL feature modules are also eager-loaded from `index.html`, so lazy-modules.js is an opt-in path that is not yet wired into the page.
@@ -121,9 +126,9 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 
 | Key | Store | Module | Purpose | Invalidation |
 |---|---|---|---|---|
-| `yaab` DB / `factions` | IndexedDB | `js/db.js` | Parsed faction objects | Bump `DB_VERSION` in `db.js` (drops all stores in `onupgradeneeded`) |
-| `yaab` DB / `gst` | IndexedDB | `js/db.js` | Raw `.gst` + `Library *.cat` XML | Same |
-| `yaab_bsdata_filelist_10e_v2` | sessionStorage | `bsdata.js` | File listing (source: `'mirror'` or `'github'` + array of files) | Bump suffix on cache-shape changes |
+| `yaab` DB / `factions` | IndexedDB | `js/db.js` | Parsed faction objects | **No longer written by the active path** — `dc-adapter.js` rebuilds factions from `window.DC` every load (no faction cache to invalidate). `DB_VERSION` is `37` (the 11e cutover bumped it once to drop the stale 10e cache). |
+| `yaab` DB / `gst` | IndexedDB | `js/db.js` | (Dormant) raw `.gst` + `Library *.cat` XML — only `bsdata.js` wrote this | Dropped on a `DB_VERSION` bump |
+| `yaab_bsdata_filelist_10e_v2` | sessionStorage | `bsdata.js` (dormant) | **Unused** — dormant BattleScribe file listing | n/a |
 | `yaab_armies` | localStorage | `army.js` | Saved armies (Array of `Army.toJSON()`) | User data — never invalidate silently |
 | `yaab_factions` | localStorage | `storage.js` | Legacy; unused by active path | Kept for back-compat |
 | `yaab_recent_factions` | localStorage | `hero-state.js` | Recently-selected factions chip | User data |
@@ -191,7 +196,7 @@ Common questions and where to look first.
 | "How do I expose a new API route?" | `../api/CLAUDE.md` (sibling repo). Endpoints under `/api/*` are contract — paths and shapes are versioned. |
 | "Why isn't my new feature showing up?" | (1) Did you add the `<script>` tag to `index.html`? (2) Did the IIFE bail early (look for early returns guarding `App.hooks` or DOM nodes)? (3) Hard-refresh: Ctrl+Shift+R / ⌘⇧R — static-site caches stick. |
 | "Why does X re-render twice?" | `armyChange` fires on every mutation. If your renderer is also called by a button handler, the hook will refire it. Either gate the renderer with a "kind" check or use `selectionChange` instead. |
-| "Why is my parser change not visible?" | You forgot to bump `DB_VERSION` in `js/db.js`. Cached factions are served from IndexedDB; the new field is parsed correctly but never makes it into the DOM until the cache is dropped (which `onupgradeneeded` does on a version bump). |
+| "Why is my data/field change not visible?" | The BattleScribe parser (`js/parser/`) is DORMANT — live data comes from `js/vendor/dc-bundle.js` (`window.DC`) via `js/data/dc-adapter.js`, which rebuilds factions on every load (no IndexedDB faction cache, no `DB_VERSION` bump needed). If a unit/field is wrong, fix `dc-adapter.js`. The bundle itself is generated — do NOT hand-edit it; the cron rebuilds it from 40kdc git `main`. |
 | "How do I make my module aware of mode (Build / Collect / Play)?" | `App.hooks.modeChange.push((newMode, prevMode) => { ... })`. Mode is also reflected as `body[data-mode]` for CSS. |
 | "Where do I add a changelog entry?" | `js/data/changelog-data.js`. Bump `version` + `lastUpdated`. EVERY user-visible change must add one (see editing guidance #6 below). |
 
@@ -199,8 +204,8 @@ Common questions and where to look first.
 
 1. **Find the right file FIRST. Don't grep blindly.** The file map above is intentionally exhaustive. If you can't tell where a feature lives from the table, scan `js/app/` and `js/ui/` filenames first — every module is named after what it does.
 2. **Hook-first.** Adding a new feature should never require touching `events.js`, `detail.js`, `index.html` toolbar markup, or any other shared file. Create a new file under `js/app/` or `js/ui/`, register via `App.hooks.*`, and append the script tag to `index.html`. See `docs/UI.md` "How to add X".
-3. **Don't introduce a bundler, framework, or TypeScript.** Vanilla JS, IIFE, namespace globals. That's the deal.
-4. **Don't change `WahapediaParser.parse()` output shape** without bumping `DB_VERSION` in `js/db.js` AND clearing the IndexedDB stores in `onupgradeneeded`. Stale cached JSON will silently misrender.
+3. **Don't introduce a bundler, framework, or TypeScript for APP code.** Vanilla JS, IIFE, namespace globals. That's the deal. (The offline `build/` data-bundle step is the one sanctioned exception — it produces a static `js/vendor/dc-bundle.js`.)
+4. **The parser output shape is now a contract `dc-adapter.js` emits** (documented in `docs/PARSER.md`). Don't break it — every renderer reads it. There is no faction IndexedDB cache anymore (the adapter rebuilds from `window.DC` each load), so a data/field change does NOT require a `DB_VERSION` bump. Don't hand-edit `js/vendor/dc-bundle.js` or `build/abilities-index.json` — they're generated and auto-refreshed by `~/sites/base/refresh-40kdc.sh`.
 5. **Don't break the namespaces** (`window.App`, `window.UI`, `window.Storage`, `window.Army`, `window.ArmyManager`, `window.BSData`, `window.WahapediaParser`, `window.YaabDB`, `App.hooks`). External tabs reload through them.
 6. **Update the user-facing changelog on every shippable change.** This is a HARD requirement. Any new feature, visible bug fix, or data correction the user can notice MUST add an entry to `js/data/changelog-data.js` (and bump `version` + `lastUpdated`) **in the same commit as the code change** — not a follow-up. The "What's new" button in the topbar (`js/app/changelog.js`) is the only place users see release notes; if your fix isn't there, the user thinks you forgot. Skip entries only for pure refactors, internal-only behaviour, doc edits, and CI plumbing. See the comment at the top of `changelog-data.js` for the entry shape and the `feature` / `fix` / `change` `kind` values.
 
@@ -215,12 +220,12 @@ Common questions and where to look first.
 
 ## Don't break
 
-- `WahapediaParser.parse()` output shape (see `docs/PARSER.md`). Bump `DB_VERSION` if you must.
+- `WahapediaParser.parse()` output shape (see `docs/PARSER.md`) — now the contract `dc-adapter.js` emits and every renderer consumes.
 - `App.hooks.*` action shapes. New feature modules consume them.
 - `Army.toJSON()` / `Army.fromJSON()`. Saved armies must keep deserializing.
 - `Army.toJSON()` keys must include `createdAt` and `updatedAt`, and the constructor must accept them. Every `fromJSON` path that drops the timestamps breaks cross-device sync (every load looks "newer" than cloud → uploads stale → clobbers other devices).
 - API endpoint paths under `/api/*` and their request/response shapes are contract — see `../api/CLAUDE.md`.
 - `YAAB1:` v2 export format (`storage.js`). Bookmarked share URLs depend on it.
 - The hook iteration in `App.fireBootstrap` / `fireArmyChange` / `fireSelectionChange` — they wrap each call in try/catch, so one broken module shouldn't break others. Keep that pattern.
-- `releaseSharedIndex()` is called once in `bsdata.js` after Phase 2. Don't hold DOM refs alive past that point — it leaks tens of MB.
+- `releaseSharedIndex()` was called once in `bsdata.js` after Phase 2 (now dormant). If you ever revive the XML parser path, don't hold DOM refs alive past that point — it leaks tens of MB.
 - The changelog-entry rule (editing guidance #6). Shipping a user-visible change without an entry is a regression — the user can't find out about the fix, can't tell whether their report was addressed, and will reasonably assume nothing happened. Every commit that touches user-facing behaviour stages `js/data/changelog-data.js` too.
