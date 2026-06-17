@@ -26,10 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.17-5',
+    version:     '2026.06.17-6',
     lastUpdated: '2026-06-17T00:00:00Z',
     entries: [
       // ── 2026-06-17 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-17', kind: 'feature',
+        title: 'Better stratagem coverage (11th-edition first)',
+        description:
+          'Stratagems now come from the 11th-edition data first, falling back ' +
+          'to the older source only where the new text isn’t written yet. New ' +
+          '11th-edition detachments that previously showed no stratagems now ' +
+          'list them with full rules text, CP and phase. Coverage keeps ' +
+          'improving automatically as the 11th-edition data fills in.',
+      },
       {
         date: '2026-06-17', kind: 'fix',
         title: 'Updated to confirmed 11th-edition launch points',

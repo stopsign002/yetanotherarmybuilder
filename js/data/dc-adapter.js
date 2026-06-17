@@ -148,6 +148,62 @@
              stratagemIds: d.stratagem_ids || [] };
   }
 
+  // ── stratagems: 40kdc structure + text, GDC as text fallback ───────────────
+  const cap = (s) => s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : '';
+  const titleCase = (s) => String(s || '').toLowerCase().split(' ')
+    .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w)).join(' ');
+  const foldName = (s) => String(s || '').toLowerCase().replace(/[‘’]/g, "'").replace(/[^a-z0-9]/g, '');
+
+  // Build this detachment's stratagems from 40kdc (authoritative 11e structure +
+  // CP/phase), with text from the 40kdc-abilities store where it's authored.
+  function dcStratsFor(stratagemIds) {
+    return (stratagemIds || []).map((id) => {
+      const s = DC.stratagems.get(id);
+      if (!s) return null;
+      return {
+        name: s.name,
+        cp: s.cp_cost != null ? s.cp_cost : null,
+        phase: cap((s.phases || [])[0] || ''),
+        type: s.type || '',
+        description: textFor(s.ability_id),
+        source: '40kdc',
+      };
+    }).filter(Boolean);
+  }
+
+  // Reconcile 40kdc strats with the GDC-attached list on a detachment, in place.
+  // 40kdc decides which strats exist + CP/phase; text is 40kdc-where-authored,
+  // GDC-where-not; GDC-only strats (no 40kdc match) are appended so we never lose
+  // text GDC has. Writes the union back to `detachment.gdcStratagems` (the field
+  // faction-rules.js already renders), and returns coverage counts.
+  function reconcileStrats(detachment) {
+    const dcList  = dcStratsFor(detachment.stratagemIds);
+    const gdcList = Array.isArray(detachment.gdcStratagems) ? detachment.gdcStratagems : [];
+    if (dcList.length === 0) return { n40kdc: 0, nGdcFallback: 0, total: gdcList.length };
+    const gdcByKey = new Map();
+    gdcList.forEach((g) => { const k = foldName(g.name); if (k && !gdcByKey.has(k)) gdcByKey.set(k, g); });
+    const usedGdc = new Set();
+    let nGdcFallback = 0;
+    const out = dcList.map((d) => {
+      const k = foldName(d.name);
+      const g = gdcByKey.get(k);
+      if (g) usedGdc.add(k);
+      const description = d.description || (g ? g.description : '');
+      if (!d.description && g && g.description) nGdcFallback++;
+      return {
+        name: g ? g.name : titleCase(d.name),
+        cp:   d.cp != null ? d.cp : (g ? g.cp : null),
+        phase: d.phase || (g ? g.phase : ''),
+        type:  d.type  || (g ? g.type  : ''),
+        description,
+        source: d.description ? '40kdc' : (g && g.description ? 'gdc' : '40kdc'),
+      };
+    });
+    gdcList.forEach((g) => { if (!usedGdc.has(foldName(g.name))) out.push(g); });
+    detachment.gdcStratagems = out;
+    return { n40kdc: dcList.length, nGdcFallback, total: out.length };
+  }
+
   // ── build all yaab faction objects from 40kdc ──────────────────────────────
   function buildFactions() {
     const enhById = new Map();
@@ -196,6 +252,18 @@
         if (typeof App.GDC.mergeUnitDataIntoFactions === 'function') {
           App.GDC.mergeUnitDataIntoFactions(App.state.factions);
         }
+
+        // Reconcile: prefer 40kdc strat text, fall back to GDC. Runs AFTER the
+        // GDC merge so detachment.gdcStratagems is populated. Self-improving —
+        // GDC reliance shrinks as 40kdc authors more ability_id text.
+        let agg = { n40kdc: 0, nGdcFallback: 0, total: 0 };
+        App.state.factions.forEach((f) => (f.detachments || []).forEach((d) => {
+          const c = reconcileStrats(d);
+          agg.n40kdc += c.n40kdc; agg.nGdcFallback += c.nGdcFallback; agg.total += c.total;
+        }));
+        console.info(`[DC] stratagems: ${agg.total} shown across detachments — ` +
+          `${agg.n40kdc} from 40kdc (${agg.nGdcFallback} using GDC text fallback)`);
+
         try {
           if (window.UI && typeof UI.updateFactionRules === 'function') {
             const cf = (typeof App.getCurrentFaction === 'function') ? App.getCurrentFaction() : null;
@@ -216,6 +284,8 @@
     clearCache: () => {},
     clearFactionCache: async () => { try { await window.YaabDB.clearFactions(); } catch (_) {} },
     _build: buildFactions,
+    _dcStratsFor: dcStratsFor,
+    _reconcileStrats: reconcileStrats,
   };
 
   // attachments.js reaches into WahapediaParser._internal.foldKey. Provide a stub
