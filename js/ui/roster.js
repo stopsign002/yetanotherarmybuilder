@@ -261,6 +261,14 @@
     ensureChipBar();
     ensureChipPredicate();
 
+    // Bump a per-render filter-pass id BEFORE any rosterFilters run. Dedupe
+    // predicates (reserves.js) key their seen-set to this so each render gets
+    // a fresh set — robust to two renders firing in the same synchronous tick
+    // (boot cascade, renderUnitRosterWithContext → fireSelectionChange), which
+    // a microtask-based reset could not distinguish and which made owned units
+    // flash in then vanish until an unrelated later render.
+    if (window.App) App._rosterFilterPass = (App._rosterFilterPass || 0) + 1;
+
     const grid  = document.getElementById('unit-grid');
     const badge = document.getElementById('unit-count-badge');
     const empty = document.getElementById('roster-empty');
