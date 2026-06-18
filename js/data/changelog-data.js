@@ -26,9 +26,31 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.17-9',
-    lastUpdated: '2026-06-17T00:00:00Z',
+    version:     '2026.06.18-2',
+    lastUpdated: '2026-06-18T00:00:00Z',
     entries: [
+      // ── 2026-06-18 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-18', kind: 'fix',
+        title: 'Reserves no longer flash in and disappear on load',
+        description:
+          'In the Reserves / Requisitions unit view, your owned units could ' +
+          'appear for a moment on page load and then vanish until you switched ' +
+          'browser tabs and back. Two roster renders firing in the same instant ' +
+          'were collapsing all the duplicate-collapsing logic onto the second ' +
+          'render, leaving it empty. The view now renders consistently on first ' +
+          'paint.',
+      },
+      {
+        date: '2026-06-18', kind: 'fix',
+        title: 'Reserves & Requisitions restored after the 11th-edition data switch',
+        description:
+          'When the app moved to the 40kdc 11th-edition dataset, your Reserves ' +
+          'and Requisition Requests could show a count (e.g. "22") but render ' +
+          'empty, because they still pointed at the old unit ids. Your stockpile ' +
+          'now heals itself automatically on load — the saved units reappear with ' +
+          'their quantities intact. No action needed.',
+      },
       // ── 2026-06-17 ──────────────────────────────────────────────────────
       {
         date: '2026-06-17', kind: 'fix',

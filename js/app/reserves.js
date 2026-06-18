@@ -35,9 +35,15 @@
   let _emptyNote = null;
   let _armyScanRaf = 0;
   let _gridScanRaf = 0;
-  // Dedupe set for the roster predicate; re-initialised at the start of
-  // each filter pass and cleared via microtask after the pass ends.
+  // Dedupe set for the roster predicate; rebuilt whenever the roster's
+  // per-render filter-pass id (App._rosterFilterPass, bumped at the top of
+  // UI.renderUnitRoster) changes. Keying to the pass id — rather than
+  // clearing on a microtask — keeps two renders that fire in the SAME
+  // synchronous tick from sharing one seen-set, which would dedupe every
+  // owned unit out of the second render and make Reserves flash in then
+  // vanish until an unrelated later render.
   let _filterSeen = null;
+  let _filterSeenPass = -1;
 
   // ── mode helpers ──────────────────────────────────────────────────────
   function getMode() {
@@ -352,13 +358,10 @@
       }
       if (qty <= 0) return false; // also filters; redundant but order-safe
       if (!unit || !unit.id) return true;
-      if (_filterSeen === null) {
+      const pass = (window.App && App._rosterFilterPass) || 0;
+      if (_filterSeen === null || pass !== _filterSeenPass) {
         _filterSeen = new Set();
-        if (typeof queueMicrotask === 'function') {
-          queueMicrotask(() => { _filterSeen = null; });
-        } else {
-          Promise.resolve().then(() => { _filterSeen = null; });
-        }
+        _filterSeenPass = pass;
       }
       if (_filterSeen.has(unit.id)) return false;
       _filterSeen.add(unit.id);
