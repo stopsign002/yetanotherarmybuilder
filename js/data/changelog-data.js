@@ -26,10 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.18-2',
+    version:     '2026.06.18-3',
     lastUpdated: '2026-06-18T00:00:00Z',
     entries: [
       // ── 2026-06-18 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-18', kind: 'fix',
+        title: 'Leaders no longer all claim to lead Raveners',
+        description:
+          'Every leader (Castellan Crowe, Librarians, Captains — across all ' +
+          'factions) was showing a bogus "Leader" ability saying it could be ' +
+          'attached to Raveners, while its real "can lead" info was missing. ' +
+          'The 11th-edition dataset tags every leader with the same generic ' +
+          '"Leader" ability id, and our rules-text store held a single entry ' +
+          'for it (the Tyranids\' Raveners text), so it leaked onto everyone — ' +
+          'and made every leader appear under Raveners\' "Led By" list. We now ' +
+          'drop that placeholder ability and source the real leader / bodyguard ' +
+          'pairings from the structured data instead.',
+      },
       {
         date: '2026-06-18', kind: 'fix',
         title: 'Reserves no longer flash in and disappear on load',

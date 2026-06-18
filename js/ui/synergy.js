@@ -101,43 +101,32 @@
 
   function detectLeaderPairings(units) {
     const out = [];
-    // Lowercase name -> first matching wrapper in the army
-    const byLowerName = new Map();
-    for (let i = 0; i < units.length; i++) {
-      const n = String(units[i].unit.name || '').toLowerCase();
-      if (n && !byLowerName.has(n)) byLowerName.set(n, units[i]);
-    }
-
+    // Source of truth is App.Attachments (GDC `gdcLeadBy` overlay + any genuine
+    // "can be attached to" prose). 40kdc's generic "leader" ability was dropped
+    // in the adapter — its single shared text wrongly paired every leader with
+    // Raveners — so we no longer scan unit prose directly here.
+    const A = App.Attachments;
+    if (!A || typeof A.canAttach !== 'function') return out;
     for (let i = 0; i < units.length; i++) {
       const leaderWrap = units[i];
       const leader = leaderWrap.unit;
-      const abs = leader.abilities || [];
-      for (let j = 0; j < abs.length; j++) {
-        const ab = abs[j];
-        if (!ab || !ab.description) continue;
-        if (ab.isCore) continue;
-        if (!/can be attached to/i.test(ab.description)) continue;
-        const attachText = ab.description.replace(/^.*?can be attached to[^:]*:/i, '').trim();
-        const list = attachText.split(/[,■\n●•]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
-        const seen = new Set();
-        for (let k = 0; k < list.length; k++) {
-          const targetLower = list[k];
-          if (seen.has(targetLower)) continue;
-          seen.add(targetLower);
-          const target = byLowerName.get(targetLower);
-          if (!target) continue;
-          if (target.unit.id === leader.id) continue;
-          out.push({
-            type: 'leader-target',
-            leaderName:   leader.name,
-            leaderUnit:   leader,
-            leaderEntryIndex: leaderWrap.index,
-            targetName:   target.unit.name,
-            targetUnit:   target.unit,
-            targetEntryIndex: target.index,
-            description:  leader.name + ' can be attached to ' + target.unit.name + '.',
-          });
-        }
+      if (leader.attachmentRole && leader.attachmentRole !== 'leader') continue;
+      for (let k = 0; k < units.length; k++) {
+        if (k === i) continue;
+        const targetWrap = units[k];
+        const target = targetWrap.unit;
+        const res = A.canAttach(leader, target);
+        if (!res || !res.ok) continue;
+        out.push({
+          type: 'leader-target',
+          leaderName:   leader.name,
+          leaderUnit:   leader,
+          leaderEntryIndex: leaderWrap.index,
+          targetName:   target.name,
+          targetUnit:   target,
+          targetEntryIndex: targetWrap.index,
+          description:  leader.name + ' can be attached to ' + target.name + '.',
+        });
       }
     }
     return out;

@@ -414,30 +414,40 @@
       </div>`;
     }
 
-    if (leaderAbilities.length > 0) {
+    // Forward "Can lead" list. 40kdc's generic "leader" ability was dropped in
+    // the adapter (its text was a single shared, wrong entry — see
+    // dc-adapter.js), so the authoritative source is now the GDC overlay
+    // (App.Attachments.candidateTargetsFor → unit.gdcLeadBy). We still merge any
+    // genuine "can be attached to" ability prose (leaderAbilities) as a backup.
+    const canLead = [];
+    const seenLead = new Set();
+    const pushLead = (nm) => {
+      const t = (nm || '').trim();
+      const k = t.toLowerCase();
+      if (t && !seenLead.has(k)) { seenLead.add(k); canLead.push(t); }
+    };
+    if (App.Attachments && typeof App.Attachments.candidateTargetsFor === 'function') {
+      App.Attachments.candidateTargetsFor(unit).forEach(t => pushLead(t && t.name));
+    }
+    leaderAbilities.forEach(ab => {
+      ab.description.replace(/^.*?can be attached to.*?:/i, '')
+        .split(/[■\n●•]+/).forEach(pushLead);
+    });
+    if (unit.attachmentRole === 'leader' || canLead.length > 0) {
       html += `<div class="detail-section">
         <div class="detail-section-title detail-section-title-leader">Leader</div>`;
-      leaderAbilities.forEach(ab => {
-        const attachText = ab.description.replace(/^.*?can be attached to.*?:/i, '').trim();
-        const unitList = attachText
-          .split(/[■\n●•]+/)
-          .map(s => s.trim())
-          .filter(s => s.length > 0);
-
-        if (unitList.length > 0) {
-          html += `<div class="detail-leader-units">
-            <span class="detail-ability-name">Can lead:</span>
-            <div class="detail-leader-list">
-              ${unitList.map(u => `<span class="leader-unit-tag">${esc(u)}</span>`).join('')}
-            </div>
-          </div>`;
-        } else {
-          html += `<div class="detail-ability">
-            <span class="detail-ability-name">${esc(ab.name)}:</span>
-            <span class="detail-ability-desc">${esc(ab.description || '—')}</span>
-          </div>`;
-        }
-      });
+      if (canLead.length > 0) {
+        html += `<div class="detail-leader-units">
+          <span class="detail-ability-name">Can lead:</span>
+          <div class="detail-leader-list">
+            ${canLead.map(u => `<span class="leader-unit-tag">${esc(u)}</span>`).join('')}
+          </div>
+        </div>`;
+      } else {
+        html += `<div class="detail-ability detail-leader-empty">
+          <span class="detail-ability-desc">This model is a Leader and can be attached to a Bodyguard unit.</span>
+        </div>`;
+      }
       html += `</div>`;
     }
 

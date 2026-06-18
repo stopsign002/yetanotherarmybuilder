@@ -114,9 +114,22 @@
     // Split them: squadOptions carries one BASE cost per distinct size; the
     // ordinal surcharge (flat per unit across sizes) goes in `ordinal`.
     const { squadOptions, pointsOptions, ordinal } = parsePoints(u.points || []);
-    const abilities = (uv.abilities || []).map((a) => ({
-      name: abilityName(a), description: textFor(a.id), isCore: false,
-    })).filter((a) => a.name);
+    // Drop 40kdc's generic "leader" ability. Every leader datasheet (230 units
+    // across every faction) carries the SAME ability_id "leader", and the flat
+    // ability-text store (abilities-index.json) holds a single entry for it —
+    // the Tyranids' "…can be attached to: RAVENERS" text. Rendering it made
+    // EVERY leader show a bogus "Leader" ability claiming it leads Raveners, and
+    // poisoned the leader/bodyguard reverse-index (attachments.js) so every
+    // leader appeared under Raveners' "Led By". The real attach relationships
+    // come from the GDC `gdcLeadBy` overlay; the Leader keyword itself is now
+    // recorded on `attachmentRole` for the UI. (Same root cause — ability ids
+    // are faction-scoped in 40kdc, but the text store keys them globally — also
+    // mis-keys faction-specific prose like "Fervour of the Ancients"; that
+    // broader fix is tracked separately.)
+    const abilities = (uv.abilities || [])
+      .filter((a) => a && a.id !== 'leader')
+      .map((a) => ({ name: abilityName(a), description: textFor(a.id), isCore: false }))
+      .filter((a) => a.name);
     return {
       id: u.id,
       name: u.name,
@@ -135,6 +148,7 @@
       ordinal,                       // { fromCount, surcharge } or null
       description: '',
       isLegends: !!u.is_legend,
+      attachmentRole: u.attachment_role || null,   // 'leader' | 'support' | null
       _provisional: !!u.points_provisional,
     };
   }
