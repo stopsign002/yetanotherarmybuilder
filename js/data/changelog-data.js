@@ -26,10 +26,43 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.18-3',
+    version:     '2026.06.18-6',
     lastUpdated: '2026-06-18T00:00:00Z',
     entries: [
       // ── 2026-06-18 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-18', kind: 'change',
+        title: 'Weapon keywords sit on their own full-width line under the weapon',
+        description:
+          'On printable data cards, a weapon\'s keyword chips (Assault, Lethal ' +
+          'Hits, etc.) now drop onto their own line beneath the weapon and run ' +
+          'the full width of the card — like the older card layout — instead of ' +
+          'trailing inline off the name and wrapping early at the narrow name ' +
+          'column.',
+      },
+      {
+        date: '2026-06-18', kind: 'fix',
+        title: 'Army rules are back in the rules list and on cards',
+        description:
+          'Each faction\'s army rule (e.g. Grey Knights\' "Gate of Infinity", ' +
+          'Space Marines\' "Oath of Moment") had gone missing from the Army ' +
+          'Rules list and from printable cards after the 11th-edition data ' +
+          'switch — the new dataset names the rule but omits its text, so we ' +
+          'were dropping it entirely. The rule now shows again, with its full ' +
+          'rules text pulled from the community card data.',
+      },
+      {
+        date: '2026-06-18', kind: 'change',
+        title: 'Stratagem cards now name their detachment, CP pinned top-right',
+        description:
+          'Printed/PDF detachment stratagem cards now show the detachment name ' +
+          '(e.g. "Teleport Strike Force") in the subtitle instead of just the ' +
+          'generic "DETACHMENT STRATAGEM", so it is clear which detachment a ' +
+          'stratagem belongs to. The CP cost pill is also anchored to the ' +
+          'card\'s top-right corner (inside the borderless safe margin) — it ' +
+          'was previously inflating the title line and nudging the subtitle ' +
+          'downward.',
+      },
       {
         date: '2026-06-18', kind: 'fix',
         title: 'Leaders no longer all claim to lead Raveners',

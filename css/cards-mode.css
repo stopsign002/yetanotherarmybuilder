@@ -760,20 +760,40 @@
  * subtitles stay at the .dcc-sub-line default weight. */
 .dcc-head-strat .dcc-sub-line { font-weight: 700; }
 
-/* Stratagem CP pill */
+/* Stratagem CP pill.
+ * Pinned to the header's top-right corner via absolute positioning. It used
+ * to sit inline in .dcc-name-line (margin-left:auto), but that line is
+ * baseline-aligned and the pill is a two-row column flex (num over "CP") —
+ * its first row floated well above the name's baseline, inflating the line
+ * height and shoving the subtitle down. Anchoring it removes the pill from
+ * flow entirely so the name + subtitle keep their natural spacing; the
+ * name-line gets right padding below so long names ellipsize clear of it. */
 .dcc-head-strat .dcc-cp {
+  position: absolute;
+  top: 1.2mm;
+  right: 1.6mm;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   background: #b32020;
   border-radius: 0.6mm;
-  padding: 0.6mm 1.2mm;
+  padding: 1.04mm 2.07mm;
   line-height: 1;
   color: #fff;
-  margin-left: auto;
 }
-.dcc-cp-num { font-size: 4mm; font-weight: 700; }
-.dcc-cp-lbl { font-size: 1.6mm; opacity: 0.85; letter-spacing: 0.06em; }
+.dcc-head-strat .dcc-name-line { padding-right: 15mm; }
+/* In the stencil template the header bleeds to the card edge — its content
+ * padding folds in the borderless safe margin (--dcc-safe). The CP pill is
+ * positioned against the header's padding box (the card edge), so it must
+ * inset by that same base+safe amount, otherwise it prints into the trim on a
+ * borderless sheet. (The default template's header only bleeds a fixed 0.6mm,
+ * so the base 1.2mm/1.6mm offsets already clear the safe area there.) */
+.dcc-tpl-stencil .dcc-head-strat .dcc-cp {
+  top:   calc(1.6mm + var(--dcc-safe, 0mm));
+  right: calc(2mm + var(--dcc-safe, 0mm));
+}
+.dcc-cp-num { font-size: 6.91mm; font-weight: 700; }
+.dcc-cp-lbl { font-size: 2.76mm; opacity: 0.85; letter-spacing: 0.06em; }
 
 /* Stat strip */
 .dcc-stats {
@@ -889,7 +909,13 @@
 }
 .dcc-w-table tr { border-bottom: 0.15mm solid rgba(60, 40, 16, 0.32); }
 .dcc-w-table tr:last-child { border-bottom: none; }
+/* A weapon's stat row and its full-width keyword row are one entry: drop the
+   divider between them so the rule only falls below the keywords. */
+.dcc-w-table tr.dcc-w-row.has-kw { border-bottom: none; }
 .dcc-w-table td { padding: 0.7mm 0.4mm; vertical-align: top; }
+/* Full-width keyword row — spans name + all stat columns, indented to line up
+   under the weapon name, with no top padding so it tucks under the stat row. */
+.dcc-w-kwcell { padding-top: 0 !important; padding-left: 1.4mm !important; }
 .dcc-w-name { font-weight: 600; padding-left: 1.4mm !important; }
 .dcc-w-kw {
   font-style: italic;
@@ -1446,12 +1472,20 @@
 .dcc-tpl-stencil .dcc-w-table tr { border-bottom-color: var(--st-hair); }
 .dcc-tpl-stencil .dcc-w-name { color: var(--st-ink); font-family: var(--st-body); font-weight: 600; }
 .dcc-tpl-stencil .dcc-num    { color: var(--st-ink); font-family: 'Cinzel', serif; font-weight: 600; }
+/* Keyword pills sit on their own line under the weapon name and wrap as a
+ * group, rather than trailing inline off the name and breaking mid-row. */
+.dcc-tpl-stencil .dcc-w-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8mm;
+  margin-top: 0.5mm;
+}
 .dcc-tpl-stencil .dcc-w-tag {
   display: inline-block;
   font-family: var(--st-body);
   font-size: calc(2.0mm * var(--dcc-w-mul, 1));
   font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-  padding: 0.1mm 0.9mm; margin-left: 1mm;
+  padding: 0.1mm 0.9mm;
   border-radius: 0.6mm;
   background: var(--st-pill);
   border: 0.2mm solid var(--st-pill-bd);

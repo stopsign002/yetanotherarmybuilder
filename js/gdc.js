@@ -84,6 +84,19 @@
     };
   }
 
+  // Flatten a GDC army-rule's segmented body (rules.army[].rules — an ordered
+  // mix of { text, title, type } chunks, with the odd 'image' separator) into a
+  // single description string the rule renderer can show.
+  function composeRuleText(chunks) {
+    if (!Array.isArray(chunks)) return '';
+    return chunks
+      .filter(c => c && c.type !== 'image' && c.text && c.text.trim() && c.text.trim() !== '-')
+      .slice()
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(c => (c.title ? c.title.trim() + ': ' : '') + c.text.trim())
+      .join('\n\n');
+  }
+
   // Fetch one GDC payload, with optional IndexedDB cache. Returns null on error.
   async function fetchOne(filename) {
     const url = RAW_BASE + filename + '.json';
@@ -245,6 +258,30 @@
         });
       });
       if (factionWide.length > 0) faction.gdcFactionStratagems = factionWide;
+
+      // Army rule prose. 40kdc seeds the rule name (via faction_rule_id) but
+      // omits the text for IP; GDC carries it under payload.rules.army as
+      // [{ name, rules:[…chunks] }]. Fill the description of a 40kdc-seeded
+      // rule (matched by relaxed name key), or add the rule outright if 40kdc
+      // didn't seed one — so the Army Rules subsection is never empty when GDC
+      // has the text.
+      const gdcArmy = (payload.rules && Array.isArray(payload.rules.army)) ? payload.rules.army : [];
+      if (gdcArmy.length > 0) {
+        const existing = Array.isArray(faction.armyRules) ? faction.armyRules : (faction.armyRules = []);
+        const byKey = new Map(existing.map(r => [nameKey(r.name), r]));
+        gdcArmy.forEach(ar => {
+          if (!ar || !ar.name) return;
+          const desc = composeRuleText(ar.rules);
+          const hit = byKey.get(nameKey(ar.name));
+          if (hit) {
+            if (!hit.description && desc) hit.description = desc;
+          } else {
+            const rule = { name: ar.name, description: desc, source: 'gdc' };
+            existing.push(rule);
+            byKey.set(nameKey(ar.name), rule);
+          }
+        });
+      }
     });
   }
 

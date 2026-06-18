@@ -758,18 +758,18 @@
     const faction = getFaction();
     const det = (App.state && App.state.selectedDetachment) || null;
     const seen = new Set();
-    function pushAll(list, type) {
+    function pushAll(list, type, detName) {
       (Array.isArray(list) ? list : []).forEach(s => {
         if (!s || !s.name) return;
         const key = type + '::' + s.name;
         if (seen.has(key)) return;
         seen.add(key);
-        out.push({ id: key, label: s.name, type, strat: s });
+        out.push({ id: key, label: s.name, type, strat: s, detName: detName || null });
       });
     }
     if (det) {
-      pushAll(det.stratagems, 'detachment');
-      pushAll(det.gdcStratagems, 'detachment');
+      pushAll(det.stratagems, 'detachment', det.name);
+      pushAll(det.gdcStratagems, 'detachment', det.name);
     }
     if (faction) {
       pushAll(faction.factionStratagems, 'faction');
@@ -912,19 +912,30 @@
                     : '';
         return `<td class="dcc-num${extra}">${esc(w[c] != null && w[c] !== '' ? w[c] : '—')}</td>`;
       }).join('');
-      // Stencil renders each weapon keyword as a small accent pill after the
-      // name (the design's "Lethal Hits" chips); other templates keep the
-      // single italic keyword line.
+      // Stencil renders each weapon keyword as a small accent pill (the
+      // design's "Lethal Hits" chips); other templates keep the single italic
+      // keyword line. Either way the keywords sit on their OWN line beneath the
+      // weapon name (a block wrapper) rather than flowing inline after it —
+      // inline pills looked off once they spilled onto a second row.
       const kw = (display.weaponKw && w.Keywords)
         ? (isStencil()
-            ? String(w.Keywords).split(/\s*,\s*/).filter(Boolean)
-                .map(t => `<span class="dcc-w-tag">${esc(t)}</span>`).join('')
+            ? `<div class="dcc-w-tags">${String(w.Keywords).split(/\s*,\s*/).filter(Boolean)
+                .map(t => `<span class="dcc-w-tag">${esc(t)}</span>`).join('')}</div>`
             : `<div class="dcc-w-kw">${esc(w.Keywords)}</div>`)
         : '';
-      return `<tr class="dcc-w-row">
-        <td class="dcc-w-name">${esc(w.name)}${kw}</td>
+      // Keywords go in their own full-width row (colspan across name + every
+      // stat column) beneath the weapon's stat line, so they can run the whole
+      // card width instead of wrapping at the narrow name column. The stat row
+      // drops its bottom border when a keyword row follows so the two read as
+      // one weapon entry.
+      const statRow = `<tr class="dcc-w-row${kw ? ' has-kw' : ''}">
+        <td class="dcc-w-name">${esc(w.name)}</td>
         ${cells}
       </tr>`;
+      const kwRow = kw
+        ? `<tr class="dcc-w-kwrow"><td class="dcc-w-kwcell" colspan="${COLS.length + 1}">${kw}</td></tr>`
+        : '';
+      return statRow + kwRow;
     }).join('');
     return `
       <div class="dcc-section dcc-weapons dcc-weapons-${type}">
@@ -1304,7 +1315,12 @@
   function renderStratagemCard(item) {
     const s = item.strat || {};
     const cp = s.cp != null ? s.cp : '?';
-    const typeLabel = item.type === 'core' ? 'CORE' : item.type === 'detachment' ? 'DETACHMENT' : 'FACTION';
+    // Detachment stratagems show the actual detachment name (e.g. "Teleport
+    // Strike Force") in place of the generic "DETACHMENT" qualifier — matching
+    // the GW card, where the detachment banner identifies the stratagem set.
+    const typeLabel = item.type === 'core' ? 'CORE'
+      : item.type === 'detachment' ? (item.detName || 'DETACHMENT')
+      : 'FACTION';
     const cpHtml = display.cp ? `<span class="dcc-cp"><span class="dcc-cp-num">${esc(String(cp))}</span><span class="dcc-cp-lbl">CP</span></span>` : '';
     const typeHtml = display.type ? `<span class="dcc-role">${esc(typeLabel)} STRATAGEM</span>` : '';
     const phaseHtml = (display.phase && s.phase) ? `<span class="dcc-strat-phase">PHASE: ${esc(String(s.phase).toUpperCase())}</span>` : '';

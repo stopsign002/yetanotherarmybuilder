@@ -255,6 +255,24 @@
     return { n40kdc: dcList.length, nGdcFallback, total: out.length };
   }
 
+  // Faction army rule. 40kdc names the rule via `faction_rule_id` but omits the
+  // prose for IP, so we seed { name, description } here (name from the abilities
+  // collection, text from the ability-text store if it's authored — usually
+  // empty) and let the GDC overlay fill the real rules text in
+  // App.GDC.mergeIntoFactions (40kdc-first, GDC fallback — same model as
+  // stratagems). Without this the Army Rules subsection was always empty.
+  function buildArmyRules(f) {
+    const id = f && f.faction_rule_id;
+    if (!id) return [];
+    let name = '';
+    try {
+      const av = DC.abilities.getAny ? DC.abilities.getAny(id) : DC.abilities.get(id);
+      name = (av && (av.name || (av.raw && av.raw.name))) || '';
+    } catch (_) { /* ambiguous/missing — fall back to the id */ }
+    if (!name) name = titleCase(String(id).replace(/-/g, ' '));
+    return [{ name, description: textFor(id) }];
+  }
+
   // ── build all yaab faction objects from 40kdc ──────────────────────────────
   function buildFactions() {
     const enhById = new Map();
@@ -272,7 +290,7 @@
         filename: factionName,
         unitCount: units.length,
         units,
-        armyRules: [],
+        armyRules: buildArmyRules(f),
         detachments: dets,
         linkedCatalogues: [],
         _source: '40kdc',
