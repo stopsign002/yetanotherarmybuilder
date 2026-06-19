@@ -26,10 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.18-6',
+    version:     '2026.06.18-7',
     lastUpdated: '2026-06-18T00:00:00Z',
     entries: [
       // ── 2026-06-18 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-18', kind: 'change',
+        title: 'Melee weapons show range as "M" on data cards',
+        description:
+          'On printable data cards, a melee weapon\'s range now reads a compact ' +
+          '"M" instead of the full word "Melee", which was wide enough to crowd ' +
+          'the Attacks number next to it.',
+      },
       {
         date: '2026-06-18', kind: 'change',
         title: 'Weapon keywords sit on their own full-width line under the weapon',

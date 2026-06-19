@@ -910,7 +910,11 @@
         const extra = c === 'Range' ? ' dcc-num-range'
                     : (i === COLS.length - 1) ? ' dcc-num-dmg'
                     : '';
-        return `<td class="dcc-num${extra}">${esc(w[c] != null && w[c] !== '' ? w[c] : '—')}</td>`;
+        // Melee weapons show their range as a compact "M" rather than the full
+        // word "Melee", which was wide enough to crowd the Attacks column.
+        let val = w[c];
+        if (c === 'Range' && type === 'melee') val = 'M';
+        return `<td class="dcc-num${extra}">${esc(val != null && val !== '' ? val : '—')}</td>`;
       }).join('');
       // Stencil renders each weapon keyword as a small accent pill (the
       // design's "Lethal Hits" chips); other templates keep the single italic
