@@ -26,10 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.18-8',
+    version:     '2026.06.18-9',
     lastUpdated: '2026-06-18T00:00:00Z',
     entries: [
       // ── 2026-06-18 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-18', kind: 'change',
+        title: 'Header text prints thicker on data cards',
+        description:
+          'Following the section labels, the unit / stratagem name and the ' +
+          'faction name on the dark header bar now print with slightly thicker ' +
+          'letter strokes too, so the skinniest serif parts no longer drop out ' +
+          'against the dark background on some printers.',
+      },
       {
         date: '2026-06-18', kind: 'change',
         title: 'Section headers print thicker on data cards',

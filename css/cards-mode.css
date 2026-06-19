@@ -725,6 +725,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* Sits on the dark header bar in every template — same printer hairline
+   * dropout as the section labels, and Cinzel caps at a 600 weight so 700 is
+   * already faux-bold. Thicken the strokes so the unit/stratagem name prints
+   * solid. See `.dcc-section-label`. */
+  -webkit-text-stroke: 0.12mm currentColor;
+  text-stroke: 0.12mm currentColor;
+  paint-order: stroke fill;
 }
 .dcc-pts {
   background: var(--accent-dark, #b3b3b3);
@@ -1396,6 +1403,11 @@
   text-transform: uppercase;
   color: color-mix(in srgb, var(--st-accent) 90%, transparent);
   margin-bottom: 0.5mm;
+  /* Faction name on the dark header bar — thicken its strokes so the small
+   * accent-coloured letters print solid. See `.dcc-section-label`. */
+  -webkit-text-stroke: 0.1mm currentColor;
+  text-stroke: 0.1mm currentColor;
+  paint-order: stroke fill;
 }
 /* The design wraps long names onto a second line rather than truncating. */
 .dcc-tpl-stencil .dcc-name {
