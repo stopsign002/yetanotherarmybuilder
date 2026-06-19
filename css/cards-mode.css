@@ -894,7 +894,20 @@
   font-size: calc(2.47mm * var(--dcc-heading-mul, 1));
   opacity: 0.95;
 }
-.dcc-section-label { flex: 0 0 auto; }
+.dcc-section-label {
+  flex: 0 0 auto;
+  /* The section labels (RANGED WEAPONS / MELEE WEAPONS / …) print light-on-dark
+   * in every template — a bronze bar in the default look, a solid ink block in
+   * the stencil look. Cinzel only ships up to a 600 weight, so font-weight:700
+   * is already as heavy as the face goes; printers still drop the skinniest
+   * serif strokes against the dark background. A small same-colour text-stroke
+   * thickens every stroke uniformly so the thin parts survive the print, and
+   * `paint-order: stroke fill` keeps the fill on top so letter counters stay
+   * open rather than filling in. */
+  -webkit-text-stroke: 0.12mm currentColor;
+  text-stroke: 0.12mm currentColor;
+  paint-order: stroke fill;
+}
 
 /* Weapons table */
 .dcc-w-table {

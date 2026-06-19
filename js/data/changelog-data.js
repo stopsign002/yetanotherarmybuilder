@@ -26,10 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.18-7',
+    version:     '2026.06.18-8',
     lastUpdated: '2026-06-18T00:00:00Z',
     entries: [
       // ── 2026-06-18 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-18', kind: 'change',
+        title: 'Section headers print thicker on data cards',
+        description:
+          'The light-on-dark section labels (RANGED WEAPONS, MELEE WEAPONS, ' +
+          'ABILITIES, …) now print with slightly thicker letter strokes, so the ' +
+          'skinniest parts of the serifs no longer drop out against the dark ' +
+          'header background on some printers.',
+      },
       {
         date: '2026-06-18', kind: 'change',
         title: 'Melee weapons show range as "M" on data cards',
