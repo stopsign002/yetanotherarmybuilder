@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.18-9',
-    lastUpdated: '2026-06-18T00:00:00Z',
+    version:     '2026.06.20-1',
+    lastUpdated: '2026-06-20T00:00:00Z',
     entries: [
+      // ── 2026-06-20 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-20', kind: 'change',
+        title: 'Core rules show as a compact inline list on data cards',
+        description:
+          'Core abilities (Deep Strike, Scouts, Feel No Pain, Fights First, …) ' +
+          'now render as a single inline "CORE:" list on data cards instead of ' +
+          'each getting its own full ability block with rules text — matching ' +
+          'the real datasheet layout and freeing up card space for the unit\'s ' +
+          'unique abilities. (Their full text still appears in the unit detail ' +
+          'panel.) Note: a core rule only shows if the underlying dataset lists ' +
+          'it for that unit; a few brand-new provisional datasheets are still ' +
+          'missing some, which will fill in as the dataset is updated.',
+      },
       // ── 2026-06-18 ──────────────────────────────────────────────────────
       {
         date: '2026-06-18', kind: 'change',

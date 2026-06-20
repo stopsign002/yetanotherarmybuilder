@@ -62,6 +62,14 @@
   // resolve an AbilityView/raw ability's name
   const abilityName = (a) => a && (a.name || (a.raw && a.raw.name)) || '';
 
+  // The fixed GW datasheet CORE abilities. Matched by name (anchored, so a
+  // unit ability that merely starts with one of these words doesn't false-hit)
+  // with an optional trailing rating — "Feel No Pain 5+", "Scouts 9\"",
+  // "Deadly Demise D6+2". "Leader" is intentionally absent: 40kdc's generic
+  // leader ability is dropped upstream of this and surfaced via attachmentRole.
+  const CORE_ABILITY_RE =
+    /^(Deadly Demise|Deep Strike|Feel No Pain|Fights First|Firing Deck|Infiltrators|Lone Operative|Scouts|Stealth|Hover)\b/i;
+
   // ── stat formatting (BSData rendered M as 6", Sv as 3+, Ld as 6+) ──────────
   const sv  = (v) => (v == null ? '' : `${v}+`);
   const mv  = (v) => (v == null ? '' : `${v}"`);
@@ -128,7 +136,19 @@
     // broader fix is tracked separately.)
     const abilities = (uv.abilities || [])
       .filter((a) => a && a.id !== 'leader')
-      .map((a) => ({ name: abilityName(a), description: textFor(a.id), isCore: false }))
+      .map((a) => {
+        const raw = a.raw || a;
+        const name = abilityName(a);
+        // Flag core abilities (Deep Strike, Scouts, Feel No Pain, …) so the
+        // card renders them as a compact inline "CORE:" list instead of full
+        // ability blocks. Two signals because 40kdc's `ability_type` tagging is
+        // uneven: it's authoritative when set to "core", but some datasheet
+        // copies of a core rule are mis-typed "unit" (e.g. Fights First is
+        // never tagged core anywhere), so we also match the fixed GW core-rule
+        // names (with their trailing rating, e.g. "Feel No Pain 5+").
+        const isCore = raw.ability_type === 'core' || CORE_ABILITY_RE.test(name);
+        return { name, description: textFor(a.id), isCore };
+      })
       .filter((a) => a.name);
     return {
       id: u.id,
