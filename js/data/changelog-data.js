@@ -26,10 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.20-1',
+    version:     '2026.06.20-2',
     lastUpdated: '2026-06-20T00:00:00Z',
     entries: [
       // ── 2026-06-20 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-20', kind: 'fix',
+        title: 'Nekrosor Ammentar now shows Deep Strike',
+        description:
+          'Nekrosor Ammentar (Necrons) was missing the Deep Strike core ability ' +
+          'because the upstream dataset doesn\'t list it on that datasheet yet ' +
+          '(reported upstream). Patched it back in so it shows in the unit\'s ' +
+          'CORE abilities; the patch removes itself automatically once the ' +
+          'dataset is corrected.',
+      },
       {
         date: '2026-06-20', kind: 'change',
         title: 'Core rules show as a compact inline list on data cards',

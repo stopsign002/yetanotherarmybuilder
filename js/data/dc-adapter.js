@@ -70,6 +70,17 @@
   const CORE_ABILITY_RE =
     /^(Deadly Demise|Deep Strike|Feel No Pain|Fights First|Firing Deck|Infiltrators|Lone Operative|Scouts|Stealth|Hover)\b/i;
 
+  // Hand-patches for core abilities the upstream 40kdc dataset is missing on a
+  // unit's datasheet. Keyed by unit id → core ability ids to inject. This is
+  // SELF-HEALING: the inject is skipped if the unit already lists the ability,
+  // so each entry no-ops automatically once 40kdc links it and the bundle is
+  // refreshed — at which point the entry can be deleted. Keep each line tagged
+  // with the upstream issue so it's auditable.
+  //   nekrosor-ammentar / deep-strike → wn-mitch/40kdc-data#51
+  const MISSING_CORE_ABILITIES = {
+    'nekrosor-ammentar': ['deep-strike'],
+  };
+
   // ── stat formatting (BSData rendered M as 6", Sv as 3+, Ld as 6+) ──────────
   const sv  = (v) => (v == null ? '' : `${v}+`);
   const mv  = (v) => (v == null ? '' : `${v}"`);
@@ -150,6 +161,19 @@
         return { name, description: textFor(a.id), isCore };
       })
       .filter((a) => a.name);
+    // Inject any hand-patched core abilities the dataset omits for this unit.
+    const patchIds = MISSING_CORE_ABILITIES[u.id];
+    if (patchIds) {
+      const have = new Set(abilities.map((a) => a.name.toLowerCase()));
+      patchIds.forEach((aid) => {
+        let av = null;
+        try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
+        const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
+        if (have.has(name.toLowerCase())) return;   // already present → no-op (self-heals post-upstream-fix)
+        have.add(name.toLowerCase());
+        abilities.push({ name, description: textFor(aid), isCore: true });
+      });
+    }
     return {
       id: u.id,
       name: u.name,
