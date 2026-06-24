@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-22T13:44:09.440Z",
+  "generatedAt": "2026-06-24T21:46:46.953Z",
   "sourceRepo": "BSData/wh40k-10e",
   "sourceBranch": "main",
-  "sourceCommit": "2c51facbf5585eb677062856935bbbe86834bd60",
+  "sourceCommit": "52914f259d4e509379fc653e3b13d2e38edb102e",
   "files": [
     {
       "path": "Aeldari - Aeldari Library.cat",
@@ -289,8 +289,8 @@
       "path": "Library - Tyranids.cat",
       "name": "Library - Tyranids",
       "type": "catalogue",
-      "sha": "630f88d194212236c77fb711ec05151f93642d24",
-      "size": 654867
+      "sha": "31ab6788375ed5a961a2daa87d46a8f67b9a6b39",
+      "size": 654863
     },
     {
       "path": "Necrons.cat",
