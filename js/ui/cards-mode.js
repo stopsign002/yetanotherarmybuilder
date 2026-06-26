@@ -531,15 +531,15 @@
   //                    primary, just with the cloned header and the
   //                    overflowing sections.
   let spilloverMode = 'continuation';
-  // When false (default), spillover splits only at whole-section
-  // boundaries: a section either fits on the primary or moves entirely
-  // to the continuation. Rule cards (single-section bodies) therefore
-  // can't split and would clip.
-  // When true, the splitter is allowed to break mid-section: rule-card
-  // text splits paragraph-by-paragraph onto the continuation, and a
-  // unit-card section that doesn't fit at its boundary will spill its
-  // overflowing rows/items onto the continuation instead of being
-  // moved entirely.
+  // When false (default), spillover splits only at whole-section boundaries:
+  // a section either fits on the primary or moves entirely to the
+  // continuation, and the keyword footer stays pinned to page 1.
+  // When true, the splitter may break ANY overflowing section mid-content —
+  // a weapon table or ability list fills the page with the rows that fit and
+  // spills the remainder, and rule-card text splits paragraph-by-paragraph.
+  // Independent of this flag, a single section that is too tall to ever fit
+  // whole on a page (e.g. a Redemptor Dreadnought's ranged list) is always
+  // split mid-content so it doesn't leave the page half-empty.
   let allowPartialSection = false;
   // Title-bar header corner radius in mm. Independent of the card-frame
   // radius so users can tune the dark-bar shape (square / softly
@@ -902,18 +902,27 @@
       : ['Range', 'A', 'WS', 'S', 'AP', 'D'];
     const label = type === 'ranged' ? 'RANGED WEAPONS' : 'MELEE WEAPONS';
     const rows = list.map(w => {
-      // Range is the widest stat (e.g. `Melee`, `24"`) and Damage the next
-      // (`D6+2`); the rest are 1–2 chars. Tagging them lets the fixed-layout
-      // table give each column a width that matches the header letters above
-      // it — see `.dcc-num-range` / `.dcc-num-dmg` in cards-mode.css.
+      // Several stats carry values wider than a single glyph: Range
+      // (`Melee`, `24"`), Attacks (`D6+*`, `2D6`), Damage (`D6+2`), and a
+      // Torrent weapon's BS (`N/A`). With `table-layout: fixed` an over-wide
+      // value can't grow its cell — it spills over the next column — so we
+      // tag those columns to get wider widths that match the header letters
+      // above them (see `.dcc-num-*` in cards-mode.css).
       const cells = COLS.map((c, i) => {
         const extra = c === 'Range' ? ' dcc-num-range'
+                    : c === 'A' ? ' dcc-num-att'
+                    : (c === 'BS' || c === 'WS') ? ' dcc-num-bs'
                     : (i === COLS.length - 1) ? ' dcc-num-dmg'
                     : '';
         // Melee weapons show their range as a compact "M" rather than the full
         // word "Melee", which was wide enough to crowd the Attacks column.
         let val = w[c];
         if (c === 'Range' && type === 'melee') val = 'M';
+        // A weapon that can't make hit rolls (Torrent, etc.) ships its skill
+        // as "N/A"; render it as the same em-dash placeholder used for any
+        // other empty stat so it reads as a single narrow glyph instead of a
+        // 3-char token that crowds the Attacks value beside it.
+        if ((c === 'BS' || c === 'WS') && /^n\s*\/?\s*a$/i.test(String(val).trim())) val = '—';
         return `<td class="dcc-num${extra}">${esc(val != null && val !== '' ? val : '—')}</td>`;
       }).join('');
       // Stencil renders each weapon keyword as a small accent pill (the
@@ -1513,7 +1522,8 @@
       document.body.removeChild(stage);
     }
   }
-  function measureAndMaybeSplit(card, cardW, cardH, stage, backsOn) {
+  function measureAndMaybeSplit(card, cardW, cardH, stage, backsOn, depth) {
+    depth = depth || 0;
     const host = document.createElement('div');
     host.style.cssText = 'width:' + cardW + 'mm; height:' + cardH + 'mm;';
     const cardEl = document.createElement('article');
@@ -1533,38 +1543,91 @@
       const isHeaderEl = header && header.classList && header.classList.contains('dcc-head');
       if (!isHeaderEl) return [card];
 
+      // The keyword footer (FACTION KEYWORDS / KEYWORDS) normally stays pinned
+      // to the bottom of page 1, so its height is reserved there and ordinary
+      // spillover keeps it on the first page. It only flows to the spillover
+      // page in one case: when a single section is so tall it can't fit whole
+      // on a page at all and must be split mid-content (e.g. a Redemptor
+      // Dreadnought's ranged-weapon list). There, dropping the footer hands
+      // its ~8mm back to the weapon rows so more of them stay on page 1.
       const last = children[children.length - 1];
-      const footer = (last && last.classList && last.classList.contains('dcc-foot')) ? last : null;
-      const middle = children.slice(1, footer ? -1 : undefined);
+      const footerEl = (last && last.classList && last.classList.contains('dcc-foot')) ? last : null;
+      const middle = children.slice(1, footerEl ? -1 : undefined);
       if (middle.length === 0) return [card];
 
       const cardClient = cardEl.clientHeight;
       const headerH = header.offsetHeight;
-      const footerH = footer ? footer.offsetHeight : 0;
+      const footerH = footerEl ? footerEl.offsetHeight : 0;
       // Padding + per-section margins/gap eat ~6mm at default; budget
       // generously so the visible card never quite fills to its edge.
       const reserveMm = 8;
       const reservePx = mmToPx(reserveMm);
-      const usable = cardClient - headerH - footerH - reservePx;
+      const usableFull = cardClient - headerH - reservePx;   // page-1 space if the footer flows
+      const usable = usableFull - footerH;                   // page-1 space with the footer pinned
 
-      // Walk sections in order, fitting whole sections until one
-      // overflows. When `allowPartialSection` is on we additionally try
-      // to break the overflowing section's children between primary and
-      // continuation, so dense sections (long ability lists, deep weapon
-      // tables) don't pop entirely to the back.
+      // Walk sections in order, fitting whole sections until one overflows.
+      // The overflowing section is split mid-content (which lets the keyword
+      // footer flow so its space goes to the rows) when the user opted in
+      // ("Split sections mid-content"), OR in the "extreme" cases where
+      // leaving it whole is wasteful:
+      //   - it can't fit whole on the next page either (h > usableFull), or
+      //   - bumping it wholesale would leave page 1 less than half full
+      //     (running < usableFull / 2) — e.g. a Redemptor whose only page-1
+      //     content so far is the stat block, with a ranged list too big to
+      //     fit beside it. Here we keep the stats AND as many weapon rows as
+      //     fit on page 1.
+      // Otherwise the section (and everything after it) moves wholesale to the
+      // spillover and the footer stays pinned to the bottom of page 1.
       let running = 0;
       const fits = [];
       let partialFitHtml = null;
+      let footerFlows = false;
       const overflowParts = [];
       for (let i = 0; i < middle.length; i++) {
         const c = middle[i];
         const h = c.offsetHeight + 4;  // ~1mm gap between sections
-        if (running + h <= usable) {
+        // While the footer is pinned we fit against `usable` (its height
+        // reserved); once it's dropped, the reclaimed space makes the budget
+        // the full page.
+        const budget = footerFlows ? usableFull : usable;
+        if (running + h <= budget) {
           fits.push(c); running += h;
           continue;
         }
-        if (allowPartialSection) {
-          const partial = splitSectionPartial(c, usable - running);
+
+        if (!footerFlows) {
+          // First section that won't fit beside the pinned footer. Drop the
+          // footer to the spillover page when: the user opted in, the section
+          // can't fit whole on the next page either, OR bumping it wholesale
+          // would leave page 1 less than half full (the Redemptor case — only
+          // the stat block on page 1). Measure "half full" against the FULL
+          // page, not the footer-reserved `usable`, so a tall keyword footer
+          // doesn't suppress the test.
+          const cantFitOnNextPageWhole = h > usableFull;
+          const wholesaleWouldWastePage1 = running < usableFull / 2;
+          if (allowPartialSection || cantFitOnNextPageWhole || wholesaleWouldWastePage1) {
+            footerFlows = true;
+            // Dropping the footer often gives the overflowing section enough
+            // room to fit WHOLE (it only overflowed the footer-reserved
+            // budget) — keep it intact on page 1 in that case.
+            if (running + h <= usableFull) {
+              fits.push(c); running += h;
+              continue;
+            }
+            // Still taller than the page even without the footer → split it.
+            const partial = splitSectionPartial(c, usableFull - running);
+            if (partial) {
+              partialFitHtml = partial.fitHtml;
+              overflowParts.push(partial.overflowHtml);
+              for (let j = i + 1; j < middle.length; j++) overflowParts.push(middle[j].outerHTML);
+              break;
+            }
+            // Couldn't split (single-item section) → fall through to wholesale.
+          }
+        } else {
+          // Footer already dropped (full-page budget). Spill just the
+          // overflowing rows of this section if we can.
+          const partial = splitSectionPartial(c, usableFull - running);
           if (partial) {
             partialFitHtml = partial.fitHtml;
             overflowParts.push(partial.overflowHtml);
@@ -1572,6 +1635,7 @@
             break;
           }
         }
+
         for (let j = i; j < middle.length; j++) overflowParts.push(middle[j].outerHTML);
         break;
       }
@@ -1580,17 +1644,43 @@
       // up and let the card clip — the alternative is an empty primary
       // card with all content on the continuation, which looks broken.
       if (fits.length === 0 && !partialFitHtml) return [card];
+
+      // Place the keyword footer: appended to the very end of the overflow (so
+      // it lands on the last spillover page) when its space was reclaimed,
+      // otherwise pinned to the bottom of page 1.
+      if (footerEl && footerFlows) overflowParts.push(footerEl.outerHTML);
+      const footerOnPage1 = (footerEl && !footerFlows) ? footerEl.outerHTML : '';
+
       if (overflowParts.length === 0) return [card];
 
-      // Build primary card: header + fits + footer. The footer
-      // (FACTION KEYWORDS / KEYWORDS lines) is pinned to the first
-      // card always — it identifies the unit and shouldn't get
-      // shuffled to a continuation that the user might cut apart from
-      // its primary.
+      // Build primary card: header + the sections that fit + (pinned footer).
       const fitsHTML = fits.map(n => n.outerHTML).join('') + (partialFitHtml || '');
-      const firstHTML = header.outerHTML + fitsHTML + (footer ? footer.outerHTML : '');
+      const firstHTML = header.outerHTML + fitsHTML + footerOnPage1;
       const clonedHead = header.outerHTML.replace('class="dcc-head"', 'class="dcc-head dcc-head-cont"');
       const overflowHTML = overflowParts.join('');
+
+      // In 'fullCard' mode each continuation is its own front-grid card, so a
+      // very dense unit (a Redemptor's long weapon list, a primarch's wall of
+      // abilities) can cascade across as many cards as it needs: recurse on
+      // the overflow and split it again whenever it is still too tall. The
+      // recursion always terminates — each level either shrinks the overflow
+      // or returns the card untouched (and a depth cap backstops any
+      // pathological single-item-taller-than-a-card case).
+      // Duplex 'continuation' mode rides on a single card back, so it stays
+      // capped at one continuation (the partial-section fill above still
+      // keeps the front from going half-empty).
+      if (spilloverMode === 'fullCard' && depth < 12) {
+        const primary = Object.assign({}, card, { html: firstHTML });
+        const contCard = Object.assign({}, card, {
+          html: clonedHead + overflowHTML,
+          isContinuation: true,
+          contClasses: '',
+          label: (card.label || 'Card') + ' (cont.)',
+        });
+        const tail = measureAndMaybeSplit(contCard, cardW, cardH, stage, backsOn, depth + 1);
+        return [primary].concat(tail);
+      }
+
       const { contHtml, contClasses } = buildContinuationChrome(clonedHead + overflowHTML, backsOn);
 
       return emitSplit(card, firstHTML, contHtml, contClasses, 'Unit');

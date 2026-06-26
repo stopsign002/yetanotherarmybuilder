@@ -26,9 +26,36 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.20-2',
-    lastUpdated: '2026-06-20T00:00:00Z',
+    version:     '2026.06.26-6',
+    lastUpdated: '2026-06-26T16:00:00Z',
     entries: [
+      // ── 2026-06-26 ──────────────────────────────────────────────────────
+      {
+        date: '2026-06-26', kind: 'fix',
+        title: 'Variable Attacks no longer bleed into the next stat on cards',
+        description:
+          'On printable data cards, a weapon with a wide Attacks value like ' +
+          '"D6+*" or "2D6" overflowed its narrow column and ran on top of the ' +
+          'BS stat beside it. The Attacks column is now wide enough for these ' +
+          'values, and a weapon that can\'t make hit rolls (Torrent, etc.) now ' +
+          'shows its BS/WS as a simple "—" instead of "N/A".',
+      },
+      {
+        date: '2026-06-26', kind: 'fix',
+        title: 'Dense data cards spill across pages more gracefully',
+        description:
+          'When a unit\'s weapons ran longer than one card (e.g. the Redemptor ' +
+          'Dreadnought), the whole weapons block jumped to the next page and ' +
+          'left the first page nearly empty. A weapon section too big to fit ' +
+          'on page one alongside the stat block now keeps the stats AND fills ' +
+          'the page with the weapon rows that fit, spilling only the ' +
+          'remainder, and drops the FACTION KEYWORDS / KEYWORDS footer to the ' +
+          'spillover page so those rows reclaim its space. Ordinary spillover ' +
+          'is unchanged — whole sections move and the keywords stay on page ' +
+          'one. With the "separate continuation cards" ' +
+          'spillover option, a very dense unit can now flow across as many ' +
+          'cards as it needs instead of getting clipped.',
+      },
       // ── 2026-06-20 ──────────────────────────────────────────────────────
       {
         date: '2026-06-20', kind: 'fix',
