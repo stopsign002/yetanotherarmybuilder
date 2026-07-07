@@ -167,6 +167,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_collect_debug` | localStorage | `collect-mode.js` | Dev flag for verbose Collect-mode logging | Dev flag |
 | `yaab_changelog_seen` | localStorage | `changelog.js` | Last `App.CHANGELOG.version` the user has opened — drives the "unseen" red dot on the Updates icon | User pref |
 | `yaab_cards_presets` | localStorage | `cards-mode.js` | Named snapshots of every card-render setting (colours, typography, layout, back-image id, …); cloud-synced | User data |
+| `yaab_cards_selection` | localStorage | `cards-mode.js` | Card-exporter deselections (excluded card ids per category: units/rules/strats); device-local, NOT cloud-synced | User selection |
 
 The kill-switch in `sw.js` self-unregisters and clears any legacy `yaab-shell-v*` caches; no Cache API entries are maintained anymore.
 

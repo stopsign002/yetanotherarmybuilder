@@ -464,6 +464,40 @@
     return p ? p.name : '';
   }
 
+  // ── Selection persistence (exclusions) ────────────────────────────────────
+  // The pick panel defaults every available card to INCLUDED on each
+  // (re)render — but users complained their deselections evaporated on
+  // navigation / periodic re-render. We persist the user's EXCLUSIONS (card
+  // ids they explicitly unchecked), not inclusions: that way a brand-new
+  // card (never seen, never excluded) defaults to included, and only the
+  // user's opt-outs survive. Ids from other armies/factions that aren't
+  // currently present are simply ignored when we compute the include set.
+  // Separate key from yaab_cards_presets — this is transient selection, not
+  // a named look. Not in sync.js's SYNCED_BAG_KEYS (device-local by design).
+  const SELECTION_KEY = 'yaab_cards_selection';
+  // { units: Set<id>, rules: Set<id>, strats: Set<id> } of excluded ids.
+  let excluded = { units: new Set(), rules: new Set(), strats: new Set() };
+
+  function loadExclusions() {
+    try {
+      const raw = localStorage.getItem(SELECTION_KEY);
+      if (!raw) return;
+      const p = JSON.parse(raw) || {};
+      ['units', 'rules', 'strats'].forEach(k => {
+        excluded[k] = new Set(Array.isArray(p[k]) ? p[k].map(String) : []);
+      });
+    } catch (_) { /* malformed / private mode — keep empty defaults */ }
+  }
+  function saveExclusions() {
+    try {
+      localStorage.setItem(SELECTION_KEY, JSON.stringify({
+        units:  Array.from(excluded.units),
+        rules:  Array.from(excluded.rules),
+        strats: Array.from(excluded.strats),
+      }));
+    } catch (_) {}
+  }
+
   // ── Display toggles ──────────────────────────────────────────────────────
   // Every section the user can hide. Grouped by card kind so the Display
   // sub-tab can render them under headings.
@@ -779,8 +813,18 @@
     return out;
   }
   function syncIncludeDefaults() {
+    // Default = every currently-available card EXCEPT the user's persisted
+    // exclusions. A newly-available card (not in `excluded`) is included by
+    // default; a user's deselection survives navigation / re-render because
+    // its id is in `excluded[key]` and gets filtered out here. Only rebuild
+    // a null set — an already-computed set carries the user's in-session
+    // toggles forward untouched.
     function defaultAll(items, key) {
-      if (!include[key]) include[key] = new Set(items.map(x => x.id));
+      if (!include[key]) {
+        include[key] = new Set(
+          items.filter(x => !excluded[key].has(x.id)).map(x => x.id)
+        );
+      }
     }
     defaultAll(gatherUnits(),       'units');
     defaultAll(gatherRules(),       'rules');
@@ -1614,18 +1658,22 @@
       const usable = usableFull - footerH;                   // page-1 space with the footer pinned
 
       // Walk sections in order, fitting whole sections until one overflows.
-      // The overflowing section is split mid-content (which lets the keyword
-      // footer flow so its space goes to the rows) when the user opted in
-      // ("Split sections mid-content"), OR in the "extreme" cases where
-      // leaving it whole is wasteful:
-      //   - it can't fit whole on the next page either (h > usableFull), or
-      //   - bumping it wholesale would leave page 1 less than half full
-      //     (running < usableFull / 2) — e.g. a Redemptor whose only page-1
-      //     content so far is the stat block, with a ranged list too big to
-      //     fit beside it. Here we keep the stats AND as many weapon rows as
-      //     fit on page 1.
-      // Otherwise the section (and everything after it) moves wholesale to the
-      // spillover and the footer stays pinned to the bottom of page 1.
+      // The overflowing section (be it a long weapon list like a Redemptor's
+      // ranged profiles OR a dense ABILITIES block like Illuminor Szeras) is
+      // SPLIT mid-content: page 1 keeps the header + whole fitting sections +
+      // as many rows of the overflowing section as fit, and the remaining rows
+      // flow to the continuation. Splitting the section always lets the keyword
+      // footer flow to the continuation too, so its ~8mm goes to the rows and,
+      // crucially, the footer never gets orphaned alone on a near-empty page or
+      // clipped off the bottom.
+      //
+      // Splitting mid-content is the default whenever a section overflows —
+      // even with the "Split sections mid-content" option OFF — because the
+      // only alternatives (bump the whole section wholesale with the footer
+      // pinned, or render the card whole and clip) both regress to the bad
+      // outcomes we're fixing. The one case we can't split is a section whose
+      // single row is itself taller than a page; there we bump it wholesale but
+      // STILL flow the footer so nothing clips or orphans.
       let running = 0;
       const fits = [];
       let partialFitHtml = null;
@@ -1643,55 +1691,35 @@
           continue;
         }
 
-        // Only weapon sections may trigger a page split. Card rule: abilities
-        // (and other prose sections) must NEVER cause spillover — if a non-weapon
-        // section is what overflows, keep the whole card intact rather than
-        // paginating. Splitting on an abilities overflow otherwise orphaned the
-        // keyword footer alone on a near-empty spillover page (Illuminor Szeras).
-        // Long weapon lists (a Redemptor's ranged profiles) still split as before.
-        if (!(c.classList && c.classList.contains('dcc-weapons'))) return [card];
-
+        // This section overflows. Flow the footer to the continuation (freeing
+        // its reserved space back to page 1) so the section split below can use
+        // the full-page budget and the footer lands with the spilled content.
         if (!footerFlows) {
-          // First section that won't fit beside the pinned footer. Drop the
-          // footer to the spillover page when: the user opted in, the section
-          // can't fit whole on the next page either, OR bumping it wholesale
-          // would leave page 1 less than half full (the Redemptor case — only
-          // the stat block on page 1). Measure "half full" against the FULL
-          // page, not the footer-reserved `usable`, so a tall keyword footer
-          // doesn't suppress the test.
-          const cantFitOnNextPageWhole = h > usableFull;
-          const wholesaleWouldWastePage1 = running < usableFull / 2;
-          if (allowPartialSection || cantFitOnNextPageWhole || wholesaleWouldWastePage1) {
-            footerFlows = true;
-            // Dropping the footer often gives the overflowing section enough
-            // room to fit WHOLE (it only overflowed the footer-reserved
-            // budget) — keep it intact on page 1 in that case.
-            if (running + h <= usableFull) {
-              fits.push(c); running += h;
-              continue;
-            }
-            // Still taller than the page even without the footer → split it.
-            const partial = splitSectionPartial(c, usableFull - running);
-            if (partial) {
-              partialFitHtml = partial.fitHtml;
-              overflowParts.push(partial.overflowHtml);
-              for (let j = i + 1; j < middle.length; j++) overflowParts.push(middle[j].outerHTML);
-              break;
-            }
-            // Couldn't split (single-item section) → fall through to wholesale.
-          }
-        } else {
-          // Footer already dropped (full-page budget). Spill just the
-          // overflowing rows of this section if we can.
-          const partial = splitSectionPartial(c, usableFull - running);
-          if (partial) {
-            partialFitHtml = partial.fitHtml;
-            overflowParts.push(partial.overflowHtml);
-            for (let j = i + 1; j < middle.length; j++) overflowParts.push(middle[j].outerHTML);
-            break;
+          footerFlows = true;
+          // Dropping the footer often gives the overflowing section enough
+          // room to fit WHOLE (it only overflowed the footer-reserved budget)
+          // — keep it intact on page 1 in that case.
+          if (running + h <= usableFull) {
+            fits.push(c); running += h;
+            continue;
           }
         }
 
+        // Split the overflowing section: keep the rows that fit on page 1,
+        // move the rest (plus every later section) to the continuation. Works
+        // for both weapon tables and ability-row lists via splitSectionPartial.
+        const partial = splitSectionPartial(c, usableFull - running);
+        if (partial) {
+          partialFitHtml = partial.fitHtml;
+          overflowParts.push(partial.overflowHtml);
+          for (let j = i + 1; j < middle.length; j++) overflowParts.push(middle[j].outerHTML);
+          break;
+        }
+
+        // Couldn't split (single-item section taller than a page): bump this
+        // section and everything after it wholesale. The footer still flows
+        // (footerFlows is set above), so it rides the continuation rather than
+        // clipping/orphaning on page 1.
         for (let j = i; j < middle.length; j++) overflowParts.push(middle[j].outerHTML);
         break;
       }
@@ -1701,13 +1729,19 @@
       // card with all content on the continuation, which looks broken.
       if (fits.length === 0 && !partialFitHtml) return [card];
 
+      // If no real section content spilled, the keyword footer alone tipped the
+      // card over its budget (every section fit once its ~8mm was reclaimed).
+      // Flowing ONLY the footer to a continuation would orphan it on a near-empty
+      // page — the exact bad outcome we're avoiding — so instead keep the whole
+      // card intact with the footer pinned to page 1. The 8mm reserve + 2px
+      // slack normally absorbs a footer-only overflow without a visible clip.
+      if (overflowParts.length === 0) return [card];
+
       // Place the keyword footer: appended to the very end of the overflow (so
-      // it lands on the last spillover page) when its space was reclaimed,
-      // otherwise pinned to the bottom of page 1.
+      // it lands on the last spillover page) when real content spilled and its
+      // space was reclaimed, otherwise pinned to the bottom of page 1.
       if (footerEl && footerFlows) overflowParts.push(footerEl.outerHTML);
       const footerOnPage1 = (footerEl && !footerFlows) ? footerEl.outerHTML : '';
-
-      if (overflowParts.length === 0) return [card];
 
       // Build primary card: header + the sections that fit + (pinned footer).
       const fitsHTML = fits.map(n => n.outerHTML).join('') + (partialFitHtml || '');
@@ -2688,10 +2722,16 @@
                     : cat === 'rules' ? gatherRules()
                     :                   gatherStratagems();
         include[cat] = allOn ? new Set(items.map(x => x.id)) : new Set();
+        // Select-all clears this category's exclusions; clear-all excludes
+        // every currently-available id so the deselection persists.
+        if (allOn) excluded[cat] = new Set();
+        else       excluded[cat] = new Set(items.map(x => x.id));
+        saveExclusions();
         refreshSidebar();
       } else {
-        if (cb.checked) include[cat].add(id);
-        else            include[cat].delete(id);
+        if (cb.checked) { include[cat].add(id);    excluded[cat].delete(id); }
+        else            { include[cat].delete(id); excluded[cat].add(id);    }
+        saveExclusions();
         // Update the count chip on the active category tab without a full re-render.
         const tab = hostEl.querySelector(`.cards-cat-tab[data-cat="${cat}"] .cards-cat-count`);
         if (tab) {
@@ -3042,6 +3082,7 @@
     // the time bootstrap fires for already-signed-in users).
     loadPrefs();
     loadPresets();
+    loadExclusions();
     applyDynamicStyle();
     // Kick off saved-image load in the background so it's ready by the
     // time the user opens the Layout sub-tab.
@@ -3066,9 +3107,16 @@
     }
     // Re-load prefs when localStorage changes from another tab.
     window.addEventListener('storage', e => {
-      if (e.key === PREFS_KEY || e.key === PRESETS_KEY) {
-        if (e.key === PREFS_KEY)    loadPrefs();
-        if (e.key === PRESETS_KEY)  loadPresets();
+      if (e.key === PREFS_KEY || e.key === PRESETS_KEY || e.key === SELECTION_KEY) {
+        if (e.key === PREFS_KEY)      loadPrefs();
+        if (e.key === PRESETS_KEY)    loadPresets();
+        if (e.key === SELECTION_KEY) {
+          // Another tab changed the selection — reload exclusions and
+          // rebuild the include sets from them so the picker + preview match.
+          loadExclusions();
+          include = { units: null, rules: null, strats: null };
+          if (mounted) syncIncludeDefaults();
+        }
         applyDynamicStyle();
         if (mounted) {
           refreshSidebar();
@@ -3129,6 +3177,7 @@
       // Cards tab).
       loadPrefs();
       loadPresets();
+      loadExclusions();
       applyDynamicStyle();
       renderHost();
     });

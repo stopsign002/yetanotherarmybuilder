@@ -26,10 +26,30 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.07-9',
+    version:     '2026.07.07-10',
     lastUpdated: '2026-07-07T00:00:00Z',
     entries: [
       // ── 2026-07-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Data card exporter remembers which cards you picked',
+        description:
+          'The card exporter reset to "everything selected" whenever you left ' +
+          'and came back, or after a background refresh. Your selection now ' +
+          'persists (per device) across navigation, refreshes and reloads — ' +
+          'cards you deselect stay deselected, and newly added cards still ' +
+          'appear selected by default.',
+      },
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Dense unit cards paginate instead of clipping',
+        description:
+          'A unit with a lot of abilities (e.g. Illuminor Szeras) could clip ' +
+          'its keyword footer or strand it on a near-empty second card. Cards ' +
+          'now fill the first page with the stats, weapons and as many ability ' +
+          'rows as fit, then flow the rest — with the keywords at the bottom of ' +
+          'the last card.',
+      },
       {
         date: '2026-07-07', kind: 'fix',
         title: 'Stratagem cards: no more stray "&x20;" and bunched WHEN/TARGET/EFFECT',
