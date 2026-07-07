@@ -843,8 +843,20 @@
   // handled — a bare single `*` is left alone because 40k stat text uses it
   // (e.g. "D6+*", "2D6*").
   function descHtml(text) {
-    return esc(formatStructuredText(text || ''))
+    let html = esc(formatStructuredText(text || ''))
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Bold GW-style keywords the way the printed datacards do:
+    //   1. Bracketed weapon-ability tags — [DEVASTATING WOUNDS], [SUSTAINED
+    //      HITS 1], [ANTI-INFANTRY 4+] — WITH the surrounding brackets.
+    //   2. Runs of ALL-CAPS keyword words — ADEPTUS ASTARTES, MONSTER, VEHICLE,
+    //      WOLF PRIEST, SPACE WOLVES CHARACTER — including attached hyphen/
+    //      apostrophe (ANTI-TANK, T'AU).
+    // Runs after escaping (so only these become markup) and after the ** pass;
+    // an all-caps run already inside a <strong> just nests harmlessly.
+    html = html
+      .replace(/\[[A-Z][A-Z0-9 +'’\-]*\]/g, '<strong>$&</strong>')
+      .replace(/\b[A-Z][A-Z]+(?:[ '’\-][A-Z0-9]+)*\b/g, '<strong>$&</strong>');
+    return html;
   }
 
   // Normalise an invulnerable-save string to the conventional "4++" form,
@@ -1607,6 +1619,14 @@
           fits.push(c); running += h;
           continue;
         }
+
+        // Only weapon sections may trigger a page split. Card rule: abilities
+        // (and other prose sections) must NEVER cause spillover — if a non-weapon
+        // section is what overflows, keep the whole card intact rather than
+        // paginating. Splitting on an abilities overflow otherwise orphaned the
+        // keyword footer alone on a near-empty spillover page (Illuminor Szeras).
+        // Long weapon lists (a Redemptor's ranged profiles) still split as before.
+        if (!(c.classList && c.classList.contains('dcc-weapons'))) return [card];
 
         if (!footerFlows) {
           // First section that won't fit beside the pinned footer. Drop the

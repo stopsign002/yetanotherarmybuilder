@@ -26,10 +26,30 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.07-6',
+    version:     '2026.07.07-7',
     lastUpdated: '2026-07-07T00:00:00Z',
     entries: [
       // ── 2026-07-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-07', kind: 'change',
+        title: 'Keywords are bold on data cards',
+        description:
+          'On printable data cards, ALL-CAPS keywords in rules and ability text ' +
+          '(ADEPTUS ASTARTES, MONSTER, VEHICLE, WOLF PRIEST, …) are now bold, ' +
+          'and bracketed weapon abilities like [DEVASTATING WOUNDS] or ' +
+          '[SUSTAINED HITS 1] are bolded including their brackets — matching the ' +
+          'printed datasheet style.',
+      },
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Data cards stop pushing the keyword footer to a second page',
+        description:
+          'A dense unit (e.g. Illuminor Szeras) could push just its KEYWORDS ' +
+          'footer onto a near-empty second card while the abilities stayed on ' +
+          'the first. Card pagination now only splits on long weapon lists; ' +
+          'abilities never trigger a page split, so the keyword footer stays ' +
+          'put on the card.',
+      },
       {
         date: '2026-07-07', kind: 'fix',
         title: 'Space Wolves: Curse of the Wulfen added',
