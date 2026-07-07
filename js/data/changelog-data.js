@@ -26,10 +26,31 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.07-3',
+    version:     '2026.07.07-4',
     lastUpdated: '2026-07-07T00:00:00Z',
     entries: [
       // ── 2026-07-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Space Marine chapter army rules corrected',
+        description:
+          'Every Space Marine chapter now shows its army rule correctly. Blood ' +
+          'Angels and Deathwatch were showing a blank card (their "The Red ' +
+          'Thirst" / "Mission Tactics" are actually detachment rules, not army ' +
+          'rules) — they now show Oath of Moment, which is their real army ' +
+          'rule. Black Templars now show Templar Vows (which replaces Oath of ' +
+          'Moment), including all four selectable vows. (Space Wolves\' Curse ' +
+          'of the Wulfen is still being confirmed and will follow.)',
+      },
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Multi-profile weapons show their full name',
+        description:
+          'Weapons with two firing modes (e.g. Bjorn\'s "Helfrost cannon", ' +
+          'plasma "Standard/Supercharge", missile "Krak/Frag") were showing ' +
+          'only the mode label and dropping the weapon name. Each profile now ' +
+          'reads "Weapon name – Mode" so the weapon is identifiable.',
+      },
       {
         date: '2026-07-07', kind: 'fix',
         title: 'Data cards no longer show literal ** around bold text',

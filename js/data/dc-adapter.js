@@ -147,6 +147,58 @@
       "well.",
   };
 
+  // Space Marine chapter army rules. In 40kdc every SM chapter is emitted as its
+  // own (unit-less) faction, but their `faction_rule_id` is unreliable: most
+  // point at the shared `oath-of-moment`, while a few point at a MIScategorized
+  // *detachment* rule (blood-angels→the-red-thirst, deathwatch→mission-tactics)
+  // that carries no army-rule text and must NOT render as an army rule. So we
+  // normalize per chapter instead of trusting faction_rule_id:
+  //   - Default (Blood Angels, Dark Angels, Deathwatch, Imperial Fists, Iron
+  //     Hands, Raven Guard, Salamanders, Ultramarines, White Scars, Crimson
+  //     Fists): no distinct army rule — they share Oath of Moment.
+  //   - black-templars: Templar Vows REPLACES Oath of Moment (Heirs of Sigismund).
+  //   - space-wolves: Curse of the Wulfen IN ADDITION to Oath of Moment — exact
+  //     verbatim text pending confirmation, so not seeded yet (the chapter still
+  //     correctly shows Oath of Moment until then).
+  // SELF-HEALING: remove an override once 40kdc authors a real faction rule +
+  // text for that chapter and it flows through buildArmyRules normally.
+  const SM_CHAPTER_IDS = new Set(
+    Object.keys(FACTION_NAME).filter(
+      (fid) => fid !== 'adeptus-astartes' &&
+               /^Imperium - Adeptus Astartes - /.test(FACTION_NAME[fid])
+    )
+  );
+  // Black Templars' Templar Vows: choose one vow army-wide for the whole battle.
+  // Sourced from the official Warhammer Community article + New Recruit rules DB
+  // (2025 Codex Supplement wording); verify exact punctuation against the codex.
+  const TEMPLAR_VOWS_TEXT =
+    "ADEPTUS ASTARTES units from your army lose the Oath of Moment army rule (if " +
+    "they have it); it is replaced by the Templar Vows army rule. At the start of " +
+    "the first battle round, select one of the following vows to be active for the " +
+    "rest of the battle. While that vow is active, every ADEPTUS ASTARTES unit " +
+    "from your army has the associated ability:\n\n" +
+    "Suffer Not the Unclean to Live: This unit is eligible to declare a charge in " +
+    "a turn in which it Fell Back, and each time a model in this unit makes a " +
+    "Pile-in or Consolidation move, it does not need to end that move closer to " +
+    "the closest enemy model, provided it ends as close as possible to the closest " +
+    "enemy unit.\n\n" +
+    "Uphold the Honour of the Emperor: While this unit is within range of an " +
+    "objective marker you control, at the end of your Command phase that objective " +
+    "marker remains under your control until your opponent controls it by more " +
+    "than you do at the end of a phase (sticky objectives). In addition, this unit " +
+    "is eligible to perform actions in a turn in which it Advanced.\n\n" +
+    "Abhor the Witch, Destroy the Witch: Each time this unit declares a charge " +
+    "against one or more units that have the PSYKER keyword, you can re-roll the " +
+    "Charge roll. In addition, melee weapons equipped by models in this unit have " +
+    "the [PRECISION] ability while targeting PSYKER units.\n\n" +
+    "Accept Any Challenge, No Matter the Odds: Each time this unit makes a melee " +
+    "attack, if the Strength characteristic of that attack is less than or equal " +
+    "to the Toughness characteristic of the target, add 1 to the Wound roll.";
+  // faction_id → { mode: 'add' | 'replace', rules: [{ name, description }] }
+  const CHAPTER_ARMY_RULES = {
+    'black-templars': { mode: 'replace', rules: [{ name: 'Templar Vows', description: TEMPLAR_VOWS_TEXT }] },
+  };
+
   // ── stat formatting (BSData rendered M as 6", Sv as 3+, Ld as 6+) ──────────
   const sv  = (v) => (v == null ? '' : `${v}+`);
   const mv  = (v) => (v == null ? '' : `${v}"`);
@@ -166,7 +218,22 @@
       const melee = w.type === 'melee';
       w.profiles.forEach((p) => {
         const st = p.stats || {};
-        const name = p.name || w.name || '';
+        // Compose the row name. For MULTI-profile weapons, 40kdc stores each
+        // profile's `name` as the firing-MODE only ("Dispersed"/"Focused",
+        // "Standard"/"Supercharge", "Krak"/"Frag") and keeps the real weapon
+        // name one level up on `w.name`. The datasheet renderer prints each row
+        // flat with no weapon-level grouping header, so a bare mode label loses
+        // the weapon identity (Bjorn's "Helfrost cannon" showed as just
+        // "Dispersed"/"Focused"). Compose "Weapon – Mode" for these. Guards:
+        // only when the profile name differs from and isn't already contained in
+        // the weapon name, so single-profile weapons (where 40kdc sets
+        // profiles[0].name === w.name) don't become "Assault cannon – Assault
+        // cannon".
+        const pn = p.name || '', wn = w.name || '';
+        const pl = pn.toLowerCase(), wl = wn.toLowerCase();
+        const name = (w.profiles.length > 1 && pn && wn && pl !== wl && pl.indexOf(wl) === -1)
+          ? `${wn} – ${pn}`
+          : (pn || wn || '');
         const key = (melee ? 'm:' : 'r:') + name + JSON.stringify(st);
         if (seen.has(key)) return; seen.add(key);
         const row = {
@@ -395,6 +462,18 @@
   // App.GDC.mergeIntoFactions (40kdc-first, GDC fallback — same model as
   // stratagems). Without this the Army Rules subsection was always empty.
   function buildArmyRules(f) {
+    // SM chapters: normalize to Oath of Moment (+ optional distinct chapter
+    // rule), ignoring 40kdc's unreliable per-chapter faction_rule_id (see
+    // SM_CHAPTER_IDS / CHAPTER_ARMY_RULES above).
+    if (f && SM_CHAPTER_IDS.has(f.id)) {
+      const override = CHAPTER_ARMY_RULES[f.id];
+      if (override && override.mode === 'replace') return override.rules.map((r) => ({ ...r }));
+      const oath = { name: 'Oath of Moment',
+        description: textFor('oath-of-moment') || MISSING_ARMY_RULE_TEXT['oath-of-moment'] || '' };
+      const rules = [oath];
+      if (override && override.mode === 'add') override.rules.forEach((r) => rules.push({ ...r }));
+      return rules;
+    }
     const id = f && f.faction_rule_id;
     if (!id) return [];
     let name = '';
