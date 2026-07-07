@@ -387,9 +387,21 @@
   }
 
   // ── detachment: 40kdc detachment → yaab detachment {name, rules, enhancements}
-  function toDetachment(d, enhById) {
+  function toDetachment(d, enhById, parentDetRule) {
     const rule = d.detachment_rule_id;
-    const rules = rule ? [{ name: d.name, description: textFor(rule) }] : [];
+    const ruleText = rule ? textFor(rule) : '';
+    let rules = ruleText ? [{ name: d.name, description: ruleText }] : [];
+    // SM chapter borrow: a chapter's copy of a generic codex detachment (Gladius,
+    // Anvil Siege, …) has a NULL detachment_rule_id, but the Space Marines parent
+    // authored the text. Borrow it by folded name so the chapter shows the same
+    // detachment rule as vanilla Space Marines. Chapter-SPECIFIC detachments
+    // (Saga of the Great Wolf, etc.) aren't in the parent — the GDC overlay fills
+    // those (js/gdc.js). Fill-only; leaves non-chapter detachments untouched.
+    if (parentDetRule && rules.length === 0) {
+      const rid = parentDetRule.get(foldName(d.name));
+      const borrowed = rid ? textFor(rid) : '';
+      if (borrowed) rules = [{ name: d.name, description: borrowed }];
+    }
     const enhancements = (d.enhancement_ids || []).map((id) => {
       const e = enhById.get(id);
       if (!e) return null;
@@ -494,13 +506,24 @@
   function buildFactions() {
     const enhById = new Map();
     DC.enhancements.all.forEach((e) => enhById.set(e.id, e));
+    // Parent Space Marines detachment-rule map (folded detachment name →
+    // detachment_rule_id) for the SM chapter borrow in toDetachment. Only the
+    // parent detachments that actually have authored text are borrowable.
+    const smParentDetRule = new Map();
+    (DC.detachments.byFaction ? DC.detachments.byFaction('adeptus-astartes') : []).forEach((dv) => {
+      const d = dv.raw || dv;
+      if (d && d.detachment_rule_id && textFor(d.detachment_rule_id)) {
+        smParentDetRule.set(foldName(d.name), d.detachment_rule_id);
+      }
+    });
     const out = [];
     DC.factions.all.forEach((fv) => {
       const f = fv.raw || fv;
       const factionName = FACTION_NAME[f.id];
       if (!factionName) return; // unmapped (e.g. Titans) — skip in trial
       const units = (fv.units || []).map(toUnit);
-      const dets = DC.detachments.byFaction(f.id).map((d) => toDetachment(d, enhById));
+      const dets = DC.detachments.byFaction(f.id).map((d) =>
+        toDetachment(d, enhById, SM_CHAPTER_IDS.has(f.id) ? smParentDetRule : null));
       if (units.length === 0 && dets.length === 0) return;
       out.push({
         factionName,

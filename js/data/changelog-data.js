@@ -26,10 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.07-4',
+    version:     '2026.07.07-5',
     lastUpdated: '2026-07-07T00:00:00Z',
     entries: [
       // ── 2026-07-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Detachment rules now show for Space Marine chapters',
+        description:
+          'Space Marine chapter detachments (Space Wolves, Blood Angels, Dark ' +
+          'Angels, Black Templars, Deathwatch, etc.) had no detachment rule ' +
+          'text, so their rule cards were empty. Generic codex detachments now ' +
+          'inherit the Space Marines rule text, and chapter-specific ones (e.g. ' +
+          'Saga of the Great Wolf, Champions of Fenris, Inner Circle Task ' +
+          'Force, Black Spear Task Force, Liberator Assault Group) now pull ' +
+          'their full rules — including multi-part detachments — from the ' +
+          'rules overlay. A few other factions (Chaos Knights, World Eaters) ' +
+          'that were missing detachment text also benefit.',
+      },
       {
         date: '2026-07-07', kind: 'fix',
         title: 'Space Marine chapter army rules corrected',

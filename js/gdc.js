@@ -282,6 +282,32 @@
           }
         });
       }
+
+      // Detachment rule prose. 40kdc leaves many detachment_rule_ids null — every
+      // SM chapter detachment, plus a handful of other factions — so fill EMPTY
+      // detachment.rules from GDC's payload.rules.detachment (sibling of
+      // rules.army, identical chunk shape). A GDC detachment often has several
+      // named sub-rules → emit one { name, description } per sub-rule to match
+      // the GW datacard. Routed via detKeyToTargets (indexes this faction's AND
+      // the parent SM faction's detachments), so chapter-specific detachments
+      // land on the object App.getDetachmentFaction() surfaces. Fill-only: never
+      // overrides 40kdc-authored or adapter-borrowed text.
+      const gdcDet = (payload.rules && Array.isArray(payload.rules.detachment)) ? payload.rules.detachment : [];
+      gdcDet.forEach(entry => {
+        if (!entry || !entry.detachment) return;
+        const targets = detKeyToTargets.get(nameKey(entry.detachment));
+        if (!targets || targets.length === 0) return;
+        const built = (Array.isArray(entry.rules) ? entry.rules : []).map(sr => ({
+          name: (sr && sr.name) ? sr.name : entry.detachment,
+          description: composeRuleText(sr && sr.rules),
+          source: 'gdc',
+        })).filter(r => r.description);
+        if (built.length === 0) return;
+        targets.forEach(d => {
+          const cur = Array.isArray(d.rules) ? d.rules : [];
+          if (!cur.some(r => r && r.description)) d.rules = built.map(r => ({ ...r }));
+        });
+      });
     });
   }
 
