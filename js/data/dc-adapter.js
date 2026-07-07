@@ -81,6 +81,41 @@
     'nekrosor-ammentar': ['deep-strike'],
   };
 
+  // Hand-patches for NON-core unit abilities (with prose) the upstream 40kdc
+  // dataset fails to link on a unit's datasheet. Keyed by unit id → ability ids
+  // to inject. Same SELF-HEALING contract as MISSING_CORE_ABILITIES: injection
+  // is skipped if the unit already lists an ability of that name, so each entry
+  // no-ops automatically once 40kdc links it and the bundle is refreshed (at
+  // which point the entry can be deleted). The ability text comes from the
+  // abilities-index store (textFor), so it only helps for ids that already have
+  // authored prose there. Keep each line tagged with the upstream gap.
+  //   eradicator-squad-with-heavy-bolters / total-obliteration:
+  //     the Heavy Bolters variant is the same datasheet as `eradicator-squad`
+  //     (which correctly carries "Total Obliteration"), but the HB variant's
+  //     datasheet in 40kdc-data links ZERO abilities — an upstream data gap.
+  const MISSING_UNIT_ABILITIES = {
+    'eradicator-squad-with-heavy-bolters': ['total-obliteration'],
+  };
+
+  // Hand-patched army-rule prose the upstream 40kdc dataset names (via a
+  // faction's faction_rule_id) but leaves without text — and which the GDC
+  // overlay doesn't fill either — so the Army Rules card would render the name
+  // with no rules text. Keyed by faction_rule_id → canonical current-edition
+  // prose. SELF-HEALING: buildArmyRules only falls back to this when
+  // textFor(id) is empty, so each entry no-ops automatically once 40kdc (or
+  // GDC) authors the text, at which point the entry can be deleted.
+  //   oath-of-moment: Space Marines' army rule; upstream 40kdc-data has no
+  //     ability-text entry for it and GDC carries no SM army-rule prose.
+  const MISSING_ARMY_RULE_TEXT = {
+    'oath-of-moment':
+      "At the start of your Command phase, select one unit from your opponent's " +
+      "army. Until the start of your next Command phase, each time a model from " +
+      "your army with this ability makes an attack that targets that enemy unit, " +
+      "you can re-roll the Hit roll and you can re-roll the Wound roll. You can " +
+      "only select one enemy unit per turn with the Oath of Moment ability, no " +
+      "matter how many units in your army have it.",
+  };
+
   // ── stat formatting (BSData rendered M as 6", Sv as 3+, Ld as 6+) ──────────
   const sv  = (v) => (v == null ? '' : `${v}+`);
   const mv  = (v) => (v == null ? '' : `${v}"`);
@@ -172,6 +207,19 @@
         if (have.has(name.toLowerCase())) return;   // already present → no-op (self-heals post-upstream-fix)
         have.add(name.toLowerCase());
         abilities.push({ name, description: textFor(aid), isCore: true });
+      });
+    }
+    // Inject any hand-patched NON-core unit abilities the dataset omits here.
+    const unitPatchIds = MISSING_UNIT_ABILITIES[u.id];
+    if (unitPatchIds) {
+      const have = new Set(abilities.map((a) => a.name.toLowerCase()));
+      unitPatchIds.forEach((aid) => {
+        let av = null;
+        try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
+        const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
+        if (have.has(name.toLowerCase())) return;   // already present → no-op (self-heals post-upstream-fix)
+        have.add(name.toLowerCase());
+        abilities.push({ name, description: textFor(aid), isCore: false });
       });
     }
     return {
@@ -314,7 +362,12 @@
       name = (av && (av.name || (av.raw && av.raw.name))) || '';
     } catch (_) { /* ambiguous/missing — fall back to the id */ }
     if (!name) name = titleCase(String(id).replace(/-/g, ' '));
-    return [{ name, description: textFor(id) }];
+    // Prefer the authored ability-text; fall back to a hand-patched string only
+    // when the store has none (self-heals once upstream/GDC authors the prose).
+    // GDC's mergeIntoFactions only fills an EMPTY description, so a non-empty
+    // seed here is not clobbered by the runtime overlay.
+    const description = textFor(id) || MISSING_ARMY_RULE_TEXT[id] || '';
+    return [{ name, description }];
   }
 
   // ── build all yaab faction objects from 40kdc ──────────────────────────────

@@ -26,9 +26,38 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.06.26-6',
-    lastUpdated: '2026-06-26T16:00:00Z',
+    version:     '2026.07.07-1',
+    lastUpdated: '2026-07-07T00:00:00Z',
     entries: [
+      // ── 2026-07-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Chapters no longer show every Space Marine unit',
+        description:
+          'Selecting a Space Marine chapter (Space Wolves, Blood Angels, Dark ' +
+          'Angels, Black Templars, etc.) was showing the entire Space Marines ' +
+          'roster — including other chapters\' unique units like Death Company, ' +
+          'Deathwing Knights and Sanguinary Guard. Each chapter now shows the ' +
+          'generic Codex units it can bring plus its OWN chapter-specific ' +
+          'units, and hides the units locked to other chapters.',
+      },
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Oath of Moment now shows its rules text',
+        description:
+          'The Space Marines army rule card listed "Oath of Moment" by name ' +
+          'but had no description. The full rules text is now shown on the ' +
+          'Army Rules card.',
+      },
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Eradicator Squad with Heavy Bolters shows its ability',
+        description:
+          'The Heavy Bolters variant of the Eradicator Squad was missing its ' +
+          'Total Obliteration ability (the datasheet\'s re-roll against ' +
+          'Monsters and Vehicles). It now appears, matching the standard ' +
+          'Eradicator Squad.',
+      },
       // ── 2026-06-26 ──────────────────────────────────────────────────────
       {
         date: '2026-06-26', kind: 'fix',

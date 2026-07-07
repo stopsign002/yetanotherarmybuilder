@@ -58,6 +58,36 @@
     'Imperium - Adeptus Astartes - White Scars':     'Imperium - Adeptus Astartes - Space Marines',
   };
 
+  // Space Marine chapter faction_keywords, exactly as they appear folded into
+  // unit.keywords by dc-adapter.js (from 40kdc faction_keywords). In the 40kdc
+  // 11e dataset EVERY Space Marine unit — generic codex AND every chapter's
+  // unique units — lives under the single `Imperium - Adeptus Astartes -
+  // Space Marines` faction; the individual chapter factions have zero units of
+  // their own. The ONLY thing that delineates a chapter's units is these
+  // keywords: chapter-specific units (Grey Hunters, Death Company Marines,
+  // Deathwing Knights, Sword Brethren…) carry their chapter as a keyword;
+  // generic codex units (Intercessor Squad, Tactical Squad…) do not.
+  // Used by js/app/sm-chapter-filter.js to hide OTHER chapters' units when a
+  // chapter is selected. Verified complete against the 40kdc adapter output on
+  // 2026-07-07 (enumerated every chapter faction_keyword under adeptus-astartes
+  // — these 11 are the full set). Note: unit-org keywords like "Deathwing",
+  // "Ravenwing", "Death Company", "Sanguinary Guard" are NOT chapter keys —
+  // they always co-occur with their parent chapter's keyword, so they need no
+  // separate handling.
+  App.SM_CHAPTER_KEYWORDS = new Set([
+    'Blood Angels',
+    'Dark Angels',
+    'Space Wolves',
+    'Black Templars',
+    'Deathwatch',
+    'Imperial Fists',
+    'Iron Hands',
+    'Raven Guard',
+    'Salamanders',
+    'Ultramarines',
+    'White Scars',
+  ]);
+
   // Chapter-exclusive detachment tokens. The BSData Space Marines catalogue
   // bundles every chapter-specific detachment (Sons of Sanguinius, Inner
   // Circle Task Force, Champions of Russ, Righteous Crusaders, Black Spear
