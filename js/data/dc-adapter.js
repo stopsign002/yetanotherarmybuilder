@@ -157,9 +157,7 @@
   //     Hands, Raven Guard, Salamanders, Ultramarines, White Scars, Crimson
   //     Fists): no distinct army rule — they share Oath of Moment.
   //   - black-templars: Templar Vows REPLACES Oath of Moment (Heirs of Sigismund).
-  //   - space-wolves: Curse of the Wulfen IN ADDITION to Oath of Moment — exact
-  //     verbatim text pending confirmation, so not seeded yet (the chapter still
-  //     correctly shows Oath of Moment until then).
+  //   - space-wolves: Curse of the Wulfen IN ADDITION to Oath of Moment.
   // SELF-HEALING: remove an override once 40kdc authors a real faction rule +
   // text for that chapter and it flows through buildArmyRules normally.
   const SM_CHAPTER_IDS = new Set(
@@ -194,9 +192,17 @@
     "Accept Any Challenge, No Matter the Odds: Each time this unit makes a melee " +
     "attack, if the Strength characteristic of that attack is less than or equal " +
     "to the Toughness characteristic of the target, add 1 to the Wound roll.";
+  // Space Wolves' Curse of the Wulfen (verbatim from the printed datacard).
+  const CURSE_OF_THE_WULFEN_TEXT =
+    'While this unit is within 6" of one or more friendly SPACE WOLVES CHARACTER ' +
+    'models (excluding WULFEN models) or within 12" of one or more friendly WOLF ' +
+    'PRIEST models, if it is not Battle-shocked, add 1 to the Objective Control ' +
+    'characteristic of INFANTRY models in it and add 3 to the Objective Control ' +
+    'characteristic of VEHICLE models in it.';
   // faction_id → { mode: 'add' | 'replace', rules: [{ name, description }] }
   const CHAPTER_ARMY_RULES = {
     'black-templars': { mode: 'replace', rules: [{ name: 'Templar Vows', description: TEMPLAR_VOWS_TEXT }] },
+    'space-wolves':   { mode: 'add',     rules: [{ name: 'Curse of the Wulfen', description: CURSE_OF_THE_WULFEN_TEXT }] },
   };
 
   // ── stat formatting (BSData rendered M as 6", Sv as 3+, Ld as 6+) ──────────

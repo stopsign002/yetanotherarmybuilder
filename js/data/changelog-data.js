@@ -26,10 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.07-5',
+    version:     '2026.07.07-6',
     lastUpdated: '2026-07-07T00:00:00Z',
     entries: [
       // ── 2026-07-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Space Wolves: Curse of the Wulfen added',
+        description:
+          'Space Wolves now show their Curse of the Wulfen army rule alongside ' +
+          'Oath of Moment (+1 Objective Control for Infantry / +3 for Vehicles ' +
+          'while near a Space Wolves Character or Wolf Priest and not ' +
+          'Battle-shocked).',
+      },
       {
         date: '2026-07-07', kind: 'fix',
         title: 'Detachment rules now show for Space Marine chapters',
