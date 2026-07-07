@@ -801,14 +801,32 @@
   // Master of Battle: … Supreme Strategist: …"). Inserts \n where
   // needed and lets `white-space: pre-line / pre-wrap` in CSS render
   // the breaks.
+  // Decode HTML entities so encoded characters in the source rules text render
+  // as real characters (and real whitespace), instead of leaking through as
+  // literal "&#x20;" / "&nbsp;" strings. GDC / dataslate text carries encoded
+  // spaces (&#x20;), non-breaking spaces and the odd &amp;/&lt; — left encoded
+  // they printed verbatim AND, being non-whitespace, blocked the WHEN/TARGET/
+  // EFFECT line-break detection so those blurbs bunched together. Runs BEFORE
+  // structuring + esc(); esc() then re-escapes any real specials safely.
+  function decodeEntities(s) {
+    return String(s == null ? '' : s)
+      .replace(/&#x([0-9a-fA-F]+);/gi, (_, h) => { const n = parseInt(h, 16); return (n >= 0 && n <= 0x10FFFF) ? String.fromCodePoint(n) : ' '; })
+      .replace(/&#(\d+);/g, (_, d) => { const n = parseInt(d, 10); return (n >= 0 && n <= 0x10FFFF) ? String.fromCodePoint(n) : ' '; })
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&quot;/gi, '"')
+      .replace(/&apos;/gi, "'");
+  }
   function formatStructuredText(text) {
     if (!text) return '';
-    let out = String(text);
+    let out = decodeEntities(String(text));
     // Bullet-style list markers → new line + bullet.
     out = out.replace(/\s*([•◆◾●])\s+/g, '\n$1 ');
-    // GW stratagem sub-headers — only when at a word boundary so we
-    // don't break sentences that happen to contain the word.
-    out = out.replace(/\s*\b(WHEN|TARGET|EFFECT|RESTRICTIONS?|DURATION)\b\s*:\s*/g, '\n$1: ');
+    // GW stratagem sub-headers (WHEN/TARGET/EFFECT/…) each start after a blank
+    // line so the blurbs read as separate stanzas instead of bunching together.
+    out = out.replace(/\s*\b(WHEN|TARGET|EFFECT|RESTRICTIONS?|DURATION)\b\s*:\s*/g, '\n\n$1: ');
     // Sub-ability heading pattern used by primarch / hero abilities:
     //   "...prev sentence.  Foo Bar (Aura): ..." or
     //   "...abilities.'  Primarch of the XIII (Aura): ..."
