@@ -498,6 +498,29 @@
     } catch (_) {}
   }
 
+  // ── Manual per-card section spill (page-2 overrides) ─────────────────────
+  // The user can click a unit card in the preview and hand-pick which whole
+  // sections spill to a continuation card. We persist those hand-picks per
+  // unit-card id. The AUTO splitter still computes a starting guess; an
+  // override — when present — wins verbatim (manual beats auto). Device-local
+  // like yaab_cards_selection (NOT in sync.js's SYNCED_BAG_KEYS): a hand-tuned
+  // split is tied to one print run, not a cross-device look.
+  const SPILL_KEY = 'yaab_cards_spill';
+  // { [unitCardId]: [secKey, ...] } — the exact set of section keys the user
+  // wants on page 2 for that card. Absent id ⇒ no override ⇒ use auto guess.
+  let spillOverrides = {};
+
+  function loadSpillOverrides() {
+    try {
+      const raw = localStorage.getItem(SPILL_KEY);
+      const p = raw ? JSON.parse(raw) : null;
+      spillOverrides = (p && typeof p === 'object') ? p : {};
+    } catch (_) { spillOverrides = {}; }
+  }
+  function saveSpillOverrides() {
+    try { localStorage.setItem(SPILL_KEY, JSON.stringify(spillOverrides)); } catch (_) {}
+  }
+
   // ── Display toggles ──────────────────────────────────────────────────────
   // Every section the user can hide. Grouped by card kind so the Display
   // sub-tab can render them under headings.
@@ -1042,8 +1065,10 @@
         : '';
       return statRow + kwRow;
     }).join('');
+    const secKey = type === 'ranged' ? 'weapons-ranged' : 'weapons-melee';
+    const secLbl = type === 'ranged' ? 'Ranged Weapons' : 'Melee Weapons';
     return `
-      <div class="dcc-section dcc-weapons dcc-weapons-${type}">
+      <div class="dcc-section dcc-weapons dcc-weapons-${type}" data-sec="${secKey}" data-sec-label="${secLbl}">
         <div class="dcc-section-head">
           <span class="dcc-section-label">${label}</span>
           <span class="dcc-section-cols">${COLS.map(c => `<span>${c === 'Range' ? 'R' : c}</span>`).join('')}</span>
@@ -1121,7 +1146,7 @@
     }
 
     if (lines.length === 0) return '';
-    return `<div class="dcc-section dcc-wargear">
+    return `<div class="dcc-section dcc-wargear" data-sec="wargear" data-sec-label="Wargear">
       <div class="dcc-section-head"><span class="dcc-section-label">WARGEAR</span></div>
       <div class="dcc-wargear-body">${lines.join('')}</div>
     </div>`;
@@ -1201,7 +1226,7 @@
         });
       });
       if (!body) return '';
-      return `<div class="dcc-section dcc-abilities">
+      return `<div class="dcc-section dcc-abilities" data-sec="abilities" data-sec-label="Abilities">
         <div class="dcc-section-head"><span class="dcc-section-label">Abilities</span></div>
         <div class="dcc-abilities-body">${body}</div>
       </div>`;
@@ -1215,7 +1240,7 @@
     // because they have typeName="Abilities" and explain the choose
     // mechanic for the special section below.
     if (coreVisible || named.length > 0) {
-      html += `<div class="dcc-section dcc-abilities">
+      html += `<div class="dcc-section dcc-abilities" data-sec="abilities" data-sec-label="Abilities">
         <div class="dcc-section-head"><span class="dcc-section-label">ABILITIES</span></div>
         <div class="dcc-abilities-body">`;
       if (coreVisible) {
@@ -1234,7 +1259,7 @@
     // ABILITIES" for Silent King, etc. Same gold-leaf section head
     // styling for all of them so they read as "pick from N" at a glance.
     subGroups.forEach((rows, label) => {
-      html += `<div class="dcc-section dcc-abilities dcc-abilities-primarch">
+      html += `<div class="dcc-section dcc-abilities dcc-abilities-primarch" data-sec="abilities" data-sec-label="${esc(label)}">
         <div class="dcc-section-head dcc-section-head-primarch"><span class="dcc-section-label">${esc(label)}</span></div>
         <div class="dcc-abilities-body">`;
       rows.forEach(a => {
@@ -1253,7 +1278,7 @@
   function renderTransportBlock(unit) {
     if (!unit || !unit.transportCapacity) return '';
     if (display.abilities === false) return '';
-    return `<div class="dcc-section dcc-abilities dcc-abilities-transport">
+    return `<div class="dcc-section dcc-abilities dcc-abilities-transport" data-sec="transport" data-sec-label="Transport">
       <div class="dcc-section-head"><span class="dcc-section-label">TRANSPORT</span></div>
       <div class="dcc-abilities-body">
         <div class="dcc-ability-row">${descHtml(unit.transportCapacity)}</div>
@@ -1283,7 +1308,7 @@
 
     const showEnh = display.enhancements && Array.isArray(entry.enhancements) && entry.enhancements.length > 0;
     const enhancementHtml = showEnh
-      ? `<div class="dcc-section dcc-enhancements">
+      ? `<div class="dcc-section dcc-enhancements" data-sec="enhancements" data-sec-label="Enhancement">
           <div class="dcc-section-head"><span class="dcc-section-label">ENHANCEMENT</span></div>
           <div class="dcc-abilities-body">${
             entry.enhancements.map(e => `<div class="dcc-ability-row"><strong>${esc(e.name)}${e.pts ? ' (+' + e.pts + ')' : ''}:</strong> ${descHtml(e.description)}</div>`).join('')
@@ -1297,7 +1322,7 @@
     const showUKw = display.unitKw && allKw.length > 0;
     const fkwFooter = showFKw ? `<div class="dcc-keywords dcc-faction-kw"><strong>FACTION KEYWORDS:</strong> ${esc(factionKw.join(', '))}</div>` : '';
     const kwFooter = showUKw ? `<div class="dcc-keywords"><strong>KEYWORDS:</strong> ${esc(allKw.join(', '))}</div>` : '';
-    const footerHtml = (showFKw || showUKw) ? `<footer class="dcc-foot">${fkwFooter}${kwFooter}</footer>` : '';
+    const footerHtml = (showFKw || showUKw) ? `<footer class="dcc-foot" data-sec="keywords" data-sec-label="Keywords">${fkwFooter}${kwFooter}</footer>` : '';
 
     const role = display.role ? `<span class="dcc-role">${esc(unit.type || '')}</span>` : '';
     const ptsHtml = (display.points && ptsLabel != null) ? `<span class="dcc-pts">${esc(String(ptsLabel))} pts</span>` : '';
@@ -1388,7 +1413,7 @@
         </div>
         ${showSubLine ? `<div class="dcc-sub-line">${role}</div>` : ''}
       </header>
-      ${statsHtml}
+      ${statsHtml ? `<div class="dcc-stats-group" data-sec="stats" data-sec-label="Stat Block">${statsHtml}</div>` : ''}
       ${display.ranged ? renderWeaponsBlock(ranged, 'ranged') : ''}
       ${display.melee  ? renderWeaponsBlock(melee, 'melee')   : ''}
       ${renderAbilitiesBlock(unit)}
@@ -1450,7 +1475,7 @@
   function selectedCards() {
     const out = [];
     gatherUnits().forEach(u => {
-      if (include.units && include.units.has(u.id)) out.push({ kind: 'unit', html: renderUnitCard(u.entry), label: u.label });
+      if (include.units && include.units.has(u.id)) out.push({ kind: 'unit', id: u.id, html: renderUnitCard(u.entry), label: u.label });
     });
     gatherRules().forEach(r => {
       if (include.rules && include.rules.has(r.id)) out.push({ kind: 'rule', html: renderRuleCard(r), label: r.label });
@@ -1499,6 +1524,13 @@
       let cls = 'dcc-card dcc-card-' + card.kind + ' ' + templateClass();
       if (card.isContinuation && card.contClasses) cls += ' ' + card.contClasses;
       cardEl.className = cls;
+      // Only the FRONT of a unit card is clickable-for-spill; continuations
+      // aren't (the panel edits the primary). Carry the unit id so the
+      // preview click handler can resolve which override to edit.
+      if (card.kind === 'unit' && card.id && !card.isContinuation) {
+        cardEl.dataset.cardId = card.id;
+        cardEl.classList.add('dcc-card-spillable');
+      }
       cardEl.innerHTML = card.html;
       pageEl.appendChild(cardEl);
     });
@@ -1594,6 +1626,148 @@
       h: (layout.h - 2 * pageMargin() - (layout.rows - 1) * cardGutter()) / layout.rows,
     };
   }
+
+  // ── Whole-section spill machinery ────────────────────────────────────────
+  // Every spillable node (a `.dcc-section` or the `<footer class="dcc-foot">`)
+  // is tagged at render time with a base `data-sec` key + human `data-sec-label`.
+  // A card can carry several sections that share a base key (two ability blocks:
+  // ABILITIES + a PRIMARCH group). uniquifySecKeys() walks the parsed DOM and
+  // suffixes repeats (`abilities`, `abilities-2`, …) so every section is
+  // uniquely addressable while the FIRST of each base keeps its clean key.
+  // Idempotent so it's safe to call on already-uniquified DOM.
+  function uniquifySecKeys(rootEl) {
+    const seen = Object.create(null);
+    rootEl.querySelectorAll('[data-sec]').forEach(el => {
+      const base = el.getAttribute('data-sec');
+      if (!base) return;
+      // Skip nodes already suffixed on a prior pass (they contain their own
+      // uniqueness); only re-key the base occurrences.
+      if (el.dataset.secUniq === '1') { seen[el.getAttribute('data-sec')] = true; return; }
+      let key = base, n = 1;
+      while (seen[key]) { n++; key = base + '-' + n; }
+      seen[key] = true;
+      el.setAttribute('data-sec', key);
+      el.dataset.secUniq = '1';
+    });
+  }
+
+  // Parse a unit card's HTML and return its ordered spillable sections as
+  // { key, label } — the panel's row list and the auto-guess input. Header is
+  // never spillable and is excluded. Keys are uniquified (see above).
+  function sectionsOf(cardHtml) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = cardHtml;
+    uniquifySecKeys(tmp);
+    return Array.from(tmp.querySelectorAll('[data-sec]')).map(el => ({
+      key: el.getAttribute('data-sec'),
+      label: el.getAttribute('data-sec-label') || el.getAttribute('data-sec'),
+    }));
+  }
+
+  // THE single split mechanism used by BOTH auto and manual paths. Given a
+  // card's full HTML and a Set of section keys to move to page 2, returns
+  // { frontHtml, contHtml } — or null when the set is empty (no split needed).
+  // The header (`.dcc-head`) is cloned onto BOTH cards (continuation header
+  // gets the `dcc-head-cont` class). Every tagged node whose key is in
+  // spillKeySet moves to the continuation IN ORIGINAL DOM ORDER; everything
+  // else stays on the front. Whole sections only — never splits within a node.
+  function splitUnitCardBySections(cardHtml, spillKeySet) {
+    if (!spillKeySet || spillKeySet.size === 0) return null;
+    const root = document.createElement('div');
+    root.innerHTML = cardHtml;
+    uniquifySecKeys(root);
+
+    const header = root.querySelector('.dcc-head');
+    const headHtml = header ? header.outerHTML : '';
+    const contHead = header
+      ? header.outerHTML.replace('class="dcc-head"', 'class="dcc-head dcc-head-cont"')
+      : '';
+
+    const frontParts = [];
+    const contParts = [];
+    let spilledAny = false;
+    // Walk the card's top-level children in order. The header goes to front
+    // (already captured). Tagged nodes route by their key; a stray untagged
+    // node (shouldn't happen for unit cards) stays on the front.
+    Array.from(root.children).forEach(node => {
+      if (node === header) return;
+      const key = node.getAttribute && node.getAttribute('data-sec');
+      if (key && spillKeySet.has(key)) { contParts.push(node.outerHTML); spilledAny = true; }
+      else { frontParts.push(node.outerHTML); }
+    });
+    if (!spilledAny) return null;
+
+    return {
+      frontHtml: headHtml + frontParts.join(''),
+      contHtml: contHead + contParts.join(''),
+    };
+  }
+
+  // Compute the AUTO starting-guess spill set for one already-measured card by
+  // WHOLE-SECTION measurement. `cardEl` is the offscreen measured card element
+  // (children uniquified). Returns a Set of section keys to move to page 2 —
+  // empty when the card fits. Rules encoded:
+  //   • Walk middle sections in order, reserving the footer's height.
+  //   • Keep whole sections on the front while they fit.
+  //   • When a STRUCTURAL section (stats / weapons) no longer fits but WOULD
+  //     fit once the footer's reserved space is freed, spill `keywords` (the
+  //     footer yields its space) and keep that structural section on the front.
+  //   • Otherwise (abilities/other prose, or it still doesn't fit) spill THAT
+  //     section and every LATER section as whole units. Abilities never claim
+  //     the footer's space.
+  function autoSpillKeysFor(cardEl) {
+    const empty = new Set();
+    if (cardEl.scrollHeight <= cardEl.clientHeight + 2) return empty;
+
+    const children = Array.from(cardEl.children);
+    if (children.length < 2) return empty;
+    const header = children[0];
+    if (!(header.classList && header.classList.contains('dcc-head'))) return empty;
+
+    const last = children[children.length - 1];
+    const footerEl = (last.classList && last.classList.contains('dcc-foot')) ? last : null;
+    const footerKey = footerEl ? footerEl.getAttribute('data-sec') : null;
+    const middle = children.slice(1, footerEl ? -1 : undefined)
+      .filter(c => c.getAttribute && c.getAttribute('data-sec'));
+    if (middle.length === 0) return empty;
+
+    const STRUCTURAL = /^(stats|weapons-)/;
+    const cardClient = cardEl.clientHeight;
+    const headerH = header.offsetHeight;
+    const footerH = footerEl ? footerEl.offsetHeight : 0;
+    const reservePx = mmToPx(8);                  // padding + per-section gaps
+    const usableFull = cardClient - headerH - reservePx;   // footer flowed
+    const usable = usableFull - footerH;                   // footer pinned
+
+    const spill = new Set();
+    let footerFlows = false;
+    let running = 0;
+    for (let i = 0; i < middle.length; i++) {
+      const c = middle[i];
+      const h = c.offsetHeight + 4;               // ~1mm inter-section gap
+      const budget = footerFlows ? usableFull : usable;
+      if (running + h <= budget) { running += h; continue; }
+
+      const key = c.getAttribute('data-sec');
+      const isStructural = STRUCTURAL.test(key);
+      // A structural section that only overflowed the footer-reserved budget:
+      // hand the footer its ~8mm and keep the structural block on page 1.
+      if (isStructural && !footerFlows && running + h <= usableFull) {
+        footerFlows = true;
+        if (footerKey) spill.add(footerKey);
+        running += h;
+        continue;
+      }
+      // Otherwise this section + every later section spill as whole units.
+      for (let j = i; j < middle.length; j++) {
+        const k = middle[j].getAttribute('data-sec');
+        if (k) spill.add(k);
+      }
+      break;
+    }
+    return spill;
+  }
+
   function splitOverflowingUnitCards(unitCards, layout) {
     if (unitCards.length === 0) return unitCards;
     const { w: cardW, h: cardH } = cardSizeFor(layout);
@@ -1614,168 +1788,78 @@
       document.body.removeChild(stage);
     }
   }
+  // Measure one unit card offscreen and split it by WHOLE SECTIONS. The set of
+  // sections that move to page 2 is: the user's manual override for this card
+  // if one exists (manual always wins), else the auto starting-guess computed
+  // by whole-section measurement (autoSpillKeysFor). Never splits within a
+  // section. Continuations that are still too tall recurse (fullCard mode,
+  // depth-capped) re-running the auto guess on the tail.
   function measureAndMaybeSplit(card, cardW, cardH, stage, backsOn, depth) {
     depth = depth || 0;
+
+    // Resolve the effective spill set. A top-level (depth 0) card can carry a
+    // manual override keyed by its unit id; deeper recursion tails always use
+    // the auto guess (there's nothing for the user to override on a tail).
+    let spillKeys;
+    if (depth === 0 && card.id && Array.isArray(spillOverrides[card.id])) {
+      spillKeys = new Set(spillOverrides[card.id]);
+    } else {
+      spillKeys = autoSpillKeysForCard(card, cardW, cardH, stage);
+    }
+    if (!spillKeys || spillKeys.size === 0) return [card];
+
+    const split = splitUnitCardBySections(card.html, spillKeys);
+    if (!split) return [card];   // keys matched nothing (stale override) — leave whole
+
+    // In 'fullCard' mode each continuation is its own front-grid card, so a
+    // dense unit can cascade across as many cards as it needs: recurse on the
+    // continuation and split it again whenever it's still too tall. The
+    // recursion terminates — each level either shrinks the tail or returns it
+    // untouched, backed by a depth cap. Duplex 'continuation' mode rides on a
+    // single card back, so it stays capped at one continuation.
+    if (spilloverMode === 'fullCard' && depth < 12) {
+      const primary = Object.assign({}, card, { html: split.frontHtml });
+      const contCard = Object.assign({}, card, {
+        html: split.contHtml,
+        id: null,                 // tail carries no override identity
+        isContinuation: true,
+        contClasses: '',
+        label: (card.label || 'Card') + ' (cont.)',
+      });
+      const tail = measureAndMaybeSplit(contCard, cardW, cardH, stage, backsOn, depth + 1);
+      return [primary].concat(tail);
+    }
+
+    const { contHtml, contClasses } = buildContinuationChrome(split.contHtml, backsOn);
+    return emitSplit(card, split.frontHtml, contHtml, contClasses, 'Unit');
+  }
+
+  // Measure a card offscreen at its target size and return the auto spill set.
+  // Wraps autoSpillKeysFor with the offscreen-stage plumbing so it can be
+  // called both from the split path and from the panel (to seed checkboxes).
+  function autoSpillKeysForCard(card, cardW, cardH, stage) {
+    const ownStage = !stage;
+    if (ownStage) {
+      stage = document.createElement('div');
+      stage.style.cssText =
+        'position:fixed;top:-99999px;left:0;width:auto;height:auto;visibility:hidden;z-index:-9999;pointer-events:none;';
+      stage.className = 'dcc-measure-stage';
+      document.body.appendChild(stage);
+    }
     const host = document.createElement('div');
     host.style.cssText = 'width:' + cardW + 'mm; height:' + cardH + 'mm;';
     const cardEl = document.createElement('article');
     cardEl.className = 'dcc-card dcc-card-unit ' + templateClass();
     cardEl.style.cssText = 'width:100%;height:100%;box-sizing:border-box;';
     cardEl.innerHTML = card.html;
+    uniquifySecKeys(cardEl);
     host.appendChild(cardEl);
     stage.appendChild(host);
     try {
-      // Sub-pixel slack: browsers can round mm-derived heights by ±1px.
-      if (cardEl.scrollHeight <= cardEl.clientHeight + 2) return [card];
-
-      const children = Array.from(cardEl.children);
-      if (children.length < 2) return [card]; // can't split
-
-      const header = children[0];
-      const isHeaderEl = header && header.classList && header.classList.contains('dcc-head');
-      if (!isHeaderEl) return [card];
-
-      // The keyword footer (FACTION KEYWORDS / KEYWORDS) normally stays pinned
-      // to the bottom of page 1, so its height is reserved there and ordinary
-      // spillover keeps it on the first page. It only flows to the spillover
-      // page in one case: when a single section is so tall it can't fit whole
-      // on a page at all and must be split mid-content (e.g. a Redemptor
-      // Dreadnought's ranged-weapon list). There, dropping the footer hands
-      // its ~8mm back to the weapon rows so more of them stay on page 1.
-      const last = children[children.length - 1];
-      const footerEl = (last && last.classList && last.classList.contains('dcc-foot')) ? last : null;
-      const middle = children.slice(1, footerEl ? -1 : undefined);
-      if (middle.length === 0) return [card];
-
-      const cardClient = cardEl.clientHeight;
-      const headerH = header.offsetHeight;
-      const footerH = footerEl ? footerEl.offsetHeight : 0;
-      // Padding + per-section margins/gap eat ~6mm at default; budget
-      // generously so the visible card never quite fills to its edge.
-      const reserveMm = 8;
-      const reservePx = mmToPx(reserveMm);
-      const usableFull = cardClient - headerH - reservePx;   // page-1 space if the footer flows
-      const usable = usableFull - footerH;                   // page-1 space with the footer pinned
-
-      // Walk sections in order, fitting whole sections until one overflows.
-      // The overflowing section (be it a long weapon list like a Redemptor's
-      // ranged profiles OR a dense ABILITIES block like Illuminor Szeras) is
-      // SPLIT mid-content: page 1 keeps the header + whole fitting sections +
-      // as many rows of the overflowing section as fit, and the remaining rows
-      // flow to the continuation. Splitting the section always lets the keyword
-      // footer flow to the continuation too, so its ~8mm goes to the rows and,
-      // crucially, the footer never gets orphaned alone on a near-empty page or
-      // clipped off the bottom.
-      //
-      // Splitting mid-content is the default whenever a section overflows —
-      // even with the "Split sections mid-content" option OFF — because the
-      // only alternatives (bump the whole section wholesale with the footer
-      // pinned, or render the card whole and clip) both regress to the bad
-      // outcomes we're fixing. The one case we can't split is a section whose
-      // single row is itself taller than a page; there we bump it wholesale but
-      // STILL flow the footer so nothing clips or orphans.
-      let running = 0;
-      const fits = [];
-      let partialFitHtml = null;
-      let footerFlows = false;
-      const overflowParts = [];
-      for (let i = 0; i < middle.length; i++) {
-        const c = middle[i];
-        const h = c.offsetHeight + 4;  // ~1mm gap between sections
-        // While the footer is pinned we fit against `usable` (its height
-        // reserved); once it's dropped, the reclaimed space makes the budget
-        // the full page.
-        const budget = footerFlows ? usableFull : usable;
-        if (running + h <= budget) {
-          fits.push(c); running += h;
-          continue;
-        }
-
-        // This section overflows. Flow the footer to the continuation (freeing
-        // its reserved space back to page 1) so the section split below can use
-        // the full-page budget and the footer lands with the spilled content.
-        if (!footerFlows) {
-          footerFlows = true;
-          // Dropping the footer often gives the overflowing section enough
-          // room to fit WHOLE (it only overflowed the footer-reserved budget)
-          // — keep it intact on page 1 in that case.
-          if (running + h <= usableFull) {
-            fits.push(c); running += h;
-            continue;
-          }
-        }
-
-        // Split the overflowing section: keep the rows that fit on page 1,
-        // move the rest (plus every later section) to the continuation. Works
-        // for both weapon tables and ability-row lists via splitSectionPartial.
-        const partial = splitSectionPartial(c, usableFull - running);
-        if (partial) {
-          partialFitHtml = partial.fitHtml;
-          overflowParts.push(partial.overflowHtml);
-          for (let j = i + 1; j < middle.length; j++) overflowParts.push(middle[j].outerHTML);
-          break;
-        }
-
-        // Couldn't split (single-item section taller than a page): bump this
-        // section and everything after it wholesale. The footer still flows
-        // (footerFlows is set above), so it rides the continuation rather than
-        // clipping/orphaning on page 1.
-        for (let j = i; j < middle.length; j++) overflowParts.push(middle[j].outerHTML);
-        break;
-      }
-
-      // If even one middle section won't fit alongside the header, give
-      // up and let the card clip — the alternative is an empty primary
-      // card with all content on the continuation, which looks broken.
-      if (fits.length === 0 && !partialFitHtml) return [card];
-
-      // If no real section content spilled, the keyword footer alone tipped the
-      // card over its budget (every section fit once its ~8mm was reclaimed).
-      // Flowing ONLY the footer to a continuation would orphan it on a near-empty
-      // page — the exact bad outcome we're avoiding — so instead keep the whole
-      // card intact with the footer pinned to page 1. The 8mm reserve + 2px
-      // slack normally absorbs a footer-only overflow without a visible clip.
-      if (overflowParts.length === 0) return [card];
-
-      // Place the keyword footer: appended to the very end of the overflow (so
-      // it lands on the last spillover page) when real content spilled and its
-      // space was reclaimed, otherwise pinned to the bottom of page 1.
-      if (footerEl && footerFlows) overflowParts.push(footerEl.outerHTML);
-      const footerOnPage1 = (footerEl && !footerFlows) ? footerEl.outerHTML : '';
-
-      // Build primary card: header + the sections that fit + (pinned footer).
-      const fitsHTML = fits.map(n => n.outerHTML).join('') + (partialFitHtml || '');
-      const firstHTML = header.outerHTML + fitsHTML + footerOnPage1;
-      const clonedHead = header.outerHTML.replace('class="dcc-head"', 'class="dcc-head dcc-head-cont"');
-      const overflowHTML = overflowParts.join('');
-
-      // In 'fullCard' mode each continuation is its own front-grid card, so a
-      // very dense unit (a Redemptor's long weapon list, a primarch's wall of
-      // abilities) can cascade across as many cards as it needs: recurse on
-      // the overflow and split it again whenever it is still too tall. The
-      // recursion always terminates — each level either shrinks the overflow
-      // or returns the card untouched (and a depth cap backstops any
-      // pathological single-item-taller-than-a-card case).
-      // Duplex 'continuation' mode rides on a single card back, so it stays
-      // capped at one continuation (the partial-section fill above still
-      // keeps the front from going half-empty).
-      if (spilloverMode === 'fullCard' && depth < 12) {
-        const primary = Object.assign({}, card, { html: firstHTML });
-        const contCard = Object.assign({}, card, {
-          html: clonedHead + overflowHTML,
-          isContinuation: true,
-          contClasses: '',
-          label: (card.label || 'Card') + ' (cont.)',
-        });
-        const tail = measureAndMaybeSplit(contCard, cardW, cardH, stage, backsOn, depth + 1);
-        return [primary].concat(tail);
-      }
-
-      const { contHtml, contClasses } = buildContinuationChrome(clonedHead + overflowHTML, backsOn);
-
-      return emitSplit(card, firstHTML, contHtml, contClasses, 'Unit');
+      return autoSpillKeysFor(cardEl);
     } finally {
       stage.removeChild(host);
+      if (ownStage) document.body.removeChild(stage);
     }
   }
   function mmToPx(mm) {
@@ -1822,57 +1906,6 @@
       label: (card.label || kindLabel || 'Card') + ' (cont.)',
     });
     return [primary, cont];
-  }
-
-  // Partial-section splitter for unit cards. Used only when the user
-  // enables `allowPartialSection`. Given a section element that doesn't
-  // fit in `availPx`, splits its body children between a primary clone
-  // (kept) and a continuation clone (overflow). Returns null when the
-  // section can't be split usefully (single child, head-only, etc.).
-  function splitSectionPartial(sectionEl, availPx) {
-    const head = sectionEl.querySelector(':scope > .dcc-section-head');
-    const candidates = Array.from(sectionEl.children).filter(c => c !== head);
-    if (candidates.length === 0) return null;
-    // Walk into single-child wrappers (e.g. <table> → <tbody>) until we
-    // reach a multi-child node to split.
-    let splitParent = candidates[0];
-    while (splitParent && splitParent.children && splitParent.children.length === 1) {
-      splitParent = splitParent.children[0];
-    }
-    if (!splitParent || !splitParent.children || splitParent.children.length < 2) return null;
-
-    const items = Array.from(splitParent.children);
-    const headH = head ? head.offsetHeight : 0;
-    let running = headH + 4;  // section head + body padding budget
-    const fitItems = [], overflowItems = [];
-    for (const it of items) {
-      const h = it.offsetHeight + 2;
-      if (overflowItems.length === 0 && running + h <= availPx) {
-        fitItems.push(it); running += h;
-      } else {
-        overflowItems.push(it);
-      }
-    }
-    if (fitItems.length === 0 || overflowItems.length === 0) return null;
-
-    // Resolve the same splitParent inside a deep clone by replaying the
-    // child-index path from the section root.
-    const path = [];
-    for (let n = splitParent; n !== sectionEl; n = n.parentNode) {
-      path.unshift(Array.from(n.parentNode.children).indexOf(n));
-    }
-    function buildClone(itemsArr) {
-      const clone = sectionEl.cloneNode(true);
-      let target = clone;
-      for (const idx of path) target = target.children[idx];
-      while (target.firstChild) target.removeChild(target.firstChild);
-      itemsArr.forEach(it => target.appendChild(it.cloneNode(true)));
-      return clone.outerHTML;
-    }
-    return {
-      fitHtml: buildClone(fitItems),
-      overflowHtml: buildClone(overflowItems),
-    };
   }
 
   // Rule-card spillover. Rule cards have a single body section (the
@@ -2082,6 +2115,16 @@
       hostEl.querySelector('#cards-side-body').addEventListener('change', withSave(onSidebarChange));
       hostEl.querySelector('#cards-side-body').addEventListener('click',  withSave(onSidebarClick));
       hostEl.querySelector('#cards-print-btn').addEventListener('click', onPrint);
+      // Click a unit card in the preview to open its page-2 spill panel. Only
+      // the front of a unit card is spillable (data-card-id is set on it);
+      // clicks on continuations, backs, rule/strat cards, or empty padders do
+      // nothing. The panel itself lives outside the preview, so a click inside
+      // it won't re-trigger this handler.
+      hostEl.querySelector('#cards-preview').addEventListener('click', e => {
+        const cardEl = e.target.closest('.dcc-card-spillable[data-card-id]');
+        if (!cardEl) return;
+        openSpillPanel(cardEl.dataset.cardId);
+      });
     }
     applyTextureStyle();
     refreshSidebar();
@@ -2987,6 +3030,129 @@
       scroller.scrollTop = Math.min(prevTop, Math.max(0, max));
     }
   }
+  // ── Page-2 spill panel (manual per-card override) ────────────────────────
+  // Build the { kind:'unit', id, html, label } card object for one unit id —
+  // used by the panel to list sections and seed the auto guess.
+  function unitCardById(id) {
+    const u = gatherUnits().find(x => x.id === id);
+    if (!u) return null;
+    return { kind: 'unit', id: u.id, html: renderUnitCard(u.entry), label: u.label };
+  }
+
+  // The EFFECTIVE set of section keys currently on page 2 for a unit card:
+  // the manual override verbatim if present, else the auto starting guess.
+  function effectiveSpillKeys(card) {
+    if (Array.isArray(spillOverrides[card.id])) return new Set(spillOverrides[card.id]);
+    const layout = getLayoutFor('unit');
+    const { w, h } = cardSizeFor(layout);
+    return autoSpillKeysForCard(card, w, h, null);
+  }
+
+  let spillPanelId = null;   // id of the unit card the panel is currently editing
+
+  function closeSpillPanel() {
+    spillPanelId = null;
+    const p = document.getElementById('cards-spill-panel');
+    if (p) p.remove();
+    const bd = document.getElementById('cards-spill-backdrop');
+    if (bd) bd.remove();
+    document.removeEventListener('keydown', onSpillPanelKey);
+  }
+  function onSpillPanelKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); closeSpillPanel(); }
+  }
+
+  function openSpillPanel(id, force) {
+    if (!hostEl) return;
+    // Toggle closed if re-clicking the same card's panel (a fresh card click).
+    // A `force` re-open (after a toggle/reset changed the override) skips this.
+    if (spillPanelId === id && !force) { closeSpillPanel(); return; }
+    closeSpillPanel();
+    const card = unitCardById(id);
+    if (!card) return;
+    spillPanelId = id;
+
+    const sections = sectionsOf(card.html);   // ordered { key, label }
+    if (sections.length === 0) {
+      // Nothing spillable — a bare card. Nothing to configure.
+      spillPanelId = null;
+      return;
+    }
+    const active = effectiveSpillKeys(card);   // keys currently on page 2
+    const hasOverride = Array.isArray(spillOverrides[id]);
+
+    const backdrop = document.createElement('div');
+    backdrop.id = 'cards-spill-backdrop';
+    backdrop.className = 'cards-spill-backdrop';
+    backdrop.addEventListener('click', closeSpillPanel);
+
+    const panel = document.createElement('div');
+    panel.id = 'cards-spill-panel';
+    panel.className = 'cards-spill-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-label', 'Send sections to page 2');
+    panel.innerHTML = `
+      <header class="cards-spill-head">
+        <div>
+          <div class="cards-spill-title">Page-2 split</div>
+          <div class="cards-spill-sub">${esc(card.label || 'Unit')}</div>
+        </div>
+        <button type="button" class="cards-spill-close" aria-label="Close" data-spill-close>×</button>
+      </header>
+      <p class="cards-spill-help">
+        Tick a section to move the whole block to a continuation card.
+        ${hasOverride ? 'You’ve customised this card.' : 'Starting from the automatic guess.'}
+      </p>
+      <div class="cards-spill-list">
+        ${sections.map(s => `
+          <label class="cards-spill-row">
+            <input type="checkbox" data-spill-sec="${esc(s.key)}" ${active.has(s.key) ? 'checked' : ''}>
+            <span class="cards-spill-label">${esc(s.label)}</span>
+          </label>`).join('')}
+      </div>
+      <footer class="cards-spill-foot">
+        <button type="button" class="cards-link-btn" data-spill-reset ${hasOverride ? '' : 'disabled'}>Reset to auto</button>
+      </footer>`;
+
+    // Toggling a checkbox: on the FIRST manual change, seed the override from
+    // the current EFFECTIVE set (so an auto guess becomes an explicit,
+    // editable override), then apply this toggle. Manual always wins from here.
+    // Update the panel chrome IN PLACE (no full re-open) so the user keeps
+    // focus and the list doesn't flicker mid-interaction.
+    panel.addEventListener('change', e => {
+      const cb = e.target.closest('[data-spill-sec]');
+      if (!cb) return;
+      const key = cb.getAttribute('data-spill-sec');
+      let set = new Set(spillOverrides[id] || effectiveSpillKeys(unitCardById(id)));
+      if (cb.checked) set.add(key); else set.delete(key);
+      spillOverrides[id] = Array.from(set);
+      saveSpillOverrides();
+      // Live re-render so the split updates in the preview immediately.
+      refreshPreview();
+      refreshSummary();
+      // Now that an override exists, enable "Reset to auto" + note the custom
+      // state — without tearing down the checkbox list.
+      const resetBtn = panel.querySelector('[data-spill-reset]');
+      if (resetBtn) resetBtn.disabled = false;
+      const helpEl = panel.querySelector('.cards-spill-help');
+      if (helpEl) helpEl.textContent = 'Tick a section to move the whole block to a continuation card. You’ve customised this card.';
+    });
+    panel.addEventListener('click', e => {
+      if (e.target.closest('[data-spill-close]')) { closeSpillPanel(); return; }
+      if (e.target.closest('[data-spill-reset]')) {
+        delete spillOverrides[id];
+        saveSpillOverrides();
+        refreshPreview();
+        refreshSummary();
+        openSpillPanel(id, true);   // re-seed from the auto guess
+      }
+    });
+
+    hostEl.appendChild(backdrop);
+    hostEl.appendChild(panel);
+    document.addEventListener('keydown', onSpillPanelKey);
+  }
+
   function refreshSummary() {
     const sum = hostEl && hostEl.querySelector('#cards-summary');
     if (!sum) return;
@@ -3083,6 +3249,7 @@
     loadPrefs();
     loadPresets();
     loadExclusions();
+    loadSpillOverrides();
     applyDynamicStyle();
     // Kick off saved-image load in the background so it's ready by the
     // time the user opens the Layout sub-tab.
@@ -3107,9 +3274,10 @@
     }
     // Re-load prefs when localStorage changes from another tab.
     window.addEventListener('storage', e => {
-      if (e.key === PREFS_KEY || e.key === PRESETS_KEY || e.key === SELECTION_KEY) {
+      if (e.key === PREFS_KEY || e.key === PRESETS_KEY || e.key === SELECTION_KEY || e.key === SPILL_KEY) {
         if (e.key === PREFS_KEY)      loadPrefs();
         if (e.key === PRESETS_KEY)    loadPresets();
+        if (e.key === SPILL_KEY)      loadSpillOverrides();
         if (e.key === SELECTION_KEY) {
           // Another tab changed the selection — reload exclusions and
           // rebuild the include sets from them so the picker + preview match.
@@ -3178,6 +3346,7 @@
       loadPrefs();
       loadPresets();
       loadExclusions();
+      loadSpillOverrides();
       applyDynamicStyle();
       renderHost();
     });

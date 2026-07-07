@@ -803,6 +803,14 @@
 .dcc-cp-lbl { font-size: 2.76mm; opacity: 0.85; letter-spacing: 0.06em; }
 
 /* Stat strip */
+/* Wrapper around every stat row so the whole stat block is one addressable
+   section (data-sec="stats") for the manual page-2 spill panel. It's a plain
+   flex column so the enclosed .dcc-stats rows keep their own margins and the
+   card's column gap sits above/below the block, not between the rows. */
+.dcc-stats-group {
+  display: flex;
+  flex-direction: column;
+}
 .dcc-stats {
   display: grid;
   grid-template-columns: repeat(var(--dcc-stat-cols, 6), 1fr);
@@ -937,8 +945,11 @@
 .dcc-w-table td { padding: 0.7mm 0.4mm; vertical-align: top; }
 /* Full-width keyword row — spans name + all stat columns, indented to line up
    under the weapon name, with no top padding so it tucks under the stat row. */
-.dcc-w-kwcell { padding-top: 0 !important; padding-left: 1.4mm !important; }
-.dcc-w-name { font-weight: 600; padding-left: 1.4mm !important; }
+/* Weapon names align with the ability text (section-content left edge), not
+   indented under the section-head label — matches the abilities block. The
+   keyword sub-row stays lined up under the weapon name. */
+.dcc-w-kwcell { padding-top: 0 !important; padding-left: 0 !important; }
+.dcc-w-name { font-weight: 600; padding-left: 0 !important; }
 .dcc-w-kw {
   font-style: italic;
   font-size: calc(2.405mm * var(--dcc-w-mul, 1));
@@ -1583,6 +1594,78 @@
   .cards-shell { flex-direction: column; height: auto; min-height: 100vh; }
   .cards-side { width: 100%; max-height: 50vh; border-right: 0; border-bottom: 1px solid #23272e; }
   .cards-preview-wrap { padding: 12px; }
+}
+
+/* ── Page-2 spill panel ─────────────────────────────────────────────────── */
+/* A unit card in the preview is clickable to hand-pick which whole sections
+ * spill to a continuation card. The cursor/outline hint makes that
+ * discoverable; the panel itself is a small centred dialog over a backdrop. */
+.dcc-card-spillable { cursor: pointer; }
+.cards-preview .dcc-card-spillable:hover {
+  outline: 2px solid var(--accent, #b89052);
+  outline-offset: -2px;
+}
+.cards-spill-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 40;
+}
+.cards-spill-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(340px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  background: #14171c;
+  color: #e7e9ee;
+  border: 1px solid #2a2f38;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  z-index: 41;
+}
+.cards-spill-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px 8px;
+  border-bottom: 1px solid #23272e;
+}
+.cards-spill-title { font-size: 15px; font-weight: 600; }
+.cards-spill-sub { font-size: 12px; color: #9aa1ad; margin-top: 2px; }
+.cards-spill-close {
+  background: none;
+  border: 0;
+  color: #9aa1ad;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.cards-spill-close:hover { color: #fff; }
+.cards-spill-help {
+  margin: 8px 16px 4px;
+  font-size: 12px;
+  color: #9aa1ad;
+}
+.cards-spill-list { padding: 4px 8px 8px; }
+.cards-spill-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cards-spill-row:hover { background: #1b1f26; }
+.cards-spill-row input[type="checkbox"] { accent-color: var(--accent, #b89052); }
+.cards-spill-foot {
+  padding: 6px 16px 14px;
+  border-top: 1px solid #23272e;
 }
 
 /* ── Print stylesheet ───────────────────────────────────────────────────── */

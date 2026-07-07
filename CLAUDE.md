@@ -168,6 +168,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_changelog_seen` | localStorage | `changelog.js` | Last `App.CHANGELOG.version` the user has opened — drives the "unseen" red dot on the Updates icon | User pref |
 | `yaab_cards_presets` | localStorage | `cards-mode.js` | Named snapshots of every card-render setting (colours, typography, layout, back-image id, …); cloud-synced | User data |
 | `yaab_cards_selection` | localStorage | `cards-mode.js` | Card-exporter deselections (excluded card ids per category: units/rules/strats); device-local, NOT cloud-synced | User selection |
+| `yaab_cards_spill` | localStorage | `cards-mode.js` | Per-unit-card manual page-split overrides (`{cardId: [sectionKey,…]}` of whole sections sent to the continuation card); device-local, NOT cloud-synced. Absent card → automatic whole-section split | User selection |
 
 The kill-switch in `sw.js` self-unregisters and clears any legacy `yaab-shell-v*` caches; no Cache API entries are maintained anymore.
 

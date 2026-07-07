@@ -26,10 +26,28 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.07-10',
+    version:     '2026.07.07-11',
     lastUpdated: '2026-07-07T00:00:00Z',
     entries: [
       // ── 2026-07-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-07', kind: 'feature',
+        title: 'Choose how dense cards split across pages',
+        description:
+          'Data cards now split by whole section. Click a unit card in the ' +
+          'exporter to open a panel and send whole sections (Abilities, a ' +
+          'weapon block, Keywords, …) to a continuation card, card by card. An ' +
+          'automatic split is offered as a starting point — keywords stay on ' +
+          'the front card unless the stats and weapons need the room — and your ' +
+          'per-card choices are remembered.',
+      },
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Weapon names line up with ability text on cards',
+        description:
+          'Weapon names were indented slightly further right than the ability ' +
+          'text below them. They now share the same left edge.',
+      },
       {
         date: '2026-07-07', kind: 'fix',
         title: 'Data card exporter remembers which cards you picked',
