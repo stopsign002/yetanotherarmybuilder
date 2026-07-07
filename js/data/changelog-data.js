@@ -26,10 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.07-2',
+    version:     '2026.07.07-3',
     lastUpdated: '2026-07-07T00:00:00Z',
     entries: [
       // ── 2026-07-07 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Data cards no longer show literal ** around bold text',
+        description:
+          'Rules and ability text on printable data cards marks keywords in ' +
+          'bold using "**...**"; the cards were showing the raw asterisks ' +
+          'instead of bolding the text. Those are now rendered as bold. Bare ' +
+          'single asterisks in stat values (e.g. "D6+*") are left untouched.',
+      },
       {
         date: '2026-07-07', kind: 'fix',
         title: 'Chapters no longer show every Space Marine unit',

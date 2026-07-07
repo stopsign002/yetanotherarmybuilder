@@ -834,6 +834,19 @@
     return out.trim();
   }
 
+  // Render a rules / ability / stratagem description as safe card HTML:
+  // structure it (line breaks), HTML-escape it, THEN convert **bold** markdown
+  // to <strong>. GDC / Wahapedia-style rules text marks keywords in bold with
+  // `**…**`; without this the card showed the literal asterisks. The bold pass
+  // runs AFTER esc() so the injected <strong> is the only markup and the inner
+  // text stays escaped (no injection risk). Only the paired `**` form is
+  // handled — a bare single `*` is left alone because 40k stat text uses it
+  // (e.g. "D6+*", "2D6*").
+  function descHtml(text) {
+    return esc(formatStructuredText(text || ''))
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  }
+
   // Normalise an invulnerable-save string to the conventional "4++" form,
   // so SV cells read "2+ / 4++". BSData / GDC sometimes hand us "4", "4+",
   // or "4++" depending on faction; this folds them all into the same shape.
@@ -1099,13 +1112,13 @@
       named.forEach(a => {
         body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">Ability</span>`
               + `<span class="dcc-ab-name">${esc(a.name)}</span></div>`
-              + `<div class="dcc-ab-text">${esc(formatStructuredText(a.description || ''))}</div></div>`;
+              + `<div class="dcc-ab-text">${descHtml(a.description)}</div></div>`;
       });
       subGroups.forEach((rows, label) => {
         rows.forEach(a => {
           body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">${esc(label)}</span>`
                 + `<span class="dcc-ab-name">${esc(a.name)}</span></div>`
-                + `<div class="dcc-ab-text">${esc(formatStructuredText(a.description || ''))}</div></div>`;
+                + `<div class="dcc-ab-text">${descHtml(a.description)}</div></div>`;
         });
       });
       if (!body) return '';
@@ -1132,7 +1145,7 @@
         }</div>`;
       }
       named.forEach(a => {
-        html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${esc(formatStructuredText(a.description || ''))}</div>`;
+        html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${descHtml(a.description)}</div>`;
       });
       html += `</div></div>`;
     }
@@ -1146,7 +1159,7 @@
         <div class="dcc-section-head dcc-section-head-primarch"><span class="dcc-section-label">${esc(label)}</span></div>
         <div class="dcc-abilities-body">`;
       rows.forEach(a => {
-        html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${esc(formatStructuredText(a.description || ''))}</div>`;
+        html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${descHtml(a.description)}</div>`;
       });
       html += `</div></div>`;
     });
@@ -1164,7 +1177,7 @@
     return `<div class="dcc-section dcc-abilities dcc-abilities-transport">
       <div class="dcc-section-head"><span class="dcc-section-label">TRANSPORT</span></div>
       <div class="dcc-abilities-body">
-        <div class="dcc-ability-row">${esc(formatStructuredText(unit.transportCapacity))}</div>
+        <div class="dcc-ability-row">${descHtml(unit.transportCapacity)}</div>
       </div>
     </div>`;
   }
@@ -1194,7 +1207,7 @@
       ? `<div class="dcc-section dcc-enhancements">
           <div class="dcc-section-head"><span class="dcc-section-label">ENHANCEMENT</span></div>
           <div class="dcc-abilities-body">${
-            entry.enhancements.map(e => `<div class="dcc-ability-row"><strong>${esc(e.name)}${e.pts ? ' (+' + e.pts + ')' : ''}:</strong> ${esc(e.description || '')}</div>`).join('')
+            entry.enhancements.map(e => `<div class="dcc-ability-row"><strong>${esc(e.name)}${e.pts ? ' (+' + e.pts + ')' : ''}:</strong> ${descHtml(e.description)}</div>`).join('')
           }</div>
         </div>`
       : '';
@@ -1321,7 +1334,7 @@
         ${subLine}
       </header>
       <div class="dcc-section dcc-rule-body">
-        <div class="dcc-rule-text">${esc(formatStructuredText(r.description || ''))}</div>
+        <div class="dcc-rule-text">${descHtml(r.description)}</div>
       </div>`;
   }
 
@@ -1350,7 +1363,7 @@
         ${subLine}
       </header>
       <div class="dcc-section dcc-strat-body">
-        <div class="dcc-rule-text">${esc(formatStructuredText(s.description || ''))}</div>
+        <div class="dcc-rule-text">${descHtml(s.description)}</div>
       </div>`;
   }
 
