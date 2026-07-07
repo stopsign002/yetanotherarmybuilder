@@ -26,20 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.07-8',
+    version:     '2026.07.07-9',
     lastUpdated: '2026-07-07T00:00:00Z',
     entries: [
       // ── 2026-07-07 ──────────────────────────────────────────────────────
       {
         date: '2026-07-07', kind: 'fix',
-        title: 'Stratagem cards: no more stray "&#x20;" and bunched WHEN/TARGET/EFFECT',
+        title: 'Stratagem cards: no more stray "&x20;" and bunched WHEN/TARGET/EFFECT',
         description:
-          'Some rules text carried encoded characters (like "&#x20;", an ' +
-          'encoded space) that printed literally on cards and, because they ' +
-          'weren\'t real whitespace, stopped the WHEN / TARGET / EFFECT blurbs ' +
-          'from breaking onto their own lines — bunching them together. Those ' +
-          'entities are now decoded, and each WHEN / TARGET / EFFECT / ' +
-          'RESTRICTIONS / DURATION line starts its own stanza.',
+          'Some rules text carried encoded characters — including a malformed ' +
+          'encoded space ("&x20;") shipped on 30+ stratagem/rule strings — that ' +
+          'printed literally on cards and, not being real whitespace, stopped ' +
+          'the WHEN / TARGET / EFFECT blurbs from breaking onto their own lines. ' +
+          'Those entities (well-formed and malformed) are now decoded, and each ' +
+          'WHEN / TARGET / EFFECT / RESTRICTIONS / DURATION line starts its own ' +
+          'stanza.',
       },
       {
         date: '2026-07-07', kind: 'change',

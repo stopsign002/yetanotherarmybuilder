@@ -811,6 +811,11 @@
   function decodeEntities(s) {
     return String(s == null ? '' : s)
       .replace(/&#x([0-9a-fA-F]+);/gi, (_, h) => { const n = parseInt(h, 16); return (n >= 0 && n <= 0x10FFFF) ? String.fromCodePoint(n) : ' '; })
+      // Malformed hex entity missing the '#': the source data ships "&x20;"
+      // (should be "&#x20;", an encoded space) on 30+ stratagem/rule strings in
+      // both 40kdc and GDC. Browsers don't decode it either, so it printed
+      // literally. Decode the same as the well-formed hex form.
+      .replace(/&x([0-9a-fA-F]+);/gi, (_, h) => { const n = parseInt(h, 16); return (n >= 0 && n <= 0x10FFFF) ? String.fromCodePoint(n) : ' '; })
       .replace(/&#(\d+);/g, (_, d) => { const n = parseInt(d, 10); return (n >= 0 && n <= 0x10FFFF) ? String.fromCodePoint(n) : ' '; })
       .replace(/&nbsp;/gi, ' ')
       .replace(/&amp;/gi, '&')
