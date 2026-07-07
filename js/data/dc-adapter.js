@@ -77,24 +77,51 @@
   // refreshed — at which point the entry can be deleted. Keep each line tagged
   // with the upstream issue so it's auditable.
   //   nekrosor-ammentar / deep-strike → wn-mitch/40kdc-data#51
+  //   land-speeder / deep-strike: the Land Speeder datasheet in 40kdc-data links
+  //     ZERO abilities — an upstream data gap. Its printed card has the CORE
+  //     "Deep Strike" ability, and deep-strike text IS in the store, so inject it.
   const MISSING_CORE_ABILITIES = {
     'nekrosor-ammentar': ['deep-strike'],
+    'land-speeder': ['deep-strike'],
   };
 
   // Hand-patches for NON-core unit abilities (with prose) the upstream 40kdc
-  // dataset fails to link on a unit's datasheet. Keyed by unit id → ability ids
-  // to inject. Same SELF-HEALING contract as MISSING_CORE_ABILITIES: injection
-  // is skipped if the unit already lists an ability of that name, so each entry
-  // no-ops automatically once 40kdc links it and the bundle is refreshed (at
-  // which point the entry can be deleted). The ability text comes from the
-  // abilities-index store (textFor), so it only helps for ids that already have
-  // authored prose there. Keep each line tagged with the upstream gap.
-  //   eradicator-squad-with-heavy-bolters / total-obliteration:
-  //     the Heavy Bolters variant is the same datasheet as `eradicator-squad`
-  //     (which correctly carries "Total Obliteration"), but the HB variant's
-  //     datasheet in 40kdc-data links ZERO abilities — an upstream data gap.
+  // dataset fails to link on a unit's datasheet. Keyed by unit id → list of
+  // abilities to inject. Each entry is EITHER a string ability-id (name +
+  // prose pulled from the abilities-index store via textFor — only works when
+  // that id already has authored text there) OR a fully hand-authored
+  // { name, description } object (used when the store has NO entry for it).
+  //
+  // Same SELF-HEALING contract as MISSING_CORE_ABILITIES: injection is skipped
+  // if the unit already lists an ability of that name, so each entry no-ops
+  // automatically once 40kdc links it and the bundle is refreshed (at which
+  // point the entry can be deleted). Keep each entry tagged with the upstream gap.
+  //   eradicator-squad-with-heavy-bolters / Overlapping Detonations:
+  //     the HB variant's datasheet in 40kdc-data links ZERO abilities — an
+  //     upstream data gap. Its real datasheet ability is "Overlapping
+  //     Detonations" (NOT the base melta squad's "Total Obliteration"), and the
+  //     store has no text for it, so we hand-author from the printed card.
+  //   land-speeder / Purgation Run:
+  //     the Land Speeder datasheet in 40kdc-data links ZERO abilities — an
+  //     upstream data gap. Its datasheet ability "Purgation Run" has no text in
+  //     the store, so we hand-author it from the printed card. (Its CORE "Deep
+  //     Strike" is injected separately via MISSING_CORE_ABILITIES above.)
   const MISSING_UNIT_ABILITIES = {
-    'eradicator-squad-with-heavy-bolters': ['total-obliteration'],
+    'eradicator-squad-with-heavy-bolters': [{
+      name: 'Overlapping Detonations',
+      description:
+        'In your Shooting phase, when this unit is selected to shoot, you can ' +
+        'select one non-MONSTER/VEHICLE enemy unit visible to it. While making ' +
+        "attacks, this unit's heavy bolters that targeted that selected unit " +
+        'have the [BLAST] ability.',
+    }],
+    'land-speeder': [{
+      name: 'Purgation Run',
+      description:
+        'In your Shooting phase, after this unit has shot, it can make a ' +
+        'normal move of up to D6". If it does, until the end of the turn, ' +
+        'this unit is not eligible to declare a charge.',
+    }],
   };
 
   // Hand-patched army-rule prose the upstream 40kdc dataset names (via a
@@ -108,12 +135,16 @@
   //     ability-text entry for it and GDC carries no SM army-rule prose.
   const MISSING_ARMY_RULE_TEXT = {
     'oath-of-moment':
-      "At the start of your Command phase, select one unit from your opponent's " +
-      "army. Until the start of your next Command phase, each time a model from " +
-      "your army with this ability makes an attack that targets that enemy unit, " +
-      "you can re-roll the Hit roll and you can re-roll the Wound roll. You can " +
-      "only select one enemy unit per turn with the Oath of Moment ability, no " +
-      "matter how many units in your army have it.",
+      "If your Army Faction is ADEPTUS ASTARTES, at the start of your Command " +
+      "phase, select one unit from your opponent's army. Until the start of your " +
+      "next Command phase, that enemy unit is your Oath of Moment target. Each " +
+      "time a model with this ability makes an attack that targets your Oath of " +
+      "Moment target:\n" +
+      "- You can re-roll the Hit roll.\n" +
+      "- If you are using a Codex: Space Marines Detachment and your army does " +
+      "not include one or more units with the BLACK TEMPLARS, BLOOD ANGELS, DARK " +
+      "ANGELS, DEATHWATCH or SPACE WOLVES keywords, add 1 to the Wound roll as " +
+      "well.",
   };
 
   // ── stat formatting (BSData rendered M as 6", Sv as 3+, Ld as 6+) ──────────
@@ -210,16 +241,26 @@
       });
     }
     // Inject any hand-patched NON-core unit abilities the dataset omits here.
-    const unitPatchIds = MISSING_UNIT_ABILITIES[u.id];
-    if (unitPatchIds) {
+    // Each patch entry is either a string ability-id (name + prose from the
+    // store) or a hand-authored { name, description } object (store has none).
+    const unitPatches = MISSING_UNIT_ABILITIES[u.id];
+    if (unitPatches) {
       const have = new Set(abilities.map((a) => a.name.toLowerCase()));
-      unitPatchIds.forEach((aid) => {
-        let av = null;
-        try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
-        const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
-        if (have.has(name.toLowerCase())) return;   // already present → no-op (self-heals post-upstream-fix)
+      unitPatches.forEach((patch) => {
+        let name, description;
+        if (patch && typeof patch === 'object') {
+          name = patch.name;
+          description = patch.description || '';
+        } else {
+          const aid = patch;
+          let av = null;
+          try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
+          name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
+          description = textFor(aid);
+        }
+        if (!name || have.has(name.toLowerCase())) return;   // already present → no-op (self-heals post-upstream-fix)
         have.add(name.toLowerCase());
-        abilities.push({ name, description: textFor(aid), isCore: false });
+        abilities.push({ name, description, isCore: false });
       });
     }
     return {

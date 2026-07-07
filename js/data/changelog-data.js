@@ -26,7 +26,7 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.07-1',
+    version:     '2026.07.07-2',
     lastUpdated: '2026-07-07T00:00:00Z',
     entries: [
       // ── 2026-07-07 ──────────────────────────────────────────────────────
@@ -43,20 +43,30 @@
       },
       {
         date: '2026-07-07', kind: 'fix',
-        title: 'Oath of Moment now shows its rules text',
+        title: 'Oath of Moment now shows its full rules text',
         description:
           'The Space Marines army rule card listed "Oath of Moment" by name ' +
-          'but had no description. The full rules text is now shown on the ' +
-          'Army Rules card.',
+          'but had no description. The complete current-edition text is now ' +
+          'shown, including both parts: the Hit re-roll against your Oath ' +
+          'target, and the +1 to Wound that only applies with a Codex: Space ' +
+          'Marines Detachment when your army has no Black Templars, Blood ' +
+          'Angels, Dark Angels, Deathwatch or Space Wolves units.',
+      },
+      {
+        date: '2026-07-07', kind: 'fix',
+        title: 'Land Speeder abilities now appear',
+        description:
+          'The Land Speeder was missing its abilities. Its Deep Strike (core) ' +
+          'and Purgation Run (shoot-then-move, no charge) abilities now show ' +
+          'on its datasheet.',
       },
       {
         date: '2026-07-07', kind: 'fix',
         title: 'Eradicator Squad with Heavy Bolters shows its ability',
         description:
-          'The Heavy Bolters variant of the Eradicator Squad was missing its ' +
-          'Total Obliteration ability (the datasheet\'s re-roll against ' +
-          'Monsters and Vehicles). It now appears, matching the standard ' +
-          'Eradicator Squad.',
+          'The Heavy Bolters variant of the Eradicator Squad had no abilities ' +
+          'listed. Its Overlapping Detonations ability (granting [BLAST] to its ' +
+          'heavy bolters against a chosen non-Monster/Vehicle unit) now appears.',
       },
       // ── 2026-06-26 ──────────────────────────────────────────────────────
       {
