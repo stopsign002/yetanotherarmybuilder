@@ -54,11 +54,13 @@
   }
 
   // Take-budget limit for one item id at the given squad size (Infinity = none).
+  // Scaling budgets are PROPORTIONAL: "2 per 10 models" allows 1 at 5 models
+  // (floor(models × count / per)), matching GW's "for every N models" wording.
   function budgetLimitFor(profile, itemId, models) {
     let lim = Infinity;
     (profile.budgets || []).forEach((b) => {
       if (!b.items.some((it) => it.id === itemId)) return;
-      const l = (b.perModels > 0 && models) ? Math.floor(models / b.perModels) * b.count : b.count;
+      const l = (b.perModels > 0 && models) ? Math.floor((models * b.count) / b.perModels) : b.count;
       lim = Math.min(lim, l);
     });
     return lim;
@@ -124,6 +126,15 @@
     });
     const itemTotals = added;   // budget checks count what's been TAKEN
 
+    // Effective default counts after all swaps. Negative = the selections
+    // collectively swap out more of an item than the squad carries — the
+    // cascade signal (e.g. a pair-swap consumed a storm bolter, so one fewer
+    // storm shield can be taken).
+    const effById = new Map();
+    defaults.forEach((d) => effById.set(d.id, d.count + (added.get(d.id) || 0) - (removed.get(d.id) || 0)));
+    const depleted = (opt, grp) =>
+      effReplaces(opt, grp).filter((x) => effById.has(x.id) && effById.get(x.id) < 0);
+
     // For each default item, the (option, choice) pairs that actually replace
     // it — a single unambiguous pair gets proxy steppers on the default row
     // itself ("remove a gauss flayer" = take one of its replacement).
@@ -146,7 +157,7 @@
         <span class="wgp-replaces">Default loadout${models ? ' — ' + models + ' models' : ''}</span>
       </div>`;
       defaults.forEach((d) => {
-        const eff = d.count + (added.get(d.id) || 0) - (removed.get(d.id) || 0);
+        const eff = effById.get(d.id);
         const neg = eff < 0;
         if (neg) negNote = true;
         const proxy = replacerFor(d.id);
@@ -191,10 +202,15 @@
           <span class="wgp-replaces">${esc(replacesLabel)}</span>
           <span class="wgp-chip">${esc(constraintChip(profile, opt, models))}</span>
         </div>`;
+      const shortNames = new Set();
       opt.choices.forEach((grp, ci) => {
         const key = opt.id + ':' + ci;
         const n = counts.get(key) || 0;
-        const rowOver = overOpt && n > 0 || grp.some((x) => overBudgetItems.has(x.id));
+        // Cascade: this row is red when the item(s) it swaps out are already
+        // exhausted by other selections (nothing left to replace).
+        const short = n > 0 ? depleted(opt, grp) : [];
+        short.forEach((x) => shortNames.add(x.name));
+        const rowOver = overOpt && n > 0 || short.length > 0 || grp.some((x) => overBudgetItems.has(x.id));
         html += `<div class="wgp-row${rowOver ? ' wgp-row-over' : ''}">
           <span class="wgp-item">${esc(cap(names(grp)))}${opt.cost ? ` <span class="wgp-pts">+${opt.cost} pts</span>` : ''}</span>
           <span class="wgp-stepper" data-key="${esc(key)}">
@@ -206,6 +222,8 @@
       });
       if (overOpt) {
         html += `<div class="wgp-note">Exceeds limit — ${lim === Infinity ? 'over budget' : 'max ' + lim}${models ? ' for ' + models + ' models' : ''}</div>`;
+      } else if (shortNames.size) {
+        html += `<div class="wgp-note">Not enough ${esc([...shortNames].join(' / '))} left to swap</div>`;
       } else if (overBudgetItems.size) {
         html += `<div class="wgp-note">Over the take-limit for: ${esc([...overBudgetItems].map((id) => {
           for (const o of profile.options) for (const g of o.choices) { const hit = g.find((x) => x.id === id); if (hit) return hit.name; }

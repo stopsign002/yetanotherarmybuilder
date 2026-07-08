@@ -26,9 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-25',
+    version:     '2026.07.08-26',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Wargear limits: proportional budgets + swap cascade',
+        description:
+          'Scaling take-limits are now proportional — “2 per 10 models” ' +
+          'allows 1 at 5 models (it wrongly rounded to 0, flagging a legal ' +
+          'Wolf Guard Terminators power fist + assault cannon). And swaps now ' +
+          'cascade: once a pair-swap uses up a storm bolter, taking more ' +
+          'storm shields than there are bolters left turns red with a “not ' +
+          'enough left to swap” note.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Wargear swaps no longer eat weapons you keep',
