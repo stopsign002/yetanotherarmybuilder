@@ -348,6 +348,10 @@
 }
 .unit-detail-content .weapons-subsection { margin-bottom: 8px; }
 .unit-detail-content .weapons-subsection:last-child { margin-bottom: 0; }
+/* style.css's legacy .weapons-section { margin-top: 14px } rides the same
+   elements and collapses through the unpadded wrapper — the gap the stats /
+   ranged / melee blocks weren't respecting. */
+.unit-detail-content .weapons-section { margin-top: 0; }
 .unit-detail-content .detail-stats-section { padding: 8px; }
 
 /* Separate cells with a 4px gap (build-mode.css draws a connected strip with
