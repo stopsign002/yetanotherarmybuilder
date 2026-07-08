@@ -877,7 +877,7 @@
     if (enhancements.length) {
       html += `<div class="detail-section"><div class="detail-section-title">Enhancements</div>`;
       enhancements.forEach(e => {
-        html += `<div class="detail-detachment-block"><div class="detail-detachment-subname">${esc(e.name)}${
+        html += `<div class="detail-detachment-block detail-detachment-card"><div class="detail-detachment-subname">${esc(e.name)}${
           e.pts ? ` <span class="detail-inline-pts">${esc(String(e.pts))} pts</span>` : ''
         }</div><p class="detail-detachment-text">${mdBold(e.description || '')}</p></div>`;
       });
@@ -896,7 +896,7 @@
               ? `<div class="strat-section"><div class="strat-section-label">${esc(sec.label)}</div><div class="strat-section-text">${esc(sec.text)}</div></div>`
               : `<p class="strat-section-text strat-section-preface">${esc(sec.text)}</p>`).join('') + '</div>'
           : `<p class="strat-section-empty">No description available.</p>`;
-        html += `<div class="detail-detachment-block"><div class="detail-detachment-subname">${esc(s.name)}${
+        html += `<div class="detail-detachment-block detail-detachment-card"><div class="detail-detachment-subname">${esc(s.name)}${
           meta.length ? ` <span class="detail-inline-pts">${meta.join(' · ')}</span>` : ''
         }</div>${sbody}</div>`;
       });

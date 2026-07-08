@@ -26,7 +26,7 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-6',
+    version:     '2026.07.08-7',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
       // ── 2026-07-08 ──────────────────────────────────────────────────────
@@ -37,7 +37,8 @@
           'In the Detachments box, tick the checkbox to add a detachment to your ' +
           'army; click anywhere else on its row to read its full rule, ' +
           'enhancements, and stratagems in the Details pane — so you can compare ' +
-          'options before committing.',
+          'options before committing. Each enhancement and stratagem is boxed so ' +
+          'they’re easy to tell apart.',
       },
       {
         date: '2026-07-08', kind: 'change',

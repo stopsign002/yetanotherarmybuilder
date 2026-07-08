@@ -136,6 +136,15 @@
 /* ── Detachment detail view (rendered into the Details pane on row click) ── */
 .detail-detachment-block { margin: 0 0 14px; }
 .detail-detachment-block:last-child { margin-bottom: 0; }
+/* Boxed items (enhancements + stratagems) so each reads as a distinct card. */
+.detail-detachment-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: var(--card-bg, rgba(255, 255, 255, 0.02));
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.detail-detachment-card .strat-sections { margin-top: 4px; }
 .detail-detachment-subname {
   font-weight: 600;
   color: var(--text);
