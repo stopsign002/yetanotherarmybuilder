@@ -274,12 +274,6 @@
       </div>
     `;
 
-    // Wargear picker mount point (js/app/wargear-picker.js fills it when the
-    // unit has a structured wargearProfile). Sits directly under Add-to-Army
-    // so a loadout is configured before the unit is added.
-    if (unit.wargearProfile) {
-      html += `<div class="detail-section" id="detail-wargear-picker"></div>`;
-    }
 
     const STAT_ORDER = ['M', 'T', 'SV', 'W', 'LD', 'OC'];
 
@@ -392,11 +386,15 @@
           </div>`;
         }).join('');
 
+        // The banner carries the stat column headers (aligned to the row
+        // grid below) and the box attaches flush underneath it.
         return `
           <div class="weapons-subsection weapons-section wg-section">
-            <div class="weapons-subsection-title weapons-section-banner weapons-section-banner-${type} ${type}">${label}</div>
-            <div class="wg-box">
-              <div class="wg-head"><span></span>${HDR.map(h => `<span class="wg-cell">${esc(h)}</span>`).join('')}</div>
+            <div class="weapons-subsection-title weapons-section-banner weapons-section-banner-${type} ${type} wg-banner">
+              <span class="wg-banner-label">${label}</span>
+              ${HDR.map(h => `<span class="wg-cell wg-banner-col">${esc(h)}</span>`).join('')}
+            </div>
+            <div class="wg-box wg-box-attached">
               <div class="wg-rows">${rows}</div>
             </div>
           </div>`;
@@ -406,6 +404,14 @@
         ${renderWeaponTable(ranged, 'ranged')}
         ${renderWeaponTable(melee, 'melee')}
       </div>`;
+    }
+
+    // Wargear picker mount point (js/app/wargear-picker.js fills it when the
+    // unit has a structured wargearProfile). Sits after the weapon tables —
+    // stats + weapons stay one datasheet block under the stockpile, with the
+    // loadout picker following them.
+    if (unit.wargearProfile) {
+      html += `<div class="detail-section" id="detail-wargear-picker"></div>`;
     }
 
     const coreAbilities    = abilities.filter(a => a.isCore);
@@ -496,17 +502,14 @@
       html += `</div>`;
     }
 
-    // "Led By" uses the memoized reverse-index. Collapsed by default: first
-    // 3 leaders visible + "+N more" pill; click section header or pill to expand.
+    // "Led By" uses the memoized reverse-index. Always fully expanded — every
+    // leader that can attach is visible at a glance (no "+N more" pill).
     const ledBy = getLedByFor(unit);
     if (ledBy.length > 0) {
-      const extra = ledBy.length - 3;
-      const collapsed = ledBy.length > 3;
       html += `<div class="detail-section detail-ledby-section">
-        <div class="detail-section-title detail-section-title-ledbby detail-ledby-title"${collapsed ? ' role="button" tabindex="0"' : ''}>Led By</div>
-        <div class="detail-ledby-list${collapsed ? ' collapsed' : ''}">
+        <div class="detail-section-title detail-section-title-ledbby">Led By</div>
+        <div class="detail-ledby-list">
           ${ledBy.map(l => `<span class="ledby-tag">${esc(l.name)}</span>`).join('')}
-          ${collapsed ? `<span class="ledby-more-pill" role="button" tabindex="0">+${extra} more</span>` : ''}
         </div>
       </div>`;
     }
@@ -831,26 +834,7 @@
       }
     });
 
-    // Led-By: clicking the section title or "+N more" pill toggles collapse.
-    const ledbyList = panel.querySelector('.detail-ledby-list');
-    if (ledbyList) {
-      const expand = () => ledbyList.classList.remove('collapsed');
-      const toggle = () => ledbyList.classList.toggle('collapsed');
-      const title = panel.querySelector('.detail-ledby-title');
-      if (title) {
-        title.addEventListener('click', toggle);
-        title.addEventListener('keydown', e => {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
-        });
-      }
-      const pill = panel.querySelector('.ledby-more-pill');
-      if (pill) {
-        pill.addEventListener('click', e => { e.stopPropagation(); expand(); });
-        pill.addEventListener('keydown', e => {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); expand(); }
-        });
-      }
-    }
+    // (Led-By collapse wiring removed — the list always shows every leader.)
   };
 
   // Stratagem descriptions follow GW's "WHEN: … TARGET: … EFFECT: …

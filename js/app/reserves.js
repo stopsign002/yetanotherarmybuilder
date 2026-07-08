@@ -534,12 +534,13 @@
     }
     if (existing) existing.remove();
     const widget = buildDetailWidget(unit);
-    // Anchor right after .detail-add-section so the stockpile controls
-    // sit next to "Add to Army" — same conceptual neighbourhood
-    // (deciding what goes into your army or your shelf).
+    // Mount INSIDE .detail-add-section so Add-to-Army and the stockpile
+    // steppers share one box — same conceptual neighbourhood (deciding what
+    // goes into your army or your shelf). detail-redesign.css strips the
+    // widget's own chrome and draws a separator instead.
     const addSection = content.querySelector('.detail-add-section');
-    if (addSection && addSection.parentNode) {
-      addSection.parentNode.insertBefore(widget, addSection.nextSibling);
+    if (addSection) {
+      addSection.appendChild(widget);
     } else {
       content.appendChild(widget);
     }

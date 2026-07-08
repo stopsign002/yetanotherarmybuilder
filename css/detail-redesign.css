@@ -195,13 +195,21 @@
   border-radius: var(--radius, 6px);
 }
 
-/* Uniform rhythm between the top boxes: banner → add → stockpile → wargear
-   all sit 14px apart. The stockpile widget's own 12px top margin stacked on
-   the add box's 14px bottom margin (26px gap); its wash also differed. */
-.unit-detail-content .stockpile-detail-widget {
-  margin: 0 0 14px;
-  background: rgba(255, 255, 255, 0.03);
+/* The stockpile widget lives INSIDE the Add-to-Army box (one box): strip its
+   own chrome, run a full-width separator between the add row and the
+   stockpile steppers. Compact — no "Your stockpile" heading (the rows are
+   self-explanatory) and tight row spacing. */
+.unit-detail-content .detail-add-section .stockpile-detail-widget {
+  margin: 8px -12px 0;
+  padding: 4px 12px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
 }
+.unit-detail-content .detail-add-section .stockpile-detail-title { display: none; }
+.unit-detail-content .detail-add-section .stockpile-row { padding: 2px 0; }
+.unit-detail-content .detail-add-section .stockpile-detail-rows { gap: 2px; }
 
 /* Squad-size stepper in the add row (reuses the wargear-picker pill). */
 .detail-size-stepper { padding: 3px 4px; }
@@ -219,13 +227,95 @@
 /* ─────────────────────────────────────────────────────────────
    3. STAT STRIP  (invuln folded into the SV cell)
 ───────────────────────────────────────────────────────────── */
-/* Stats live in the same neutral card box as the other sections. Stats +
-   weapons read as one unit: tighten the gap between them (the default
-   14px section margin-bottom + build-mode's 12px margin-top made ~26px). */
-.unit-detail-content .detail-stats-section {
+/* ─────────────────────────────────────────────────────────────
+   ATTACHED SECTIONS — every section is a card box whose band header sits
+   flush at its top (the "box dropping down from the header" look, matching
+   the weapons tables). The band bleeds to the box edges via negative
+   margins that mirror the section padding. Exclusions: the weapons section
+   (already two attached banner+box pairs), the primarch gold-leaf box, and
+   the wargear picker (band + its own stacked boxes, attached below).
+───────────────────────────────────────────────────────────── */
+.unit-detail-content .detail-section:not(.detail-weapons-section):not(.detail-section-primarch):not(#detail-wargear-picker) {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 4px;
+  padding: 8px 10px;
+}
+.unit-detail-content .detail-section:not(.detail-weapons-section):not(.detail-section-primarch):not(#detail-wargear-picker) > .detail-section-title {
+  margin: -8px -10px 8px;
+  border: none;
+  border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
+  border-left: 3px solid var(--accent);
+  border-radius: 3px 3px 0 0;
+}
+/* Coloured bands keep their hue for the bottom rule + left bar. */
+.unit-detail-content .detail-section > .detail-section-title-leader {
+  border-bottom-color: rgba(90, 181, 232, 0.25); border-left-color: #5ab5e8;
+}
+.unit-detail-content .detail-section > .detail-section-title-ledbby {
+  border-bottom-color: rgba(168, 232, 138, 0.25); border-left-color: #a8e88a;
+}
+.unit-detail-content .detail-section > .detail-section-title-strat {
+  border-bottom-color: rgba(245, 200, 66, 0.25); border-left-color: #f5c842;
+}
+.unit-detail-content .detail-section > .detail-section-title-wargear {
+  border-bottom-color: rgba(205, 180, 136, 0.25); border-left-color: #cdb488;
+}
+
+/* Inner ability cards flatten into separator rows (box-in-box reads bad). */
+.unit-detail-content .detail-section:not(.detail-section-primarch) .detail-ability {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(58, 58, 68, 0.5);
+  padding: 8px 2px;
+  margin-bottom: 0;
+}
+.unit-detail-content .detail-section:not(.detail-section-primarch) .detail-ability:last-child {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+/* Enhancement rows flatten the same way; selected = accent inset bar. */
+.unit-detail-content .detail-enhancements-list .enhancement-cb-item {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(58, 58, 68, 0.5);
+  padding: 8px 2px;
+}
+.unit-detail-content .detail-enhancements-list .enhancement-cb-item:last-child { border-bottom: none; }
+.unit-detail-content .detail-enhancements-list .enhancement-cb-item:has(input:checked) {
+  background: rgba(var(--accent-rgb), 0.05);
+  box-shadow: inset 3px 0 0 var(--accent);
+  border-radius: 0;
+}
+/* Detachment-view cards (rules / enhancements / stratagems) flatten too;
+   stratagem cards keep their gold left bar. */
+.unit-detail-content .detail-section .detail-detachment-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(58, 58, 68, 0.5);
+  padding: 9px 2px;
+  margin-bottom: 0;
+}
+.unit-detail-content .detail-section .detail-detachment-card:last-child { border-bottom: none; }
+.unit-detail-content .detail-section .strat-card {
+  border-left: 2px solid rgba(245, 200, 66, 0.5);
+  padding-left: 8px;
+}
+
+/* Wargear picker: band attaches to its first box; later boxes stack below. */
+#detail-wargear-picker > .detail-section-title { margin-bottom: 0; border-radius: 0 4px 0 0; }
+#detail-wargear-picker .detail-section-title + .wgp-option {
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+}
+
+/* Stats + weapons read as one unit: tighten the gap between them (the
+   default 14px section margin-bottom + build-mode's 12px margin-top made
+   ~26px). Stats box comes from the generic section rule above. */
+.unit-detail-content .detail-stats-section {
   padding: 8px;
   margin-bottom: 6px;
 }
@@ -293,12 +383,39 @@
 }
 .wg-head .wg-cell { text-align: center; }
 
-/* Weapon rows (header + weapons) sit in a neutral card box under the band. */
+/* Weapon rows sit in a neutral card box under the band. */
 .wg-box {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 0 2px 2px;
+}
+
+/* Banner doubles as the column-header row: label in the name column, RNG/A/
+   BS|WS/S/AP/D over their stat columns, grid-aligned with the rows below.
+   Horizontal padding is tuned so banner columns line up with row columns
+   (banner 3px bar + 8px pad ≈ box 1px border + 2px pad + 8px row pad). */
+.unit-detail-content .weapons-section-banner.wg-banner {
+  display: grid;
+  grid-template-columns: 1fr 44px 30px 30px 30px 30px 30px;
+  gap: 2px;
+  align-items: center;
+  padding: 5px 10px 4px 8px;
+  margin-bottom: 0;
+  border-radius: 0 4px 0 0;
+}
+.wg-banner .wg-banner-col {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-align: center;
+  color: var(--text-muted);
+}
+/* Box attaches flush to the banner. */
+.wg-box-attached {
+  border-top: none;
+  border-radius: 0 0 4px 4px;
 }
 
 .wg-weapon { padding: 7px 8px; border-bottom: 1px solid rgba(58, 58, 68, 0.5); }

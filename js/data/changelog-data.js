@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-33',
+    version:     '2026.07.08-34',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'change',
+        title: 'Details pane layout overhaul',
+        description:
+          'Every section now uses the attached header-and-box look: the band ' +
+          'header sits flush on top of its content box (weapons, abilities, ' +
+          'enhancements, keywords, detachment views — all of it). The weapon ' +
+          'banners house the RNG/A/BS/S/AP/D column headers. Add to Army and ' +
+          'the stockpile steppers share one compact box (no more “Your ' +
+          'stockpile” heading), the stats + weapons block moved up right ' +
+          'under it (above the wargear picker), and the Led By box always ' +
+          'shows every leader — no more “+N more” click.',
+      },
       {
         date: '2026-07-08', kind: 'change',
         title: 'Details pane polish pass',
