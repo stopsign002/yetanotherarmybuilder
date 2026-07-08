@@ -26,10 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-1',
+    version:     '2026.07.08-2',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
       // ── 2026-07-08 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Detachments no longer show stratagems from a different detachment',
+        description:
+          'Some detachments (e.g. Champions of Fenris) listed extra stratagems ' +
+          'that did not belong to them — leftovers from an older edition of a ' +
+          'same-named detachment in the fallback data (you would see things like ' +
+          'Chilling Howl or even Armour of Contempt bleed in). The stratagem list ' +
+          'now shows exactly the stratagems that detachment actually has.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Space Wolves detachment rules filled in',

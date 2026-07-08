@@ -560,22 +560,28 @@
   }
 
   // Reconcile 40kdc strats with the GDC-attached list on a detachment, in place.
-  // 40kdc decides which strats exist + CP/phase; text is 40kdc-where-authored,
-  // GDC-where-not; GDC-only strats (no 40kdc match) are appended so we never lose
-  // text GDC has. Writes the union back to `detachment.gdcStratagems` (the field
-  // faction-rules.js already renders), and returns coverage counts.
+  // 40kdc decides WHICH strats exist + CP/phase; GDC is a TEXT fallback only,
+  // matched by folded name onto the 40kdc set. GDC-only strats (no 40kdc match)
+  // are intentionally DROPPED when 40kdc supplied a strat set for this detachment:
+  // GDC's Space Wolves/SM files still carry legacy prior-edition detachments under
+  // the same names (e.g. an old "Champions of Fenris" whose strat list — Chilling
+  // Howl, Stalking Wolves, even the core Armour of Contempt — has nothing to do
+  // with the current 11e detachment of that name). Appending those leaked foreign
+  // strats onto the wrong detachment. When 40kdc supplies NO strats for a
+  // detachment (dcList empty — e.g. Librarius Conclave), we keep the full GDC list
+  // as-is via the early return, since GDC is then the only source. Writes the
+  // result back to `detachment.gdcStratagems` (the field faction-rules.js renders)
+  // and returns coverage counts.
   function reconcileStrats(detachment) {
     const dcList  = dcStratsFor(detachment.stratagemIds);
     const gdcList = Array.isArray(detachment.gdcStratagems) ? detachment.gdcStratagems : [];
     if (dcList.length === 0) return { n40kdc: 0, nGdcFallback: 0, total: gdcList.length };
     const gdcByKey = new Map();
     gdcList.forEach((g) => { const k = foldName(g.name); if (k && !gdcByKey.has(k)) gdcByKey.set(k, g); });
-    const usedGdc = new Set();
     let nGdcFallback = 0;
     const out = dcList.map((d) => {
       const k = foldName(d.name);
       const g = gdcByKey.get(k);
-      if (g) usedGdc.add(k);
       const description = d.description || (g ? g.description : '');
       if (!d.description && g && g.description) nGdcFallback++;
       return {
@@ -587,7 +593,6 @@
         source: d.description ? '40kdc' : (g && g.description ? 'gdc' : '40kdc'),
       };
     });
-    gdcList.forEach((g) => { if (!usedGdc.has(foldName(g.name))) out.push(g); });
     detachment.gdcStratagems = out;
     return { n40kdc: dcList.length, nGdcFallback, total: out.length };
   }
