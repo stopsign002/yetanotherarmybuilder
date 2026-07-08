@@ -1,0 +1,110 @@
+/* wargear-picker.css — wargear picker under the Add-to-Army box.
+ * Rows follow the redesigned pane's card treatment; steppers echo the
+ * stockpile (Reserves/Requisitions) − n + pill. Over-limit is a SOFT
+ * signal: rows go red, nothing is blocked. */
+
+#detail-wargear-picker { margin-bottom: 14px; }
+
+.wgp-option {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+.wgp-option-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.wgp-replaces {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  min-width: 0;
+}
+.wgp-chip {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.wgp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+}
+.wgp-item {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 0;
+}
+.wgp-pts {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stepper pill: − n + (echoes the stockpile widget) */
+.wgp-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 3px;
+  flex-shrink: 0;
+}
+.wgp-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.wgp-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+.wgp-count {
+  min-width: 18px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* Soft over-limit: red signal, never a block. */
+.wgp-row-over .wgp-item,
+.wgp-row-over .wgp-count { color: #e86a6a; }
+.wgp-row-over .wgp-stepper { border-color: rgba(220, 74, 74, 0.6); }
+.wgp-option.wgp-over { border-color: rgba(220, 74, 74, 0.45); }
+.wgp-note {
+  font-size: 10.5px;
+  color: #e86a6a;
+  margin-top: 3px;
+}

@@ -570,6 +570,69 @@
       const key = wa.name.toLowerCase();
       if (!wargearAbilities.some((x) => x.name.toLowerCase() === key)) wargearAbilities.push(wa);
     });
+    // ── Structured wargear profile (drives the wargear picker) ─────────
+    // 40kdc authors each datasheet's wargear options as machine-readable
+    // swap/add records (replaces + replacement/replacement_choice +
+    // model_constraint) plus take-limits (wargear_budgets, e.g. "1 plasma
+    // pistol per 3 models") and size-tiered composition. Map them into a
+    // renderer-friendly shape; null when the unit has none authored.
+    // Costs: upstream ships every option is_free today — carry cost:0 so the
+    // picker's points math lights up unchanged when 11e wargear costs land.
+    const wargearProfile = (function () {
+      const itemName = (id) => {
+        let it = null;
+        try { it = DC.weapons.getInFaction ? DC.weapons.getInFaction(id, u.faction_id) : null; } catch (_) {}
+        if (!it) { try { it = DC.weapons.getAny ? DC.weapons.getAny(id) : DC.weapons.get(id); } catch (_) {} }
+        if (!it) { try { it = DC.wargear.getAny ? DC.wargear.getAny(id) : DC.wargear.get(id); } catch (_) {} }
+        const nm = it && (it.name || (it.raw && it.raw.name));
+        return nm || String(id).replace(/-/g, ' ');
+      };
+      let wgos = [];
+      try { wgos = uv.wargearOptions || []; } catch (_) { wgos = []; }
+      const options = wgos.map((w) => {
+        const r = (w && w.raw) || w || {};
+        const groups = Array.isArray(r.replacement_choice) ? r.replacement_choice
+          : (Array.isArray(r.replacement) ? [r.replacement] : []);
+        return {
+          id: r.id,
+          replaces: (r.replaces || []).map((id) => ({ id, name: itemName(id) })),
+          choices: groups.map((grp) => (grp || []).map((id) => ({ id, name: itemName(id) }))),
+          constraint: r.model_constraint || {},
+          cost: 0,
+        };
+      }).filter((o) => o.id && o.choices.length);
+      const budgets = (u.wargear_budgets || []).map((b) => ({
+        items: (b && b.items || []).map((id) => ({ id, name: itemName(id) })),
+        count: (b && b.count) || 0,
+        perModels: (b && b.per_models) || 0,
+      })).filter((b) => b.items.length && b.count > 0);
+      // Per-squad-size model roster (from composition tiers) so the picker can
+      // resolve model_name-scoped limits at the chosen squad size.
+      let modelsBySize = null;
+      try {
+        const ds = uv.ds;
+        const comp = ds && ds.compositionByUnit && ds.compositionByUnit.get(u.faction_id + '::' + u.id);
+        const rawComp = comp && (comp.raw || comp);
+        const tiers = rawComp && rawComp.tiers;
+        if (Array.isArray(tiers) && tiers.length) {
+          modelsBySize = {};
+          tiers.forEach((t) => {
+            const models = (t && t.models) || [];
+            let total = 0; const byName = {};
+            models.forEach((m) => {
+              const n = (m && (m.max != null ? m.max : m.min)) || 0;
+              total += n;
+              if (m && m.name) byName[m.name] = n;
+            });
+            if (total > 0) modelsBySize[total] = byName;
+          });
+          if (!Object.keys(modelsBySize).length) modelsBySize = null;
+        }
+      } catch (_) { modelsBySize = null; }
+      if (!options.length) return null;
+      return { options, budgets, modelsBySize };
+    })();
+
     // Apply hand-patched default-wargear links the dataset omits entirely.
     (MISSING_WARGEAR_ABILITIES[u.id] || []).forEach((aid) => {
       const desc = textFor(aid);
@@ -595,6 +658,7 @@
       weapons: weaponRows(uv.weapons),
       abilities,
       wargearAbilities,
+      wargearProfile,
       keywords: (u.keywords || []).concat(u.faction_keywords || []),
       wargearOptions: [],
       points: pointsOptions.length ? pointsOptions[0] : 0,

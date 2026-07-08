@@ -103,19 +103,30 @@ window.Storage = (() => {
     // |0]` as the 5th slot on every entry so the decoder can resolve
     // parent pointers from imported tuples.
     const hasAttachments = (army.entries || []).some(e => e && e.attachedToEntryId);
+    // 6th slot: wargear-picker selections as [optionId, choiceIdx, count(, pts)]
+    // triples. Only armies that actually carry wargear emit the slot (with
+    // placeholders on the earlier slots), so pre-feature codes stay
+    // byte-identical. Labels/items are re-derived from the unit's
+    // wargearProfile on import.
+    const hasWargear = (army.entries || []).some(e => e && e.wargear && e.wargear.length);
     data.e = (army.entries || []).map(entry => {
       const tuple = [entry.unitId, entry.count];
       const enhs = (entry.enhancements || []).map(e => [e.name, e.pts || 0]);
       const hasEnh = enhs.length > 0;
       const hasPts = entry.selectedPts != null;
+      const wgs = (entry.wargear || []).filter(w => w && w.optionId && w.count > 0)
+        .map(w => w.pts ? [w.optionId, w.choice, w.count, w.pts] : [w.optionId, w.choice, w.count]);
+      const hasWg = wgs.length > 0;
       // Slots are positional; if attachments are present we have to
       // emit selectedPts + enhPairs as placeholders even when empty so
-      // the 5th slot lands at index 4.
-      if (hasAttachments || hasPts || hasEnh) tuple.push(hasPts ? entry.selectedPts : null);
-      if (hasAttachments || hasEnh)           tuple.push(hasEnh ? enhs : null);
-      if (hasAttachments) {
+      // the 5th slot lands at index 4. Same domino when the wargear slot
+      // (index 5) is in play.
+      if (hasAttachments || hasWargear || hasPts || hasEnh) tuple.push(hasPts ? entry.selectedPts : null);
+      if (hasAttachments || hasWargear || hasEnh)           tuple.push(hasEnh ? enhs : null);
+      if (hasAttachments || hasWargear) {
         tuple.push([entry.entryId || null, entry.attachedToEntryId || 0]);
       }
+      if (hasWargear) tuple.push(hasWg ? wgs : null);
       return tuple;
     });
     return data;
@@ -143,8 +154,32 @@ window.Storage = (() => {
     const chapter     = data.c || '';
     const lookupOrder = [chapter, factionName];
     const displayFaction = chapter || factionName || '(unknown)';
+    // Rebuild wargear-picker selections from compact [optionId, choiceIdx,
+    // count(, pts)] triples against the unit's wargearProfile (labels/items
+    // aren't encoded). Options that no longer exist upstream decode to a
+    // bare selection with the optionId as label, so nothing is silently lost.
+    const wargearFromTriples = (triples, unitData) => {
+      if (!Array.isArray(triples)) return [];
+      const opts = (unitData && unitData.wargearProfile && unitData.wargearProfile.options) || [];
+      return triples.map(t => {
+        if (!Array.isArray(t)) return null;
+        const [optionId, choice = null, count = 0, pts = 0] = t;
+        if (!optionId || !count) return null;
+        const opt = opts.find(o => o.id === optionId) || null;
+        const grp = (opt && opt.choices[(choice == null ? 0 : choice)]) || null;
+        const items = grp ? grp.map(x => x.name) : [];
+        return {
+          optionId,
+          choice: choice == null ? null : choice,
+          count,
+          label: items.join(' + ') || String(optionId),
+          items,
+          pts: pts || (opt && opt.cost) || 0,
+        };
+      }).filter(Boolean);
+    };
     const entries = (data.e || []).map(tuple => {
-      const [unitId, count = 1, selectedPts = null, enhPairs = null, attachPair = null] = tuple;
+      const [unitId, count = 1, selectedPts = null, enhPairs = null, attachPair = null, wgTriples = null] = tuple;
       const unitData = _findUnit(factions, lookupOrder, unitId);
       if (!unitData) {
         throw new Error(`Unit "${unitId}" from "${displayFaction}" is not loaded yet. Wait for background loading to finish, then try again.`);
@@ -172,6 +207,7 @@ window.Storage = (() => {
         selectedPts: resolvedPts,
         squadLabel,
         enhancements,
+        wargear: wargearFromTriples(wgTriples, unitData),
         entryId,
         attachedToEntryId,
       };

@@ -111,6 +111,24 @@
 }
 .detail-name-underline-gold { background: #f5c842; }
 
+/* Two-row banner: row 1 = name/flavor + points/actions stack; row 2 spans
+   the FULL width (faction tag, type, ordinal-pricing box). Inside the old
+   single flex row those lower elements were squeezed into the left column
+   for the banner's whole height. */
+.unit-detail-content .detail-header.detail-banner { display: block; }
+.unit-detail-content .detail-banner-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.unit-detail-content .detail-banner-full { min-width: 0; }
+.unit-detail-content .detail-banner-full .detail-meta { margin-top: 2px; }
+.unit-detail-content .detail-banner-full .detail-ordinal {
+  margin: 8px 0 0;
+  max-width: none;
+}
+
 /* Points as a right-aligned stack: big value + small "POINTS" caption. */
 .detail-pts-stack {
   text-align: right;
@@ -281,9 +299,29 @@
   border-color: rgba(var(--accent-rgb), 0.5);
   background: rgba(var(--accent-rgb), 0.06);
 }
+/* The body must fill the row or space-between has no space to distribute —
+   without flex:1 the pts pill hugged the name instead of the right edge. */
+.unit-detail-content .enhancement-cb-item .enh-cb-body {
+  flex: 1;
+  min-width: 0;
+}
 .unit-detail-content .enh-cb-header {
   justify-content: space-between;
   gap: 8px;
+}
+/* 11e unit-scoped "upgrade enhancement" marker */
+.enh-cb-upgrade-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #cdb488;
+  background: rgba(205, 180, 136, 0.1);
+  border: 1px solid rgba(205, 180, 136, 0.3);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: 1px;
 }
 .unit-detail-content .enh-cb-name { font-size: 12.5px; font-weight: 700; }
 .unit-detail-content .enh-cb-pts {

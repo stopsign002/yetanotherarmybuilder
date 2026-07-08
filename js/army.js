@@ -52,12 +52,14 @@ window.Army = class Army {
    * @param {object|null} squadOption  — { pts, models } from parser squadOptions
    * @param {Array} enhancements       — [{name, pts, description}] selected enhancements
    */
-  addUnit(unitData, count = 1, squadOption = null, enhancements = []) {
+  addUnit(unitData, count = 1, squadOption = null, enhancements = [], wargear = []) {
     const selectedPts  = squadOption ? squadOption.pts  : (unitData.points || 0);
     const squadLabel   = squadOption && squadOption.models ? `${squadOption.models} models` : null;
-    // Entries with enhancements are always separate; plain entries can stack
-    const existing = !enhancements.length && this.entries.find(
-      e => e.unitId === unitData.id && e.selectedPts === selectedPts && !(e.enhancements && e.enhancements.length)
+    // Entries with enhancements or wargear selections are always separate;
+    // plain entries can stack.
+    const existing = !enhancements.length && !(wargear && wargear.length) && this.entries.find(
+      e => e.unitId === unitData.id && e.selectedPts === selectedPts
+        && !(e.enhancements && e.enhancements.length) && !(e.wargear && e.wargear.length)
     );
     if (existing) {
       existing.count += count;
@@ -70,6 +72,10 @@ window.Army = class Army {
         selectedPts,
         squadLabel,
         enhancements: enhancements || [],
+        // Wargear selections from the picker: [{ optionId, choice, count,
+        // label, items:[names], pts }] — pts per item, 0 until upstream
+        // 40kdc ships 11e wargear costs.
+        wargear: wargear || [],
         entryId: _mintEntryId(),
         attachedToEntryId: null,
       });
@@ -92,6 +98,13 @@ window.Army = class Army {
     this.detachmentNames = list;
     this.detachmentName = list[0] || null;
     if (!opts || opts.touch !== false) this.updatedAt = new Date().toISOString();
+  }
+
+  setWargear(index, wargear) {
+    if (this.entries[index]) {
+      this.entries[index].wargear = wargear || [];
+      this.updatedAt = new Date().toISOString();
+    }
   }
 
   setEnhancements(index, enhancements) {
@@ -138,7 +151,10 @@ window.Army = class Army {
     if (!entry) return 0;
     const pts    = (entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData && entry.unitData.points || 0));
     const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
-    return pts * (entry.count || 0) + enhPts + this.getEntryOrdinalSurcharge(index);
+    // Wargear cost: per-item pts × how many taken, per squad copy. Zero today
+    // (upstream ships all options free); lights up when 11e costs land.
+    const wgPts  = (entry.wargear || []).reduce((s, w) => s + (w.pts || 0) * (w.count || 0), 0);
+    return pts * (entry.count || 0) + enhPts + wgPts * (entry.count || 0) + this.getEntryOrdinalSurcharge(index);
   }
 
   // 11e per-army-ordinal pricing: copies of a datasheet at/after its threshold
@@ -194,6 +210,21 @@ window.Army = class Army {
             selectedPts: Number.isFinite(e.selectedPts) ? e.selectedPts : undefined,
             squadLabel:  typeof e.squadLabel === 'string' ? e.squadLabel : null,
             enhancements: Array.isArray(e.enhancements) ? e.enhancements : [],
+            // Wargear picker selections — rebuild each from a fixed shape
+            // (same untrusted-input policy as the rest of the entry).
+            wargear: Array.isArray(e.wargear)
+              ? e.wargear
+                  .filter(w => w && typeof w === 'object')
+                  .map(w => ({
+                    optionId: typeof w.optionId === 'string' ? w.optionId : '',
+                    choice:   Number.isFinite(w.choice) ? w.choice : null,
+                    count:    Number.isFinite(w.count) ? w.count : 0,
+                    label:    typeof w.label === 'string' ? w.label : '',
+                    items:    Array.isArray(w.items) ? w.items.filter(x => typeof x === 'string') : [],
+                    pts:      Number.isFinite(w.pts) ? w.pts : 0,
+                  }))
+                  .filter(w => w.optionId && w.count > 0)
+              : [],
             // entryId / attachedToEntryId carry the attachment graph.
             // Missing entryId on a legacy entry is fine — the Army
             // constructor mints one on rehydration. attachedToEntryId

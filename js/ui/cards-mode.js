@@ -533,6 +533,7 @@
       ['ranged',      'Ranged weapons'],
       ['melee',       'Melee weapons'],
       ['weaponKw',    'Weapon keywords (under name)'],
+      ['wgCounts',    'Wargear counts (×N taken)'],
       ['abilities',   'Abilities'],
       ['coreAbil',    'Core abilities row'],
       ['wargear',     'Wargear options / loadout'],
@@ -1023,7 +1024,7 @@
     return out;
   }
 
-  function renderWeaponsBlock(list, type) {
+  function renderWeaponsBlock(list, type, wgCounts) {
     if (!list || list.length === 0) return '';
     const COLS = type === 'ranged'
       ? ['Range', 'A', 'BS', 'S', 'AP', 'D']
@@ -1069,8 +1070,10 @@
       // card width instead of wrapping at the narrow name column. The stat row
       // drops its bottom border when a keyword row follows so the two read as
       // one weapon entry.
+      // ×N chip when the army entry's wargear picker took N of this item.
+      const wgN = wgCounts && wgCounts.get(String(w.name).toLowerCase());
       const statRow = `<tr class="dcc-w-row${kw ? ' has-kw' : ''}">
-        <td class="dcc-w-name">${esc(w.name)}</td>
+        <td class="dcc-w-name">${esc(w.name)}${wgN ? `<span class="dcc-wg-count">×${wgN}</span>` : ''}</td>
         ${cells}
       </tr>`;
       const kwRow = kw
@@ -1336,6 +1339,15 @@
     const presentStats = STAT_ORDER.filter(k =>
       statProfiles.some(p => getStatVal(p, k) !== '—'));
     const { ranged, melee } = classifyWeapons(unit);
+    // Wargear-picker counts (entry.wargear) keyed by lowercased item name —
+    // weapon rows whose name matches a taken item get a "×N" chip.
+    const wgCounts = new Map();
+    if (display.wgCounts) {
+      (entry.wargear || []).forEach(w => (w.items || []).forEach(nm => {
+        const k = String(nm).toLowerCase();
+        wgCounts.set(k, (wgCounts.get(k) || 0) + (w.count || 0));
+      }));
+    }
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     const ptsLabel = entry.selectedPts != null ? entry.selectedPts : (ptsOpts.length ? ptsOpts[0] : null);
 
@@ -1447,8 +1459,8 @@
         ${showSubLine ? `<div class="dcc-sub-line">${role}</div>` : ''}
       </header>
       ${statsHtml ? `<div class="dcc-stats-group" data-sec="stats" data-sec-label="Stat Block">${statsHtml}</div>` : ''}
-      ${display.ranged ? renderWeaponsBlock(ranged, 'ranged') : ''}
-      ${display.melee  ? renderWeaponsBlock(melee, 'melee')   : ''}
+      ${display.ranged ? renderWeaponsBlock(ranged, 'ranged', wgCounts) : ''}
+      ${display.melee  ? renderWeaponsBlock(melee, 'melee', wgCounts)   : ''}
       ${renderAbilitiesBlock(unit)}
       ${renderTransportBlock(unit)}
       ${renderWargearBlock(unit)}

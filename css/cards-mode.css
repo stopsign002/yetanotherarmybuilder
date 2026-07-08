@@ -1765,3 +1765,16 @@
     break-after: auto !important;
   }
 }
+
+/* ── Wargear-picker ×N chips on weapon rows ─────────────────────────
+   Shown when the army entry took N of an item via the wargear picker
+   (display toggle: "Wargear counts"). Sized in em so it scales with
+   every card template's own type size. */
+.dcc-wg-count {
+  font-size: 0.82em;
+  font-weight: 700;
+  margin-left: 0.35em;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

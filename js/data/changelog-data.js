@@ -26,9 +26,45 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-19',
+    version:     '2026.07.08-20',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'feature',
+        title: 'Wargear picker — build your loadout per squad',
+        description:
+          'Units with authored wargear options (550 datasheets) now show a ' +
+          '“Wargear Options” box under Add to Army. Use the +/− steppers to ' +
+          'pick weapon swaps before adding the unit; each option shows its ' +
+          'limit (“Sergeant only · max 1”, “1 per 3 models”, …) and limits ' +
+          'react to the squad size you pick. Going over a limit never blocks ' +
+          'you — the rows just turn red so you know it’s illegal. Chosen ' +
+          'counts appear as ×N next to the matching weapons on printed cards ' +
+          '(toggle under Cards → Display), and they survive save / share / ' +
+          'sync. Wargear point costs aren’t in the data yet — when upstream ' +
+          'adds them, prices will appear here automatically.',
+      },
+      {
+        date: '2026-07-08', kind: 'feature',
+        title: 'Unit upgrade enhancements now selectable',
+        description:
+          '11th edition added unit-scoped “upgrade” enhancements (e.g. ' +
+          '“WOLF GUARD TERMINATORS unit only”). These were wrongly locked ' +
+          'behind the Character-only rule. They now unlock on the matching ' +
+          'unit — including keyword targets like ADEPTUS CUSTODES WALKER — ' +
+          'and carry an “Upgrade” tag so they read differently from ' +
+          'character relics.',
+      },
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Details header uses the full card width',
+        description:
+          'The faction tag, unit type and the per-army pricing box were ' +
+          'squeezed into the left half of the details header next to the ' +
+          'points stack. They now sit on their own full-width row under the ' +
+          'unit name. Enhancement point pills also right-align properly in ' +
+          'their cards.',
+      },
       {
         date: '2026-07-08', kind: 'change',
         title: 'Add-to-Army box matches the redesigned pane',

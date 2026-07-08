@@ -145,7 +145,11 @@
         document.querySelectorAll('#detail-enhancements-section .enhancement-cb:checked')
       ).map(cb => detEnhs.find(e => e.name === cb.value)).filter(Boolean);
 
-      state.currentArmy.addUnit(state.selectedUnit, qty, squadOption, selectedEnhancements);
+      // Wargear picker: snapshot the configured loadout onto the new entry.
+      const wargearSel = (App.WargearPicker && App.WargearPicker.takeSelections)
+        ? App.WargearPicker.takeSelections(state.selectedUnit) : [];
+
+      state.currentArmy.addUnit(state.selectedUnit, qty, squadOption, selectedEnhancements, wargearSel);
       UI.renderArmyList(state.currentArmy);
       const label = squadOption && squadOption.models
         ? `${qty}× ${state.selectedUnit.name} (${squadOption.models} models)`

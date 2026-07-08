@@ -210,16 +210,17 @@
         </div>`
       : '';
 
+    // Two-row banner: the name/flavor column shares row 1 with the points/
+    // actions stack; the meta row + ordinal-pricing box sit BELOW on a
+    // full-width row (inside the old flex column they were squeezed to the
+    // left half of the card for the banner's whole height).
     html += `
       <div class="detail-header detail-banner">
+        <div class="detail-banner-row">
         <div class="detail-header-main">
           <div class="detail-name">${esc(unit.name)}</div>
           <div class="detail-name-underline"></div>
           ${flavorHtml}
-          <div class="detail-meta detail-banner-subtitle">
-            ${subtitleParts.join('')}
-          </div>
-          ${ordinalNoteHtml(unit)}
         </div>
         <div class="detail-header-actions detail-banner-actions">
           ${ptsStackHtml}
@@ -234,6 +235,13 @@
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
           </button>
+        </div>
+        </div>
+        <div class="detail-banner-full">
+          <div class="detail-meta detail-banner-subtitle">
+            ${subtitleParts.join('')}
+          </div>
+          ${ordinalNoteHtml(unit)}
         </div>
       </div>
     `;
@@ -255,6 +263,13 @@
         </div>
       </div>
     `;
+
+    // Wargear picker mount point (js/app/wargear-picker.js fills it when the
+    // unit has a structured wargearProfile). Sits directly under Add-to-Army
+    // so a loadout is configured before the unit is added.
+    if (unit.wargearProfile) {
+      html += `<div class="detail-section" id="detail-wargear-picker"></div>`;
+    }
 
     const STAT_ORDER = ['M', 'T', 'SV', 'W', 'LD', 'OC'];
 
@@ -664,19 +679,61 @@
       </div>`;
     }
 
-    // 10e rule: enhancements require the Character keyword AND the unit
+    // Character enhancements require the Character keyword AND the unit
     // must NOT be an Epic Hero (named special characters can't take
-    // enhancements per 10e core rules).
+    // enhancements per core rules). 11e ALSO has unit-scoped "upgrade
+    // enhancements" whose prose opens "<UNIT NAME> unit only." — those are
+    // taken by the named unit itself (no Character requirement), so
+    // eligibility is decided PER enhancement, not once per unit.
     const kws = unit.keywords || [];
     const isCharacter = kws.some(k => String(k).toLowerCase() === 'character');
     const isEpicHero  = kws.some(k => String(k).toLowerCase() === 'epic hero');
     const canTakeEnhancement = isCharacter && !isEpicHero;
+    // "<TARGET> unit only" prefix → the upgrade's target (null = regular
+    // character enhancement). TARGET is uppercase in the prose.
+    const upgradeTarget = (enh) => {
+      const m = /^([A-Z][A-Z0-9'’\- ]+?)\s+unit only\b/.exec(String(enh && enh.description || '').trim());
+      return m ? m[1].trim() : null;
+    };
+    // Match target against the unit's name/keywords. Targets can be a plain
+    // unit name ("WOLF GUARD TERMINATORS") or a KEYWORD CONJUNCTION
+    // ("ADEPTUS CUSTODES WALKER" = keywords Adeptus Custodes + Walker), so we
+    // check the target can be fully segmented into phrases the unit carries.
+    const unitHay = new Set([String(unit.name || '').toUpperCase()]
+      .concat(kws.map(k => String(k).toUpperCase())));
+    const segments = (target) => {
+      const words = target.split(/\s+/).filter(Boolean);
+      const memo = new Array(words.length + 1).fill(null);
+      memo[words.length] = true;
+      const ok = (i) => {
+        if (memo[i] != null) return memo[i];
+        for (let j = words.length; j > i; j--) {
+          if (unitHay.has(words.slice(i, j).join(' ')) && ok(j)) return (memo[i] = true);
+        }
+        return (memo[i] = false);
+      };
+      return ok(0);
+    };
+    const targetMatches = (target) => target.split(/\s+OR\s+/).some(t => segments(t.trim()));
+    const enhEligibility = (enh) => {
+      const target = upgradeTarget(enh);
+      if (target) {
+        return { eligible: targetMatches(target), note: target + ' unit only', upgrade: true };
+      }
+      return {
+        eligible: canTakeEnhancement,
+        note: isEpicHero ? 'Epic Hero — cannot take enhancements' : 'Character-only',
+        upgrade: false,
+      };
+    };
+    const anyEligible = canTakeEnhancement
+      || (detachmentEnhancements || []).some(e => enhEligibility(e).eligible);
     // Show the section when the unit can take enhancements, or when a
     // detachment with enhancements is loaded — that way users always see
     // where the feature lives, with a contextual hint when they haven't
     // selected a detachment yet. Epic Heroes with no detachment loaded
     // get nothing (the "pick a detachment" hint would be misleading).
-    if (canTakeEnhancement || (detachmentEnhancements && detachmentEnhancements.length > 0)) {
+    if (anyEligible || (detachmentEnhancements && detachmentEnhancements.length > 0)) {
       const selectedNames = new Set((selectedEnhancements || []).map(e => e.name));
       html += `<div class="detail-section" id="detail-enhancements-section">
         <div class="detail-section-title">Enhancements</div>`;
@@ -686,26 +743,22 @@
           Pick a detachment with enhancements (top-left) to apply one to this character.
         </div></div>`;
       } else {
-        const ineligNote = isEpicHero
-          ? 'Epic Hero — cannot take enhancements'
-          : 'Character-only';
-        const ineligTitle = isEpicHero
-          ? 'Epic Heroes cannot take enhancements'
-          : 'Character-only';
         html += `<div class="detail-enhancements-list">`;
         detachmentEnhancements.forEach(enh => {
           const checked = selectedNames.has(enh.name) ? ' checked' : '';
-          const ineligClass = canTakeEnhancement ? '' : ' enhancement-ineligible';
-          html += `<label class="enhancement-cb-item${ineligClass}"${!canTakeEnhancement ? ` title="${esc(ineligTitle)}"` : ''}>
+          const elig = enhEligibility(enh);
+          const ineligClass = elig.eligible ? '' : ' enhancement-ineligible';
+          const upgradeTag = elig.upgrade ? `<span class="enh-cb-upgrade-tag">Upgrade</span>` : '';
+          html += `<label class="enhancement-cb-item${ineligClass}"${!elig.eligible ? ` title="${esc(elig.note)}"` : ''}>
             <input type="checkbox" class="enhancement-cb" value="${esc(enh.name)}"${checked}
               data-enh-pts="${enh.pts || 0}" data-enh-name="${esc(enh.name)}" data-enh-desc="${esc(enh.description || '')}"/>
             <span class="enh-cb-body">
               <span class="enh-cb-header">
-                <span class="enh-cb-name">${esc(enh.name)}</span>
+                <span class="enh-cb-name">${esc(enh.name)}${upgradeTag}</span>
                 <span class="enh-cb-pts">${enh.pts ? enh.pts + ' pts' : ''}</span>
               </span>
               <span class="enh-cb-desc">${esc(enh.description || '')}</span>
-              ${!canTakeEnhancement ? `<span class="enh-cb-ineligible-note">${esc(ineligNote)}</span>` : ''}
+              ${!elig.eligible ? `<span class="enh-cb-ineligible-note">${esc(elig.note)}</span>` : ''}
             </span>
           </label>`;
         });
@@ -718,6 +771,11 @@
     const existing = panel.querySelector('.unit-detail-content');
     if (existing) existing.remove();
     panel.insertAdjacentHTML('beforeend', html);
+
+    // Fill the wargear picker (no-op when the unit has no profile).
+    if (unit.wargearProfile && window.App && App.WargearPicker) {
+      try { App.WargearPicker.mount(unit, panel); } catch (_) {}
+    }
 
     document.getElementById('btn-google-images').addEventListener('click', e => {
       const name = e.currentTarget.dataset.unit;
