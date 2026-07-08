@@ -26,10 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-7',
+    version:     '2026.07.08-8',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
       // ── 2026-07-08 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Army rules no longer clutter unit cards',
+        description:
+          'Army-wide rules (Oath of Moment, Reanimation Protocols, Waaagh!, For ' +
+          'the Greater Good, Mission Tactics, Voice of Command, …) were showing ' +
+          'as empty abilities on individual datasheets. They now appear only in ' +
+          'the Army Rules section where they belong; genuine unit abilities are ' +
+          'untouched.',
+      },
       {
         date: '2026-07-08', kind: 'feature',
         title: 'Read a detachment before you pick it',

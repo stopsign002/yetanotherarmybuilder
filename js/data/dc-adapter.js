@@ -62,6 +62,25 @@
   // resolve an AbilityView/raw ability's name
   const abilityName = (a) => a && (a.name || (a.raw && a.raw.name)) || '';
 
+  // The set of ARMY-RULE ability ids — every faction's faction_rule_id(s). 40kdc
+  // links the army rule (Oath of Moment, Reanimation Protocols, Waaagh!, For the
+  // Greater Good, Mission Tactics, Voice of Command, …) onto individual
+  // datasheets as an ability_type:'faction' ability, so it was rendering on unit
+  // cards — usually with no text, since the prose lives at the army level. The
+  // army rule already shows in the Army Rules section (buildArmyRules), so we
+  // strip it from unit ability lists. Keyed by id (precise): this does NOT touch
+  // genuine unit abilities that merely happen to be tagged 'faction' upstream
+  // (e.g. "Super-heavy Walker", "Synapse") since those aren't faction_rule_ids.
+  const ARMY_RULE_IDS = (function () {
+    const s = new Set();
+    (DC.factions && DC.factions.all || []).forEach((fv) => {
+      const f = fv.raw || fv;
+      if (f && f.faction_rule_id) s.add(f.faction_rule_id);
+      if (f && Array.isArray(f.faction_rule_ids)) f.faction_rule_ids.forEach((x) => x && s.add(x));
+    });
+    return s;
+  })();
+
   // The fixed GW datasheet CORE abilities. Matched by name (anchored, so a
   // unit ability that merely starts with one of these words doesn't false-hit)
   // with an optional trailing rating — "Feel No Pain 5+", "Scouts 9\"",
@@ -394,7 +413,7 @@
     // mis-keys faction-specific prose like "Fervour of the Ancients"; that
     // broader fix is tracked separately.)
     const abilities = (uv.abilities || [])
-      .filter((a) => a && a.id !== 'leader')
+      .filter((a) => a && a.id !== 'leader' && !ARMY_RULE_IDS.has(a.id))
       .map((a) => {
         const raw = a.raw || a;
         const name = abilityName(a);
