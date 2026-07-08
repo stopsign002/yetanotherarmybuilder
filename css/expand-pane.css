@@ -101,10 +101,12 @@
   .panel-expanded > .panel-body {
     padding: 24px clamp(20px, 4vw, 56px) 32px;
   }
-  .panel-expanded > .panel-header {
+  .panel-expanded > .panel-header,
+  .panel-build-focus > .panel-header {
     padding: 16px clamp(20px, 4vw, 56px) 12px;
   }
-  .panel-expanded > .panel-header h2 {
+  .panel-expanded > .panel-header h2,
+  .panel-build-focus > .panel-header h2 {
     font-size: 16px;
     letter-spacing: 2px;
   }

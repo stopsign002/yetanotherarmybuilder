@@ -13,6 +13,11 @@
 (function () {
   const App = window.App = window.App || {};
 
+  // Name of the detachment whose details are currently shown in the Details
+  // pane (read-only view). Persists across picker re-renders so the row stays
+  // highlighted. Distinct from SELECTED (in the army) — that's the checkbox.
+  let viewingName = null;
+
   const alpha = (a, b) =>
     String(a && a.name || '').localeCompare(String(b && b.name || ''), undefined, { sensitivity: 'base' });
 
@@ -153,11 +158,13 @@
       html += '<div class="detachments-list">';
       g.items.forEach(d => {
         const sel = selectedNames.has(d.name);
+        const viewing = (d.name === viewingName);
         const pts = d.points;
         html +=
-          `<div class="detachment-row${sel ? ' selected' : ''}" data-name="${esc(d.name)}" ` +
-          `role="button" tabindex="0" aria-pressed="${sel ? 'true' : 'false'}">` +
-            `<span class="detachment-row-check" aria-hidden="true">${sel ? '&#10003;' : ''}</span>` +
+          `<div class="detachment-row${sel ? ' selected' : ''}${viewing ? ' viewing' : ''}" data-name="${esc(d.name)}" ` +
+          `role="button" tabindex="0" title="Click to read its rules; tick the box to add it to your army">` +
+            `<input type="checkbox" class="detachment-row-cb" data-name="${esc(d.name)}" ${sel ? 'checked' : ''} ` +
+            `aria-label="Add ${esc(d.name)} to your army" />` +
             `<span class="detachment-row-name">${esc(d.name)}</span>` +
             (pts != null ? `<span class="detachment-row-pts">${esc(ptLabel(pts))}</span>` : '') +
           '</div>';
@@ -179,23 +186,44 @@
     if (total) total.textContent = count ? `${totalPts} pt${totalPts === 1 ? '' : 's'}` : '';
   };
 
-  // One delegated listener handles clicks/keys on every (re-rendered) row.
-  function onActivate(name) { if (name) App.toggleDetachment(name); }
-  document.addEventListener('click', e => {
-    const row = e.target.closest && e.target.closest('.detachment-row');
-    if (row && document.getElementById('detachments-body') &&
-        document.getElementById('detachments-body').contains(row)) {
-      onActivate(row.dataset.name);
+  function inBody(el) {
+    const body = document.getElementById('detachments-body');
+    return !!(body && el && body.contains(el));
+  }
+
+  // Show a detachment's full rules/enhancements/stratagems in the Details pane.
+  // Read-only — it does NOT change what's in the army (that's the checkbox).
+  function showDetail(name) {
+    if (!name) return;
+    viewingName = name;
+    const avail = (typeof App.getAvailableDetachments === 'function') ? App.getAvailableDetachments() : [];
+    const det = avail.find(d => d.name === name);
+    if (det && window.UI && typeof UI.renderDetachmentDetail === 'function') {
+      UI.renderDetachmentDetail(det);
+      if (App.setMobilePanel) App.setMobilePanel('detail');
     }
+    const body = document.getElementById('detachments-body');
+    if (body) body.querySelectorAll('.detachment-row').forEach(r =>
+      r.classList.toggle('viewing', r.dataset.name === name));
+  }
+
+  // Checkbox toggles army membership (delegated — survives re-renders).
+  document.addEventListener('change', e => {
+    const cb = e.target.closest && e.target.closest('.detachment-row-cb');
+    if (!cb || !inBody(cb)) return;
+    if (cb.dataset.name) App.toggleDetachment(cb.dataset.name);
+  });
+  // Clicking the row anywhere BUT the checkbox opens its details.
+  document.addEventListener('click', e => {
+    if (e.target.closest && e.target.closest('.detachment-row-cb')) return;
+    const row = e.target.closest && e.target.closest('.detachment-row');
+    if (row && inBody(row)) showDetail(row.dataset.name);
   });
   document.addEventListener('keydown', e => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.key !== 'Enter') return;
+    if (e.target.closest && e.target.closest('.detachment-row-cb')) return;
     const row = e.target.closest && e.target.closest('.detachment-row');
-    if (row && document.getElementById('detachments-body') &&
-        document.getElementById('detachments-body').contains(row)) {
-      e.preventDefault();
-      onActivate(row.dataset.name);
-    }
+    if (row && inBody(row)) { e.preventDefault(); showDetail(row.dataset.name); }
   });
 
   // Defensive first paint once the app has bootstrapped.

@@ -26,10 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-5',
+    version:     '2026.07.08-6',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
       // ── 2026-07-08 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-08', kind: 'feature',
+        title: 'Read a detachment before you pick it',
+        description:
+          'In the Detachments box, tick the checkbox to add a detachment to your ' +
+          'army; click anywhere else on its row to read its full rule, ' +
+          'enhancements, and stratagems in the Details pane — so you can compare ' +
+          'options before committing.',
+      },
       {
         date: '2026-07-08', kind: 'change',
         title: 'Expanding Army or Details now hides only the Units pane',

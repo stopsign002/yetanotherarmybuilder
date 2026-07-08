@@ -826,6 +826,90 @@
     `);
   };
 
+  // Render a whole detachment (rules + enhancements + stratagems) into the
+  // Details pane so a player can read through their options before committing.
+  // Driven by clicking a row in the Detachments picker (js/app/detachment-picker.js).
+  UI.renderDetachmentDetail = function (det) {
+    const esc = UI.escapeHtml;
+    const panel = document.getElementById('unit-detail-panel');
+    if (!panel || !det) return;
+    const empty = document.getElementById('unit-detail-empty');
+    if (empty) empty.style.display = 'none';
+    const existing = panel.querySelector('.unit-detail-content');
+    if (existing) existing.remove();
+
+    const mdBold = (s) => esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    const rules = det.rules || [];
+    const enhancements = det.enhancements || [];
+    // Reconciled display strats (gdcStratagems) + any BSData strats, deduped.
+    const seen = new Set(), strats = [];
+    [(det.stratagems || []), (det.gdcStratagems || [])].forEach(arr => arr.forEach(s => {
+      if (!s || !s.name) return;
+      const k = s.name.toLowerCase();
+      if (seen.has(k)) return;
+      seen.add(k);
+      strats.push(s);
+    }));
+
+    const ptsBadge = (det.points != null)
+      ? `<div class="detail-header-actions detail-banner-actions"><span class="detail-pts detail-banner-pts">${esc(String(det.points))} pt${det.points === 1 ? '' : 's'}</span></div>`
+      : '';
+
+    let html = `<div class="unit-detail-content unit-detail-rule" data-detail-kind="detachment">
+      <div class="detail-header detail-banner detail-banner-rule">
+        <div class="detail-header-main">
+          <div class="detail-name">${esc(det.name)}</div>
+          <div class="detail-meta detail-banner-subtitle"><span class="detail-rule-kind">Detachment</span></div>
+        </div>
+        ${ptsBadge}
+      </div>`;
+
+    if (rules.length) {
+      html += `<div class="detail-section"><div class="detail-section-title">Detachment Rule${rules.length > 1 ? 's' : ''}</div>`;
+      rules.forEach(r => {
+        html += `<div class="detail-detachment-block">${
+          r.name && r.name !== det.name ? `<div class="detail-detachment-subname">${esc(r.name)}</div>` : ''
+        }<p class="detail-detachment-text">${mdBold(r.description || '')}</p></div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (enhancements.length) {
+      html += `<div class="detail-section"><div class="detail-section-title">Enhancements</div>`;
+      enhancements.forEach(e => {
+        html += `<div class="detail-detachment-block"><div class="detail-detachment-subname">${esc(e.name)}${
+          e.pts ? ` <span class="detail-inline-pts">${esc(String(e.pts))} pts</span>` : ''
+        }</div><p class="detail-detachment-text">${mdBold(e.description || '')}</p></div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (strats.length) {
+      html += `<div class="detail-section"><div class="detail-section-title">Stratagems</div>`;
+      strats.forEach(s => {
+        const meta = [];
+        if (s.cp != null) meta.push(`${esc(String(s.cp))} CP`);
+        if (s.phase)      meta.push(esc(s.phase));
+        const sections = splitStratagemSections(s.description || '');
+        const sbody = sections.length
+          ? '<div class="strat-sections">' + sections.map(sec => sec.label
+              ? `<div class="strat-section"><div class="strat-section-label">${esc(sec.label)}</div><div class="strat-section-text">${esc(sec.text)}</div></div>`
+              : `<p class="strat-section-text strat-section-preface">${esc(sec.text)}</p>`).join('') + '</div>'
+          : `<p class="strat-section-empty">No description available.</p>`;
+        html += `<div class="detail-detachment-block"><div class="detail-detachment-subname">${esc(s.name)}${
+          meta.length ? ` <span class="detail-inline-pts">${meta.join(' · ')}</span>` : ''
+        }</div>${sbody}</div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (!rules.length && !enhancements.length && !strats.length) {
+      html += `<div class="detail-section"><p class="strat-section-empty">No rules text available yet.</p></div>`;
+    }
+    html += `</div>`;
+    panel.insertAdjacentHTML('beforeend', html);
+  };
+
   UI.clearUnitDetail = function () {
     const panel = document.getElementById('unit-detail-panel');
     const existing = panel.querySelector('.unit-detail-content');
