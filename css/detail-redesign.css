@@ -235,13 +235,13 @@
    (already two attached banner+box pairs), the primarch gold-leaf box, and
    the wargear picker (band + its own stacked boxes, attached below).
 ───────────────────────────────────────────────────────────── */
-.unit-detail-content .detail-section:not(.detail-weapons-section):not(.detail-section-primarch):not(#detail-wargear-picker) {
+.unit-detail-content .detail-section:not(.detail-weapons-section):not(.detail-section-primarch) {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 8px 10px;
 }
-.unit-detail-content .detail-section:not(.detail-weapons-section):not(.detail-section-primarch):not(#detail-wargear-picker) > .detail-section-title {
+.unit-detail-content .detail-section:not(.detail-weapons-section):not(.detail-section-primarch) > .detail-section-title {
   margin: -8px -10px 8px;
   border: none;
   border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
@@ -305,11 +305,21 @@
   padding-left: 8px;
 }
 
-/* Wargear picker: band attaches to its first box; later boxes stack below. */
-#detail-wargear-picker > .detail-section-title { margin-bottom: 0; border-radius: 0 4px 0 0; }
-#detail-wargear-picker .detail-section-title + .wgp-option {
-  border-top: none;
-  border-radius: 0 0 4px 4px;
+/* Wargear picker: ONE box — the section card holds everything; the inner
+   default/option boxes flatten to groups separated by rules. Over-limit red
+   becomes an inset bar (the group border is gone). */
+#detail-wargear-picker .wgp-option {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(58, 58, 68, 0.5);
+  padding: 8px 0;
+  margin-bottom: 0;
+}
+#detail-wargear-picker .wgp-option:last-child { border-bottom: none; padding-bottom: 2px; }
+#detail-wargear-picker .wgp-option.wgp-over {
+  box-shadow: inset 3px 0 0 rgba(220, 74, 74, 0.7);
+  padding-left: 8px;
 }
 
 /* Stats + weapons read as one unit: tighten the gap between them (the
