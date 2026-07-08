@@ -336,16 +336,19 @@
   padding-left: 8px;
 }
 
-/* Stats + weapons read as one unit: tighten the gap between them (the
-   default 14px section margin-bottom + build-mode's 12px margin-top made
-   ~26px). Stats box comes from the generic section rule above. */
-.unit-detail-content .detail-stats-section {
-  padding: 8px;
-  margin-bottom: 6px;
-}
-.unit-detail-content .detail-stats-section + .detail-weapons-section {
+/* Uniform tight rhythm across the whole pane — the same gap the ranged /
+   melee weapon blocks use. The band headers separate sections plenty on
+   their own; the old 14px margins + build-mode's 12px margin-top read as
+   disconnected islands. */
+.unit-detail-content .detail-header.detail-banner { margin-bottom: 8px; }
+.unit-detail-content .detail-add-section { margin-bottom: 8px; }
+.unit-detail-content .detail-section {
   margin-top: 0;
+  margin-bottom: 8px;
 }
+.unit-detail-content .weapons-subsection { margin-bottom: 8px; }
+.unit-detail-content .weapons-subsection:last-child { margin-bottom: 0; }
+.unit-detail-content .detail-stats-section { padding: 8px; }
 
 /* Separate cells with a 4px gap (build-mode.css draws a connected strip with
    an outer border + overflow:hidden — undo that so the rounded cells show). */
