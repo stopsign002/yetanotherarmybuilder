@@ -53,35 +53,24 @@
     });
   };
 
-  App.updateDetachmentOptions = function () {
-    const state  = App.state;
-    const select = document.getElementById('army-detachment-select');
+  // Compute the detachments available to the current army, applying the same
+  // catalogue-gate + chapter token-blocklist the old dropdown used. Sets
+  // `state.detachmentFaction` as a side effect (the object the list came from).
+  // Returns an (unsorted) array of detachment objects; the picker
+  // (js/app/detachment-picker.js) handles grouping/sorting/render. Returns []
+  // while the factions list is still warming up.
+  App.getAvailableDetachments = function () {
+    const state = App.state;
     const detFaction = App.getDetachmentFaction();
     state.detachmentFaction = detFaction;
-
-    if (!detFaction) {
-      // Don't blow away an already-populated dropdown while the factions
-      // list is still warming up (e.g. a visibility-change-triggered
-      // re-render fires before state.factions has finished hydrating).
-      // The user otherwise watches their detachment options vanish for
-      // no apparent reason when they tab back into the window.
-      const factionsReady = Array.isArray(state.factions) && state.factions.length > 0;
-      const dropdownHasOptions = select && select.options && select.options.length > 1;
-      if (!factionsReady && dropdownHasOptions) return;
-      select.innerHTML = '<option value="">— Select Faction First —</option>';
-      return;
-    }
+    if (!detFaction) return [];
 
     let detachments = (detFaction.detachments || []);
 
-    // Catalogue-gated filter: the SM parent catalogue bundles every
-    // chapter's detachments (Sons of Sanguinius, Inner Circle Task
-    // Force, Champions of Fenris, Blade of Ultramar, …) and tags the
-    // chapter-exclusive ones with `onlyCatalogues` / `notCatalogues`
-    // (BSData "hide unless primary-catalogue is X" conditions — parsed
-    // in js/parser/catalogue.js). Filter against the SELECTED faction's
-    // own catalogueId, not the detachment-list faction's (which may be
-    // the SM parent we fell back to for the list itself).
+    // Catalogue-gated filter: the SM parent catalogue bundles every chapter's
+    // detachments and tags the chapter-exclusive ones with `onlyCatalogues` /
+    // `notCatalogues` (dormant BSData path only — inert for 40kdc data). Filter
+    // against the SELECTED faction's own catalogueId.
     const selFaction = App.getCurrentFaction();
     const selCatId = selFaction && selFaction.catalogueId;
     if (selCatId) {
@@ -93,37 +82,26 @@
       });
     }
 
-    // Legacy token-based blocklist — kept as a backstop for any chapter
-    // that lacks its own catalogue (so getCurrentFaction has no
-    // catalogueId) or detachments parsed before the v29 DB bump.
+    // Legacy token-based blocklist — backstop for any chapter lacking its own
+    // catalogueId (so a chapter never shows another chapter's exclusive detachment).
     const chapter = state.selectedChapter
       || (state.factionFilter && state.factionFilter !== 'all' ? state.factionFilter : null);
     if (chapter && typeof App.filterSMDetachmentsForChapter === 'function') {
       detachments = App.filterSMDetachmentsForChapter(detachments, chapter);
     }
-
-    if (detachments.length === 0) {
-      select.innerHTML = '<option value="">— No Detachments Found —</option>';
-      return;
-    }
-
-    select.innerHTML = '<option value="">— Select Detachment —</option>';
-    detachments
-      .slice()
-      .sort((a, b) => String(a && a.name || '').localeCompare(String(b && b.name || ''), undefined, { sensitivity: 'base' }))
-      .forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d.name;
-        opt.textContent = d.name;
-        select.appendChild(opt);
-      });
+    return detachments;
   };
 
   App.applyImportedSelections = function (factionName, chapter, detachment) {
     const state = App.state;
     const factionSelect    = document.getElementById('army-faction-select');
     const chapterSelect    = document.getElementById('army-chapter-select');
-    const detachmentSelect = document.getElementById('army-detachment-select');
+
+    // `detachment` may be a single name (legacy saved armies / old share codes)
+    // or an array of names (multi-detachment). Normalize to an array.
+    const names = Array.isArray(detachment)
+      ? detachment.filter(n => typeof n === 'string' && n)
+      : (detachment ? [detachment] : []);
 
     let topLevel = chapter ? (App.getVirtualParentOf(chapter) || factionName) : factionName;
     if (!topLevel) topLevel = 'all';
@@ -132,6 +110,9 @@
       || !!state.chaptersMap[topLevel];
     if (!topLevelExists) topLevel = 'all';
 
+    // Dispatching 'change' on the faction/chapter selects resets the detachment
+    // selection to empty (events.js) and re-renders the picker for the new
+    // faction. We restore the detachment picks AFTER, from `names`.
     factionSelect.value = topLevel;
     factionSelect.dispatchEvent(new Event('change'));
 
@@ -140,9 +121,9 @@
       chapterSelect.dispatchEvent(new Event('change'));
     }
 
-    if (detachment && [...detachmentSelect.options].some(o => o.value === detachment)) {
-      detachmentSelect.value = detachment;
-      detachmentSelect.dispatchEvent(new Event('change'));
+    // Restore the detachment selection against the now-populated available list.
+    if (typeof App.setSelectedDetachments === 'function') {
+      App.setSelectedDetachments(names, { persist: false });
     }
 
     document.getElementById('army-name-input').value    = state.currentArmy.name || '';

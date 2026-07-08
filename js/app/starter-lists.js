@@ -352,8 +352,7 @@
     state.currentArmy = army;
     state.armyManager.currentArmy = army;
 
-    const factionSelect    = document.getElementById('army-faction-select');
-    const detachmentSelect = document.getElementById('army-detachment-select');
+    const factionSelect = document.getElementById('army-faction-select');
 
     if (factionSelect && prepared.factionName) {
       const topLevel = App.getVirtualParentOf
@@ -373,14 +372,10 @@
       }
     }
 
-    if (detachmentSelect && prepared.detachment) {
-      const match = [...detachmentSelect.options].find(o =>
-        o.value.toLowerCase() === prepared.detachment.toLowerCase()
-      );
-      if (match) {
-        detachmentSelect.value = match.value;
-        detachmentSelect.dispatchEvent(new Event('change'));
-      }
+    if (prepared.detachment && typeof App.setSelectedDetachments === 'function') {
+      const avail = App.getAvailableDetachments ? App.getAvailableDetachments() : [];
+      const m = avail.find(d => d.name.toLowerCase() === prepared.detachment.toLowerCase());
+      if (m) App.setSelectedDetachments([m.name], { persist: true });
     }
 
     document.getElementById('army-name-input').value = army.name;

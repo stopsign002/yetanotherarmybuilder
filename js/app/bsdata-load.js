@@ -14,9 +14,9 @@
     // this immutable snapshot instead of from the (mutated) currentArmy.
     const cur0 = state.currentArmy;
     const want = cur0 ? {
-      factionName:    cur0.factionName || '',
-      chapter:        cur0.chapter || null,
-      detachmentName: cur0.detachmentName || null,
+      factionName:     cur0.factionName || '',
+      chapter:         cur0.chapter || null,
+      detachmentNames: Array.isArray(cur0.detachmentNames) ? cur0.detachmentNames.slice() : [],
     } : null;
 
     let restoredSelections = false;
@@ -46,7 +46,7 @@
             const wantTop = App.getVirtualParentOf(want.chapter || '') || want.factionName || '';
             if (wantTop && state.factions.some(f => f.factionName === wantTop)) {
               try {
-                App.applyImportedSelections(want.factionName, want.chapter, want.detachmentName);
+                App.applyImportedSelections(want.factionName, want.chapter, want.detachmentNames);
                 restoredSelections = true;
               } catch (_) { /* ignore — the final restore below covers it */ }
             }
@@ -65,7 +65,7 @@
         const userSwitched = facSel && facSel.value && facSel.value !== 'all' && facSel.value !== wantTop;
         if (!userSwitched) {
           try {
-            App.applyImportedSelections(want.factionName, want.chapter, want.detachmentName);
+            App.applyImportedSelections(want.factionName, want.chapter, want.detachmentNames);
           } catch (_) {}
         }
       }

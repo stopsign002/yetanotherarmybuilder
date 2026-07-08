@@ -74,9 +74,9 @@
     try {
       const state = App.state;
       const code = await Storage.exportArmyToString(state.currentArmy, {
-        factionName:    state.factionFilter && state.factionFilter !== 'all' ? state.factionFilter : '',
-        chapter:        state.selectedChapter,
-        detachmentName: state.selectedDetachment ? state.selectedDetachment.name : null,
+        factionName:     state.factionFilter && state.factionFilter !== 'all' ? state.factionFilter : '',
+        chapter:         state.selectedChapter,
+        detachmentNames: (state.selectedDetachments || []).map(d => d.name),
       });
       const url = window.location.origin + window.location.pathname + '?a=' + code;
       try {

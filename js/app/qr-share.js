@@ -12,9 +12,9 @@
     const state = App.state;
     if (!state || !state.currentArmy || !window.Storage) return null;
     const code = await Storage.exportArmyToString(state.currentArmy, {
-      factionName:    state.factionFilter && state.factionFilter !== 'all' ? state.factionFilter : '',
-      chapter:        state.selectedChapter,
-      detachmentName: state.selectedDetachment ? state.selectedDetachment.name : null,
+      factionName:     state.factionFilter && state.factionFilter !== 'all' ? state.factionFilter : '',
+      chapter:         state.selectedChapter,
+      detachmentNames: (state.selectedDetachments || []).map(d => d.name),
     });
     return window.location.origin + window.location.pathname + '?a=' + code;
   }

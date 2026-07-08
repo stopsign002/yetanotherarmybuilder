@@ -33,17 +33,32 @@
     const section     = document.getElementById('army-rules-section');
     if (!section) return;
 
-    // Defensive: if no detachment was passed but the app already has one
-    // selected, use it. Some call sites (chapter-change, faction re-render
-    // hooks) pass only `faction` and would otherwise wipe the enhancements
-    // subsection even though the user has a detachment locked in.
-    if (!detachment && window.App && App.state && App.state.selectedDetachment) {
-      detachment = App.state.selectedDetachment;
+    // Multi-detachment: render the UNION of every selected detachment. Prefer
+    // the live selection array; fall back to the single `detachment` arg (or
+    // state.selectedDetachment) for callers/states that predate multi-select.
+    let detachments = (window.App && App.state && Array.isArray(App.state.selectedDetachments) && App.state.selectedDetachments.length)
+      ? App.state.selectedDetachments.slice()
+      : [];
+    if (!detachments.length && detachment) detachments = [detachment];
+    if (!detachments.length && window.App && App.state && App.state.selectedDetachment) {
+      detachments = [App.state.selectedDetachment];
     }
 
+    const dedupeByName = (arrays) => {
+      const seen = new Set(), out = [];
+      arrays.forEach(arr => (arr || []).forEach(x => {
+        if (!x || !x.name) return;
+        const k = x.name.toLowerCase();
+        if (seen.has(k)) return;
+        seen.add(k);
+        out.push(x);
+      }));
+      return out;
+    };
+
     const rules        = (faction && faction.armyRules)  || [];
-    const detRules     = (detachment && detachment.rules) || [];
-    const enhancements = (detachment && detachment.enhancements) || [];
+    const detRules     = dedupeByName(detachments.map(d => d && d.rules));
+    const enhancements = dedupeByName(detachments.map(d => d && d.enhancements));
 
     // Stratagems are split into TWO buckets in the UI:
     //   - Detachment Stratagems: detachment-specific (BSData rare + GDC) AND
@@ -52,8 +67,8 @@
     //     shared by every faction.
     // BSData wh40k-10e doesn't ship 10e stratagem rules; GDC fills that gap
     // (see app/js/gdc.js). Names dedupe across all sources.
-    const detStrats           = (detachment && Array.isArray(detachment.stratagems))    ? detachment.stratagems    : [];
-    const detGdcStrats        = (detachment && Array.isArray(detachment.gdcStratagems)) ? detachment.gdcStratagems : [];
+    const detStrats           = detachments.flatMap(d => (d && Array.isArray(d.stratagems))    ? d.stratagems    : []);
+    const detGdcStrats        = detachments.flatMap(d => (d && Array.isArray(d.gdcStratagems)) ? d.gdcStratagems : []);
     const factionStrats       = (faction && Array.isArray(faction.factionStratagems))    ? faction.factionStratagems    : [];
     const factionGdcStrats    = (faction && Array.isArray(faction.gdcFactionStratagems)) ? faction.gdcFactionStratagems : [];
     const coreStrats          = (faction && window.App && Array.isArray(App.CORE_STRATAGEMS)) ? App.CORE_STRATAGEMS : [];

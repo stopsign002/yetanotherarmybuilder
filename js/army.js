@@ -13,12 +13,21 @@ function _mintEntryId() {
 }
 
 window.Army = class Army {
-  constructor({ id, name, factionName, chapter, detachmentName, pointsLimit, entries, createdAt, updatedAt } = {}) {
+  constructor({ id, name, factionName, chapter, detachmentName, detachmentNames, pointsLimit, entries, createdAt, updatedAt } = {}) {
     this.id = id || Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     this.name = name || 'New Army';
     this.factionName = factionName || '';
     this.chapter = chapter || null;
-    this.detachmentName = detachmentName || null;
+    // Detachments are now MULTI-select. `detachmentNames` is the canonical list;
+    // `detachmentName` (singular) is kept as a mirror of the FIRST selected one,
+    // so the many single-detachment readers (play mode, cards, tournament export,
+    // QR/URL share, sync) keep working unchanged, and pre-multi saved armies
+    // (which only have `detachmentName`) migrate to a 1-item list on load.
+    const names = Array.isArray(detachmentNames) && detachmentNames.length
+      ? detachmentNames.filter(n => typeof n === 'string' && n)
+      : (detachmentName ? [detachmentName] : []);
+    this.detachmentNames = names;
+    this.detachmentName = names[0] || null;
     this.pointsLimit = pointsLimit || 2000;
     this.entries = entries || []; // [{unitId, unitName, unitData, count, entryId, attachedToEntryId?}]
     // Every entry must carry a stable entryId — minted on add, preserved
@@ -72,6 +81,17 @@ window.Army = class Army {
   findByEntryId(entryId) {
     if (!entryId) return null;
     return this.entries.find(e => e && e.entryId === entryId) || null;
+  }
+
+  // Set the selected detachments (array of names). Keeps `detachmentName` in
+  // sync as the first entry for single-detachment readers. Pass { touch: false }
+  // for programmatic load/reset so a restore doesn't advance updatedAt (which
+  // would make every load look newer than cloud and clobber other devices).
+  setDetachments(names, opts) {
+    const list = Array.isArray(names) ? names.filter(n => typeof n === 'string' && n) : [];
+    this.detachmentNames = list;
+    this.detachmentName = list[0] || null;
+    if (!opts || opts.touch !== false) this.updatedAt = new Date().toISOString();
   }
 
   setEnhancements(index, enhancements) {
@@ -145,7 +165,8 @@ window.Army = class Army {
       name: this.name,
       factionName: this.factionName,
       chapter: this.chapter,
-      detachmentName: this.detachmentName,
+      detachmentNames: this.detachmentNames,
+      detachmentName: this.detachmentName,   // mirror of detachmentNames[0] for old readers
       pointsLimit: this.pointsLimit,
       entries: this.entries,
       createdAt: this.createdAt,
@@ -196,6 +217,9 @@ window.Army = class Army {
       factionName:    typeof data.factionName === 'string' ? data.factionName : '',
       chapter:        data.chapter && typeof data.chapter === 'object' ? data.chapter : null,
       detachmentName: typeof data.detachmentName === 'string' ? data.detachmentName : null,
+      detachmentNames: Array.isArray(data.detachmentNames)
+        ? data.detachmentNames.filter(n => typeof n === 'string' && n)
+        : undefined,   // undefined → constructor migrates from detachmentName
       pointsLimit:    Number.isFinite(data.pointsLimit) ? data.pointsLimit : 2000,
       entries:        safeEntries,
       createdAt:      typeof data.createdAt === 'string' ? data.createdAt : undefined,

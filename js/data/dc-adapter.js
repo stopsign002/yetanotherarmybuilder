@@ -530,6 +530,10 @@
                description: textFor(e.ability_id) || MISSING_ENHANCEMENT_TEXT[id] || '' };
     }).filter(Boolean);
     return { name: d.name, rules, enhancements,
+             // 40kdc rates every detachment 1–3 "detachment points"; surface it
+             // for the detachment picker (js/app/detachment-picker.js). Straight
+             // passthrough — null if upstream ever drops the field.
+             points: (d.detachment_points != null ? d.detachment_points : null),
              stratagemIds: d.stratagem_ids || [] };
   }
 

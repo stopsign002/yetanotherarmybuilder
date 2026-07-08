@@ -40,9 +40,9 @@
     if (army && window.Storage && typeof Storage.exportArmyToString === 'function') {
       try {
         code = await Storage.exportArmyToString(army, {
-          factionName:    state.factionFilter && state.factionFilter !== 'all' ? state.factionFilter : '',
-          chapter:        state.selectedChapter,
-          detachmentName: state.selectedDetachment ? state.selectedDetachment.name : null,
+          factionName:     state.factionFilter && state.factionFilter !== 'all' ? state.factionFilter : '',
+          chapter:         state.selectedChapter,
+          detachmentNames: (state.selectedDetachments || []).map(d => d.name),
         });
       } catch (err) {
         code = '(export failed: ' + (err && err.message) + ')';
@@ -52,7 +52,9 @@
     const swActive = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
     const totalUnits = (state.allUnits && state.allUnits.length) || 0;
     const numFactions = (state.factions && state.factions.length) || 0;
-    const detachmentName = state.selectedDetachment ? state.selectedDetachment.name : '(none)';
+    const detachmentName = (state.selectedDetachments && state.selectedDetachments.length)
+      ? state.selectedDetachments.map(d => d.name).join(', ')
+      : '(none)';
     const factionFilter = state.factionFilter || 'all';
     const chapter = state.selectedChapter || '(none)';
     const viewport = (window.innerWidth || 0) + 'x' + (window.innerHeight || 0);

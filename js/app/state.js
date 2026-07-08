@@ -14,7 +14,11 @@
     chaptersMap:    {},
     chapterFactions: new Set(),
     virtualBase:    {},
+    // Multi-detachment selection. `selectedDetachments` is the canonical array
+    // of selected detachment OBJECTS (drives the picker + the Army Rules union);
+    // `selectedDetachment` mirrors the FIRST for single-detachment readers.
     selectedDetachment: null,
+    selectedDetachments: [],
     detachmentFaction:  null,
     selectedArmyEntryIndex: null,
     // Which tab the BUILD-mode right panel shows: 'detail' (Unit Detail) or

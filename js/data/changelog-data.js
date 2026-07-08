@@ -26,10 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-2',
+    version:     '2026.07.08-3',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
       // ── 2026-07-08 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-08', kind: 'feature',
+        title: 'New Detachments picker — choose more than one',
+        description:
+          'Detachment selection moved out of the Army setup dropdown into its own ' +
+          'Detachments box. It lists every detachment available to your army; ' +
+          'click to add or remove one (you can pick several). Each shows its ' +
+          'detachment-points cost and the box tallies a running total. For Space ' +
+          'Marine chapters, the chapter’s own detachments are listed first ' +
+          '(A–Z), then the generic codex ones. All selected detachments’ ' +
+          'rules, enhancements, and stratagems now show together in Army rules & ' +
+          'stratagems, and their enhancements are all available to your characters.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Detachments no longer show stratagems from a different detachment',

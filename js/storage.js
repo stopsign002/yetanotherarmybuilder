@@ -79,7 +79,7 @@ window.Storage = (() => {
     return new TextDecoder().decode(await new Response(stream).arrayBuffer());
   }
 
-  function _toCompact(army, { factionName, chapter, detachmentName } = {}) {
+  function _toCompact(army, { factionName, chapter, detachmentName, detachmentNames } = {}) {
     const data = {
       v: 2,
       n: army.name,
@@ -87,7 +87,16 @@ window.Storage = (() => {
     };
     if (factionName)    data.f = factionName;
     if (chapter)        data.c = chapter;
-    if (detachmentName) data.d = detachmentName;
+    // `d` holds the detachment selection. Multi-select: an array of names. To
+    // keep single-detachment codes byte-identical to the pre-multi format (and
+    // readable by older clients), a lone detachment is still stored as a string.
+    const dNames = (Array.isArray(detachmentNames) && detachmentNames.length)
+      ? detachmentNames
+      : (Array.isArray(army.detachmentNames) && army.detachmentNames.length)
+        ? army.detachmentNames
+        : (detachmentName ? [detachmentName] : []);
+    if (dNames.length === 1)      data.d = dNames[0];
+    else if (dNames.length > 1)   data.d = dNames.slice();
     // Detect whether ANY entry carries an attachment. Armies without
     // attachments encode identically to pre-feature v2 — no 5th tuple
     // slot, no bloat. Armies with attachments emit `[entryId, parentId
@@ -167,13 +176,16 @@ window.Storage = (() => {
         attachedToEntryId,
       };
     });
+    const detachmentNames = Array.isArray(data.d) ? data.d.filter(n => typeof n === 'string' && n)
+      : (data.d ? [data.d] : []);
     const army = new Army({
       name: data.n || 'Imported Army',
       factionName,
+      detachmentNames,
       pointsLimit: data.p || 2000,
       entries,
     });
-    return { army, chapter: data.c || null, detachment: data.d || null };
+    return { army, chapter: data.c || null, detachment: detachmentNames };
   }
 
   async function exportArmyToString(army, opts = {}) {
@@ -192,7 +204,8 @@ window.Storage = (() => {
       if (!data.name || !Array.isArray(data.entries)) {
         throw new Error('Invalid army data');
       }
-      return { army: Army.fromJSON(data), chapter: null, detachment: null };
+      const a = Army.fromJSON(data);
+      return { army: a, chapter: a.chapter || null, detachment: a.detachmentNames || [] };
     }
 
     if (!raw.startsWith(EXPORT_PREFIX)) {
@@ -209,16 +222,23 @@ window.Storage = (() => {
 
     // Pre-v2 YAAB1 codes contained the full serialized Army.
     if (data && data.name && Array.isArray(data.entries)) {
-      return { army: Army.fromJSON(data), chapter: null, detachment: null };
+      const a = Army.fromJSON(data);
+      return { army: a, chapter: a.chapter || null, detachment: a.detachmentNames || [] };
     }
     throw new Error('Unknown army code format');
   }
 
-  function exportArmyToText(army, { detachmentName } = {}) {
+  function exportArmyToText(army, { detachmentName, detachmentNames } = {}) {
     const lines = [];
     lines.push(`=== ${army.name} ===`);
     if (army.factionName) lines.push(`Faction: ${army.factionName}`);
-    if (detachmentName)   lines.push(`Detachment: ${detachmentName}`);
+    const dNames = (Array.isArray(detachmentNames) && detachmentNames.length)
+      ? detachmentNames
+      : (Array.isArray(army.detachmentNames) && army.detachmentNames.length)
+        ? army.detachmentNames
+        : (detachmentName ? [detachmentName] : []);
+    if (dNames.length === 1)    lines.push(`Detachment: ${dNames[0]}`);
+    else if (dNames.length > 1) lines.push(`Detachments: ${dNames.join(', ')}`);
     lines.push(`Points Limit: ${army.pointsLimit}`);
     lines.push('');
 

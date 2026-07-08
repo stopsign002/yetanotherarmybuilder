@@ -9,59 +9,42 @@
       state.factionFilter = e.target.value;
       state.selectedChapter = null;
       state.selectedDetachment = null;
+      state.selectedDetachments = [];
       state.detachmentFaction  = null;
       state.selectedArmyEntryIndex = null;
-      document.getElementById('army-detachment-select').value = '';
       if (state.currentArmy) {
-        state.currentArmy.factionName    = state.factionFilter === 'all' ? '' : state.factionFilter;
-        state.currentArmy.chapter        = null;
-        state.currentArmy.detachmentName = null;
+        state.currentArmy.factionName = state.factionFilter === 'all' ? '' : state.factionFilter;
+        state.currentArmy.chapter     = null;
+        state.currentArmy.setDetachments([], { touch: false });
       }
       App.applyFactionColor(state.factionFilter === 'all' ? null : state.factionFilter);
       App.updateChapterDropdown(state.factionFilter);
       App.renderUnitRosterWithContext();
       const faction = App.getCurrentFaction();
       UI.updateFactionRules(faction);
-      App.updateDetachmentOptions();
+      App.renderDetachmentPicker();
     });
 
     document.getElementById('army-chapter-select').addEventListener('change', e => {
       state.selectedChapter = e.target.value || null;
       state.selectedDetachment = null;
+      state.selectedDetachments = [];
       state.detachmentFaction  = null;
       state.selectedArmyEntryIndex = null;
-      document.getElementById('army-detachment-select').value = '';
       if (state.currentArmy) {
-        state.currentArmy.chapter        = state.selectedChapter;
-        state.currentArmy.detachmentName = null;
+        state.currentArmy.chapter = state.selectedChapter;
+        state.currentArmy.setDetachments([], { touch: false });
       }
       App.applyFactionColor(state.selectedChapter || state.factionFilter);
       App.renderUnitRosterWithContext();
       const faction = App.getCurrentFaction();
       UI.updateFactionRules(faction);
-      App.updateDetachmentOptions();
+      App.renderDetachmentPicker();
     });
 
-    document.getElementById('army-detachment-select').addEventListener('change', e => {
-      const detName = e.target.value;
-      const dets = (state.detachmentFaction && state.detachmentFaction.detachments) || [];
-      state.selectedDetachment = detName ? (dets.find(d => d.name === detName) || null) : null;
-      if (state.currentArmy) {
-        state.currentArmy.detachmentName = state.selectedDetachment ? state.selectedDetachment.name : null;
-      }
-      UI.updateFactionRules(App.getCurrentFaction(), state.selectedDetachment);
-      // Refresh whichever unit detail is currently open so its
-      // enhancements section reflects the newly-picked detachment.
-      // Without this, the detail keeps showing "pick a detachment" or
-      // stale enhancements from the previous detachment.
-      const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
-      if (state.selectedArmyEntryIndex != null && state.currentArmy) {
-        const entry = state.currentArmy.entries[state.selectedArmyEntryIndex];
-        if (entry) UI.renderUnitDetail(entry.unitData, detEnhs, entry.enhancements || []);
-      } else if (state.selectedUnit) {
-        UI.renderUnitDetail(state.selectedUnit, detEnhs, []);
-      }
-    });
+    // The detachment selection is driven by the Detachments box
+    // (js/app/detachment-picker.js), which owns its own click handling and
+    // re-renders the Army Rules union + open detail. No dropdown handler here.
 
     document.getElementById('search-input').addEventListener('input', () => {
       App.renderUnitRosterWithContext();
@@ -78,7 +61,7 @@
 
       state.selectedUnit = unit;
       state.selectedArmyEntryIndex = null;
-      const detEnhancements = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
+      const detEnhancements = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
       UI.renderUnitDetail(unit, detEnhancements, []);
       if (App.setMobilePanel) App.setMobilePanel('detail');
     });
@@ -123,7 +106,7 @@
       if (state.selectedArmyEntryIndex == null) return;
       const entry = state.currentArmy.entries[state.selectedArmyEntryIndex];
       if (!entry) return;
-      const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
+      const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
       const enh = detEnhs.find(e => e.name === cb.value);
       if (!enh) return;
       const enhs = [...(entry.enhancements || [])];
@@ -157,7 +140,7 @@
         squadOption = opts[0] || null;
       }
 
-      const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
+      const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
       const selectedEnhancements = Array.from(
         document.querySelectorAll('#detail-enhancements-section .enhancement-cb:checked')
       ).map(cb => detEnhs.find(e => e.name === cb.value)).filter(Boolean);
@@ -212,7 +195,7 @@
       state.selectedArmyEntryIndex = index;
       state.selectedUnit = null;
       document.querySelectorAll('.unit-card.selected').forEach(c => c.classList.remove('selected'));
-      const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
+      const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
       UI.renderUnitDetail(entry.unitData, detEnhs, entry.enhancements || []);
       if (App.setMobilePanel) App.setMobilePanel('detail');
     });
@@ -278,7 +261,7 @@
           state.armyManager.currentArmy = army;
           UI.hideLoadModal();
           UI.renderArmyList(state.currentArmy);
-          App.applyImportedSelections(army.factionName, army.chapter, army.detachmentName);
+          App.applyImportedSelections(army.factionName, army.chapter, army.detachmentNames);
           UI.toast(`Loaded "${army.name}"`, 'success');
         }
       }
@@ -299,9 +282,9 @@
     document.getElementById('btn-export-string').addEventListener('click', async () => {
       try {
         const code = await Storage.exportArmyToString(state.currentArmy, {
-          factionName:    state.factionFilter !== 'all' ? state.factionFilter : '',
-          chapter:        state.selectedChapter,
-          detachmentName: state.selectedDetachment ? state.selectedDetachment.name : null,
+          factionName:     state.factionFilter !== 'all' ? state.factionFilter : '',
+          chapter:         state.selectedChapter,
+          detachmentNames: (state.selectedDetachments || []).map(d => d.name),
         });
         UI.showExportModal(code);
       } catch (err) {
@@ -329,7 +312,7 @@
 
     document.getElementById('btn-export-text').addEventListener('click', async () => {
       const text = Storage.exportArmyToText(state.currentArmy, {
-        detachmentName: state.selectedDetachment ? state.selectedDetachment.name : null,
+        detachmentNames: (state.selectedDetachments || []).map(d => d.name),
       });
       try {
         await navigator.clipboard.writeText(text);

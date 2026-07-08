@@ -117,10 +117,9 @@
   }
 
   function selectDetachment(name) {
-    const select = document.getElementById('army-detachment-select');
-    if (!select) return;
-    select.value = name;
-    select.dispatchEvent(new Event('change', { bubbles: true }));
+    // Detachments are multi-select now; toggle this one in/out of the army
+    // via the picker (js/app/detachment-picker.js).
+    if (name && typeof App.toggleDetachment === 'function') App.toggleDetachment(name);
   }
 
   function buildDetachmentCandidates(state) {
@@ -163,7 +162,7 @@
     const state = App.state;
     state.selectedUnit = unit;
     state.selectedArmyEntryIndex = null;
-    const detEnhs = (state.selectedDetachment && state.selectedDetachment.enhancements) || [];
+    const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
     if (window.UI && typeof UI.renderUnitDetail === 'function') {
       UI.renderUnitDetail(unit, detEnhs, []);
     }

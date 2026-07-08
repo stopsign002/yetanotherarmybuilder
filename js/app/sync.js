@@ -596,7 +596,7 @@
       try {
         const cur2 = App.state && App.state.currentArmy;
         if (cur2 && typeof App.applyImportedSelections === 'function') {
-          App.applyImportedSelections(cur2.factionName, cur2.chapter, cur2.detachmentName);
+          App.applyImportedSelections(cur2.factionName, cur2.chapter, cur2.detachmentNames);
         }
       } catch (_) { /* dropdown re-sync is best-effort */ }
 
