@@ -714,6 +714,11 @@
         if (typeof App.GDC.mergeUnitDataIntoFactions === 'function') {
           App.GDC.mergeUnitDataIntoFactions(App.state.factions);
         }
+        // Fill 40kdc datasheet ability gaps (units with no abilities / empty
+        // ability text) from the 11th GDC datasheets.
+        if (typeof App.GDC.mergeUnitAbilitiesFromGdc === 'function') {
+          App.GDC.mergeUnitAbilitiesFromGdc(App.state.factions);
+        }
 
         // Reconcile: prefer 40kdc strat text, fall back to GDC. Runs AFTER the
         // GDC merge so detachment.gdcStratagems is populated. Self-improving —

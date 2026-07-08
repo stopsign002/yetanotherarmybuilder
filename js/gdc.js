@@ -435,12 +435,85 @@
     });
   }
 
+  // ── Unit ABILITIES from GDC (11th) — fills 40kdc datasheet gaps ─────────────
+  // 40kdc leaves some datasheets with zero linked abilities (Emperor's Champion,
+  // the generic Captain, The Red Terror, Commissar Yarrick, Wazdakka…) or with
+  // an ability named but no text (Lord Calgar, Captain of the Honour Guard). The
+  // 11th GDC datasheet carries the real abilities under abilities.other
+  // [{ name, description }]. We use them to:
+  //   - FILL an existing unit ability's empty description (matched by name), and
+  //   - ADD missing abilities, but ONLY to units that currently have no non-core
+  //     ability at all — so we precisely patch the empty datasheets without
+  //     broadly injecting abilities across units 40kdc already covers.
+  // SELF-HEALING + 40kdc-first: never overrides existing 40kdc ability text.
+  function project11Abilities(ds) {
+    if (!ds || !ds.abilities) return [];
+    const other = Array.isArray(ds.abilities.other) ? ds.abilities.other : [];
+    return other
+      .map(a => ({ name: pickText(a && a.name), description: cleanMarkup(pickText(a && a.description)) }))
+      .filter(a => a.name);
+  }
+
+  // For the ability index, the SM PARENT faction needs every chapter's file too:
+  // in 40kdc the chapters have zero units, so chapter-unique units (Emperor's
+  // Champion, Grey Hunters, Death Company…) live under the parent — but their
+  // GDC datasheets are in the chapter files. Those files are already fetched
+  // (their chapter factions are loaded), so consulting them is free.
+  function abilityFilesFor(factionName) {
+    const files = gdcFilesFor(factionName);
+    if (factionName === 'Imperium - Adeptus Astartes - Space Marines') {
+      return [...new Set([...files, ...SM_CHAPTER_FILES, 'space_marines'])];
+    }
+    return files;
+  }
+
+  function buildAbilityIndex11(files) {
+    const idx = new Map();
+    files.forEach(fn => {
+      const p = rawCache.get(PROSE_EDITION + '/' + fn);
+      if (!p) return;
+      (Array.isArray(p.datasheets) ? p.datasheets : []).forEach(ds => {
+        const k = nameKey(pickText(ds && ds.name));   // 11th name is a { en } object
+        if (!k || idx.has(k)) return;
+        idx.set(k, project11Abilities(ds));
+      });
+    });
+    return idx;
+  }
+
+  function mergeUnitAbilitiesFromGdc(factions) {
+    factions.forEach(faction => {
+      const files = abilityFilesFor(faction.factionName);
+      if (files.length === 0) return;
+      const idx = buildAbilityIndex11(files);
+      if (idx.size === 0) return;
+      (faction.units || []).forEach(unit => {
+        const gAbils = idx.get(nameKey(unit && unit.name));
+        if (!gAbils || gAbils.length === 0) return;
+        const abils = Array.isArray(unit.abilities) ? unit.abilities : (unit.abilities = []);
+        const byKey = new Map(abils.map(a => [nameKey(a.name), a]));
+        const hasNonCore = abils.some(a => !a.isCore);
+        gAbils.forEach(g => {
+          const hit = byKey.get(nameKey(g.name));
+          if (hit) {
+            if (!hit.description && g.description) hit.description = g.description;
+          } else if (!hasNonCore && g.description) {
+            const na = { name: g.name, description: g.description, isCore: false };
+            abils.push(na);
+            byKey.set(nameKey(g.name), na);
+          }
+        });
+      });
+    });
+  }
+
   // ── Public API ────────────────────────────────────────────────
   App.GDC = {
     FACTION_TO_GDC,
     loadAll,
     mergeIntoFactions,
     mergeUnitDataIntoFactions,
+    mergeUnitAbilitiesFromGdc,
     // Exposed for tests / debugging:
     _rawCache: rawCache,
     _projectStratagem: projectStratagem,

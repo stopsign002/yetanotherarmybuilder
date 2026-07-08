@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-9',
+    version:     '2026.07.08-10',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Filled in datasheets that were missing their abilities',
+        description:
+          'Some units showed no abilities at all (Emperor’s Champion, the generic ' +
+          'Captain, The Red Terror, Commissar Yarrick, Wazdakka Gutsmek and more) ' +
+          'because the upstream dataset hadn’t linked them. Their abilities are ' +
+          'now filled in from the current data source, and abilities that were ' +
+          'listed without any text now show their rules.',
+      },
       // ── 2026-07-08 ──────────────────────────────────────────────────────
       {
         date: '2026-07-08', kind: 'fix',
