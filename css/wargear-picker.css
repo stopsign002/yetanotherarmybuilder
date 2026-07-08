@@ -5,8 +5,10 @@
 
 #detail-wargear-picker { margin-bottom: 14px; }
 
-/* Band: title left, "official wording" hover affordance right. */
-.wgp-band {
+/* Band: title left, "official wording" hover affordance right. The ID
+   out-specifies detail-redesign.css's `display: block` on section titles,
+   which was flattening this back to inline flow. */
+#detail-wargear-picker .detail-section-title.wgp-band {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
