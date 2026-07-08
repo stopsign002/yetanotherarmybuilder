@@ -26,9 +26,17 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-39',
+    version:     '2026.07.08-40',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Big Mek in Mega Armour gets More Dakka back',
+        description:
+          'The upstream dataset links More Dakka on the base Big Mek but ' +
+          'omits it on the Mega Armour variant. Filled in from the data’s ' +
+          'own rules text (self-healing once fixed upstream).',
+      },
       {
         date: '2026-07-08', kind: 'feature',
         title: '“All factions” view in the units pane',

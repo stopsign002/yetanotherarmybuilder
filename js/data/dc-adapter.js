@@ -141,6 +141,10 @@
         'normal move of up to D6". If it does, until the end of the turn, ' +
         'this unit is not eligible to declare a charge.',
     }],
+    // Big Mek in Mega Armour: upstream links More Dakka on the base Big Mek
+    // but omits it here — string entry pulls the store's name + prose, and
+    // dedupe no-ops it the moment 40kdc adds the link.
+    'big-mek-in-mega-armour': ['more-dakka'],
   };
 
   // Self-healing manual links for wargear abilities the upstream 40kdc dataset
