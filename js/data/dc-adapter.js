@@ -143,6 +143,24 @@
     }],
   };
 
+  // Self-healing manual links for wargear abilities the upstream 40kdc dataset
+  // omits from a datasheet's DEFAULT equipment — cases the item/bearer scans
+  // can't reach because there's no reference to follow. Keyed by unit id → the
+  // ability/item ids whose prose already lives in the ability-text store; each
+  // is surfaced in the unit's Wargear Abilities section. SELF-HEALING: skipped
+  // when the same-named ability is already present (via the item scan, the
+  // bearer-pattern route, or a genuine ability_id), so an entry no-ops the
+  // moment 40kdc links it and can then be deleted.
+  //   wulfen: the base Wulfen datasheet is equipped with a Death Totem by
+  //     default (official datasheet: "Every model is equipped with: Wulfen
+  //     weapons; death totem"), swappable for a stormfrag auto-launcher. 40kdc
+  //     dropped the totem from base `wulfen` (its weapon_ids omit it and its
+  //     wgo is mislabelled) and attached Death Totem only to a separate
+  //     `wulfen-with-storm-shields` entry.
+  const MISSING_WARGEAR_ABILITIES = {
+    'wulfen': ['death-totem'],
+  };
+
   // Hand-patched army-rule prose the upstream 40kdc dataset names (via a
   // faction's faction_rule_id) but leaves without text — and which the GDC
   // overlay doesn't fill either — so the Army Rules card would render the name
@@ -551,6 +569,19 @@
     abilityWargear.forEach((wa) => {
       const key = wa.name.toLowerCase();
       if (!wargearAbilities.some((x) => x.name.toLowerCase() === key)) wargearAbilities.push(wa);
+    });
+    // Apply hand-patched default-wargear links the dataset omits entirely.
+    (MISSING_WARGEAR_ABILITIES[u.id] || []).forEach((aid) => {
+      const desc = textFor(aid);
+      if (!desc) return;                          // no prose upstream → skip
+      let src = null;
+      try { src = (DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid)) || (DC.wargear && DC.wargear.get(aid)); } catch (_) {}
+      const rawName = (src && (src.name || (src.raw && src.raw.name))) || String(aid).replace(/-/g, ' ');
+      const name = titleCase(rawName);
+      const key = name.toLowerCase();
+      if (wargearAbilities.some((x) => x.name.toLowerCase() === key)) return;   // already surfaced → self-heal no-op
+      if (abilities.some((x) => x.name.toLowerCase() === key)) return;          // already a normal ability
+      wargearAbilities.push({ name, description: desc });
     });
 
     return {
