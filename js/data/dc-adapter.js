@@ -161,6 +161,23 @@
     'wulfen': ['death-totem'],
   };
 
+  // Self-healing corrections to upstream wargear-option/composition data that
+  // the picker consumes. Keyed by unit id:
+  //   optionReplaces: wgo id → the item ids the swap ACTUALLY replaces
+  //     (applied when the wgo exists; harmless once upstream matches).
+  //   addDefaults: item ids missing from the default loadout, added at one
+  //     per model for every squad size (skipped if upstream starts listing it).
+  //   wulfen: official datasheet — every model is equipped with wulfen
+  //     weapons AND a death totem; the stormfrag auto-launcher replaces the
+  //     TOTEM. Upstream omits the totem from defaults and mislabels the swap
+  //     as replacing the wulfen weapons.
+  const WARGEAR_PROFILE_FIXES = {
+    'wulfen': {
+      optionReplaces: { 'wulfen-wgo-mfm-1': ['death-totem'] },
+      addDefaults: ['death-totem'],
+    },
+  };
+
   // Hand-patched army-rule prose the upstream 40kdc dataset names (via a
   // faction's faction_rule_id) but leaves without text — and which the GDC
   // overlay doesn't fill either — so the Army Rules card would render the name
@@ -584,6 +601,9 @@
         try { it = DC.weapons.getInFaction ? DC.weapons.getInFaction(id, u.faction_id) : null; } catch (_) {}
         if (!it) { try { it = DC.weapons.getAny ? DC.weapons.getAny(id) : DC.weapons.get(id); } catch (_) {} }
         if (!it) { try { it = DC.wargear.getAny ? DC.wargear.getAny(id) : DC.wargear.get(id); } catch (_) {} }
+        // Ability-modelled wargear (death totem, icons, …) has its display
+        // name on the abilities collection rather than the item collections.
+        if (!it) { try { it = DC.abilities.getAny ? DC.abilities.getAny(id) : DC.abilities.get(id); } catch (_) {} }
         const nm = it && (it.name || (it.raw && it.raw.name));
         return nm || String(id).replace(/-/g, ' ');
       };
@@ -647,6 +667,25 @@
           if (!Object.keys(modelsBySize).length) { modelsBySize = null; defaultsBySize = null; }
         }
       } catch (_) { modelsBySize = null; defaultsBySize = null; }
+      // Apply hand-patched corrections to upstream wgo/composition errors.
+      const fix = WARGEAR_PROFILE_FIXES[u.id];
+      if (fix) {
+        if (fix.optionReplaces) {
+          options.forEach((o) => {
+            const ids = fix.optionReplaces[o.id];
+            if (ids) o.replaces = ids.map((id) => ({ id, name: itemName(id) }));
+          });
+        }
+        if (fix.addDefaults && defaultsBySize) {
+          Object.keys(defaultsBySize).forEach((size) => {
+            fix.addDefaults.forEach((id) => {
+              if (!defaultsBySize[size].some((d) => d.id === id)) {
+                defaultsBySize[size].push({ id, name: itemName(id), count: Number(size) });
+              }
+            });
+          });
+        }
+      }
       if (!options.length) return null;
       return { options, budgets, modelsBySize, defaultsBySize };
     })();

@@ -96,28 +96,43 @@
     const models = currentModels(unit);
     const defaults = defaultsFor(profile, models);
 
-    // Per-item ADD totals and REMOVE totals across all selections. A swap of
-    // option O ×n removes n of each item O replaces and adds n of the chosen
-    // group's items.
+    // What a swap ACTUALLY takes off the squad. 40kdc's `replaces` array can
+    // list the model's whole prior loadout even when only one item is given
+    // up (GW's "bolt pistol, teeth and claws OR wolf guard weapon"). The
+    // disambiguator that holds across the dataset:
+    //   - one replaces item                → replace it (unambiguous)
+    //   - chosen group has MULTIPLE items  → pair-swap, AND: all replaced
+    //     ("storm bolter and power weapon → power fist and assault cannon")
+    //   - multi-replaces, single-item pick → OR: the FIRST listed item is the
+    //     one really given up (bolt pistol first for TWC; the model keeps its
+    //     teeth and claws)
+    const effReplaces = (opt, grp) => {
+      if (opt.replaces.length <= 1) return opt.replaces;
+      if (grp && grp.length > 1) return opt.replaces;
+      return [opt.replaces[0]];
+    };
+
+    // Per-item ADD totals and REMOVE totals across all selections.
     const added = new Map(), removed = new Map();
     profile.options.forEach((opt) => {
       opt.choices.forEach((grp, ci) => {
         const n = counts.get(opt.id + ':' + ci) || 0;
         if (!n) return;
         grp.forEach((x) => added.set(x.id, (added.get(x.id) || 0) + n));
-        opt.replaces.forEach((x) => removed.set(x.id, (removed.get(x.id) || 0) + n));
+        effReplaces(opt, grp).forEach((x) => removed.set(x.id, (removed.get(x.id) || 0) + n));
       });
     });
     const itemTotals = added;   // budget checks count what's been TAKEN
 
-    // For each default item, the (option, choice) pairs that replace it — a
-    // single unambiguous pair gets proxy steppers on the default row itself
-    // ("remove a gauss flayer" = take one of its replacement).
+    // For each default item, the (option, choice) pairs that actually replace
+    // it — a single unambiguous pair gets proxy steppers on the default row
+    // itself ("remove a gauss flayer" = take one of its replacement).
     const replacerFor = (itemId) => {
       const pairs = [];
       profile.options.forEach((opt) => {
-        if (!opt.replaces.some((x) => x.id === itemId)) return;
-        opt.choices.forEach((_g, ci) => pairs.push(opt.id + ':' + ci));
+        opt.choices.forEach((grp, ci) => {
+          if (effReplaces(opt, grp).some((x) => x.id === itemId)) pairs.push(opt.id + ':' + ci);
+        });
       });
       return pairs.length === 1 ? pairs[0] : null;
     };
@@ -163,9 +178,17 @@
         });
       });
 
+      // Label mirrors the semantics: AND pair-swaps join with "+", OR lists
+      // join with "or" (only one of them is given up per swap).
+      const isPairSwap = opt.choices.some((g) => g.length > 1);
+      const replacesLabel = !opt.replaces.length ? 'Add'
+        : opt.replaces.length === 1 || isPairSwap
+          ? 'Replace ' + names(opt.replaces)
+          : 'Replace ' + opt.replaces.map((x) => x.name).slice(0, -1).join(', ')
+            + ' or ' + opt.replaces[opt.replaces.length - 1].name;
       html += `<div class="wgp-option${overOpt ? ' wgp-over' : ''}" data-option="${esc(opt.id)}">
         <div class="wgp-option-head">
-          <span class="wgp-replaces">${opt.replaces.length ? 'Replace ' + esc(names(opt.replaces)) : 'Add'}</span>
+          <span class="wgp-replaces">${esc(replacesLabel)}</span>
           <span class="wgp-chip">${esc(constraintChip(profile, opt, models))}</span>
         </div>`;
       opt.choices.forEach((grp, ci) => {

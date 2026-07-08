@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-24',
+    version:     '2026.07.08-25',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Wargear swaps no longer eat weapons you keep',
+        description:
+          'Taking a Thunderwolf Cavalry storm shield was lowering Teeth and ' +
+          'Claws and Wolf Guard weapon too — but only one carried item is ' +
+          'given up per swap. Swap options now distinguish “replace X, Y or ' +
+          'Z” (one item, e.g. the bolt pistol) from true pair-swaps like ' +
+          '“storm bolter + power weapon → power fist + assault cannon”, and ' +
+          'the option text reads accordingly. Also fixed Wulfen: every model ' +
+          'now starts with its Death Totem, and the stormfrag auto-launcher ' +
+          'correctly replaces the totem instead of the Wulfen weapons (an ' +
+          'upstream data error, self-healing once fixed there).',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Wargear box text no longer squeezed',
