@@ -490,6 +490,23 @@
         abilities.push({ name, description, isCore: false });
       });
     }
+    // Route ability-modelled wargear abilities out of the normal Abilities
+    // list. Their prose refers to "the bearer" of a wargear item (a single
+    // model carrying it) whereas innate abilities say "this unit" / "this
+    // model" — a clean discriminator across the whole dataset (114 units, zero
+    // false positives). Complements the item scan below: some wargear abilities
+    // are linked as ability_ids on the datasheet (e.g. Death Totem) rather than
+    // as an item on a wargear option, so the item scan alone misses them.
+    const WARGEAR_BEARER_RE = /\bthe bearer\b|bearer['’]s\b/i;
+    const abilityWargear = [];
+    for (let i = abilities.length - 1; i >= 0; i--) {
+      const a = abilities[i];
+      if (!a.isCore && WARGEAR_BEARER_RE.test(a.description || '')) {
+        abilityWargear.unshift({ name: a.name, description: a.description });
+        abilities.splice(i, 1);
+      }
+    }
+
     // ── Wargear abilities ──────────────────────────────────────────────
     // 11e reintroduced wargear that confers an ability / stat change (storm
     // shield → +Wounds, Astartes shield → 4++ invuln, Reiver grav-chute →
@@ -530,6 +547,11 @@
       });
       return out;
     })();
+    // Merge the ability-modelled wargear abilities in (dedupe by name).
+    abilityWargear.forEach((wa) => {
+      const key = wa.name.toLowerCase();
+      if (!wargearAbilities.some((x) => x.name.toLowerCase() === key)) wargearAbilities.push(wa);
+    });
 
     return {
       id: u.id,
