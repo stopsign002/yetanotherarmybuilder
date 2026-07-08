@@ -28,13 +28,18 @@
   letter-spacing: 0.14em;
   padding: 5px 10px;
   margin-bottom: 8px;
-  border: 1px solid var(--border);
+  /* Same alpha recipe as the weapons banners (their hue at 0.25 border /
+     0.08 wash) so every band reads identically. */
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
   border-left: 3px solid var(--accent);
   border-radius: 0 4px 4px 0;
-  background: rgba(var(--accent-rgb), 0.055);
+  background: rgba(var(--accent-rgb), 0.08);
   color: var(--text);
   display: block;         /* weapons banners were inline-block */
 }
+/* Kill aaa-polish.css's 24px accent underline on section titles — the band
+   is the header treatment now; the leftover bar read as a stray line. */
+.unit-detail-content .detail-section-title::after { content: none; }
 
 /* Neutral is the default above. Coloured per-section variants: */
 
@@ -190,6 +195,14 @@
   border-radius: var(--radius, 6px);
 }
 
+/* Uniform rhythm between the top boxes: banner → add → stockpile → wargear
+   all sit 14px apart. The stockpile widget's own 12px top margin stacked on
+   the add box's 14px bottom margin (26px gap); its wash also differed. */
+.unit-detail-content .stockpile-detail-widget {
+  margin: 0 0 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
 /* Squad-size stepper in the add row (reuses the wargear-picker pill). */
 .detail-size-stepper { padding: 3px 4px; }
 .detail-size-stepper .detail-size-label {
@@ -206,6 +219,14 @@
 /* ─────────────────────────────────────────────────────────────
    3. STAT STRIP  (invuln folded into the SV cell)
 ───────────────────────────────────────────────────────────── */
+/* Stats live in the same neutral card box as the other sections. */
+.unit-detail-content .detail-stats-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+}
+
 /* Separate cells with a 4px gap (build-mode.css draws a connected strip with
    an outer border + overflow:hidden — undo that so the rounded cells show). */
 .unit-detail-content .detail-stat-strip {
@@ -265,6 +286,14 @@
   border-bottom: 1px solid var(--border);
 }
 .wg-head .wg-cell { text-align: center; }
+
+/* Weapon rows (header + weapons) sit in a neutral card box under the band. */
+.wg-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 2px 2px;
+}
 
 .wg-weapon { padding: 7px 8px; border-bottom: 1px solid rgba(58, 58, 68, 0.5); }
 .wg-weapon:last-child { border-bottom: none; }

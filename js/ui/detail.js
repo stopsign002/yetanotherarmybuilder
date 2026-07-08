@@ -182,7 +182,11 @@
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     const subtitleParts = [];
     if (unit._factionName) subtitleParts.push(`<span class="detail-faction">${esc(unit._factionName)}</span>`);
-    if (unit.type)         subtitleParts.push(`<span class="detail-type">${esc(unit.type)}</span>`);
+    // Type label only when it says something ("unit" is every datasheet —
+    // pure noise next to the faction tag).
+    if (unit.type && String(unit.type).toLowerCase() !== 'unit') {
+      subtitleParts.push(`<span class="detail-type">${esc(unit.type)}</span>`);
+    }
 
     // Render unit-flavor blurb when unit.description is empty and a matching
     // App.UNIT_FLAVOR entry exists (case-insensitive substring match on name).
@@ -391,8 +395,10 @@
         return `
           <div class="weapons-subsection weapons-section wg-section">
             <div class="weapons-subsection-title weapons-section-banner weapons-section-banner-${type} ${type}">${label}</div>
-            <div class="wg-head"><span></span>${HDR.map(h => `<span class="wg-cell">${esc(h)}</span>`).join('')}</div>
-            <div class="wg-rows">${rows}</div>
+            <div class="wg-box">
+              <div class="wg-head"><span></span>${HDR.map(h => `<span class="wg-cell">${esc(h)}</span>`).join('')}</div>
+              <div class="wg-rows">${rows}</div>
+            </div>
           </div>`;
       };
 

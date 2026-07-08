@@ -454,6 +454,16 @@
     if (t) return t;
     const base = String(kid).replace(/-\d+$/, '');
     if (base !== kid) { t = textFor(base); if (t) return t; }
+    // ANTI-X N: the store has no generic "anti" entry (it's parameterized per
+    // target keyword), so synthesize the core-rules text.
+    const anti = /^anti-([a-z][a-z-]*?)(?:-(\d+))?$/.exec(String(kid));
+    if (anti) {
+      const target = prettyKw(anti[1]).toUpperCase();
+      const roll = anti[2] ? anti[2] + '+' : 'the listed value or more';
+      const art = /^[aeiou]/i.test(target) ? 'an' : 'a';
+      return 'Each time an attack is made with this weapon against ' + art + ' ' + target
+        + ' unit, an unmodified Wound roll of ' + roll + ' scores a Critical Wound.';
+    }
     return '';
   }
 

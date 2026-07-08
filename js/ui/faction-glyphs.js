@@ -95,8 +95,8 @@
   const TARGETS = [
     // BUILD-mode hero faction title.
     { sel: '[data-build-hero="faction"]', mode: 'prepend', size: 28, cls: 'faction-glyph faction-glyph-hero' },
-    // Detail-banner faction subtitle.
-    { sel: '.detail-faction',              mode: 'prepend', size: 14, cls: 'faction-glyph faction-glyph-inline' },
+    // (Detail-banner faction-tag glyph removed — read as a stray arrow next
+    // to the faction name and served no purpose there.)
   ];
 
   function ensureGlyphFor(el, opts) {

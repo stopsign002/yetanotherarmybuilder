@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-31',
+    version:     '2026.07.08-32',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'change',
+        title: 'Details pane polish pass',
+        description:
+          'All section headers now share the weapons-banner styling (the ' +
+          'stray little accent line under some headers is gone and the band ' +
+          'tint matches). Stats, ranged weapons and melee weapons each sit ' +
+          'in their own box like the other sections. The top boxes now have ' +
+          'even spacing. Hovering ANTI-X keywords (Anti-Infantry 4+, ' +
+          'Anti-Vehicle 3+, …) now explains the rule. The stray arrow next ' +
+          'to the faction tag and the redundant “unit” label are gone.',
+      },
       {
         date: '2026-07-08', kind: 'change',
         title: 'Removed the Σ button from the details header',
