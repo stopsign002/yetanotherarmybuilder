@@ -26,9 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-17',
+    version:     '2026.07.08-18',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Card exporter now shows all selected detachments’ rules',
+        description:
+          'When more than one detachment was selected, the Cards exporter only ' +
+          'included the first detachment’s rules and stratagems. It now gathers ' +
+          'the full set across every selected detachment — matching the on-screen ' +
+          'Army Rules box.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Wargear abilities now shown on datasheets',

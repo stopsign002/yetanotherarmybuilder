@@ -791,29 +791,41 @@
       entry,
     }));
   }
+  // Every detachment the army has selected (multi-select). selectedDetachments
+  // holds detachment OBJECTS; fall back to the singular for pre-multi-select
+  // callers/states. Mirrors UI.updateFactionRules so the card exporter shows
+  // the SAME union of rules/stratagems as the on-screen Army Rules box.
+  function getSelectedDetachments() {
+    const s = App.state || {};
+    if (Array.isArray(s.selectedDetachments) && s.selectedDetachments.length) {
+      return s.selectedDetachments.filter(Boolean);
+    }
+    return s.selectedDetachment ? [s.selectedDetachment] : [];
+  }
   function gatherRules() {
     const out = [];
     const faction = getFaction();
-    const det = (App.state && App.state.selectedDetachment) || null;
+    const dets = getSelectedDetachments();
     if (faction && Array.isArray(faction.armyRules)) {
       faction.armyRules.forEach(r => {
         if (r && r.name) out.push({ id: 'r:' + r.name, label: r.name, kind: 'army', rule: r });
       });
     }
-    if (det && Array.isArray(det.rules)) {
-      const seen = new Set();
+    const seen = new Set();
+    dets.forEach(det => {
+      if (!det || !Array.isArray(det.rules)) return;
       det.rules.forEach(r => {
         if (!r || !r.name || seen.has(r.name)) return;
         seen.add(r.name);
         out.push({ id: 'd:' + r.name, label: r.name, kind: 'detachment', rule: r });
       });
-    }
+    });
     return out;
   }
   function gatherStratagems() {
     const out = [];
     const faction = getFaction();
-    const det = (App.state && App.state.selectedDetachment) || null;
+    const dets = getSelectedDetachments();
     const seen = new Set();
     function pushAll(list, type, detName) {
       (Array.isArray(list) ? list : []).forEach(s => {
@@ -824,10 +836,11 @@
         out.push({ id: key, label: s.name, type, strat: s, detName: detName || null });
       });
     }
-    if (det) {
+    dets.forEach(det => {
+      if (!det) return;
       pushAll(det.stratagems, 'detachment', det.name);
       pushAll(det.gdcStratagems, 'detachment', det.name);
-    }
+    });
     if (faction) {
       pushAll(faction.factionStratagems, 'faction');
       pushAll(faction.gdcFactionStratagems, 'faction');
