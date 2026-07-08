@@ -26,9 +26,16 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-22',
+    version:     '2026.07.08-23',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'change',
+        title: 'Add row simplified — quantity box removed',
+        description:
+          'Add to Army now always adds one squad; click it again for a ' +
+          'second copy (identical squads still stack into one ×2 entry).',
+      },
       {
         date: '2026-07-08', kind: 'change',
         title: 'Squad size is now a +/− stepper',

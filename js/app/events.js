@@ -128,7 +128,9 @@
       if (!e.target.closest('#btn-detail-add')) return;
       if (!state.selectedUnit) return;
 
-      const qty = parseInt(document.getElementById('detail-qty').value, 10) || 1;
+      // Quantity box removed — Add always adds one; click again for more.
+      const qtyEl = document.getElementById('detail-qty');
+      const qty = qtyEl ? (parseInt(qtyEl.value, 10) || 1) : 1;
       const squadSelect = document.getElementById('detail-squad-select');
       let squadOption = null;
       if (squadSelect) {

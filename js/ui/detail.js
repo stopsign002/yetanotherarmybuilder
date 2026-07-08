@@ -265,7 +265,6 @@
             </span>
             <input type="hidden" id="detail-squad-select" value="0" />
           ` : `<span class="detail-pts-label">${squadOptions[0] ? squadOptions[0].pts + ' pts' : '—'}</span>`}
-          <input type="number" id="detail-qty" class="form-input detail-qty-input" value="1" min="1" max="99" />
           <button class="btn btn-accent detail-add-btn" id="btn-detail-add">Add to Army</button>
         </div>
       </div>
