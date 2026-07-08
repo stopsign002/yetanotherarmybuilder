@@ -26,9 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-21',
+    version:     '2026.07.08-22',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'change',
+        title: 'Squad size is now a +/− stepper',
+        description:
+          'The squad-size dropdown in the Add to Army row is now the same ' +
+          '+/− stepper as the wargear rows — start at the smallest size and ' +
+          'press + to step up to the next tier. Points and wargear limits ' +
+          'update as you step.',
+      },
       {
         date: '2026-07-08', kind: 'change',
         title: 'Wargear picker shows your default loadout',

@@ -246,17 +246,24 @@
       </div>
     `;
 
+    // Squad size renders as a wargear-picker-style stepper: starts at the
+    // smallest tier, +/− walk the available sizes. A hidden input keeps the
+    // #detail-squad-select id/value contract (index into squadOptions) for
+    // events.js and the wargear picker, which also listens for its 'change'.
     const hasSquadChoice = squadOptions.length > 1;
+    const sizeLabel = (opt) => opt
+      ? (opt.models ? `${opt.models} models — ${opt.pts} pts` : `${opt.pts} pts`)
+      : '—';
     html += `
       <div class="detail-add-section">
         <div class="detail-add-row">
           ${hasSquadChoice ? `
-            <select class="form-select detail-squad-select" id="detail-squad-select">
-              ${squadOptions.map((opt, i) => {
-                const label = opt.models ? `${opt.models} models — ${opt.pts} pts` : `${opt.pts} pts`;
-                return `<option value="${i}">${esc(label)}</option>`;
-              }).join('')}
-            </select>
+            <span class="wgp-stepper detail-size-stepper">
+              <button type="button" class="wgp-btn" id="detail-size-minus" aria-label="Smaller squad">&minus;</button>
+              <span class="detail-size-label" id="detail-size-label">${esc(sizeLabel(squadOptions[0]))}</span>
+              <button type="button" class="wgp-btn" id="detail-size-plus" aria-label="Larger squad">+</button>
+            </span>
+            <input type="hidden" id="detail-squad-select" value="0" />
           ` : `<span class="detail-pts-label">${squadOptions[0] ? squadOptions[0].pts + ' pts' : '—'}</span>`}
           <input type="number" id="detail-qty" class="form-input detail-qty-input" value="1" min="1" max="99" />
           <button class="btn btn-accent detail-add-btn" id="btn-detail-add">Add to Army</button>
@@ -776,6 +783,28 @@
     const existing = panel.querySelector('.unit-detail-content');
     if (existing) existing.remove();
     panel.insertAdjacentHTML('beforeend', html);
+
+    // Squad-size stepper: walk squadOptions, mirror the index into the hidden
+    // #detail-squad-select and fire 'change' so existing consumers (add
+    // handler, wargear picker limits) react as if a <select> changed.
+    const sizeHidden = panel.querySelector('#detail-squad-select');
+    if (sizeHidden && sizeHidden.type === 'hidden') {
+      const label = panel.querySelector('#detail-size-label');
+      const minus = panel.querySelector('#detail-size-minus');
+      const plus  = panel.querySelector('#detail-size-plus');
+      const opts  = unit.squadOptions || [];
+      const setIdx = (i) => {
+        const idx = Math.max(0, Math.min(opts.length - 1, i));
+        if (String(idx) === sizeHidden.value) return;
+        sizeHidden.value = String(idx);
+        if (label) label.textContent = opts[idx]
+          ? (opts[idx].models ? `${opts[idx].models} models — ${opts[idx].pts} pts` : `${opts[idx].pts} pts`)
+          : '—';
+        sizeHidden.dispatchEvent(new Event('change'));
+      };
+      if (minus) minus.addEventListener('click', () => setIdx(parseInt(sizeHidden.value, 10) - 1));
+      if (plus)  plus.addEventListener('click', () => setIdx(parseInt(sizeHidden.value, 10) + 1));
+    }
 
     // Fill the wargear picker (no-op when the unit has no profile).
     if (unit.wargearProfile && window.App && App.WargearPicker) {
