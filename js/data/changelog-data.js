@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.07-11',
-    lastUpdated: '2026-07-07T00:00:00Z',
+    version:     '2026.07.08-1',
+    lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      // ── 2026-07-08 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Space Wolves detachment rules filled in',
+        description:
+          'Three Space Wolves detachments — Champions of Fenris, Legends of ' +
+          'Saga and Song, and Veterans of the Fang — were selectable with their ' +
+          'stratagems and enhancements listed, but the rule, enhancement, and ' +
+          'stratagem text was blank. Their full rules are now written in (from ' +
+          '40k.app). This is a stopgap: when the upstream dataset publishes the ' +
+          'official text, it takes over automatically.',
+      },
       // ── 2026-07-07 ──────────────────────────────────────────────────────
       {
         date: '2026-07-07', kind: 'feature',

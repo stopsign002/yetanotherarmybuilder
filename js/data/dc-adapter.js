@@ -205,6 +205,115 @@
     'space-wolves':   { mode: 'add',     rules: [{ name: 'Curse of the Wulfen', description: CURSE_OF_THE_WULFEN_TEXT }] },
   };
 
+  // ── Hand-authored DETACHMENT prose (fill-only, self-healing) ─────────────────
+  // 40kdc ships the STRUCTURE of a detachment (name, enhancement ids + costs,
+  // stratagem ids + CP + phase) before it authors the RULES PROSE — so a brand-new
+  // detachment shows up selectable with the right strat/enhancement list but blank
+  // rule/effect text. These three maps fill only that missing prose, sourced
+  // verbatim from 40k.app, keyed by the stable 40kdc id.
+  //
+  // SELF-HEALING (same contract as MISSING_*_ABILITIES above): every wire-in below
+  // is `textFor(id) || MISSING_…[id]`, so the override is consulted ONLY while the
+  // 40kdc text is empty. Once the daily/weekly bundle refresh (refresh-40kdc.sh)
+  // pulls upstream prose for one of these ids, textFor() wins and the manual entry
+  // silently no-ops — delete the entry when that happens. Added 2026-07-08 for the
+  // three Space Wolves detachments 40kdc had structured but not yet written up:
+  //   Champions of Fenris, Legends of Saga and Song, Veterans of the Fang.
+  const SW_RESTRICTION =
+    'Restrictions: Your army can include SPACE WOLVES units, but it cannot ' +
+    'include any ADEPTUS ASTARTES units drawn from any other Chapter.';
+  // detachment_id → { name (the rule's own name), description }
+  const MISSING_DETACHMENT_RULES = {
+    'champions-of-fenris': {
+      name: 'The Great Wolf Watches',
+      description:
+        'Friendly ADEPTUS ASTARTES INFANTRY CHARACTER units have the following ' +
+        'ability:\n\n' +
+        'Countercharge (Once per battle round, per unit): You can target this ' +
+        'unit with the Heroic Intervention Stratagem, regardless of any other ' +
+        'uses of that Stratagem this phase. If you do, that use does not prevent ' +
+        'any uses of that Stratagem on other units this phase.\n\n' + SW_RESTRICTION,
+    },
+    'legends-of-saga-and-song': {
+      name: 'Loping Charge',
+      description:
+        'Friendly ADEPTUS ASTARTES TERMINATOR units have +1 to Charge rolls.\n\n' +
+        SW_RESTRICTION,
+    },
+    'veterans-of-the-fang': {
+      name: 'Old Greymanes',
+      description:
+        'When a friendly GREY HUNTERS unit starts an action, that action does not ' +
+        'prevent this unit from being eligible to shoot.\n\n' +
+        'In the Declare Battle Formations step, you can split a friendly GREY ' +
+        'HUNTERS unit into two units, each with a starting strength of 5.\n\n' +
+        SW_RESTRICTION,
+    },
+  };
+  // enhancement_id → verbatim enhancement text
+  const MISSING_ENHANCEMENT_TEXT = {
+    'a-giant-amongst-giants-champions-of-fenris':
+      "This model has +2 W. This model's melee attacks have +1 S.",
+    'preyslayer-champions-of-fenris':
+      'This unit can re-roll Advance rolls and Countercharge rolls.',
+    'fierce-example-legends-of-saga-and-song':
+      'WOLF GUARD TERMINATORS unit only. This unit has +1 T.',
+    'thirst-for-glory-legends-of-saga-and-song':
+      'ADEPTUS ASTARTES TERMINATOR model only. This unit has +1 OC.',
+    'eye-of-the-hunter-veterans-of-the-fang':
+      "WOLF GUARD BATTLE LEADER model only. This unit's ranged attacks have " +
+      '[ASSAULT] and [IGNORES COVER], and have +1 AP.',
+    'weaver-of-sagas-veterans-of-the-fang':
+      'WOLF PRIEST model only. Once per battle round, per army, in your Movement ' +
+      "phase, at the start or end of this unit's move, you can select one friendly " +
+      'ADEPTUS ASTARTES unit within 6" of this unit, or one friendly GREY HUNTERS ' +
+      'unit within 18" of this unit. That unit is no longer Battle-shocked.',
+  };
+  // stratagem_id → verbatim WHEN/TARGET/EFFECT text (inline uppercase labels, the
+  // shape the card renderer splits into stanzas — see js/ui/cards-mode.js).
+  const MISSING_STRATAGEM_TEXT = {
+    // Champions of Fenris
+    'runes-of-claiming-champions-of-fenris':
+      'WHEN: End of your Movement phase. TARGET: One friendly ADEPTUS ASTARTES ' +
+      'INFANTRY CHARACTER unit. EFFECT: Select one objective your unit is ' +
+      'controlling. That objective is secured.',
+    'stalk-between-worlds-champions-of-fenris':
+      "WHEN: Your opponent's Shooting phase, when an enemy unit targets a friendly " +
+      'ADEPTUS ASTARTES INFANTRY CHARACTER unit. TARGET: That ADEPTUS ASTARTES ' +
+      'INFANTRY CHARACTER unit. EFFECT: Your unit has Stealth.',
+    'wolf-totems-champions-of-fenris':
+      'WHEN: Any phase, when a friendly ADEPTUS ASTARTES INFANTRY CHARACTER unit ' +
+      'suffers a mortal wound. TARGET: That ADEPTUS ASTARTES INFANTRY CHARACTER ' +
+      'unit. EFFECT: Your unit has Feel No Pain 5+ against mortal wounds.',
+    // Legends of Saga and Song
+    'chilling-howl-legends-of-saga-and-song':
+      "WHEN: Your opponent's Command phase. TARGET: One friendly WOLF GUARD " +
+      'TERMINATORS unit. EFFECT: Select one enemy unit within 6" of your unit. ' +
+      'That enemy unit makes a Battle-shock roll, with -1 to that Battle-shock ' +
+      'roll if that enemy unit is at or below half-strength.',
+    'wings-of-the-blizzard-legends-of-saga-and-song':
+      "WHEN: End of your opponent's Fight phase. TARGET: One friendly unengaged " +
+      'ADEPTUS ASTARTES TERMINATOR unit. EFFECT: Place your unit in Strategic ' +
+      'Reserves.',
+    'fangs-of-the-pack-legends-of-saga-and-song':
+      'WHEN: Fight phase, when a friendly ADEPTUS ASTARTES TERMINATOR unit is ' +
+      'selected to fight. TARGET: That ADEPTUS ASTARTES TERMINATOR unit. EFFECT: ' +
+      "Your unit's melee attacks have [PRECISION].",
+    // Veterans of the Fang
+    'blade-keen-senses-veterans-of-the-fang':
+      'WHEN: Start of your Shooting phase. TARGET: One friendly unengaged GREY ' +
+      'HUNTERS unit. EFFECT: Select one visible enemy unit within 24" of your ' +
+      'unit. That enemy unit has +6" detection range.',
+    'icy-calm-veterans-of-the-fang':
+      'WHEN: Your Movement phase, when a friendly GREY HUNTERS unit is selected to ' +
+      'make an Advance or Fall Back move. TARGET: That GREY HUNTERS unit. EFFECT: ' +
+      'That move does not prevent your unit from being eligible to start an action.',
+    'grizzled-killers-veterans-of-the-fang':
+      'WHEN: Fight phase, when a friendly GREY HUNTERS unit is selected to fight. ' +
+      'TARGET: That GREY HUNTERS unit. EFFECT: Your unit\'s melee attacks have ' +
+      '[SUSTAINED HITS 1] or [LETHAL HITS].',
+  };
+
   // ── stat formatting (BSData rendered M as 6", Sv as 3+, Ld as 6+) ──────────
   const sv  = (v) => (v == null ? '' : `${v}+`);
   const mv  = (v) => (v == null ? '' : `${v}"`);
@@ -408,10 +517,17 @@
       const borrowed = rid ? textFor(rid) : '';
       if (borrowed) rules = [{ name: d.name, description: borrowed }];
     }
+    // Hand-authored fallback for detachments 40kdc structured but hasn't written
+    // up yet (fill-only → self-heals once upstream authors detachment_rule_id).
+    if (rules.length === 0) {
+      const patch = MISSING_DETACHMENT_RULES[d.id];
+      if (patch) rules = [{ name: patch.name, description: patch.description }];
+    }
     const enhancements = (d.enhancement_ids || []).map((id) => {
       const e = enhById.get(id);
       if (!e) return null;
-      return { name: e.name, pts: e.cost != null ? e.cost : 0, description: textFor(e.ability_id) };
+      return { name: e.name, pts: e.cost != null ? e.cost : 0,
+               description: textFor(e.ability_id) || MISSING_ENHANCEMENT_TEXT[id] || '' };
     }).filter(Boolean);
     return { name: d.name, rules, enhancements,
              stratagemIds: d.stratagem_ids || [] };
@@ -429,12 +545,15 @@
     return (stratagemIds || []).map((id) => {
       const s = DC.stratagems.get(id);
       if (!s) return null;
+      // Hand-authored fallback for strats 40kdc structured but hasn't written up
+      // yet (fill-only → self-heals once upstream authors the ability_id text).
+      const description = textFor(s.ability_id) || MISSING_STRATAGEM_TEXT[id] || '';
       return {
         name: s.name,
         cp: s.cp_cost != null ? s.cp_cost : null,
         phase: cap((s.phases || [])[0] || ''),
         type: s.type || '',
-        description: textFor(s.ability_id),
+        description,
         source: '40kdc',
       };
     }).filter(Boolean);
