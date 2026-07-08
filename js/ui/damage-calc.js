@@ -1042,12 +1042,9 @@
     onClick: () => open(),
   });
 
-  App.hooks.detailActions.push({
-    id: 'sim-attack',
-    title: 'Simulate attack with this unit',
-    html: '<span style="font-weight:700">&Sigma;</span>',
-    onClick: unit => openFromUnit(unit),
-  });
+  // (The Σ "simulate attack" button in the details header was removed —
+  // the calculator remains reachable via the Calc toolbar action and Play
+  // mode. openFromUnit stays for those callers.)
 
   // Refresh weapon list when the army changes and we're open.
   App.hooks.armyChange.push(function () {

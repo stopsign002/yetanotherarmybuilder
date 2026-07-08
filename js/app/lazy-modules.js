@@ -38,12 +38,8 @@
           category: 'analysis',
           title: 'Damage calculator',
         },
-        {
-          kind: 'detail',
-          id: 'sim-attack',
-          title: 'Simulate attack with this unit',
-          html: '<span style="font-weight:700">&Sigma;</span>',
-        },
+        // (detail-pane Σ "simulate attack" placeholder removed alongside the
+        // real action in damage-calc.js)
       ],
     },
     {

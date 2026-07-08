@@ -26,9 +26,16 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-30',
+    version:     '2026.07.08-31',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'change',
+        title: 'Removed the Σ button from the details header',
+        description:
+          'The “simulate attack” shortcut button is gone; the damage ' +
+          'calculator is still available from the Tools menu and Play mode.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Detachments box remembers being minimized',
