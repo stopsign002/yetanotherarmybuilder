@@ -111,13 +111,18 @@
     if (!topLevelExists) topLevel = 'all';
 
     // Dispatching 'change' on the faction/chapter selects resets the detachment
-    // selection to empty (events.js) and re-renders the picker for the new
-    // faction. We restore the detachment picks AFTER, from `names`.
-    factionSelect.value = topLevel;
-    factionSelect.dispatchEvent(new Event('change'));
-
-    if (chapter && [...chapterSelect.options].some(o => o.value === chapter)) {
-      chapterSelect.value = chapter;
+    // selection to empty (events.js), re-renders the roster, and re-renders the
+    // picker for the new faction. Only dispatch when the value ACTUALLY changes:
+    // sync's visibility-pull and boot re-apply the SAME selections, and an
+    // unconditional dispatch would reset the chapter + re-filter the roster —
+    // snapping the user to the top of the units pane every time they tab back.
+    const chapterTarget = (chapter && [...chapterSelect.options].some(o => o.value === chapter)) ? chapter : '';
+    if (factionSelect.value !== topLevel) {
+      factionSelect.value = topLevel;
+      factionSelect.dispatchEvent(new Event('change'));
+    }
+    if (chapterSelect.value !== chapterTarget) {
+      chapterSelect.value = chapterTarget;
       chapterSelect.dispatchEvent(new Event('change'));
     }
 

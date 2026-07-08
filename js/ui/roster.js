@@ -331,6 +331,15 @@
 
     badge.textContent = `${filtered.length} unit${filtered.length !== 1 ? 's' : ''}`;
 
+    // Capture the user's scroll position BEFORE tearing down the cards. Reading
+    // scrollTop AFTER removing them (which is what the restore logic below used
+    // to do) forces a reflow on the now-empty grid, and the browser clamps
+    // scrollTop toward 0 because the content is suddenly short — so the "saved"
+    // value came back as 0 and same-filter re-renders (army edits, owned/reserve
+    // badge refreshes, background sync) snapped the user to the top of the roster.
+    const sc = getScrollContainer(grid);
+    const priorScrollTop = sc ? sc.scrollTop : 0;
+
     // Clear old cards but preserve #roster-empty (a static child of the grid).
     [...grid.querySelectorAll('.unit-card')].forEach(c => c.remove());
 
@@ -352,8 +361,7 @@
     // edits, autosave, sync pulls all hit this code path with the same
     // filter args) so mid-scroll re-renders don't yank the user back to
     // the top.
-    const sc = getScrollContainer(grid);
-    const savedScrollTop = (!filterChanged && sc) ? sc.scrollTop : 0;
+    const savedScrollTop = (!filterChanged && sc) ? priorScrollTop : 0;
     if (filterChanged && sc) sc.scrollTop = 0;
 
     appendBatch(grid, INITIAL_PAGE);

@@ -26,9 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-12',
+    version:     '2026.07.08-13',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Units pane stops jumping to the top',
+        description:
+          'The available-units list no longer snaps back to the top when the ' +
+          'army changes, badges refresh, or a background sync runs while you’re ' +
+          'scrolled down. Your scroll position is captured before the list ' +
+          'redraws, and returning to the tab no longer re-filters the roster.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Weapon keyword tooltips work again',
