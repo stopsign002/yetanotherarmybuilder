@@ -26,10 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-8',
+    version:     '2026.07.08-9',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
       // ── 2026-07-08 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Current-edition rules text for stratagems, enhancements & detachments',
+        description:
+          'Stratagem, enhancement, and detachment/army-rule wording now comes ' +
+          'from the current 11th-edition data source instead of last edition’s. ' +
+          'Enhancements that were showing with no text now have it, and for Space ' +
+          'Marine chapters the generic codex detachments (Gladius, Anvil Siege, …) ' +
+          'now carry their full stratagem and enhancement text on the chapter’s ' +
+          'own copies, not just on vanilla Space Marines.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Army rules no longer clutter unit cards',

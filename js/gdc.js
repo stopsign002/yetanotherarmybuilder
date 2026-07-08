@@ -1,15 +1,27 @@
 // gdc.js — game-datacards-eu data integration. Pulls per-faction JSON from
-// game-datacards/datasources and merges stratagem data into the BSData-parsed
-// faction objects. BSData wh40k-10e doesn't ship 10e stratagem rules in its
-// catalogue XML; GDC provides them as structured JSON keyed by detachment.
+// game-datacards/datasources and merges it into the 40kdc-parsed faction
+// objects. 40kdc ships structure (detachments, stratagem/enhancement ids,
+// CP/phase/cost) but little prose; GDC fills the prose (stratagem + enhancement
+// + army/detachment rule text).
 //
-// We do NOT replace BSData. Units, weapons, abilities, datasheets, detachments
-// (the names + their BSData-side rules + enhancements) all stay BSData-driven.
-// GDC contributes only the stratagem layer.
+// EDITIONS (two, on purpose):
+//   - PROSE  = 11th : stratagem / enhancement / rule TEXT, matched to the 40kdc
+//              11e structure. This is the authoritative wording.
+//   - UNITDATA = 10th : datasheet loadout / wargear / composition / leadBy /
+//              weapon profiles consumed by detail.js + attachments.js. Left on
+//              10th because the 11th datasheet shape is different (localized
+//              objects, prose leadBy) and migrating it is a separate task; the
+//              app already prefers 40kdc 11e for the core datasheet.
+//
+// 11th text fields are localized objects ({en: "…"}) and carry inline markup
+// (<k>keyword</k>, <b>bold</b>, **bold**, *italic*); pickText + cleanMarkup
+// normalize them to the plain strings the renderers expect.
 (function () {
   const App = window.App = window.App || {};
 
-  const RAW_BASE = 'https://raw.githubusercontent.com/game-datacards/datasources/main/10th/gdc/';
+  const RAW_ROOT = 'https://raw.githubusercontent.com/game-datacards/datasources/main/';
+  const PROSE_EDITION = '11th';     // stratagem / enhancement / rule prose
+  const UNITDATA_EDITION = '10th';  // datasheet loadout/wargear/weapons/leadBy
 
   // BSData faction name → GDC filename (without .json).
   // 11 SM chapters all map to space_marines.json — they share the SM stratagem
@@ -54,55 +66,87 @@
     // Titans factions don't have their own GDC file — leave unmapped.
   };
 
-  // In-memory cache of raw GDC payloads keyed by GDC filename. Populated by
-  // loadAll(); consumed by mergeIntoFactions().
+  // In-memory cache of raw GDC payloads keyed by `<edition>/<filename>`.
   const rawCache = new Map();
 
-  // Project a GDC stratagem to the shape the faction-rules renderer expects:
-  // { name, cp, phase, description, ...optional }. Drops most of GDC's bookkeeping.
+  // ── 11th-schema helpers ────────────────────────────────────────────────────
+  const cap = (s) => s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : '';
+
+  // 11th text fields are { en, de, es, … }; 10th are plain strings. Return English.
+  function pickText(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v;
+    if (typeof v === 'object') return v.en || '';
+    return String(v);
+  }
+
+  // Normalize GW datacard markup to the plain text the renderers expect:
+  //   <k>keyword</k> → KEYWORD (uppercased — the card renderer bolds ALL-CAPS)
+  //   <b>x</b>       → **x**    (bold markdown the renderers already handle)
+  //   *title*        → title    (italic book titles: drop the markers)
+  //   \r / <br>      → newline
+  function cleanMarkup(s) {
+    return String(s == null ? '' : s)
+      .replace(/<k>([\s\S]*?)<\/k>/gi, (_m, x) => x.toUpperCase())
+      .replace(/<b>([\s\S]*?)<\/b>/gi, '**$1**')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\*(?!\*)([^*\n]+?)\*(?!\*)/g, '$1')  // strip single-* italics, keep ** bold
+      .replace(/\r\n?/g, '\n')
+      .replace(/[ \t]+\n/g, '\n')
+      .trim();
+  }
+
+  // Project a GDC stratagem to { name, cp, phase, description, … }. Handles both
+  // the 11th localized/markup shape and the older plain-string shape.
   function projectStratagem(s) {
-    if (!s || !s.name) return null;
+    const name = pickText(s && s.name);
+    if (!name) return null;
     const phaseRaw = Array.isArray(s.phase) && s.phase.length > 0 ? s.phase[0] : '';
-    const phase = phaseRaw ? phaseRaw.charAt(0).toUpperCase() + phaseRaw.slice(1) : '';
+    const phase = phaseRaw ? cap(phaseRaw) : '';
     const cp = (typeof s.cost === 'number') ? s.cost : (parseInt(s.cost, 10) || 0);
-    // Compose a useful description: the printed cards are When/Target/Effect.
+    const when   = cleanMarkup(pickText(s.when));
+    const target = cleanMarkup(pickText(s.target));
+    const effect = cleanMarkup(pickText(s.effect));
+    const restr  = cleanMarkup(pickText(s.restrictions));
     const parts = [];
-    if (s.when)         parts.push('WHEN: ' + s.when);
-    if (s.target)       parts.push('TARGET: ' + s.target);
-    if (s.effect)       parts.push('EFFECT: ' + s.effect);
-    if (s.restrictions) parts.push('RESTRICTIONS: ' + s.restrictions);
-    const description = parts.join('\n\n') || (s.fluff || '');
+    if (when)   parts.push('WHEN: ' + when);
+    if (target) parts.push('TARGET: ' + target);
+    if (effect) parts.push('EFFECT: ' + effect);
+    if (restr)  parts.push('RESTRICTIONS: ' + restr);
+    const description = parts.join('\n\n') || cleanMarkup(pickText(s.fluff));
     return {
-      name: s.name,
+      name,
       cp,
       phase,
-      type: s.type || '',
-      turn: s.turn || '',
-      detachment: s.detachment || '',
+      type: pickText(s.type) || '',
+      turn: pickText(s.turn) || '',
+      detachment: pickText(s.detachment) || '',
       description,
       source: 'gdc',
     };
   }
 
-  // Flatten a GDC army-rule's segmented body (rules.army[].rules — an ordered
-  // mix of { text, title, type } chunks, with the odd 'image' separator) into a
-  // single description string the rule renderer can show.
+  // Flatten a rule's segmented body (rules[].rules — ordered { order, type, text }
+  // chunks) into one description string. Handles localized text + markup.
   function composeRuleText(chunks) {
     if (!Array.isArray(chunks)) return '';
     return chunks
-      .filter(c => c && c.type !== 'image' && c.text && c.text.trim() && c.text.trim() !== '-')
-      .slice()
-      .sort((a, b) => (a.order || 0) - (b.order || 0))
-      .map(c => (c.title ? c.title.trim() + ': ' : '') + c.text.trim())
+      .filter(c => c && c.type !== 'image')
+      .map(c => ({ order: c.order || 0, title: pickText(c.title), text: cleanMarkup(pickText(c.text)) }))
+      .filter(c => c.text && c.text !== '-')
+      .sort((a, b) => a.order - b.order)
+      .map(c => (c.title ? c.title.trim() + ': ' : '') + c.text)
       .join('\n\n');
   }
 
-  // Fetch one GDC payload, with optional IndexedDB cache. Returns null on error.
-  async function fetchOne(filename) {
-    const url = RAW_BASE + filename + '.json';
+  // ── fetching ────────────────────────────────────────────────────────────────
+  async function fetchOne(edition, filename) {
+    const cacheKey = edition + '/' + filename;
+    const url = RAW_ROOT + edition + '/gdc/' + filename + '.json';
     if (window.YaabDB && window.YaabDB.getGdc) {
       try {
-        const cached = await window.YaabDB.getGdc(filename);
+        const cached = await window.YaabDB.getGdc(cacheKey);
         if (cached) return cached;
       } catch (e) { /* fall through to network */ }
     }
@@ -110,40 +154,34 @@
     try {
       resp = await fetch(url, { cache: 'no-cache' });
     } catch (e) {
-      console.warn('[GDC] fetch failed for', filename, e);
+      console.warn('[GDC] fetch failed for', cacheKey, e);
       return null;
     }
     if (!resp.ok) {
-      console.warn('[GDC] HTTP', resp.status, 'for', filename);
+      console.warn('[GDC] HTTP', resp.status, 'for', cacheKey);
       return null;
     }
     let payload;
     try {
       payload = await resp.json();
     } catch (e) {
-      console.warn('[GDC] JSON parse failed for', filename, e);
+      console.warn('[GDC] JSON parse failed for', cacheKey, e);
       return null;
     }
     if (window.YaabDB && window.YaabDB.putGdc) {
-      try { await window.YaabDB.putGdc(filename, payload); } catch (e) { /* noop */ }
+      try { await window.YaabDB.putGdc(cacheKey, payload); } catch (e) { /* noop */ }
     }
     return payload;
   }
 
-  // SM chapters with their own GDC file ship only chapter-specific datasheets
-  // (e.g. blacktemplar.json has 18 entries — Helbrecht, Crusader Squad, etc.).
-  // The shared SM roster (Intercessor Squad, Lieutenants, Tactical Squad…)
-  // lives only in space_marines.json. For unit-data merging we therefore
-  // consult the chapter file FIRST (chapter-specific entries win on name
-  // collisions) then fall back to space_marines.json.
-  // Stratagem merging still uses the chapter file alone — chapter strats are
-  // distinct and SM-pool strats already live in the parent SM file.
+  // SM chapters with their own GDC file ship only chapter-specific datasheets;
+  // the shared SM roster + generic-detachment prose lives in space_marines.json,
+  // so we always consult it as a fallback for those chapters.
   const SM_CHAPTER_FILES = new Set([
     'blacktemplar', 'bloodangels', 'darkangels', 'deathwatch', 'spacewolves',
   ]);
 
-  // Ordered list of GDC files to consult for a given faction's unit data.
-  // First file wins on name collisions.
+  // Ordered list of GDC files for a faction. First wins on name collisions.
   function gdcFilesFor(factionName) {
     const primary = FACTION_TO_GDC[factionName];
     if (!primary) return [];
@@ -151,62 +189,48 @@
     return [primary];
   }
 
-  // Build the unique set of GDC filenames we need based on the faction list.
-  // Includes the SM fallback file when any SM-chapter faction is loaded.
   function uniqueFilenamesFor(factionNames) {
     const set = new Set();
-    factionNames.forEach(name => {
-      gdcFilesFor(name).forEach(f => set.add(f));
-    });
+    factionNames.forEach(name => gdcFilesFor(name).forEach(f => set.add(f)));
     return [...set];
   }
 
-  // Fetch every GDC payload referenced by the loaded factions. Defensive:
-  // failures are logged but don't throw; stratagems are nice-to-have, not
-  // load-bearing.
+  // Fetch every referenced GDC payload — BOTH editions (prose=11th,
+  // unit-data=10th). Defensive: failures are logged, never thrown.
   async function loadAll(factionNames) {
     const filenames = uniqueFilenamesFor(factionNames);
     if (filenames.length === 0) return;
-    const fetches = filenames.map(async fn => {
-      const payload = await fetchOne(fn);
-      if (payload) rawCache.set(fn, payload);
+    const fetches = [];
+    filenames.forEach(fn => {
+      fetches.push(fetchOne(PROSE_EDITION, fn).then(p => { if (p) rawCache.set(PROSE_EDITION + '/' + fn, p); }));
+      fetches.push(fetchOne(UNITDATA_EDITION, fn).then(p => { if (p) rawCache.set(UNITDATA_EDITION + '/' + fn, p); }));
     });
     await Promise.all(fetches);
   }
 
-  // Merge GDC stratagems into the parsed faction objects. Attaches:
-  //   detachment.gdcStratagems: per-detachment strats (matched by detachment name)
-  //   faction.gdcFactionStratagems: faction-wide strats (no detachment field, or
-  //     detachment field doesn't match any of this faction's detachments)
+  // Merge GDC PROSE (11th) into the parsed faction objects:
+  //   detachment.gdcStratagems  — per-detachment strat text (by detachment name)
+  //   detachment.enhancements[].description — filled where 40kdc left it empty
+  //   detachment.rules          — filled where empty (fill-only)
+  //   faction.armyRules[].description — filled where empty
+  //   faction.gdcFactionStratagems — faction-wide/core strats
   //
-  // We attach to a separate field instead of merging into detachment.stratagems
-  // so that BSData-derived strats (rare but possible — Tyranids in particular)
-  // remain identifiable.
+  // For SM chapters we merge from BOTH the chapter file AND space_marines.json
+  // (gdcFilesFor), so the ~15 generic codex detachments that repeat under every
+  // chapter — whose prose lives only in space_marines.json — get their strat +
+  // enhancement + rule text on the chapter's own detachment copies too (routed
+  // via detKeyToTargets, which indexes this faction's AND the parent's detachments).
   function mergeIntoFactions(factions) {
     const CHAPTER_PARENTS = (App && App.CHAPTER_PARENTS) || {};
     const factionByName = new Map();
     factions.forEach(f => factionByName.set(f.factionName, f));
+
     factions.forEach(faction => {
-      const file = FACTION_TO_GDC[faction.factionName];
-      if (!file) return;
-      const payload = rawCache.get(file);
-      if (!payload) return;
-      const strats = Array.isArray(payload.stratagems) ? payload.stratagems : [];
-      // Match on relaxed name key (curly→straight apostrophe folded,
-      // punctuation/spaces stripped). BSData decodes &apos; to a straight
-      // ASCII apostrophe ("Mont'ka") while GDC typically uses the curly
-      // form ("Mont’ka"); a plain lowercase compare misses them — Mont'ka
-      // Kau'yon, and any other apostrophe-bearing detachment lost their
-      // stratagems silently.
-      //
-      // For SM chapters (Dark Angels, Blood Angels, etc.), chapter-
-      // exclusive detachments like "Wrath of the Rock" are parsed into
-      // the PARENT Space Marines faction (BSData defines them there
-      // gated by a primary-catalogue childId condition), but the GDC
-      // ships them under the chapter file. We index the parent's
-      // detachments too so chapter stratagems land on the SM-faction
-      // detachment object that the running app actually surfaces via
-      // App.getDetachmentFaction().
+      const files = gdcFilesFor(faction.factionName);
+      if (files.length === 0) return;
+
+      // Index the detachments prose can land on: this faction's + (for chapters)
+      // the parent SM faction's. Relaxed name key folds curly/straight quotes etc.
       const detKeyToTargets = new Map();
       function indexDetachments(f) {
         if (!f || !Array.isArray(f.detachments)) return;
@@ -221,27 +245,35 @@
       const parentName = CHAPTER_PARENTS[faction.factionName];
       if (parentName) indexDetachments(factionByName.get(parentName));
 
+      // Accumulate across every file (chapter + space_marines fallback).
       const byDetachment = {};
       const factionWide = [];
-      strats.forEach(raw => {
-        const proj = projectStratagem(raw);
-        if (!proj) return;
-        const dRaw = (proj.detachment || '').trim();
-        const dKey = nameKey(dRaw);
-        if (dKey && detKeyToTargets.has(dKey)) {
-          (byDetachment[dKey] = byDetachment[dKey] || []).push(proj);
-        } else if (!dRaw || dRaw.toLowerCase() === 'core') {
-          factionWide.push(proj);
-        } else {
-          // The strat references a detachment this faction doesn't own.
-          // Most common: subfaction-specific strats in the parent faction file
-          // that don't apply when the parent itself is selected. Skip silently.
+      const armyRuleEntries = [];
+      const detRuleEntries = [];
+      const enhancementEntries = [];
+
+      files.forEach(file => {
+        const payload = rawCache.get(PROSE_EDITION + '/' + file);
+        if (!payload) return;
+        (Array.isArray(payload.stratagems) ? payload.stratagems : []).forEach(raw => {
+          const proj = projectStratagem(raw);
+          if (!proj) return;
+          const dKey = nameKey(proj.detachment);
+          if (dKey && detKeyToTargets.has(dKey)) {
+            (byDetachment[dKey] = byDetachment[dKey] || []).push(proj);
+          } else if (!proj.detachment || proj.detachment.toLowerCase() === 'core') {
+            factionWide.push(proj);
+          }
+          // else: strat references a detachment this faction doesn't own → skip.
+        });
+        (Array.isArray(payload.enhancements) ? payload.enhancements : []).forEach(e => enhancementEntries.push(e));
+        if (payload.rules) {
+          (Array.isArray(payload.rules.army) ? payload.rules.army : []).forEach(a => armyRuleEntries.push(a));
+          (Array.isArray(payload.rules.detachment) ? payload.rules.detachment : []).forEach(d => detRuleEntries.push(d));
         }
       });
-      // Attach by name, concatenating with any existing list (the parent
-      // SM faction may already have had its own GDC strats attached on a
-      // prior iteration). Dedupe by lowercased stratagem name so a strat
-      // duplicated across two GDC files doesn't render twice.
+
+      // Attach detachment strats (dedupe by name), concatenating with any existing.
       detKeyToTargets.forEach((targets, key) => {
         const list = byDetachment[key];
         if (!list || list.length === 0) return;
@@ -257,48 +289,46 @@
           if (existing.length > 0) d.gdcStratagems = existing;
         });
       });
-      if (factionWide.length > 0) faction.gdcFactionStratagems = factionWide;
 
-      // Army rule prose. 40kdc seeds the rule name (via faction_rule_id) but
-      // omits the text for IP; GDC carries it under payload.rules.army as
-      // [{ name, rules:[…chunks] }]. Fill the description of a 40kdc-seeded
-      // rule (matched by relaxed name key), or add the rule outright if 40kdc
-      // didn't seed one — so the Army Rules subsection is never empty when GDC
-      // has the text.
-      const gdcArmy = (payload.rules && Array.isArray(payload.rules.army)) ? payload.rules.army : [];
-      if (gdcArmy.length > 0) {
+      // Faction-wide / core strats (dedupe by name).
+      if (factionWide.length > 0) {
+        const seen = new Set();
+        const uniq = [];
+        factionWide.forEach(s => {
+          const k = (s.name || '').toLowerCase();
+          if (k && !seen.has(k)) { seen.add(k); uniq.push(s); }
+        });
+        faction.gdcFactionStratagems = uniq;
+      }
+
+      // Army rule prose — fill a 40kdc-seeded rule's empty description, or add.
+      if (armyRuleEntries.length > 0) {
         const existing = Array.isArray(faction.armyRules) ? faction.armyRules : (faction.armyRules = []);
         const byKey = new Map(existing.map(r => [nameKey(r.name), r]));
-        gdcArmy.forEach(ar => {
-          if (!ar || !ar.name) return;
+        armyRuleEntries.forEach(ar => {
+          const nm = pickText(ar && ar.name);
+          if (!nm) return;
           const desc = composeRuleText(ar.rules);
-          const hit = byKey.get(nameKey(ar.name));
+          const hit = byKey.get(nameKey(nm));
           if (hit) {
             if (!hit.description && desc) hit.description = desc;
           } else {
-            const rule = { name: ar.name, description: desc, source: 'gdc' };
+            const rule = { name: nm, description: desc, source: 'gdc' };
             existing.push(rule);
-            byKey.set(nameKey(ar.name), rule);
+            byKey.set(nameKey(nm), rule);
           }
         });
       }
 
-      // Detachment rule prose. 40kdc leaves many detachment_rule_ids null — every
-      // SM chapter detachment, plus a handful of other factions — so fill EMPTY
-      // detachment.rules from GDC's payload.rules.detachment (sibling of
-      // rules.army, identical chunk shape). A GDC detachment often has several
-      // named sub-rules → emit one { name, description } per sub-rule to match
-      // the GW datacard. Routed via detKeyToTargets (indexes this faction's AND
-      // the parent SM faction's detachments), so chapter-specific detachments
-      // land on the object App.getDetachmentFaction() surfaces. Fill-only: never
-      // overrides 40kdc-authored or adapter-borrowed text.
-      const gdcDet = (payload.rules && Array.isArray(payload.rules.detachment)) ? payload.rules.detachment : [];
-      gdcDet.forEach(entry => {
-        if (!entry || !entry.detachment) return;
-        const targets = detKeyToTargets.get(nameKey(entry.detachment));
+      // Detachment rule prose — one { name, description } per named sub-rule,
+      // filled only where the detachment has no rule text yet.
+      detRuleEntries.forEach(entry => {
+        const dName = pickText(entry && entry.detachment);
+        if (!dName) return;
+        const targets = detKeyToTargets.get(nameKey(dName));
         if (!targets || targets.length === 0) return;
         const built = (Array.isArray(entry.rules) ? entry.rules : []).map(sr => ({
-          name: (sr && sr.name) ? sr.name : entry.detachment,
+          name: pickText(sr && sr.name) || dName,
           description: composeRuleText(sr && sr.rules),
           source: 'gdc',
         })).filter(r => r.description);
@@ -308,14 +338,30 @@
           if (!cur.some(r => r && r.description)) d.rules = built.map(r => ({ ...r }));
         });
       });
+
+      // Enhancement prose — fill a detachment enhancement's empty description,
+      // matched by detachment name + enhancement name (relaxed key drops a
+      // trailing "(Upgrade)" suffix GDC appends). 40kdc-first: never overrides.
+      enhancementEntries.forEach(e => {
+        const dName = pickText(e && e.detachment);
+        if (!dName) return;
+        const targets = detKeyToTargets.get(nameKey(dName));
+        if (!targets || targets.length === 0) return;
+        const desc = cleanMarkup(pickText(e.description));
+        if (!desc) return;
+        const enhKey = nameKey(pickText(e.name));
+        if (!enhKey) return;
+        targets.forEach(d => {
+          (d.enhancements || []).forEach(en => {
+            if (!en.description && nameKey(en.name) === enhKey) en.description = desc;
+          });
+        });
+      });
     });
   }
 
-  // Normalize a unit name for cross-source matching. GDC and BSData mostly
-  // agree on names, but a stray apostrophe variant (’ vs ') or stray suffix
-  // ([Legends], (...)) can break exact matches. We compare on a relaxed key:
-  // lowercased, curly-quotes folded to ASCII, parenthetical/[bracket] suffixes
-  // stripped, all non-alphanumerics removed.
+  // Normalize a name for cross-source matching: lowercased, curly→straight
+  // quotes, trailing parenthetical/[bracket] suffix stripped, non-alnum removed.
   function nameKey(s) {
     if (!s) return '';
     return String(s)
@@ -326,12 +372,12 @@
       .replace(/[^a-z0-9]/g, '');
   }
 
-  // Build a lookup: nameKey → datasheet, with earlier files winning on
-  // collisions (chapter-specific entries override the SM fallback).
+  // ── Unit datasheet data (10th edition — unchanged) ──────────────────────────
+  // Build a lookup: nameKey → datasheet, earlier files winning on collisions.
   function buildDatasheetIndex(filenames) {
     const idx = new Map();
     filenames.forEach(fn => {
-      const payload = rawCache.get(fn);
+      const payload = rawCache.get(UNITDATA_EDITION + '/' + fn);
       if (!payload) return;
       const sheets = Array.isArray(payload.datasheets) ? payload.datasheets : [];
       sheets.forEach(ds => {
@@ -343,9 +389,6 @@
     return idx;
   }
 
-  // Project a GDC datasheet's wargear / weapon data onto a unit. We attach
-  // under `gdc*` fields so detail.js can prefer them when present without
-  // disturbing the BSData-derived shape (which other code already consumes).
   function projectUnitData(ds) {
     if (!ds) return null;
     const out = {};
@@ -353,8 +396,6 @@
       out.loadout = ds.loadout.trim();
     }
     if (Array.isArray(ds.wargear)) {
-      // Filter out the placeholder "None" entries GDC uses for HQs with no
-      // options — they'd render as a confusing empty bullet.
       const lines = ds.wargear
         .map(s => (typeof s === 'string' ? s.trim() : ''))
         .filter(s => s && s.toLowerCase() !== 'none');
@@ -374,17 +415,6 @@
     return Object.keys(out).length > 0 ? out : null;
   }
 
-  // Merge GDC unit-level data (loadout text, wargear options, composition,
-  // leadBy, weapon profiles) onto matching units in each faction. Attaches:
-  //   unit.gdcLoadout       string  — "Every model is equipped with: …"
-  //   unit.gdcWargear       string[] — printed Wargear Options bullet lines
-  //   unit.gdcComposition   string[] — printed Unit Composition lines
-  //   unit.gdcLeadBy        string[] — leader names this unit can be led by
-  //   unit.gdcMeleeWeapons  GDC weapon objects (profiles inside)
-  //   unit.gdcRangedWeapons same
-  // Match is by relaxed name key (see nameKey). Misses are silent — units
-  // without GDC entries (Imperial Knights, Titans, oddballs) just keep their
-  // BSData-derived display.
   function mergeUnitDataIntoFactions(factions) {
     factions.forEach(faction => {
       const files = gdcFilesFor(faction.factionName);
@@ -414,6 +444,10 @@
     // Exposed for tests / debugging:
     _rawCache: rawCache,
     _projectStratagem: projectStratagem,
+    _cleanMarkup: cleanMarkup,
+    _pickText: pickText,
     _nameKey: nameKey,
+    _PROSE_EDITION: PROSE_EDITION,
+    _UNITDATA_EDITION: UNITDATA_EDITION,
   };
 })();
