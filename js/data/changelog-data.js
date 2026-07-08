@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-13',
+    version:     '2026.07.08-14',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'change',
+        title: 'Details pane redesign — easier to read',
+        description:
+          'The right-hand details pane got a readability pass. Each section now ' +
+          'has a tinted header band with a coloured left bar (blue for ranged, ' +
+          'orange for melee, gold for stratagems). Weapons are laid out as two-' +
+          'line rows so the stats line up in fixed columns and keywords sit on ' +
+          'their own line instead of squeezing the table. Abilities and ' +
+          'enhancements are now cards with the name on its own line, points sit ' +
+          'in a right-aligned stack, and stratagems read as cards with a ' +
+          'phase + CP header and a clean WHEN / TARGET / EFFECT layout.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Units pane stops jumping to the top',

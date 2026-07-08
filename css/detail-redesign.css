@@ -1,0 +1,366 @@
+/* detail-redesign.css — readability pass on the right-hand Details pane.
+ *
+ * Two approved design directions from the "Details Pane Redesign" handoff:
+ *   1a "Banded plates" → unit details: tinted section header bands with a left
+ *      accent bar, two-line weapon rows (aligned stat columns + keyword tags on
+ *      their own line), ability/enhancement cards.
+ *   1c "Stratagem reading view" → rule/detachment details: stratagem cards with
+ *      a name + phase + CP header row and a fixed 58px WHEN/TARGET/EFFECT grid.
+ *
+ * Loaded LAST (after style.css / typography.css / build-mode.css / detachments.css
+ * / expand-pane.css) so these rules win. Presentation only — no markup class
+ * names, hooks, or event wiring change semantics. Colours map to the existing
+ * CSS-variable system (--accent/--text/…) wherever a variable exists so faction
+ * accent theming keeps working; the fixed weapon/CP/phase hues (blue ranged,
+ * orange melee, gold CP) are literal because they're semantic, not themeable.
+ */
+
+/* ─────────────────────────────────────────────────────────────
+   1. SECTION HEADER BANDS  (replaces the hairline .detail-section-title)
+   Every section title becomes a full-width tinted band with a 3px left bar.
+───────────────────────────────────────────────────────────── */
+.unit-detail-content .detail-section-title,
+.unit-detail-content .weapons-section-banner {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 5px 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 4px 0;
+  background: rgba(var(--accent-rgb), 0.055);
+  color: var(--text);
+  display: block;         /* weapons banners were inline-block */
+}
+
+/* Neutral is the default above. Coloured per-section variants: */
+
+/* Ranged weapons — blue */
+.unit-detail-content .weapons-section-banner-ranged {
+  color: #5ab5e8;
+  background: rgba(90, 181, 232, 0.08);
+  border-color: rgba(90, 181, 232, 0.25);
+  border-left-color: #5ab5e8;
+}
+/* Melee weapons — orange */
+.unit-detail-content .weapons-section-banner-melee {
+  color: #e8955a;
+  background: rgba(232, 149, 90, 0.08);
+  border-color: rgba(232, 149, 90, 0.25);
+  border-left-color: #e8955a;
+}
+/* Leader — blue */
+.unit-detail-content .detail-section-title-leader {
+  color: #5ab5e8;
+  background: rgba(90, 181, 232, 0.06);
+  border-color: rgba(90, 181, 232, 0.2);
+  border-left-color: #5ab5e8;
+}
+/* Led By — green */
+.unit-detail-content .detail-section-title-ledbby {
+  color: #a8e88a;
+  background: rgba(168, 232, 138, 0.06);
+  border-color: rgba(168, 232, 138, 0.2);
+  border-left-color: #a8e88a;
+}
+/* Primarch / choose-N — gold-leaf (keeps the section's own boxed treatment) */
+.unit-detail-content .detail-section-title-primarch {
+  color: #e7c87a;
+  background: rgba(184, 144, 82, 0.1);
+  border-color: rgba(184, 144, 82, 0.4);
+  border-left-color: #b89052;
+}
+/* Stratagems — gold */
+.unit-detail-content .detail-section-title-strat {
+  color: #f5c842;
+  background: rgba(245, 200, 66, 0.06);
+  border-color: rgba(245, 200, 66, 0.25);
+  border-left-color: #f5c842;
+}
+
+.unit-detail-content .detail-section { margin-bottom: 14px; }
+
+/* ─────────────────────────────────────────────────────────────
+   2. HEADER BLOCK  (unit + rule/detachment)
+───────────────────────────────────────────────────────────── */
+.unit-detail-content .detail-name {
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.15;
+  margin-bottom: 0;
+}
+/* Short accent underline under the name. */
+.detail-name-underline {
+  width: 56px;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0.7;
+  margin: 6px 0 8px;
+  border-radius: 1px;
+}
+.detail-name-underline-gold { background: #f5c842; }
+
+/* Points as a right-aligned stack: big value + small "POINTS" caption. */
+.detail-pts-stack {
+  text-align: right;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.detail-pts-stack .detail-pts-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.detail-pts-stack .detail-pts-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.detail-pts-caption {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3. STAT STRIP  (invuln folded into the SV cell)
+───────────────────────────────────────────────────────────── */
+/* Separate cells with a 4px gap (build-mode.css draws a connected strip with
+   an outer border + overflow:hidden — undo that so the rounded cells show). */
+.unit-detail-content .detail-stat-strip {
+  gap: 4px;
+  border: none;
+  background: transparent;
+  overflow: visible;
+}
+.unit-detail-content .detail-stat-pillar {
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  border-radius: 4px;
+  padding: 7px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.unit-detail-content .detail-stat-pillar .detail-stat-pillar-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.unit-detail-content .detail-stat-pillar .detail-stat-pillar-value {
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.unit-detail-content .detail-stat-pillar-sv {
+  border-bottom: 2px solid #5ab5e8;
+}
+.unit-detail-content .detail-stat-pillar-invuln {
+  font-size: 8.5px;
+  color: #5ab5e8;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   4. WEAPONS — two-line grid rows (replaces the squeezed 8-col table)
+   Grid: name | Rng | A | BS/WS | S | AP | D
+───────────────────────────────────────────────────────────── */
+.wg-section { margin-bottom: 14px; }
+.wg-head,
+.wg-line {
+  display: grid;
+  grid-template-columns: 1fr 44px 30px 30px 30px 30px 30px;
+  gap: 2px;
+  align-items: baseline;
+}
+.wg-head {
+  padding: 6px 8px 4px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.wg-head .wg-cell { text-align: center; }
+
+.wg-weapon { padding: 7px 8px; border-bottom: 1px solid rgba(58, 58, 68, 0.5); }
+.wg-weapon:last-child { border-bottom: none; }
+.wg-weapon-alt { background: rgba(255, 255, 255, 0.02); }
+
+.wg-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 0;
+}
+.wg-line .wg-cell {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+/* "Melee" range reads muted + non-bold, not like a stat value. */
+.wg-line .wg-cell-melee {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 11px;
+}
+.wg-kw-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 4px;
+}
+.wg-kw-row .weapon-kw-tag {
+  font-size: 9.5px;
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   5. ABILITY CARDS — name on its own line, muted body below
+───────────────────────────────────────────────────────────── */
+.unit-detail-content .detail-ability {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+.unit-detail-content .detail-ability-name {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 2px;
+}
+.unit-detail-content .detail-ability-desc {
+  display: block;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   6. ENHANCEMENT CARDS — pts pill right-aligned; selected = accent border
+───────────────────────────────────────────────────────────── */
+.unit-detail-content .enhancement-cb-item {
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+.unit-detail-content .enhancement-cb-item:has(input:checked) {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  background: rgba(var(--accent-rgb), 0.06);
+}
+.unit-detail-content .enh-cb-header {
+  justify-content: space-between;
+  gap: 8px;
+}
+.unit-detail-content .enh-cb-name { font-size: 12.5px; font-weight: 700; }
+.unit-detail-content .enh-cb-pts {
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: rgba(var(--accent-rgb), 0.25);
+  font-variant-numeric: tabular-nums;
+}
+.unit-detail-content .enh-cb-desc { font-size: 11px; line-height: 1.5; }
+
+/* ─────────────────────────────────────────────────────────────
+   7. LEADER / LED BY chips (bands handled above; chips unchanged size)
+───────────────────────────────────────────────────────────── */
+.unit-detail-content .detail-leader-units .detail-ability-name {
+  display: inline;          /* "Can lead:" stays a run-in label, not a block */
+  font-size: 12px;
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   8. STRATAGEM READING VIEW (1c) — 58px WHEN/TARGET/EFFECT label grid
+   Restyles .strat-sections (used by single-rule + detachment strat cards).
+───────────────────────────────────────────────────────────── */
+.unit-detail-content .strat-sections {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  row-gap: 5px;
+  column-gap: 10px;
+  align-items: start;
+}
+/* Each clause contributes its label + text cell directly to the parent grid. */
+.unit-detail-content .strat-section {
+  display: contents;
+}
+.unit-detail-content .strat-section-label {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f5c842;
+  padding-top: 2px;
+}
+.unit-detail-content .strat-section-label-restrict { color: #e8955a; }
+.unit-detail-content .strat-section-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c8c8cc;
+}
+.unit-detail-content .strat-section-preface,
+.unit-detail-content .strat-section-empty {
+  grid-column: 1 / -1;
+}
+
+/* Stratagem card (detachment view): gold left bar + name/phase/CP header row. */
+.unit-detail-content .strat-card {
+  border-left: 2px solid rgba(245, 200, 66, 0.5);
+  padding: 9px 10px;
+}
+.unit-detail-content .strat-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.unit-detail-content .strat-card-name {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+}
+.unit-detail-content .strat-card-head .strat-phase-badge { margin-right: 0; }
+.unit-detail-content .strat-card-head .strat-cp-badge {
+  margin-right: 0;
+  font-size: 11px;
+  padding: 2px 7px;
+}
+
+/* Enhancement card (detachment view): name + right-aligned pts pill. */
+.unit-detail-content .enh-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+.unit-detail-content .enh-card-name { font-weight: 700; font-size: 12.5px; color: var(--text); }
+.unit-detail-content .enh-card-pts {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  border-radius: 3px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}

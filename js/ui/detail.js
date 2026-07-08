@@ -198,18 +198,31 @@
       }
     }
 
+    // Points render as a right-aligned stack (big value + "POINTS" caption).
+    // Multi-tier costs (e.g. "75 / 150") keep the first tier prominent and
+    // dim the rest.
+    const ptsStackHtml = ptsOpts.length > 0
+      ? `<div class="detail-pts-stack">
+          <div class="detail-pts detail-banner-pts detail-pts-value">${ptsOpts.map((p, i) =>
+            i === 0 ? esc(String(p)) : `<span class="detail-pts-sub">${esc(String(p))}</span>`
+          ).join(' / ')}</div>
+          <div class="detail-pts-caption">points</div>
+        </div>`
+      : '';
+
     html += `
       <div class="detail-header detail-banner">
         <div class="detail-header-main">
           <div class="detail-name">${esc(unit.name)}</div>
+          <div class="detail-name-underline"></div>
           ${flavorHtml}
-          ${ptsOpts.length > 0 ? `<div class="detail-pts detail-banner-pts detail-pts-line">${ptsOpts.join(' / ')} pts</div>` : ''}
-          ${ordinalNoteHtml(unit)}
           <div class="detail-meta detail-banner-subtitle">
             ${subtitleParts.join('')}
           </div>
+          ${ordinalNoteHtml(unit)}
         </div>
         <div class="detail-header-actions detail-banner-actions">
+          ${ptsStackHtml}
           ${(window.App && App.hooks && App.hooks.detailActions || []).map(a =>
             `<button class="detail-action-btn" data-action-id="${esc(a.id)}" title="${esc(a.title || '')}">${a.html || esc(a.label || '')}</button>`
           ).join('')}
@@ -314,52 +327,55 @@
     }
 
     if (ranged.length > 0 || melee.length > 0) {
+      // Two-line grid rows: line 1 is the aligned stat grid
+      // (name | Rng | A | BS/WS | S | AP | D), line 2 the wrap of keyword
+      // tags (tooltip wiring preserved). Replaces the squeezed 8-column
+      // <table> where Keywords fought the numeric columns for width.
       const renderWeaponTable = (list, type) => {
         if (list.length === 0) return '';
-        const COLS = type === 'ranged'
-          ? ['Range', 'A', 'BS', 'S', 'AP', 'D', 'Keywords']
-          : ['Range', 'A', 'WS', 'S', 'AP', 'D', 'Keywords'];
-        const allCols = new Set();
-        list.forEach(w => Object.keys(w).forEach(k => { if (k !== 'name' && k !== '_typeName' && k !== '_keywordDefs') allCols.add(k); }));
-        const cols = COLS.filter(c => allCols.has(c));
-
+        const skill = type === 'ranged' ? 'BS' : 'WS';
+        const STATS = ['Range', 'A', skill, 'S', 'AP', 'D'];
+        const HDR   = ['Rng', 'A', skill, 'S', 'AP', 'D'];
         const label = type === 'ranged' ? 'Ranged Weapons' : 'Melee Weapons';
-        const numericCols = new Set(['Range', 'A', 'BS', 'WS', 'S', 'AP', 'D']);
-        return `
-          <div class="weapons-subsection weapons-section">
-            <div class="weapons-subsection-title weapons-section-banner weapons-section-banner-${type} ${type}">${label}</div>
-            <div class="detail-table-wrap weapons-table-wrap">
-              <table class="weapons-table weapons-datasheet-table">
-                <thead><tr>
-                  <th class="weapons-col-name">Name</th>${cols.map(c => `<th class="${numericCols.has(c) ? 'weapons-col-num' : 'weapons-col-kw'}">${esc(c)}</th>`).join('')}
-                </tr></thead>
-                <tbody>
-                  ${list.map(w => `<tr>
-                    <td class="weapon-type-${type} weapons-col-name">${esc(w.name)}</td>
-                    ${cols.map(c => {
-                      if (c === 'Keywords' && w[c]) {
-                        const kws = String(w[c]).split(',').map(k => k.trim()).filter(Boolean);
-                        return `<td class="weapon-keywords-cell weapons-col-kw">${kws.map(k => {
-                          const d = w._keywordDefs && w._keywordDefs[k];
-                          const colorClass = weaponKwClass(k);
-                          const classes = 'weapon-kw-tag'
-                            + (d ? ' has-tooltip' : '')
-                            + (colorClass ? ' ' + colorClass : '');
-                          return `<span class="${classes}"${d ? ` data-tooltip="${esc(d)}"` : ''}>${esc(k)}</span>`;
-                        }).join('')}</td>`;
-                      }
-                      const cellClass = numericCols.has(c) ? 'weapons-col-num' : '';
-                      return `<td class="${cellClass}">${esc(String(w[c] != null ? w[c] : '—'))}</td>`;
-                    }).join('')}
-                  </tr>`).join('')}
-                </tbody>
-              </table>
+
+        const rows = list.map((w, i) => {
+          const cells = STATS.map(c => {
+            let v = w[c];
+            v = (v != null && v !== '') ? String(v) : '—';
+            const melee = c === 'Range' && v.toLowerCase() === 'melee';
+            return `<span class="wg-cell${melee ? ' wg-cell-melee' : ''}">${esc(v)}</span>`;
+          }).join('');
+          const kws = w.Keywords
+            ? String(w.Keywords).split(',').map(k => k.trim()).filter(Boolean)
+            : [];
+          const kwHtml = kws.length
+            ? `<div class="wg-kw-row">${kws.map(k => {
+                const d = w._keywordDefs && w._keywordDefs[k];
+                const colorClass = weaponKwClass(k);
+                const classes = 'weapon-kw-tag'
+                  + (d ? ' has-tooltip' : '')
+                  + (colorClass ? ' ' + colorClass : '');
+                return `<span class="${classes}"${d ? ` data-tooltip="${esc(d)}"` : ''}>${esc(k)}</span>`;
+              }).join('')}</div>`
+            : '';
+          return `<div class="wg-weapon${i % 2 === 1 ? ' wg-weapon-alt' : ''}">
+            <div class="wg-line">
+              <span class="wg-name">${esc(w.name)}</span>
+              ${cells}
             </div>
+            ${kwHtml}
+          </div>`;
+        }).join('');
+
+        return `
+          <div class="weapons-subsection weapons-section wg-section">
+            <div class="weapons-subsection-title weapons-section-banner weapons-section-banner-${type} ${type}">${label}</div>
+            <div class="wg-head"><span></span>${HDR.map(h => `<span class="wg-cell">${esc(h)}</span>`).join('')}</div>
+            <div class="wg-rows">${rows}</div>
           </div>`;
       };
 
       html += `<div class="detail-section detail-weapons-section">
-        <div class="detail-section-title">Weapons</div>
         ${renderWeaponTable(ranged, 'ranged')}
         ${renderWeaponTable(melee, 'melee')}
       </div>`;
@@ -473,7 +489,7 @@
         <div class="detail-section-title">Abilities</div>`;
       regularAbilities.forEach(ab => {
         html += `<div class="detail-ability">
-          <span class="detail-ability-name">${esc(ab.name)}:</span>
+          <span class="detail-ability-name">${esc(ab.name)}</span>
           <span class="detail-ability-desc">${esc(ab.description || '—')}</span>
         </div>`;
       });
@@ -492,7 +508,7 @@
         <div class="detail-section-title detail-section-title-primarch">${esc(friendlyLabel)} <span class="detail-primarch-hint">pick from these each turn</span></div>`;
       rows.forEach(ab => {
         html += `<div class="detail-ability detail-ability-primarch">
-          <span class="detail-ability-name">${esc(ab.name)}:</span>
+          <span class="detail-ability-name">${esc(ab.name)}</span>
           <span class="detail-ability-desc">${esc(ab.description || '—')}</span>
         </div>`;
       });
@@ -757,6 +773,23 @@
     return out;
   }
 
+  // Render a stratagem's WHEN/TARGET/EFFECT/RESTRICTIONS clauses as a
+  // .strat-sections block (styled into a fixed 58px label grid by
+  // detail-redesign.css). Shared by the single-stratagem view and each
+  // stratagem card in the detachment view.
+  function stratSectionsHtml(text, esc) {
+    const sections = splitStratagemSections(text || '');
+    if (!sections.length) return `<p class="strat-section-empty">No description available.</p>`;
+    return '<div class="strat-sections">' + sections.map(s => {
+      if (!s.label) return `<p class="strat-section-text strat-section-preface">${esc(s.text)}</p>`;
+      const rest = /^restrict/i.test(s.label) ? ' strat-section-label-restrict' : '';
+      return `<div class="strat-section">
+        <div class="strat-section-label${rest}">${esc(s.label)}</div>
+        <div class="strat-section-text">${esc(s.text)}</div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+
   UI.renderRuleDetail = function (data) {
     const esc = UI.escapeHtml;
     const panel = document.getElementById('unit-detail-panel');
@@ -771,20 +804,7 @@
 
     let body;
     if (isStratagem) {
-      const sections = splitStratagemSections(data.description || '');
-      if (sections.length === 0) {
-        body = `<p class="strat-section-empty">No description available.</p>`;
-      } else {
-        body = '<div class="strat-sections">' + sections.map(s => {
-          if (!s.label) {
-            return `<p class="strat-section-text strat-section-preface">${esc(s.text)}</p>`;
-          }
-          return `<div class="strat-section">
-            <div class="strat-section-label">${esc(s.label)}</div>
-            <div class="strat-section-text">${esc(s.text)}</div>
-          </div>`;
-        }).join('') + '</div>';
-      }
+      body = stratSectionsHtml(data.description, esc);
     } else {
       body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${esc(data.description || 'No description available.')}</p>`;
     }
@@ -796,24 +816,33 @@
     let sectionTitle = 'Rule';
     if (isEnhancement) sectionTitle = 'Enhancement';
     else if (isStratagem) sectionTitle = 'Stratagem';
+    // Stratagem clauses get the gold band; enhancements/army rules stay neutral.
+    const titleClass = isStratagem ? ' detail-section-title-strat' : '';
 
+    // Points / CP as a right-aligned stack with caption, matching unit header.
     let headerActions = '';
-    if (isEnhancement && data.pts) {
-      headerActions = `<div class="detail-header-actions detail-banner-actions"><span class="detail-pts detail-banner-pts">${esc(String(data.pts))} pts</span></div>`;
-    } else if (isStratagem && data.cp != null) {
-      headerActions = `<div class="detail-header-actions detail-banner-actions"><span class="detail-pts detail-banner-pts">${esc(String(data.cp))} CP</span></div>`;
-    }
+    const stack = (value, caption) => `<div class="detail-header-actions detail-banner-actions">
+      <div class="detail-pts-stack">
+        <div class="detail-pts detail-banner-pts detail-pts-value">${esc(String(value))}</div>
+        <div class="detail-pts-caption">${esc(caption)}</div>
+      </div>
+    </div>`;
+    if (isEnhancement && data.pts) headerActions = stack(data.pts, 'pts');
+    else if (isStratagem && data.cp != null) headerActions = stack(data.cp, 'CP');
 
     let subtitleExtra = '';
     if (isStratagem && data.phase) {
       subtitleExtra = ` <span class="detail-rule-phase">· ${esc(data.phase)}</span>`;
     }
+    // Gold underline for the detachment/stratagem family; neutral for army rules.
+    const underlineClass = (isStratagem || isEnhancement) ? ' detail-name-underline-gold' : '';
 
     panel.insertAdjacentHTML('beforeend', `
       <div class="unit-detail-content unit-detail-rule" data-detail-kind="rule">
         <div class="detail-header detail-banner detail-banner-rule">
           <div class="detail-header-main">
             <div class="detail-name">${esc(data.name)}</div>
+            <div class="detail-name-underline${underlineClass}"></div>
             <div class="detail-meta detail-banner-subtitle">
               <span class="detail-rule-kind">${kindLabel}</span>${subtitleExtra}
             </div>
@@ -821,7 +850,7 @@
           ${headerActions}
         </div>
         <div class="detail-section">
-          <div class="detail-section-title">${sectionTitle}</div>
+          <div class="detail-section-title${titleClass}">${sectionTitle}</div>
           ${body}
         </div>
       </div>
@@ -861,6 +890,7 @@
       <div class="detail-header detail-banner detail-banner-rule">
         <div class="detail-header-main">
           <div class="detail-name">${esc(det.name)}</div>
+          <div class="detail-name-underline detail-name-underline-gold"></div>
           <div class="detail-meta detail-banner-subtitle"><span class="detail-rule-kind">Detachment</span></div>
         </div>
         ${ptsBadge}
@@ -869,7 +899,7 @@
     if (rules.length) {
       html += `<div class="detail-section"><div class="detail-section-title">Detachment Rule${rules.length > 1 ? 's' : ''}</div>`;
       rules.forEach(r => {
-        html += `<div class="detail-detachment-block">${
+        html += `<div class="detail-detachment-block detail-detachment-card">${
           r.name && r.name !== det.name ? `<div class="detail-detachment-subname">${esc(r.name)}</div>` : ''
         }<p class="detail-detachment-text">${mdBold(r.description || '')}</p></div>`;
       });
@@ -879,28 +909,30 @@
     if (enhancements.length) {
       html += `<div class="detail-section"><div class="detail-section-title">Enhancements</div>`;
       enhancements.forEach(e => {
-        html += `<div class="detail-detachment-block detail-detachment-card"><div class="detail-detachment-subname">${esc(e.name)}${
-          e.pts ? ` <span class="detail-inline-pts">${esc(String(e.pts))} pts</span>` : ''
-        }</div><p class="detail-detachment-text">${mdBold(e.description || '')}</p></div>`;
+        html += `<div class="detail-detachment-card enh-card">
+          <div class="enh-card-head">
+            <span class="enh-card-name">${esc(e.name)}</span>
+            ${e.pts ? `<span class="enh-card-pts">+${esc(String(e.pts))} pts</span>` : ''}
+          </div>
+          <p class="detail-detachment-text">${mdBold(e.description || '')}</p>
+        </div>`;
       });
       html += `</div>`;
     }
 
     if (strats.length) {
-      html += `<div class="detail-section"><div class="detail-section-title">Stratagems</div>`;
+      html += `<div class="detail-section"><div class="detail-section-title detail-section-title-strat">Stratagems</div>`;
       strats.forEach(s => {
-        const meta = [];
-        if (s.cp != null) meta.push(`${esc(String(s.cp))} CP`);
-        if (s.phase)      meta.push(esc(s.phase));
-        const sections = splitStratagemSections(s.description || '');
-        const sbody = sections.length
-          ? '<div class="strat-sections">' + sections.map(sec => sec.label
-              ? `<div class="strat-section"><div class="strat-section-label">${esc(sec.label)}</div><div class="strat-section-text">${esc(sec.text)}</div></div>`
-              : `<p class="strat-section-text strat-section-preface">${esc(sec.text)}</p>`).join('') + '</div>'
-          : `<p class="strat-section-empty">No description available.</p>`;
-        html += `<div class="detail-detachment-block detail-detachment-card"><div class="detail-detachment-subname">${esc(s.name)}${
-          meta.length ? ` <span class="detail-inline-pts">${meta.join(' · ')}</span>` : ''
-        }</div>${sbody}</div>`;
+        const badges = [];
+        if (s.phase)     badges.push(`<span class="strat-phase-badge">${esc(s.phase)}</span>`);
+        if (s.cp != null) badges.push(`<span class="cp-badge strat-cp-badge">${esc(String(s.cp))} CP</span>`);
+        html += `<div class="detail-detachment-card strat-card">
+          <div class="strat-card-head">
+            <span class="strat-card-name">${esc(s.name)}</span>
+            ${badges.join('')}
+          </div>
+          ${stratSectionsHtml(s.description, esc)}
+        </div>`;
       });
       html += `</div>`;
     }
