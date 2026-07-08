@@ -219,12 +219,18 @@
 /* ─────────────────────────────────────────────────────────────
    3. STAT STRIP  (invuln folded into the SV cell)
 ───────────────────────────────────────────────────────────── */
-/* Stats live in the same neutral card box as the other sections. */
+/* Stats live in the same neutral card box as the other sections. Stats +
+   weapons read as one unit: tighten the gap between them (the default
+   14px section margin-bottom + build-mode's 12px margin-top made ~26px). */
 .unit-detail-content .detail-stats-section {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 8px;
+  margin-bottom: 6px;
+}
+.unit-detail-content .detail-stats-section + .detail-weapons-section {
+  margin-top: 0;
 }
 
 /* Separate cells with a 4px gap (build-mode.css draws a connected strip with

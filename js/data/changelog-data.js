@@ -26,7 +26,7 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-32',
+    version:     '2026.07.08-33',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
       {
