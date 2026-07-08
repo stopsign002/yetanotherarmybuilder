@@ -26,9 +26,17 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-38',
+    version:     '2026.07.08-39',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'feature',
+        title: '“All factions” view in the units pane',
+        description:
+          'A fourth button next to Reserves / Requisitions / Faction units ' +
+          'shows every unit from every faction, so you can search for any ' +
+          'unit even while a faction is selected.',
+      },
       {
         date: '2026-07-08', kind: 'change',
         title: 'Details pane layout overhaul',

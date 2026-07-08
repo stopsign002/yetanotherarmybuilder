@@ -22,8 +22,9 @@
   const LS_VIEW     = 'yaab_units_view';
   const VIEW_RESERVES     = 'reserves';
   const VIEW_REQUISITIONS = 'requisitions';
-  const VIEW_ALL          = 'all';
-  const ALLOWED_VIEWS = { reserves: 1, requisitions: 1, all: 1 };
+  const VIEW_ALL          = 'all';          // every unit in the selected faction
+  const VIEW_EVERYTHING   = 'everything';   // every unit, every faction (search anywhere)
+  const ALLOWED_VIEWS = { reserves: 1, requisitions: 1, all: 1, everything: 1 };
 
   const QTY = Object.create(null);
 
@@ -264,7 +265,12 @@
       '<button type="button" class="reserves-view-btn" data-view="all" role="tab" ' +
         'title="Show every unit in the selected faction">' +
         '<span class="reserves-view-icon" aria-hidden="true">▦</span>' +
-        '<span class="reserves-view-label">All units</span>' +
+        '<span class="reserves-view-label">Faction units</span>' +
+      '</button>' +
+      '<button type="button" class="reserves-view-btn" data-view="everything" role="tab" ' +
+        'title="Show every unit from every faction — search anywhere regardless of the selected faction">' +
+        '<span class="reserves-view-icon" aria-hidden="true">✦</span>' +
+        '<span class="reserves-view-label">All factions</span>' +
       '</button>';
     controls.insertBefore(host, controls.firstChild);
     host.addEventListener('click', evt => {
