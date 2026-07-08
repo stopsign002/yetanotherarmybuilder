@@ -26,9 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-23',
+    version:     '2026.07.08-24',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Wargear box text no longer squeezed',
+        description:
+          'Long limit chips (e.g. “Wolf Guard Terminator only · any number · ' +
+          '2 per 10 models”) were crushing the “Replace …” line into one word ' +
+          'per line. The chip now sits on its own line above and wraps ' +
+          'normally.',
+      },
       {
         date: '2026-07-08', kind: 'change',
         title: 'Add row simplified — quantity box removed',
