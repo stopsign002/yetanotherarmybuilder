@@ -116,12 +116,14 @@
     }
 
     // Army OR Details: hide only the Units pane; keep Army + Details side by
-    // side. Both panes get the "collapse" affordance so either header restores
-    // the 3-pane view.
+    // side (Army 2/3 with its army-list card reflow, Details 1/3 at its normal
+    // layout). Both panes get the "collapse" affordance so either header
+    // restores the 3-pane view. Army also gets .panel-expanded so it lays out
+    // its entries as a card grid (the roomy "units in the middle" view).
     main.classList.add('pane-expanded-build');
     const left  = document.getElementById('panel-left');
     const right = document.getElementById('panel-right');
-    if (left)  { left.classList.add('panel-build-focus');  setBtn(left, true); }
+    if (left)  { left.classList.add('panel-build-focus', 'panel-expanded'); setBtn(left, true); }
     if (right) { right.classList.add('panel-build-focus'); setBtn(right, true); }
 
     // Auto-open the rules+stratagems collapsible so the user sees their
