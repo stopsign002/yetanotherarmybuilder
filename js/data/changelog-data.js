@@ -26,9 +26,16 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-29',
+    version:     '2026.07.08-30',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Detachments box remembers being minimized',
+        description:
+          'Collapsing the Detachments box now sticks across reloads, like ' +
+          'Army setup and Army rules already did.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Wargear defaults follow the selected squad size',

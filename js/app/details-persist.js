@@ -10,6 +10,7 @@
   // the markup; localStorage overrides that default when present.
   const TARGET_IDS = [
     'army-setup-section',
+    'detachments-section',
     'army-rules-collapsible',
   ];
 
