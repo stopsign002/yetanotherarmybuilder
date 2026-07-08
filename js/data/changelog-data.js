@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-28',
+    version:     '2026.07.08-29',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Wargear defaults follow the selected squad size',
+        description:
+          'Units without authored size tiers (Wolf Guard Headtakers and ' +
+          'others) showed the max-size default loadout regardless of the ' +
+          'size picked — ×12 weapons on a 3-model squad. Defaults are now ' +
+          'computed for every selectable size, and items the size doesn’t ' +
+          'carry (0 Hunting Wolves at 3 models) are hidden.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Wargear: official wording on hover + WGT claws fix',

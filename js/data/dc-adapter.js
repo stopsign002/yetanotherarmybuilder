@@ -675,6 +675,41 @@
           });
           if (!Object.keys(modelsBySize).length) { modelsBySize = null; defaultsBySize = null; }
         }
+        // Ensure every SELECTABLE squad size (squadOptions) has an entry —
+        // units without authored tiers (Wolf Guard Headtakers: 3–12 models +
+        // 0–2 wolves, no tiers[]) otherwise fall back to a max-size roster.
+        // Distribute: every model group at its min, then fill groups toward
+        // their max in declared order until the size is reached.
+        const distribute = (models, size) => {
+          if (!Array.isArray(models) || !models.length) return null;
+          const byName = {}; let used = 0;
+          models.forEach((m) => { const n = (m && m.min) || 0; if (m && m.name) byName[m.name] = n; used += n; });
+          let rem = size - used;
+          if (rem < 0) return null;
+          for (const m of models) {
+            if (rem <= 0) break;
+            if (!m || !m.name) continue;
+            const cap = ((m.max != null ? m.max : m.min) || 0) - byName[m.name];
+            const add = Math.max(0, Math.min(cap, rem));
+            byName[m.name] += add; rem -= add;
+          }
+          if (rem !== 0) return null;
+          return byName;
+        };
+        (squadOptions || []).forEach((so) => {
+          const size = so && so.models;
+          if (!size || (defaultsBySize && defaultsBySize[size])) return;
+          const byName = distribute(rawComp && rawComp.models, size);
+          if (!byName) return;
+          const items = new Map();
+          Object.keys(byName).forEach((nm) => {
+            (defByModel[nm] || []).forEach((id) => items.set(id, (items.get(id) || 0) + byName[nm]));
+          });
+          modelsBySize = modelsBySize || {};
+          defaultsBySize = defaultsBySize || {};
+          modelsBySize[size] = byName;
+          defaultsBySize[size] = [...items.entries()].map(([id, count]) => ({ id, name: itemName(id), count }));
+        });
       } catch (_) { modelsBySize = null; defaultsBySize = null; }
       // Apply hand-patched corrections to upstream wgo/composition errors.
       const fix = WARGEAR_PROFILE_FIXES[u.id];

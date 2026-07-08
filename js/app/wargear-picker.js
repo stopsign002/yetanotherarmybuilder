@@ -171,6 +171,9 @@
         <span class="wgp-replaces">Default loadout${models ? ' — ' + models + ' models' : ''}</span>
       </div>`;
       defaults.forEach((d) => {
+        // Hide items this size doesn't carry (e.g. 0 Hunting Wolves at 3
+        // models) unless a selection touches them.
+        if (d.count === 0 && !added.get(d.id) && !removed.get(d.id)) return;
         const eff = effById.get(d.id);
         const neg = eff < 0;
         if (neg) negNote = true;
