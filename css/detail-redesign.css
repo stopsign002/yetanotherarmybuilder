@@ -41,6 +41,20 @@
    is the header treatment now; the leftover bar read as a stray line. */
 .unit-detail-content .detail-section-title::after { content: none; }
 
+/* Keep the weapons banners typographically identical to the other bands in
+   every context: expand-pane.css bumps .detail-section-title to 12px in the
+   expanded pane and mobile.css adjusts its letter-spacing — mirror both so
+   the headers never drift apart. */
+.panel-right.panel-expanded .unit-detail-content .weapons-section-banner {
+  font-size: 12px;
+}
+@media (max-width: 820px) {
+  .unit-detail-content .weapons-section-banner {
+    font-size: 11px;
+    letter-spacing: 1.3px;
+  }
+}
+
 /* Neutral is the default above. Coloured per-section variants: */
 
 /* Ranged weapons — blue */
