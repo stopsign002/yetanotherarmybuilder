@@ -515,6 +515,23 @@
       html += `</div>`;
     });
 
+    // Wargear Abilities — abilities conferred by a piece of wargear the unit
+    // can be equipped with (storm shields, grav-chutes, etc.). Shown by
+    // default (the player knows whether they've taken the wargear); rendered
+    // in its own labelled band, mirroring the official datasheet.
+    const wargearAbilities = unit.wargearAbilities || [];
+    if (wargearAbilities.length > 0) {
+      html += `<div class="detail-section detail-wargear-abilities-section">
+        <div class="detail-section-title detail-section-title-wargear">Wargear Abilities</div>`;
+      wargearAbilities.forEach(wa => {
+        html += `<div class="detail-ability detail-ability-wargear">
+          <span class="detail-ability-name">${esc(wa.name)}</span>
+          <span class="detail-ability-desc">${esc(wa.description || '—')}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
     const modelNums = [...new Set(squadOptions.map(o => o.models).filter(m => m != null))].sort((a, b) => a - b);
     const compLabel = modelNums.length === 0 ? null
       : modelNums.length === 1 ? `${modelNums[0]} model${modelNums[0] !== 1 ? 's' : ''}`

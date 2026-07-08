@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-14',
+    version:     '2026.07.08-15',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Wargear abilities now shown on datasheets',
+        description:
+          'Abilities granted by a piece of wargear — storm shield (Wounds 4), ' +
+          'Astartes shield (4+ invulnerable), Shield Dome, Reiver grav-chute ' +
+          '(Deep Strike), banners, icons, Tau drones and more — now appear in a ' +
+          '“Wargear Abilities” section on the unit detail pane and printed cards, ' +
+          'matching the official datasheet. The rules text was in the data but ' +
+          'was never linked to the unit (it’s attached to the wargear item, not ' +
+          'the datasheet). Shown for any wargear the unit can be equipped with; ' +
+          'it’s up to you to know which options you took. 138 datasheets gained ' +
+          'at least one wargear ability.',
+      },
       {
         date: '2026-07-08', kind: 'change',
         title: 'Details pane redesign — easier to read',

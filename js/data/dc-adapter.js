@@ -490,6 +490,47 @@
         abilities.push({ name, description, isCore: false });
       });
     }
+    // ── Wargear abilities ──────────────────────────────────────────────
+    // 11e reintroduced wargear that confers an ability / stat change (storm
+    // shield → +Wounds, Astartes shield → 4++ invuln, Reiver grav-chute →
+    // Deep Strike, …). 40kdc keeps the prose in the ability-text store keyed
+    // by the WARGEAR ITEM id, but never links it onto the datasheet — the unit
+    // references the item through weapon_ids / wargear options, not
+    // ability_ids — so it never rendered. Gather every wargear item the unit
+    // can field and surface the ones that carry ability text, mirroring
+    // Wahapedia's "Wargear Abilities" block. `textFor(id)` empty for ordinary
+    // weapons, so those are filtered out automatically. Self-heals: the name
+    // dedupe drops anything upstream later links as a real ability.
+    const wargearAbilities = (function () {
+      const itemIds = new Set();
+      (u.weapon_ids || []).forEach((id) => id && itemIds.add(id));
+      (u.wargear_budgets || []).forEach((b) => (b && b.items || []).forEach((id) => id && itemIds.add(id)));
+      let wgos = [];
+      try { wgos = uv.wargearOptions || []; } catch (_) { wgos = []; }
+      wgos.forEach((w) => {
+        const raw = (w && w.raw) || w || {};
+        (raw.replaces || []).forEach((id) => id && itemIds.add(id));
+        (raw.replacement || []).forEach((id) => id && itemIds.add(id));
+        (raw.replacement_choice || []).forEach((grp) => (grp || []).forEach((id) => id && itemIds.add(id)));
+      });
+      const haveNames = new Set(abilities.map((a) => a.name.toLowerCase()));
+      const seen = new Set();
+      const out = [];
+      itemIds.forEach((id) => {
+        const desc = textFor(id);
+        if (!desc) return;                          // ordinary weapon / no wargear ability
+        let item = null;
+        try { item = (DC.wargear && DC.wargear.get(id)) || (DC.weapons && DC.weapons.get && DC.weapons.get(id)); } catch (_) {}
+        const rawName = (item && (item.name || (item.raw && item.raw.name))) || String(id).replace(/-/g, ' ');
+        const name = titleCase(rawName);
+        const key = name.toLowerCase();
+        if (haveNames.has(key) || seen.has(key)) return;   // already a normal ability, or dup
+        seen.add(key);
+        out.push({ name, description: desc });
+      });
+      return out;
+    })();
+
     return {
       id: u.id,
       name: u.name,
@@ -500,6 +541,7 @@
       invulnSave: first.invuln_sv != null ? sv(first.invuln_sv) : null,
       weapons: weaponRows(uv.weapons),
       abilities,
+      wargearAbilities,
       keywords: (u.keywords || []).concat(u.faction_keywords || []),
       wargearOptions: [],
       points: pointsOptions.length ? pointsOptions[0] : 0,

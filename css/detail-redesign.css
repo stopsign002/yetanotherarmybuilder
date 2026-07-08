@@ -80,6 +80,14 @@
   border-color: rgba(245, 200, 66, 0.25);
   border-left-color: #f5c842;
 }
+/* Wargear abilities — muted bronze, so it reads as its own thing next to the
+   plain Abilities band without shouting. */
+.unit-detail-content .detail-section-title-wargear {
+  color: #cdb488;
+  background: rgba(205, 180, 136, 0.07);
+  border-color: rgba(205, 180, 136, 0.25);
+  border-left-color: #cdb488;
+}
 
 .unit-detail-content .detail-section { margin-bottom: 14px; }
 

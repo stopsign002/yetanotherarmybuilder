@@ -1199,8 +1199,11 @@
         named.push(a);
       }
     });
+    // Wargear-conferred abilities (storm shield, grav-chute, …) — a distinct
+    // block, mirroring the official datasheet's "Wargear Abilities".
+    const wargear = (unit.wargearAbilities || []).filter(a => a && a.name);
     const coreVisible = display.coreAbil && core.length > 0;
-    if (!coreVisible && named.length === 0 && subGroups.size === 0) return '';
+    if (!coreVisible && named.length === 0 && subGroups.size === 0 && wargear.length === 0) return '';
 
     // Stencil template: the design renders each ability as a block — a
     // category type-pill + name on one line, paragraph below — under a
@@ -1224,6 +1227,11 @@
                 + `<span class="dcc-ab-name">${esc(a.name)}</span></div>`
                 + `<div class="dcc-ab-text">${descHtml(a.description)}</div></div>`;
         });
+      });
+      wargear.forEach(a => {
+        body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">Wargear</span>`
+              + `<span class="dcc-ab-name">${esc(a.name)}</span></div>`
+              + `<div class="dcc-ab-text">${descHtml(a.description)}</div></div>`;
       });
       if (!body) return '';
       return `<div class="dcc-section dcc-abilities" data-sec="abilities" data-sec-label="Abilities">
@@ -1267,6 +1275,18 @@
       });
       html += `</div></div>`;
     });
+
+    // Wargear Abilities — its own labelled block, reusing data-sec="abilities"
+    // so the page-fill / spill logic treats it as part of the abilities group.
+    if (wargear.length > 0) {
+      html += `<div class="dcc-section dcc-abilities dcc-abilities-wargear" data-sec="abilities" data-sec-label="Wargear Abilities">
+        <div class="dcc-section-head"><span class="dcc-section-label">WARGEAR ABILITIES</span></div>
+        <div class="dcc-abilities-body">`;
+      wargear.forEach(a => {
+        html += `<div class="dcc-ability-row"><strong>${esc(a.name)}:</strong> ${descHtml(a.description)}</div>`;
+      });
+      html += `</div></div>`;
+    }
 
     return html;
   }
