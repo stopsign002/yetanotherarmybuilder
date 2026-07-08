@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-10',
+    version:     '2026.07.08-11',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'All supplementary data now current-edition',
+        description:
+          'The remaining datasheet details sourced from the community layer — ' +
+          'weapon profiles, loadouts, wargear options, unit composition, and ' +
+          'which units a character can lead — are now pulled from the current ' +
+          'edition instead of last edition’s. Coverage improved too (chapter-' +
+          'specific units like Grey Hunters now get theirs).',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Filled in datasheets that were missing their abilities',

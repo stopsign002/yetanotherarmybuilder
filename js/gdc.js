@@ -4,24 +4,22 @@
 // CP/phase/cost) but little prose; GDC fills the prose (stratagem + enhancement
 // + army/detachment rule text).
 //
-// EDITIONS (two, on purpose):
-//   - PROSE  = 11th : stratagem / enhancement / rule TEXT, matched to the 40kdc
-//              11e structure. This is the authoritative wording.
-//   - UNITDATA = 10th : datasheet loadout / wargear / composition / leadBy /
-//              weapon profiles consumed by detail.js + attachments.js. Left on
-//              10th because the 11th datasheet shape is different (localized
-//              objects, prose leadBy) and migrating it is a separate task; the
-//              app already prefers 40kdc 11e for the core datasheet.
+// EDITION = 11th for everything: stratagem / enhancement / rule TEXT AND the
+// datasheet loadout / wargear / composition / leadBy / weapon profiles consumed
+// by detail.js + attachments.js. (Fully migrated off 10th.)
 //
-// 11th text fields are localized objects ({en: "…"}) and carry inline markup
-// (<k>keyword</k>, <b>bold</b>, **bold**, *italic*); pickText + cleanMarkup
-// normalize them to the plain strings the renderers expect.
+// 11th fields are localized objects ({en: "…"}) and carry inline markup
+// (<k>keyword</k>, <b>bold</b>, **bold**, *italic*), and some datasheet fields
+// are arrays of { en } (wargear/composition) or prose (leader). pickText,
+// cleanMarkup, plainText, listLines, leaderTargets and normalizeWeapons
+// normalize them into the plain strings / arrays the renderers expect.
 (function () {
   const App = window.App = window.App || {};
 
   const RAW_ROOT = 'https://raw.githubusercontent.com/game-datacards/datasources/main/';
-  const PROSE_EDITION = '11th';     // stratagem / enhancement / rule prose
-  const UNITDATA_EDITION = '10th';  // datasheet loadout/wargear/weapons/leadBy
+  const EDITION = '11th';   // single source of truth — stratagems/rules/
+                            // enhancements PROSE and datasheet loadout/wargear/
+                            // composition/leadBy/weapons all come from 11th now.
 
   // BSData faction name → GDC filename (without .json).
   // 11 SM chapters all map to space_marines.json — they share the SM stratagem
@@ -95,6 +93,59 @@
       .replace(/\r\n?/g, '\n')
       .replace(/[ \t]+\n/g, '\n')
       .trim();
+  }
+
+  // Like cleanMarkup but ALSO drops **bold** markers — for datasheet text fields
+  // (loadout / wargear / composition) that render as plain esc()'d strings, where
+  // literal "**" would show through.
+  function plainText(v) {
+    return cleanMarkup(pickText(v)).replace(/\*\*/g, '').replace(/[ \t]{2,}/g, ' ').trim();
+  }
+
+  // Split a localized datasheet list field (wargear / composition) — an array of
+  // { en } items, or a single { en } with newline/bullet-separated lines — into
+  // plain-text lines, dropping "None"/empty placeholders.
+  function listLines(v) {
+    let items = [];
+    if (Array.isArray(v)) items = v.map(plainText);
+    else items = plainText(v).split(/\n|(?:\s*■\s*)/);
+    return items.map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'none');
+  }
+
+  // Extract the bodyguard unit names from a 11th `leader` prose field, e.g.
+  // "…attached to the following units: ■ **INTERCESSOR SQUAD** ■ **TACTICAL SQUAD**"
+  // → ["INTERCESSOR SQUAD", "TACTICAL SQUAD"] (attachments.js folds case).
+  function leaderTargets(v) {
+    const s = pickText(v);
+    if (!s) return [];
+    const out = [];
+    const re = /\*\*([^*]+?)\*\*/g;
+    let m;
+    while ((m = re.exec(s))) {
+      const name = m[1].replace(/\s+/g, ' ').trim();
+      if (name) out.push(name);
+    }
+    // Fallback: some entries bullet the names without bold.
+    if (out.length === 0 && /■/.test(s)) {
+      s.split(/\s*■\s*/).slice(1).forEach(x => { const t = x.replace(/\s+/g, ' ').trim(); if (t) out.push(t); });
+    }
+    return out;
+  }
+
+  // Normalize a 11th weapon array (each weapon → { profiles:[…] } with a
+  // localized profile name) into the shape gdcProfilesToRows expects: a string
+  // profile name; all other stat fields already match.
+  function normalizeWeapons(arr) {
+    if (!Array.isArray(arr)) return null;
+    const out = arr
+      .filter(w => w && Array.isArray(w.profiles))
+      .map(w => ({
+        active: w.active !== false,
+        name: pickText(w.name),
+        profiles: w.profiles.map(p => Object.assign({}, p, { name: pickText(p && p.name) })),
+      }))
+      .filter(w => w.profiles.length > 0);
+    return out.length > 0 ? out : null;
   }
 
   // Project a GDC stratagem to { name, cp, phase, description, … }. Handles both
@@ -200,10 +251,9 @@
   async function loadAll(factionNames) {
     const filenames = uniqueFilenamesFor(factionNames);
     if (filenames.length === 0) return;
-    const fetches = [];
-    filenames.forEach(fn => {
-      fetches.push(fetchOne(PROSE_EDITION, fn).then(p => { if (p) rawCache.set(PROSE_EDITION + '/' + fn, p); }));
-      fetches.push(fetchOne(UNITDATA_EDITION, fn).then(p => { if (p) rawCache.set(UNITDATA_EDITION + '/' + fn, p); }));
+    const fetches = filenames.map(async fn => {
+      const payload = await fetchOne(EDITION, fn);
+      if (payload) rawCache.set(EDITION + '/' + fn, payload);
     });
     await Promise.all(fetches);
   }
@@ -253,7 +303,7 @@
       const enhancementEntries = [];
 
       files.forEach(file => {
-        const payload = rawCache.get(PROSE_EDITION + '/' + file);
+        const payload = rawCache.get(EDITION + '/' + file);
         if (!payload) return;
         (Array.isArray(payload.stratagems) ? payload.stratagems : []).forEach(raw => {
           const proj = projectStratagem(raw);
@@ -372,16 +422,16 @@
       .replace(/[^a-z0-9]/g, '');
   }
 
-  // ── Unit datasheet data (10th edition — unchanged) ──────────────────────────
+  // ── Unit datasheet data (11th) ──────────────────────────────────────────────
   // Build a lookup: nameKey → datasheet, earlier files winning on collisions.
   function buildDatasheetIndex(filenames) {
     const idx = new Map();
     filenames.forEach(fn => {
-      const payload = rawCache.get(UNITDATA_EDITION + '/' + fn);
+      const payload = rawCache.get(EDITION + '/' + fn);
       if (!payload) return;
       const sheets = Array.isArray(payload.datasheets) ? payload.datasheets : [];
       sheets.forEach(ds => {
-        const key = nameKey(ds && ds.name);
+        const key = nameKey(pickText(ds && ds.name));   // 11th name is a { en } object
         if (!key) return;
         if (!idx.has(key)) idx.set(key, ds);
       });
@@ -392,32 +442,24 @@
   function projectUnitData(ds) {
     if (!ds) return null;
     const out = {};
-    if (typeof ds.loadout === 'string' && ds.loadout.trim()) {
-      out.loadout = ds.loadout.trim();
-    }
-    if (Array.isArray(ds.wargear)) {
-      const lines = ds.wargear
-        .map(s => (typeof s === 'string' ? s.trim() : ''))
-        .filter(s => s && s.toLowerCase() !== 'none');
-      if (lines.length > 0) out.wargear = lines;
-    }
-    if (Array.isArray(ds.composition)) {
-      const lines = ds.composition
-        .map(s => (typeof s === 'string' ? s.trim() : ''))
-        .filter(Boolean);
-      if (lines.length > 0) out.composition = lines;
-    }
-    if (Array.isArray(ds.leadBy) && ds.leadBy.length > 0) {
-      out.leadBy = ds.leadBy.slice();
-    }
-    if (Array.isArray(ds.meleeWeapons))  out.meleeWeapons  = ds.meleeWeapons;
-    if (Array.isArray(ds.rangedWeapons)) out.rangedWeapons = ds.rangedWeapons;
+    const loadout = plainText(ds.loadout);
+    if (loadout) out.loadout = loadout;
+    const wargear = listLines(ds.wargear);
+    if (wargear.length > 0) out.wargear = wargear;
+    const composition = listLines(ds.composition);
+    if (composition.length > 0) out.composition = composition;
+    const leadBy = leaderTargets(ds.leader);
+    if (leadBy.length > 0) out.leadBy = leadBy;
+    const melee  = normalizeWeapons(ds.meleeWeapons);
+    const ranged = normalizeWeapons(ds.rangedWeapons);
+    if (melee)  out.meleeWeapons  = melee;
+    if (ranged) out.rangedWeapons = ranged;
     return Object.keys(out).length > 0 ? out : null;
   }
 
   function mergeUnitDataIntoFactions(factions) {
     factions.forEach(faction => {
-      const files = gdcFilesFor(faction.factionName);
+      const files = datasheetFilesFor(faction.factionName);
       if (files.length === 0) return;
       const idx = buildDatasheetIndex(files);
       if (idx.size === 0) return;
@@ -459,7 +501,7 @@
   // Champion, Grey Hunters, Death Company…) live under the parent — but their
   // GDC datasheets are in the chapter files. Those files are already fetched
   // (their chapter factions are loaded), so consulting them is free.
-  function abilityFilesFor(factionName) {
+  function datasheetFilesFor(factionName) {
     const files = gdcFilesFor(factionName);
     if (factionName === 'Imperium - Adeptus Astartes - Space Marines') {
       return [...new Set([...files, ...SM_CHAPTER_FILES, 'space_marines'])];
@@ -470,7 +512,7 @@
   function buildAbilityIndex11(files) {
     const idx = new Map();
     files.forEach(fn => {
-      const p = rawCache.get(PROSE_EDITION + '/' + fn);
+      const p = rawCache.get(EDITION + '/' + fn);
       if (!p) return;
       (Array.isArray(p.datasheets) ? p.datasheets : []).forEach(ds => {
         const k = nameKey(pickText(ds && ds.name));   // 11th name is a { en } object
@@ -483,7 +525,7 @@
 
   function mergeUnitAbilitiesFromGdc(factions) {
     factions.forEach(faction => {
-      const files = abilityFilesFor(faction.factionName);
+      const files = datasheetFilesFor(faction.factionName);
       if (files.length === 0) return;
       const idx = buildAbilityIndex11(files);
       if (idx.size === 0) return;
@@ -520,7 +562,6 @@
     _cleanMarkup: cleanMarkup,
     _pickText: pickText,
     _nameKey: nameKey,
-    _PROSE_EDITION: PROSE_EDITION,
-    _UNITDATA_EDITION: UNITDATA_EDITION,
+    _EDITION: EDITION,
   };
 })();
