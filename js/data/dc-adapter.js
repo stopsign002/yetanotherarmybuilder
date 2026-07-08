@@ -379,13 +379,39 @@
         if (melee) row.WS = sv(st.WS != null ? st.WS : st.BS);
         else       row.BS = sv(st.BS);
         const kws = (p.keywords || []).map((k) => k.keyword_id || k).filter(Boolean);
-        if (kws.length) row.Keywords = kws.map(prettyKw).join(', ');
+        if (kws.length) {
+          row.Keywords = kws.map(prettyKw).join(', ');
+          // Attach weapon-keyword rule text so the datasheet tooltip lights up.
+          // 40kdc keeps the core weapon-ability prose in the ability-text store
+          // (lethal-hits, blast, torrent, sustained-hits, melta, …). Keyed by the
+          // DISPLAYED keyword token (prettyKw) so the renderer's per-token lookup
+          // (detail.js renderWeaponTable) matches, and so buildWeaponKwGlossary
+          // picks these up for GDC-rendered rows too. Fills the gap left when the
+          // BSData parser (which used to harvest _keywordDefs) went dormant.
+          const defs = {};
+          kws.forEach((kid) => {
+            const t = weaponKwText(kid);
+            if (t) defs[prettyKw(kid)] = t;
+          });
+          if (Object.keys(defs).length) row._keywordDefs = defs;
+        }
         rows.push(row);
       });
     });
     return rows;
   }
   const prettyKw = (s) => String(s).replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  // Resolve a weapon keyword id to its rule text from the 40kdc ability-text
+  // store, trying the full id then the base form with the trailing rating
+  // stripped ("sustained-hits-1" → "sustained-hits", "anti-infantry-4" →
+  // "anti-infantry", "melta-2" → "melta").
+  function weaponKwText(kid) {
+    let t = textFor(kid);
+    if (t) return t;
+    const base = String(kid).replace(/-\d+$/, '');
+    if (base !== kid) { t = textFor(base); if (t) return t; }
+    return '';
+  }
 
   // ── one 40kdc unit → one yaab Unit ─────────────────────────────────────────
   function toUnit(uv) {

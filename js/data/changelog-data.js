@@ -26,9 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-11',
+    version:     '2026.07.08-12',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Weapon keyword tooltips work again',
+        description:
+          'Hovering a weapon keyword (Lethal Hits, Sustained Hits, Blast, Torrent, ' +
+          'Melta, …) shows its rule text again. The definitions now come from the ' +
+          'current data source; they had gone missing when the app switched data ' +
+          'backends.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'All supplementary data now current-edition',

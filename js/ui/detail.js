@@ -47,7 +47,9 @@
           if (!defs) return;
           for (const k in defs) {
             if (!Object.prototype.hasOwnProperty.call(defs, k)) continue;
-            const lk = k.trim().toLowerCase();
+            // Normalize hyphens→spaces so a source that writes "Twin-linked"
+            // matches one that writes "Twin Linked".
+            const lk = k.trim().toLowerCase().replace(/-/g, ' ').replace(/\s+/g, ' ');
             if (!lk || map.has(lk)) continue;
             const v = defs[k];
             if (typeof v === 'string' && v) map.set(lk, v);
@@ -76,7 +78,7 @@
   function lookupWeaponKwDef(rawKeyword) {
     const map = ensureWeaponKwGlossary();
     if (!map || map.size === 0) return undefined;
-    const lower = String(rawKeyword || '').trim().toLowerCase();
+    const lower = String(rawKeyword || '').trim().toLowerCase().replace(/-/g, ' ').replace(/\s+/g, ' ');
     if (!lower) return undefined;
     let d = map.get(lower);
     if (d !== undefined) return d;
