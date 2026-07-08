@@ -26,9 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-26',
+    version:     '2026.07.08-27',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'fix',
+        title: 'Wargear: official wording on hover + WGT claws fix',
+        description:
+          'The Wargear box now has an “official wording” hover on the right ' +
+          'of its header showing the datasheet’s full wargear-options text, ' +
+          'so you can read the rule then make the picks. Also corrected Wolf ' +
+          'Guard Terminators: twin lightning claws / relic greataxe replace ' +
+          'BOTH the storm bolter and the master-crafted power weapon, and the ' +
+          'swap math + red warnings account for it.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Wargear limits: proportional budgets + swap cascade',

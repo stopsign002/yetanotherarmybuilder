@@ -110,6 +110,7 @@
     //     teeth and claws)
     const effReplaces = (opt, grp) => {
       if (opt.replaces.length <= 1) return opt.replaces;
+      if (opt.andSwap) return opt.replaces;            // hand-confirmed "and"
       if (grp && grp.length > 1) return opt.replaces;
       return [opt.replaces[0]];
     };
@@ -148,7 +149,20 @@
       return pairs.length === 1 ? pairs[0] : null;
     };
 
-    let html = `<div class="detail-section-title detail-section-title-wargear">Wargear</div>`;
+    // Right-side hover: the official (GDC) wargear-option wording, so the
+    // datasheet text is one hover away while making selections.
+    let officialText = '';
+    if (typeof unit.gdcLoadout === 'string' && unit.gdcLoadout) {
+      officialText += 'Every model is equipped with: ' + unit.gdcLoadout;
+    }
+    if (Array.isArray(unit.gdcWargear) && unit.gdcWargear.length) {
+      const lines = unit.gdcWargear.map((l) => String(l).replace(/\s*◦\s*/g, '\n   • '));
+      officialText += (officialText ? '\n\n' : '') + lines.join('\n\n');
+    }
+    const infoHtml = officialText
+      ? `<span class="wgp-info has-tooltip" data-tooltip="${esc(officialText)}">official wording</span>`
+      : '';
+    let html = `<div class="detail-section-title detail-section-title-wargear wgp-band"><span>Wargear</span>${infoHtml}</div>`;
 
     // ── Default loadout with LIVE effective counts ──
     if (defaults.length) {
@@ -191,7 +205,7 @@
 
       // Label mirrors the semantics: AND pair-swaps join with "+", OR lists
       // join with "or" (only one of them is given up per swap).
-      const isPairSwap = opt.choices.some((g) => g.length > 1);
+      const isPairSwap = opt.andSwap || opt.choices.some((g) => g.length > 1);
       const replacesLabel = !opt.replaces.length ? 'Add'
         : opt.replaces.length === 1 || isPairSwap
           ? 'Replace ' + names(opt.replaces)

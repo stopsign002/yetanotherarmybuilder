@@ -167,14 +167,23 @@
   //     (applied when the wgo exists; harmless once upstream matches).
   //   addDefaults: item ids missing from the default loadout, added at one
   //     per model for every squad size (skipped if upstream starts listing it).
+  //   andOptions: wgo ids whose multi-item `replaces` is a TRUE "and" — the
+  //     swap gives up every listed item — overriding the picker's default
+  //     reading of multi-replaces + single-item choice as "or, first item".
   //   wulfen: official datasheet — every model is equipped with wulfen
   //     weapons AND a death totem; the stormfrag auto-launcher replaces the
   //     TOTEM. Upstream omits the totem from defaults and mislabels the swap
   //     as replacing the wulfen weapons.
+  //   wolf-guard-terminators: the Pack Leader's twin lightning claws /
+  //     relic greataxe replace BOTH the storm bolter and the master-crafted
+  //     power weapon (official wording is "and").
   const WARGEAR_PROFILE_FIXES = {
     'wulfen': {
       optionReplaces: { 'wulfen-wgo-mfm-1': ['death-totem'] },
       addDefaults: ['death-totem'],
+    },
+    'wolf-guard-terminators': {
+      andOptions: ['wolf-guard-terminators-wgo-mfm-3'],
     },
   };
 
@@ -675,6 +684,9 @@
             const ids = fix.optionReplaces[o.id];
             if (ids) o.replaces = ids.map((id) => ({ id, name: itemName(id) }));
           });
+        }
+        if (fix.andOptions) {
+          options.forEach((o) => { if (fix.andOptions.indexOf(o.id) !== -1) o.andSwap = true; });
         }
         if (fix.addDefaults && defaultsBySize) {
           Object.keys(defaultsBySize).forEach((size) => {

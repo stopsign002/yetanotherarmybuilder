@@ -5,6 +5,30 @@
 
 #detail-wargear-picker { margin-bottom: 14px; }
 
+/* Band: title left, "official wording" hover affordance right. */
+.wgp-band {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wgp-info {
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: help;
+  border-bottom: 1px dotted var(--text-muted);
+  flex-shrink: 0;
+}
+.wgp-info:hover { color: var(--text); }
+
+/* GDC wording is multi-line ("Replace X: • A • B") — render the newlines the
+   picker bakes into data-tooltip. Safe globally: other tooltips are one line. */
+.global-tooltip { white-space: pre-line; }
+
 .wgp-option {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
