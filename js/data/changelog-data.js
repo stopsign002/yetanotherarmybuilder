@@ -26,9 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-20',
+    version:     '2026.07.08-21',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'change',
+        title: 'Wargear picker shows your default loadout',
+        description:
+          'The Wargear box now opens with the squad’s default loadout at the ' +
+          'chosen size (Necron Warriors start with 10× gauss flayer) and the ' +
+          'counts update live as you take swaps — take 3 gauss reapers and ' +
+          'the flayers drop to ×7. Where a default has exactly one swap, its ' +
+          'own +/− works directly. The separate written Loadout section is ' +
+          'gone for units with the picker (it duplicated this); units without ' +
+          'authored options keep the written version. Also: the flavour line ' +
+          'under the unit name now runs the full width and wraps instead of ' +
+          'always being cut off, and the per-army pricing box matches the ' +
+          'pane’s design language.',
+      },
       {
         date: '2026-07-08', kind: 'feature',
         title: 'Wargear picker — build your loadout per squad',

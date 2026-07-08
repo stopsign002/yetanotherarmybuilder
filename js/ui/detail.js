@@ -194,7 +194,7 @@
         if (lcName.indexOf(key) !== -1) { flavor = App.UNIT_FLAVOR[key]; break; }
       }
       if (flavor) {
-        flavorHtml = `<div class="detail-flavor" style="font-style:italic;font-size:12px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(flavor)}</div>`;
+        flavorHtml = `<div class="detail-flavor">${esc(flavor)}</div>`;
       }
     }
 
@@ -220,7 +220,6 @@
         <div class="detail-header-main">
           <div class="detail-name">${esc(unit.name)}</div>
           <div class="detail-name-underline"></div>
-          ${flavorHtml}
         </div>
         <div class="detail-header-actions detail-banner-actions">
           ${ptsStackHtml}
@@ -238,6 +237,7 @@
         </div>
         </div>
         <div class="detail-banner-full">
+          ${flavorHtml}
           <div class="detail-meta detail-banner-subtitle">
             ${subtitleParts.join('')}
           </div>
@@ -566,7 +566,12 @@
     const gdcComposition = Array.isArray(unit.gdcComposition) ? unit.gdcComposition : null;
     const useGdc = !!(gdcWargear || gdcLoadoutText || gdcComposition);
 
-    if (useGdc) {
+    // When the unit has a structured wargearProfile the interactive picker
+    // (under Add-to-Army) owns loadout display — defaults, swaps and limits —
+    // so the prose Loadout/Wargear-Options section would duplicate it.
+    if (unit.wargearProfile) {
+      // no-op: picker renders defaults + options
+    } else if (useGdc) {
       const sectionTitle = (gdcWargear && gdcWargear.length > 0) ? 'Wargear Options' : 'Loadout';
       html += `<div class="detail-section"><div class="detail-section-title">${esc(sectionTitle)}</div>`;
 

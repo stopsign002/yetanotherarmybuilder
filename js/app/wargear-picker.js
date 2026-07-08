@@ -79,21 +79,77 @@
     return bits.length ? bits.join(' · ') : 'any model';
   }
 
+  // Default loadout at a squad size (exact tier, else nearest below, else first).
+  function defaultsFor(profile, models) {
+    const bySize = profile.defaultsBySize;
+    if (!bySize) return [];
+    if (models != null && bySize[models]) return bySize[models];
+    const sizes = Object.keys(bySize).map(Number).sort((a, b) => a - b);
+    if (!sizes.length) return [];
+    let pick = sizes[0];
+    sizes.forEach((s) => { if (models != null && s <= models) pick = s; });
+    return bySize[pick] || [];
+  }
+
   function render(unit, host) {
     const profile = unit.wargearProfile;
     const models = currentModels(unit);
+    const defaults = defaultsFor(profile, models);
 
-    // Per-item totals across all selections (for budget checks).
-    const itemTotals = new Map();
+    // Per-item ADD totals and REMOVE totals across all selections. A swap of
+    // option O ×n removes n of each item O replaces and adds n of the chosen
+    // group's items.
+    const added = new Map(), removed = new Map();
     profile.options.forEach((opt) => {
       opt.choices.forEach((grp, ci) => {
         const n = counts.get(opt.id + ':' + ci) || 0;
         if (!n) return;
-        grp.forEach((x) => itemTotals.set(x.id, (itemTotals.get(x.id) || 0) + n));
+        grp.forEach((x) => added.set(x.id, (added.get(x.id) || 0) + n));
+        opt.replaces.forEach((x) => removed.set(x.id, (removed.get(x.id) || 0) + n));
       });
     });
+    const itemTotals = added;   // budget checks count what's been TAKEN
 
-    let html = `<div class="detail-section-title detail-section-title-wargear">Wargear Options</div>`;
+    // For each default item, the (option, choice) pairs that replace it — a
+    // single unambiguous pair gets proxy steppers on the default row itself
+    // ("remove a gauss flayer" = take one of its replacement).
+    const replacerFor = (itemId) => {
+      const pairs = [];
+      profile.options.forEach((opt) => {
+        if (!opt.replaces.some((x) => x.id === itemId)) return;
+        opt.choices.forEach((_g, ci) => pairs.push(opt.id + ':' + ci));
+      });
+      return pairs.length === 1 ? pairs[0] : null;
+    };
+
+    let html = `<div class="detail-section-title detail-section-title-wargear">Wargear</div>`;
+
+    // ── Default loadout with LIVE effective counts ──
+    if (defaults.length) {
+      let negNote = false;
+      html += `<div class="wgp-option wgp-defaults"><div class="wgp-option-head">
+        <span class="wgp-replaces">Default loadout${models ? ' — ' + models + ' models' : ''}</span>
+      </div>`;
+      defaults.forEach((d) => {
+        const eff = d.count + (added.get(d.id) || 0) - (removed.get(d.id) || 0);
+        const neg = eff < 0;
+        if (neg) negNote = true;
+        const proxy = replacerFor(d.id);
+        const stepper = proxy
+          ? `<span class="wgp-stepper" data-key="${esc(proxy)}" data-proxy="1">
+              <button type="button" class="wgp-btn wgp-plus" aria-label="Remove one (swap it out)">&minus;</button>
+              <span class="wgp-count${eff < d.count ? ' wgp-count-dim' : ''}">${eff}</span>
+              <button type="button" class="wgp-btn wgp-minus" aria-label="Add one back">+</button>
+            </span>`
+          : `<span class="wgp-eff${eff < d.count ? ' wgp-count-dim' : ''}${neg ? ' wgp-neg' : ''}">×${eff}</span>`;
+        html += `<div class="wgp-row${neg ? ' wgp-row-over' : ''}">
+          <span class="wgp-item">${esc(cap(d.name))}</span>
+          ${stepper}
+        </div>`;
+      });
+      if (negNote) html += `<div class="wgp-note">More swapped out than the squad carries</div>`;
+      html += `</div>`;
+    }
     profile.options.forEach((opt) => {
       const lim = limitFor(profile, opt, models);
       const total = opt.choices.reduce((s, _g, ci) => s + (counts.get(opt.id + ':' + ci) || 0), 0);

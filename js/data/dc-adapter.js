@@ -607,30 +607,48 @@
         perModels: (b && b.per_models) || 0,
       })).filter((b) => b.items.length && b.count > 0);
       // Per-squad-size model roster (from composition tiers) so the picker can
-      // resolve model_name-scoped limits at the chosen squad size.
+      // resolve model_name-scoped limits at the chosen squad size, plus the
+      // DEFAULT loadout per size ("10 models → 10× gauss flayer, 10× close
+      // combat weapon") so the picker can show what the squad starts with and
+      // net swaps against it.
       let modelsBySize = null;
+      let defaultsBySize = null;
       try {
         const ds = uv.ds;
         const comp = ds && ds.compositionByUnit && ds.compositionByUnit.get(u.faction_id + '::' + u.id);
         const rawComp = comp && (comp.raw || comp);
-        const tiers = rawComp && rawComp.tiers;
-        if (Array.isArray(tiers) && tiers.length) {
+        const defByModel = {};
+        (rawComp && rawComp.models || []).forEach((m) => {
+          if (m && m.name && Array.isArray(m.default_weapon_ids)) defByModel[m.name] = m.default_weapon_ids;
+        });
+        // A tier without explicit per-model rosters falls back to the
+        // composition's own model list.
+        const tiers = (rawComp && Array.isArray(rawComp.tiers) && rawComp.tiers.length)
+          ? rawComp.tiers
+          : (rawComp && rawComp.models ? [{ models: rawComp.models }] : []);
+        if (tiers.length) {
           modelsBySize = {};
+          defaultsBySize = {};
           tiers.forEach((t) => {
             const models = (t && t.models) || [];
-            let total = 0; const byName = {};
+            let total = 0; const byName = {}; const items = new Map();
             models.forEach((m) => {
               const n = (m && (m.max != null ? m.max : m.min)) || 0;
               total += n;
-              if (m && m.name) byName[m.name] = n;
+              if (!m || !m.name) return;
+              byName[m.name] = n;
+              (defByModel[m.name] || []).forEach((id) => items.set(id, (items.get(id) || 0) + n));
             });
-            if (total > 0) modelsBySize[total] = byName;
+            if (total > 0) {
+              modelsBySize[total] = byName;
+              defaultsBySize[total] = [...items.entries()].map(([id, count]) => ({ id, name: itemName(id), count }));
+            }
           });
-          if (!Object.keys(modelsBySize).length) modelsBySize = null;
+          if (!Object.keys(modelsBySize).length) { modelsBySize = null; defaultsBySize = null; }
         }
-      } catch (_) { modelsBySize = null; }
+      } catch (_) { modelsBySize = null; defaultsBySize = null; }
       if (!options.length) return null;
-      return { options, budgets, modelsBySize };
+      return { options, budgets, modelsBySize, defaultsBySize };
     })();
 
     // Apply hand-patched default-wargear links the dataset omits entirely.

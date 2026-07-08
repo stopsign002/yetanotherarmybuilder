@@ -98,6 +98,18 @@
   color: var(--text);
 }
 
+/* Default-loadout block: live effective counts (dim when reduced from the
+   default, red when over-swapped below zero). */
+.wgp-eff {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.wgp-count-dim { color: var(--text-muted); }
+.wgp-neg { color: #e86a6a; }
+
 /* Soft over-limit: red signal, never a block. */
 .wgp-row-over .wgp-item,
 .wgp-row-over .wgp-count { color: #e86a6a; }
