@@ -26,9 +26,16 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-18',
+    version:     '2026.07.08-19',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-08', kind: 'change',
+        title: 'Add-to-Army box matches the redesigned pane',
+        description:
+          'The Add to Army box in the details pane now uses the same neutral ' +
+          'card styling as the other boxes instead of the old tinted wash.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Card exporter now shows all selected detachments’ rules',

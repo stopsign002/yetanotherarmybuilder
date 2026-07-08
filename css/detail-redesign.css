@@ -138,6 +138,17 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
+   2b. ADD-TO-ARMY ROW — match the neutral card treatment used by every
+   other box (abilities, enhancements, stockpile) instead of the old
+   accent-tinted wash. The Add button itself stays accent so the CTA pops.
+───────────────────────────────────────────────────────────── */
+.unit-detail-content .detail-add-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+}
+
+/* ─────────────────────────────────────────────────────────────
    3. STAT STRIP  (invuln folded into the SV cell)
 ───────────────────────────────────────────────────────────── */
 /* Separate cells with a 4px gap (build-mode.css draws a connected strip with
