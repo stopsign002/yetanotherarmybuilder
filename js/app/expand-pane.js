@@ -62,22 +62,32 @@
   function isExpanded(panelId) {
     const main = getMain();
     if (!main) return false;
-    return main.classList.contains('pane-expanded-' + POSITION[panelId]);
+    // Units (center) expands to fullscreen on its own. The Army (left) and
+    // Details (right) panes are not useful alone — they need each other — so
+    // expanding EITHER enters a shared "build focus" that hides only the Units
+    // pane and shows Army + Details together (main.pane-expanded-build).
+    if (panelId === 'panel-center') return main.classList.contains('pane-expanded-center');
+    return main.classList.contains('pane-expanded-build');
+  }
+
+  function setBtn(panel, expanded) {
+    if (!panel) return;
+    const btn = panel.querySelector('.panel-expand-btn');
+    if (btn) {
+      btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      btn.title = expanded ? 'Restore 3-pane view' : 'Expand this pane';
+    }
   }
 
   function clearExpanded() {
     const main = getMain();
     if (!main) return;
+    main.classList.remove('pane-expanded-center', 'pane-expanded-build');
     PANEL_IDS.forEach(id => {
-      main.classList.remove('pane-expanded-' + POSITION[id]);
       const p = document.getElementById(id);
       if (p) {
-        p.classList.remove('panel-expanded');
-        const btn = p.querySelector('.panel-expand-btn');
-        if (btn) {
-          btn.setAttribute('aria-expanded', 'false');
-          btn.title = 'Expand this pane';
-        }
+        p.classList.remove('panel-expanded', 'panel-build-focus');
+        setBtn(p, false);
       }
     });
     document.body.classList.remove('pane-is-expanded');
@@ -95,24 +105,31 @@
     const panel = document.getElementById(panelId);
     if (!main || !panel) return;
     clearExpanded();
-    main.classList.add('pane-expanded-' + POSITION[panelId]);
-    panel.classList.add('panel-expanded');
     document.body.classList.add('pane-is-expanded');
-    const btn = panel.querySelector('.panel-expand-btn');
-    if (btn) {
-      btn.setAttribute('aria-expanded', 'true');
-      btn.title = 'Collapse pane';
+
+    if (panelId === 'panel-center') {
+      // Units: fullscreen, as before.
+      main.classList.add('pane-expanded-center');
+      panel.classList.add('panel-expanded');
+      setBtn(panel, true);
+      return;
     }
-    // Army pane: auto-open the rules+stratagems collapsible so the user
-    // sees their detachment rules and strats next to the army list
-    // without a second click. Setup section also gets opened in case
-    // it was previously collapsed.
-    if (panelId === 'panel-left') {
-      const rules = document.getElementById('army-rules-collapsible');
-      if (rules && !rules.open) {
-        rules.dataset.expandPaneAutoOpened = '1';
-        rules.open = true;
-      }
+
+    // Army OR Details: hide only the Units pane; keep Army + Details side by
+    // side. Both panes get the "collapse" affordance so either header restores
+    // the 3-pane view.
+    main.classList.add('pane-expanded-build');
+    const left  = document.getElementById('panel-left');
+    const right = document.getElementById('panel-right');
+    if (left)  { left.classList.add('panel-build-focus');  setBtn(left, true); }
+    if (right) { right.classList.add('panel-build-focus'); setBtn(right, true); }
+
+    // Auto-open the rules+stratagems collapsible so the user sees their
+    // detachment rules and strats next to the army list without a second click.
+    const rules = document.getElementById('army-rules-collapsible');
+    if (rules && !rules.open) {
+      rules.dataset.expandPaneAutoOpened = '1';
+      rules.open = true;
     }
   }
 
@@ -125,7 +142,8 @@
     if (e.key !== 'Escape') return;
     const main = getMain();
     if (!main) return;
-    const anyExpanded = PANEL_IDS.some(id => main.classList.contains('pane-expanded-' + POSITION[id]));
+    const anyExpanded = main.classList.contains('pane-expanded-center')
+      || main.classList.contains('pane-expanded-build');
     if (!anyExpanded) return;
     // Don't fight modal Escape handlers — only act when no modal is open.
     const openModal = document.querySelector('.modal-backdrop:not([hidden])');

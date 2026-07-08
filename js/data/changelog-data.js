@@ -26,10 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-3',
+    version:     '2026.07.08-4',
     lastUpdated: '2026-07-08T00:00:00Z',
     entries: [
       // ── 2026-07-08 ──────────────────────────────────────────────────────
+      {
+        date: '2026-07-08', kind: 'change',
+        title: 'Expanding Army or Details now hides only the Units pane',
+        description:
+          'The Army list and the Unit details pane work together, so expanding ' +
+          'either one no longer hides the other — it now just tucks away the ' +
+          'Units browser and gives Army + Details the full width side by side. ' +
+          'Expanding the Units pane still goes fullscreen as before.',
+      },
       {
         date: '2026-07-08', kind: 'feature',
         title: 'New Detachments picker — choose more than one',

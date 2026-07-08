@@ -24,31 +24,29 @@
     --col-right: 0px;
   }
 
-  .app-main.pane-expanded-left {
-    grid-template-columns: minmax(0, 1fr) 0 0 0 0 !important;
-  }
+  /* Units (center) expands to fullscreen. */
   .app-main.pane-expanded-center {
     grid-template-columns: 0 0 minmax(0, 1fr) 0 0 !important;
   }
-  .app-main.pane-expanded-right {
-    grid-template-columns: 0 0 0 0 minmax(0, 1fr) !important;
+  /* Build focus: expanding Army OR Details hides only the Units pane and puts
+     Army + Details side by side (they need each other to be useful). Army keeps
+     a comfortable form width; Details takes the rest. */
+  .app-main.pane-expanded-build {
+    grid-template-columns: minmax(340px, 520px) 0 0 0 minmax(0, 1fr) !important;
   }
 
-  /* Collapsed panels lose their min-width and fade out. */
-  .app-main.pane-expanded-left  > .panel-center,
-  .app-main.pane-expanded-left  > .panel-right,
+  /* Collapsed panels lose their min-width and fade out: center-expand hides
+     Army + Details; build-focus hides only Units. */
   .app-main.pane-expanded-center > .panel-left,
   .app-main.pane-expanded-center > .panel-right,
-  .app-main.pane-expanded-right > .panel-left,
-  .app-main.pane-expanded-right > .panel-center {
+  .app-main.pane-expanded-build  > .panel-center {
     min-width: 0;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.22s ease;
   }
-  .app-main.pane-expanded-left  > .resize-handle,
   .app-main.pane-expanded-center > .resize-handle,
-  .app-main.pane-expanded-right > .resize-handle {
+  .app-main.pane-expanded-build  > .resize-handle {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.18s ease;
@@ -87,11 +85,14 @@
     pointer-events: none;
   }
   .panel-expand-btn .expand-icon-collapse { display: none; }
-  .panel-expanded > .panel-header .panel-expand-btn {
+  .panel-expanded > .panel-header .panel-expand-btn,
+  .panel-build-focus > .panel-header .panel-expand-btn {
     color: var(--accent);
   }
-  .panel-expanded > .panel-header .panel-expand-btn .expand-icon-expand { display: none; }
-  .panel-expanded > .panel-header .panel-expand-btn .expand-icon-collapse { display: inline; }
+  .panel-expanded > .panel-header .panel-expand-btn .expand-icon-expand,
+  .panel-build-focus > .panel-header .panel-expand-btn .expand-icon-expand { display: none; }
+  .panel-expanded > .panel-header .panel-expand-btn .expand-icon-collapse,
+  .panel-build-focus > .panel-header .panel-expand-btn .expand-icon-collapse { display: inline; }
 
   /* ── Layout pass: when expanded, reorganize the panel body into a
        wider, grid-based layout that uses the extra real estate. ─────── */
