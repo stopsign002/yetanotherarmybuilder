@@ -141,10 +141,8 @@
         'normal move of up to D6". If it does, until the end of the turn, ' +
         'this unit is not eligible to declare a charge.',
     }],
-    // Big Mek in Mega Armour: upstream links More Dakka on the base Big Mek
-    // but omits it here — string entry pulls the store's name + prose, and
-    // dedupe no-ops it the moment 40kdc adds the link.
-    'big-mek-in-mega-armour': ['more-dakka'],
+    // (big-mek-in-mega-armour's More Dakka patch retired 2026-07-09 — fixed
+    // upstream in 40kdc-data PR #72.)
   };
 
   // Self-healing manual links for wargear abilities the upstream 40kdc dataset
@@ -155,40 +153,19 @@
   // when the same-named ability is already present (via the item scan, the
   // bearer-pattern route, or a genuine ability_id), so an entry no-ops the
   // moment 40kdc links it and can then be deleted.
-  //   wulfen: the base Wulfen datasheet is equipped with a Death Totem by
-  //     default (official datasheet: "Every model is equipped with: Wulfen
-  //     weapons; death totem"), swappable for a stormfrag auto-launcher. 40kdc
-  //     dropped the totem from base `wulfen` (its weapon_ids omit it and its
-  //     wgo is mislabelled) and attached Death Totem only to a separate
-  //     `wulfen-with-storm-shields` entry.
-  const MISSING_WARGEAR_ABILITIES = {
-    'wulfen': ['death-totem'],
-  };
+  // (wulfen's Death Totem patch retired 2026-07-09 — fixed upstream in
+  // 40kdc-data PR #73; the totem now arrives via ability_ids and the
+  // bearer-pattern route.)
+  const MISSING_WARGEAR_ABILITIES = {};
 
-  // Per-faction datasheet ability corrections. Upstream flattened the shared
-  // Defiler datasheet into the UNION of every legion's abilities (plus Deadly
-  // Demise D3 instead of D6) on the CSM / Death Guard / Thousand Sons copies.
-  // Wahapedia 11e per legion:
-  //   CSM: DD-D6 + Scuttling Walker + Daemonforge
-  //   DG:  DD-D6 + Scuttling Walker + Barrage of Filth
-  //   TS:  DD-D6 + FNP 6+ + Scuttling Walker + Destroyer of Futures
-  //   WE:  already clean upstream (DD-D6 + Scuttling Walker + Unleash Wrath)
-  // Keyed `${faction_id}::${unit_id}` → { remove: [ability ids], add: [ids] }.
-  // Self-healing: removes only strip ids actually present; adds dedupe by name.
-  const UNIT_ABILITY_FIXES = {
-    'chaos-space-marines::defiler': {
-      remove: ['barrage-of-filth', 'destroyer-of-futures', 'feel-no-pain-6', 'unleash-wrath', 'deadly-demise-d3'],
-      add: ['deadly-demise-d6'],
-    },
-    'death-guard::defiler': {
-      remove: ['daemonforge', 'destroyer-of-futures', 'feel-no-pain-6', 'unleash-wrath', 'deadly-demise-d3'],
-      add: ['deadly-demise-d6'],
-    },
-    'thousand-sons::defiler': {
-      remove: ['barrage-of-filth', 'daemonforge', 'unleash-wrath', 'deadly-demise-d3'],
-      add: ['deadly-demise-d6'],
-    },
-  };
+  // Per-faction datasheet ability corrections for upstream data errors that
+  // can't be fixed by the generic scans (e.g. sibling-legion abilities leaking
+  // onto a shared datasheet). Keyed `${faction_id}::${unit_id}` →
+  // { remove: [ability ids], add: [ids] }. Self-healing: removes only strip
+  // ids actually present; adds dedupe by name.
+  // (The CSM/DG/TS Defiler union-leak entries retired 2026-07-09 — fixed
+  // upstream in 40kdc-data PR #76.)
+  const UNIT_ABILITY_FIXES = {};
 
   // Self-healing corrections to upstream wargear-option/composition data that
   // the picker consumes. Keyed by unit id:
@@ -199,18 +176,13 @@
   //   andOptions: wgo ids whose multi-item `replaces` is a TRUE "and" — the
   //     swap gives up every listed item — overriding the picker's default
   //     reading of multi-replaces + single-item choice as "or, first item".
-  //   wulfen: official datasheet — every model is equipped with wulfen
-  //     weapons AND a death totem; the stormfrag auto-launcher replaces the
-  //     TOTEM. Upstream omits the totem from defaults and mislabels the swap
-  //     as replacing the wulfen weapons.
   //   wolf-guard-terminators: the Pack Leader's twin lightning claws /
   //     relic greataxe replace BOTH the storm bolter and the master-crafted
-  //     power weapon (official wording is "and").
+  //     power weapon (official wording is "and" — 40kdc's schema can't
+  //     distinguish and/or in `replaces`, so this one stays local).
+  // (wulfen's totem-defaults + swap-target entries retired 2026-07-09 —
+  // fixed upstream in 40kdc-data PR #73.)
   const WARGEAR_PROFILE_FIXES = {
-    'wulfen': {
-      optionReplaces: { 'wulfen-wgo-mfm-1': ['death-totem'] },
-      addDefaults: ['death-totem'],
-    },
     'wolf-guard-terminators': {
       andOptions: ['wolf-guard-terminators-wgo-mfm-3'],
     },
