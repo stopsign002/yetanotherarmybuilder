@@ -30,6 +30,18 @@
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
       {
+        date: '2026-07-09', kind: 'fix',
+        title: 'Primarch choose-one abilities restored',
+        description:
+          'Mortarion\u2019s Lord of the Death Guard options (Diseased Influence, ' +
+          'Boon of Death, Inflamed Reprisal) \u2014 and the equivalent choose-one ' +
+          'ability groups on other primarchs and heroes \u2014 were missing: the ' +
+          'upstream dataset only carries the parent ability (\u201csee below\u201d ' +
+          'with nothing below). The options are now pulled from the community ' +
+          'datasource and render in the gold \u201cpick from these\u201d section on ' +
+          'the details pane and printed cards.',
+      },
+      {
         date: '2026-07-09', kind: 'feature',
         title: 'Edit wargear on units already in your army',
         description:

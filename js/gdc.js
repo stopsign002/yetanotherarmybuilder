@@ -509,6 +509,21 @@
     return files;
   }
 
+  // Primarch/hero choose-N groups (Guilliman, Mortarion's "Lord of the Death
+  // Guard", Lion, Magnus, …) live under abilities.primarch as
+  // [{ name, abilities: [{ name, description }] }]. Each sub-ability is
+  // attached with _typeName = the GROUP name, which detail.js / cards-mode.js
+  // already route into the gold-leaf "pick from these" section.
+  function project11PrimarchGroups(ds) {
+    if (!ds || !ds.abilities || !Array.isArray(ds.abilities.primarch)) return [];
+    return ds.abilities.primarch.map(grp => ({
+      group: pickText(grp && grp.name),
+      abilities: (Array.isArray(grp && grp.abilities) ? grp.abilities : [])
+        .map(a => ({ name: pickText(a && a.name), description: cleanMarkup(pickText(a && a.description)) }))
+        .filter(a => a.name),
+    })).filter(g => g.group && g.abilities.length);
+  }
+
   function buildAbilityIndex11(files) {
     const idx = new Map();
     files.forEach(fn => {
@@ -517,7 +532,7 @@
       (Array.isArray(p.datasheets) ? p.datasheets : []).forEach(ds => {
         const k = nameKey(pickText(ds && ds.name));   // 11th name is a { en } object
         if (!k || idx.has(k)) return;
-        idx.set(k, project11Abilities(ds));
+        idx.set(k, { abilities: project11Abilities(ds), primarch: project11PrimarchGroups(ds) });
       });
     });
     return idx;
@@ -530,8 +545,11 @@
       const idx = buildAbilityIndex11(files);
       if (idx.size === 0) return;
       (faction.units || []).forEach(unit => {
-        const gAbils = idx.get(nameKey(unit && unit.name));
-        if (!gAbils || gAbils.length === 0) return;
+        const entry = idx.get(nameKey(unit && unit.name));
+        if (!entry) return;
+        const gAbils = entry.abilities || [];
+        const gGroups = entry.primarch || [];
+        if (gAbils.length === 0 && gGroups.length === 0) return;
         const abils = Array.isArray(unit.abilities) ? unit.abilities : (unit.abilities = []);
         const byKey = new Map(abils.map(a => [nameKey(a.name), a]));
         const hasNonCore = abils.some(a => !a.isCore);
@@ -544,6 +562,26 @@
             abils.push(na);
             byKey.set(nameKey(g.name), na);
           }
+        });
+        // Primarch choose-N sub-abilities are ALWAYS added when missing
+        // (unlike the hasNonCore-gated fill above): the parent ability's text
+        // says "see below", so the options are part of the printed datasheet
+        // — 40kdc just doesn't model them. _typeName = group name routes them
+        // into the choose-N section. Self-healing: the name-dedupe no-ops if
+        // 40kdc ever links them natively.
+        gGroups.forEach(grp => {
+          grp.abilities.forEach(g => {
+            const hit = byKey.get(nameKey(g.name));
+            if (hit) {
+              if (!hit.description && g.description) hit.description = g.description;
+              if (!hit._typeName) hit._typeName = grp.group;
+              return;
+            }
+            if (!g.description) return;
+            const na = { name: g.name, description: g.description, isCore: false, _typeName: grp.group };
+            abils.push(na);
+            byKey.set(nameKey(g.name), na);
+          });
         });
       });
     });
