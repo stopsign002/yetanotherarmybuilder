@@ -3482,31 +3482,50 @@
       renderHost();
     });
   }
+  // Change-signature guard: armyChange / selectionChange refire constantly
+  // for reasons that don't alter the cards output (autosave echoes, sync
+  // ticks, roster re-renders firing selectionChange, badge refreshes). A
+  // full pane rebuild on each was (a) nudging the layout/preview scroll
+  // every second and (b) breaking file upload — the sidebar re-render
+  // replaced the <input type=file> while the OS picker was open, so the
+  // chosen file fired `change` on a detached node and the delegated
+  // handler never saw it. Only rebuild when something cards actually
+  // render from has changed.
+  let _lastCardsSig = '';
+  function cardsStateSig() {
+    const s = App.state || {};
+    const a = s.currentArmy;
+    let pts = 0; try { pts = a && a.getTotalPoints ? a.getTotalPoints() : 0; } catch (_) {}
+    return [
+      a ? a.id : '',
+      a ? a.updatedAt : '',
+      a && a.entries ? a.entries.length : 0,
+      pts,
+      a && a.detachmentNames ? a.detachmentNames.join(',') : '',
+      s.factionsVersion || 0,
+    ].join('|');
+  }
+  function onArmyStateMaybeChanged() {
+    const sig = cardsStateSig();
+    if (sig === _lastCardsSig) return;   // no-op refire — leave the pane alone
+    _lastCardsSig = sig;
+    // Repopulate include sets from the new army before redrawing —
+    // otherwise refreshPreview sees `include.units === null`, treats
+    // every card as deselected, and shows the empty-state "Nothing
+    // selected yet" message until the user mode-switches (which
+    // calls renderHost → syncIncludeDefaults). This was the
+    // disappearing-cards-after-tab-switch bug.
+    include = { units: null, rules: null, strats: null };
+    if (mounted && App.getMode && App.getMode() === 'cards') {
+      syncIncludeDefaults();
+      refreshSidebar(); refreshPreview(); refreshSummary();
+    }
+  }
   if (Array.isArray(App.hooks.armyChange)) {
-    App.hooks.armyChange.push(() => {
-      include = { units: null, rules: null, strats: null };
-      if (mounted && App.getMode && App.getMode() === 'cards') {
-        // Repopulate include sets from the new army before redrawing —
-        // otherwise refreshPreview sees `include.units === null`, treats
-        // every card as deselected, and shows the empty-state "Nothing
-        // selected yet" message until the user mode-switches (which
-        // calls renderHost → syncIncludeDefaults). This was the
-        // disappearing-cards-after-tab-switch bug: sync.js's
-        // visibilitychange listener pulls fresh server state, the army
-        // manager fires armyChange even when nothing changed, and the
-        // preview blanked because of the un-defaulted include.
-        syncIncludeDefaults();
-        refreshSidebar(); refreshPreview(); refreshSummary();
-      }
-    });
+    App.hooks.armyChange.push(onArmyStateMaybeChanged);
   }
   if (Array.isArray(App.hooks.selectionChange)) {
-    App.hooks.selectionChange.push(() => {
-      if (mounted && App.getMode && App.getMode() === 'cards') {
-        syncIncludeDefaults();
-        refreshSidebar(); refreshPreview(); refreshSummary();
-      }
-    });
+    App.hooks.selectionChange.push(onArmyStateMaybeChanged);
   }
 
   // Public API: external callers (Export menu, command palette) just flip

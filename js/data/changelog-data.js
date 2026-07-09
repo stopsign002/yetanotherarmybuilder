@@ -26,9 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-9',
+    version:     '2026.07.09-10',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'fix',
+        title: 'Card exporter stops creeping and uploads work again',
+        description:
+          'Background events (autosave echoes, sync ticks, roster refreshes) ' +
+          'were rebuilding the card exporter about once a second \u2014 nudging ' +
+          'the layout/preview scroll and, worse, replacing the image-upload ' +
+          'field while your file picker was open so the chosen image was ' +
+          'silently dropped. The exporter now only rebuilds when the army, ' +
+          'points, detachments or loaded data actually change.',
+      },
       {
         date: '2026-07-09', kind: 'fix',
         title: 'Defiler no longer shows other legions\u2019 abilities',
