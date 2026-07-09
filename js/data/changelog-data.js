@@ -26,9 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-11',
+    version:     '2026.07.09-12',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'fix',
+        title: 'Card back art selection is remembered',
+        description:
+          'The exporter now remembers which library image you had selected ' +
+          'as the card back across reloads (and across devices when signed ' +
+          'in) \u2014 it was saving the scale/position tuning but not the ' +
+          'image choice itself.',
+      },
       {
         date: '2026-07-09', kind: 'fix',
         title: 'Unit cards stop re-rendering under your cursor',

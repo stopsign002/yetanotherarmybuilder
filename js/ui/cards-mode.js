@@ -293,6 +293,12 @@
           if (typeof p.cardBack.scale   === 'number')  cardBack.scale   = p.cardBack.scale;
           if (typeof p.cardBack.offsetX === 'number')  cardBack.offsetX = p.cardBack.offsetX;
           if (typeof p.cardBack.offsetY === 'number')  cardBack.offsetY = p.cardBack.offsetY;
+          if (p.cardBack.activeId != null) {
+            cardBack.activeId = p.cardBack.activeId;
+            if (typeof p.cardBack.name === 'string') cardBack.name = p.cardBack.name;
+            // src is rehydrated from the image library once it loads
+            // (rehydrateCardBack) — bytes aren't stored in prefs.
+          }
         }
       }
     } catch (_) {
@@ -330,6 +336,11 @@
           scale:   cardBack.scale,
           offsetX: cardBack.offsetX,
           offsetY: cardBack.offsetY,
+          // The SELECTED library image, by ImageStore id (bytes stay in the
+          // library). rehydrateCardBack() resolves it back to a dataUrl once
+          // savedImages loads, so the chosen back art survives reloads.
+          activeId: cardBack.activeId,
+          name:     cardBack.name || '',
         },
       };
       localStorage.setItem(PREFS_KEY, JSON.stringify(p));
@@ -750,6 +761,24 @@
     try { savedImages = await ImageStore.list(); }
     catch (_) { savedImages = []; }
     savedImagesLoading = false;
+    rehydrateCardBack();
+  }
+
+  // Resolve the persisted active card-back (prefs store only the ImageStore
+  // id) to its dataUrl once the library is loaded. If the image was deleted
+  // from the library, drop the selection cleanly.
+  function rehydrateCardBack() {
+    if (cardBack.activeId == null || cardBack.src) return;
+    const img = savedImages.find(i => String(i.id) === String(cardBack.activeId));
+    if (img) {
+      cardBack.src  = img.dataUrl;
+      cardBack.name = img.name || cardBack.name || '';
+    } else {
+      cardBack.activeId = null;
+      cardBack.name = '';
+      cardBack.enabled = false;
+    }
+    if (mounted) { refreshPreview(); refreshSummary(); }
   }
   let include = { units: null, rules: null, strats: null };
   let display = Object.assign({}, DEFAULT_DISPLAY);
@@ -2841,6 +2870,7 @@
         if (result.ok) {
           cardBack.activeId = result.id;
           savedImages.unshift(result.image);
+          savePrefs();
         } else if (result.reason === 'limit' && UI && UI.toast) {
           UI.toast(`Library is full (${result.limit} images). Delete one to save more.`, 'warning', 5000);
         } else if (result.reason === 'network' && UI && UI.toast) {
@@ -3015,6 +3045,7 @@
       cardBack.src = null;
       cardBack.name = '';
       cardBack.activeId = null;
+      savePrefs();
       refreshSidebar();
       refreshPreview();
       refreshSummary();
@@ -3039,6 +3070,7 @@
             cardBack.src = null;
             cardBack.name = '';
             cardBack.activeId = null;
+            savePrefs();
             refreshPreview();
             refreshSummary();
           }
@@ -3057,6 +3089,7 @@
         cardBack.name = img.name;
         cardBack.activeId = img.id;
         cardBack.enabled = true;
+        savePrefs();
         refreshSidebar();
         refreshPreview();
         refreshSummary();
