@@ -150,3 +150,10 @@
   color: #e86a6a;
   margin-top: 3px;
 }
+
+/* Live wargear-points readout (not a warning — accent, matches the chips). */
+.wgp-total {
+  color: var(--accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

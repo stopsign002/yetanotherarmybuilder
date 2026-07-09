@@ -11,9 +11,12 @@
 // is illegal at the chosen squad size. Limits recompute live when the
 // squad-size select changes.
 //
-// Costs: every option is free in today's upstream data (cost:0 carried
-// through). When 40kdc ships 11e wargear costs the "+N pts" chips and the
-// entry points math (army.js getEntryPoints) light up without UI changes.
+// Costs: 11e prices SOME wargear per item taken (MFM overlay →
+// wargearProfile.itemCosts). Charged against the FINAL loadout: priced
+// defaults cost points before any selection (army.js getEntryWargearBasePts)
+// and each swap row shows its NET delta — negative when it sheds a priced
+// default (thunder hammer → free lightning claws = −5 pts). takeSelections
+// stamps that net delta on each selection's `pts` for the entry points math.
 (function () {
   const App = window.App = window.App || {};
 
@@ -110,6 +113,19 @@
     return [opt.replaces[0]];
   };
 
+  // NET points delta of taking one of this choice group: priced items gained
+  // minus priced items given up (per effReplaces), plus any upstream
+  // per-option surcharge (opt.cost — 0 across today's dataset).
+  const groupCost = (profile, opt, grp) => {
+    const ic = profile.itemCosts;
+    let d = opt.cost || 0;
+    if (!ic) return d;
+    (grp || []).forEach((x) => { d += ic[x.id] || 0; });
+    effReplaces(opt, grp).forEach((x) => { d -= ic[x.id] || 0; });
+    return d;
+  };
+  const ptsChip = (d) => (d ? ` <span class="wgp-pts">${d > 0 ? '+' : '−'}${Math.abs(d)} pts</span>` : '');
+
   function render(unit, host) {
     const profile = unit.wargearProfile;
     const models = currentModels(unit);
@@ -185,8 +201,9 @@
               <button type="button" class="wgp-btn wgp-minus" aria-label="Add one back">+</button>
             </span>`
           : `<span class="wgp-eff${eff < d.count ? ' wgp-count-dim' : ''}${neg ? ' wgp-neg' : ''}">×${eff}</span>`;
+        const price = (profile.itemCosts && profile.itemCosts[d.id]) || 0;
         html += `<div class="wgp-row${neg ? ' wgp-row-over' : ''}">
-          <span class="wgp-item">${esc(cap(d.name))}</span>
+          <span class="wgp-item">${esc(cap(d.name))}${price ? ` <span class="wgp-pts">${price} pts each</span>` : ''}</span>
           ${stepper}
         </div>`;
       });
@@ -229,7 +246,7 @@
         short.forEach((x) => shortNames.add(x.name));
         const rowOver = overOpt && n > 0 || short.length > 0 || grp.some((x) => overBudgetItems.has(x.id));
         html += `<div class="wgp-row${rowOver ? ' wgp-row-over' : ''}">
-          <span class="wgp-item">${esc(cap(names(grp)))}${opt.cost ? ` <span class="wgp-pts">+${opt.cost} pts</span>` : ''}</span>
+          <span class="wgp-item">${esc(cap(names(grp)))}${ptsChip(groupCost(profile, opt, grp))}</span>
           <span class="wgp-stepper" data-key="${esc(key)}">
             <button type="button" class="wgp-btn wgp-minus" aria-label="Remove one">&minus;</button>
             <span class="wgp-count">${n}</span>
@@ -249,6 +266,20 @@
       }
       html += `</div>`;
     });
+    // Live points owed by the CURRENT loadout's priced items (per squad
+    // copy): effective default counts after swaps, plus taken non-defaults,
+    // plus always-carried priced wargear. Mirrors what army.js will charge.
+    if (profile.itemCosts) {
+      const ic = profile.itemCosts;
+      let total = profile.alwaysCost || 0;
+      const counted = new Set();
+      defaults.forEach((d) => {
+        counted.add(d.id);
+        total += (ic[d.id] || 0) * Math.max(0, effById.get(d.id) || 0);
+      });
+      added.forEach((n, id) => { if (!counted.has(id)) total += (ic[id] || 0) * n; });
+      html += `<div class="wgp-note wgp-total">Wargear points: +${Math.max(0, total)} pts</div>`;
+    }
     host.innerHTML = html;
   }
 
@@ -328,7 +359,9 @@
             count: n,
             label: cap(names(grp)),
             items: grp.map((x) => x.name),
-            pts: opt.cost || 0,
+            // NET delta per take (may be negative — swapping away a priced
+            // default refunds it; army.js floors the entry total at 0).
+            pts: groupCost(unit.wargearProfile, opt, grp),
           });
         });
       });

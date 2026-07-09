@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-1',
-    lastUpdated: '2026-07-09T00:00:00Z',
+    version:     '2026.07.09-2',
+    lastUpdated: '2026-07-09T12:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'feature',
+        title: 'Wargear points costs (Munitorum Field Manual)',
+        description:
+          'Priced wargear from the official MFM now counts toward your army: ' +
+          'squads pay for priced items in their loadout (Terminator Assault ' +
+          'Squad thunder hammers +5 pts each) and get the points back when ' +
+          'swapping to a free option. The wargear picker shows +/− pts on ' +
+          'each choice, priced default items are labelled, and a live ' +
+          '“Wargear points” line tracks the total. Costs refresh ' +
+          'automatically alongside the weekly 40kdc data sync.',
+      },
       {
         date: '2026-07-09', kind: 'fix',
         title: 'Cards show the full wargear counts',

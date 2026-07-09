@@ -24,6 +24,11 @@
     // Ordinal-aware per-entry total (matches the army total). `surcharge` is the
     // extra this entry pays for copies past the datasheet's per-army threshold.
     const army      = opts.army;
+    // 11e wargear points, per squad copy (priced defaults + selection net
+    // deltas, floored at 0 — mirrors army.getEntryPoints).
+    const wgSel  = (entry.wargear || []).reduce((s, w) => s + (w.pts || 0) * (w.count || 0), 0);
+    const wgBase = (army && typeof army.getEntryWargearBasePts === 'function') ? army.getEntryWargearBasePts(index) : 0;
+    const wgPts  = Math.max(0, wgBase + wgSel);
     const surcharge = (army && typeof army.getEntryOrdinalSurcharge === 'function') ? army.getEntryOrdinalSurcharge(index) : 0;
     const total     = (army && typeof army.getEntryPoints === 'function') ? army.getEntryPoints(index) : (pts * entry.count + enhPts);
     const squadHtml = entry.squadLabel
@@ -75,7 +80,7 @@
         <div class="army-entry-stats">
           <span class="army-entry-stat army-entry-stat-pts">
             <span class="army-entry-stat-label">Pts</span>
-            <span class="army-entry-pts">${pts}${enhPts ? `<span class="army-enh-pts">+${enhPts}</span>` : ''}</span>
+            <span class="army-entry-pts">${pts}${enhPts ? `<span class="army-enh-pts">+${enhPts}</span>` : ''}${wgPts ? `<span class="army-enh-pts" title="Wargear points (MFM per-item costs)">+${wgPts}</span>` : ''}</span>
           </span>
           <span class="army-entry-stat army-entry-stat-qty">
             <span class="army-entry-stat-label">Qty</span>

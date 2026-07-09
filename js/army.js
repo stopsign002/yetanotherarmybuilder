@@ -151,10 +151,44 @@ window.Army = class Army {
     if (!entry) return 0;
     const pts    = (entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData && entry.unitData.points || 0));
     const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
-    // Wargear cost: per-item pts × how many taken, per squad copy. Zero today
-    // (upstream ships all options free); lights up when 11e costs land.
-    const wgPts  = (entry.wargear || []).reduce((s, w) => s + (w.pts || 0) * (w.count || 0), 0);
+    // 11e wargear cost, per squad copy: the DEFAULT loadout's priced items
+    // (base, from the MFM overlay via wargearProfile) plus each selection's
+    // NET delta (w.pts from the picker — negative when a swap sheds a priced
+    // default, e.g. thunder hammer → free lightning claws). Floored at 0: a
+    // loadout can't refund more than its priced defaults.
+    const wgSel  = (entry.wargear || []).reduce((s, w) => s + (w.pts || 0) * (w.count || 0), 0);
+    const wgPts  = Math.max(0, this.getEntryWargearBasePts(index) + wgSel);
     return pts * (entry.count || 0) + enhPts + wgPts * (entry.count || 0) + this.getEntryOrdinalSurcharge(index);
+  }
+
+  // Points the entry's DEFAULT loadout owes for MFM-priced wargear at its
+  // squad size (before selections), plus any flat always-carried priced items
+  // (ability-modelled wargear). 0 for units with nothing priced.
+  getEntryWargearBasePts(index) {
+    const entry = this.entries[index];
+    const prof = entry && entry.unitData && entry.unitData.wargearProfile;
+    if (!prof || (!prof.defaultCostBySize && !prof.alwaysCost)) return 0;
+    let base = prof.alwaysCost || 0;
+    const bySize = prof.defaultCostBySize;
+    if (bySize) {
+      // Squad size: parse "N models" off squadLabel, else match selectedPts
+      // to a squad option, else fall back to the smallest tier. Same
+      // nearest-below tier pick as the picker's defaultsFor().
+      let models = null;
+      const m = /^(\d+)\s+model/.exec(entry.squadLabel || '');
+      if (m) models = parseInt(m[1], 10);
+      if (models == null && entry.unitData && Array.isArray(entry.unitData.squadOptions)) {
+        const so = entry.unitData.squadOptions.find(o => o.pts === entry.selectedPts);
+        if (so) models = so.models;
+      }
+      const sizes = Object.keys(bySize).map(Number).sort((a, b) => a - b);
+      if (sizes.length) {
+        let pick = sizes[0];
+        sizes.forEach((s) => { if (models != null && s <= models) pick = s; });
+        base += bySize[pick] || 0;
+      }
+    }
+    return base;
   }
 
   // 11e per-army-ordinal pricing: copies of a datasheet at/after its threshold

@@ -616,9 +616,15 @@
     // model_constraint) plus take-limits (wargear_budgets, e.g. "1 plasma
     // pistol per 3 models") and size-tiered composition. Map them into a
     // renderer-friendly shape; null when the unit has none authored.
-    // Costs: upstream ships every option is_free today — carry cost:0 so the
-    // picker's points math lights up unchanged when 11e wargear costs land.
+    // Costs: 11e prices SOME wargear per item taken (MFM: "applied on top of
+    // the unit's main points cost", defaults included). Upstream 40kdc still
+    // ships every option is_free, so per-item prices arrive via the
+    // window.DC.wargearCosts overlay appended to the bundle by
+    // ~/sites/base/refresh-40kdc.sh (scraped from the official MFM site,
+    // keyed "faction_id/unit_id" → { item_id: pts }).
     const wargearProfile = (function () {
+      const itemCosts = (DC.wargearCosts && DC.wargearCosts[u.faction_id + '/' + u.id]) || null;
+      const costOf = (id) => (itemCosts && itemCosts[id]) || 0;
       const itemName = (id) => {
         let it = null;
         try { it = DC.weapons.getInFaction ? DC.weapons.getInFaction(id, u.faction_id) : null; } catch (_) {}
@@ -641,7 +647,11 @@
           replaces: (r.replaces || []).map((id) => ({ id, name: itemName(id) })),
           choices: groups.map((grp) => (grp || []).map((id) => ({ id, name: itemName(id) }))),
           constraint: r.model_constraint || {},
-          cost: 0,
+          // Upstream per-option surcharge — still 0 across the whole dataset
+          // (their importer drops the dump's points); real prices come from
+          // itemCosts below. If upstream ever populates additional_cost,
+          // revisit the overlay to avoid double-charging.
+          cost: (r.additional_cost > 0 && !itemCosts) ? r.additional_cost : 0,
         };
       }).filter((o) => o.id && o.choices.length);
       const budgets = (u.wargear_budgets || []).map((b) => ({
@@ -747,8 +757,42 @@
           });
         }
       }
-      if (!options.length) return null;
-      return { options, budgets, modelsBySize, defaultsBySize };
+      // ── 11e per-item wargear costs ──────────────────────────────────
+      // Charged against the FINAL loadout: the default loadout owes for any
+      // priced items it carries (defaultCostBySize, per squad size) and each
+      // swap's pts is the NET delta (picker computes: added − removed — e.g.
+      // Terminator Assault Squad pays +5/thunder hammer by default and gets
+      // it back when a model swaps to free lightning claws). Priced items
+      // that live outside the swap/defaults model entirely (ability-modelled
+      // wargear like a banner) are charged flat per squad via alwaysCost.
+      let defaultCostBySize = null;
+      let alwaysCost = 0;
+      if (itemCosts) {
+        if (defaultsBySize) {
+          defaultCostBySize = {};
+          Object.keys(defaultsBySize).forEach((size) => {
+            defaultCostBySize[size] = defaultsBySize[size]
+              .reduce((s, d) => s + costOf(d.id) * d.count, 0);
+          });
+        }
+        const reachable = new Set();
+        if (defaultsBySize) {
+          Object.keys(defaultsBySize).forEach((size) =>
+            defaultsBySize[size].forEach((d) => reachable.add(d.id)));
+        }
+        options.forEach((o) => {
+          o.replaces.forEach((x) => reachable.add(x.id));
+          o.choices.forEach((grp) => grp.forEach((x) => reachable.add(x.id)));
+        });
+        Object.keys(itemCosts).forEach((id) => {
+          if (!reachable.has(id)) alwaysCost += itemCosts[id];
+        });
+      }
+      // Units with priced items but no authored options still need a profile
+      // (the base-cost math and the picker's default-loadout chips use it).
+      if (!options.length && !itemCosts) return null;
+      return { options, budgets, modelsBySize, defaultsBySize,
+               itemCosts, defaultCostBySize, alwaysCost };
     })();
 
     // Apply hand-patched default-wargear links the dataset omits entirely.
