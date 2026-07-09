@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-8',
+    version:     '2026.07.09-9',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'fix',
+        title: 'Defiler no longer shows other legions\u2019 abilities',
+        description:
+          'The shared Defiler datasheet was flattened upstream into the union ' +
+          'of every legion\u2019s abilities \u2014 the Death Guard Defiler showed ' +
+          'Daemonforge and Destroyer of Futures, and all three carried Deadly ' +
+          'Demise D3 instead of D6. Each legion\u2019s Defiler now matches its ' +
+          'printed datasheet (CSM: Daemonforge; Death Guard: Barrage of Filth; ' +
+          'Thousand Sons: Destroyer of Futures + FNP 6+; World Eaters was ' +
+          'already correct).',
+      },
       {
         date: '2026-07-09', kind: 'fix',
         title: 'Nurgle\u2019s Gift shows the Contagion Range table',

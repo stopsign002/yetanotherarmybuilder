@@ -165,6 +165,31 @@
     'wulfen': ['death-totem'],
   };
 
+  // Per-faction datasheet ability corrections. Upstream flattened the shared
+  // Defiler datasheet into the UNION of every legion's abilities (plus Deadly
+  // Demise D3 instead of D6) on the CSM / Death Guard / Thousand Sons copies.
+  // Wahapedia 11e per legion:
+  //   CSM: DD-D6 + Scuttling Walker + Daemonforge
+  //   DG:  DD-D6 + Scuttling Walker + Barrage of Filth
+  //   TS:  DD-D6 + FNP 6+ + Scuttling Walker + Destroyer of Futures
+  //   WE:  already clean upstream (DD-D6 + Scuttling Walker + Unleash Wrath)
+  // Keyed `${faction_id}::${unit_id}` → { remove: [ability ids], add: [ids] }.
+  // Self-healing: removes only strip ids actually present; adds dedupe by name.
+  const UNIT_ABILITY_FIXES = {
+    'chaos-space-marines::defiler': {
+      remove: ['barrage-of-filth', 'destroyer-of-futures', 'feel-no-pain-6', 'unleash-wrath', 'deadly-demise-d3'],
+      add: ['deadly-demise-d6'],
+    },
+    'death-guard::defiler': {
+      remove: ['daemonforge', 'destroyer-of-futures', 'feel-no-pain-6', 'unleash-wrath', 'deadly-demise-d3'],
+      add: ['deadly-demise-d6'],
+    },
+    'thousand-sons::defiler': {
+      remove: ['barrage-of-filth', 'daemonforge', 'unleash-wrath', 'deadly-demise-d3'],
+      add: ['deadly-demise-d6'],
+    },
+  };
+
   // Self-healing corrections to upstream wargear-option/composition data that
   // the picker consumes. Keyed by unit id:
   //   optionReplaces: wgo id → the item ids the swap ACTUALLY replaces
@@ -501,8 +526,13 @@
     // are faction-scoped in 40kdc, but the text store keys them globally — also
     // mis-keys faction-specific prose like "Fervour of the Ancients"; that
     // broader fix is tracked separately.)
+    // Per-faction ability corrections (leaked sibling-legion abilities on
+    // shared datasheets like the Defiler).
+    const abilityFix = UNIT_ABILITY_FIXES[u.faction_id + '::' + u.id] || null;
+    const removeAbilityIds = abilityFix ? new Set(abilityFix.remove || []) : null;
     const abilities = (uv.abilities || [])
-      .filter((a) => a && a.id !== 'leader' && !ARMY_RULE_IDS.has(a.id))
+      .filter((a) => a && a.id !== 'leader' && !ARMY_RULE_IDS.has(a.id)
+        && !(removeAbilityIds && removeAbilityIds.has(a.id)))
       .map((a) => {
         const raw = a.raw || a;
         const name = abilityName(a);
@@ -517,6 +547,19 @@
         return { name, description: textFor(a.id), isCore };
       })
       .filter((a) => a.name);
+    // Corrections' adds (e.g. the Defiler's Deadly Demise D6 replacing the
+    // leaked D3): name + prose from the store, core flag by name pattern.
+    if (abilityFix && Array.isArray(abilityFix.add)) {
+      const have = new Set(abilities.map((x) => x.name.toLowerCase()));
+      abilityFix.add.forEach((aid) => {
+        let av = null;
+        try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
+        const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
+        if (have.has(name.toLowerCase())) return;   // self-heal no-op
+        have.add(name.toLowerCase());
+        abilities.push({ name, description: textFor(aid), isCore: CORE_ABILITY_RE.test(name) });
+      });
+    }
     // Inject any hand-patched core abilities the dataset omits for this unit.
     const patchIds = MISSING_CORE_ABILITIES[u.id];
     if (patchIds) {
