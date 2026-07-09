@@ -1243,23 +1243,34 @@
               + `<span class="dcc-ab-name">${esc(a.name)}</span></div>`
               + `<div class="dcc-ab-text">${descHtml(a.description)}</div></div>`;
       });
-      subGroups.forEach((rows, label) => {
-        rows.forEach(a => {
-          body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">${esc(label)}</span>`
-                + `<span class="dcc-ab-name">${esc(a.name)}</span></div>`
-                + `<div class="dcc-ab-text">${descHtml(a.description)}</div></div>`;
-        });
-      });
       wargear.forEach(a => {
         body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">Wargear</span>`
               + `<span class="dcc-ab-name">${esc(a.name)}</span></div>`
               + `<div class="dcc-ab-text">${descHtml(a.description)}</div></div>`;
       });
-      if (!body) return '';
-      return `<div class="dcc-section dcc-abilities" data-sec="abilities" data-sec-label="Abilities">
-        <div class="dcc-section-head"><span class="dcc-section-label">Abilities</span></div>
-        <div class="dcc-abilities-body">${body}</div>
-      </div>`;
+      let out = '';
+      if (body) {
+        out += `<div class="dcc-section dcc-abilities" data-sec="abilities" data-sec-label="Abilities">
+          <div class="dcc-section-head"><span class="dcc-section-label">Abilities</span></div>
+          <div class="dcc-abilities-body">${body}</div>
+        </div>`;
+      }
+      // Primarch / choose-N groups get their OWN section (and their own
+      // data-sec key) — inside Abilities they ballooned the section and the
+      // spill logic couldn't move them to another face independently.
+      subGroups.forEach((rows, label) => {
+        let gbody = '';
+        rows.forEach(a => {
+          gbody += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">${esc(label)}</span>`
+                + `<span class="dcc-ab-name">${esc(a.name)}</span></div>`
+                + `<div class="dcc-ab-text">${descHtml(a.description)}</div></div>`;
+        });
+        out += `<div class="dcc-section dcc-abilities dcc-abilities-primarch" data-sec="primarch" data-sec-label="${esc(label)}">
+          <div class="dcc-section-head"><span class="dcc-section-label">${esc(label)}</span></div>
+          <div class="dcc-abilities-body">${gbody}</div>
+        </div>`;
+      });
+      return out;
     }
 
     let html = '';
@@ -1289,7 +1300,7 @@
     // ABILITIES" for Silent King, etc. Same gold-leaf section head
     // styling for all of them so they read as "pick from N" at a glance.
     subGroups.forEach((rows, label) => {
-      html += `<div class="dcc-section dcc-abilities dcc-abilities-primarch" data-sec="abilities" data-sec-label="${esc(label)}">
+      html += `<div class="dcc-section dcc-abilities dcc-abilities-primarch" data-sec="primarch" data-sec-label="${esc(label)}">
         <div class="dcc-section-head dcc-section-head-primarch"><span class="dcc-section-label">${esc(label)}</span></div>
         <div class="dcc-abilities-body">`;
       rows.forEach(a => {

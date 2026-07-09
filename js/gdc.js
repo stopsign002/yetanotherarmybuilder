@@ -180,6 +180,30 @@
 
   // Flatten a rule's segmented body (rules[].rules — ordered { order, type, text }
   // chunks) into one description string. Handles localized text + markup.
+  // Self-healing content patches for rule text GDC ships as IMAGES (dropped
+  // by composeRuleText — nothing to extract). Keyed by an { anchor, insert }
+  // pair: `insert` goes right after `anchor` in the composed text, and only
+  // when the text doesn't already carry it (so the patch no-ops the moment
+  // the datasource inlines the content as text).
+  //   Nurgle's Gift: the per-round Contagion Range values are three graphics.
+  const RULE_TEXT_PATCHES = {
+    // key = nameKey(rule name): lowercased, "(Aura)" suffix + punctuation stripped
+    'nurglesgift': {
+      anchor: 'Contagion Range changes over the course of the battle:',
+      already: 'First battle round',
+      insert: '\n• First battle round: 3"\n• Second battle round: 6"\n• Third battle round onwards: 9"',
+    },
+  };
+  function patchRuleText(name, text) {
+    const p = RULE_TEXT_PATCHES[nameKey(name)];
+    if (!p || !text) return text;
+    if (text.indexOf(p.already) !== -1) return text;       // datasource fixed → no-op
+    const i = text.indexOf(p.anchor);
+    if (i === -1) return text;
+    const at = i + p.anchor.length;
+    return text.slice(0, at) + p.insert + text.slice(at);
+  }
+
   function composeRuleText(chunks) {
     if (!Array.isArray(chunks)) return '';
     return chunks
@@ -358,7 +382,7 @@
         armyRuleEntries.forEach(ar => {
           const nm = pickText(ar && ar.name);
           if (!nm) return;
-          const desc = composeRuleText(ar.rules);
+          const desc = patchRuleText(nm, composeRuleText(ar.rules));
           const hit = byKey.get(nameKey(nm));
           if (hit) {
             if (!hit.description && desc) hit.description = desc;

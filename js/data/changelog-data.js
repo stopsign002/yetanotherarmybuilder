@@ -26,9 +26,28 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-7',
+    version:     '2026.07.09-8',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'fix',
+        title: 'Nurgle\u2019s Gift shows the Contagion Range table',
+        description:
+          'The per-round Contagion Range values (3\u2033 / 6\u2033 / 9\u2033) are shipped ' +
+          'as graphics in the community datasource, so the text version lost ' +
+          'them. They\u2019re now filled in below \u201cContagion Range changes over ' +
+          'the course of the battle\u201d (self-healing if the datasource inlines ' +
+          'them as text).',
+      },
+      {
+        date: '2026-07-09', kind: 'change',
+        title: 'Primarch abilities are their own card section',
+        description:
+          'Choose-one primarch ability groups (Lord of the Death Guard, \u2026) ' +
+          'now render as their own titled section on printed cards \u2014 in the ' +
+          'Stencil template they were inflating the Abilities section \u2014 and ' +
+          'they spill to another face independently of Abilities.',
+      },
       {
         date: '2026-07-09', kind: 'change',
         title: 'Cards spill across as many pages as they need',
