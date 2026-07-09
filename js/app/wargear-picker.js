@@ -23,6 +23,7 @@
   // Pending config for the viewed unit: 'optionId:choiceIdx' -> count.
   let unitId = null;
   let counts = new Map();
+  let panelEl = null;   // details pane root (set at mount) — banner pts live here
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -152,6 +153,24 @@
     const depleted = (opt, grp) =>
       effReplaces(opt, grp).filter((x) => effById.has(x.id) && effById.get(x.id) < 0);
 
+    // Live wargear points for the CURRENT config, per squad copy: priced
+    // items in the effective loadout (defaults after swaps + taken
+    // non-defaults) plus always-carried priced wargear. Feeds the summary
+    // line below AND the banner points at the top of the pane. Mirrors what
+    // army.js charges on Add to Army.
+    let wgLive = 0;
+    if (profile.itemCosts) {
+      const ic = profile.itemCosts;
+      wgLive = profile.alwaysCost || 0;
+      const counted = new Set();
+      defaults.forEach((d) => {
+        counted.add(d.id);
+        wgLive += (ic[d.id] || 0) * Math.max(0, effById.get(d.id) || 0);
+      });
+      added.forEach((n, id) => { if (!counted.has(id)) wgLive += (ic[id] || 0) * n; });
+      wgLive = Math.max(0, wgLive);
+    }
+
     // For each default item, the (option, choice) pairs that actually replace
     // it — a single unambiguous pair gets proxy steppers on the default row
     // itself ("remove a gauss flayer" = take one of its replacement).
@@ -266,21 +285,28 @@
       }
       html += `</div>`;
     });
-    // Live points owed by the CURRENT loadout's priced items (per squad
-    // copy): effective default counts after swaps, plus taken non-defaults,
-    // plus always-carried priced wargear. Mirrors what army.js will charge.
     if (profile.itemCosts) {
-      const ic = profile.itemCosts;
-      let total = profile.alwaysCost || 0;
-      const counted = new Set();
-      defaults.forEach((d) => {
-        counted.add(d.id);
-        total += (ic[d.id] || 0) * Math.max(0, effById.get(d.id) || 0);
-      });
-      added.forEach((n, id) => { if (!counted.has(id)) total += (ic[id] || 0) * n; });
-      html += `<div class="wgp-note wgp-total">Wargear points: +${Math.max(0, total)} pts</div>`;
+      html += `<div class="wgp-note wgp-total">Wargear points: +${wgLive} pts</div>`;
     }
     host.innerHTML = html;
+    updateBannerPts(unit, wgLive);
+  }
+
+  // Banner points (big number, top of the details pane) track the LIVE cost:
+  // selected squad size's base points + current wargear points. The banner
+  // renders pointsOptions as "main / sub / sub" — only the leading number is
+  // the main value, so replace just those digits and keep the dimmed subs.
+  function updateBannerPts(unit, wgLive) {
+    if (!panelEl) return;
+    const el = panelEl.querySelector('.detail-banner-pts.detail-pts-value');
+    if (!el || !el.firstChild || el.firstChild.nodeType !== 3) return;
+    const opts = unit.squadOptions || [];
+    const sel = panelEl.querySelector('#detail-squad-select');
+    const idx = sel ? (parseInt(sel.value, 10) || 0) : 0;
+    const base = (opts[idx] && opts[idx].pts != null) ? opts[idx].pts
+      : (opts[0] && opts[0].pts != null) ? opts[0].pts : (unit.points || 0);
+    el.firstChild.nodeValue =
+      el.firstChild.nodeValue.replace(/^\d+/, String(base + wgLive));
   }
 
   // Mount into the placeholder detail.js renders under the Add box.
@@ -288,6 +314,7 @@
     mount(unit, panel) {
       const host = panel.querySelector('#detail-wargear-picker');
       if (!host || !unit || !unit.wargearProfile) return;
+      panelEl = panel;
       if (unit.id !== unitId) { unitId = unit.id; counts = new Map(); }
       render(unit, host);
 

@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-3',
-    lastUpdated: '2026-07-09T18:00:00Z',
+    version:     '2026.07.09-4',
+    lastUpdated: '2026-07-09T20:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'change',
+        title: 'Details-pane points track your wargear picks live',
+        description:
+          'The big points number at the top of the unit details pane now ' +
+          'updates as you add or remove priced wargear (and follows the ' +
+          'selected squad size), so it always shows exactly what Add to ' +
+          'Army will charge — e.g. Thunderwolf Cavalry reads 100 and ticks ' +
+          'up +5 per storm shield.',
+      },
       {
         date: '2026-07-09', kind: 'fix',
         title: 'Unit points now match the live Munitorum Field Manual',
