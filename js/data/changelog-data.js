@@ -26,9 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-6',
+    version:     '2026.07.09-7',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'change',
+        title: 'Cards spill across as many pages as they need',
+        description:
+          'Dense datasheets (primarchs) are no longer capped at one ' +
+          'continuation \u2014 in duplex mode the overflow now cascades onto ' +
+          'additional cards (front and back) until everything fits. Army ' +
+          'rule cards with long text (Nurgle\u2019s Gift) also paginate across ' +
+          'faces instead of clipping \u2014 always on now, so the \u201csplit ' +
+          'sections mid-content\u201d toggle is gone.',
+      },
       {
         date: '2026-07-09', kind: 'fix',
         title: 'Primarch choose-one abilities restored',

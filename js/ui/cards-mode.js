@@ -1894,6 +1894,34 @@
       return [primary].concat(tail);
     }
 
+    // Duplex 'continuation' mode: the first overflow rides the primary's
+    // back. If that continuation is ITSELF still too tall, the remainder
+    // cascades onto additional front cards (each of which may carry its own
+    // back), so a dense datasheet (primarchs) spans 3+ faces in duplex too.
+    if (spilloverMode === 'continuation' && depth < 12) {
+      const contProbe = Object.assign({}, card, { html: split.contHtml, id: null });
+      const more = autoSpillKeysForCard(contProbe, cardW, cardH, stage);
+      if (more && more.size > 0) {
+        const s2 = splitUnitCardBySections(split.contHtml, more);
+        if (s2) {
+          const chrome = buildContinuationChrome(s2.frontHtml, backsOn);
+          const primary = Object.assign({}, card, {
+            html: split.frontHtml,
+            continuationHtml: chrome.contHtml,
+            continuationClasses: chrome.contClasses,
+          });
+          const tailCard = Object.assign({}, card, {
+            html: s2.contHtml,
+            id: null,                 // tail carries no override identity
+            isContinuation: true,
+            contClasses: '',
+            label: (card.label || 'Card') + ' (cont.)',
+          });
+          return [primary].concat(measureAndMaybeSplit(tailCard, cardW, cardH, stage, backsOn, depth + 1));
+        }
+      }
+    }
+
     const { contHtml, contClasses } = buildContinuationChrome(split.contHtml, backsOn);
     return emitSplit(card, split.frontHtml, contHtml, contClasses, 'Unit');
   }
@@ -1973,12 +2001,12 @@
   }
 
   // Rule-card spillover. Rule cards have a single body section (the
-  // `<div class="dcc-rule-text">` blob), so they can only overflow
-  // when partial-section splitting is enabled. With the flag off we
-  // leave the card untouched and let it clip — matching the default
-  // behaviour for everything else.
+  // `<div class="dcc-rule-text">` blob), so overflow can only split
+  // mid-text. Always on: the alternative is silently clipping rules
+  // prose (Nurgle's Gift ran off the card). Long rules paginate across
+  // as many faces as they need.
   function splitOverflowingRuleCards(ruleCards, layout) {
-    if (!allowPartialSection || ruleCards.length === 0) return ruleCards;
+    if (ruleCards.length === 0) return ruleCards;
     const { w: cardW, h: cardH } = cardSizeFor(layout);
     const stage = document.createElement('div');
     stage.style.cssText =
@@ -1996,23 +2024,37 @@
       document.body.removeChild(stage);
     }
   }
-  function measureAndMaybeSplitRule(card, cardW, cardH, stage, backsOn) {
+  // Re-inject rule text by swapping the dcc-rule-text contents in a rule
+  // card's HTML — keeps every other class / attribute intact.
+  function withRuleText(html, newText) {
+    return html.replace(
+      /(<div class="dcc-rule-text">)[\s\S]*?(<\/div>)/,
+      '$1' + esc(newText) + '$2'
+    );
+  }
+
+  // Fit ONE page of a rule card: measure `html` at card size; when it
+  // overflows, binary-search the largest text prefix that fits and return
+  // { fitHtml, remainderHtml } — remainderHtml is a full rule card carrying
+  // the leftover text under a cloned "(cont.)" head, ready to be fitted
+  // again. remainderHtml is null when everything fits.
+  function fitRuleCardPage(html, cardW, cardH, stage) {
     const host = document.createElement('div');
     host.style.cssText = 'width:' + cardW + 'mm; height:' + cardH + 'mm;';
     const cardEl = document.createElement('article');
     cardEl.className = 'dcc-card dcc-card-rule ' + templateClass();
     cardEl.style.cssText = 'width:100%;height:100%;box-sizing:border-box;';
-    cardEl.innerHTML = card.html;
+    cardEl.innerHTML = html;
     host.appendChild(cardEl);
     stage.appendChild(host);
     try {
-      if (cardEl.scrollHeight <= cardEl.clientHeight + 2) return [card];
+      if (cardEl.scrollHeight <= cardEl.clientHeight + 2) return { fitHtml: html, remainderHtml: null };
 
       const header = cardEl.querySelector('.dcc-head');
       const textEl = cardEl.querySelector('.dcc-rule-text');
-      if (!header || !textEl) return [card];
+      if (!header || !textEl) return { fitHtml: html, remainderHtml: null };
       const fullText = textEl.textContent || '';
-      if (!fullText.trim()) return [card];
+      if (!fullText.trim()) return { fitHtml: html, remainderHtml: null };
 
       // Tokenise so we can rebuild any prefix without losing whitespace:
       // double-newline → paragraph, single-newline → soft break, words +
@@ -2030,7 +2072,7 @@
           for (const wp of wordParts) if (wp) tokens.push(wp);
         }
       }
-      if (tokens.length < 2) return [card];
+      if (tokens.length < 2) return { fitHtml: html, remainderHtml: null };
 
       let lo = 1, hi = tokens.length, bestFit = 0;
       while (lo <= hi) {
@@ -2042,40 +2084,69 @@
           hi = mid - 1;
         }
       }
-      if (bestFit === 0 || bestFit >= tokens.length) return [card];
+      if (bestFit === 0 || bestFit >= tokens.length) return { fitHtml: html, remainderHtml: null };
 
       const fitText      = tokens.slice(0, bestFit).join('').replace(/\s+$/, '');
       const overflowText = tokens.slice(bestFit).join('').replace(/^\s+/, '');
-      if (!overflowText) return [card];
+      if (!overflowText) return { fitHtml: html, remainderHtml: null };
 
-      // Re-inject the split text by swapping the dcc-rule-text contents
-      // in the original card HTML — keeps every other class / attribute
-      // intact (display.kindLabel subtitle, custom radii, etc.).
-      function withRuleText(html, newText) {
-        return html.replace(
-          /(<div class="dcc-rule-text">)[\s\S]*?(<\/div>)/,
-          '$1' + esc(newText) + '$2'
-        );
-      }
-      const primaryHtml = withRuleText(card.html, fitText);
-      const overflowOnlyHtml = withRuleText(card.html, overflowText);
-
-      // Continuation: rebuild from the overflow-only HTML, marking the
-      // cloned head as a continuation so the "(cont.)" pseudo-element
-      // shows up. Strip the footerless rule card's outer header wrapper
-      // and reuse it directly.
+      // Remainder page: same card HTML with the leftover text and the head
+      // cloned as a continuation ("(cont.)" pseudo-element). Idempotent for
+      // pages 3+ — the class list is fixed, not appended.
       const clonedHead = '<header class="dcc-head dcc-head-rule dcc-head-cont">' +
         (header.innerHTML || '') + '</header>';
-      // The continuation body keeps the same .dcc-rule-body wrapper from
-      // overflowOnlyHtml — we just splice in the cloned head.
-      const overflowBodyHtml = overflowOnlyHtml.replace(/^[\s\S]*?<\/header>/, '');
-      const inner = clonedHead + overflowBodyHtml;
-      const { contHtml, contClasses } = buildContinuationChrome(inner, backsOn);
-
-      return emitSplit(card, primaryHtml, contHtml, contClasses, 'Rule');
+      const overflowBodyHtml = withRuleText(html, overflowText).replace(/^[\s\S]*?<\/header>/, '');
+      return {
+        fitHtml: withRuleText(html, fitText),
+        remainderHtml: clonedHead + overflowBodyHtml,
+      };
     } finally {
       stage.removeChild(host);
     }
+  }
+
+  // Paginate an overflowing rule card across as many faces as it needs
+  // (Nurgle's Gift-length army rules). Assembly mirrors the unit splitter:
+  //   'continuation' (duplex) — pages pair up front/back: page 2 rides the
+  //     primary's back; pages 3-4 become a second card's front/back; etc.
+  //   'fullCard' — every page is its own front-grid card.
+  function measureAndMaybeSplitRule(card, cardW, cardH, stage, backsOn) {
+    const pages = [];
+    let cur = card.html;
+    let guard = 0;
+    while (cur && guard++ < 12) {
+      const res = fitRuleCardPage(cur, cardW, cardH, stage);
+      pages.push(res.fitHtml);
+      cur = res.remainderHtml;
+    }
+    if (pages.length === 1) return [card];
+
+    const contCardOf = (html) => Object.assign({}, card, {
+      html,
+      isContinuation: true,
+      contClasses: '',
+      label: (card.label || 'Rule') + ' (cont.)',
+    });
+
+    if (spilloverMode === 'fullCard') {
+      return [Object.assign({}, card, { html: pages[0] })]
+        .concat(pages.slice(1).map(contCardOf));
+    }
+
+    // Duplex: pair pages into (front, back) per physical card.
+    const out = [];
+    for (let i = 0; i < pages.length; i += 2) {
+      const front = i === 0
+        ? Object.assign({}, card, { html: pages[0] })
+        : contCardOf(pages[i]);
+      if (pages[i + 1] != null) {
+        const chrome = buildContinuationChrome(pages[i + 1], backsOn);
+        front.continuationHtml = chrome.contHtml;
+        front.continuationClasses = chrome.contClasses;
+      }
+      out.push(front);
+    }
+    return out;
   }
 
   function buildPagesDOM() {
@@ -2523,19 +2594,10 @@
             <span class="cards-help" style="display:block; margin:2px 0 0">Same full parchment as the primary.</span>
           </span>
         </label>
-        <label class="cards-row" style="margin: 8px 12px 4px">
-          <input type="checkbox" id="cards-allow-partial-section"
-                 ${allowPartialSection ? 'checked' : ''}>
-          <span><strong>Split sections mid-content</strong>
-            <span class="cards-help" style="display:block; margin:2px 0 0">
-              Required for army-rule overflow (single-section body). Also
-              lets dense unit sections (abilities, weapons) break across
-              primary &amp; continuation instead of moving the whole
-              section.
-            </span>
-          </span>
-        </label>
       </div>`;
+    // (The "split sections mid-content" toggle was removed: overflowing
+    // army-rule text now always paginates — the alternative was clipping —
+    // and unit cards split at whole-section boundaries regardless.)
     // Defer setting the <select> values until after the HTML lands in the DOM.
     queueMicrotask(() => {
       const g = hostEl.querySelector('#cards-layout-global');
@@ -2651,12 +2713,6 @@
         spilloverMode = v;
         refreshPreview();
       }
-      return;
-    }
-    // Split-sections-mid-content checkbox
-    if (e.target && e.target.id === 'cards-allow-partial-section') {
-      allowPartialSection = !!e.target.checked;
-      refreshPreview();
       return;
     }
     // Border color picker
