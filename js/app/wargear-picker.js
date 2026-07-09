@@ -93,27 +93,27 @@
     return bySize[pick] || [];
   }
 
+  // What a swap ACTUALLY takes off the squad. 40kdc's `replaces` array can
+  // list the model's whole prior loadout even when only one item is given
+  // up (GW's "bolt pistol, teeth and claws OR wolf guard weapon"). The
+  // disambiguator that holds across the dataset:
+  //   - one replaces item                → replace it (unambiguous)
+  //   - chosen group has MULTIPLE items  → pair-swap, AND: all replaced
+  //     ("storm bolter and power weapon → power fist and assault cannon")
+  //   - multi-replaces, single-item pick → OR: the FIRST listed item is the
+  //     one really given up (bolt pistol first for TWC; the model keeps its
+  //     teeth and claws)
+  const effReplaces = (opt, grp) => {
+    if (opt.replaces.length <= 1) return opt.replaces;
+    if (opt.andSwap) return opt.replaces;            // hand-confirmed "and"
+    if (grp && grp.length > 1) return opt.replaces;
+    return [opt.replaces[0]];
+  };
+
   function render(unit, host) {
     const profile = unit.wargearProfile;
     const models = currentModels(unit);
     const defaults = defaultsFor(profile, models);
-
-    // What a swap ACTUALLY takes off the squad. 40kdc's `replaces` array can
-    // list the model's whole prior loadout even when only one item is given
-    // up (GW's "bolt pistol, teeth and claws OR wolf guard weapon"). The
-    // disambiguator that holds across the dataset:
-    //   - one replaces item                → replace it (unambiguous)
-    //   - chosen group has MULTIPLE items  → pair-swap, AND: all replaced
-    //     ("storm bolter and power weapon → power fist and assault cannon")
-    //   - multi-replaces, single-item pick → OR: the FIRST listed item is the
-    //     one really given up (bolt pistol first for TWC; the model keeps its
-    //     teeth and claws)
-    const effReplaces = (opt, grp) => {
-      if (opt.replaces.length <= 1) return opt.replaces;
-      if (opt.andSwap) return opt.replaces;            // hand-confirmed "and"
-      if (grp && grp.length > 1) return opt.replaces;
-      return [opt.replaces[0]];
-    };
 
     // Per-item ADD totals and REMOVE totals across all selections.
     const added = new Map(), removed = new Map();
@@ -275,6 +275,42 @@
         sizeSel._wgpWired = true;
         sizeSel.addEventListener('change', () => render(unit, host));
       }
+    },
+
+    // Full effective loadout for a squad: defaults at `models` size adjusted
+    // by the entry's saved wargear selections (adds − replaced), plus taken
+    // items that aren't defaults. Returns Map lowercased item name →
+    // { name, count }, or null when the unit has no profile. Used by the
+    // card exporter to stamp ×N on every weapon row.
+    effectiveCounts(unit, models, selections) {
+      const profile = unit && unit.wargearProfile;
+      if (!profile) return null;
+      const defaults = defaultsFor(profile, models);
+      const added = new Map(), removed = new Map();
+      (selections || []).forEach((sel) => {
+        if (!sel || !sel.optionId || !sel.count) return;
+        const opt = profile.options.find((o) => o.id === sel.optionId);
+        if (!opt) return;
+        const grp = opt.choices[sel.choice == null ? 0 : sel.choice] || [];
+        grp.forEach((x) => added.set(x.id, (added.get(x.id) || 0) + sel.count));
+        effReplaces(opt, grp).forEach((x) => removed.set(x.id, (removed.get(x.id) || 0) + sel.count));
+      });
+      const out = new Map();
+      const put = (name, count) => { const k = String(name).toLowerCase(); out.set(k, { name, count }); };
+      const seen = new Set();
+      defaults.forEach((d) => {
+        seen.add(d.id);
+        put(d.name, Math.max(0, d.count + (added.get(d.id) || 0) - (removed.get(d.id) || 0)));
+      });
+      // Taken items that aren't part of the default loadout.
+      profile.options.forEach((opt) => {
+        opt.choices.forEach((grp) => grp.forEach((x) => {
+          if (seen.has(x.id) || !added.get(x.id)) return;
+          seen.add(x.id);
+          put(x.name, added.get(x.id));
+        }));
+      });
+      return out;
     },
 
     // Snapshot the pending config for addUnit(); keeps state so adding a

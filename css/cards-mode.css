@@ -1778,3 +1778,6 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+/* ×0 (all swapped away) reads dimmer than carried counts. */
+.dcc-wg-count.dcc-wg-zero { opacity: 0.45; }

@@ -1070,10 +1070,16 @@
       // card width instead of wrapping at the narrow name column. The stat row
       // drops its bottom border when a keyword row follows so the two read as
       // one weapon entry.
-      // ×N chip when the army entry's wargear picker took N of this item.
-      const wgN = wgCounts && wgCounts.get(String(w.name).toLowerCase());
+      // ×N chip: how many of this item the squad fields. Multi-profile rows
+      // ("Plasma pistol – Supercharge") fall back to their base item name.
+      const wgKey = String(w.name).toLowerCase();
+      let wgN = wgCounts && wgCounts.get(wgKey);
+      if (wgN == null && wgCounts) {
+        const base = wgKey.split(/\s+[–—-]\s+/)[0].trim();
+        if (base && base !== wgKey) wgN = wgCounts.get(base);
+      }
       const statRow = `<tr class="dcc-w-row${kw ? ' has-kw' : ''}">
-        <td class="dcc-w-name">${esc(w.name)}${wgN ? `<span class="dcc-wg-count">×${wgN}</span>` : ''}</td>
+        <td class="dcc-w-name">${esc(w.name)}${wgN != null ? `<span class="dcc-wg-count${wgN === 0 ? ' dcc-wg-zero' : ''}">×${wgN}</span>` : ''}</td>
         ${cells}
       </tr>`;
       const kwRow = kw
@@ -1339,14 +1345,27 @@
     const presentStats = STAT_ORDER.filter(k =>
       statProfiles.some(p => getStatVal(p, k) !== '—'));
     const { ranged, melee } = classifyWeapons(unit);
-    // Wargear-picker counts (entry.wargear) keyed by lowercased item name —
-    // weapon rows whose name matches a taken item get a "×N" chip.
+    // Wargear counts keyed by lowercased item name — weapon rows get a "×N"
+    // chip for the squad's FULL effective loadout (defaults at the entry's
+    // squad size, adjusted by picker swaps), not just the taken swaps.
+    // Falls back to selections-only for units without a wargearProfile.
     const wgCounts = new Map();
     if (display.wgCounts) {
-      (entry.wargear || []).forEach(w => (w.items || []).forEach(nm => {
-        const k = String(nm).toLowerCase();
-        wgCounts.set(k, (wgCounts.get(k) || 0) + (w.count || 0));
-      }));
+      let effMap = null;
+      if (window.App && App.WargearPicker && typeof App.WargearPicker.effectiveCounts === 'function') {
+        const models = (unit.squadOptions || []).reduce((m, o) =>
+          (m == null && o.pts === entry.selectedPts) ? o.models : m, null)
+          || parseInt(String(entry.squadLabel || '').replace(/[^\d]/g, ''), 10) || null;
+        try { effMap = App.WargearPicker.effectiveCounts(unit, models, entry.wargear || []); } catch (_) {}
+      }
+      if (effMap) {
+        effMap.forEach((v, k) => wgCounts.set(k, v.count));
+      } else {
+        (entry.wargear || []).forEach(w => (w.items || []).forEach(nm => {
+          const k = String(nm).toLowerCase();
+          wgCounts.set(k, (wgCounts.get(k) || 0) + (w.count || 0));
+        }));
+      }
     }
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     const ptsLabel = entry.selectedPts != null ? entry.selectedPts : (ptsOpts.length ? ptsOpts[0] : null);

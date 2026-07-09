@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.08-40',
-    lastUpdated: '2026-07-08T00:00:00Z',
+    version:     '2026.07.09-1',
+    lastUpdated: '2026-07-09T00:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'fix',
+        title: 'Cards show the full wargear counts',
+        description:
+          'Weapon rows on printed cards now carry \u00d7N for the squad\u2019s whole ' +
+          'effective loadout \u2014 defaults at the chosen size adjusted by swaps ' +
+          '(Blood Claws: bolt pistol \u00d710, chainsword \u00d79, power weapon \u00d71) \u2014 ' +
+          'instead of only the swapped items. Weapons swapped away entirely ' +
+          'show a dimmed \u00d70.',
+      },
       {
         date: '2026-07-08', kind: 'fix',
         title: 'Big Mek in Mega Armour gets More Dakka back',
