@@ -26,9 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-2',
-    lastUpdated: '2026-07-09T12:00:00Z',
+    version:     '2026.07.09-3',
+    lastUpdated: '2026-07-09T18:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'fix',
+        title: 'Unit points now match the live Munitorum Field Manual',
+        description:
+          'Base unit points are now sourced directly from the official MFM ' +
+          'site on every data refresh, fixing ~90 stale values in the ' +
+          'upstream dataset (Thunderwolf Cavalry are 100 pts, not 115 — ' +
+          'storm shields are what cost +5 each; Sternguard 85, Crusader ' +
+          'Squad 290 at 20 models, and more). “Your 3rd+ unit costs ' +
+          'more” brackets come along too.',
+      },
       {
         date: '2026-07-09', kind: 'feature',
         title: 'Wargear points costs (Munitorum Field Manual)',

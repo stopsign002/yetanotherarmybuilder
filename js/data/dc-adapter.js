@@ -483,7 +483,12 @@
     //     cost more. Absent (the common case) = cost applies to every copy.
     // Split them: squadOptions carries one BASE cost per distinct size; the
     // ordinal surcharge (flat per unit across sizes) goes in `ordinal`.
-    const { squadOptions, pointsOptions, ordinal } = parsePoints(u.points || []);
+    // The official MFM overlay (window.DC.mfmPoints, same shape, scraped by
+    // refresh-40kdc.sh) is AUTHORITATIVE when present — upstream 40kdc points
+    // lag the live MFM (e.g. Thunderwolf Cavalry shipped 115 vs MFM 100+10/3rd).
+    const mfmPts = (DC.mfmPoints && DC.mfmPoints[u.faction_id + '/' + u.id]) || null;
+    const { squadOptions, pointsOptions, ordinal } =
+      parsePoints((mfmPts && mfmPts.length ? mfmPts : u.points) || []);
     // Drop 40kdc's generic "leader" ability. Every leader datasheet (230 units
     // across every faction) carries the SAME ability_id "leader", and the flat
     // ability-text store (abilities-index.json) holds a single entry for it —
@@ -830,7 +835,10 @@
       description: '',
       isLegends: !!u.is_legend,
       attachmentRole: u.attachment_role || null,   // 'leader' | 'support' | null
-      _provisional: !!u.points_provisional,
+      // Points sourced from the live MFM overlay (also clears provisional —
+      // the MFM is the confirmed source upstream's flag is provisional FOR).
+      _mfmPoints: !!(mfmPts && mfmPts.length),
+      _provisional: !!u.points_provisional && !(mfmPts && mfmPts.length),
     };
   }
 
