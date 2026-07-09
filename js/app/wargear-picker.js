@@ -24,6 +24,26 @@
   let unitId = null;
   let counts = new Map();
   let panelEl = null;   // details pane root (set at mount) — banner pts live here
+  // Army entry being EDITED (pane opened by clicking an army-list entry), or
+  // null when configuring a not-yet-added roster unit. Mirrors how the
+  // enhancement checkboxes edit existing entries via selectedArmyEntryIndex.
+  let entryIndex = null;
+
+  function currentEntry() {
+    const s = App.state || {};
+    if (entryIndex == null || !s.currentArmy) return null;
+    return s.currentArmy.entries[entryIndex] || null;
+  }
+
+  // Live write-back for entry-bound panes: same flow as the enhancement
+  // checkboxes — update the entry, persist, re-render the army list.
+  function syncEntry(unit) {
+    const s = App.state || {};
+    if (!currentEntry()) return;
+    s.currentArmy.setWargear(entryIndex, App.WargearPicker.takeSelections(unit));
+    if (s.armyManager) s.armyManager.saveArmy(s.currentArmy);
+    if (window.UI && UI.renderArmyList) UI.renderArmyList(s.currentArmy);
+  }
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -315,7 +335,41 @@
       const host = panel.querySelector('#detail-wargear-picker');
       if (!host || !unit || !unit.wargearProfile) return;
       panelEl = panel;
-      if (unit.id !== unitId) { unitId = unit.id; counts = new Map(); }
+      // Entry-bound render? (army-list click sets selectedArmyEntryIndex and
+      // renders the detail pane for that entry's unit)
+      const s = App.state || {};
+      const selEntry = (s.selectedArmyEntryIndex != null && s.currentArmy)
+        ? s.currentArmy.entries[s.selectedArmyEntryIndex] : null;
+      const ei = (selEntry && selEntry.unitId === unit.id) ? s.selectedArmyEntryIndex : null;
+      if (unit.id !== unitId || ei !== entryIndex) {
+        unitId = unit.id;
+        entryIndex = ei;
+        counts = new Map();
+        // Seed from the entry's saved selections so the pane shows (and
+        // edits) the squad's ACTUAL loadout.
+        const entry = currentEntry();
+        ((entry && entry.wargear) || []).forEach((w) => {
+          if (w && w.optionId && w.count) {
+            counts.set(w.optionId + ':' + (w.choice == null ? 0 : w.choice), w.count);
+          }
+        });
+      }
+      // Editing an existing entry: preselect ITS squad size so limits, the
+      // banner, and the live wargear total describe the squad being edited.
+      const entry = currentEntry();
+      if (entry) {
+        const sel = panel.querySelector('#detail-squad-select');
+        const opts = unit.squadOptions || [];
+        const idx = opts.findIndex((o) => o.pts === entry.selectedPts);
+        if (sel && idx >= 0 && String(idx) !== sel.value) {
+          sel.value = String(idx);
+          const label = panel.querySelector('#detail-size-label');
+          if (label && opts[idx]) {
+            label.textContent = opts[idx].models
+              ? `${opts[idx].models} models — ${opts[idx].pts} pts` : `${opts[idx].pts} pts`;
+          }
+        }
+      }
       render(unit, host);
 
       // Steppers (one delegated listener per mount — host is fresh DOM).
@@ -326,6 +380,7 @@
         const cur = counts.get(key) || 0;
         counts.set(key, Math.max(0, cur + (btn.classList.contains('wgp-plus') ? 1 : -1)));
         render(unit, host);
+        syncEntry(unit);   // no-op unless this pane edits an army entry
       });
       // Squad-size change → limits recompute.
       const sizeSel = panel.querySelector('#detail-squad-select');

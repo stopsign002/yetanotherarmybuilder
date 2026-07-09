@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-4',
-    lastUpdated: '2026-07-09T20:00:00Z',
+    version:     '2026.07.09-5',
+    lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'feature',
+        title: 'Edit wargear on units already in your army',
+        description:
+          'Click a unit in your army list and its wargear picker now shows ' +
+          'that squad’s saved loadout (at its actual squad size) — and ' +
+          'edits apply to the squad immediately, updating its points, just ' +
+          'like enhancement checkboxes. Previously the picker only ' +
+          'configured a unit before adding it.',
+      },
       {
         date: '2026-07-09', kind: 'change',
         title: 'Details-pane points track your wargear picks live',
