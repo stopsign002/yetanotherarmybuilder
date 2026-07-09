@@ -26,9 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-10',
+    version:     '2026.07.09-11',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-09', kind: 'fix',
+        title: 'Unit cards stop re-rendering under your cursor',
+        description:
+          'The units grid was being rebuilt about once a second by background ' +
+          'events even when nothing visible changed, restarting the card ' +
+          'glow/hover animation (\u201cgraphics keep resetting\u201d). The grid now ' +
+          'skips the rebuild entirely unless the filter, unit list, points or ' +
+          'loaded data actually changed \u2014 selecting a card just moves the ' +
+          'highlight instead of redrawing everything.',
+      },
       {
         date: '2026-07-09', kind: 'fix',
         title: 'Card exporter stops creeping and uploads work again',

@@ -331,6 +331,27 @@
 
     badge.textContent = `${filtered.length} unit${filtered.length !== 1 ? 's' : ''}`;
 
+    // Content-signature skip: when NOTHING the grid renders from has changed
+    // (same filter, same unit list, same data generation), leave the DOM
+    // completely alone. armyChange/selectionChange refire constantly from
+    // background activity (autosave echoes, sync ticks, badge refreshes) and
+    // each full rebuild restarted the cards' hover/glow animations — the
+    // "card graphics keep resetting every second" bug. A selection-only
+    // change retargets the highlight class in place instead of rebuilding.
+    const contentSig = filterSig
+      + '§' + ((window.App && App.state && App.state.factionsVersion) || 0)
+      + '§' + filtered.map(u => u.id + ':' + (u.points || 0)).join(',');
+    if (contentSig === R.lastContentSig && grid.querySelector('.unit-card')) {
+      const sel = selectedUnitId || null;
+      if (sel !== R.selectedId) {
+        R.selectedId = sel;
+        grid.querySelectorAll('.unit-card').forEach(c =>
+          c.classList.toggle('selected', !!sel && c.dataset.unitId === sel));
+      }
+      return;
+    }
+    R.lastContentSig = contentSig;
+
     // Capture the user's scroll position BEFORE tearing down the cards. Reading
     // scrollTop AFTER removing them (which is what the restore logic below used
     // to do) forces a reflow on the now-empty grid, and the browser clamps
