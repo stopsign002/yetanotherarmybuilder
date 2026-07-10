@@ -17,7 +17,10 @@
   const UI  = window.UI  = window.UI  || {};
   if (!App.hooks) return;
 
-  const APP_VERSION = 'v0.x.y-dev';
+  // Resolved at diagnostics-build time so it reflects the loaded release
+  // (changelog-data.js is the single source of truth for the version).
+  const appVersion = () =>
+    (App.CHANGELOG && App.CHANGELOG.version) ? App.CHANGELOG.version : '(unknown)';
   const ENDPOINT    = '/api/bugs';
   const MAX_BODY    = 4000;
   const MAX_DIAG    = 16000;
@@ -60,7 +63,7 @@
     const viewport = (window.innerWidth || 0) + 'x' + (window.innerHeight || 0);
 
     const lines = [
-      'App version:      ' + APP_VERSION,
+      'App version:      ' + appVersion(),
       'Date/time:        ' + new Date().toISOString(),
       'User agent:       ' + (navigator.userAgent || '(unknown)'),
       'Viewport:         ' + viewport,

@@ -26,9 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.10-1',
+    version:     '2026.07.10-2',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-10', kind: 'fix',
+        title: 'Leagues of Votann 11e points verified current',
+        description:
+          'Checked against today\u2019s official Munitorum Field Manual: all 26 ' +
+          'Votann datasheets carry current 11th-edition points (the MFM ' +
+          'overlay re-scraped clean at a 100% match). If you\u2019re seeing old ' +
+          'values, your device is running a cached copy \u2014 close all yaab ' +
+          'tabs and reopen, or hard-refresh. Bug reports now also record the ' +
+          'real app version so we can spot stale clients.',
+      },
       {
         date: '2026-07-10', kind: 'fix',
         title: 'Combat Patrol detachments no longer clutter the picker',
