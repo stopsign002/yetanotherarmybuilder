@@ -1045,8 +1045,18 @@
       const factionName = FACTION_NAME[f.id];
       if (!factionName) return; // unmapped (e.g. Titans) — skip in trial
       const units = (fv.units || []).map(toUnit);
-      const dets = DC.detachments.byFaction(f.id).map((d) =>
-        toDetachment(d, enhById, SM_CHAPTER_IDS.has(f.id) ? smParentDetRule : null));
+      // Combat Patrol detachments (upstream added them 2026-07) are fixed-force
+      // mini-game content: 1 detachment point, no rule text, no stratagems.
+      // They leaked into the matched-play picker looking broken (The
+      // Vardenghast Swarm, bug #12) — exclude them until/unless yaab grows a
+      // Combat Patrol mode.
+      const dets = DC.detachments.byFaction(f.id)
+        .filter((dv) => {
+          const d = dv.raw || dv;
+          return !(Array.isArray(d.game_modes) && d.game_modes.indexOf('combat-patrol') !== -1);
+        })
+        .map((d) =>
+          toDetachment(d, enhById, SM_CHAPTER_IDS.has(f.id) ? smParentDetRule : null));
       if (units.length === 0 && dets.length === 0) return;
       out.push({
         factionName,

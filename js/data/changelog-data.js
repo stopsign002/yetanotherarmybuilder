@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.09-12',
+    version:     '2026.07.10-1',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-10', kind: 'fix',
+        title: 'Combat Patrol detachments no longer clutter the picker',
+        description:
+          'The community dataset added Combat Patrol detachments (The ' +
+          'Vardenghast Swarm and 23 more) \u2014 fixed-force mini-game content ' +
+          'with no detachment rule or stratagems \u2014 and they leaked into the ' +
+          'matched-play detachment list looking broken. They\u2019re excluded ' +
+          'now. Thanks FrumpOfWar for the report. (A full audit of all 446 ' +
+          'matched-play detachments found 397 with complete rules/stratagem/' +
+          'enhancement text; the rest are missing text upstream \u2014 newest-' +
+          'codex content like Librarius Conclave \u2014 and will fill in ' +
+          'automatically as the community datasets author it.)',
+      },
       {
         date: '2026-07-09', kind: 'fix',
         title: 'Card back art selection is remembered',
