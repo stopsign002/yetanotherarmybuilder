@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-5',
+    version:     '2026.07.11-6',
     lastUpdated: '2026-07-11T12:00:00Z',
     entries: [
+      {
+        date: '2026-07-11', kind: 'fix',
+        title: 'Full-datacard verification — hundreds of missing abilities restored',
+        description:
+          'The two-source checker now covers the whole datacard, not just ' +
+          'statlines: core abilities (Deep Strike, Scouts, Deadly Demise…), ' +
+          'named abilities, wargear abilities and weapon profiles are all ' +
+          'cross-checked against wahapedia AND New Recruit, and fixed when ' +
+          'both agree. First pass: 584 units corrected — the upstream ' +
+          'dataset systematically fails to link core abilities, so most ' +
+          'datasheets gained one or more (Bloodletters and Seraphim get ' +
+          'their Deep Strike back), plus ~160 named/wargear abilities with ' +
+          'full rules text and six weapon-profile corrections.',
+      },
       {
         date: '2026-07-11', kind: 'feature',
         title: 'Conditional invulnerable saves now shown',

@@ -544,7 +544,18 @@
     // Per-faction ability corrections (leaked sibling-legion abilities on
     // shared datasheets like the Defiler).
     const abilityFix = UNIT_ABILITY_FIXES[u.faction_id + '::' + u.id] || null;
-    const removeAbilityIds = abilityFix ? new Set(abilityFix.remove || []) : null;
+    // Consensus ability overlay (window.DC.abilityFixes — appended to the
+    // bundle by the weekly stat checker where wahapedia AND New Recruit agree
+    // the datasheet differs). Shape per 'faction::unit' key:
+    //   { addCore: [ability-ids], addNamed: [{name, description}],
+    //     addWargear: [{name, description}], remove: [ability-ids] }
+    // Every path is self-healing (name dedupe / present-only removes), same
+    // contract as the hand maps.
+    const abilityFixOv = (DC.abilityFixes || {})[u.faction_id + '::' + u.id] || null;
+    const removeAbilityIds = new Set([
+      ...(abilityFix ? abilityFix.remove || [] : []),
+      ...(abilityFixOv ? abilityFixOv.remove || [] : []),
+    ]);
     const abilities = (uv.abilities || [])
       .filter((a) => a && a.id !== 'leader' && !ARMY_RULE_IDS.has(a.id)
         && !(removeAbilityIds && removeAbilityIds.has(a.id)))
@@ -559,7 +570,9 @@
         // never tagged core anywhere), so we also match the fixed GW core-rule
         // names (with their trailing rating, e.g. "Feel No Pain 5+").
         const isCore = raw.ability_type === 'core' || CORE_ABILITY_RE.test(name);
-        return { name, description: textFor(a.id), isCore };
+        // `id` kept so tooling (the stat checker's consensus removes) can
+        // target the upstream ability; renderers ignore it.
+        return { name, description: textFor(a.id), isCore, id: a.id };
       })
       .filter((a) => a.name);
     // Corrections' adds (e.g. the Defiler's Deadly Demise D6 replacing the
@@ -609,6 +622,27 @@
         if (!name || have.has(name.toLowerCase())) return;   // already present → no-op (self-heals post-upstream-fix)
         have.add(name.toLowerCase());
         abilities.push({ name, description, isCore: false });
+      });
+    }
+    // Consensus overlay adds (see abilityFixOv above). Core adds resolve
+    // through the ability store by id; named adds carry New Recruit's rules
+    // text (the store has no entry to point at).
+    if (abilityFixOv) {
+      const have = new Set(abilities.map((a) => a.name.toLowerCase()));
+      (abilityFixOv.addCore || []).forEach((aid) => {
+        let av = null;
+        try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
+        const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
+        if (have.has(name.toLowerCase())) return;   // self-heal no-op
+        have.add(name.toLowerCase());
+        abilities.push({ name, description: textFor(aid), isCore: true });
+      });
+      (abilityFixOv.addNamed || []).forEach((p) => {
+        const name = p && p.name;
+        if (!name || have.has(name.toLowerCase())) return;
+        have.add(name.toLowerCase());
+        abilities.push({ name, description: p.description || '',
+                         isCore: CORE_ABILITY_RE.test(name) });
       });
     }
     // Route ability-modelled wargear abilities out of the normal Abilities
@@ -673,6 +707,17 @@
       const key = wa.name.toLowerCase();
       if (!wargearAbilities.some((x) => x.name.toLowerCase() === key)) wargearAbilities.push(wa);
     });
+    // Consensus overlay wargear-ability adds (New Recruit rules text).
+    if (abilityFixOv && Array.isArray(abilityFixOv.addWargear)) {
+      const haveAb = new Set(abilities.map((a) => a.name.toLowerCase()));
+      abilityFixOv.addWargear.forEach((p) => {
+        const key = p && p.name && p.name.toLowerCase();
+        if (!key || haveAb.has(key)) return;   // self-heal no-op
+        if (!wargearAbilities.some((x) => x.name.toLowerCase() === key)) {
+          wargearAbilities.push({ name: p.name, description: p.description || '' });
+        }
+      });
+    }
     // ── Structured wargear profile (drives the wargear picker) ─────────
     // 40kdc authors each datasheet's wargear options as machine-readable
     // swap/add records (replaces + replacement/replacement_choice +
@@ -1129,6 +1174,75 @@
     return out;
   }
 
+  // ── consensus weapon-profile fixes (window.DC.weaponFixes) ─────────────────
+  // Appended to the bundle by the weekly stat checker where wahapedia AND New
+  // Recruit agree a weapon row differs from ours. Shape per 'faction::unit':
+  //   [{ match: { name, mode: 'ranged'|'melee' },
+  //      expect: { Range, A, BSWS, S, AP, D },   // pins our current values
+  //      set:    { ...same keys... } }]
+  // Expect-gated (no-ops once upstream corrects) and idempotent (after the
+  // set is applied the expect no longer matches). Runs after the GDC weapon
+  // merge so both weapon shapes (u.weapons rows and gdc profile lists) are
+  // covered.
+  const WFIX_ID_BY_NAME = (function () {
+    const m = {};
+    Object.keys(FACTION_NAME).forEach((fid) => { m[FACTION_NAME[fid]] = fid; });
+    return m;
+  })();
+  function wfNorm(v) {
+    const s = String(v == null ? '' : v).toLowerCase().replace(/["+*\s]/g, '');
+    return (s === '0' || s === '-' || s === '—') ? '' : s;
+  }
+  function applyWeaponFixes(factions) {
+    const all = DC.weaponFixes || {};
+    if (!Object.keys(all).length || !Array.isArray(factions)) return;
+    factions.forEach((f) => {
+      const fid = WFIX_ID_BY_NAME[f.factionName];
+      if (!fid) return;
+      (f.units || []).forEach((u) => {
+        const fixes = all[fid + '::' + u.id];
+        if (!fixes) return;
+        fixes.forEach((fx) => {
+          const wantName = String((fx.match && fx.match.name) || '').toLowerCase();
+          const wantMode = (fx.match && fx.match.mode) || 'ranged';
+          const exp = fx.expect || {};
+          const set = fx.set || {};
+          const expMatch = (cur) => Object.keys(exp).every((k) => wfNorm(cur[k]) === wfNorm(exp[k]));
+          (u.weapons || []).forEach((w) => {
+            if (String(w.name || '').toLowerCase() !== wantName) return;
+            const mode = wfNorm(w.Range) === 'melee' ? 'melee' : 'ranged';
+            if (mode !== wantMode) return;
+            if (!expMatch({ Range: w.Range, A: w.A, BSWS: w.BS != null ? w.BS : w.WS,
+                            S: w.S, AP: w.AP, D: w.D })) return;
+            if ('Range' in set) w.Range = set.Range;
+            if ('A' in set) w.A = set.A;
+            if ('BSWS' in set) { if (mode === 'melee') w.WS = set.BSWS; else w.BS = set.BSWS; }
+            if ('S' in set) w.S = set.S;
+            if ('AP' in set) w.AP = set.AP;
+            if ('D' in set) w.D = set.D;
+          });
+          const lst = wantMode === 'melee' ? u.gdcMeleeWeapons : u.gdcRangedWeapons;
+          (lst || []).forEach((w) => ((w && w.profiles) || []).forEach((p) => {
+            const pname = String(p.name || (w && w.name) || '').toLowerCase();
+            if (pname !== wantName) return;
+            // melee gdc profiles usually carry no range; mirror the renderers'
+            // 'Melee' default so the expect pin still matches.
+            const curRange = (p.range != null && p.range !== '') ? p.range
+              : (wantMode === 'melee' ? 'Melee' : '');
+            if (!expMatch({ Range: curRange, A: p.attacks, BSWS: p.skill,
+                            S: p.strength, AP: p.ap, D: p.damage })) return;
+            if ('Range' in set && wantMode !== 'melee') p.range = set.Range;
+            if ('A' in set) p.attacks = set.A;
+            if ('BSWS' in set) p.skill = set.BSWS;
+            if ('S' in set) p.strength = set.S;
+            if ('AP' in set) p.ap = set.AP;
+            if ('D' in set) p.damage = set.D;
+          }));
+        });
+      });
+    });
+  }
+
   // ── drop-in BSData replacement ─────────────────────────────────────────────
   async function loadAllFactions(onProgress, onFactionLoaded /*, signal */) {
     let factions;
@@ -1141,6 +1255,9 @@
       if (onProgress) onProgress(i + 1, total, faction.factionName);
       if (onFactionLoaded) onFactionLoaded(faction);
     });
+    // Weapon fixes for the non-GDC rows (idempotent; re-run post-GDC below
+    // for the gdc profile lists that merge creates).
+    try { applyWeaponFixes(factions); } catch (_) {}
 
     // Phase 3: GDC overlay for stratagem text (hybrid). Defensive — never fatal.
     try {
@@ -1156,6 +1273,7 @@
         if (typeof App.GDC.mergeUnitAbilitiesFromGdc === 'function') {
           App.GDC.mergeUnitAbilitiesFromGdc(App.state.factions);
         }
+        try { applyWeaponFixes(App.state.factions); } catch (_) {}
 
         // Reconcile: prefer 40kdc strat text, fall back to GDC. Runs AFTER the
         // GDC merge so detachment.gdcStratagems is populated. Self-improving —
@@ -1190,6 +1308,7 @@
     _build: buildFactions,
     _dcStratsFor: dcStratsFor,
     _reconcileStrats: reconcileStrats,
+    _applyWeaponFixes: applyWeaponFixes,
   };
 
   // attachments.js reaches into WahapediaParser._internal.foldKey. Provide a stub
