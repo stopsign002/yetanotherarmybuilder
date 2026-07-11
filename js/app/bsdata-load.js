@@ -69,6 +69,11 @@
           } catch (_) {}
         }
       }
+      // All factions loaded — refresh the current army's entry snapshots so
+      // cards/details render current datasheet data, not add-time copies.
+      if (typeof App.rehydrateEntryUnitData === 'function') {
+        try { App.rehydrateEntryUnitData(); } catch (_) {}
+      }
     } catch (err) {
       console.error('[BSData] Auto-load failed:', err);
       UI.toast('Could not load BSData: ' + err.message, 'error', 6000);

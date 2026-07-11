@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.10-2',
+    version:     '2026.07.11-1',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-11', kind: 'fix',
+        title: 'Saved armies pick up current datasheet data',
+        description:
+          'Army entries kept a frozen copy of the unit from the moment it was ' +
+          'added \u2014 so cards and details for older entries missed everything ' +
+          'the data layer learned since (core ability flags, wargear ' +
+          'abilities like the Teleport Crest\u2019s Deep Strike, corrected ' +
+          'points). Entries now refresh from current data on every load.',
+      },
       {
         date: '2026-07-10', kind: 'fix',
         title: 'Leagues of Votann 11e points verified current',
