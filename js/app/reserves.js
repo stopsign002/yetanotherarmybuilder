@@ -1,9 +1,10 @@
 // app/reserves.js — "Reserves": the user's owned-units stockpile with
 // per-unit quantities. Layers on top of collection.js (which tracks paint
-// status, no quantities). The Build-mode unit pane defaults to a Reserves
-// view that lists only units the user has at least one of; the controls
-// to actually adjust quantities live in the right-hand Details pane via
-// a combined "stockpile" widget shared with requisitions.js.
+// status, no quantities). The Build-mode unit pane offers a Reserves
+// view that lists only units the user has at least one of (the pane
+// itself defaults to the "Faction units" view — see _view below); the
+// controls to actually adjust quantities live in the right-hand Details
+// pane via a combined "stockpile" widget shared with requisitions.js.
 //
 // Soft-warns the army list when a unit's army count exceeds owned qty.
 //
@@ -28,7 +29,12 @@
 
   const QTY = Object.create(null);
 
-  let _view = VIEW_RESERVES;
+  // Default view = "Faction units": every unit in the selected faction.
+  // New users land here rather than on an empty Reserves pane (owning
+  // nothing yet) or the game-wide "All factions" firehose. Returning
+  // users keep whatever they last picked — loadPersisted() overrides
+  // this from yaab_units_view.
+  let _view = VIEW_ALL;
   let _predicateRegistered = false;
   let _detailObserver = null;
   let _armyObserver = null;

@@ -26,9 +26,27 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-10',
-    lastUpdated: '2026-07-11T18:00:00Z',
+    version:     '2026.07.11-12',
+    lastUpdated: '2026-07-11T19:30:00Z',
     entries: [
+      {
+        date: '2026-07-11', kind: 'change',
+        title: 'Units pane opens on your faction’s units',
+        description:
+          'The unit-select pane now defaults to the “Faction units” view — ' +
+          'the units of your selected faction — instead of your Reserves. ' +
+          'New users no longer land on an empty pane or the whole-game unit ' +
+          'list. If you’ve switched the view before, your choice is remembered.',
+      },
+      {
+        date: '2026-07-11', kind: 'change',
+        title: 'Mobile now opens on the Army tab',
+        description:
+          'On phones, first-time visitors used to land in the Units grid, ' +
+          'which is confusing with no army built yet. The app now opens on ' +
+          'the Army tab instead. If you’ve used the app before, it still ' +
+          'remembers and restores whichever tab you were last on.',
+      },
       {
         date: '2026-07-11', kind: 'fix',
         title: 'FRAME keyword added to vehicles (11e errata)',

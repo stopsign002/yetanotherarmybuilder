@@ -92,7 +92,11 @@
       const saved = localStorage.getItem(PANEL_KEY);
       if (saved === 'army' || saved === 'units' || saved === 'detail') return saved;
     } catch (_) {}
-    return 'units';
+    // First-time default: land on the Army panel, not the Units grid.
+    // Dropping a new user straight into the unit picker (with no army
+    // context yet) reads as confusing; the Army tab is the friendlier
+    // starting point. Returning users keep their last-active tab above.
+    return 'army';
   }
 
   function syncActiveTab(panel) {
