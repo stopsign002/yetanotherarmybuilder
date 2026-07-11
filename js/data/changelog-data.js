@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-7',
+    version:     '2026.07.11-8',
     lastUpdated: '2026-07-11T18:00:00Z',
     entries: [
+      {
+        date: '2026-07-11', kind: 'fix',
+        title: 'Aircraft updated to 11th-edition movement rules',
+        description:
+          'In 11th edition GW removed normal movement from Aircraft \u2014 they ' +
+          'no longer have a Move value (shown as \u201c-\u201d) and instead ' +
+          'reposition via Ingress, and the old Hover ability was removed from ' +
+          'them. The community datasets still carried the 10th-edition M20" ' +
+          '(plus leftover Hover), so all 40 Aircraft (Stormraven, Heldrake, ' +
+          'Valkyrie, Manta, Dakkajet\u2026) now show Move \u201c-\u201d with ' +
+          'Hover stripped. A few former Aircraft that GW turned into hover-only ' +
+          'units keep their move \u2014 flag any that look wrong.',
+      },
       {
         date: '2026-07-11', kind: 'fix',
         title: 'Datasheet corrections verified against official GW faction packs',
