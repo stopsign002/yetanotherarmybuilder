@@ -241,6 +241,35 @@
     (u.keywords || []).concat(u.faction_keywords || [])
       .some((k) => /^aircraft$/i.test(String(k).trim()));
 
+  // GW 11e errata added the FRAME keyword to most vehicles (faction-pack
+  // RULES-UPDATES "Keywords Section: Add 'FRAME'"). Upstream 40kdc hasn't
+  // applied it yet, so add it here. Self-healing: skipped if already present.
+  // (All other datasheet errata — Custodes/Tyranids/SM weapon + stat + other
+  // keyword changes — are already in the 40kdc data, verified 2026-07-11.)
+  const FRAME_UNITS = new Set([
+    // Chaos Space Marines
+    'chaos-land-raider', 'chaos-predator-annihilator', 'chaos-predator-destructor',
+    'chaos-rhino', 'chaos-vindicator', 'khorne-lord-of-skulls', 'noctilith-crown',
+    // Necrons
+    'annihilation-barge', 'catacomb-command-barge', 'convergence-of-dominion',
+    'ghost-ark', 'monolith', 'night-scythe', 'obelisk', 'tesseract-vault',
+    'triarch-stalker', 'seraptek-heavy-construct',
+    // Orks
+    'battlewagon', 'blitza-bommer', 'burna-bommer', 'dakkajet', 'hunta-rig',
+    'kill-rig', 'stompa', 'trukk',
+    // Space Marines
+    'drop-pod', 'gladiator-lancer', 'gladiator-reaper', 'gladiator-valiant',
+    'hammerfall-bunker', 'impulsor', 'invader-atv', 'land-raider',
+    'land-raider-crusader', 'land-raider-redeemer', 'predator-annihilator',
+    'predator-destructor', 'razorback', 'repulsor', 'repulsor-executioner',
+    'rhino', 'storm-speeder-hailstrike', 'storm-speeder-hammerstrike',
+    'storm-speeder-thunderstrike', 'stormhawk-interceptor', 'stormraven-gunship',
+    'stormtalon-gunship', 'vindicator', 'whirlwind',
+    // Adeptus Custodes
+    'anathema-psykana-rhino', 'shield-captain-on-dawneagle-jetbike',
+    'venerable-land-raider', 'vertus-praetors',
+  ]);
+
   // Self-healing corrections to upstream wargear-option/composition data that
   // the picker consumes. Keyed by unit id:
   //   optionReplaces: wgo id → the item ids the swap ACTUALLY replaces
@@ -991,8 +1020,12 @@
       modelStats = modelStats.map((p) => ({ ...p, M: '-' }));
       stripHover();
     }
-    const finalKeywords = (u.keywords || []).concat(u.faction_keywords || [])
+    let finalKeywords = (u.keywords || []).concat(u.faction_keywords || [])
       .filter((k) => !(dropAircraftKw && /^aircraft$/i.test(String(k).trim())));
+    if (FRAME_UNITS.has(u.id)
+        && !finalKeywords.some((k) => /^frame$/i.test(String(k).trim()))) {
+      finalKeywords = finalKeywords.concat('Frame');
+    }
 
     return {
       id: u.id,

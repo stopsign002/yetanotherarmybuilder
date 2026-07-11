@@ -26,9 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-9',
+    version:     '2026.07.11-10',
     lastUpdated: '2026-07-11T18:00:00Z',
     entries: [
+      {
+        date: '2026-07-11', kind: 'fix',
+        title: 'FRAME keyword added to vehicles (11e errata)',
+        description:
+          '11th edition adds the FRAME keyword to most vehicles via the ' +
+          'faction-pack errata; the community dataset had not applied it yet, ' +
+          'so ~50 vehicles (Rhino, Razorback, Land Raiders, Battlewagon, ' +
+          'Monolith, Impulsor, Predators, Storm Speeders, etc.) now carry it.',
+      },
       {
         date: '2026-07-11', kind: 'fix',
         title: 'Aircraft & flyers reconciled to 11th-edition rules (from GW errata)',
