@@ -26,9 +26,30 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-4',
-    lastUpdated: '2026-07-09T21:00:00Z',
+    version:     '2026.07.11-5',
+    lastUpdated: '2026-07-11T12:00:00Z',
     entries: [
+      {
+        date: '2026-07-11', kind: 'feature',
+        title: 'Conditional invulnerable saves now shown',
+        description:
+          'Units whose invulnerable save only applies in certain cases (the ' +
+          'Knights’ ranged-only ion shields, the Judiciar’s melee-only 4+, ' +
+          'the Archon’s Shadowfield) now show an asterisk on the save in ' +
+          'the details pane and on datacards, with a footnote saying when it ' +
+          'applies. ~40 units gained their missing condition text.',
+      },
+      {
+        date: '2026-07-11', kind: 'fix',
+        title: 'Statline corrections confirmed by two independent sources',
+        description:
+          'A new weekly checker cross-references every datasheet against ' +
+          'BOTH wahapedia and New Recruit’s dataset, and only auto-corrects ' +
+          'when the two agree — single-source claims (like the stale ' +
+          'wahapedia stats behind yesterday’s revert) go to manual review ' +
+          'instead. First pass: the Defiler (CSM / Death Guard / Thousand ' +
+          'Sons) is M12" T11 W18, and the Venerable Dreadnought moves 8".',
+      },
       {
         date: '2026-07-11', kind: 'fix',
         title: 'Reverted three statline changes \u2014 official datasheets win',

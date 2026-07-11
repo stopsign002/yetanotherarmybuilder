@@ -1464,7 +1464,7 @@
               return `
                 <div class="dcc-stat-cell dcc-stat-cell-sv">
                   <span class="dcc-stat-key">${esc(k)}</span>
-                  <span class="dcc-stat-val dcc-stat-val-combo">${esc(v)} / ${esc(formatInvuln(unit.invulnSave))}</span>
+                  <span class="dcc-stat-val dcc-stat-val-combo">${esc(v)} / ${esc(formatInvuln(unit.invulnSave))}${unit.invulnNote ? '*' : ''}</span>
                 </div>`;
             }
             return `
@@ -1482,9 +1482,14 @@
       // the stat columns aligned on rows that have no shield.
       const v = anyProfInv ? profInvs[i] : (unit.invulnSave || '');
       return v
-        ? `<div class="dcc-invuln-shield"><span class="dcc-invuln-val">${fmtInv(v)}</span><span class="dcc-invuln-lbl">Inv</span></div>`
+        ? `<div class="dcc-invuln-shield"><span class="dcc-invuln-val">${fmtInv(v)}${unit.invulnNote ? '*' : ''}</span><span class="dcc-invuln-lbl">Inv</span></div>`
         : '<div class="dcc-invuln-spacer"></div>';
     }
+    // Conditional-invuln footnote — pairs with the `*` on the combined SV
+    // cell / stencil shield. Unstyled beyond a small muted line for now.
+    const invulnNoteHtml = (display.invuln && unit.invulnSave && unit.invulnNote)
+      ? `<div class="dcc-invuln-note" style="font-size:.62em;opacity:.75">* ${esc(String(unit.invulnNote))}</div>`
+      : '';
     const statsHtml = (display.stats && presentStats.length > 0)
       ? statProfiles.map((prof, i) => {
           const label = (multiStat && prof.name)
@@ -1496,7 +1501,7 @@
           return shieldMode
             ? label + `<div class="dcc-statline">${row}${shieldFor(i)}</div>`
             : label + row;
-        }).join('')
+        }).join('') + invulnNoteHtml
       : '';
 
     // Stencil header carries a faction "kicker" (eyebrow) above the name.

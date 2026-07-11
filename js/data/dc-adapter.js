@@ -167,19 +167,25 @@
   // upstream in 40kdc-data PR #76.)
   const UNIT_ABILITY_FIXES = {};
 
-  // Expect-gated STATLINE corrections, verified against the live wahapedia
-  // 11e datasheet (scheduled fixer: ~/sites/base/wahapedia-fixer.sh — every
-  // entry cites a human/agent live-page check). `expect` pins the upstream
-  // (wrong) values on the FIRST profile; the fix applies only while upstream
-  // still matches, so the entry no-ops the moment 40kdc ships corrected (or
-  // GW re-changed) stats and can then be deleted.
+  // Expect-gated STATLINE corrections. `expect` pins the upstream (wrong)
+  // values on the FIRST profile; the fix applies only while upstream still
+  // matches, so the entry no-ops the moment 40kdc ships corrected (or GW
+  // re-changed) stats and can then be deleted. The special expect key `INV`
+  // pins the CURRENT invulnerable save ('5+' form, '' = none).
   //   'faction_id::unit_id': {
-  //     expect: { T: '10', W: '14' },
+  //     expect: { T: '10', W: '14', INV: '5+' },
   //     set: {
   //       profiles: [{ name: '', M: '12"', T: '11', SV: '3+', W: '18', LD: '6+', OC: '5' }],
   //       invuln: '5+',        // optional; null clears
+  //       invulnNote: 'Against ranged attacks only',  // optional conditional-
+  //                            // invuln note (null clears); shown as `5+*`
   //     },
   //   },
+  // Two sources, same shape and gating:
+  //   1. This hand-authored map (wins on key collision).
+  //   2. window.DC.statFixes — the consensus overlay appended to the bundle by
+  //      the weekly stat checker (~/sites/base/wahapedia-audit.py): fixes where
+  //      wahapedia AND New Recruit (BSData wh40k-11e) agree against our data.
   const UNIT_STAT_FIXES = {};
 
   // Self-healing corrections to upstream wargear-option/composition data that
@@ -488,13 +494,18 @@
     const u = uv.raw || uv;
     const profiles = u.profiles && u.profiles.length ? u.profiles : [{ name: u.name }];
     let modelStats = profiles.map(profileStats);
-    let invulnOverride;   // undefined = untouched; null/'N+' = forced
-    const statFix = UNIT_STAT_FIXES[u.faction_id + '::' + u.id];
+    let invulnOverride;      // undefined = untouched; null/'N+' = forced
+    let invulnNoteOverride;  // undefined = untouched; null/string = forced
+    const statFix = UNIT_STAT_FIXES[u.faction_id + '::' + u.id]
+      || (DC.statFixes || {})[u.faction_id + '::' + u.id];
     if (statFix && statFix.set) {
       const first0 = modelStats[0] || {};
+      const prof0 = profiles[0] || {};
+      const inv0 = prof0.invuln_sv != null ? sv(prof0.invuln_sv) : '';
       const exp = statFix.expect || {};
-      const stillWrong = Object.keys(exp).every(
-        (k) => String(first0[k]) === String(exp[k]));
+      const stillWrong = Object.keys(exp).every((k) => (k === 'INV'
+        ? String(inv0 || '') === String(exp[k] || '')
+        : String(first0[k]) === String(exp[k])));
       if (stillWrong) {
         if (Array.isArray(statFix.set.profiles) && statFix.set.profiles.length) {
           modelStats = statFix.set.profiles.map((p) => ({
@@ -502,6 +513,7 @@
           }));
         }
         if ('invuln' in statFix.set) invulnOverride = statFix.set.invuln;
+        if ('invulnNote' in statFix.set) invulnNoteOverride = statFix.set.invulnNote;
       }
     }
     const first = profiles[0] || {};
@@ -870,6 +882,10 @@
       invulnSave: invulnOverride !== undefined
         ? invulnOverride
         : (first.invuln_sv != null ? sv(first.invuln_sv) : null),
+      // Conditional-invuln note ("Against ranged attacks only"). 40kdc's
+      // schema has no field for it, so it only arrives via UNIT_STAT_FIXES /
+      // the DC.statFixes consensus overlay.
+      invulnNote: invulnNoteOverride !== undefined ? invulnNoteOverride : null,
       weapons: weaponRows(uv.weapons),
       abilities,
       wargearAbilities,

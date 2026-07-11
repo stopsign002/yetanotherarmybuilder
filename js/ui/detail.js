@@ -302,7 +302,7 @@
           return `<div class="detail-stat-cell detail-stat-pillar detail-stat-pillar-sv">
             <span class="stat-name detail-stat-pillar-label">SV</span>
             <span class="stat-value detail-stat-pillar-value">${esc(String(v))}</span>
-            <span class="detail-stat-pillar-invuln">${esc(String(unit.invulnSave))} INV</span>
+            <span class="detail-stat-pillar-invuln">${esc(String(unit.invulnSave))}${unit.invulnNote ? '*' : ''} INV</span>
           </div>`;
         }
         return `<div class="detail-stat-cell detail-stat-pillar">
@@ -321,6 +321,10 @@
             ${presentStats.map(k => renderPillar(k, prof)).join('')}
           </div>`;
       });
+      // Conditional-invuln footnote (matches the `*` on the SV pillar).
+      if (unit.invulnSave && unit.invulnNote) {
+        html += `<div class="detail-invuln-note" style="font-size:11px;color:var(--text-muted);margin-top:2px">* ${esc(String(unit.invulnNote))}</div>`;
+      }
       html += `</div>`;
     }
 
