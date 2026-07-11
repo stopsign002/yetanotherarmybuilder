@@ -26,21 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-8',
+    version:     '2026.07.11-9',
     lastUpdated: '2026-07-11T18:00:00Z',
     entries: [
       {
         date: '2026-07-11', kind: 'fix',
-        title: 'Aircraft updated to 11th-edition movement rules',
+        title: 'Aircraft & flyers reconciled to 11th-edition rules (from GW errata)',
         description:
-          'In 11th edition GW removed normal movement from Aircraft \u2014 they ' +
-          'no longer have a Move value (shown as \u201c-\u201d) and instead ' +
-          'reposition via Ingress, and the old Hover ability was removed from ' +
-          'them. The community datasets still carried the 10th-edition M20" ' +
-          '(plus leftover Hover), so all 40 Aircraft (Stormraven, Heldrake, ' +
-          'Valkyrie, Manta, Dakkajet\u2026) now show Move \u201c-\u201d with ' +
-          'Hover stripped. A few former Aircraft that GW turned into hover-only ' +
-          'units keep their move \u2014 flag any that look wrong.',
+          '11th edition reworked flyers, and GW applied it through the faction-' +
+          'pack errata text (which overrides the datasheet cards). Two cases, ' +
+          'now both handled: aircraft that stayed Aircraft lost normal movement ' +
+          '(Move \u201c-\u201d, Ingress instead) and lost Hover \u2014 ' +
+          'Stormhawk, Stormtalon, Doom Scythe, Valkyrie, Dakkajet, etc. Aircraft ' +
+          'that were turned into hover units kept a real Move and Hover and ' +
+          'dropped the Aircraft keyword \u2014 Heldrake (12"), Night Scythe ' +
+          '(14"), Stormraven (14"), Lord Discordant (14"). The community ' +
+          'datasets still had the old 10th-edition M20", so these were all ' +
+          'wrong before.',
       },
       {
         date: '2026-07-11', kind: 'fix',
@@ -49,13 +51,10 @@
           'Cross-checked the disputed units against Games Workshop\u2019s own ' +
           'free faction-pack and Imperial Armour PDFs. Fixes where BOTH our ' +
           'data and wahapedia were wrong (a blind spot the two-source check ' +
-          'can\u2019t catch): Mutilators are M5" W5 (not M4"/W4); the World ' +
-          'Eaters Heldrake moves 20" like every other Heldrake (upstream had ' +
-          'it at 12"); the Skull Altar has the Infiltrators ability. Also ' +
-          'confirmed ~20 flagged units were already correct \u2014 the ' +
-          'aircraft \u201c20+\u201d minimum-move (Stormraven, Corvus, ' +
-          'Heldrake, Manta, Harridan, Night Scythe\u2026) was a New Recruit ' +
-          'data quirk, not an error in ours.',
+          'can\u2019t catch): Mutilators are M5" W5 (not M4"/W4), and the ' +
+          'Skull Altar has the Infiltrators ability. (Aircraft movement was ' +
+          'also flagged here and is now handled properly \u2014 see the ' +
+          'flyers entry above.)',
       },
       {
         date: '2026-07-11', kind: 'fix',

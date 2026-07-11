@@ -208,34 +208,35 @@
     // minimum move). Our WE copy + New Recruit share the M12" error; wahapedia
     // has the correct M20". Move corrected here; the missing Aircraft KEYWORD
     // is a separate upstream bug flagged for the 40kdc PR.
-    // World Eaters Heldrake: upstream ships it as a NON-Aircraft at M12", while
-    // the CSM/EC/TS Heldrakes carry the Aircraft keyword. The Heldrake IS an
-    // Aircraft, so like every 11e Aircraft its Move is "-" (see AIRCRAFT rule
-    // below). Pin the wrong upstream stats and correct the whole profile;
-    // the missing Aircraft KEYWORD is flagged for the upstream PR (no keyword
-    // mechanism here, so the blanket Aircraft rule can't catch this copy).
-    'world-eaters::heldrake': {
-      expect: { M: '12"', T: '9', W: '12' },
-      set: { profiles: [{ name: '', M: '-', T: '9', SV: '3+', W: '12', LD: '6+', OC: '0' }] },
-    },
   };
 
-  // ── 11th-edition AIRCRAFT movement rule ────────────────────────────────────
-  // In 11e GW removed normal movement from Aircraft: they no longer have a Move
-  // characteristic (printed "-") and instead arrive/reposition via the
-  // Ingress ("uppy-downy") mechanic, and the old Hover ability was removed from
-  // them. Upstream 40kdc (and wahapedia, and New Recruit) still carry the stale
-  // 10e values (M20", plus leftover Hover on many), so we normalise here:
-  // any unit with the AIRCRAFT keyword gets M="-" on every profile and its
-  // Hover ability stripped.
-  //
-  // EXCEPTIONS — a handful of former Aircraft were converted to hover-only
-  // units that DO keep a Move value (and legitimately hover). GW dropped the
-  // Aircraft keyword from those, but our stale data may still tag them Aircraft.
-  // List them here (unit id → retained Move string) to opt out of the blanket
-  // rule; these keep their move and their Hover ability. Populate as the user
-  // confirms each against the 11e datasheet.
-  const AIRCRAFT_HOVER_ONLY = {};
+  // ── 11th-edition AIRCRAFT reconciliation (GW errata-driven) ────────────────
+  // 11e reworked flyers, and GW applied it via the faction-pack RULES-UPDATES
+  // *text* (authoritative over the datasheet cards, which are often stale).
+  // Two treatments:
+  //   1. KEPT Aircraft → "Change M and OC to '-'" + Hover removed. They no
+  //      longer make normal moves (Ingress instead). This is the DEFAULT for
+  //      any AIRCRAFT-keyword unit not listed in AIRCRAFT_ERRATA below.
+  //   2. DE-AIRCRAFTED → keyword AIRCRAFT removed, given a real Move, and
+  //      Hover added/kept. These are listed explicitly (their exact Move comes
+  //      from the errata, and matches New Recruit — which tracked the patches;
+  //      40kdc + wahapedia stayed on the stale 10e M20").
+  // Keyed by unit id. Fields: M / OC (set on every profile), deAircraft
+  // (drop the AIRCRAFT keyword so it renders/plays as a normal flyer),
+  // addHover, removeHover.
+  const AIRCRAFT_ERRATA = {
+    // De-aircrafted hover flyers (errata: Change M / Remove 'AIRCRAFT'):
+    'heldrake':               { M: '12"', OC: '-', deAircraft: true },
+    'night-scythe':           { M: '14"', deAircraft: true, addHover: true },
+    'stormraven-gunship':     { M: '14"', deAircraft: true },
+    // Not an Aircraft — plain Move errata:
+    'lord-discordant-on-helstalker': { M: '14"' },
+    // Kept Aircraft with an explicit "remove Hover" note (the blanket rule also
+    // blanks M/strips Hover, but listing makes the source auditable):
+    'stormtalon-gunship':     { M: '-', OC: '-', removeHover: true },
+    'stormhawk-interceptor':  { M: '-', OC: '-', removeHover: true },
+    'doom-scythe':            { M: '-', OC: '-' },
+  };
   const isAircraft = (u) =>
     (u.keywords || []).concat(u.faction_keywords || [])
       .some((k) => /^aircraft$/i.test(String(k).trim()));
@@ -969,18 +970,29 @@
       wargearAbilities.push({ name, description: desc });
     });
 
-    // 11e Aircraft normalisation (see AIRCRAFT_HOVER_ONLY note above): blank the
-    // Move on every profile and drop the stale Hover ability, unless this unit
-    // is a listed hover-only exception.
-    if (isAircraft(u) && !AIRCRAFT_HOVER_ONLY[u.id]) {
-      modelStats = modelStats.map((p) => ({ ...p, M: '-' }));
+    // 11e Aircraft/flyer reconciliation (see AIRCRAFT_ERRATA note above).
+    let dropAircraftKw = false;
+    const er = AIRCRAFT_ERRATA[u.id];
+    const stripHover = () => {
       for (let i = abilities.length - 1; i >= 0; i--) {
         if (/^hover$/i.test(abilities[i].name)) abilities.splice(i, 1);
       }
-    } else if (AIRCRAFT_HOVER_ONLY[u.id]) {
-      const mv = AIRCRAFT_HOVER_ONLY[u.id];
-      modelStats = modelStats.map((p) => ({ ...p, M: mv }));
+    };
+    if (er) {
+      if (er.M) modelStats = modelStats.map((p) => ({ ...p, M: er.M }));
+      if (er.OC) modelStats = modelStats.map((p) => ({ ...p, OC: er.OC }));
+      if (er.deAircraft) dropAircraftKw = true;
+      if (er.removeHover) stripHover();
+      if (er.addHover && !abilities.some((a) => /^hover$/i.test(a.name))) {
+        abilities.push({ name: 'Hover', description: textFor('hover'), isCore: true });
+      }
+    } else if (isAircraft(u)) {
+      // Default kept-Aircraft rule: no normal move, Hover removed.
+      modelStats = modelStats.map((p) => ({ ...p, M: '-' }));
+      stripHover();
     }
+    const finalKeywords = (u.keywords || []).concat(u.faction_keywords || [])
+      .filter((k) => !(dropAircraftKw && /^aircraft$/i.test(String(k).trim())));
 
     return {
       id: u.id,
@@ -1000,7 +1012,7 @@
       abilities,
       wargearAbilities,
       wargearProfile,
-      keywords: (u.keywords || []).concat(u.faction_keywords || []),
+      keywords: finalKeywords,
       wargearOptions: [],
       points: pointsOptions.length ? pointsOptions[0] : 0,
       pointsOptions,
