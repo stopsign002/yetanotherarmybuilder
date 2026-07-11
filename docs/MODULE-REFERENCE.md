@@ -128,6 +128,30 @@ Cross-cutting docs:
 - **DOM:** none.
 - **Notes:** Calls `applyImportedSelections` per-faction-loaded so the user sees their selection sync the moment its data lands; final safety pass after load completes.
 
+### `js/app/rehydrate.js`
+- **Purpose:** Refresh saved armies' embedded `entry.unitData` snapshots against freshly-parsed faction data.
+- **Exports:** `App.rehydrateArmy`. Registers `App.hooks.armyChange` + `selectionChange`.
+- **Depends on:** `App.state`, `ArmyManager`.
+- **Storage:** reads/writes `localStorage.yaab_armies`.
+- **DOM:** none.
+- **Notes:** Army entries snapshot the full unit object at add-time and persist it (localStorage + cloud). Without rehydration, later data-layer changes (new ability flags, corrected points, `wargearProfile`) never reach old entries, so printed cards / the details pane render a stale datasheet. See `entry-rehydrate.js` for the per-mutation counterpart.
+
+### `js/app/entry-rehydrate.js`
+- **Purpose:** Per-entry refresh of `unitData` snapshots on every `armyChange`.
+- **Exports:** `App.rehydrateEntryUnitData`. Registers `App.hooks.armyChange`.
+- **Depends on:** `App.state`, current faction data from `window.DC`.
+- **Storage:** none directly (mutates the in-memory army; `autosave.js` persists).
+- **DOM:** none.
+- **Notes:** Complements `rehydrate.js` — keeps the currently-edited army's entries current so a months-old add-time copy doesn't survive across data refreshes.
+
+### `js/app/id-migration.js`
+- **Purpose:** One-time, per-device migration of stale Reserves / Requisitions unit-ids from dormant BattleScribe GUIDs to current 40kdc slug ids.
+- **Exports:** none (runs on load).
+- **Depends on:** `App.state.allUnits`, reserves/requisitions storage.
+- **Storage:** `localStorage.yaab_reserves`, `yaab_requisitions`; sentinel `yaab_idmig_v` (records the completed migration version so it runs once).
+- **DOM:** none.
+- **Notes:** Reserves/Requisitions store only bare `{unitId: qty}` (no `unitData` snapshot), so the army rehydration path didn't cover them. Matches old GUIDs to current slug ids by unit name.
+
 ### `js/app/selections.js`
 - **Purpose:** Chapter sub-dropdown + detachment dropdown population + import sync.
 - **Exports:** `App.updateChapterDropdown`, `App.updateDetachmentOptions`, `App.applyImportedSelections`.
@@ -135,6 +159,22 @@ Cross-cutting docs:
 - **Storage:** none.
 - **DOM:** `#army-chapter-group`, `#army-chapter-select`, `#army-detachment-select`.
 - **Notes:** Chapter dropdown only visible when faction is a `VIRTUAL_PARENT`. Changes cascade — selecting a faction wipes chapter & detachment.
+
+### `js/app/detachment-picker.js`
+- **Purpose:** The "Detachments" box — multi-select detachment picker (replaced the single-select dropdown).
+- **Exports:** `App.renderDetachmentPicker`, `App.toggleDetachment`, `App.setSelectedDetachments`, `App.getAvailableDetachments`, `App.getActiveEnhancements` (also proxies `App.getCurrentFaction` / `getDetachmentFaction`). Registers `App.hooks.bootstrap`.
+- **Depends on:** `App.state`, `UI.updateFactionRules`, `UI.renderDetachmentDetail`.
+- **Storage:** none (selection lives in `App.state`, persisted with the army).
+- **DOM:** `#detachments-body`, `#detachments-total`.
+- **Notes:** Lists every detachment available to the army with its 40kdc `detachment_points`. Selected detachments' rules / enhancements / stratagems render as a UNION in the Army Rules box (`ui/faction-rules.js`); their enhancements feed `App.getActiveEnhancements` for character assignment.
+
+### `js/app/sm-chapter-filter.js`
+- **Purpose:** Space Marine chapter roster delineation.
+- **Exports:** none — registers an `App.hooks.rosterFilters` predicate.
+- **Depends on:** `App.state`, `App.CHAPTER_PARENTS`, `App.getEffectiveFilter`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** In 40kdc 11e ALL Space Marine units live under one faction (`Imperium - Adeptus Astartes - Space Marines`); the individual chapter factions ship zero units, and `CHAPTER_PARENTS` maps each chapter → that SM parent so selecting a chapter surfaces the parent's ENTIRE roster. This filter narrows it back to generic-codex units + the selected chapter's own units.
 
 ### `js/app/resize.js`
 - **Purpose:** Drag-to-resize handles for left/right panel widths.
@@ -304,6 +344,14 @@ Cross-cutting docs:
 - **DOM:** `#yaab-hero-cta`, `.yaab-search-wrap`, `.yaab-kbd-hint`.
 - **Notes:** Wraps `#search-input` in `.yaab-search-wrap` so the Cmd+K badge can be absolutely positioned. The wrap's `width: 100%` is essential — `expand-pane.css` relies on it as a flex item.
 
+### `js/app/search-clear.js`
+- **Purpose:** Adds a "×" clear button to the unit-search box.
+- **Exports:** none. Registers `App.hooks.bootstrap`.
+- **Depends on:** `#search-input`, the `.yaab-search-wrap` from `hero-state.js` (wraps the input itself in `.search-input-wrap` if that wrap is absent).
+- **Storage:** none.
+- **DOM:** `#search-input`; injects the clear button + optional wrap.
+- **Notes:** On click empties + refocuses the field and dispatches an `input` event so the roster re-renders through the normal `events.js` path.
+
 ### `js/app/legends-toggle.js`
 - **Purpose:** Show/hide `[Legends]` units + corner badge.
 - **Exports:** Toolbar button + `rosterFilters` predicate + `cardClassContributors` (`.unit-legends`).
@@ -328,6 +376,22 @@ Cross-cutting docs:
 - **DOM:** `points-override-*` classes.
 - **Notes:** Applied when reading unit cost; original BSData value is preserved.
 
+### `js/app/wargear-picker.js`
+- **Purpose:** Wargear picker in the unit details pane (configure-then-add).
+- **Exports:** `App.WargearPicker` (incl. `takeSelections()`).
+- **Depends on:** `unit.wargearProfile` (built by `dc-adapter.js` from 40kdc options / budgets / composition tiers), `App.state`, `events.js` (Add-to-Army).
+- **Storage:** none — the pending config is in-memory and snapshotted onto the new entry on add.
+- **DOM:** renders under the Add-to-Army box; `#detail-squad-select`.
+- **Notes:** Renders only for units with a structured `wargearProfile`. Holds a pending config for the currently-viewed unit; Add-to-Army (`events.js`) calls `App.WargearPicker.takeSelections()` to snapshot it onto the entry.
+
+### `js/app/attachments.js`
+- **Purpose:** Leader / bodyguard attachment rule logic.
+- **Exports:** `App.Attachments` (incl. `canAttach(source, target)`).
+- **Depends on:** `WahapediaParser._internal.foldKey` (stubbed by `dc-adapter.js`), `App.state`.
+- **Storage:** none.
+- **DOM:** none.
+- **Notes:** Single source of truth for BOTH the right-panel "Led By" badge (`ui/detail.js`) and the drag-to-attach drop-target highlight (`ui/flip-animations.js`). Soft enforcement — validators block on `canAttach`, drag-and-drop just colours the outline.
+
 ### `js/app/favorites.js`
 - **Purpose:** Star/unstar units; Favorites + Recents chips on roster.
 - **Exports:** Roster chips + detail-panel star button (dynamic html getter).
@@ -343,6 +407,22 @@ Cross-cutting docs:
 - **Storage:** `localStorage.yaab_collection` (`{ unitId: status }`), `yaab_show_collection_badges` (BUILD-mode opt-in).
 - **DOM:** `.collection-detail-widget`, dashboard modal.
 - **Notes:** Mode-gated. Badge toggle persists & syncs cross-tab via `storage` event. Detail widget is hidden on mobile.
+
+### `js/app/reserves.js`
+- **Purpose:** "Reserves" — owned-units stockpile with per-unit quantities; the Build-mode unit-pane default view.
+- **Exports:** `App.Reserves`. Registers `bootstrap`, `armyChange`, `modeChange`, `rosterFilters`, `selectionChange`.
+- **Depends on:** `collection.js`, `App.renderUnitRosterWithContext`, `App.getEffectiveFilter`, `App.getMode`.
+- **Storage:** `localStorage.yaab_reserves` (`{unitId: qty}`, **cloud-synced**), `yaab_units_view` (active unit-pane view: `reserves` / `requisitions` / `all`).
+- **DOM:** `#reserves-view-toggle`, `#reserves-pts-badge`, `#unit-grid`, `#army-entry-list`, `#unit-detail-panel`.
+- **Notes:** Layers on `collection.js` (paint status, no quantities). Owns the unit-pane view toggle AND the combined stockpile widget in the Details pane, shared with `requisitions.js`.
+
+### `js/app/requisitions.js`
+- **Purpose:** "Requisition Requests" — wishlist of units to acquire/paint next, with per-unit quantity.
+- **Exports:** `App.Requisitions`. Registers `bootstrap`, `modeChange`, `rosterFilters`, `selectionChange`.
+- **Depends on:** `reserves.js` (owns the shared view toggle + stockpile widget), `App.renderUnitRosterWithContext`, `App.getMode`.
+- **Storage:** `localStorage.yaab_requisitions` (`{unitId: qty}`, **cloud-synced**); reads `yaab_units_view`.
+- **DOM:** `#unit-grid`.
+- **Notes:** Sibling to `reserves.js`. Both quantity bags are migrated from old BSData ids by `id-migration.js`.
 
 ### `js/app/starter-lists.js`
 - **Purpose:** Curated starter army gallery + "Surprise me" random.
@@ -488,6 +568,14 @@ Cross-cutting docs:
 - **DOM:** `.mobile-pts-pill`, `.mobile-back-btn`, `body[data-mobile-panel]`.
 - **Notes:** Re-evaluates on resize. Desktop is untouched.
 
+### `js/app/mobile-history.js`
+- **Purpose:** Wires the mobile panel + More drawer into the browser history stack.
+- **Exports:** `App.setMobilePanel` (mobile-aware panel switch). Registers `App.hooks.bootstrap`.
+- **Depends on:** `window.matchMedia` (≤820px), `App.hooks`, browser history / `popstate`.
+- **Storage:** none.
+- **DOM:** none directly (drives panel + drawer state).
+- **Notes:** Active only on mobile — the back button moves Detail → Units and closes the More drawer instead of leaving the site. On desktop the wraps are no-ops and `popstate` is ignored. `App.setMobilePanel` is also defined by `mobile-shell.js` / `pwa-install.js`; `index.html` load order decides the final binding.
+
 ### `js/app/mode-shell.js`
 - **Purpose:** Build / Collect / Play / Cards mode container switching.
 - **Exports:** `App.setMode(modeName)`, `App.getMode()`. Owns `App.fireModeChange`.
@@ -612,13 +700,10 @@ Cross-cutting docs:
 - **DOM:** `#army-name-input`, `#points-limit-input`, `#points-current`, `#points-limit-display`, `#points-bar-pct`, `#points-bar-remaining`, `#points-bar`, `.points-summary`, `#unit-grid`, `.army-entry`, `.army-entry-card`, `.army-qty-input`, `.army-entry-remove`, `[data-build-hero="*"]` mirrors.
 - **Notes:** Dual-update path: legacy `#points-*` spans AND `[data-build-hero=*]` mirrors so `build-mode.js` doesn't lag a render behind. Enhancements rendered as badges under the name. Drag-handle stripe on the left, remove button top-right.
 
-### `js/ui/datasheet.js`
-- **Purpose:** GW-style datasheet print (single + whole-army bundle).
-- **Exports:** `UI.renderDatasheet`, `UI.renderArmyDatasheets`, `UI.printUnitDatasheet`, `UI.printArmyDatasheets`, `UI.printCurrentArmy`. Detail-action button.
-- **Depends on:** `App.state`, `App.hooks.detailActions`.
-- **Storage:** none.
-- **DOM:** datasheet-print container injected on demand.
-- **Notes:** Print CSS hides everything except datasheet content.
+> **Note:** there is no longer a standalone `js/ui/datasheet.js` module. GW-style
+> datasheet rendering now lives in `js/ui/tournament-export.js` (`renderDatasheetPages`,
+> the full-datasheet section of the PDF bundle) and `js/ui/cards-mode.js` (printable
+> data cards). Nothing else references the old `UI.printDatasheet*` API.
 
 ### `js/ui/action-center.js`
 - **Purpose:** Slide-in sheet replacing Tools/More dropdowns. Sections: Game Day / Analyze / Print & Export / Browse / Collection / Settings.
@@ -653,12 +738,12 @@ Cross-cutting docs:
 - **Notes:** Owns the quick-stratagems drawer in this mode.
 
 ### `js/ui/cards-mode.js`
-- **Purpose:** Printable data cards mode.
-- **Exports:** `UI.renderUnitCard`, `UI.renderRuleCard`, `UI.renderStratagemCard` + visibility toggles.
-- **Depends on:** `App.hooks`, `UI.escapeHtml`, localStorage.
-- **Storage:** `localStorage.yaab_cards_prefs` (display, texture, layout, typography, cardBack).
-- **DOM:** `#cards-mode` host, `#cards-texture-style` injected stylesheet.
-- **Notes:** `@media print` CSS hides everything else. Textures via inline SVG data URLs (`feTurbulence`). Card-back images stored in IDB (`YaabDB.images`), not in prefs. Typography multipliers 0.5 – 2.0×.
+- **Purpose:** Cards mode — full-page printable data-card designer (owns `#cards-mode`).
+- **Exports:** `App.openCardsMode` (entry point); shares `App.setMode` / `App.getMode` with `mode-shell.js`.
+- **Depends on:** `App.hooks`, `App.state`, `UI.escapeHtml`, `YaabDB.images`, localStorage.
+- **Storage:** `localStorage.yaab_cards_prefs` (live display/texture/layout/typography prefs), `yaab_cards_presets` (named snapshots of every setting — **cloud-synced**), `yaab_cards_selection` (per-category deselections — device-local), `yaab_cards_spill` (per-card manual page-split overrides — device-local).
+- **DOM:** `#cards-mode` host; injected `#cards-texture-style` + `#cards-print-style` stylesheets; `#cards-spill-panel` / `#cards-spill-backdrop`.
+- **Notes:** `@media print` CSS hides everything else. Textures via inline SVG data URLs (`feTurbulence`). Card-back images stored in IDB (`YaabDB.images`), not in prefs. Typography multipliers 0.5 – 2.0×. Presets sync via the KV state bag; selection + spill stay device-local.
 
 ### `js/ui/topbar-export.js`
 - **Purpose:** Top-bar Export ▾ button mirror.
@@ -730,7 +815,7 @@ Cross-cutting docs:
 - **Depends on:** `App.hooks.bootstrap`.
 - **Storage:** sessionStorage `yaab_warmed_up`.
 - **DOM:** `#cold-start-overlay`, `#cold-start-close`.
-- **Notes:** **Orphan** — not currently in `index.html`.
+- **Notes:** Loaded in `index.html`. First-visit splash + cold/warm-start detection while the dataset loads.
 
 ### `js/ui/list-coach.js`
 - **Purpose:** Heuristic list-coach modal (composition / threats / synergy scoring).
@@ -738,7 +823,7 @@ Cross-cutting docs:
 - **Depends on:** `App.state.currentArmy`, `App.hooks.armyToolbarActions`.
 - **Storage:** none.
 - **DOM:** list-coach modal.
-- **Notes:** **Orphan** — not currently in `index.html`. Heuristic scoring only.
+- **Notes:** Loaded in `index.html`; registers a toolbar action. Heuristic scoring only (composition / threats / points / synergy).
 
 ### `js/ui/analytics.js`
 - **Purpose:** Army analytics dashboard modal. Live via `armyChange`.
@@ -941,7 +1026,7 @@ The parser output shape is now the contract `dc-adapter.js` emits from `window.D
 - **Exports:** N/A (produces `js/vendor/dc-bundle.js`).
 - **Depends on:** `@alpaca-software/40kdc-data` (built from 40kdc-data git `main`, not npm) + the `40kdc-abilities` text store.
 - **Storage:** writes `js/vendor/dc-bundle.js`. `abilities-index.json` is generated (do not hand-edit).
-- **Notes:** Auto-refreshed + redeployed by `~/sites/base/refresh-40kdc.sh` (daily→weekly), which validates against the live adapter before deploying. See `build/README.md` for rebuild commands.
+- **Notes:** Auto-refreshed + redeployed by `~/sites/base/refresh-40kdc.sh` (weekly, Mondays; daily until the 2026-07-01 cutover), which validates against the live adapter before deploying. See `build/README.md` for rebuild commands.
 
 ### `scripts/mirror-bsdata.mjs` (DORMANT)
 - **Purpose:** **DORMANT — kept for rollback.** Cron-driven Node 20 script that diffs `BSData/wh40k-10e` blob SHAs and downloads only changed files into `data/bsdata/`.

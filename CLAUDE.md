@@ -4,7 +4,7 @@
 
 A client-only static site that sources Warhammer 40k **11th-edition** data from the community **40kdc dataset** (`wn-mitch/40kdc-data`) and lets a user build, share, and play 40k armies. The dataset is built offline into a single committed browser bundle, `js/vendor/dc-bundle.js`, which exposes a global `window.DC` (collections: units, factions, weapons, detachments, stratagems, enhancements, abilities, plus an embedded `abilityText` store). `js/data/dc-adapter.js` maps `window.DC` into the exact parser output shape the old BattleScribe parser emitted (see `docs/PARSER.md`) and **overrides `window.BSData`** at load — so every downstream renderer keeps working unchanged. 40kdc ships no rules prose, so `js/gdc.js` runs as a hybrid fallback for stratagem/unit text (a bundled ability-text store covers ~98% of unit abilities). Persists user data in `localStorage`. Optional username/password account with offline-first cloud sync of armies + a small KV bag (favorites, collection, crusade rosters, etc.) via the sibling `api/` backend.
 
-The **app's own JavaScript is still buildless** (plain `<script src>`, IIFEs, namespace globals, no framework/bundler/TS). The single exception is the offline data-bundle build under `build/` (esbuild → `js/vendor/dc-bundle.js`); its output is just a static `.js` asset loaded like any other. See `build/README.md`. The bundle is auto-refreshed + frozen, not live-fetched: `window.DC` data is embedded (no runtime network calls for 40kdc data; only the GDC fallback text is fetched live), and a server cron (`~/sites/base/refresh-40kdc.sh`) rebuilds + redeploys it daily→weekly, validating against the live adapter before deploying. Do NOT hand-edit `js/vendor/dc-bundle.js` or `build/abilities-index.json` — they're generated.
+The **app's own JavaScript is still buildless** (plain `<script src>`, IIFEs, namespace globals, no framework/bundler/TS). The single exception is the offline data-bundle build under `build/` (esbuild → `js/vendor/dc-bundle.js`); its output is just a static `.js` asset loaded like any other. See `build/README.md`. The bundle is auto-refreshed + frozen, not live-fetched: `window.DC` data is embedded (no runtime network calls for 40kdc data; only the GDC fallback text is fetched live), and a server cron (`~/sites/base/refresh-40kdc.sh`) rebuilds + redeploys it weekly (Mondays; it ran daily until the 2026-07-01 cutover), validating against the live adapter before deploying. Do NOT hand-edit `js/vendor/dc-bundle.js` or `build/abilities-index.json` — they're generated.
 
 ## Running it
 
@@ -13,6 +13,12 @@ python3 -m http.server 8000
 ```
 
 Then open `http://localhost:8000/`. Cannot be opened via `file://` — the GDC fallback fetch requires http(s).
+
+**No automated test suite.** Verify changes by exercising the running site. The
+only Node tooling is: `node scripts/stamp-assets.mjs` (cache-bust stamper; `--check`
+in CI fails on a stale stamp — see "HTTP caching" below), and the analysis reports
+`scripts/parser-coverage.mjs` + `scripts/gap-report.mjs` (data-coverage diagnostics,
+not tests). The app itself needs no `npm install` — vendored deps are committed.
 
 ## File map
 
@@ -38,6 +44,10 @@ Then open `http://localhost:8000/`. Cannot be opened via `file://` — the GDC f
 | `js/app/sync.js` | `App.Sync`: offline-first cloud sync. (See `docs/SYNC.md`.) |
 | `js/ui/auth-modal.js` | `UI.showAuthModal(mode)` for login/register/recover/change-password. |
 | `js/ui/auth-button.js` | Top-bar Sign-in / username button + dropdown menu (Sync now, Change password, Sign out). |
+| `js/ui/cards-mode.js` | Cards: full-page printable data-card designer (owns `#cards-mode` + `css/cards-mode.css`). Settings rail, named presets (cloud-synced), per-card page-split. |
+| `js/app/admin.js` | Site-operator admin panel (admins only). Approve/revoke users, browse+resolve bug reports, moderate card-back images. Client for `/api/admin/*`; contract in `docs/ADMIN_API.md`. |
+| `js/app/id-migration.js` | One-time per-device shim: migrates stale reserve/requisition unit-ids from dormant BSData GUIDs to 40kdc slug ids. |
+| `js/app/entry-rehydrate.js` | Refreshes army entries' embedded `unitData` snapshots against current `window.DC` (add-time copies go stale across data refreshes). |
 | `js/data/` | Static JSON-ish data: lore, stratagems, community feed. |
 | `js/ui/` | DOM-rendering modules. Each attaches to `window.UI`. See `docs/UI.md`. |
 | `js/app/` | Bootstrap, state, events, and feature modules. Each attaches to `window.App`. See `docs/UI.md` and `docs/MODULE-REFERENCE.md`. |
@@ -53,6 +63,11 @@ Grouped by user intent. One module per row; module path is the search target.
 | Build | Faction → chapter → detachment selection | `js/app/selections.js`, `js/ui/faction-filter.js` |
 | Build | Capped-render unit roster (search, role chips, fuzzy match) | `js/ui/roster.js` |
 | Build | Unit detail panel (stats, weapons, abilities, Led By, enhancements) | `js/ui/detail.js` |
+| Build | Detachment multi-select picker (replaced the single-select dropdown) | `js/app/detachment-picker.js` |
+| Build | Wargear picker (structured 11e options, under Add-to-Army) | `js/app/wargear-picker.js` |
+| Build | Leader/bodyguard attachment ("Led By") logic | `js/app/attachments.js` |
+| Build | Space Marine chapter roster delineation (11e generic-vs-chapter split) | `js/app/sm-chapter-filter.js` |
+| Build | Army Rules + Detachment Rule + Enhancements + Stratagems panel | `js/ui/faction-rules.js` |
 | Build | Composition validation (Rule of Three, no warlord) | `js/app/validation.js` |
 | Build | Undo / redo (50-snapshot stack, Cmd/Ctrl+Z) | `js/app/history.js` |
 | Build | Starter lists + "Surprise me" generator | `js/app/starter-lists.js` |
@@ -70,6 +85,8 @@ Grouped by user intent. One module per row; module path is the search target.
 | Account & sync | Username/password auth | `js/app/auth.js`, `js/ui/auth-modal.js` |
 | Account & sync | Top-bar account button | `js/ui/auth-button.js` |
 | Account & sync | Cloud sync of armies + KV bag | `js/app/sync.js` |
+| Account & sync | Admin panel (approve/revoke users, bug reports, image moderation) | `js/app/admin.js` |
+| Account & sync | Admin-only pending-approval banner | `js/app/pending-approval-banner.js` |
 | Game Day | Match-mode overlay (CP, turns, phases, wounds, VP) | `js/app/match-mode.js` |
 | Game Day | Stratagem browser (detachment + faction + core) | `js/app/stratagems.js` |
 | Game Day | Crusade campaign tracker (rosters, XP, ranks, scars) | `js/app/crusade.js` |
@@ -80,9 +97,11 @@ Grouped by user intent. One module per row; module path is the search target.
 | Analyze | Analytics dashboard (live via `armyChange` hook) | `js/ui/analytics.js` |
 | Analyze | Damage calculator (10e attack simulator) | `js/ui/damage-calc.js` |
 | Analyze | Synergy detector (leaders, keyword combos) | `js/ui/synergy.js` |
+| Analyze | List coach (heuristic composition / threats / points / synergy modal) | `js/ui/list-coach.js` |
 | Analyze | Army-diff history (labeled snapshots, two-version compare) | `js/app/army-diff.js` |
 | Analyze | Activity log (passive session history, 30-day persistence) | `js/app/activity-log.js` |
-| Print & Export | GW-style datasheet print (single + whole army) | `js/ui/datasheet.js`, `css/datasheet.css` |
+| Print & Export | Cards mode — printable data-card designer (templates, presets, page-split) | `js/ui/cards-mode.js`, `css/cards-mode.css` |
+| Print & Export | Full datasheet pages inside the tournament PDF bundle | `js/ui/tournament-export.js` |
 | Print & Export | Tournament-prep PDF bundle | `js/ui/tournament-export.js` |
 | Print & Export | URL-shareable armies (`?a=YAAB1:...`) | `js/app/url-share.js` |
 | Print & Export | QR share (mobile-to-mobile) | `js/app/qr-share.js` |
@@ -111,6 +130,12 @@ Grouped by user intent. One module per row; module path is the search target.
 | Polish | Role icon prefix on unit cards (Character / Vehicle / Monster …) | `js/ui/role-icons.js` |
 | Polish | Per-faction unit-card gradients (`faction-<slug>` class contributor) | `js/ui/unit-card-themes.js` |
 | Polish | Click pane header to expand it full-width (Army / Units / Details) — animated, with per-pane layout pass | `js/app/expand-pane.js`, `css/expand-pane.css` |
+
+> **Keeping the docs honest:** `docs/MODULE-REFERENCE.md` has a `###` entry per JS
+> module (data files under `js/data/` and vendored `*.min.js` are intentionally
+> excluded). When you add a new module, add its entry there too — and if you delete
+> or rename one, remove/rename the entry (a heading pointing at a nonexistent file
+> is the drift to avoid).
 
 ## Module conventions
 
