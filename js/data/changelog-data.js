@@ -26,9 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-6',
-    lastUpdated: '2026-07-11T12:00:00Z',
+    version:     '2026.07.11-7',
+    lastUpdated: '2026-07-11T18:00:00Z',
     entries: [
+      {
+        date: '2026-07-11', kind: 'fix',
+        title: 'Datasheet corrections verified against official GW faction packs',
+        description:
+          'Cross-checked the disputed units against Games Workshop\u2019s own ' +
+          'free faction-pack and Imperial Armour PDFs. Fixes where BOTH our ' +
+          'data and wahapedia were wrong (a blind spot the two-source check ' +
+          'can\u2019t catch): Mutilators are M5" W5 (not M4"/W4); the World ' +
+          'Eaters Heldrake moves 20" like every other Heldrake (upstream had ' +
+          'it at 12"); the Skull Altar has the Infiltrators ability. Also ' +
+          'confirmed ~20 flagged units were already correct \u2014 the ' +
+          'aircraft \u201c20+\u201d minimum-move (Stormraven, Corvus, ' +
+          'Heldrake, Manta, Harridan, Night Scythe\u2026) was a New Recruit ' +
+          'data quirk, not an error in ours.',
+      },
       {
         date: '2026-07-11', kind: 'fix',
         title: 'Full-datacard verification — hundreds of missing abilities restored',

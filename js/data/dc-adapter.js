@@ -102,6 +102,10 @@
   const MISSING_CORE_ABILITIES = {
     'nekrosor-ammentar': ['deep-strike'],
     'land-speeder': ['deep-strike'],
+    // GW Chaos Daemons faction pack (2026) — Skull Altar's printed datasheet
+    // lists CORE: Infiltrators; upstream 40kdc omits it. Verified against the
+    // official PDF (fortifications can deploy via Infiltrators).
+    'skull-altar': ['infiltrators'],
   };
 
   // Hand-patches for NON-core unit abilities (with prose) the upstream 40kdc
@@ -186,7 +190,29 @@
   //   2. window.DC.statFixes — the consensus overlay appended to the bundle by
   //      the weekly stat checker (~/sites/base/wahapedia-audit.py): fixes where
   //      wahapedia AND New Recruit (BSData wh40k-11e) agree against our data.
-  const UNIT_STAT_FIXES = {};
+  const UNIT_STAT_FIXES = {
+    // ── GW official faction-pack corrections (2026) ────────────────────────
+    // These break consensus "blind spots": cases where our data and wahapedia
+    // share the SAME error, so the weekly two-source checker can't catch them.
+    // Each is verified against the official GW PDF datasheet.
+    //
+    // Mutilators (CSM faction pack): printed M5" W5; upstream 40kdc AND
+    // wahapedia both had M4"/W4 (New Recruit had the correct M5"/W5).
+    'chaos-space-marines::mutilators': {
+      expect: { M: '4"', W: '4' },
+      set: { profiles: [{ name: '', M: '5"', T: '7', SV: '2+', W: '5', LD: '6+', OC: '2' }] },
+    },
+    // World Eaters Heldrake: upstream ships it as a NON-Aircraft at M12", while
+    // the identical CSM / Emperor's Children / Thousand Sons Heldrakes are all
+    // Aircraft at M20" (and the Heldrake has always been an Aircraft — 20+"
+    // minimum move). Our WE copy + New Recruit share the M12" error; wahapedia
+    // has the correct M20". Move corrected here; the missing Aircraft KEYWORD
+    // is a separate upstream bug flagged for the 40kdc PR.
+    'world-eaters::heldrake': {
+      expect: { M: '12"', T: '9', W: '12' },
+      set: { profiles: [{ name: '', M: '20"', T: '9', SV: '3+', W: '12', LD: '6+', OC: '0' }] },
+    },
+  };
 
   // Self-healing corrections to upstream wargear-option/composition data that
   // the picker consumes. Keyed by unit id:
