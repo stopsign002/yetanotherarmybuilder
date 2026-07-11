@@ -167,6 +167,21 @@
   // upstream in 40kdc-data PR #76.)
   const UNIT_ABILITY_FIXES = {};
 
+  // Expect-gated STATLINE corrections, verified against the live wahapedia
+  // 11e datasheet (scheduled fixer: ~/sites/base/wahapedia-fixer.sh — every
+  // entry cites a human/agent live-page check). `expect` pins the upstream
+  // (wrong) values on the FIRST profile; the fix applies only while upstream
+  // still matches, so the entry no-ops the moment 40kdc ships corrected (or
+  // GW re-changed) stats and can then be deleted.
+  //   'faction_id::unit_id': {
+  //     expect: { T: '10', W: '14' },
+  //     set: {
+  //       profiles: [{ name: '', M: '12"', T: '11', SV: '3+', W: '18', LD: '6+', OC: '5' }],
+  //       invuln: '5+',        // optional; null clears
+  //     },
+  //   },
+  const UNIT_STAT_FIXES = {};
+
   // Self-healing corrections to upstream wargear-option/composition data that
   // the picker consumes. Keyed by unit id:
   //   optionReplaces: wgo id → the item ids the swap ACTUALLY replaces
@@ -472,7 +487,23 @@
   function toUnit(uv) {
     const u = uv.raw || uv;
     const profiles = u.profiles && u.profiles.length ? u.profiles : [{ name: u.name }];
-    const modelStats = profiles.map(profileStats);
+    let modelStats = profiles.map(profileStats);
+    let invulnOverride;   // undefined = untouched; null/'N+' = forced
+    const statFix = UNIT_STAT_FIXES[u.faction_id + '::' + u.id];
+    if (statFix && statFix.set) {
+      const first0 = modelStats[0] || {};
+      const exp = statFix.expect || {};
+      const stillWrong = Object.keys(exp).every(
+        (k) => String(first0[k]) === String(exp[k]));
+      if (stillWrong) {
+        if (Array.isArray(statFix.set.profiles) && statFix.set.profiles.length) {
+          modelStats = statFix.set.profiles.map((p) => ({
+            name: p.name || '', M: p.M, T: p.T, SV: p.SV, W: p.W, LD: p.LD, OC: p.OC,
+          }));
+        }
+        if ('invuln' in statFix.set) invulnOverride = statFix.set.invuln;
+      }
+    }
     const first = profiles[0] || {};
     // 11e points have two independent dimensions in points[]:
     //   - squad size (`models`): 5 for X, 10 for Y
@@ -836,7 +867,9 @@
       stats: { M: modelStats[0].M, T: modelStats[0].T, SV: modelStats[0].SV,
                W: modelStats[0].W, LD: modelStats[0].LD, OC: modelStats[0].OC },
       modelStats: modelStats.length > 1 ? modelStats : [{ name: '', ...modelStats[0] }],
-      invulnSave: first.invuln_sv != null ? sv(first.invuln_sv) : null,
+      invulnSave: invulnOverride !== undefined
+        ? invulnOverride
+        : (first.invuln_sv != null ? sv(first.invuln_sv) : null),
       weapons: weaponRows(uv.weapons),
       abilities,
       wargearAbilities,
