@@ -26,9 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-1',
+    version:     '2026.07.11-2',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-11', kind: 'fix',
+        title: 'Combat Patrol units removed from the roster',
+        description:
+          'The upstream dataset\u2019s Combat Patrol datasheets (122 fixed-force ' +
+          'units like \u201cAssault Force Captain\u201d at 0 points) were mixed into ' +
+          'the matched-play unit list. Filtered out, same as the Combat ' +
+          'Patrol detachments were.',
+      },
       {
         date: '2026-07-11', kind: 'fix',
         title: 'Saved armies pick up current datasheet data',

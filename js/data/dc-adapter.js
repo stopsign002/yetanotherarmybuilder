@@ -1044,7 +1044,15 @@
       const f = fv.raw || fv;
       const factionName = FACTION_NAME[f.id];
       if (!factionName) return; // unmapped (e.g. Titans) — skip in trial
-      const units = (fv.units || []).map(toUnit);
+      // Combat Patrol units (fixed-force mini-game datasheets, 0-point
+      // characters, "Assault Force X" / "Sanctuary Guardians Y" names) are
+      // matched-play noise in the roster — same exclusion as CP detachments.
+      const units = (fv.units || [])
+        .filter((uv) => {
+          const r = (uv && uv.raw) || uv || {};
+          return !(Array.isArray(r.game_modes) && r.game_modes.indexOf('combat-patrol') !== -1);
+        })
+        .map(toUnit);
       // Combat Patrol detachments (upstream added them 2026-07) are fixed-force
       // mini-game content: 1 detachment point, no rule text, no stratagems.
       // They leaked into the matched-play picker looking broken (The
