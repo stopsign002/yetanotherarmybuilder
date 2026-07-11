@@ -26,9 +26,18 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-2',
-    lastUpdated: '2026-07-09T21:00:00Z',
+    version:     '2026.07.11-3',
+    lastUpdated: '2026-07-11T09:30:00Z',
     entries: [
+      {
+        date: '2026-07-11', kind: 'fix',
+        title: 'Data corrections vs official datasheets: 3 units fixed',
+        description:
+          'Verified against the live 11th-edition datasheets: the Defiler ' +
+          '(Chaos Space Marines and Death Guard) is now M12" T11 W18 (was ' +
+          'M8" with 14 wounds), and the Chaos Knights War Dog Moirax is now ' +
+          'T10 W12 OC8 (was T9 W14 OC6).',
+      },
       {
         date: '2026-07-11', kind: 'fix',
         title: 'Combat Patrol units removed from the roster',

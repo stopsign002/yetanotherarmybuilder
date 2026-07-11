@@ -180,7 +180,23 @@
   //       invuln: '5+',        // optional; null clears
   //     },
   //   },
-  const UNIT_STAT_FIXES = {};
+  const UNIT_STAT_FIXES = {
+    // wahapedia live 2026-07-11: War Dog Moirax is T10 W12 OC8 (ours T9 W14 OC6); 5++ ranged-only unchanged
+    'chaos-knights::war-dog-moirax': {
+      expect: { T: '9', W: '14', OC: '6' },
+      set: { profiles: [{ M: '12"', T: '10', SV: '3+', W: '12', LD: '7+', OC: '8' }] },
+    },
+    // wahapedia live 2026-07-11: CSM Defiler is M12" T11 W18 (ours M8" T10 W14); 5++ unchanged
+    'chaos-space-marines::defiler': {
+      expect: { M: '8"', T: '10', W: '14' },
+      set: { profiles: [{ M: '12"', T: '11', SV: '3+', W: '18', LD: '6+', OC: '5' }] },
+    },
+    // wahapedia live 2026-07-11: DG Defiler is M12" T11 W18 (ours M8" W14, T already 11); 5++ unchanged
+    'death-guard::defiler': {
+      expect: { M: '8"', W: '14' },
+      set: { profiles: [{ M: '12"', T: '11', SV: '3+', W: '18', LD: '6+', OC: '5' }] },
+    },
+  };
 
   // Self-healing corrections to upstream wargear-option/composition data that
   // the picker consumes. Keyed by unit id:
