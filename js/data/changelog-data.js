@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-2',
+    version:     '2026.07.11-4',
     lastUpdated: '2026-07-09T21:00:00Z',
     entries: [
+      {
+        date: '2026-07-11', kind: 'fix',
+        title: 'Reverted three statline changes \u2014 official datasheets win',
+        description:
+          'Earlier today the Defiler (CSM/Death Guard) and War Dog Moirax ' +
+          'statlines were changed to match wahapedia\u2019s 11e pages. GW\u2019s ' +
+          'official faction-pack PDFs contradict those pages (wahapedia is ' +
+          'serving stale stats for some units), so the changes are reverted ' +
+          '\u2014 the original data matches the official packs.',
+      },
       {
         date: '2026-07-11', kind: 'fix',
         title: 'Combat Patrol units removed from the roster',
