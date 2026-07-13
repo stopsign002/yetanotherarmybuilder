@@ -410,13 +410,14 @@
       </div>`;
     }
 
-    // Wargear picker mount point (js/app/wargear-picker.js fills it when the
-    // unit has a structured wargearProfile). Sits after the weapon tables —
-    // stats + weapons stay one datasheet block under the stockpile, with the
-    // loadout picker following them.
-    if (unit.wargearProfile) {
-      html += `<div class="detail-section" id="detail-wargear-picker"></div>`;
-    }
+    // Wargear picker DISABLED for now (too many edge cases in the structured
+    // options). The loadout is shown as official GDC prose in the Wargear
+    // section below instead — see the `useGdc` block. To re-enable the
+    // interactive picker, restore this placeholder + the mount call below and
+    // revert the `useGdc` guard to skip wargearProfile units.
+    // if (unit.wargearProfile) {
+    //   html += `<div class="detail-section" id="detail-wargear-picker"></div>`;
+    // }
 
     const coreAbilities    = abilities.filter(a => a.isCore);
     // Sub-ability detection — same logic as cards-mode.js
@@ -585,12 +586,11 @@
     const gdcComposition = Array.isArray(unit.gdcComposition) ? unit.gdcComposition : null;
     const useGdc = !!(gdcWargear || gdcLoadoutText || gdcComposition);
 
-    // When the unit has a structured wargearProfile the interactive picker
-    // (under Add-to-Army) owns loadout display — defaults, swaps and limits —
-    // so the prose Loadout/Wargear-Options section would duplicate it.
-    if (unit.wargearProfile) {
-      // no-op: picker renders defaults + options
-    } else if (useGdc) {
+    // The interactive wargear picker is disabled for now (too many edge cases),
+    // so units WITH a structured wargearProfile no longer get the picker in its
+    // place — they fall through to the official GDC wargear/loadout prose here,
+    // same as every other unit.
+    if (useGdc) {
       const sectionTitle = (gdcWargear && gdcWargear.length > 0) ? 'Wargear Options' : 'Loadout';
       html += `<div class="detail-section"><div class="detail-section-title">${esc(sectionTitle)}</div>`;
 
@@ -624,6 +624,38 @@
         });
       }
 
+      html += `</div>`;
+    } else if (unit.wargearProfile) {
+      // Profile unit with NO GDC datasheet prose (GDC coverage gap — e.g.
+      // Imperial Knights, Titans). The interactive picker is disabled, so
+      // render the structured profile as plain, non-interactive text instead
+      // of leaving the Wargear section blank.
+      const wp = unit.wargearProfile;
+      html += `<div class="detail-section"><div class="detail-section-title">Loadout</div>`;
+      const bySize = wp.defaultsBySize || null;
+      if (bySize) {
+        const sizes = Object.keys(bySize).map(Number).sort((a, b) => a - b);
+        sizes.forEach(sz => {
+          const items = (bySize[sz] || []).filter(d => d.count > 0)
+            .map(d => `${d.count}× ${d.name}`).join(', ');
+          if (!items) return;
+          const label = sizes.length > 1 ? `${sz} models` : 'Default';
+          html += `<div class="wl-defaults">
+            <span class="wl-defaults-label">${esc(label)}:</span>
+            <span class="wl-defaults-weapons">${esc(items)}</span>
+          </div>`;
+        });
+      }
+      (wp.options || []).forEach(opt => {
+        const subs = (opt.choices || []).map(grp => grp.map(x => x.name).join(' + ')).filter(Boolean);
+        if (!subs.length) return;
+        const repl = (opt.replaces || []).map(x => x.name).join(', ');
+        html += `<div class="wl-choice-group">
+          <div class="wl-choice-group-title">${esc(repl ? repl + ' can be replaced with:' : 'Options:')}</div>
+          <ul class="wl-choice-list">`;
+        subs.forEach(s => { html += `<li>${esc(s)}</li>`; });
+        html += `</ul></div>`;
+      });
       html += `</div>`;
     } else if (compLabel || wargearOpts.length > 0) {
       html += `<div class="detail-section"><div class="detail-section-title">Loadout</div>`;
@@ -713,10 +745,16 @@
     const isCharacter = kws.some(k => String(k).toLowerCase() === 'character');
     const isEpicHero  = kws.some(k => String(k).toLowerCase() === 'epic hero');
     const canTakeEnhancement = isCharacter && !isEpicHero;
-    // "<TARGET> unit only" prefix → the upgrade's target (null = regular
-    // character enhancement). TARGET is uppercase in the prose.
+    // "<TARGET> unit only" clause → the upgrade's target (null = regular
+    // character enhancement). TARGET is uppercase in the prose. The clause is
+    // usually first, but some 11e enhancements open with a sentence of flavour
+    // text before it ("…their more valuable soldiery. IMMORTALS unit only.
+    // This unit's ranged attacks have [RAPID FIRE 1].") — so accept it at the
+    // start of the description OR at any sentence boundary, otherwise those
+    // read as character-only enhancements (e.g. Necron "Tools of Dominion").
     const upgradeTarget = (enh) => {
-      const m = /^([A-Z][A-Z0-9'’\- ]+?)\s+unit only\b/.exec(String(enh && enh.description || '').trim());
+      const m = /(?:^|[.!?][)"'’]?\s+)([A-Z][A-Z0-9'’\- ]+?)\s+unit only\b/
+        .exec(String(enh && enh.description || '').trim());
       return m ? m[1].trim() : null;
     };
     // Match target against the unit's name/keywords. Targets can be a plain
@@ -818,10 +856,12 @@
       if (plus)  plus.addEventListener('click', () => setIdx(parseInt(sizeHidden.value, 10) + 1));
     }
 
-    // Fill the wargear picker (no-op when the unit has no profile).
-    if (unit.wargearProfile && window.App && App.WargearPicker) {
-      try { App.WargearPicker.mount(unit, panel); } catch (_) {}
-    }
+    // Wargear picker DISABLED for now — loadout shows as official GDC prose in
+    // the Wargear section instead (see the `useGdc` block above). Re-enable by
+    // restoring the placeholder div and uncommenting this mount.
+    // if (unit.wargearProfile && window.App && App.WargearPicker) {
+    //   try { App.WargearPicker.mount(unit, panel); } catch (_) {}
+    // }
 
     document.getElementById('btn-google-images').addEventListener('click', e => {
       const name = e.currentTarget.dataset.unit;

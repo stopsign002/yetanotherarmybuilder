@@ -26,9 +26,31 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.11-12',
-    lastUpdated: '2026-07-11T19:30:00Z',
+    version:     '2026.07.13-2',
+    lastUpdated: '2026-07-13T00:30:00Z',
     entries: [
+      {
+        date: '2026-07-13', kind: 'fix',
+        title: 'Unit-upgrade enhancements no longer mistaken for character-only',
+        description:
+          'Some enhancements upgrade a specific unit rather than a character ' +
+          '(e.g. Necrons’ “Tools of Dominion”, an IMMORTALS-only upgrade). ' +
+          'When the rules text opened with a line of flavour before the ' +
+          '“<UNIT> unit only” restriction, the app misread them as ' +
+          'character-only. They’re now correctly tagged as unit upgrades and ' +
+          'selectable on the right unit (Immortals, Sword Brethren, Armigers, ' +
+          'Land Speeder Vengeance).',
+      },
+      {
+        date: '2026-07-13', kind: 'change',
+        title: 'Wargear now shown as the official datasheet wording',
+        description:
+          'The interactive wargear picker had too many edge cases in the ' +
+          'structured options, so it’s hidden for now. Each unit’s Wargear ' +
+          'section instead shows the official datasheet wording — default ' +
+          'loadout and the “can be replaced with…” options — straight from ' +
+          'the source. Loadouts you’d already saved on army entries are kept.',
+      },
       {
         date: '2026-07-11', kind: 'change',
         title: 'Units pane opens on your faction’s units',
