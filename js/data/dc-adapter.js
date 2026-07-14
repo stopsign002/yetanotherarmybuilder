@@ -95,12 +95,12 @@
   // so each entry no-ops automatically once 40kdc links it and the bundle is
   // refreshed — at which point the entry can be deleted. Keep each line tagged
   // with the upstream issue so it's auditable.
-  //   nekrosor-ammentar / deep-strike → wn-mitch/40kdc-data#51
   //   land-speeder / deep-strike: the Land Speeder datasheet in 40kdc-data links
   //     ZERO abilities — an upstream data gap. Its printed card has the CORE
   //     "Deep Strike" ability, and deep-strike text IS in the store, so inject it.
+  // (nekrosor-ammentar's deep-strike patch retired 2026-07-14 — fixed upstream
+  //  in 40kdc-data #51, shipped in release 1.0.27; it now links deep-strike.)
   const MISSING_CORE_ABILITIES = {
-    'nekrosor-ammentar': ['deep-strike'],
     'land-speeder': ['deep-strike'],
     // GW Chaos Daemons faction pack (2026) — Skull Altar's printed datasheet
     // lists CORE: Infiltrators; upstream 40kdc omits it. Verified against the
@@ -224,15 +224,19 @@
   // Keyed by unit id. Fields: M / OC (set on every profile), deAircraft
   // (drop the AIRCRAFT keyword so it renders/plays as a normal flyer),
   // addHover, removeHover.
+  // (The de-aircrafting + Move for heldrake / night-scythe / stormraven-gunship /
+  //  lord-discordant-on-helstalker was absorbed by 40kdc in release 1.0.27
+  //  (PR #85) on 2026-07-14, so those Move/keyword overrides retired. Two
+  //  residuals upstream did NOT take stay below: heldrake's OC (upstream ships
+  //  0; GW errata is '-') and night-scythe's Hover ability.)
   const AIRCRAFT_ERRATA = {
-    // De-aircrafted hover flyers (errata: Change M / Remove 'AIRCRAFT'):
-    'heldrake':               { M: '12"', OC: '-', deAircraft: true },
-    'night-scythe':           { M: '14"', deAircraft: true, addHover: true },
-    'stormraven-gunship':     { M: '14"', deAircraft: true },
-    // Not an Aircraft — plain Move errata:
-    'lord-discordant-on-helstalker': { M: '14"' },
+    // De-aircrafted upstream; GW errata OC is '-' but 40kdc ships OC 0:
+    'heldrake':               { OC: '-' },
+    // De-aircrafted upstream but still missing its Hover ability:
+    'night-scythe':           { addHover: true },
     // Kept Aircraft with an explicit "remove Hover" note (the blanket rule also
-    // blanks M/strips Hover, but listing makes the source auditable):
+    // blanks M/strips Hover, but listing makes the source auditable). Upstream
+    // (1.0.27) still ships these as Aircraft at M20", so these stay active:
     'stormtalon-gunship':     { M: '-', OC: '-', removeHover: true },
     'stormhawk-interceptor':  { M: '-', OC: '-', removeHover: true },
     'doom-scythe':            { M: '-', OC: '-' },
@@ -242,33 +246,13 @@
       .some((k) => /^aircraft$/i.test(String(k).trim()));
 
   // GW 11e errata added the FRAME keyword to most vehicles (faction-pack
-  // RULES-UPDATES "Keywords Section: Add 'FRAME'"). Upstream 40kdc hasn't
-  // applied it yet, so add it here. Self-healing: skipped if already present.
-  // (All other datasheet errata — Custodes/Tyranids/SM weapon + stat + other
-  // keyword changes — are already in the 40kdc data, verified 2026-07-11.)
-  const FRAME_UNITS = new Set([
-    // Chaos Space Marines
-    'chaos-land-raider', 'chaos-predator-annihilator', 'chaos-predator-destructor',
-    'chaos-rhino', 'chaos-vindicator', 'khorne-lord-of-skulls', 'noctilith-crown',
-    // Necrons
-    'annihilation-barge', 'catacomb-command-barge', 'convergence-of-dominion',
-    'ghost-ark', 'monolith', 'night-scythe', 'obelisk', 'tesseract-vault',
-    'triarch-stalker', 'seraptek-heavy-construct',
-    // Orks
-    'battlewagon', 'blitza-bommer', 'burna-bommer', 'dakkajet', 'hunta-rig',
-    'kill-rig', 'stompa', 'trukk',
-    // Space Marines
-    'drop-pod', 'gladiator-lancer', 'gladiator-reaper', 'gladiator-valiant',
-    'hammerfall-bunker', 'impulsor', 'invader-atv', 'land-raider',
-    'land-raider-crusader', 'land-raider-redeemer', 'predator-annihilator',
-    'predator-destructor', 'razorback', 'repulsor', 'repulsor-executioner',
-    'rhino', 'storm-speeder-hailstrike', 'storm-speeder-hammerstrike',
-    'storm-speeder-thunderstrike', 'stormhawk-interceptor', 'stormraven-gunship',
-    'stormtalon-gunship', 'vindicator', 'whirlwind',
-    // Adeptus Custodes
-    'anathema-psykana-rhino', 'shield-captain-on-dawneagle-jetbike',
-    'venerable-land-raider', 'vertus-praetors',
-  ]);
+  // RULES-UPDATES "Keywords Section: Add 'FRAME'"). Self-healing: skipped if
+  // already present.
+  // (All 53 previously hand-listed FRAME units retired 2026-07-14 — 40kdc
+  //  shipped the FRAME keyword on every one of them in release 1.0.27, verified
+  //  against upstream. The injection scaffold below is kept empty so a future
+  //  gap can be re-listed here without rewiring the keyword logic.)
+  const FRAME_UNITS = new Set([]);
 
   // Self-healing corrections to upstream wargear-option/composition data that
   // the picker consumes. Keyed by unit id:
