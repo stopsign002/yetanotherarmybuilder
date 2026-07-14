@@ -3,7 +3,10 @@
  * stockpile (Reserves/Requisitions) − n + pill. Over-limit is a SOFT
  * signal: rows go red, nothing is blocked. */
 
-#detail-wargear-picker { margin-bottom: 8px; }  /* matches the pane's uniform section gap */
+/* The picker now lives INSIDE the official-wording Wargear section (below the
+   prose), so it just needs a little separation above and nothing when empty. */
+#detail-wargear-picker { margin-top: 10px; }
+#detail-wargear-picker:empty { display: none; }
 
 /* Band: title left, "official wording" hover affordance right. The ID
    out-specifies detail-redesign.css's `display: block` on section titles,
@@ -151,9 +154,31 @@
   margin-top: 3px;
 }
 
+/* Point-costing options grouped by the model they apply to. The model name
+   heads each group so identical upgrades on different models (a squad member
+   vs its pack leader) are distinguishable. */
+.wgp-group {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px 8px;
+  margin-bottom: 6px;
+}
+.wgp-group-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
 /* Live wargear-points readout (not a warning — accent, matches the chips). */
 .wgp-total {
   color: var(--accent);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  margin-top: 6px;
 }

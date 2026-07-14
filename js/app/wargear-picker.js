@@ -1,22 +1,24 @@
-// app/wargear-picker.js — wargear picker in the unit details pane.
+// app/wargear-picker.js — POINTS-ONLY wargear picker in the unit details pane.
 //
-// Renders under the Add-to-Army box for any unit with a structured
-// `wargearProfile` (built by dc-adapter.js from 40kdc wargear options /
-// budgets / composition tiers). Configure-then-add: the picker holds a
-// pending config for the currently-viewed unit; "Add to Army" (events.js)
-// snapshots it onto the new entry via App.WargearPicker.takeSelections().
+// Renders under the official-wording Wargear section (detail.js) for any unit
+// with a structured `wargearProfile` (built by dc-adapter.js from 40kdc wargear
+// options / composition tiers). The official prose already lists EVERY option;
+// this picker only surfaces the choices that CHANGE THE UNIT'S POINTS, as plain
+// steppers, so armies cost correctly. It deliberately does NOT enforce limits,
+// budgets, model-scoped constraints or swap cascades, and does not show the
+// default loadout — that fuller UI had too many edge cases (see git history).
 //
-// Limits are SOFT: exceeding a per-model/per-size limit never blocks the
-// stepper — the rows turn red with a note so the player knows the loadout
-// is illegal at the chosen squad size. Limits recompute live when the
-// squad-size select changes.
+// Configure-then-add: the picker holds a pending config for the currently-viewed
+// unit; "Add to Army" (events.js) snapshots it onto the new entry via
+// App.WargearPicker.takeSelections(). Editing an existing army entry writes back
+// live via syncEntry().
 //
 // Costs: 11e prices SOME wargear per item taken (MFM overlay →
-// wargearProfile.itemCosts). Charged against the FINAL loadout: priced
-// defaults cost points before any selection (army.js getEntryWargearBasePts)
-// and each swap row shows its NET delta — negative when it sheds a priced
-// default (thunder hammer → free lightning claws = −5 pts). takeSelections
-// stamps that net delta on each selection's `pts` for the entry points math.
+// wargearProfile.itemCosts). Priced DEFAULTS cost points before any selection
+// (army.js getEntryWargearBasePts / wargearProfile.defaultCostBySize); each
+// shown row is a non-zero NET delta — negative when it sheds a priced default
+// (thunder hammer → free lightning claws = −5 pts). takeSelections stamps that
+// net delta on each selection's `pts` for the entry points math.
 (function () {
   const App = window.App = window.App || {};
 
@@ -59,50 +61,17 @@
     return (opt && opt.models) || (opts[0] && opts[0].models) || null;
   }
 
-  // How many of `modelName` exist at this squad size (null → unknown).
-  function eligibleModels(profile, modelName, models) {
-    if (!models) return null;
-    if (!modelName) return models;
-    const tier = profile.modelsBySize && profile.modelsBySize[models];
-    if (tier && tier[modelName] != null) return tier[modelName];
-    return models; // tier data missing — fall back to whole squad
-  }
-
-  // Per-option take limit at the given squad size. Infinity = unbounded.
-  function limitFor(profile, opt, models) {
-    const c = opt.constraint || {};
-    if (c.max_count != null) return c.max_count;
-    const elig = eligibleModels(profile, c.model_name || null, models);
-    if (c.any_number || c.model_name) return (elig == null) ? Infinity : elig;
-    return (elig == null) ? Infinity : elig;
-  }
-
-  // Take-budget limit for one item id at the given squad size (Infinity = none).
-  // Scaling budgets are PROPORTIONAL: "2 per 10 models" allows 1 at 5 models
-  // (floor(models × count / per)), matching GW's "for every N models" wording.
-  function budgetLimitFor(profile, itemId, models) {
-    let lim = Infinity;
-    (profile.budgets || []).forEach((b) => {
-      if (!b.items.some((it) => it.id === itemId)) return;
-      const l = (b.perModels > 0 && models) ? Math.floor((models * b.count) / b.perModels) : b.count;
-      lim = Math.min(lim, l);
-    });
-    return lim;
-  }
-
-  function constraintChip(profile, opt, models) {
-    const c = opt.constraint || {};
-    const bits = [];
-    if (c.model_name) bits.push(c.model_name + ' only');
-    if (c.max_count != null) bits.push('max ' + c.max_count);
-    else if (c.any_number) bits.push('any number');
-    // Surface a scaling budget on the chip when one governs this option's items.
-    (profile.budgets || []).forEach((b) => {
-      if (b.perModels > 0 && opt.choices.some((grp) => grp.some((x) => b.items.some((it) => it.id === x.id)))) {
-        bits.push(b.count + ' per ' + b.perModels + ' models');
-      }
-    });
-    return bits.length ? bits.join(' · ') : 'any model';
+  // Priced default loadout cost at a squad size (nearest tier ≤ models, else
+  // smallest). Mirrors army.js getEntryWargearBasePts's tier pick so the
+  // banner preview and the added entry agree.
+  function defaultBasePts(profile, models) {
+    const bySize = profile.defaultCostBySize;
+    if (!bySize) return 0;
+    const sizes = Object.keys(bySize).map(Number).sort((a, b) => a - b);
+    if (!sizes.length) return 0;
+    let pick = sizes[0];
+    sizes.forEach((s) => { if (models != null && s <= models) pick = s; });
+    return bySize[pick] || 0;
   }
 
   // Default loadout at a squad size (exact tier, else nearest below, else first).
@@ -147,167 +116,68 @@
   };
   const ptsChip = (d) => (d ? ` <span class="wgp-pts">${d > 0 ? '+' : '−'}${Math.abs(d)} pts</span>` : '');
 
+  // Points-only picker. The official prose (rendered by detail.js) already
+  // lists EVERY wargear option; this surfaces just the choices whose net points
+  // delta is non-zero, as plain steppers, so an army costs correctly. Rows are
+  // grouped under the MODEL the option applies to (constraint.model_name) —
+  // units often offer the same upgrade separately per model (e.g. a Wolf Guard
+  // Terminator vs its Pack Leader each get a storm shield option). No title
+  // band: detail.js owns the section heading. Deliberately NO limits, budgets
+  // or swap-cascade logic — those are what had too many edge cases.
   function render(unit, host) {
     const profile = unit.wargearProfile;
     const models = currentModels(unit);
-    const defaults = defaultsFor(profile, models);
 
-    // Per-item ADD totals and REMOVE totals across all selections.
-    const added = new Map(), removed = new Map();
-    profile.options.forEach((opt) => {
-      opt.choices.forEach((grp, ci) => {
-        const n = counts.get(opt.id + ':' + ci) || 0;
-        if (!n) return;
-        grp.forEach((x) => added.set(x.id, (added.get(x.id) || 0) + n));
-        effReplaces(opt, grp).forEach((x) => removed.set(x.id, (removed.get(x.id) || 0) + n));
-      });
-    });
-    const itemTotals = added;   // budget checks count what's been TAKEN
-
-    // Effective default counts after all swaps. Negative = the selections
-    // collectively swap out more of an item than the squad carries — the
-    // cascade signal (e.g. a pair-swap consumed a storm bolter, so one fewer
-    // storm shield can be taken).
-    const effById = new Map();
-    defaults.forEach((d) => effById.set(d.id, d.count + (added.get(d.id) || 0) - (removed.get(d.id) || 0)));
-    const depleted = (opt, grp) =>
-      effReplaces(opt, grp).filter((x) => effById.has(x.id) && effById.get(x.id) < 0);
-
-    // Live wargear points for the CURRENT config, per squad copy: priced
-    // items in the effective loadout (defaults after swaps + taken
-    // non-defaults) plus always-carried priced wargear. Feeds the summary
-    // line below AND the banner points at the top of the pane. Mirrors what
-    // army.js charges on Add to Army.
-    let wgLive = 0;
+    // Point-costing choice groups (positive = upgrade; negative = shedding a
+    // priced default), grouped by the model the option is for. Preserves
+    // first-seen model order.
+    const groups = new Map();   // modelName -> [{ key, opt, grp, cost }]
     if (profile.itemCosts) {
-      const ic = profile.itemCosts;
-      wgLive = profile.alwaysCost || 0;
-      const counted = new Set();
-      defaults.forEach((d) => {
-        counted.add(d.id);
-        wgLive += (ic[d.id] || 0) * Math.max(0, effById.get(d.id) || 0);
-      });
-      added.forEach((n, id) => { if (!counted.has(id)) wgLive += (ic[id] || 0) * n; });
-      wgLive = Math.max(0, wgLive);
-    }
-
-    // For each default item, the (option, choice) pairs that actually replace
-    // it — a single unambiguous pair gets proxy steppers on the default row
-    // itself ("remove a gauss flayer" = take one of its replacement).
-    const replacerFor = (itemId) => {
-      const pairs = [];
       profile.options.forEach((opt) => {
+        const model = (opt.constraint && opt.constraint.model_name) || unit.name || 'Any model';
         opt.choices.forEach((grp, ci) => {
-          if (effReplaces(opt, grp).some((x) => x.id === itemId)) pairs.push(opt.id + ':' + ci);
+          const cost = groupCost(profile, opt, grp);
+          if (!cost) return;
+          if (!groups.has(model)) groups.set(model, []);
+          groups.get(model).push({ key: opt.id + ':' + ci, opt, grp, cost });
         });
       });
-      return pairs.length === 1 ? pairs[0] : null;
-    };
-
-    // Right-side hover: the official (GDC) wargear-option wording, so the
-    // datasheet text is one hover away while making selections.
-    let officialText = '';
-    if (typeof unit.gdcLoadout === 'string' && unit.gdcLoadout) {
-      officialText += 'Every model is equipped with: ' + unit.gdcLoadout;
     }
-    if (Array.isArray(unit.gdcWargear) && unit.gdcWargear.length) {
-      const lines = unit.gdcWargear.map((l) => String(l).replace(/\s*◦\s*/g, '\n   • '));
-      officialText += (officialText ? '\n\n' : '') + lines.join('\n\n');
-    }
-    const infoHtml = officialText
-      ? `<span class="wgp-info has-tooltip" data-tooltip="${esc(officialText)}">official wording</span>`
-      : '';
-    let html = `<div class="detail-section-title detail-section-title-wargear wgp-band"><span>Wargear</span>${infoHtml}</div>`;
 
-    // ── Default loadout with LIVE effective counts ──
-    if (defaults.length) {
-      let negNote = false;
-      html += `<div class="wgp-option wgp-defaults"><div class="wgp-option-head">
-        <span class="wgp-replaces">Default loadout${models ? ' — ' + models + ' models' : ''}</span>
-      </div>`;
-      defaults.forEach((d) => {
-        // Hide items this size doesn't carry (e.g. 0 Hunting Wolves at 3
-        // models) unless a selection touches them.
-        if (d.count === 0 && !added.get(d.id) && !removed.get(d.id)) return;
-        const eff = effById.get(d.id);
-        const neg = eff < 0;
-        if (neg) negNote = true;
-        const proxy = replacerFor(d.id);
-        const stepper = proxy
-          ? `<span class="wgp-stepper" data-key="${esc(proxy)}" data-proxy="1">
-              <button type="button" class="wgp-btn wgp-plus" aria-label="Remove one (swap it out)">&minus;</button>
-              <span class="wgp-count${eff < d.count ? ' wgp-count-dim' : ''}">${eff}</span>
-              <button type="button" class="wgp-btn wgp-minus" aria-label="Add one back">+</button>
-            </span>`
-          : `<span class="wgp-eff${eff < d.count ? ' wgp-count-dim' : ''}${neg ? ' wgp-neg' : ''}">×${eff}</span>`;
-        const price = (profile.itemCosts && profile.itemCosts[d.id]) || 0;
-        html += `<div class="wgp-row${neg ? ' wgp-row-over' : ''}">
-          <span class="wgp-item">${esc(cap(d.name))}${price ? ` <span class="wgp-pts">${price} pts each</span>` : ''}</span>
-          ${stepper}
-        </div>`;
-      });
-      if (negNote) html += `<div class="wgp-note">More swapped out than the squad carries</div>`;
-      html += `</div>`;
-    }
-    profile.options.forEach((opt) => {
-      const lim = limitFor(profile, opt, models);
-      const total = opt.choices.reduce((s, _g, ci) => s + (counts.get(opt.id + ':' + ci) || 0), 0);
-      const overOpt = total > lim;
-      // Budget check: any chosen item over its budget marks the rows carrying it.
-      const overBudgetItems = new Set();
-      opt.choices.forEach((grp, ci) => {
-        if (!(counts.get(opt.id + ':' + ci) || 0)) return;
-        grp.forEach((x) => {
-          if ((itemTotals.get(x.id) || 0) > budgetLimitFor(profile, x.id, models)) overBudgetItems.add(x.id);
-        });
-      });
+    // Live wargear points = priced default loadout at this size + selected
+    // deltas, floored at 0 — mirrors army.js getEntryPoints so the banner
+    // preview and the added entry agree.
+    let wgLive = (profile.alwaysCost || 0) + defaultBasePts(profile, models);
+    groups.forEach((rows) => rows.forEach((r) => { wgLive += (counts.get(r.key) || 0) * r.cost; }));
+    wgLive = Math.max(0, wgLive);
 
-      // Label mirrors the semantics: AND pair-swaps join with "+", OR lists
-      // join with "or" (only one of them is given up per swap).
-      const isPairSwap = opt.andSwap || opt.choices.some((g) => g.length > 1);
-      const replacesLabel = !opt.replaces.length ? 'Add'
-        : opt.replaces.length === 1 || isPairSwap
-          ? 'Replace ' + names(opt.replaces)
-          : 'Replace ' + opt.replaces.map((x) => x.name).slice(0, -1).join(', ')
-            + ' or ' + opt.replaces[opt.replaces.length - 1].name;
-      html += `<div class="wgp-option${overOpt ? ' wgp-over' : ''}" data-option="${esc(opt.id)}">
-        <div class="wgp-option-head">
-          <span class="wgp-replaces">${esc(replacesLabel)}</span>
-          <span class="wgp-chip">${esc(constraintChip(profile, opt, models))}</span>
-        </div>`;
-      const shortNames = new Set();
-      opt.choices.forEach((grp, ci) => {
-        const key = opt.id + ':' + ci;
-        const n = counts.get(key) || 0;
-        // Cascade: this row is red when the item(s) it swaps out are already
-        // exhausted by other selections (nothing left to replace).
-        const short = n > 0 ? depleted(opt, grp) : [];
-        short.forEach((x) => shortNames.add(x.name));
-        const rowOver = overOpt && n > 0 || short.length > 0 || grp.some((x) => overBudgetItems.has(x.id));
-        html += `<div class="wgp-row${rowOver ? ' wgp-row-over' : ''}">
-          <span class="wgp-item">${esc(cap(names(grp)))}${ptsChip(groupCost(profile, opt, grp))}</span>
-          <span class="wgp-stepper" data-key="${esc(key)}">
+    if (!groups.size) {
+      // No priced options to pick — the official prose covers the free ones.
+      // Leave the section empty but keep the banner accurate for the default.
+      host.innerHTML = '';
+      updateBannerPts(unit, wgLive);
+      return;
+    }
+
+    let html = '';
+    groups.forEach((rows, model) => {
+      html += `<div class="wgp-group"><div class="wgp-group-title">${esc(model)}</div>`;
+      rows.forEach((r) => {
+        const n = counts.get(r.key) || 0;
+        const repl = (r.opt.replaces && r.opt.replaces.length)
+          ? ` <span class="wgp-chip">replaces ${esc(names(r.opt.replaces))}</span>` : '';
+        html += `<div class="wgp-row">
+          <span class="wgp-item">${esc(cap(names(r.grp)))}${ptsChip(r.cost)}${repl}</span>
+          <span class="wgp-stepper" data-key="${esc(r.key)}">
             <button type="button" class="wgp-btn wgp-minus" aria-label="Remove one">&minus;</button>
             <span class="wgp-count">${n}</span>
             <button type="button" class="wgp-btn wgp-plus" aria-label="Add one">+</button>
           </span>
         </div>`;
       });
-      if (overOpt) {
-        html += `<div class="wgp-note">Exceeds limit — ${lim === Infinity ? 'over budget' : 'max ' + lim}${models ? ' for ' + models + ' models' : ''}</div>`;
-      } else if (shortNames.size) {
-        html += `<div class="wgp-note">Not enough ${esc([...shortNames].join(' / '))} left to swap</div>`;
-      } else if (overBudgetItems.size) {
-        html += `<div class="wgp-note">Over the take-limit for: ${esc([...overBudgetItems].map((id) => {
-          for (const o of profile.options) for (const g of o.choices) { const hit = g.find((x) => x.id === id); if (hit) return hit.name; }
-          return id;
-        }).join(', '))}</div>`;
-      }
       html += `</div>`;
     });
-    if (profile.itemCosts) {
-      html += `<div class="wgp-note wgp-total">Wargear points: +${wgLive} pts</div>`;
-    }
+    html += `<div class="wgp-note wgp-total">Wargear points: +${wgLive} pts</div>`;
     host.innerHTML = html;
     updateBannerPts(unit, wgLive);
   }

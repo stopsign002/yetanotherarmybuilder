@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.13-2',
-    lastUpdated: '2026-07-13T00:30:00Z',
+    version:     '2026.07.13-4',
+    lastUpdated: '2026-07-13T17:00:00Z',
     entries: [
+      {
+        date: '2026-07-13', kind: 'change',
+        title: 'Wargear: official text plus point-costing options you can pick',
+        description:
+          'One “Wargear” section, now directly under the weapons, holding the ' +
+          'official datasheet wording, steppers for the options that cost ' +
+          'points — grouped by the model they’re for (e.g. a squad member vs ' +
+          'its pack leader) with a running points tally that feeds the army ' +
+          'total — and the unit’s wargear abilities. Free options stay as text ' +
+          'only; the old picker’s limits, budgets and swap logic (too many ' +
+          'edge cases) are gone. “Leader” and “Led By” moved down next to ' +
+          'Keywords.',
+      },
       {
         date: '2026-07-13', kind: 'fix',
         title: 'Unit-upgrade enhancements no longer mistaken for character-only',

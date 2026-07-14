@@ -410,14 +410,11 @@
       </div>`;
     }
 
-    // Wargear picker DISABLED for now (too many edge cases in the structured
-    // options). The loadout is shown as official GDC prose in the Wargear
-    // section below instead — see the `useGdc` block. To re-enable the
-    // interactive picker, restore this placeholder + the mount call below and
-    // revert the `useGdc` guard to skip wargearProfile units.
-    // if (unit.wargearProfile) {
-    //   html += `<div class="detail-section" id="detail-wargear-picker"></div>`;
-    // }
+    // Wargear — official datasheet wording + the point-costing option picker,
+    // in ONE section directly under the weapon tables (wargearSection() is a
+    // hoisted helper defined further down; the picker is filled by
+    // wargear-picker.js at mount time).
+    html += wargearSection();
 
     const coreAbilities    = abilities.filter(a => a.isCore);
     // Sub-ability detection — same logic as cards-mode.js
@@ -489,36 +486,6 @@
       ab.description.replace(/^.*?can be attached to.*?:/i, '')
         .split(/[■\n●•]+/).forEach(pushLead);
     });
-    if (unit.attachmentRole === 'leader' || canLead.length > 0) {
-      html += `<div class="detail-section">
-        <div class="detail-section-title detail-section-title-leader">Leader</div>`;
-      if (canLead.length > 0) {
-        html += `<div class="detail-leader-units">
-          <span class="detail-ability-name">Can lead:</span>
-          <div class="detail-leader-list">
-            ${canLead.map(u => `<span class="leader-unit-tag">${esc(u)}</span>`).join('')}
-          </div>
-        </div>`;
-      } else {
-        html += `<div class="detail-ability detail-leader-empty">
-          <span class="detail-ability-desc">This model is a Leader and can be attached to a Bodyguard unit.</span>
-        </div>`;
-      }
-      html += `</div>`;
-    }
-
-    // "Led By" uses the memoized reverse-index. Always fully expanded — every
-    // leader that can attach is visible at a glance (no "+N more" pill).
-    const ledBy = getLedByFor(unit);
-    if (ledBy.length > 0) {
-      html += `<div class="detail-section detail-ledby-section">
-        <div class="detail-section-title detail-section-title-ledbby">Led By</div>
-        <div class="detail-ledby-list">
-          ${ledBy.map(l => `<span class="ledby-tag">${esc(l.name)}</span>`).join('')}
-        </div>
-      </div>`;
-    }
-
     if (regularAbilities.length > 0) {
       html += `<div class="detail-section">
         <div class="detail-section-title">Abilities</div>`;
@@ -550,180 +517,193 @@
       html += `</div>`;
     });
 
-    // Wargear Abilities — abilities conferred by a piece of wargear the unit
-    // can be equipped with (storm shields, grav-chutes, etc.). Shown by
-    // default (the player knows whether they've taken the wargear); rendered
-    // in its own labelled band, mirroring the official datasheet.
-    const wargearAbilities = unit.wargearAbilities || [];
-    if (wargearAbilities.length > 0) {
-      html += `<div class="detail-section detail-wargear-abilities-section">
-        <div class="detail-section-title detail-section-title-wargear">Wargear Abilities</div>`;
-      wargearAbilities.forEach(wa => {
-        html += `<div class="detail-ability detail-ability-wargear">
+    // Build the combined Wargear section (called right after the weapon tables
+    // above). ONE section: the official datasheet wording, then a mount for the
+    // point-costing option picker that wargear-picker.js fills. Hoisted so the
+    // call site can sit under the weapons block.
+    function wargearSection() {
+      const modelNums = [...new Set(squadOptions.map(o => o.models).filter(m => m != null))].sort((a, b) => a - b);
+      const compLabel = modelNums.length === 0 ? null
+        : modelNums.length === 1 ? `${modelNums[0]} model${modelNums[0] !== 1 ? 's' : ''}`
+        : `${modelNums[0]}–${modelNums[modelNums.length - 1]} models`;
+      const modelTypeOpts = wargearOpts.filter(o => o.type === 'model');
+      const choiceOpts    = wargearOpts.filter(o => o.type !== 'model');
+
+      // ── GDC-driven wargear/composition (preferred when present) ──
+      // game-datacards-eu ships pre-formatted wargear option strings + a default
+      // loadout line + canonical composition lines. Coverage is faction-dependent
+      // (Imperial Knights, Titans aren't in GDC) so we fall back to profile/BSData.
+      const gdcWargear     = Array.isArray(unit.gdcWargear) ? unit.gdcWargear : null;
+      const gdcLoadoutText = (typeof unit.gdcLoadout === 'string') ? unit.gdcLoadout : '';
+      const gdcComposition = Array.isArray(unit.gdcComposition) ? unit.gdcComposition : null;
+      const useGdc = !!(gdcWargear || gdcLoadoutText || gdcComposition);
+
+      // Official prose is built as INNER html (no section wrapper/title) so the
+      // interactive picker + wargear abilities share the single section below.
+      let wg = '';
+      if (useGdc) {
+        if (gdcComposition && gdcComposition.length > 0) {
+          wg += `<div class="wl-composition">${gdcComposition.map(esc).join(' · ')}</div>`;
+        }
+        if (gdcLoadoutText) {
+          wg += `<div class="wl-defaults">
+            <span class="wl-defaults-label">Default:</span>
+            <span class="wl-defaults-weapons">${esc(gdcLoadoutText)}</span>
+          </div>`;
+        }
+        if (gdcWargear && gdcWargear.length > 0) {
+          gdcWargear.forEach(line => {
+            // GDC encodes "X can be replaced with one of the following: ◦ A ◦ B …"
+            // by separating the heading from each option with a ◦.
+            const parts = String(line).split(/\s*◦\s*/);
+            const head = (parts[0] || '').replace(/:\s*$/, '').trim();
+            const subs = parts.slice(1).map(s => s.trim()).filter(Boolean);
+            wg += `<div class="wl-choice-group">`;
+            if (head) wg += `<div class="wl-choice-group-title">${esc(head)}</div>`;
+            if (subs.length > 0) {
+              wg += `<ul class="wl-choice-list">`;
+              subs.forEach(s => { wg += `<li>${esc(s)}</li>`; });
+              wg += `</ul>`;
+            }
+            wg += `</div>`;
+          });
+        }
+      } else if (unit.wargearProfile) {
+        // Profile unit with NO GDC prose (coverage gap — e.g. Imperial Knights,
+        // Titans): render the structured profile as plain text so it's not blank.
+        const wp = unit.wargearProfile;
+        const bySize = wp.defaultsBySize || null;
+        if (bySize) {
+          const sizes = Object.keys(bySize).map(Number).sort((a, b) => a - b);
+          sizes.forEach(sz => {
+            const items = (bySize[sz] || []).filter(d => d.count > 0)
+              .map(d => `${d.count}× ${d.name}`).join(', ');
+            if (!items) return;
+            const label = sizes.length > 1 ? `${sz} models` : 'Default';
+            wg += `<div class="wl-defaults">
+              <span class="wl-defaults-label">${esc(label)}:</span>
+              <span class="wl-defaults-weapons">${esc(items)}</span>
+            </div>`;
+          });
+        }
+        (wp.options || []).forEach(opt => {
+          const subs = (opt.choices || []).map(grp => grp.map(x => x.name).join(' + ')).filter(Boolean);
+          if (!subs.length) return;
+          const repl = (opt.replaces || []).map(x => x.name).join(', ');
+          wg += `<div class="wl-choice-group">
+            <div class="wl-choice-group-title">${esc(repl ? repl + ' can be replaced with:' : 'Options:')}</div>
+            <ul class="wl-choice-list">`;
+          subs.forEach(s => { wg += `<li>${esc(s)}</li>`; });
+          wg += `</ul></div>`;
+        });
+      } else if (compLabel || wargearOpts.length > 0) {
+        if (compLabel) wg += `<div class="wl-composition">${esc(compLabel)}</div>`;
+        modelTypeOpts.forEach(opt => {
+          let countStr = '';
+          if (opt.modelMin != null && opt.modelMax != null) {
+            if (opt.modelMin === opt.modelMax) {
+              countStr = `${opt.modelMin} model${opt.modelMin !== 1 ? 's' : ''}`;
+            } else if (opt.modelMin === 0) {
+              countStr = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
+            } else {
+              countStr = `${opt.modelMin}–${opt.modelMax} models`;
+            }
+          } else if (opt.modelMax != null) {
+            countStr = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
+          } else if (opt.modelMin != null) {
+            countStr = `${opt.modelMin}+ models`;
+          }
+          wg += `<div class="wl-model-block"><div class="wl-model-header">
+            <span class="wl-model-name">${esc(opt.modelName)}</span>`;
+          if (countStr) wg += `<span class="wl-model-count">${esc(countStr)}</span>`;
+          wg += `</div>`;
+          if (opt.defaultWeapons && opt.defaultWeapons.length > 0) {
+            wg += `<div class="wl-defaults">
+              <span class="wl-defaults-label">Default:</span>
+              <span class="wl-defaults-weapons">${opt.defaultWeapons.map(esc).join(' · ')}</span>
+            </div>`;
+          }
+          (opt.subOptions || []).forEach(sub => {
+            const subCtx = sub.max === 1 ? ' — choose one' : sub.max > 1 ? ` — choose up to ${sub.max}` : '';
+            wg += `<div class="wl-suboption">
+              <div class="wl-suboption-title">${esc(sub.name)}${subCtx}</div>
+              <ul class="wl-choice-list">`;
+            (sub.choices || []).forEach(c => {
+              wg += `<li>${esc(typeof c === 'object' ? c.name : c)}</li>`;
+            });
+            wg += `</ul></div>`;
+          });
+          wg += `</div>`;
+        });
+        choiceOpts.forEach(opt => {
+          const name    = typeof opt === 'object' ? (opt.name || '') : opt;
+          const choices = typeof opt === 'object' && opt.choices ? opt.choices : [];
+          const maxSpan = typeof opt === 'object' && opt.max != null
+            ? ` <span class="wl-max">(max ${opt.max})</span>` : '';
+          wg += `<div class="wl-choice-group">
+            <div class="wl-choice-group-title">${esc(name)}${maxSpan}</div>`;
+          if (choices.length > 0) {
+            wg += `<ul class="wl-choice-list">`;
+            choices.forEach(c => { wg += `<li>${esc(typeof c === 'object' ? c.name : c)}</li>`; });
+            wg += `</ul>`;
+          }
+          wg += `</div>`;
+        });
+      }
+
+      // Wargear Abilities (effects conferred by wargear the unit can take —
+      // storm shields, grav-chutes, etc.) now live INSIDE this section too.
+      let waHtml = '';
+      (unit.wargearAbilities || []).forEach(wa => {
+        waHtml += `<div class="detail-ability detail-ability-wargear">
           <span class="detail-ability-name">${esc(wa.name)}</span>
           <span class="detail-ability-desc">${esc(wa.description || '—')}</span>
         </div>`;
       });
+
+      // Nothing to render at all → no section.
+      if (!wg && !unit.wargearProfile && !waHtml) return '';
+      // ONE "Wargear" section, styled with the muted-bronze band the Wargear
+      // Abilities section used to carry (detail-section-title-wargear): official
+      // prose, then the point-costing option picker, then the wargear abilities.
+      let out = `<div class="detail-section detail-wargear-abilities-section">
+        <div class="detail-section-title detail-section-title-wargear">Wargear</div>`;
+      out += wg;
+      if (unit.wargearProfile) out += `<div id="detail-wargear-picker"></div>`;
+      out += waHtml;
+      out += `</div>`;
+      return out;
+    }
+
+    // "Leader" + "Led By" — both attachment sections sit just above Keywords so
+    // the ability sections stay contiguous under the Wargear section. (canLead
+    // is computed earlier, near the leader-ability parsing.)
+    if (unit.attachmentRole === 'leader' || canLead.length > 0) {
+      html += `<div class="detail-section">
+        <div class="detail-section-title detail-section-title-leader">Leader</div>`;
+      if (canLead.length > 0) {
+        html += `<div class="detail-leader-units">
+          <span class="detail-ability-name">Can lead:</span>
+          <div class="detail-leader-list">
+            ${canLead.map(u => `<span class="leader-unit-tag">${esc(u)}</span>`).join('')}
+          </div>
+        </div>`;
+      } else {
+        html += `<div class="detail-ability detail-leader-empty">
+          <span class="detail-ability-desc">This model is a Leader and can be attached to a Bodyguard unit.</span>
+        </div>`;
+      }
       html += `</div>`;
     }
 
-    const modelNums = [...new Set(squadOptions.map(o => o.models).filter(m => m != null))].sort((a, b) => a - b);
-    const compLabel = modelNums.length === 0 ? null
-      : modelNums.length === 1 ? `${modelNums[0]} model${modelNums[0] !== 1 ? 's' : ''}`
-      : `${modelNums[0]}–${modelNums[modelNums.length - 1]} models`;
-
-    const modelTypeOpts = wargearOpts.filter(o => o.type === 'model');
-    const choiceOpts    = wargearOpts.filter(o => o.type !== 'model');
-
-    // ── GDC-driven wargear/composition (preferred when present) ──
-    // game-datacards-eu ships pre-formatted wargear option strings + a default
-    // loadout line + canonical composition lines. When we have those we render
-    // them in place of the BSData-derived Loadout section, which has parser
-    // edge cases for some units. Coverage is faction-dependent (e.g. Imperial
-    // Knights, Titans aren't in GDC) so we fall back to BSData below.
-    const gdcWargear     = Array.isArray(unit.gdcWargear) ? unit.gdcWargear : null;
-    const gdcLoadoutText = (typeof unit.gdcLoadout === 'string') ? unit.gdcLoadout : '';
-    const gdcComposition = Array.isArray(unit.gdcComposition) ? unit.gdcComposition : null;
-    const useGdc = !!(gdcWargear || gdcLoadoutText || gdcComposition);
-
-    // The interactive wargear picker is disabled for now (too many edge cases),
-    // so units WITH a structured wargearProfile no longer get the picker in its
-    // place — they fall through to the official GDC wargear/loadout prose here,
-    // same as every other unit.
-    if (useGdc) {
-      const sectionTitle = (gdcWargear && gdcWargear.length > 0) ? 'Wargear Options' : 'Loadout';
-      html += `<div class="detail-section"><div class="detail-section-title">${esc(sectionTitle)}</div>`;
-
-      if (gdcComposition && gdcComposition.length > 0) {
-        html += `<div class="wl-composition">${gdcComposition.map(esc).join(' · ')}</div>`;
-      }
-
-      if (gdcLoadoutText) {
-        html += `<div class="wl-defaults">
-          <span class="wl-defaults-label">Default:</span>
-          <span class="wl-defaults-weapons">${esc(gdcLoadoutText)}</span>
-        </div>`;
-      }
-
-      if (gdcWargear && gdcWargear.length > 0) {
-        gdcWargear.forEach(line => {
-          // GDC encodes "X can be replaced with one of the following: ◦ A ◦ B …"
-          // by separating the heading from each option with a ◦. Split on ◦,
-          // first piece is the description, the rest are sub-bullets.
-          const parts = String(line).split(/\s*◦\s*/);
-          const head = (parts[0] || '').replace(/:\s*$/, '').trim();
-          const subs = parts.slice(1).map(s => s.trim()).filter(Boolean);
-          html += `<div class="wl-choice-group">`;
-          if (head) html += `<div class="wl-choice-group-title">${esc(head)}</div>`;
-          if (subs.length > 0) {
-            html += `<ul class="wl-choice-list">`;
-            subs.forEach(s => { html += `<li>${esc(s)}</li>`; });
-            html += `</ul>`;
-          }
-          html += `</div>`;
-        });
-      }
-
-      html += `</div>`;
-    } else if (unit.wargearProfile) {
-      // Profile unit with NO GDC datasheet prose (GDC coverage gap — e.g.
-      // Imperial Knights, Titans). The interactive picker is disabled, so
-      // render the structured profile as plain, non-interactive text instead
-      // of leaving the Wargear section blank.
-      const wp = unit.wargearProfile;
-      html += `<div class="detail-section"><div class="detail-section-title">Loadout</div>`;
-      const bySize = wp.defaultsBySize || null;
-      if (bySize) {
-        const sizes = Object.keys(bySize).map(Number).sort((a, b) => a - b);
-        sizes.forEach(sz => {
-          const items = (bySize[sz] || []).filter(d => d.count > 0)
-            .map(d => `${d.count}× ${d.name}`).join(', ');
-          if (!items) return;
-          const label = sizes.length > 1 ? `${sz} models` : 'Default';
-          html += `<div class="wl-defaults">
-            <span class="wl-defaults-label">${esc(label)}:</span>
-            <span class="wl-defaults-weapons">${esc(items)}</span>
-          </div>`;
-        });
-      }
-      (wp.options || []).forEach(opt => {
-        const subs = (opt.choices || []).map(grp => grp.map(x => x.name).join(' + ')).filter(Boolean);
-        if (!subs.length) return;
-        const repl = (opt.replaces || []).map(x => x.name).join(', ');
-        html += `<div class="wl-choice-group">
-          <div class="wl-choice-group-title">${esc(repl ? repl + ' can be replaced with:' : 'Options:')}</div>
-          <ul class="wl-choice-list">`;
-        subs.forEach(s => { html += `<li>${esc(s)}</li>`; });
-        html += `</ul></div>`;
-      });
-      html += `</div>`;
-    } else if (compLabel || wargearOpts.length > 0) {
-      html += `<div class="detail-section"><div class="detail-section-title">Loadout</div>`;
-
-      if (compLabel) {
-        html += `<div class="wl-composition">${esc(compLabel)}</div>`;
-      }
-
-      modelTypeOpts.forEach(opt => {
-        let countStr = '';
-        if (opt.modelMin != null && opt.modelMax != null) {
-          if (opt.modelMin === opt.modelMax) {
-            countStr = `${opt.modelMin} model${opt.modelMin !== 1 ? 's' : ''}`;
-          } else if (opt.modelMin === 0) {
-            // Optional model variant ("up to N of these can be swapped in").
-            // Render as "up to N models" rather than "0–N models" — clearer.
-            countStr = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
-          } else {
-            countStr = `${opt.modelMin}–${opt.modelMax} models`;
-          }
-        } else if (opt.modelMax != null) {
-          countStr = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
-        } else if (opt.modelMin != null) {
-          countStr = `${opt.modelMin}+ models`;
-        }
-
-        html += `<div class="wl-model-block"><div class="wl-model-header">
-          <span class="wl-model-name">${esc(opt.modelName)}</span>`;
-        if (countStr) html += `<span class="wl-model-count">${esc(countStr)}</span>`;
-        html += `</div>`;
-
-        if (opt.defaultWeapons && opt.defaultWeapons.length > 0) {
-          html += `<div class="wl-defaults">
-            <span class="wl-defaults-label">Default:</span>
-            <span class="wl-defaults-weapons">${opt.defaultWeapons.map(esc).join(' · ')}</span>
-          </div>`;
-        }
-
-        (opt.subOptions || []).forEach(sub => {
-          const subCtx = sub.max === 1 ? ' — choose one' : sub.max > 1 ? ` — choose up to ${sub.max}` : '';
-          html += `<div class="wl-suboption">
-            <div class="wl-suboption-title">${esc(sub.name)}${subCtx}</div>
-            <ul class="wl-choice-list">`;
-          (sub.choices || []).forEach(c => {
-            html += `<li>${esc(typeof c === 'object' ? c.name : c)}</li>`;
-          });
-          html += `</ul></div>`;
-        });
-
-        html += `</div>`;
-      });
-
-      choiceOpts.forEach(opt => {
-        const name    = typeof opt === 'object' ? (opt.name || '') : opt;
-        const choices = typeof opt === 'object' && opt.choices ? opt.choices : [];
-        const maxSpan = typeof opt === 'object' && opt.max != null
-          ? ` <span class="wl-max">(max ${opt.max})</span>` : '';
-        html += `<div class="wl-choice-group">
-          <div class="wl-choice-group-title">${esc(name)}${maxSpan}</div>`;
-        if (choices.length > 0) {
-          html += `<ul class="wl-choice-list">`;
-          choices.forEach(c => { html += `<li>${esc(typeof c === 'object' ? c.name : c)}</li>`; });
-          html += `</ul>`;
-        }
-        html += `</div>`;
-      });
-
-      html += `</div>`;
+    const ledBy = getLedByFor(unit);
+    if (ledBy.length > 0) {
+      html += `<div class="detail-section detail-ledby-section">
+        <div class="detail-section-title detail-section-title-ledbby">Led By</div>
+        <div class="detail-ledby-list">
+          ${ledBy.map(l => `<span class="ledby-tag">${esc(l.name)}</span>`).join('')}
+        </div>
+      </div>`;
     }
 
     if (keywords.length > 0) {
@@ -856,12 +836,11 @@
       if (plus)  plus.addEventListener('click', () => setIdx(parseInt(sizeHidden.value, 10) + 1));
     }
 
-    // Wargear picker DISABLED for now — loadout shows as official GDC prose in
-    // the Wargear section instead (see the `useGdc` block above). Re-enable by
-    // restoring the placeholder div and uncommenting this mount.
-    // if (unit.wargearProfile && window.App && App.WargearPicker) {
-    //   try { App.WargearPicker.mount(unit, panel); } catch (_) {}
-    // }
+    // Fill the wargear picker (points-only mode; no-op when the unit has no
+    // priced options).
+    if (unit.wargearProfile && window.App && App.WargearPicker) {
+      try { App.WargearPicker.mount(unit, panel); } catch (_) {}
+    }
 
     document.getElementById('btn-google-images').addEventListener('click', e => {
       const name = e.currentTarget.dataset.unit;
