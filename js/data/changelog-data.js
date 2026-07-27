@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.13-4',
-    lastUpdated: '2026-07-13T17:00:00Z',
+    version:     '2026.07.14-1',
+    lastUpdated: '2026-07-14T15:30:00Z',
     entries: [
+      {
+        date: '2026-07-14', kind: 'fix',
+        title: 'Led By: fixed missing leader attachments (Necrons and more)',
+        description:
+          'Necron leaders — the Chronomancer, other Crypteks, Overlords and ' +
+          'named characters — were showing no “Led By” options, so you could ' +
+          'not see which units they attach to (or which leaders a unit like ' +
+          'Immortals or Necron Warriors can take). The app now falls back to ' +
+          '40kdc’s official leader-attachment data wherever the datacard text ' +
+          'source has none, restoring the correct attachments across every ' +
+          'affected faction.',
+      },
       {
         date: '2026-07-13', kind: 'change',
         title: 'Wargear: official text plus point-costing options you can pick',

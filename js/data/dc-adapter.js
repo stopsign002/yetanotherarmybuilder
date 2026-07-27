@@ -556,6 +556,43 @@
   }
 
   // ── one 40kdc unit → one yaab Unit ─────────────────────────────────────────
+  // Leader → eligible-bodyguard NAME list, sourced from 40kdc's OFFICIAL
+  // `leaderAttachments` table (data/core/<faction>/leader-attachments.json,
+  // embedded per-faction in `ds`). The "Led By" reverse-index (attachments.js)
+  // is driven by each leader's `gdcLeadBy` NAME array. GDC prose is the primary
+  // source of that array, but GDC ships NO leader field for whole factions
+  // (every Necrons Cryptek/Overlord, etc.), so those leaders showed no "Led By".
+  // This map fills `gdcLeadBy` from 40kdc's structured data; the GDC overlay
+  // (js/gdc.js) only overwrites gdcLeadBy when it has its OWN prose, so GDC
+  // still wins wherever it has data and this is a pure fallback. Self-healing:
+  // if 40kdc drops the table or GDC starts carrying the prose, the other source
+  // takes over with no code change. Memoised — the same global list is copied
+  // into every faction's ds, so it's read once.
+  let _leaderLeadBy = null;
+  function leaderLeadByMap() {
+    if (_leaderLeadBy) return _leaderLeadBy;
+    _leaderLeadBy = new Map();               // leader_id -> string[] of names
+    try {
+      const nameById = new Map();
+      DC.units.all.forEach((uu) => { if (uu && uu.id) nameById.set(uu.id, uu.name); });
+      const fv = DC.factions.all.find(
+        (f) => f && f.ds && Array.isArray(f.ds.leaderAttachments) && f.ds.leaderAttachments.length);
+      const list = (fv && fv.ds.leaderAttachments) || [];
+      list.forEach((la) => {
+        if (!la || !la.leader_id || !Array.isArray(la.eligible_bodyguard_ids)) return;
+        const names = la.eligible_bodyguard_ids
+          .map((bid) => nameById.get(bid)).filter(Boolean);
+        if (!names.length) return;
+        const prev = _leaderLeadBy.get(la.leader_id) || [];
+        // dedupe by name (a leader can appear under multiple faction copies)
+        const seen = new Set(prev);
+        names.forEach((n) => { if (!seen.has(n)) { seen.add(n); prev.push(n); } });
+        _leaderLeadBy.set(la.leader_id, prev);
+      });
+    } catch (_) { /* leave the map empty; GDC prose still drives Led By */ }
+    return _leaderLeadBy;
+  }
+
   function toUnit(uv) {
     const u = uv.raw || uv;
     const profiles = u.profiles && u.profiles.length ? u.profiles : [{ name: u.name }];
@@ -611,12 +648,14 @@
     // shared datasheets like the Defiler).
     const abilityFix = UNIT_ABILITY_FIXES[u.faction_id + '::' + u.id] || null;
     // Consensus ability overlay (window.DC.abilityFixes — appended to the
-    // bundle by the weekly stat checker where wahapedia AND New Recruit agree
-    // the datasheet differs). Shape per 'faction::unit' key:
+    // bundle by the weekly stat checker + FAQ processor). Shape per
+    // 'faction::unit' key:
     //   { addCore: [ability-ids], addNamed: [{name, description}],
-    //     addWargear: [{name, description}], remove: [ability-ids] }
-    // Every path is self-healing (name dedupe / present-only removes), same
-    // contract as the hand maps.
+    //     addWargear: [{name, description}], remove: [ability-ids],
+    //     updateNamed: [{name, expectContains, description}] }
+    // Every path is self-healing: `updateNamed` matches by name and requires
+    // the current description to contain `expectContains` before rewriting —
+    // so once upstream catches up, the override no-ops.
     const abilityFixOv = (DC.abilityFixes || {})[u.faction_id + '::' + u.id] || null;
     const removeAbilityIds = new Set([
       ...(abilityFix ? abilityFix.remove || [] : []),
@@ -692,9 +731,19 @@
     }
     // Consensus overlay adds (see abilityFixOv above). Core adds resolve
     // through the ability store by id; named adds carry New Recruit's rules
-    // text (the store has no entry to point at).
+    // text (the store has no entry to point at). `updateNamed` rewrites an
+    // existing ability's description in place — gated on `expectContains` so
+    // it self-heals once upstream 40kdc-abilities carries the new text.
     if (abilityFixOv) {
       const have = new Set(abilities.map((a) => a.name.toLowerCase()));
+      (abilityFixOv.updateNamed || []).forEach((u) => {
+        if (!u || !u.name) return;
+        const target = abilities.find((a) => a.name && a.name.toLowerCase() === u.name.toLowerCase());
+        if (!target) return;   // ability not present → no-op
+        if (u.expectContains && !(target.description || '').toLowerCase()
+              .includes(String(u.expectContains).toLowerCase())) return;   // already updated upstream → no-op
+        target.description = u.description || '';
+      });
       (abilityFixOv.addCore || []).forEach((aid) => {
         let av = null;
         try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
@@ -1038,6 +1087,10 @@
       description: '',
       isLegends: !!u.is_legend,
       attachmentRole: u.attachment_role || null,   // 'leader' | 'support' | null
+      // Fallback "Led By" targets from 40kdc's structured leaderAttachments
+      // table, used when GDC prose carries none (e.g. all Necrons leaders). The
+      // GDC overlay overwrites this per-unit only when it has its own list.
+      gdcLeadBy: leaderLeadByMap().get(u.id) || undefined,
       // Points sourced from the live MFM overlay (also clears provisional —
       // the MFM is the confirmed source upstream's flag is provisional FOR).
       _mfmPoints: !!(mfmPts && mfmPts.length),
