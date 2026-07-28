@@ -561,9 +561,18 @@
     (weaponViews || []).forEach((wv) => {
       const w = wv.raw || wv;
       if (!w || !Array.isArray(w.profiles)) return;
-      const melee = w.type === 'melee';
+      const meleeWeapon = w.type === 'melee';
       w.profiles.forEach((p) => {
         const st = p.stats || {};
+        // Melee-ness is a property of the PROFILE, not the weapon. 40kdc gives
+        // ranged weapons melee profiles — pistols and combi-weapons carry
+        // { name: 'Melee', range: 'Melee', stats: { WS } } alongside their
+        // ranged profile. Keying off `w.type` alone read st.BS (absent on those
+        // profiles) and emitted a BLANK skill, plus a Range of `Melee"` from
+        // interpolating the string 'Melee' into `${p.range}"`. Cypher's bolt and
+        // plasma pistols showed no melee skill at all; GW's data says 2+.
+        const melee = meleeWeapon || st.WS != null
+          || String(p.range == null ? '' : p.range).trim().toLowerCase() === 'melee';
         // Compose the row name. For MULTI-profile weapons, 40kdc stores each
         // profile's `name` as the firing-MODE only ("Dispersed"/"Focused",
         // "Standard"/"Supercharge", "Krak"/"Frag") and keeps the real weapon

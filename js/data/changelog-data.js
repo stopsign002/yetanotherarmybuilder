@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-3',
-    lastUpdated: '2026-07-28T04:00:00Z',
+    version:     '2026.07.28-4',
+    lastUpdated: '2026-07-28T04:40:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Pistols and combi-weapons now show their melee skill',
+        description:
+          'Weapons that are ranged but also have a melee profile \u2014 Cypher\u2019s ' +
+          'bolt and plasma pistols, combi-weapons and others \u2014 showed a blank ' +
+          'Weapon Skill on the melee line, and its Range read \u201cMelee\u201d with a ' +
+          'stray inch mark. Both are fixed: all 1,710 melee weapon lines now ' +
+          'carry the correct skill.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'FRAME keyword restored on 132 vehicles',
