@@ -427,22 +427,76 @@
       // Enhancement prose — fill a detachment enhancement's empty description,
       // matched by detachment name + enhancement name (relaxed key drops a
       // trailing "(Upgrade)" suffix GDC appends). 40kdc-first: never overrides.
+      //
+      // Exact key first, then the closest name among THAT detachment's GDC
+      // entries. 40kdc misspells a handful of enhancements against GW's own
+      // text — "Synaptic Lynchpin" vs GDC's "Synaptic Linchpin", "Stave of
+      // Kurnos" vs "Kurnous", "Mask of the Nekrosor" vs "Mark of the" — and an
+      // exact-only join leaves those with NO rules text at all, which is what a
+      // user reported. Scoped to one detachment the candidate pool is ~4 names,
+      // so a high-similarity unique match is safe. It self-heals too: once
+      // upstream corrects a spelling the exact branch wins and this never runs.
+      const enhByDet = new Map();
       enhancementEntries.forEach(e => {
         const dName = pickText(e && e.detachment);
-        if (!dName) return;
-        const targets = detKeyToTargets.get(nameKey(dName));
-        if (!targets || targets.length === 0) return;
         const desc = cleanMarkup(pickText(e.description));
-        if (!desc) return;
         const enhKey = nameKey(pickText(e.name));
-        if (!enhKey) return;
+        if (!dName || !desc || !enhKey) return;
+        const k = nameKey(dName);
+        if (!enhByDet.has(k)) enhByDet.set(k, []);
+        enhByDet.get(k).push({ key: enhKey, desc });
+      });
+      enhByDet.forEach((entries, detKey) => {
+        const targets = detKeyToTargets.get(detKey);
+        if (!targets || targets.length === 0) return;
+        const byKey = new Map(entries.map(x => [x.key, x.desc]));
         targets.forEach(d => {
           (d.enhancements || []).forEach(en => {
-            if (!en.description && nameKey(en.name) === enhKey) en.description = desc;
+            if (en.description) return;
+            const k = nameKey(en.name);
+            if (!k) return;
+            const desc = byKey.get(k) || nearestUnique(k, entries);
+            if (desc) en.description = desc;
           });
         });
       });
     });
+  }
+
+  // Closest candidate by edit distance — but ONLY when unambiguous: the best
+  // match must clear the similarity floor AND be strictly better than the
+  // runner-up. Anything else returns '' , because attaching the wrong rules
+  // text to an enhancement is worse than showing none.
+  function nearestUnique(key, entries) {
+    let best = null, bestD = Infinity, secondD = Infinity;
+    entries.forEach(e => {
+      const d = editDistance(key, e.key);
+      if (d < bestD) { secondD = bestD; bestD = d; best = e; }
+      else if (d < secondD) secondD = d;
+    });
+    if (!best || bestD >= secondD) return '';
+    const span = Math.max(key.length, best.key.length) || 1;
+    return (1 - bestD / span) >= 0.85 ? best.desc : '';
+  }
+
+  // Levenshtein, two-row. Names are short (< 40 chars after nameKey) and this
+  // only runs for the few enhancements an exact match missed.
+  function editDistance(a, b) {
+    if (a === b) return 0;
+    if (!a.length || !b.length) return a.length || b.length;
+    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+      const row = [i];
+      for (let j = 1; j <= b.length; j++) {
+        row[j] = Math.min(
+          prev[j] + 1,
+          row[j - 1] + 1,
+          prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+        );
+      }
+      prev = row;
+    }
+    return prev[b.length];
   }
 
   // Normalize a name for cross-source matching: lowercased, curly→straight

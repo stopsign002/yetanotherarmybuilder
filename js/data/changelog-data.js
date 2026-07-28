@@ -26,9 +26,42 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-10',
-    lastUpdated: '2026-07-28T08:20:00Z',
+    version:     '2026.07.28-11',
+    lastUpdated: '2026-07-28T09:40:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Points corrected for 240 units — including every transport',
+        description:
+          'Our reader of Games Workshop’s Munitorum Field Manual was ' +
+          'skipping any price GW had just changed, because changed prices are ' +
+          'printed with a “▼ (-10)” marker next to them. Units ' +
+          'that lost their base price fell back to a wrong figure — the ' +
+          'Rhino read 75pts instead of 65, and every dedicated transport in the ' +
+          'game was 10pts over. 158 units that had no official price at all now ' +
+          'have one, and 82 more were corrected. All 991 priced units now match ' +
+          'the MFM exactly.',
+      },
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Unit size options fixed (Von Ryan’s Leapers and others)',
+        description:
+          'Some units offered the wrong second squad size — Von Ryan’s ' +
+          'Leapers showed 3 for 55pts or 4 for 105pts, when the real options are ' +
+          '3 or 6. These units were missing from the official points data and ' +
+          'fell back to a stale figure; they now use GW’s own sizes. ' +
+          'Reported by FrumpOfWar.',
+      },
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Missing enhancement rules text (Synaptic Lynchpin and 6 more)',
+        description:
+          'Seven enhancements showed a name and cost but no rules text, because ' +
+          'their name is spelled slightly differently in our dataset than in ' +
+          'GW’s (“Synaptic Lynchpin” vs “Linchpin”). ' +
+          'Affected Tyranids, Aeldari, Black Templars, Emperor’s Children, ' +
+          'Grey Knights, Leagues of Votann and Necrons. Reported by FrumpOfWar.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Rules text filled in for 200+ unit abilities',
