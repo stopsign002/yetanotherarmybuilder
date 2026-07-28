@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-15',
-    lastUpdated: '2026-07-28T14:15:00Z',
+    version:     '2026.07.28-16',
+    lastUpdated: '2026-07-28T14:50:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Super-heavy Walker now listed as a core ability',
+        description:
+          'The Ta\u2019unar Supremacy Armour\u2019s Super-heavy Walker and the ' +
+          'Seraptek Heavy Construct\u2019s Titanic Walker \u2014 the same rule ' +
+          'under two names \u2014 were shown in the named-abilities list instead ' +
+          'of on the core-ability row, which is where Games Workshop prints them. ' +
+          'The rules text was always there and is unchanged.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Ability name no longer printed twice in its own rules text',

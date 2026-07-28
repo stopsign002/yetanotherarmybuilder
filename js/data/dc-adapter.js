@@ -86,8 +86,16 @@
   // with an optional trailing rating — "Feel No Pain 5+", "Scouts 9\"",
   // "Deadly Demise D6+2". "Leader" is intentionally absent: 40kdc's generic
   // leader ability is dropped upstream of this and surfaced via attachmentRole.
+  // GW's own data groups these as CORE abilities, so they belong on the core
+  // tag row rather than in the named-ability list. Super-heavy Walker (Ta'unar)
+  // and Titanic Walker (Seraptek) are the SAME rule — identical text, "move
+  // over models and terrain 4\" or less in height" — that 40kdc names
+  // differently per faction; BSData names them the same way we do, so the names
+  // stay and only the classification changes. Deliberately NOT Heavy Walker
+  // (Stormsurge): same text again, but GW files that one under `other`, so it
+  // is correctly not core.
   const CORE_ABILITY_RE =
-    /^(Deadly Demise|Deep Strike|Feel No Pain|Fights First|Firing Deck|Infiltrators|Lone Operative|Scouts|Stealth|Hover)\b/i;
+    /^(Deadly Demise|Deep Strike|Feel No Pain|Fights First|Firing Deck|Infiltrators|Lone Operative|Scouts|Stealth|Hover|Super-heavy Walker|Titanic Walker)\b/i;
 
   // Hand-patches for core abilities the upstream 40kdc dataset is missing on a
   // unit's datasheet. Keyed by unit id → core ability ids to inject. This is
