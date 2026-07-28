@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-4',
-    lastUpdated: '2026-07-28T04:40:00Z',
+    version:     '2026.07.28-5',
+    lastUpdated: '2026-07-28T05:20:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'change',
+        title: 'All game data now served from yaab itself',
+        description:
+          'Ability and stratagem rules text, and the weapon lines on ' +
+          'datasheets, were being fetched live from a third-party GitHub ' +
+          'repository every time you loaded the app \u2014 so an outage there ' +
+          'could blank rules text or change the weapon numbers you saw. That ' +
+          'data is now bundled with yaab and served from here, versioned ' +
+          'alongside everything else. The app no longer makes any external ' +
+          'request for game data.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Pistols and combi-weapons now show their melee skill',

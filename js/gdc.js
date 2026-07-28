@@ -16,7 +16,18 @@
 (function () {
   const App = window.App = window.App || {};
 
-  const RAW_ROOT = 'https://raw.githubusercontent.com/game-datacards/datasources/main/';
+  // Served from OUR origin, not github. `data/gdc/` is a committed snapshot of
+  // game-datacards/datasources (same `<edition>/gdc/<file>.json` layout, so the
+  // URL builder below is unchanged), refreshed by ~/sites/base/refresh-40kdc.sh
+  // alongside the 40kdc bundle.
+  //
+  // Why this stopped being a live fetch: GDC is not a nice-to-have fallback.
+  // 40kdc ships NO rules prose, and detail.js/cards-mode.js render weapon
+  // statlines from the gdcRanged/gdcMelee rows — so a github outage or an
+  // upstream reshuffle would blank ability text and swap the weapon numbers
+  // users see. Pinning it also makes what's on screen reproducible: the app now
+  // has ONE data origin we control, versioned in git with everything else.
+  const RAW_ROOT = 'data/gdc/';
   const EDITION = '11th';   // single source of truth — stratagems/rules/
                             // enhancements PROSE and datasheet loadout/wargear/
                             // composition/leadBy/weapons all come from 11th now.
