@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-2',
-    lastUpdated: '2026-07-28T03:10:00Z',
+    version:     '2026.07.28-3',
+    lastUpdated: '2026-07-28T04:00:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'FRAME keyword restored on 132 vehicles',
+        description:
+          'The 11th-edition FRAME keyword was missing from every vehicle that ' +
+          'should have it \u2014 Rhinos, Predators, Immolators, Knights, Barges ' +
+          'and 120-odd more. It is back on all 132 datasheets that carry it in ' +
+          'Games Workshop\u2019s own data. (The community dataset we build on ' +
+          'removed it as a non-game tag; we now keep it ourselves.)',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Flyers now show the Move that GW\u2019s own data gives them',

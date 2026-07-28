@@ -269,14 +269,53 @@
     (u.keywords || []).concat(u.faction_keywords || [])
       .some((k) => /^aircraft$/i.test(String(k).trim()));
 
-  // GW 11e errata added the FRAME keyword to most vehicles (faction-pack
-  // RULES-UPDATES "Keywords Section: Add 'FRAME'"). Self-healing: skipped if
-  // already present.
-  // (All 53 previously hand-listed FRAME units retired 2026-07-14 — 40kdc
-  //  shipped the FRAME keyword on every one of them in release 1.0.27, verified
-  //  against upstream. The injection scaffold below is kept empty so a future
-  //  gap can be re-listed here without rewiring the keyword logic.)
-  const FRAME_UNITS = new Set([]);
+  // GW 11e added the FRAME keyword to most vehicles (faction-pack RULES-UPDATES
+  // "Keywords Section: Add 'FRAME'"). Self-healing: injection is skipped when the
+  // keyword is already present, so this no-ops if upstream ever ships it.
+  //
+  // RE-ADDED 2026-07-28 with the full 132 units, from GW's OWN app data (found by
+  // ~/sites/base/dump-audit.py, data_version 912 — it was 153 of the audit's
+  // findings, all one root cause). History worth knowing before touching this:
+  // the original 53-unit list was retired 2026-07-14 because 40kdc had shipped
+  // FRAME in release 1.0.27 (via our PR #85) — but upstream then DELETED it again
+  // in commit 3aac909, "drop the non-game 'Frame' build tag from unit keywords".
+  // Upstream now has it on ZERO units while GW has it on 132, so this is a
+  // standing editorial disagreement, not a temporary gap: expect to keep this
+  // list. User ruled 2026-07-28 to follow GW.
+  const FRAME_UNITS = new Set([
+    'acastus-knight-asterius', 'acastus-knight-porphyrion', 'aegis-defence-line',
+    'agamatus-custodians', 'anathema-psykana-rhino', 'annihilation-barge', 'astraeus',
+    'baal-predator', 'baneblade', 'banehammer', 'banesword', 'basilisk', 'battlewagon',
+    'caladius-grav-tank', 'castigator', 'catacomb-command-barge',
+    'chaos-acastus-knight-asterius', 'chaos-acastus-knight-porphyrion', 'chaos-land-raider',
+    'chaos-predator-annihilator', 'chaos-predator-destructor', 'chaos-rhino',
+    'chaos-vindicator', 'chimera', 'convergence-of-dominion', 'coronus-grav-carrier',
+    'corvus-blackstar', 'd-cannon-platform', 'deathstrike', 'devilfish', 'doomhammer',
+    'doomsday-ark', 'drop-pod', 'exorcist', 'falcon', 'feculent-gnarlmaw', 'fire-prism',
+    'gargantuan-squiggoth', 'ghost-ark', 'gladiator-lancer', 'gladiator-reaper',
+    'gladiator-valiant', 'goliath-rockgrinder', 'goliath-truck', 'hammerfall-bunker',
+    'hammerhead-gunship', 'harridan', 'hekaton-land-fortress', 'hellhammer', 'hellhound',
+    'hierophant', 'hydra', 'immolator', 'imperial-rhino', 'impulsor',
+    'inquisitorial-chimera', 'invader-atv', 'khorne-lord-of-skulls', 'land-raider',
+    'land-raider-crusader', 'land-raider-redeemer', 'land-speeder',
+    'land-speeder-vengeance', 'leman-russ-battle-tank', 'leman-russ-commander',
+    'leman-russ-demolisher', 'leman-russ-eradicator', 'leman-russ-executioner',
+    'leman-russ-exterminator', 'leman-russ-punisher', 'leman-russ-vanquisher', 'manta',
+    'manticore', 'miasmic-malignifier', 'monolith', 'night-scythe', 'night-spinner',
+    'noctilith-crown', 'obelisk', 'pallas-grav-attack', 'piranhas', 'plagueburst-crawler',
+    'predator-annihilator', 'predator-destructor', 'raider', 'ravager',
+    'ravenwing-darkshroud', 'razorback', 'repulsor', 'repulsor-executioner', 'rhino',
+    'rogal-dorn-battle-tank', 'rogal-dorn-commander', 'sagitaur', 'sammael',
+    'seraptek-heavy-construct', 'shadow-weaver-platform', 'shadowsword',
+    'sisters-of-battle-immolator', 'skorpius-disintegrator', 'skorpius-dunerider',
+    'skull-altar', 'sky-ray-gunship', 'sororitas-rhino', 'starweaver', 'stompa',
+    'storm-speeder-hailstrike', 'storm-speeder-hammerstrike', 'storm-speeder-thunderstrike',
+    'stormlord', 'taunar-supremacy-armour', 'taurox', 'taurox-prime', 'tesseract-vault',
+    'tidewall-droneport', 'tidewall-gunrig', 'tidewall-shieldline', 'toxicrene',
+    'triarch-stalker', 'trukk', 'tyrannocyte', 'tyrannofex', 'venerable-land-raider',
+    'venom', 'vibro-cannon-platform', 'vindicator', 'voidweaver', 'wave-serpent',
+    'whirlwind', 'wyvern', 'ynnari-raider', 'ynnari-venom'
+  ]);
 
   // Self-healing corrections to upstream wargear-option/composition data that
   // the picker consumes. Keyed by unit id:
