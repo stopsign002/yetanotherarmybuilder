@@ -26,9 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-14',
-    lastUpdated: '2026-07-28T13:40:00Z',
+    version:     '2026.07.28-15',
+    lastUpdated: '2026-07-28T14:15:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Ability name no longer printed twice in its own rules text',
+        description:
+          'Where a rules update came from a Games Workshop faction pack, the ' +
+          'ability\u2019s name was repeated at the start of its text \u2014 ' +
+          '\u201cAdaptive Instincts (Once per turn, per unit): In the Fight ' +
+          'phase\u2026\u201d sitting directly under the heading \u201cAdaptive ' +
+          'Instincts\u201d. GW prints the name that way in the PDF; we now strip ' +
+          'it, since the heading already says it.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Once-per-turn limits now shown on three abilities',

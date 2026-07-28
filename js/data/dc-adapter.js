@@ -835,13 +835,28 @@
     // it self-heals once upstream 40kdc-abilities carries the new text.
     if (abilityFixOv) {
       const have = new Set(abilities.map((a) => a.name.toLowerCase()));
+      // GW's faction packs print the ability name at the head of the rules
+      // paragraph — "Adaptive Instincts (Once per turn, per unit): In the Fight
+      // phase, …" — and the FAQ processor lifts the paragraph verbatim. Every
+      // renderer already shows the name as its own heading, so that prefix
+      // renders the name twice in a row. Strip a leading copy of the name, with
+      // or without a trailing "(qualifier)". Tolerant of the curly apostrophes
+      // and non-breaking spaces GW's PDFs are full of.
+      const stripEchoedName = (name, desc) => {
+        if (!name || !desc) return desc || '';
+        const esc = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+          .replace(/['’]/g, "['’]").replace(/\s+/g, '[\\s\\u00a0]+');
+        return String(desc)
+          .replace(new RegExp('^' + esc + '(?:[\\s\\u00a0]*\\([^)]*\\))?[\\s\\u00a0]*:[\\s\\u00a0]*', 'i'), '')
+          .trim();
+      };
       (abilityFixOv.updateNamed || []).forEach((u) => {
         if (!u || !u.name) return;
         const target = abilities.find((a) => a.name && a.name.toLowerCase() === u.name.toLowerCase());
         if (!target) return;   // ability not present → no-op
         if (u.expectContains && !(target.description || '').toLowerCase()
               .includes(String(u.expectContains).toLowerCase())) return;   // already updated upstream → no-op
-        target.description = u.description || '';
+        target.description = stripEchoedName(target.name, u.description || '');
       });
       (abilityFixOv.addCore || []).forEach((aid) => {
         let av = null;
@@ -855,7 +870,7 @@
         const name = p && p.name;
         if (!name || have.has(name.toLowerCase())) return;
         have.add(name.toLowerCase());
-        abilities.push({ name, description: p.description || '',
+        abilities.push({ name, description: stripEchoedName(name, p.description || ''),
                          isCore: CORE_ABILITY_RE.test(name) });
       });
     }
