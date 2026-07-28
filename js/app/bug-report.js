@@ -120,6 +120,14 @@
             '<label class="bug-report-label" for="bug-report-desc"><span id="bug-report-desc-label">What went wrong?</span></label>' +
             '<textarea id="bug-report-desc" class="form-input bug-report-desc" rows="5" maxlength="' + MAX_BODY + '" ' +
               'placeholder="Steps to reproduce, what you expected, what happened…"></textarea>' +
+            '<label class="bug-report-label" for="bug-report-email">Email (optional)</label>' +
+            '<input id="bug-report-email" class="form-input bug-report-email" type="email" maxlength="254" ' +
+              'placeholder="you@example.com" autocomplete="email" inputmode="email" ' +
+              'aria-describedby="bug-report-email-hint" />' +
+            '<div class="bug-report-hint" id="bug-report-email-hint">' +
+              'Only used to tell you when this is fixed, with a note on what changed. ' +
+              'Leave it blank if you’d rather not hear back.' +
+            '</div>' +
             '<label class="bug-report-label" for="bug-report-attach">Screenshot or recording (optional, up to 50 MB)</label>' +
             '<input id="bug-report-attach" class="form-input bug-report-attach" type="file" accept="' + ATTACH_ACCEPT + '" />' +
             '<div class="bug-report-attach-info" id="bug-report-attach-info"></div>' +
@@ -228,12 +236,14 @@
     const titleEl = modalEl.querySelector('#bug-report-summary');
     const descEl  = modalEl.querySelector('#bug-report-desc');
     const diagEl  = modalEl.querySelector('#bug-report-diag');
+    const emailEl = modalEl.querySelector('#bug-report-email');
     const submit  = modalEl.querySelector('#bug-report-submit');
 
     const kind        = getCurrentKind();
     const title       = (titleEl.value || '').trim();
     const description = (descEl.value || '').trim();
     let   diagnostics = (diagEl.value || '').trim();
+    const email       = ((emailEl && emailEl.value) || '').trim();
     if (diagnostics.length > MAX_DIAG) diagnostics = diagnostics.slice(0, MAX_DIAG) + '\n…(truncated)…';
 
     if (!title) {
@@ -244,6 +254,13 @@
     if (!description) {
       setStatus('Please describe ' + (kind === 'feature' ? 'the feature you\'d like.' : 'what happened.'), 'error');
       descEl.focus();
+      return;
+    }
+    // Catch a typo here rather than letting the server 400 it — the address is
+    // optional, so a mistake would otherwise cost the reporter their update.
+    if (email && !/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email)) {
+      setStatus('That email address doesn\u2019t look right. Fix it, or clear it to skip the update.', 'error');
+      emailEl.focus();
       return;
     }
 
@@ -261,6 +278,7 @@
         fd.append('title',       title);
         fd.append('description', description);
         fd.append('diagnostics', diagnostics);
+        if (email) fd.append('email', email);
         fd.append('attachment',  chosenAttachment, chosenAttachment.name);
         resp = await fetch(ENDPOINT, {
           method: 'POST',
@@ -273,7 +291,7 @@
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ kind, title, description, diagnostics }),
+          body: JSON.stringify({ kind, title, description, diagnostics, email }),
         });
       }
       if (resp.status === 401) {
@@ -289,7 +307,8 @@
         let data = null; try { data = await resp.json(); } catch (_) {}
         throw new Error((data && data.error) || ('HTTP ' + resp.status));
       }
-      toast((kind === 'feature' ? 'Feature request sent' : 'Bug report sent') + ' — thanks!', 'success', 3000);
+      toast((kind === 'feature' ? 'Feature request sent' : 'Bug report sent') +
+        (email ? ' — we\u2019ll email you when it\u2019s fixed.' : ' — thanks!'), 'success', 3800);
       closeModal();
     } catch (err) {
       setStatus('Send failed: ' + (err.message || 'unknown'), 'error');
@@ -337,6 +356,8 @@
     descEl.value  = '';
     if (attachEl)   attachEl.value = '';
     if (attachInfo) attachInfo.textContent = '';
+    // The email field is deliberately NOT cleared — someone filing a second
+    // report in the same session almost certainly wants the same address.
     chosenAttachment = null;
     diagEl.value  = 'Gathering diagnostics…';
     setTimeout(() => titleEl.focus(), 0);

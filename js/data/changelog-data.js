@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-11',
-    lastUpdated: '2026-07-28T09:40:00Z',
+    version:     '2026.07.28-12',
+    lastUpdated: '2026-07-28T10:20:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'feature',
+        title: 'Leave your email on a bug report and we\u2019ll tell you when it\u2019s fixed',
+        description:
+          'The feedback form now has an optional email field. If you fill it in, ' +
+          'you get one message when your report is resolved, explaining what was ' +
+          'wrong and what changed. Leave it blank and nothing changes \u2014 the ' +
+          'address is used for that one note and nothing else. Reports are now ' +
+          'triaged automatically every hour, so most get looked at the same day.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Points corrected for 240 units — including every transport',

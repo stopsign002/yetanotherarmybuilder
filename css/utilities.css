@@ -189,8 +189,18 @@
 .bug-report-summary,
 .bug-report-desc,
 .bug-report-kind,
+.bug-report-email,
 .bug-report-attach {
   width: 100%;
+}
+/* Sits directly under the email field to explain why we're asking. Tighter
+   than .bug-report-label so it reads as a note on the field above, not a
+   heading for the field below. */
+.bug-report-hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted, #aaa);
+  margin: 5px 0 4px;
 }
 .bug-report-desc {
   resize: vertical;
