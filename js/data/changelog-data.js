@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-6',
-    lastUpdated: '2026-07-28T05:50:00Z',
+    version:     '2026.07.28-7',
+    lastUpdated: '2026-07-28T06:40:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Optional wargear weapons and missing core abilities restored',
+        description:
+          'Weapons a unit can TAKE rather than start with \u2014 the Venerable ' +
+          'Dreadnought\u2019s Helfrost cannon and Fenrisian great axe, the Knight ' +
+          'Destrier\u2019s Bellatus chainsword and Thundershock spear, the ' +
+          'Forgefiend\u2019s Ectoplasma cannon \u2014 appeared on datasheets but were ' +
+          'invisible to the damage calculator and list coach. They are now in ' +
+          'the unit data, with stats taken from GW\u2019s own datasheet. Also ' +
+          'added 19 missing core abilities across 13 units, including Deep ' +
+          'Strike on The Red Terror and Kravek Morne, Stealth and Infiltrators ' +
+          'on Cadian Recon Squads, and Lone Operative on Wazdakka Gutsmek.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Weapon values corrected against GW\u2019s own data',

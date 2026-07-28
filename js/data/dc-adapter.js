@@ -939,6 +939,50 @@
     // mfm-scrape-wargear.py, keyed "faction_id/unit_id" → {item_id: pts}) stays
     // as a fallback/override for anything upstream hasn't priced yet. NB the
     // scraper's OTHER output, DC.mfmPoints, remains the points authority.
+    // Weapons a unit can TAKE but isn't issued by default.
+    //
+    // 40kdc's `weapon_ids` is only the default loadout; swap options live in
+    // wargear-options as { replaces: [given up], replacement / replacement_choice:
+    // [gained] }. weaponRows() only walked weapon_ids, so option-only weapons were
+    // absent from unit.weapons entirely — the Venerable Dreadnought's Helfrost
+    // cannon and Fenrisian great axe exist in 40kdc with full profiles and ARE
+    // linked to the unit via 4 wargear options, yet never reached us. The
+    // datasheet still showed them (it renders the GDC rows, which list every
+    // profile on the sheet), so the gap was invisible on screen while
+    // damage-calc / list-coach / analytics could not see the weapons at all.
+    //
+    // Only `replacement`/`replacement_choice` are read — NOT `replaces`, which is
+    // what the model gives up and is normally already in the default loadout.
+    // Rows are appended with `_optional: true` so consumers can tell "can take"
+    // from "is armed with"; nothing here implies the model carries them all at
+    // once (the wargear picker remains the authority on legal combinations).
+    function optionWeaponRows() {
+      let wgos = [];
+      try { wgos = uv.wargearOptions || []; } catch (_) { return []; }
+      if (!wgos.length) return [];
+      const have = new Set((u.weapon_ids || []).filter(Boolean));
+      const ids = new Set();
+      wgos.forEach((w) => {
+        const raw = (w && w.raw) || w || {};
+        (raw.replacement || []).forEach((id) => id && !have.has(id) && ids.add(id));
+        (raw.replacement_choice || []).forEach((grp) =>
+          (grp || []).forEach((id) => id && !have.has(id) && ids.add(id)));
+      });
+      if (!ids.size) return [];
+      const views = [];
+      ids.forEach((id) => {
+        let w = null;
+        try {
+          w = (DC.weapons.getInFaction && DC.weapons.getInFaction(id, u.faction_id))
+            || (DC.weapons.getAny && DC.weapons.getAny(id))
+            || (DC.weapons.get && DC.weapons.get(id));
+        } catch (_) { w = null; }
+        const raw = (w && (w.raw || w)) || null;
+        if (raw && Array.isArray(raw.profiles)) views.push({ raw: raw });
+      });
+      return weaponRows(views).map((r) => Object.assign(r, { _optional: true }));
+    }
+
     const wargearProfile = (function () {
       const upstreamCosts = Array.isArray(u.wargear_costs) && u.wargear_costs.length
         ? u.wargear_costs.reduce((m, c) => (c && c.item_id ? (m[c.item_id] = c.cost, m) : m), {})
@@ -1182,7 +1226,7 @@
       // an override for anything upstream genuinely lacks.
       invulnNote: invulnNoteOverride !== undefined ? invulnNoteOverride
         : (condInvuln(first) ? condInvuln(first).note : null),
-      weapons: weaponRows(uv.weapons),
+      weapons: weaponRows(uv.weapons).concat(optionWeaponRows()),
       abilities,
       wargearAbilities,
       wargearProfile,
@@ -1448,6 +1492,46 @@
     const s = String(v == null ? '' : v).toLowerCase().replace(/["+*\s]/g, '');
     return (s === '0' || s === '-' || s === '—') ? '' : s;
   }
+  // Option-weapon rows carry the stats of a SHARED weapon entity, whose skill is
+  // the wrong wielder's: 40kdc stores one `helfrost-cannon`, and the Wulfen
+  // Dreadnought that also takes it hits on 2+ where the Venerable Dreadnought
+  // hits on 3+. Skill is a property of the model, not the gun.
+  //
+  // So once the GDC rows are merged (they are per-DATASHEET, i.e. already
+  // wielder-correct), copy their values onto our `_optional` rows. Runs after the
+  // GDC merge for that reason, alongside applyWeaponFixes. Only touches rows we
+  // added ourselves, and only where a same-named GDC profile exists.
+  function syncOptionalWeaponsFromGdc(factions) {
+    if (!Array.isArray(factions)) return;
+    const key = (v) => String(v == null ? '' : v).toLowerCase()
+      .replace(/[\u2018\u2019]/g, "'").replace(/[^a-z0-9]/g, '');
+    factions.forEach((f) => (f.units || []).forEach((u) => {
+      const opts = (u.weapons || []).filter((w) => w && w._optional);
+      if (!opts.length) return;
+      const idx = new Map();
+      [u.gdcRangedWeapons, u.gdcMeleeWeapons].forEach((lst) => (lst || []).forEach((w) =>
+        ((w && w.profiles) || []).forEach((p) => {
+          const k = key(p && p.name);
+          if (k && !idx.has(k)) idx.set(k, p);
+        })));
+      if (!idx.size) return;
+      opts.forEach((w) => {
+        const p = idx.get(key(w.name));
+        if (!p) return;
+        const melee = String(w.Range || '').toLowerCase().indexOf('melee') === 0;
+        if (p.attacks != null && p.attacks !== '') w.A = String(p.attacks);
+        if (p.strength != null && p.strength !== '') w.S = String(p.strength);
+        if (p.ap != null && p.ap !== '') w.AP = String(p.ap);
+        if (p.damage != null && p.damage !== '') w.D = String(p.damage);
+        if (p.skill != null && p.skill !== '') {
+          const sk = String(p.skill);
+          if (melee) w.WS = sk; else w.BS = sk;
+        }
+        if (!melee && p.range != null && p.range !== '') w.Range = String(p.range);
+      });
+    }));
+  }
+
   function applyWeaponFixes(factions) {
     const all = DC.weaponFixes || {};
     if (!Object.keys(all).length || !Array.isArray(factions)) return;
@@ -1512,6 +1596,7 @@
     });
     // Weapon fixes for the non-GDC rows (idempotent; re-run post-GDC below
     // for the gdc profile lists that merge creates).
+    try { syncOptionalWeaponsFromGdc(factions); } catch (_) {}
     try { applyWeaponFixes(factions); } catch (_) {}
 
     // Phase 3: GDC overlay for stratagem text (hybrid). Defensive — never fatal.
@@ -1528,6 +1613,7 @@
         if (typeof App.GDC.mergeUnitAbilitiesFromGdc === 'function') {
           App.GDC.mergeUnitAbilitiesFromGdc(App.state.factions);
         }
+        try { syncOptionalWeaponsFromGdc(App.state.factions); } catch (_) {}
         try { applyWeaponFixes(App.state.factions); } catch (_) {}
 
         // Reconcile: prefer 40kdc strat text, fall back to GDC. Runs AFTER the
@@ -1564,6 +1650,7 @@
     _dcStratsFor: dcStratsFor,
     _reconcileStrats: reconcileStrats,
     _applyWeaponFixes: applyWeaponFixes,
+    _syncOptionalWeaponsFromGdc: syncOptionalWeaponsFromGdc,
   };
 
   // attachments.js reaches into WahapediaParser._internal.foldKey. Provide a stub
