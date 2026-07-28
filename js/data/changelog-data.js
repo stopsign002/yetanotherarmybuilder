@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-17',
-    lastUpdated: '2026-07-28T16:20:00Z',
+    version:     '2026.07.28-18',
+    lastUpdated: '2026-07-28T17:10:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Keyword corrections on 12 datasheets',
+        description:
+          'Checked against Games Workshop’s own app data. The Venerable ' +
+          'Dreadnought’s keyword is VENERABLE DREADNOUGHT, Blue Horrors are ' +
+          'BLUE (not BRIMSTONE), and the Catacomb Command Barge is a NOBLE. ' +
+          'Removed keywords GW does not have: PSYKER from Corsair Voidscarred, ' +
+          'SMOKE from the Defiler, GRENADES from the World Eaters Master of ' +
+          'Executions, and the SPAWN/MUTANT/SORCERER tags that leaked between ' +
+          'legions on datasheets shared by several of them — those shared ' +
+          'sheets now carry the right keywords per legion.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Leader and Support now appear on the card as core abilities',

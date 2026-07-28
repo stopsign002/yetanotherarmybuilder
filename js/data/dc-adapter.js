@@ -318,6 +318,47 @@
     'roboute-guilliman', 'the-red-terror', 'thulia-ghuld'
   ]);
 
+  // Per-datasheet keyword corrections, keyed '<faction_id>::<unit_id>'. Every
+  // entry follows GW's own app data (dump-audit.py vs GDC v912), confirmed by
+  // the user 2026-07-28. Same self-healing contract as the maps above: an add is
+  // skipped when the keyword is already present and a remove only fires when it
+  // is, so each entry no-ops once upstream agrees and can then be deleted.
+  //
+  // Keyed per FACTION COPY, not per unit id, and that is load-bearing: 40kdc
+  // serves several legions from one datasheet and unions their keywords, while
+  // GW splits them and tags each separately. So the CSM Sorcerer in Terminator
+  // Armour must lose SORCERER while the Thousand Sons copy of the same
+  // datasheet keeps it; the Agents Corvus Blackstar loses FRAME while the
+  // Deathwatch one keeps it; the World Eaters Master of Executions loses
+  // GRENADES while the CSM one keeps it. A unit-id key would break the copy it
+  // isn't aimed at. (The four Chaos MARKS are a separate, deliberate divergence
+  // — see `keywordsWeCarryByDesign` in dump-suppress.json — and stay.)
+  const UNIT_KEYWORD_FIXES = {
+    // Ours called it VENERABLE; GW's keyword is the full datasheet name. The
+    // Grey Knights copy already matches.
+    'adeptus-astartes::venerable-dreadnought': { remove: ['Venerable'], add: ['Venerable Dreadnought'] },
+    // GW's 11e datasheet is not a PSYKER (10e's was) — matters, PSYKER is a
+    // targeting keyword for a pile of rules.
+    'aeldari::corsair-voidscarred':            { remove: ['Psyker'] },
+    // FRAME is on GW's Deathwatch copy only, not the Agents one.
+    'agents-of-the-imperium::corvus-blackstar': { remove: ['Frame'] },
+    // BLUE, not BRIMSTONE — Brimstone Horrors are their own datasheet.
+    'chaos-daemons::blue-horrors':             { remove: ['Brimstone'], add: ['Blue'] },
+    'chaos-space-marines::sorcerer-in-terminator-armour': { remove: ['Sorcerer'] },
+    // GW's CSM copy is CHAOS SPAWN; SPAWN + MUTANT leak in from the World
+    // Eaters / Thousand Sons copies of the shared datasheet.
+    'chaos-space-marines::chaos-spawn':        { remove: ['Spawn', 'Mutant'] },
+    // GW gives SMOKE to no Defiler. (Our World Eaters copy already lacks it.)
+    'chaos-space-marines::defiler':            { remove: ['Smoke'] },
+    'death-guard::defiler':                    { remove: ['Smoke'] },
+    'thousand-sons::defiler':                  { remove: ['Smoke'] },
+    'necrons::catacomb-command-barge':         { add: ['Noble'] },
+    'world-eaters::master-of-executions':      { remove: ['Grenades'] },
+    // GW's World Eaters copy is SPAWN where CSM's is CHAOS SPAWN — GW's own
+    // inconsistency between two copies of one model, followed as-is.
+    'world-eaters::chaos-spawn':               { remove: ['Chaos Spawn', 'Mutant'] },
+  };
+
   const FRAME_UNITS = new Set([
     'acastus-knight-asterius', 'acastus-knight-porphyrion', 'aegis-defence-line',
     'agamatus-custodians', 'anathema-psykana-rhino', 'annihilation-barge', 'astraeus',
@@ -1268,6 +1309,24 @@
     if (MOBILE_UNITS.has(u.id)
         && !finalKeywords.some((k) => /^mobile$/i.test(String(k).trim()))) {
       finalKeywords = finalKeywords.concat('Mobile');
+    }
+    // Per-faction-copy keyword corrections (UNIT_KEYWORD_FIXES). Runs LAST so a
+    // remove can also undo a FRAME/MOBILE injection above — the Agents Corvus
+    // Blackstar is in FRAME_UNITS for the Deathwatch copy's sake and has to give
+    // it back here.
+    const kwFix = UNIT_KEYWORD_FIXES[u.faction_id + '::' + u.id];
+    if (kwFix) {
+      const gone = (kwFix.remove || []).map((k) => String(k).trim().toLowerCase());
+      if (gone.length) {
+        finalKeywords = finalKeywords.filter(
+          (k) => !gone.includes(String(k).trim().toLowerCase()));
+      }
+      (kwFix.add || []).forEach((k) => {
+        const lower = String(k).trim().toLowerCase();
+        if (!finalKeywords.some((x) => String(x).trim().toLowerCase() === lower)) {
+          finalKeywords = finalKeywords.concat(k);
+        }
+      });
     }
 
     return {
