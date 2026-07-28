@@ -26,9 +26,16 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-7',
-    lastUpdated: '2026-07-28T06:40:00Z',
+    version:     '2026.07.28-8',
+    lastUpdated: '2026-07-28T07:10:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Doomhammer: Firing Deck corrected to 12',
+        description:
+          'The Doomhammer was showing Firing Deck 6. Games Workshop\u2019s own ' +
+          'data gives it Firing Deck 12, and it now reads correctly.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Optional wargear weapons and missing core abilities restored',
