@@ -26,9 +26,17 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-9',
-    lastUpdated: '2026-07-28T07:40:00Z',
+    version:     '2026.07.28-10',
+    lastUpdated: '2026-07-28T08:20:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Rules text filled in for 200+ unit abilities',
+        description:
+          'Abilities that showed a name but no rules text now have it, taken ' +
+          'from Games Workshop\u2019s own data \u2014 208 abilities across 177 ' +
+          'datasheets. Every ability on every unit now has its text.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'MOBILE keyword added to six characters',

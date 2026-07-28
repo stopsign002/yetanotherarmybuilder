@@ -9,3 +9,6 @@ scripts/parser-coverage-report.md
 node_modules/
 package.json
 package-lock.json
+
+# Server-only: GW ability prose (see js/vendor/dc-prose.js header)
+js/vendor/dc-prose.js
