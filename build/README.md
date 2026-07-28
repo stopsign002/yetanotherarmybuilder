@@ -10,10 +10,10 @@ This is the ONE build step in an otherwise buildless app. The committed
 
 ## When a new MFM (Munitorum Field Manual) drops
 
-The weekly `~/sites/base/refresh-40kdc.sh` cron (Fridays 04:45) re-scrapes
+The daily `~/sites/base/refresh-40kdc.sh` cron (04:45) re-scrapes
 mfm.warhammer-community.com every run and rebuilds the bundle, so a new MFM
-picks itself up on the next Friday with zero manual work. To pull it
-immediately (or verify a fresh MFM before Friday):
+picks itself up the next morning with zero manual work. To pull it
+immediately:
 
 ```
 FORCE_REFRESH=1 ~/sites/base/refresh-40kdc.sh
