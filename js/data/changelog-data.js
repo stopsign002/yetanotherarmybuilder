@@ -26,9 +26,19 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-5',
-    lastUpdated: '2026-07-28T05:20:00Z',
+    version:     '2026.07.28-6',
+    lastUpdated: '2026-07-28T05:50:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Weapon values corrected against GW\u2019s own data',
+        description:
+          'On some weapons the datasheet showed Games Workshop\u2019s value while ' +
+          'the damage calculator and list coach used a different one \u2014 the ' +
+          'Defiler\u2019s guns hitting on 4+ instead of 3+, for instance. 38 weapon ' +
+          'values across 9 units are now corrected in the underlying data, so ' +
+          'what you see on the card is what the tools calculate with.',
+      },
       {
         date: '2026-07-28', kind: 'change',
         title: 'All game data now served from yaab itself',
