@@ -19,9 +19,19 @@
 // (woff2) are intentionally skipped — their URLs must match the CSS
 // @font-face requests or the preload is wasted.
 //
+// The nightly data refresh also redeploys js/vendor/dc-bundle.js WITHOUT a
+// release, and that content needs a new URL too. It must not bump
+// App.CHANGELOG.version to get one: changelog.js lights the "What's new" dot by
+// comparing that version against yaab_changelog_seen, so bumping it daily would
+// show every user a new-updates badge over an unchanged changelog. Instead the
+// refresh passes --data <hash>, which suffixes the token as `<version>-d<hash>`.
+// The release version stays visible in the URL, the cache key still changes,
+// and the changelog is untouched.
+//
 // Usage (no deps):
-//   node scripts/stamp-assets.mjs            # stamp using changelog version
-//   node scripts/stamp-assets.mjs --check    # exit 1 if index.html is stale
+//   node scripts/stamp-assets.mjs                # stamp using changelog version
+//   node scripts/stamp-assets.mjs --data <hash>  # …plus a data-only suffix
+//   node scripts/stamp-assets.mjs --check        # exit 1 if index.html is stale
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
@@ -32,6 +42,8 @@ const INDEX = resolve(ROOT, 'index.html');
 const CHANGELOG = resolve(ROOT, 'js/data/changelog-data.js');
 
 const checkOnly = process.argv.includes('--check');
+const dataIx = process.argv.indexOf('--data');
+const dataHash = dataIx > -1 ? (process.argv[dataIx + 1] || '').replace(/[^0-9a-f]/gi, '').slice(0, 8) : '';
 
 const changelogSrc = await readFile(CHANGELOG, 'utf8');
 const m = changelogSrc.match(/version:\s*'([^']+)'/);
@@ -40,13 +52,15 @@ if (!m) {
   process.exit(2);
 }
 const version = m[1];
-const token = encodeURIComponent(version);
+const token = encodeURIComponent(dataHash ? `${version}-d${dataHash}` : version);
 
 let html = await readFile(INDEX, 'utf8');
 
 // Match the URL inside src="…" / href="…" when it points at a local js/ or
 // css/ asset ending in .js or .css, with an optional existing ?v=… we strip.
 const ASSET_RE = /(\b(?:src|href)=")((?:js|css)\/[^"?]+\.(?:js|css))(?:\?v=[^"]*)?(")/g;
+// Same match, but capturing the existing ?v= value so --check can inspect it.
+const ASSET_RE_CHECK = /(\b(?:src|href)=")((?:js|css)\/[^"?]+\.(?:js|css))(?:\?v=([^"]*))?(")/g;
 
 let count = 0;
 const stamped = html.replace(ASSET_RE, (_full, pre, path, post) => {
@@ -54,15 +68,30 @@ const stamped = html.replace(ASSET_RE, (_full, pre, path, post) => {
   return `${pre}${path}?v=${token}${post}`;
 });
 
-if (stamped === html) {
-  console.log(`[stamp] index.html already at v=${version} (${count} assets).`);
+// --check accepts EITHER the bare release version or that version carrying a
+// data suffix. Both are current: the second is what a nightly bundle refresh
+// leaves behind, and failing CI on it would make every data-only deploy look
+// like a stale stamp.
+if (checkOnly) {
+  const okRe = new RegExp(`^${version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(-d[0-9a-f]{1,8})?$`);
+  const stale = [];
+  for (const mm of html.matchAll(ASSET_RE_CHECK)) {
+    const got = mm[3] ? decodeURIComponent(mm[3]) : '';
+    if (!okRe.test(got)) stale.push(`${mm[2]} (v=${got || 'none'})`);
+  }
+  if (stale.length) {
+    console.error(`[stamp] STALE: ${stale.length} asset(s) not stamped at v=${version}[-d…]. `
+      + `First: ${stale[0]}. Run: node scripts/stamp-assets.mjs`);
+    process.exit(1);
+  }
+  console.log(`[stamp] index.html is current at v=${version}[-d…] (${count} assets).`);
   process.exit(0);
 }
 
-if (checkOnly) {
-  console.error(`[stamp] STALE: index.html is not stamped at v=${version}. Run: node scripts/stamp-assets.mjs`);
-  process.exit(1);
+if (stamped === html) {
+  console.log(`[stamp] index.html already at v=${decodeURIComponent(token)} (${count} assets).`);
+  process.exit(0);
 }
 
 await writeFile(INDEX, stamped, 'utf8');
-console.log(`[stamp] stamped ${count} js/css assets in index.html with ?v=${version}.`);
+console.log(`[stamp] stamped ${count} js/css assets in index.html with ?v=${decodeURIComponent(token)}.`);
