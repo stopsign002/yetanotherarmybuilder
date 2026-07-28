@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-1',
-    lastUpdated: '2026-07-28T02:30:00Z',
+    version:     '2026.07.28-2',
+    lastUpdated: '2026-07-28T03:10:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Flyers now show the Move that GW\u2019s own data gives them',
+        description:
+          'Eight aircraft were showing \u201c-\u201d for Move because we blanked it for ' +
+          'everything with the AIRCRAFT keyword. Checked against Games ' +
+          'Workshop\u2019s own app data, they are hover flyers with a real Move and ' +
+          'the Hover ability: Valkyrie, Corvus Blackstar, Archaeopter ' +
+          'Transvector, Orion Assault Dropship and Harridan at 14\u2033, the two ' +
+          'Thunderhawks at 20\u2033, and the Manta at 40\u2033. The Avenger Strike ' +
+          'Fighter correctly keeps \u201c-\u201d per its faction pack.',
+      },
       {
         date: '2026-07-28', kind: 'feature',
         title: 'Support characters now show their own “Support” section',

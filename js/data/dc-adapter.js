@@ -240,6 +240,30 @@
     'stormtalon-gunship':     { M: '-', OC: '-', removeHover: true },
     'stormhawk-interceptor':  { M: '-', OC: '-', removeHover: true },
     'doom-scythe':            { M: '-', OC: '-' },
+
+    // ── De-aircrafted hover flyers, per GW's OWN app data (2026-07-28) ────────
+    // Found by ~/sites/base/dump-audit.py comparing us against GW's app dump
+    // (via the Game Datacards extraction, data_version 912): GW ships these with
+    // a REAL Move, no AIRCRAFT keyword, and the Hover ability. Upstream 40kdc
+    // still has them as AIRCRAFT at M20", so our blanket kept-Aircraft rule was
+    // blanking a Move GW actually publishes — and stripping the `hover` that
+    // upstream already links. Listing them here suppresses the blanket rule, so
+    // Hover survives on its own; only Move and the keyword need overriding.
+    // BSData independently agrees on 6 of these (and on Manta 40" / Harridan
+    // 14", both previously open in errata-uncertainty-report.md).
+    // NB no OC override: GW ships OC 0 for these, same as upstream.
+    'corvus-blackstar':               { M: '14"', deAircraft: true },
+    'orion-assault-dropship':         { M: '14"', deAircraft: true },
+    'archaeopter-transvector':        { M: '14"', deAircraft: true },
+    'valkyrie':                       { M: '14"', deAircraft: true },
+    'harridan':                       { M: '14"', deAircraft: true },
+    'thunderhawk-gunship':            { M: '20+"', deAircraft: true },
+    'grey-knights-thunderhawk-gunship': { M: '20"', deAircraft: true },
+    // Manta stays AIRCRAFT in GW's data but still has a real Move and Hover:
+    'manta':                          { M: '40"' },
+    // Avenger Strike Fighter is deliberately ABSENT: GW's app data says 20+",
+    // but the user (game authority) confirmed the faction pack gives it M '-',
+    // and BSData agrees with '-'. The blanket kept-Aircraft rule handles it.
   };
   const isAircraft = (u) =>
     (u.keywords || []).concat(u.faction_keywords || [])
