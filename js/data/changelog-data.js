@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-13',
-    lastUpdated: '2026-07-28T13:05:00Z',
+    version:     '2026.07.28-14',
+    lastUpdated: '2026-07-28T13:40:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Once-per-turn limits now shown on three abilities',
+        description:
+          'Games Workshop prints a usage limit as part of the ability\u2019s ' +
+          'name \u2014 \u201cAdaptive Instincts (Once per turn, per unit)\u201d ' +
+          '\u2014 and nowhere in the rules text, so we were showing the ability ' +
+          'with no sign that it was limited at all. Fixed for Tyranid Warriors ' +
+          'with Melee Bio-weapons, Boss Snikrot\u2019s Kunnin\u2019 Infiltrator ' +
+          '(once per battle, per army) and the Defiler\u2019s Destroyer of ' +
+          'Futures (once per phase, per unit).',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Stray ** around rules text is now proper bold',

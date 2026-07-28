@@ -499,6 +499,11 @@
     return prev[b.length];
   }
 
+  // A trailing "(…)" on an ability name — GW's datacard convention for "(Aura)"
+  // and for usage limits like "(Once per turn, per unit)". nameKey() strips it
+  // for matching; this is how we tell whether a name still carries one.
+  const QUALIFIED_NAME_RE = /\([^)]*\)\s*$/;
+
   // Normalize a name for cross-source matching: lowercased, curly→straight
   // quotes, trailing parenthetical/[bracket] suffix stripped, non-alnum removed.
   function nameKey(s) {
@@ -646,6 +651,18 @@
           const hit = byKey.get(nameKey(g.name));
           if (hit) {
             if (!hit.description && g.description) hit.description = g.description;
+            // GW prints a usage limit as a SUFFIX ON THE NAME — "Adaptive
+            // Instincts (Once per turn, per unit)" — and nowhere in the body.
+            // nameKey() strips that suffix so the two sides match, which is how
+            // the description merges correctly; but it also means we render the
+            // bare name and the player never learns the restriction exists.
+            // Adopt GW's fuller name whenever ours carries no qualifier of its
+            // own. 40kdc already ships "(Aura)" on 120 abilities, so downstream
+            // renderers handle the shape; this only adds the once-per-X limits
+            // it happens to omit. Self-healing — a no-op once 40kdc includes them.
+            if (QUALIFIED_NAME_RE.test(g.name) && !QUALIFIED_NAME_RE.test(hit.name)) {
+              hit.name = g.name;
+            }
           } else if (!hasNonCore && g.description) {
             const na = { name: g.name, description: g.description, isCore: false };
             abils.push(na);
