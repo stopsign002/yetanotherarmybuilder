@@ -675,22 +675,34 @@
       return out;
     }
 
-    // "Leader" + "Led By" — both attachment sections sit just above Keywords so
-    // the ability sections stay contiguous under the Wargear section. (canLead
-    // is computed earlier, near the leader-ability parsing.)
-    if (unit.attachmentRole === 'leader' || canLead.length > 0) {
+    // "Leader"/"Support" + "Led By" — both attachment sections sit just above
+    // Keywords so the ability sections stay contiguous under the Wargear
+    // section. (canLead is computed earlier, near the leader-ability parsing.)
+    //
+    // The section is labelled by attachmentRole, which 40kdc populates from the
+    // GW app dump's datasheet_bodyguard_group (authoritative). 11e splits
+    // attaching characters into LEADER and SUPPORT; both get a "can attach to"
+    // list, but a Support model does not lead its unit, so titling its section
+    // "Leader / Can lead" was simply wrong. Covers all 37 Support units — the
+    // overlay hack this replaces injected a fake "Support" core ability and
+    // reached only 33.
+    const isSupport = unit.attachmentRole === 'support';
+    if (isSupport || unit.attachmentRole === 'leader' || canLead.length > 0) {
+      const title = isSupport ? 'Support' : 'Leader';
       html += `<div class="detail-section">
-        <div class="detail-section-title detail-section-title-leader">Leader</div>`;
+        <div class="detail-section-title detail-section-title-leader">${title}</div>`;
       if (canLead.length > 0) {
         html += `<div class="detail-leader-units">
-          <span class="detail-ability-name">Can lead:</span>
+          <span class="detail-ability-name">${isSupport ? 'Can be attached to:' : 'Can lead:'}</span>
           <div class="detail-leader-list">
             ${canLead.map(u => `<span class="leader-unit-tag">${esc(u)}</span>`).join('')}
           </div>
         </div>`;
       } else {
         html += `<div class="detail-ability detail-leader-empty">
-          <span class="detail-ability-desc">This model is a Leader and can be attached to a Bodyguard unit.</span>
+          <span class="detail-ability-desc">${isSupport
+            ? 'This model has Support and can be attached to a unit.'
+            : 'This model is a Leader and can be attached to a Bodyguard unit.'}</span>
         </div>`;
       }
       html += `</div>`;

@@ -232,8 +232,8 @@
   const AIRCRAFT_ERRATA = {
     // De-aircrafted upstream; GW errata OC is '-' but 40kdc ships OC 0:
     'heldrake':               { OC: '-' },
-    // De-aircrafted upstream but still missing its Hover ability:
-    'night-scythe':           { addHover: true },
+    // (night-scythe's addHover retired 2026-07-28 — upstream now links `hover`
+    //  in its ability_ids, alongside the M14 + de-aircrafting it already had.)
     // Kept Aircraft with an explicit "remove Hover" note (the blanket rule also
     // blanks M/strips Hover, but listing makes the source auditable). Upstream
     // (1.0.27) still ships these as Aircraft at M20", so these stay active:
@@ -467,6 +467,23 @@
 
   // ── stat formatting (BSData rendered M as 6", Sv as 3+, Ld as 6+) ──────────
   const sv  = (v) => (v == null ? '' : `${v}+`);
+
+  // Conditional invulnerable saves. 40kdc carries these as first-class profile
+  // fields — `invuln_sv_ranged` / `invuln_sv_melee` — separate from the
+  // unconditional `invuln_sv`. Returns {value, note} for the UI's `5+* INV`
+  // + footnote treatment, or null when the save is unconditional/absent.
+  // Prefer this over hand-authored overlay notes: it covers every unit upstream
+  // knows about and can't drift out of sync with the value.
+  function condInvuln(p) {
+    if (!p) return null;
+    if (p.invuln_sv_ranged != null) {
+      return { value: sv(p.invuln_sv_ranged), note: 'Against ranged attacks only' };
+    }
+    if (p.invuln_sv_melee != null) {
+      return { value: sv(p.invuln_sv_melee), note: 'Against melee attacks only' };
+    }
+    return null;
+  }
   const mv  = (v) => (v == null ? '' : `${v}"`);
   const num = (v) => (v == null ? '' : String(v));
   function profileStats(p) {
@@ -840,13 +857,24 @@
     // pistol per 3 models") and size-tiered composition. Map them into a
     // renderer-friendly shape; null when the unit has none authored.
     // Costs: 11e prices SOME wargear per item taken (MFM: "applied on top of
-    // the unit's main points cost", defaults included). Upstream 40kdc still
-    // ships every option is_free, so per-item prices arrive via the
-    // window.DC.wargearCosts overlay appended to the bundle by
-    // ~/sites/base/refresh-40kdc.sh (scraped from the official MFM site,
-    // keyed "faction_id/unit_id" → { item_id: pts }).
+    // the unit's main points cost", defaults included).
+    //
+    // Upstream 40kdc NOW ships these as `unit.wargear_costs`
+    // ([{item_id, cost}]), so prefer it: as of 2026-07-28 it covers 50 units
+    // against our MFM scrape's 42, with 46/46 shared item prices identical and
+    // zero disagreements — a strict superset. The window.DC.wargearCosts
+    // overlay (scraped from the official MFM site by ~/sites/base/
+    // mfm-scrape-wargear.py, keyed "faction_id/unit_id" → {item_id: pts}) stays
+    // as a fallback/override for anything upstream hasn't priced yet. NB the
+    // scraper's OTHER output, DC.mfmPoints, remains the points authority.
     const wargearProfile = (function () {
-      const itemCosts = (DC.wargearCosts && DC.wargearCosts[u.faction_id + '/' + u.id]) || null;
+      const upstreamCosts = Array.isArray(u.wargear_costs) && u.wargear_costs.length
+        ? u.wargear_costs.reduce((m, c) => (c && c.item_id ? (m[c.item_id] = c.cost, m) : m), {})
+        : null;
+      const overlayCosts = (DC.wargearCosts && DC.wargearCosts[u.faction_id + '/' + u.id]) || null;
+      const itemCosts = (upstreamCosts || overlayCosts)
+        ? Object.assign({}, upstreamCosts || {}, overlayCosts || {})
+        : null;
       const costOf = (id) => (itemCosts && itemCosts[id]) || 0;
       const itemName = (id) => {
         let it = null;
@@ -1069,11 +1097,19 @@
       modelStats: modelStats.length > 1 ? modelStats : [{ name: '', ...modelStats[0] }],
       invulnSave: invulnOverride !== undefined
         ? invulnOverride
-        : (first.invuln_sv != null ? sv(first.invuln_sv) : null),
-      // Conditional-invuln note ("Against ranged attacks only"). 40kdc's
-      // schema has no field for it, so it only arrives via UNIT_STAT_FIXES /
-      // the DC.statFixes consensus overlay.
-      invulnNote: invulnNoteOverride !== undefined ? invulnNoteOverride : null,
+        : (first.invuln_sv != null ? sv(first.invuln_sv)
+           : (condInvuln(first) ? condInvuln(first).value : null)),
+      // Conditional-invuln note ("Against ranged attacks only"), shown as `5+*`
+      // plus a footnote.
+      //
+      // 40kdc DOES model this — `invuln_sv_ranged` / `invuln_sv_melee` on the
+      // profile, which is strictly more precise than a value + prose note. An
+      // earlier comment here claimed the schema had no field for it, so 37
+      // hand-authored consensus overlay entries re-encoded facts already in the
+      // bundle. Read the real fields first; the overlay stays supported only as
+      // an override for anything upstream genuinely lacks.
+      invulnNote: invulnNoteOverride !== undefined ? invulnNoteOverride
+        : (condInvuln(first) ? condInvuln(first).note : null),
       weapons: weaponRows(uv.weapons),
       abilities,
       wargearAbilities,

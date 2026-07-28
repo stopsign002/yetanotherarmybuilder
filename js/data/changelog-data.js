@@ -26,9 +26,41 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.14-1',
-    lastUpdated: '2026-07-14T15:30:00Z',
+    version:     '2026.07.28-1',
+    lastUpdated: '2026-07-28T02:30:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'feature',
+        title: 'Support characters now show their own “Support” section',
+        description:
+          '11th edition splits attaching characters into Leaders and Support. ' +
+          'Support models — Crypteks, Dialogus, Hospitaller, Apothecaries and ' +
+          '34 others — were either mislabelled under a “Leader / Can lead” ' +
+          'heading or showed nothing at all. They now get a proper “Support” ' +
+          'section listing the units they can be attached to. All 37 Support ' +
+          'datasheets are covered.',
+      },
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Conditional invulnerable saves now read from official data',
+        description:
+          'Saves that only apply against ranged or melee attacks — Aeldari ' +
+          'Rangers, the Judiciar, Knight ion shields and 34 more — were being ' +
+          'annotated from a hand-maintained list. They now come straight from ' +
+          'the dataset’s own ranged/melee invulnerable-save fields, so the ' +
+          'value and its “Against ranged attacks only” footnote can no longer ' +
+          'drift apart or go stale.',
+      },
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'More wargear point costs, and a corrected Night Scythe',
+        description:
+          'Per-item wargear prices now come from the official dataset first, ' +
+          'covering 49 units instead of 42 — including the Defiler’s Hades ' +
+          'lascannon, Victrix Honour Guard banner, Ghostkeel cyclic ion raker ' +
+          'and Riptide ion accelerator. The Night Scythe also keeps its Hover ' +
+          'ability now that the upstream data ships it.',
+      },
       {
         date: '2026-07-14', kind: 'fix',
         title: 'Led By: fixed missing leader attachments (Necrons and more)',
