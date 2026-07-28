@@ -455,7 +455,7 @@
       html += `<div class="detail-section">
         <div class="detail-section-title">Core Abilities</div>
         <div class="core-abilities-list">
-          ${coreAbilities.map(a => `<span class="core-ability-tag"${a.description ? ` data-tooltip="${esc(a.description)}"` : ''}>${esc(a.name)}</span>`).join('')}
+          ${coreAbilities.map(a => `<span class="core-ability-tag"${a.description ? ` data-tooltip="${UI.mdPlain(a.description)}"` : ''}>${esc(a.name)}</span>`).join('')}
         </div>
       </div>`;
     }
@@ -492,7 +492,7 @@
       regularAbilities.forEach(ab => {
         html += `<div class="detail-ability">
           <span class="detail-ability-name">${esc(ab.name)}</span>
-          <span class="detail-ability-desc">${esc(ab.description || '—')}</span>
+          <span class="detail-ability-desc">${UI.mdBold(ab.description || '—')}</span>
         </div>`;
       });
       html += `</div>`;
@@ -511,7 +511,7 @@
       rows.forEach(ab => {
         html += `<div class="detail-ability detail-ability-primarch">
           <span class="detail-ability-name">${esc(ab.name)}</span>
-          <span class="detail-ability-desc">${esc(ab.description || '—')}</span>
+          <span class="detail-ability-desc">${UI.mdBold(ab.description || '—')}</span>
         </div>`;
       });
       html += `</div>`;
@@ -543,12 +543,12 @@
       let wg = '';
       if (useGdc) {
         if (gdcComposition && gdcComposition.length > 0) {
-          wg += `<div class="wl-composition">${gdcComposition.map(esc).join(' · ')}</div>`;
+          wg += `<div class="wl-composition">${gdcComposition.map(UI.mdBold).join(' · ')}</div>`;
         }
         if (gdcLoadoutText) {
           wg += `<div class="wl-defaults">
             <span class="wl-defaults-label">Default:</span>
-            <span class="wl-defaults-weapons">${esc(gdcLoadoutText)}</span>
+            <span class="wl-defaults-weapons">${UI.mdBold(gdcLoadoutText)}</span>
           </div>`;
         }
         if (gdcWargear && gdcWargear.length > 0) {
@@ -914,11 +914,11 @@
     const sections = splitStratagemSections(text || '');
     if (!sections.length) return `<p class="strat-section-empty">No description available.</p>`;
     return '<div class="strat-sections">' + sections.map(s => {
-      if (!s.label) return `<p class="strat-section-text strat-section-preface">${esc(s.text)}</p>`;
+      if (!s.label) return `<p class="strat-section-text strat-section-preface">${UI.mdBold(s.text)}</p>`;
       const rest = /^restrict/i.test(s.label) ? ' strat-section-label-restrict' : '';
       return `<div class="strat-section">
         <div class="strat-section-label${rest}">${esc(s.label)}</div>
-        <div class="strat-section-text">${esc(s.text)}</div>
+        <div class="strat-section-text">${UI.mdBold(s.text)}</div>
       </div>`;
     }).join('') + '</div>';
   }
@@ -939,7 +939,7 @@
     if (isStratagem) {
       body = stratSectionsHtml(data.description, esc);
     } else {
-      body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${esc(data.description || 'No description available.')}</p>`;
+      body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${UI.mdBold(data.description || 'No description available.')}</p>`;
     }
 
     let kindLabel = 'Army Rule';
@@ -1002,7 +1002,7 @@
     const existing = panel.querySelector('.unit-detail-content');
     if (existing) existing.remove();
 
-    const mdBold = (s) => esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    const mdBold = UI.mdBold;   // shared: js/ui/helpers.js
     const rules = det.rules || [];
     const enhancements = det.enhancements || [];
     // Reconciled display strats (gdcStratagems) + any BSData strats, deduped.

@@ -34,7 +34,7 @@
     const squadHtml = entry.squadLabel
       ? `<span class="army-entry-squad">${esc(entry.squadLabel)}</span>` : '';
     const enhBadges = (entry.enhancements || []).map(e =>
-      `<span class="army-enh-badge" title="${esc(e.description || '')}">${esc(e.name)}</span>`
+      `<span class="army-enh-badge" title="${UI.mdPlain(e.description || '')}">${esc(e.name)}</span>`
     ).join('');
     // The squad-label (e.g. "20 models") and the "+N attached" pill
     // share a SUB-ROW immediately below the unit name. Keeping them

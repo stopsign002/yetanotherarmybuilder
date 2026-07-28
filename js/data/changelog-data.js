@@ -26,9 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-12',
-    lastUpdated: '2026-07-28T10:20:00Z',
+    version:     '2026.07.28-13',
+    lastUpdated: '2026-07-28T13:05:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Stray ** around rules text is now proper bold',
+        description:
+          'Games Workshop\u2019s rules text marks emphasis with double asterisks, ' +
+          'and we were printing them literally \u2014 \u201cOne **CRYPTEK** or ' +
+          '**CANOPTEK** unit\u201d instead of bolding the keywords. Stratagems, ' +
+          'army and detachment rules, enhancements, unit abilities, and unit ' +
+          'composition and loadout lines are all affected; 6,503 pieces of rules ' +
+          'text across the game now render the way the printed datacards do.',
+      },
       {
         date: '2026-07-28', kind: 'feature',
         title: 'Leave your email on a bug report and we\u2019ll tell you when it\u2019s fixed',

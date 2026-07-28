@@ -89,6 +89,14 @@
     }[c]));
   }
 
+  // GDC rules text carries `**bold**`. Mirrors esc()'s defensive shape — this
+  // module has no local UI binding and degrades rather than throwing if
+  // helpers.js hasn't loaded.
+  function mdBold(s) {
+    if (window.UI && UI.mdBold) return UI.mdBold(s);
+    return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  }
+
   function toast(msg, kind, ms) {
     if (window.UI && UI.toast) UI.toast(msg, kind || 'info', ms || 2200);
   }
@@ -179,7 +187,7 @@
       +     '<span class="strat-tag strat-tag-phase">' + esc(phase) + '</span>'
       +     '<span class="strat-tag strat-tag-type">' + esc(strat.type || 'core') + '</span>'
       +   '</div>'
-      +   '<div class="strat-desc">' + esc(strat.description) + '</div>'
+      +   '<div class="strat-desc">' + mdBold(strat.description) + '</div>'
       +   '<div class="strat-foot">'
       +     '<button type="button" class="strat-use" '
       +       'data-strat-use="' + esc(strat.name) + '" '

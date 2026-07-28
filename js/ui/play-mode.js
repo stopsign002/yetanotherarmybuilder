@@ -568,7 +568,7 @@
               +     '<span class="play-chip-phase">' + esc(phase) + '</span>'
               +   '</button>'
               +   '<div class="play-chip-body" hidden>'
-              +     '<div class="play-chip-desc">' + esc(s.description || '') + '</div>'
+              +     '<div class="play-chip-desc">' + UI.mdBold(s.description || '') + '</div>'
               +     '<div class="play-chip-foot">'
               +       '<button type="button" class="play-chip-use" data-play-act="use-strat" data-play-idx="' + i + '" data-play-cp="' + cost + '" data-play-name="' + esc(s.name || '') + '">Use</button>'
               +     '</div>'

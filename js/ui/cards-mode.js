@@ -976,8 +976,7 @@
   // handled — a bare single `*` is left alone because 40k stat text uses it
   // (e.g. "D6+*", "2D6*").
   function descHtml(text) {
-    let html = esc(formatStructuredText(text || ''))
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    let html = UI.mdBold(formatStructuredText(text || ''));   // shared: js/ui/helpers.js
     // Bold GW-style keywords the way the printed datacards do:
     //   1. Bracketed weapon-ability tags — [DEVASTATING WOUNDS], [SUSTAINED
     //      HITS 1], [ANTI-INFANTRY 4+] — WITH the surrounding brackets.
