@@ -26,9 +26,17 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-8',
-    lastUpdated: '2026-07-28T07:10:00Z',
+    version:     '2026.07.28-9',
+    lastUpdated: '2026-07-28T07:40:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'MOBILE keyword added to six characters',
+        description:
+          'Lion El\u2019Jonson, Roboute Guilliman, Belisarius Cawl, Fulgrim, ' +
+          'Thulia Ghuld and The Red Terror were missing the 11th-edition MOBILE ' +
+          'keyword. It now shows on all six, matching Games Workshop\u2019s data.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Doomhammer: Firing Deck corrected to 12',

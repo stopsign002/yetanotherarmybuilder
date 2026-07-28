@@ -282,6 +282,16 @@
   // Upstream now has it on ZERO units while GW has it on 132, so this is a
   // standing editorial disagreement, not a temporary gap: expect to keep this
   // list. User ruled 2026-07-28 to follow GW.
+  // GW 11e MOBILE keyword, missing from 40kdc on these six. Found by
+  // ~/sites/base/dump-audit.py against GW's own app data (data_version 912) and
+  // confirmed by the user 2026-07-28. Same self-healing contract as FRAME_UNITS:
+  // injection is skipped when the keyword is already present, so this no-ops if
+  // upstream starts shipping it.
+  const MOBILE_UNITS = new Set([
+    'belisarius-cawl', 'fulgrim', 'lion-eljonson',
+    'roboute-guilliman', 'the-red-terror', 'thulia-ghuld'
+  ]);
+
   const FRAME_UNITS = new Set([
     'acastus-knight-asterius', 'acastus-knight-porphyrion', 'aegis-defence-line',
     'agamatus-custodians', 'anathema-psykana-rhino', 'annihilation-barge', 'astraeus',
@@ -1202,6 +1212,10 @@
     if (FRAME_UNITS.has(u.id)
         && !finalKeywords.some((k) => /^frame$/i.test(String(k).trim()))) {
       finalKeywords = finalKeywords.concat('Frame');
+    }
+    if (MOBILE_UNITS.has(u.id)
+        && !finalKeywords.some((k) => /^mobile$/i.test(String(k).trim()))) {
+      finalKeywords = finalKeywords.concat('Mobile');
     }
 
     return {
