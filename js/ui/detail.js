@@ -708,12 +708,27 @@
       html += `</div>`;
     }
 
-    const ledBy = getLedByFor(unit);
+    // Reverse direction, split by the attacher's role for the same reason the
+    // forward section is: a SUPPORT model attaches to this unit but does not
+    // lead it, so listing Crypteks and Apothecaries under "Led By" states a
+    // rule that isn't true. `role` comes from App.Attachments (40kdc's
+    // attachment_role); prose-index hits have none and read as leaders.
+    const attachers = getLedByFor(unit);
+    const ledBy   = attachers.filter(l => l.role !== 'support');
+    const support = attachers.filter(l => l.role === 'support');
     if (ledBy.length > 0) {
       html += `<div class="detail-section detail-ledby-section">
         <div class="detail-section-title detail-section-title-ledbby">Led By</div>
         <div class="detail-ledby-list">
           ${ledBy.map(l => `<span class="ledby-tag">${esc(l.name)}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+    if (support.length > 0) {
+      html += `<div class="detail-section detail-ledby-section">
+        <div class="detail-section-title detail-section-title-ledbby">Support Attached</div>
+        <div class="detail-ledby-list">
+          ${support.map(l => `<span class="ledby-tag">${esc(l.name)}</span>`).join('')}
         </div>
       </div>`;
     }

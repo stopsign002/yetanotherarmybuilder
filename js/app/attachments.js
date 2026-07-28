@@ -162,6 +162,14 @@
   // bodyguard. Used by the right-panel "Led By" badge — this REPLACES
   // the inlined `buildLedByIndex` / `getLedByFor` in detail.js so both
   // the panel and drag-and-drop hit the same data.
+  //
+  // Each result carries `role` (the attacher's `attachmentRole`, 'leader' |
+  // 'support' | null) because 11e splits attaching characters in two and a
+  // SUPPORT model does not lead the unit it joins. Callers must label the two
+  // groups separately — listing a Cryptek under a plain "Led By" heading is the
+  // same mistake the forward direction used to make. Prose-index hits have no
+  // role (they come from ability text, not 40kdc's structured field), so they
+  // fall through as null and are treated as leaders.
   function candidateLeadersFor(targetUnit) {
     if (!targetUnit || !targetUnit.name) return [];
     const targetFolded = foldName(targetUnit.name);
@@ -180,7 +188,8 @@
       for (let j = 0; j < leadBy.length; j++) {
         if (foldName(leadBy[j]) === targetFolded) {
           seenIds.add(leader.id);
-          out.push({ name: leader.name, factionName: leader._factionName || null });
+          out.push({ name: leader.name, factionName: leader._factionName || null,
+                     role: leader.attachmentRole || null });
           break;
         }
       }
@@ -193,7 +202,8 @@
       bucket.forEach(leader => {
         if (!leader || seenIds.has(leader.id)) return;
         seenIds.add(leader.id);
-        out.push({ name: leader.name, factionName: leader._factionName || null });
+        out.push({ name: leader.name, factionName: leader._factionName || null,
+                   role: leader.attachmentRole || null });
       });
     }
     return out;

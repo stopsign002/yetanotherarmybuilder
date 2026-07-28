@@ -110,7 +110,12 @@
     for (let i = 0; i < units.length; i++) {
       const leaderWrap = units[i];
       const leader = leaderWrap.unit;
-      if (leader.attachmentRole && leader.attachmentRole !== 'leader') continue;
+      // 11e SUPPORT models attach to a unit without leading it. They used to be
+      // skipped outright here, which silently dropped every pairing for the 37
+      // Support characters — the attachment is exactly as worth surfacing as a
+      // leader's, it just isn't a "leads" relationship. Keep both; the row says
+      // which it is.
+      const role = leader.attachmentRole === 'support' ? 'support' : 'leader';
       for (let k = 0; k < units.length; k++) {
         if (k === i) continue;
         const targetWrap = units[k];
@@ -119,13 +124,15 @@
         if (!res || !res.ok) continue;
         out.push({
           type: 'leader-target',
+          role,
           leaderName:   leader.name,
           leaderUnit:   leader,
           leaderEntryIndex: leaderWrap.index,
           targetName:   target.name,
           targetUnit:   target,
           targetEntryIndex: targetWrap.index,
-          description:  leader.name + ' can be attached to ' + target.name + '.',
+          description:  leader.name + ' can be attached to ' + target.name
+                        + (role === 'support' ? ' as a Support model (it does not lead the unit).' : '.'),
         });
       }
     }
@@ -556,7 +563,7 @@
         '<div class="yaab-syn-row-explain">' + esc(syn.description) + '</div>' +
       '</div>' +
       '<div class="yaab-syn-row-actions">' +
-        '<button type="button" class="btn btn-sm btn-outline" data-yaab-syn-goto="leader" data-unit-id="' + esc(syn.leaderUnit.id) + '" data-faction-name="' + esc(syn.leaderUnit._factionName || '') + '">Go to leader</button>' +
+        '<button type="button" class="btn btn-sm btn-outline" data-yaab-syn-goto="leader" data-unit-id="' + esc(syn.leaderUnit.id) + '" data-faction-name="' + esc(syn.leaderUnit._factionName || '') + '">' + (syn.role === 'support' ? 'Go to model' : 'Go to leader') + '</button>' +
       '</div>' +
     '</li>';
   }
@@ -587,7 +594,9 @@
       return '<div class="yaab-syn-empty">Add more units to see synergies.</div>';
     }
     const parts = [];
-    parts.push(renderSection('Leader Pairings', '&#9670;',  result.leaderPairings.map(renderLeaderRow)));
+    // "Attachments", not "Leader Pairings" — the section carries Support models
+    // too, and each row states which relationship it is.
+    parts.push(renderSection('Attachments', '&#9670;',  result.leaderPairings.map(renderLeaderRow)));
     parts.push(renderSection('Keyword Combos',  '&#9651;',  result.keywordCombos.map(renderGenericRow)));
     parts.push(renderSection('Faction Synergies','&#9734;', result.factionSynergies.map(renderGenericRow)));
     parts.push(renderSection('Composition Notes','&#9888;',  result.compositionNotes.map(renderGenericRow)));

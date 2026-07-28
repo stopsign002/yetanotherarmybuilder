@@ -97,6 +97,24 @@
   const CORE_ABILITY_RE =
     /^(Deadly Demise|Deep Strike|Feel No Pain|Fights First|Firing Deck|Infiltrators|Lone Operative|Scouts|Stealth|Hover|Super-heavy Walker|Titanic Walker)\b/i;
 
+  // 11e prints LEADER and SUPPORT as CORE abilities on the datasheet, but 40kdc
+  // models them as `unit.attachment_role` and NOT as an ability link (the shared
+  // `leader` ability id is dropped below — its one global text wrongly named
+  // Raveners). Until this map existed, `attachmentRole` was read only by the
+  // detail pane, so every card / print / export view showed a Captain with no
+  // LEADER and a Cryptek with no SUPPORT — 287 units missing a core rule their
+  // printed datasheet carries. The prose is OURS: upstream ships `effect: null`
+  // for every `unitKeywords` entry (all 13 of them, not just these two), so
+  // there is no rule text to borrow, and the ability store's "leader" text is
+  // the poisoned one. Wording is kept identical to the detail pane's empty-list
+  // fallback so the same rule never reads two ways.
+  const ATTACH_ROLE_ABILITY = {
+    leader:  { name: 'Leader',
+               description: 'This model is a Leader and can be attached to a Bodyguard unit.' },
+    support: { name: 'Support',
+               description: 'This model has Support and can be attached to a unit.' },
+  };
+
   // Hand-patches for core abilities the upstream 40kdc dataset is missing on a
   // unit's datasheet. Keyed by unit id → core ability ids to inject. This is
   // SELF-HEALING: the inject is skipped if the unit already lists the ability,
@@ -881,6 +899,17 @@
         abilities.push({ name, description: stripEchoedName(name, p.description || ''),
                          isCore: CORE_ABILITY_RE.test(name) });
       });
+    }
+    // Re-add the attachment ROLE as the core ability the printed datasheet
+    // shows (see ATTACH_ROLE_ABILITY). `attachmentRole` still drives the detail
+    // pane's Leader/Support section with its eligible-target list; this is what
+    // puts the keyword itself on the card, in print, and in every export.
+    // No-ops if an ability of that name is already present, so it self-heals if
+    // 40kdc ever starts linking a real per-faction leader/support ability id.
+    const roleAbility = ATTACH_ROLE_ABILITY[u.attachment_role];
+    if (roleAbility
+        && !abilities.some((a) => a.name.toLowerCase() === roleAbility.name.toLowerCase())) {
+      abilities.push({ name: roleAbility.name, description: roleAbility.description, isCore: true });
     }
     // Route ability-modelled wargear abilities out of the normal Abilities
     // list. Their prose refers to "the bearer" of a wargear item (a single

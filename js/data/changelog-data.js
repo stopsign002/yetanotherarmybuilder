@@ -26,9 +26,38 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-16',
-    lastUpdated: '2026-07-28T14:50:00Z',
+    version:     '2026.07.28-17',
+    lastUpdated: '2026-07-28T16:20:00Z',
     entries: [
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Leader and Support now appear on the card as core abilities',
+        description:
+          'Every attaching character — 250 Leaders and 37 Support models — ' +
+          'was missing the LEADER or SUPPORT keyword from its core-ability row, so ' +
+          'printed cards, PDFs and exports left off a rule the official datasheet ' +
+          'prints. Only the detail panel knew about it. It is now on the card, with ' +
+          'the rule in the tooltip.',
+      },
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Support models no longer listed under “Led By”',
+        description:
+          'On a bodyguard unit’s datasheet, Support characters (Crypteks, ' +
+          'Apothecaries, Dialogus and the rest) were listed alongside its Leaders, ' +
+          'which claimed a rule that does not exist — a Support model attaches ' +
+          'to the unit but does not lead it. They now get their own ' +
+          '“Support Attached” section.',
+      },
+      {
+        date: '2026-07-28', kind: 'fix',
+        title: 'Support attachments show up in the synergy panel',
+        description:
+          'The synergy panel skipped Support characters entirely, so a Cryptek ' +
+          'sitting next to the unit it can join produced no row at all. Both kinds ' +
+          'of attachment are now listed — the section is called Attachments and ' +
+          'each row says whether the model leads the unit or supports it.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Super-heavy Walker now listed as a core ability',
