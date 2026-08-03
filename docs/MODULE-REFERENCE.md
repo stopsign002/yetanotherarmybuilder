@@ -360,6 +360,14 @@ Cross-cutting docs:
 - **DOM:** `#yaab-btn-legends`.
 - **Notes:** Detail panel gets a "LEGENDS — casual play" tag via MutationObserver on render.
 
+### `js/app/allies.js`
+- **Purpose:** Surface 11e allied units (Daemonic Pact, Imperial Agents, Brood Brothers…) on their HOST faction's roster: ALLY badge, visibility toggle, detail-panel tag.
+- **Exports:** `App.allyTagText(unit)`, `App.allyTagTitle(unit)`; toolbar button + `rosterFilters` predicate + `cardClassContributors` (`.unit-card-ally`).
+- **Depends on:** `App.hooks`, `App.state.factions` (reads `faction.alliedRules`), `App.renderUnitRosterWithContext`.
+- **Storage:** `localStorage.yaab_show_allies` (`'1'` / `'0'`, **defaults on**).
+- **DOM:** `#yaab-btn-allies`, `.unit-card-ally`, `.detail-ally-tag`.
+- **Notes:** Presentation only — the units themselves are attached by `attachAlliedUnits()` in `js/data/dc-adapter.js`, which stamps `_allyOf` / `_allyLabel` / `_allySourceFaction` / `_allyRuleIds` / `_allyDetachments` on a per-host **clone**. Unlike the Legends toggle this one defaults ON (allies are legal units; the toggle is for decluttering). The detail tag is emitted inline by `js/ui/detail.js`, not via MutationObserver.
+
 ### `js/app/ork-math.js`
 - **Purpose:** Convert points display to "teef" when Orks selected.
 - **Exports:** none (DOM-replace via MutationObserver-style render hook).

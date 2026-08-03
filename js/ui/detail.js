@@ -182,6 +182,13 @@
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     const subtitleParts = [];
     if (unit._factionName) subtitleParts.push(`<span class="detail-faction">${esc(unit._factionName)}</span>`);
+    // Allied unit (Daemonic Pact, Imperial Agents, …) — see js/app/allies.js.
+    // The tooltip carries the rule's points limits, warlord/enhancement
+    // restrictions and GW's authored notes.
+    if (unit._allyOf && window.App && typeof App.allyTagText === 'function') {
+      subtitleParts.push(`<span class="detail-ally-tag" title="${esc(App.allyTagTitle(unit))}">` +
+        `${esc(App.allyTagText(unit))}</span>`);
+    }
     // Type label only when it says something ("unit" is every datasheet —
     // pure noise next to the faction tag).
     if (unit.type && String(unit.type).toLowerCase() !== 'unit') {

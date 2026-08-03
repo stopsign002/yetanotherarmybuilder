@@ -1,0 +1,62 @@
+/* allies.css — styling for allied units surfaced on a host faction's roster.
+   Mirrors legends-toggle.css, but in a cool teal so the two badges stay
+   distinguishable (Legends owns amber #d9b566). */
+
+/* Corner badge on roster unit cards for allied units.
+   ::after because .unit-card::before is already the selection accent. */
+.unit-card.unit-card-ally::after {
+  content: "ALLY";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 8pt;
+  letter-spacing: 0.1em;
+  color: #6fb7c4;
+  font-weight: 700;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* A Legends unit that is ALSO an ally would stack two ::after badges on the
+   same corner. Allies win the corner; the Legends state still reads from the
+   border tint and the detail panel. */
+.unit-card.unit-card-ally.unit-card-legends::after {
+  content: "ALLY";
+  color: #6fb7c4;
+}
+
+/* Subtle teal tint so allied entries read as "from another codex". */
+.unit-card.unit-card-ally {
+  border-color: rgba(111, 183, 196, 0.35);
+  background: linear-gradient(
+    to bottom,
+    rgba(111, 183, 196, 0.05),
+    transparent 60%
+  ), var(--card-bg);
+}
+
+/* Toolbar icon active state. .toolbar-icons button.is-on is a generic amber
+   rule from legends-toggle.css; scope this one to the allies button so the
+   two toggles don't look identical when both are on. */
+.toolbar-icons button#yaab-btn-allies.is-on {
+  border-color: #6fb7c4;
+  color: #b7e3ea;
+  background: rgba(111, 183, 196, 0.12);
+  box-shadow: 0 0 0 1px rgba(111, 183, 196, 0.45),
+              0 0 8px rgba(111, 183, 196, 0.25);
+}
+
+/* Detail-panel tag: sits in the subtitle row next to the faction chip. */
+.detail-ally-tag {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 9pt;
+  letter-spacing: 0.08em;
+  color: #6fb7c4;
+  border: 1px solid rgba(111, 183, 196, 0.55);
+  border-radius: 3px;
+  background: rgba(111, 183, 196, 0.08);
+  font-weight: 600;
+  vertical-align: middle;
+  cursor: help;
+}

@@ -49,10 +49,13 @@
   };
 
   // Match: split search into whitespace tokens; every token must match the unit (AND).
-  // A token matches if it's a substring of the unit name, any keyword, or the faction name.
+  // A token matches if it's a substring of the unit name, any keyword, the faction
+  // name, or — for allied units — the ally label / source faction, so that typing
+  // "daemons" under Chaos Space Marines surfaces the Daemonic Pact pool.
   function fuzzyMatch(unit, tokens) {
     const name     = (unit.name || '').toLowerCase();
     const fac      = (unit._factionName || '').toLowerCase();
+    const ally     = ((unit._allyLabel || '') + ' ' + (unit._allySourceFaction || '')).toLowerCase();
     const keywords = (unit.keywords || []).map(k => k.toLowerCase());
     for (let t = 0; t < tokens.length; t++) {
       const tok = tokens[t];
@@ -60,6 +63,7 @@
       const hit =
         name.indexOf(tok) !== -1 ||
         fac.indexOf(tok)  !== -1 ||
+        (ally && ally.indexOf(tok) !== -1) ||
         keywords.some(k => k.indexOf(tok) !== -1);
       if (!hit) return false;
     }

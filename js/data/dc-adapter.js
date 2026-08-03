@@ -1437,6 +1437,10 @@
                description: textFor(e.ability_id) || MISSING_ENHANCEMENT_TEXT[id] || '' };
     }).filter(Boolean);
     return { name: d.name, rules, enhancements,
+             // 40kdc detachment id. Allied rules gate on detachment_ids (e.g.
+             // world-eaters-khorne-daemons requires khorne-daemonkin), so the
+             // ally pass needs id → name to render "requires <detachment>".
+             id: d.id,
              // 40kdc rates every detachment 1–3 "detachment points"; surface it
              // for the detachment picker (js/app/detachment-picker.js). Straight
              // passthrough — null if upstream ever drops the field.
@@ -1707,6 +1711,145 @@
     });
   }
 
+  // ── allied units (11e "Allies" / Daemonic Pact / Agents of the Imperium) ───
+  // 40kdc models allies as a top-level `alliedRules` table, NOT as duplicate
+  // datasheets: Bloodletters exist exactly once, under `chaos-daemons`, and the
+  // `daemonic-pact` rule is what makes them available to any HERETIC ASTARTES
+  // army (i.e. Word Bearers / Black Legion / any CSM list). Without this pass
+  // yaab's roster filter is a strict `_factionName ===` match, so every allied
+  // unit in the game is unreachable — Bloodletters under CSM, Callidus Assassin
+  // under Space Marines, Brood Brothers under Genestealer Cults, all of it.
+  //
+  // The rules and their resolvers already ship inside dc-bundle.js; they're just
+  // not on `window.DC`. `fv.ds` is the live Dataset back-reference (same escape
+  // hatch leaderLeadByMap uses above), so this needs no bundle rebuild. We still
+  // prefer `DC.alliedRules` when present — build/dc-entry.mjs exports it as of
+  // this change, so it appears after the next nightly refresh.
+  //
+  // Two rules of the road, both load-bearing:
+  //   1. CLONE per host. App.rebuildAllUnits (js/app/filters.js) stamps
+  //      `_factionName` IN PLACE, so a shared object would have its faction
+  //      clobbered by whichever host faction is iterated last.
+  //   2. Run AFTER the GDC overlay. App.GDC.mergeUnitDataIntoFactions is
+  //      faction-FILE scoped, so a Bloodletters clone sitting under CSM would be
+  //      looked up in the CSM datasheet file, miss, and render with no weapons.
+  //      Cloning post-merge inherits the source faction's fully-populated object.
+  function attachAlliedUnits(factions) {
+    if (!Array.isArray(factions) || !factions.length) return { rules: 0, units: 0 };
+    const fvWithDs = DC.factions.all.find((f) => f && f.ds && typeof f.ds.alliesFor === 'function');
+    const ds = fvWithDs ? fvWithDs.ds : null;
+    if (!ds || typeof ds.allyUnitsFor !== 'function') return { rules: 0, units: 0 };
+    const ruleById = new Map();
+    const ruleList = (DC.alliedRules && DC.alliedRules.all)
+                  || (ds.alliedRules && ds.alliedRules.all) || [];
+    ruleList.forEach((r) => r && r.id && ruleById.set(r.id, r));
+    if (!ruleById.size) return { rules: 0, units: 0 };
+
+    const byName = new Map();
+    factions.forEach((f) => byName.set(f.factionName, f));
+    let nRules = 0, nUnits = 0;
+
+    factions.forEach((faction) => {
+      // Idempotent: a second call (GDC-failed fallback path) must not re-add.
+      if ((faction.units || []).some((u) => u && u._allyOf)) return;
+      const fid = WFIX_ID_BY_NAME[faction.factionName];
+      if (!fid) return;
+      // Space Marine chapters own zero datasheets — their roster comes from the
+      // parent via App.CHAPTER_PARENTS → linkedFactions. But every chapter's
+      // keywords include "Adeptus Astartes", so alliesFor() returns the SAME
+      // rules as the parent. Attaching to both would render each ally twice
+      // under one filter, breaking roster.js's contentSig and click-to-select.
+      if (SM_CHAPTER_IDS.has(fid)) return;
+
+      const detNameById = new Map();
+      (faction.detachments || []).forEach((d) => { if (d && d.id) detNameById.set(d.id, d.name); });
+      // Pass EVERY detachment the faction owns, not the selected one: the Units
+      // tab is a browse surface. Gating on the current selection would show a
+      // Genestealer Cults player zero allies (both its rules are detachment-
+      // gated) with nothing on screen explaining why. The requirement is
+      // surfaced per-unit as `_allyDetachments` instead.
+      let applicable;
+      try { applicable = ds.alliesFor(fid, Array.from(detNameById.keys())); }
+      catch (_) { return; }
+      if (!applicable || !applicable.length) return;
+
+      const ownIds = new Set((faction.units || []).map((u) => u && u.id));
+      const picked = new Map();   // bare unit id → { uv, rule, ruleIds:Set }
+      const rulesUsed = [];
+
+      applicable.forEach((ruleRaw) => {
+        const rule = ruleById.get(ruleRaw.id) || ruleRaw;
+        let pool;
+        try { pool = ds.allyUnitsFor(rule.id) || []; } catch (_) { return; }
+        const detNames = (rule.detachment_ids || [])
+          .map((id) => detNameById.get(id)).filter(Boolean);
+        let added = 0;
+        pool.forEach((uv) => {
+          const r = (uv && uv.raw) || {};
+          if (!r.id) return;
+          // Same combat-patrol exclusion buildFactions applies to own units.
+          if (Array.isArray(r.game_modes) && r.game_modes.indexOf('combat-patrol') !== -1) return;
+          if (ownIds.has(r.id)) return;
+          // Dedupe on the BARE id, not faction_id::id — roster.js keys cards on
+          // unit.id, so two rows sharing one id inside a faction break selection.
+          // Matters for chaos-space-marines-renegades, which has no
+          // source_faction_id and therefore scans units across every faction.
+          const seen = picked.get(r.id);
+          if (seen) { seen.ruleIds.add(rule.id); return; }
+          picked.set(r.id, { uv, rule, ruleIds: new Set([rule.id]), detNames });
+          added++;
+        });
+        if (added > 0) {
+          rulesUsed.push({
+            id: rule.id,
+            name: rule.name || rule.id,
+            label: rule.label || rule.name || 'Allies',
+            sourceFactionName: FACTION_NAME[rule.source_faction_id] || null,
+            detachmentNames: detNames.length ? detNames : null,
+            pointsLimits: rule.points_limits || null,
+            keywordLimits: rule.keyword_limits || null,
+            cannotBeWarlord: !!rule.cannot_be_warlord,
+            cannotTakeEnhancements: !!rule.cannot_take_enhancements,
+            battlelineRatioKeywords: rule.battleline_ratio_keywords || null,
+            notes: rule.notes || '',
+          });
+        }
+      });
+      if (!picked.size) return;
+
+      const additions = [];
+      picked.forEach((entry, unitId) => {
+        const { uv, rule, ruleIds, detNames } = entry;
+        const srcFactionName = FACTION_NAME[uv.raw.faction_id] || null;
+        const srcFaction = srcFactionName ? byName.get(srcFactionName) : null;
+        // Prefer the already-built, already-GDC-merged, already-weapon-fixed
+        // object. toUnit(uv) is a correct fallback (uv is the SOURCE faction's
+        // view, so the faction_id::unit_id overlay lookups still resolve) — it
+        // just loses the GDC prose. Never drop the unit.
+        let src = srcFaction ? (srcFaction.units || []).find((u) => u && u.id === unitId) : null;
+        if (!src) { try { src = toUnit(uv); } catch (_) { return; } }
+        if (!src) return;
+        const clone = Object.assign({}, src);
+        delete clone._factionName;          // App.rebuildAllUnits stamps the host
+        clone._allyOf = faction.factionName;
+        clone._allySourceFaction = srcFactionName;
+        clone._allyLabel = rule.label || rule.name || 'Allies';
+        clone._allyRuleIds = Array.from(ruleIds);
+        clone._allyDetachments = (detNames && detNames.length) ? detNames.slice() : null;
+        additions.push(clone);
+      });
+      if (!additions.length) return;
+
+      faction.units = (faction.units || []).concat(additions);
+      faction.unitCount = faction.units.length;
+      faction.alliedRules = rulesUsed;
+      faction.allyUnitCount = additions.length;
+      nRules += rulesUsed.length;
+      nUnits += additions.length;
+    });
+    return { rules: nRules, units: nUnits };
+  }
+
   // ── drop-in BSData replacement ─────────────────────────────────────────────
   async function loadAllFactions(onProgress, onFactionLoaded /*, signal */) {
     let factions;
@@ -1723,6 +1866,7 @@
     // for the gdc profile lists that merge creates).
     try { syncOptionalWeaponsFromGdc(factions); } catch (_) {}
     try { applyWeaponFixes(factions); } catch (_) {}
+    let allyStats = null;
 
     // Phase 3: GDC overlay for stratagem text (hybrid). Defensive — never fatal.
     try {
@@ -1740,6 +1884,10 @@
         }
         try { syncOptionalWeaponsFromGdc(App.state.factions); } catch (_) {}
         try { applyWeaponFixes(App.state.factions); } catch (_) {}
+
+        // Allies. Must run AFTER the GDC merge + weapon fixes so each clone
+        // inherits a fully-populated source object (see attachAlliedUnits).
+        allyStats = attachAlliedUnits(App.state.factions);
 
         // Reconcile: prefer 40kdc strat text, fall back to GDC. Runs AFTER the
         // GDC merge so detachment.gdcStratagems is populated. Self-improving —
@@ -1762,6 +1910,28 @@
     } catch (e) {
       console.warn('[DC] GDC overlay failed (non-fatal):', e && e.message ? e.message : e);
     }
+
+    // The GDC overlay is explicitly non-fatal, so allies must still attach if it
+    // threw or was skipped — just without GDC prose. attachAlliedUnits bails on
+    // any faction that already carries ally rows, so the double call is a no-op
+    // on the happy path.
+    try {
+      const target = (window.App && App.state && Array.isArray(App.state.factions))
+        ? App.state.factions : factions;
+      if (!allyStats) allyStats = attachAlliedUnits(target);
+      if (allyStats && allyStats.units > 0) {
+        console.info(`[DC] allies: ${allyStats.units} allied unit rows attached ` +
+          `across ${allyStats.rules} faction-rule pairings`);
+        // The rows were added after the initial roster render — restamp
+        // _factionName onto them and repaint.
+        if (window.App && typeof App.rebuildAllUnits === 'function') App.rebuildAllUnits();
+        if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
+          App.renderUnitRosterWithContext();
+        }
+      }
+    } catch (e) {
+      console.warn('[DC] ally attach failed (non-fatal):', e && e.message ? e.message : e);
+    }
   }
 
   // Override the data source. Keep the same public surface bsdata.js exposed.
@@ -1776,6 +1946,7 @@
     _reconcileStrats: reconcileStrats,
     _applyWeaponFixes: applyWeaponFixes,
     _syncOptionalWeaponsFromGdc: syncOptionalWeaponsFromGdc,
+    _attachAlliedUnits: attachAlliedUnits,
   };
 
   // attachments.js reaches into WahapediaParser._internal.foldKey. Provide a stub

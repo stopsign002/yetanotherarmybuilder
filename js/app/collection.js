@@ -482,6 +482,10 @@
       const u = allUnits[i];
       if (!u || !u._factionName) continue;
       if (u._factionName !== filter) continue;
+      // Allied units (js/app/allies.js) are borrowed from another codex — they
+      // shouldn't inflate "how much of THIS faction do I own". They're still
+      // trackable individually; they just don't count toward the denominator.
+      if (u._allyOf) continue;
       total++;
       if (getStatus(u.id) !== 'none') owned++;
     }

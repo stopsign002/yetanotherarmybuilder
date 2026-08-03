@@ -26,9 +26,28 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.07.28-18',
-    lastUpdated: '2026-07-28T17:10:00Z',
+    version:     '2026.08.03-1',
+    lastUpdated: '2026-08-03T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-03', kind: 'feature',
+        title: 'Allied units now show up on your faction’s Units tab',
+        description:
+          'Bloodletters and Bloodcrushers were missing from Chaos Space ' +
+          'Marines — and it turned out no allied unit in the game was ' +
+          'reachable. yaab only ever showed a faction’s own datasheets, so ' +
+          'the Daemonic Pact, Imperial Agents, Imperial Knights, Chaos ' +
+          'Knights, Brood Brothers and every other 11e allies rule was ' +
+          'invisible. All of them are now listed alongside your own units ' +
+          'with a teal ALLY badge, searchable by their label (type ' +
+          '“daemons” under Chaos Space Marines). Units that need a specific ' +
+          'detachment say so on the badge — e.g. World Eaters see ' +
+          '“Daemons of Khorne — requires Khorne Daemonkin” — and the detail ' +
+          'panel spells out each rule’s points cap, warlord and enhancement ' +
+          'restrictions. Going over an allied points cap now raises a ' +
+          'composition warning. Use the new A button in the toolbar to hide ' +
+          'allies if you want a shorter list.',
+      },
       {
         date: '2026-07-28', kind: 'fix',
         title: 'Keyword corrections on 12 datasheets',

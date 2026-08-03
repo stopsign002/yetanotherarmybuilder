@@ -117,6 +117,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Polish | Hero CTA + Cmd+K hint + recent factions chip | `js/app/hero-state.js` |
 | Polish | Ork "teef" math (faction-themed point display) | `js/app/ork-math.js` |
 | Polish | Legends-units toggle | `js/app/legends-toggle.js` |
+| Build | Allied units on the host faction's roster (Daemonic Pact, Imperial Agents, …) | `js/data/dc-adapter.js` (`attachAlliedUnits`), `js/app/allies.js` |
 | Polish | PWA install prompt + mobile tab bar | `js/app/pwa-install.js` |
 | Polish | Bug-report modal (server-backed, signed-in users post to `/api/bugs`; admin Reports tab marks fixed) | `js/app/bug-report.js` |
 | Polish | "What's new" updates modal — versioned, dated, user-facing changelog. **All shippable changes must add an entry to `js/data/changelog-data.js`.** | `js/app/changelog.js`, `js/data/changelog-data.js` |
@@ -173,6 +174,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_points_overrides` | localStorage | `points-override.js` | Dataslate-style point edits | User data |
 | `yaab_kt_mode` | localStorage | `kill-team.js` | Kill Team mode flag | User pref |
 | `yaab_show_legends` | localStorage | `legends-toggle.js` | Show [Legends] units | User pref |
+| `yaab_show_allies` | localStorage | `allies.js` | Show allied units on a host faction's roster (**defaults on**) | User pref |
 | `yaab_ork_math` | localStorage | `ork-math.js` | Teef-math toggle | User pref |
 | `yaab_pwa_dismissed` | localStorage | `pwa-install.js` | Install banner dismissal | User pref |
 | `yaab_mobile_panel` | localStorage | `pwa-install.js` | Last-active mobile tab | User pref |
