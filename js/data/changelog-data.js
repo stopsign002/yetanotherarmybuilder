@@ -26,9 +26,20 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.07-2',
+    version:     '2026.08.07-3',
     lastUpdated: '2026-08-07T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-07', kind: 'change',
+        title: 'Tidier header on detachment and stratagem detail views',
+        description:
+          'The points/CP badge was dropping below the name instead of sitting ' +
+          'beside it, leaving the header as a stack of same-sized lines with a ' +
+          'stranded number underneath. The badge now aligns to the right of ' +
+          'the name, the “Detachment” / “Stratagem” label moved above the name ' +
+          'as a small caption, and the name is set in the same engraved serif ' +
+          'the unit datasheets use.',
+      },
       {
         date: '2026-08-07', kind: 'feature',
         title: 'Detachments now show their Force Disposition',

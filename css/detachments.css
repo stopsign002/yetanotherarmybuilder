@@ -133,27 +133,48 @@
 }
 .detachments-footer-pts { font-weight: 700; color: var(--text); }
 
-/* ── Detachment detail view (rendered into the Details pane on row click) ── */
-/* Force Disposition chips, sitting under the "DETACHMENT" kind label. Hover
-   shows the disposition's blurb via the title attribute. */
+/* ── Detachment / rule detail header ──────────────────────────────────────
+   The kind label ("DETACHMENT", "STRATAGEM", …) sits ABOVE the name as a small
+   eyebrow. Previously it sat under the name at nearly the same size as the
+   other meta text, so the banner read as three undifferentiated stacked rows
+   with the points badge stranded below them. */
+.unit-detail-rule .detail-eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10px;
+  line-height: 1.2;
+  opacity: 0.85;
+}
+/* Match the datasheet header's engraved-serif name treatment — the rule and
+   detachment banners were the only headers still rendering in the body face. */
+.unit-detail-rule .detail-name {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  letter-spacing: 0.04em;
+}
+/* The banner's lower row: no top margin, since the name underline already
+   provides the separation. */
+.unit-detail-rule .detail-banner-full { margin-top: 0; }
+
+/* Force Disposition chips. Hover shows the disposition's blurb (title attr). */
 .detail-dispositions {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 6px;
+  margin: 0;
 }
 .detail-disposition {
   display: inline-block;
-  padding: 2px 8px;
-  border: 1px solid var(--border);
+  padding: 3px 9px;
+  border: 1px solid rgba(245, 200, 66, 0.35);
   border-radius: 999px;
-  background: rgba(var(--accent-rgb, 200, 200, 200), 0.08);
-  color: var(--text, #e8e8e8);
+  background: rgba(245, 200, 66, 0.10);
+  color: #f5c842;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
-  cursor: default;
+  cursor: help;
 }
 .detail-detachment-block { margin: 0 0 14px; }
 .detail-detachment-block:last-child { margin-bottom: 0; }

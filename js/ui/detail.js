@@ -985,9 +985,12 @@
     if (isEnhancement && data.pts) headerActions = stack(data.pts, 'pts');
     else if (isStratagem && data.cp != null) headerActions = stack(data.cp, 'CP');
 
+    // The phase used to trail the kind label on one line ("STRATAGEM · Shooting"),
+    // so it carried a leading middot. The kind label is now an eyebrow above the
+    // name and the phase owns its own row, so the separator would dangle.
     let subtitleExtra = '';
     if (isStratagem && data.phase) {
-      subtitleExtra = ` <span class="detail-rule-phase">· ${esc(data.phase)}</span>`;
+      subtitleExtra = `<span class="detail-rule-phase">${esc(data.phase)}</span>`;
     }
     // Gold underline for the detachment/stratagem family; neutral for army rules.
     const underlineClass = (isStratagem || isEnhancement) ? ' detail-name-underline-gold' : '';
@@ -995,14 +998,17 @@
     panel.insertAdjacentHTML('beforeend', `
       <div class="unit-detail-content unit-detail-rule" data-detail-kind="rule">
         <div class="detail-header detail-banner detail-banner-rule">
-          <div class="detail-header-main">
-            <div class="detail-name">${esc(data.name)}</div>
-            <div class="detail-name-underline${underlineClass}"></div>
-            <div class="detail-meta detail-banner-subtitle">
-              <span class="detail-rule-kind">${kindLabel}</span>${subtitleExtra}
+          <div class="detail-banner-row">
+            <div class="detail-header-main">
+              <div class="detail-rule-kind detail-eyebrow">${kindLabel}</div>
+              <div class="detail-name">${esc(data.name)}</div>
+              <div class="detail-name-underline${underlineClass}"></div>
             </div>
+            ${headerActions}
           </div>
-          ${headerActions}
+          ${subtitleExtra
+            ? `<div class="detail-banner-full"><div class="detail-meta detail-banner-subtitle">${subtitleExtra}</div></div>`
+            : ''}
         </div>
         <div class="detail-section">
           <div class="detail-section-title${titleClass}">${sectionTitle}</div>
@@ -1037,13 +1043,21 @@
       strats.push(s);
     }));
 
+    // Points as the same right-aligned value+caption stack the stratagem and
+    // enhancement headers use, so the whole rule family reads alike. "pts"
+    // matches the wording in the detachment picker rows.
     const ptsBadge = (det.points != null)
-      ? `<div class="detail-header-actions detail-banner-actions"><span class="detail-pts detail-banner-pts">${esc(String(det.points))} pt${det.points === 1 ? '' : 's'}</span></div>`
+      ? `<div class="detail-header-actions detail-banner-actions">
+           <div class="detail-pts-stack">
+             <div class="detail-pts detail-banner-pts detail-pts-value">${esc(String(det.points))}</div>
+             <div class="detail-pts-caption">pt${det.points === 1 ? '' : 's'}</div>
+           </div>
+         </div>`
       : '';
 
-    // 11e Force Disposition(s), from 40kdc via dc-adapter. Rendered as chips on
-    // their own row under the name — a matched-play list must have one, so it's
-    // a thing players pick a detachment *for*, not a footnote.
+    // 11e Force Disposition(s), from 40kdc via dc-adapter. Full-width row under
+    // the name — a matched-play list must have one, so it's a thing players pick
+    // a detachment *for*, not a footnote.
     const dispositions = det.dispositions || [];
     const dispoRow = dispositions.length
       ? `<div class="detail-meta detail-dispositions">${dispositions.map(d =>
@@ -1051,15 +1065,24 @@
         ).join('')}</div>`
       : '';
 
+    // Banner layout mirrors the unit datasheet header: a .detail-banner-row flex
+    // row (name + points) over a full-width row. The wrapper is REQUIRED —
+    // .detail-header.detail-banner is display:block (css/detail-redesign.css),
+    // so without it the points stack drops below the name instead of aligning
+    // right. "Detachment" rides above the name as an eyebrow, which gives the
+    // block a kind → name → dispositions hierarchy instead of three stacked
+    // rows of same-size text.
     let html = `<div class="unit-detail-content unit-detail-rule" data-detail-kind="detachment">
       <div class="detail-header detail-banner detail-banner-rule">
-        <div class="detail-header-main">
-          <div class="detail-name">${esc(det.name)}</div>
-          <div class="detail-name-underline detail-name-underline-gold"></div>
-          <div class="detail-meta detail-banner-subtitle"><span class="detail-rule-kind">Detachment</span></div>
-          ${dispoRow}
+        <div class="detail-banner-row">
+          <div class="detail-header-main">
+            <div class="detail-rule-kind detail-eyebrow">Detachment</div>
+            <div class="detail-name">${esc(det.name)}</div>
+            <div class="detail-name-underline detail-name-underline-gold"></div>
+          </div>
+          ${ptsBadge}
         </div>
-        ${ptsBadge}
+        ${dispoRow ? `<div class="detail-banner-full">${dispoRow}</div>` : ''}
       </div>`;
 
     if (rules.length) {
