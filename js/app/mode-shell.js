@@ -23,10 +23,17 @@
     } catch (_) { return false; }
   }
 
+  // Modes that are a place to work, and so are worth restoring on next launch.
+  // 'cards' is deliberately excluded: it's a transient print/export tool that
+  // hides the whole builder while active, so restoring into it meant a user who
+  // closed the tab from Cards mode reopened the app with no visible builder and
+  // (before the Back fix) no way out.
+  const RESUMABLE = ['build', 'collect', 'play'];
+
   function readPersisted() {
     try {
       const v = localStorage.getItem(LS_KEY);
-      if (VALID.indexOf(v) !== -1) return v;
+      if (RESUMABLE.indexOf(v) !== -1) return v;
     } catch (_) {}
     return DEFAULT_MODE;
   }
@@ -89,6 +96,21 @@
 
     currentMode = mode;
     writePersisted(mode);
+
+    // Back-trap non-default modes so the hardware Back button returns to Build
+    // rather than leaving the site. Cards mode is the acute case: it hides
+    // #build-mode (making all three panel tabs inert), ships no exit control of
+    // its own, and persists to localStorage — so before this, entering it on a
+    // phone was a one-way trip that survived a reload.
+    if (App.backTrap) {
+      VALID.forEach(m => {
+        if (m !== DEFAULT_MODE && m !== mode) App.backTrap.closed('mode:' + m);
+      });
+      if (mode !== DEFAULT_MODE) {
+        App.backTrap.opened('mode:' + mode, function () { applyMode(DEFAULT_MODE); });
+      }
+    }
+
     fireHooks(mode);
   }
 

@@ -163,6 +163,8 @@
       // Focus the search after the transition starts.
       setTimeout(() => search.focus(), 80);
     }
+    // Back closes the sheet instead of leaving the site.
+    if (window.App && App.backTrap) App.backTrap.opened('action-center', close);
   }
 
   function close() {
@@ -176,7 +178,11 @@
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const delay = reduce ? 0 : 280;
     setTimeout(() => { root.hidden = true; }, delay);
-    if (trigger) trigger.focus();
+    if (window.App && App.backTrap) App.backTrap.closed('action-center');
+    // #topbar-action-center is display:none on mobile, so only take focus back
+    // when it's actually focusable — otherwise the call silently no-ops and
+    // focus is left on a hidden node.
+    if (trigger && trigger.offsetParent !== null) trigger.focus();
   }
 
   function isOpen() {

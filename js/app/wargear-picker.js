@@ -116,6 +116,32 @@
   };
   const ptsChip = (d) => (d ? ` <span class="wgp-pts">${d > 0 ? '+' : '−'}${Math.abs(d)} pts</span>` : '');
 
+  // render() rebuilds the whole host with innerHTML, which destroys the very
+  // stepper button the user just pressed — focus falls to <body> and a
+  // keyboard / switch-control / VoiceOver user can't press "+" twice in a row.
+  // Remember the focused control by its stepper's data-key plus direction (a
+  // STABLE id — the option list can change between renders, so a positional
+  // index would land on the wrong row) and put focus back after the rebuild.
+  function focusedStepperBtn(host) {
+    const btn = document.activeElement;
+    if (!btn || !host.contains(btn) || !btn.classList || !btn.classList.contains('wgp-btn')) return null;
+    const stepper = btn.closest('.wgp-stepper');
+    if (!stepper) return null;
+    return { key: stepper.dataset.key, plus: btn.classList.contains('wgp-plus') };
+  }
+
+  function restoreStepperFocus(host, ref) {
+    if (!ref) return;
+    let stepper = null;
+    // Match on dataset rather than a selector — option ids aren't guaranteed
+    // to be safe inside an attribute selector.
+    host.querySelectorAll('.wgp-stepper').forEach((s) => {
+      if (!stepper && s.dataset.key === ref.key) stepper = s;
+    });
+    const btn = stepper && stepper.querySelector(ref.plus ? '.wgp-plus' : '.wgp-minus');
+    if (btn) btn.focus();
+  }
+
   // Points-only picker. The official prose (rendered by detail.js) already
   // lists EVERY wargear option; this surfaces just the choices whose net points
   // delta is non-zero, as plain steppers, so an army costs correctly. Rows are
@@ -127,6 +153,7 @@
   function render(unit, host) {
     const profile = unit.wargearProfile;
     const models = currentModels(unit);
+    const refocus = focusedStepperBtn(host);
 
     // Point-costing choice groups (positive = upgrade; negative = shedding a
     // priced default), grouped by the model the option is for. Preserves
@@ -166,12 +193,17 @@
         const n = counts.get(r.key) || 0;
         const repl = (r.opt.replaces && r.opt.replaces.length)
           ? ` <span class="wgp-chip">replaces ${esc(names(r.opt.replaces))}</span>` : '';
+        // The option name goes IN the button label: a unit can render a dozen
+        // priced rows, and a bare "Add one" ×12 is unusable in a screen
+        // reader's controls rotor. The .wgp-item text alongside is decorative
+        // for that purpose — it names no control.
+        const label = cap(names(r.grp));
         html += `<div class="wgp-row">
-          <span class="wgp-item">${esc(cap(names(r.grp)))}${ptsChip(r.cost)}${repl}</span>
+          <span class="wgp-item">${esc(label)}${ptsChip(r.cost)}${repl}</span>
           <span class="wgp-stepper" data-key="${esc(r.key)}">
-            <button type="button" class="wgp-btn wgp-minus" aria-label="Remove one">&minus;</button>
+            <button type="button" class="wgp-btn wgp-minus" aria-label="Remove one ${esc(label)}">&minus;</button>
             <span class="wgp-count">${n}</span>
-            <button type="button" class="wgp-btn wgp-plus" aria-label="Add one">+</button>
+            <button type="button" class="wgp-btn wgp-plus" aria-label="Add one ${esc(label)}">+</button>
           </span>
         </div>`;
       });
@@ -179,6 +211,7 @@
     });
     html += `<div class="wgp-note wgp-total">Wargear points: +${wgLive} pts</div>`;
     host.innerHTML = html;
+    restoreStepperFocus(host, refocus);
     updateBannerPts(unit, wgLive);
   }
 

@@ -281,3 +281,34 @@ body.reduce-motion .build-hero-bar::after {
 body.reduce-motion .unit-card:hover {
   transform: none !important;
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+   11b. Reduced-motion CATCH-ALL.
+
+   The Settings drawer's "Reduced animations" toggle only adds
+   `body.reduce-motion`, but 23 of the 28 stylesheets that handle reduced
+   motion listen ONLY for `@media (prefers-reduced-motion: reduce)`. So the
+   toggle silently did nothing for the overwhelming majority of the app's
+   animation — its help text promises it "overrides system preference when on",
+   and it didn't.
+
+   Rather than hand-edit 23 files (and re-edit every future one), this blanket
+   rule makes the class do what the media query does. `!important` on a
+   universal selector means source order stops mattering, so a stylesheet added
+   later is covered automatically.
+
+   Durations are near-zero rather than `none` on purpose: `transitionend` and
+   `animationend` still fire, so JS that waits on them keeps working —
+   js/ui/flip-animations.js:163 (flight ghost), js/ui/toast.js:51 (toast
+   teardown) and js/ui/scanline.js:36 all depend on that.
+   ────────────────────────────────────────────────────────────────────── */
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}

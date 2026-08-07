@@ -34,14 +34,87 @@
     return node;
   }
 
+  // The element that had focus when the modal opened, so close() can hand
+  // focus back to whatever opened it (More ▾ → Sign in, the top-bar account
+  // menu, …). On mobile this modal is the ONLY account surface, so losing
+  // focus to <body> strands a keyboard / switch-control user.
+  let lastFocused = null;
+  let wired = false;
+
+  function isOpen() {
+    const m = $modal();
+    return !!(m && !m.hasAttribute('hidden'));
+  }
+
+  // Everything tabbable inside the dialog, in DOM order. Recomputed per key
+  // press — the body is re-rendered whenever the view changes.
+  function focusables() {
+    const m = $modal();
+    if (!m) return [];
+    const sel = 'a[href], button:not([disabled]), input:not([disabled]),'
+      + ' select:not([disabled]), textarea:not([disabled]),'
+      + ' [tabindex]:not([tabindex="-1"])';
+    // getClientRects() rather than offsetParent — the backdrop is fixed.
+    return Array.prototype.filter.call(m.querySelectorAll(sel),
+      (n) => !n.hasAttribute('hidden') && n.getClientRects().length > 0);
+  }
+
+  function onKeydown(e) {
+    if (!isOpen()) return;
+    if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+    if (e.key !== 'Tab') return;
+    // Focus trap: the background is inert while the dialog is up, so Tab has
+    // to cycle between the first and last focusable elements.
+    const items = focusables();
+    if (!items.length) return;
+    const m = $modal();
+    const first = items[0], last = items[items.length - 1];
+    const active = document.activeElement;
+    const outside = !active || !m.contains(active);
+    if (e.shiftKey && (outside || active === first)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (outside || active === last)) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  // Tap/click the scrim to dismiss — but only the scrim itself, never a click
+  // that bubbled out of the dialog.
+  function onBackdropClick(e) {
+    if (e.target === e.currentTarget) close();
+  }
+
+  function wire() {
+    if (wired) return;
+    const m = $modal();
+    if (!m) return;
+    wired = true;
+    document.addEventListener('keydown', onKeydown);
+    m.addEventListener('click', onBackdropClick);
+  }
+
   function close() {
     const m = $modal();
     if (m) m.setAttribute('hidden', '');
+    const back = lastFocused;
+    lastFocused = null;
+    if (back && back.isConnected && typeof back.focus === 'function') back.focus();
   }
 
   function open() {
     const m = $modal();
-    if (m) m.removeAttribute('hidden');
+    if (!m) return;
+    // Only a real open records the trigger — switching views (login →
+    // register) calls open() again while the modal is already visible, and
+    // focus is inside the dialog by then.
+    if (!isOpen()) {
+      const active = document.activeElement;
+      if (active && active !== document.body && !m.contains(active)) lastFocused = active;
+    }
+    m.removeAttribute('hidden');
+    wire();
   }
 
   function setBody(node) {

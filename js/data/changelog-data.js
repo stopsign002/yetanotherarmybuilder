@@ -26,9 +26,82 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.07-4',
+    version:     '2026.08.07-5',
     lastUpdated: '2026-08-07T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-07', kind: 'fix',
+        title: 'The back button behaves properly on mobile',
+        description:
+          'Every time you opened a unit’s Details, the app pushed a browser ' +
+          'history entry it never cleaned up. After looking at eight units, ' +
+          'seven presses of Back did nothing at all and the eighth threw you ' +
+          'off the site. Closing the More sheet leaked an entry too, so a ' +
+          'later Back could re-open a sheet you had already dismissed. Back ' +
+          'now closes exactly one thing per press — the sheet, then Details, ' +
+          'then the site — and never re-opens something you closed.',
+      },
+      {
+        date: '2026-08-07', kind: 'feature',
+        title: 'Collect, Play and every tool are reachable on a phone',
+        description:
+          'The mode switcher lives in the top bar, which is hidden on mobile — ' +
+          'so Collect (painting, crusade, kill team) and Play (match tracker, ' +
+          'stratagems, damage calculator, opponent, deployment planner) had no ' +
+          'way in at all on a phone. The More sheet now opens with a “Go” ' +
+          'section: Build / Collect / Play, an “All tools…” entry that opens ' +
+          'the full tool sheet, and “What’s new” — which is how you are ' +
+          'reading this on mobile for the first time. Data cards mode also has ' +
+          'a way out now, and no longer traps you there after a reload.',
+      },
+      {
+        date: '2026-08-07', kind: 'fix',
+        title: 'Drag to reorder and attach leaders now works by touch',
+        description:
+          'Reordering your army list and dragging a unit onto a leader to ' +
+          'attach it were mouse-only — on a phone the browser claimed the ' +
+          'gesture for scrolling and the drag never started, so there was no ' +
+          'way to attach a bodyguard at all. Press and hold a row for about a ' +
+          'third of a second to pick it up (you get a nudge of haptic feedback ' +
+          'where the device supports it), then drag; the list auto-scrolls when ' +
+          'you near the top or bottom. A normal flick still scrolls as before.',
+      },
+      {
+        date: '2026-08-07', kind: 'change',
+        title: 'Bigger tap targets and real press feedback on mobile',
+        description:
+          'The wargear and squad-size +/− buttons were 20px squares, so ' +
+          'overshooting onto the wrong one was easy — they are 44px on mobile ' +
+          'now, with more space between them. The filter “clear” x, the army ' +
+          'quantity box and the More sheet’s close button all grew too. ' +
+          'Tapping an army row or a filter chip now visibly responds — the ' +
+          'platform highlight had been switched off with nothing put in its ' +
+          'place. Tapping the tab you are already on scrolls that pane back to ' +
+          'the top, and switching tabs no longer loses your place in the list.',
+      },
+      {
+        date: '2026-08-07', kind: 'fix',
+        title: 'Screen-reader, keyboard and reduced-motion fixes',
+        description:
+          'Status messages (“Signed in”, “Import failed”, “Sync complete”) were ' +
+          'never announced to screen readers. Wargear +/− buttons rebuilt the ' +
+          'panel on every press and threw away keyboard focus, so you could not ' +
+          'press one twice in a row, and every one of them was announced with ' +
+          'the same name. The More sheet and the sign-in dialog now trap focus ' +
+          'and hand it back when they close, and the sign-in dialog closes on ' +
+          'Escape or a tap outside. The “Reduced animations” setting also ' +
+          'covers the whole app now — it only ever reached a handful of screens.',
+      },
+      {
+        date: '2026-08-07', kind: 'fix',
+        title: 'Content no longer hides under the notch or the tab bar',
+        description:
+          'The More sheet’s title and close button rendered underneath the ' +
+          'notch / Dynamic Island on newer iPhones. Collect, Play and Data ' +
+          'cards ran underneath the bottom tab bar with their last rows ' +
+          'unreachable, and Play and Data cards could not be scrolled to the ' +
+          'bottom at all on a phone.',
+      },
       {
         date: '2026-08-07', kind: 'change',
         title: 'Tidier header on detachment and stratagem detail views',

@@ -43,11 +43,27 @@
   to   { transform: translateX(0); }
 }
 
+/* index.html ships `viewport-fit=cover`, and this drawer is pinned to
+ * `top: 0` inside a `position: fixed; inset: 0` root. On a notched iPhone or
+ * a Dynamic Island device that put the title and the close button UNDERNEATH
+ * the cutout — and at <= 820px mobile.css hides the topbar, so this drawer is
+ * the only navigation surface there is. The panel's BACKGROUND should still
+ * run edge to edge under the cutout (that is what viewport-fit=cover is for),
+ * so the inset goes on the header's padding, not on the drawer's geometry.
+ *
+ * calc() rather than max(): the 16px is the design's own breathing room and
+ * should sit BELOW the cutout, not be swallowed by it. env() resolves to 0px
+ * on every non-notched device and on desktop, so this is inert there.
+ * padding-right uses max() because the right inset (landscape notch, on the
+ * side this drawer is anchored to) REPLACES the gutter rather than adding to
+ * it — the drawer is flush right, so 20px of gutter is already there. */
 .settings-drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -68,6 +84,14 @@
   line-height: 1;
   padding: 4px 8px;
   border-radius: 4px;
+  /* Was ~28x30 from font-size + padding alone. inline-flex + min-* makes the
+     box explicit instead of a side effect of the glyph metrics. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  flex-shrink: 0;
 }
 .settings-drawer-close:hover { color: var(--text); }
 .settings-drawer-close:focus-visible {
@@ -79,6 +103,16 @@
   flex: 1 1 auto;
   overflow-y: auto;
   padding: 16px 20px 32px;
+  /* Bottom edge: clear the iOS home indicator. mobile.css already lifts the
+   * whole drawer root above the tab bar + safe-bottom at <= 820px, and
+   * menu-overflow-fixes.css (#47, later than this file, so it wins) sets a
+   * larger 48px floor at <= 720px. Neither covers the gap in between —
+   * notably a large iPhone in LANDSCAPE, which is ~932 CSS px wide and so
+   * misses every one of those breakpoints while still having a home
+   * indicator. This unscoped floor closes that hole and is inert elsewhere.
+   * Right inset for the same landscape case (drawer is flush right). */
+  padding-bottom: max(32px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -243,6 +277,23 @@
   @keyframes settings-drawer-in {
     from { transform: translateY(100%); }
     to   { transform: translateY(0); }
+  }
+}
+
+/* ── Mobile: close button must be a real touch target ─────── */
+/* At <= 720px the drawer is `width: 100vw` (above), so the scrim is entirely
+ * covered and tap-outside-to-dismiss does not exist — this X is the only way
+ * to close the sheet from inside it. It computed to roughly 28x30 from
+ * font-size + padding, under the WCAG 2.2 AA 24x24 floor in one axis and well
+ * under Apple's 44x44. Scoped to 820px rather than 720px to match where
+ * mobile.css hides the topbar, i.e. wherever this drawer is the sole
+ * navigation surface. Only min-* grows, so the header's `align-items: center`
+ * keeps the glyph optically where it was; the header is the row that grows. */
+@media (max-width: 820px) {
+  .settings-drawer-close {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 26px;
   }
 }
 

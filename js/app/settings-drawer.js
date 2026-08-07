@@ -176,10 +176,82 @@
     return null;
   }
 
+  // The topbar is display:none at <=820px, so anything that only ever mounted
+  // into the topbar shelf is unreachable on a phone unless it also appears
+  // here. This sheet is the entire mobile navigation surface.
+  function isMobileWidth() {
+    try { return window.matchMedia && window.matchMedia('(max-width: 820px)').matches; }
+    catch (_) { return false; }
+  }
+
+  function currentMode() {
+    try { return (typeof App.getMode === 'function' && App.getMode()) || 'build'; }
+    catch (_) { return 'build'; }
+  }
+
+  function goToMode(mode) {
+    close();
+    if (typeof App.setMode === 'function') App.setMode(mode);
+  }
+
   function buildActions() {
     const user = getAuthUser();
     const signedIn = !!user;
+    const mode = currentMode();
     return [
+      // ── GO ───────────────────────────────────────────────────────────
+      // Mode switching. The only other switcher is .topbar-modes, which is
+      // display:none globally AND sits inside the topbar that's removed at
+      // <=820px — so Collect and Play had no mobile entry point at all.
+      {
+        id: 'go-build',
+        label: mode === 'build' ? 'Build ✓' : 'Build',
+        section: 'go',
+        visible: isMobileWidth,
+        run() { goToMode('build'); },
+      },
+      {
+        id: 'go-collect',
+        label: mode === 'collect' ? 'Collect ✓' : 'Collect',
+        section: 'go',
+        visible: isMobileWidth,
+        run() { goToMode('collect'); },
+      },
+      {
+        id: 'go-play',
+        label: mode === 'play' ? 'Play ✓' : 'Play',
+        section: 'go',
+        visible: isMobileWidth,
+        run() { goToMode('play'); },
+      },
+      // The Action Center holds every hook-registered feature (match mode,
+      // stratagems, damage calc, deployment planner, analytics, …). Its only
+      // trigger was #topbar-action-center, which nothing ever clicked — so
+      // this is the first working entry point on ANY viewport, not just mobile.
+      {
+        id: 'go-all-tools',
+        label: 'All tools…',
+        section: 'go',
+        run() {
+          close();
+          if (window.UI && UI.actionCenter && typeof UI.actionCenter.open === 'function') {
+            UI.actionCenter.open();
+          }
+        },
+      },
+      // Release notes. Mounted only into the topbar icon shelf, so phone users
+      // could never read them.
+      {
+        id: 'go-changelog',
+        label: 'What’s new',
+        section: 'go',
+        visible: isMobileWidth,
+        run() {
+          close();
+          if (App.Changelog && typeof App.Changelog.open === 'function') App.Changelog.open();
+        },
+      },
+
       // ── ARMY ─────────────────────────────────────────────────────────
       // Mirrors the desktop panel-footer toolbar (which is hidden on mobile).
       {
@@ -541,6 +613,14 @@
     const actions = buildActions().filter(Boolean);
     const visible = a => typeof a.visible !== 'function' || a.visible();
 
+    // GO — mode switching + the tools sheet. First, because on mobile this is
+    // the app's only navigation between top-level sections.
+    const goActions = actions.filter(a => a.section === 'go' && visible(a));
+    if (goActions.length) {
+      b.appendChild(renderSectionHeader('Go'));
+      goActions.forEach(a => b.appendChild(renderActionRow(a)));
+    }
+
     // ARMY — primary actions (was the desktop panel-footer toolbar).
     const armyActions = actions.filter(a => a.section === 'army' && visible(a));
     if (armyActions.length) {
@@ -601,9 +681,14 @@
     const sb = settingsBtn();
     if (sb) sb.setAttribute('aria-expanded', 'true');
     if (typeof App._syncMobileTabActive === 'function') App._syncMobileTabActive(document.body.dataset.mobilePanel || 'units');
+    // Back-trap the sheet so the hardware Back button closes it instead of
+    // leaving the site. Announced from in here rather than wrapped from
+    // outside, because every dismissal below calls the local close() and an
+    // external wrapper on App.settingsDrawer.close would never see it.
+    if (App.backTrap) App.backTrap.opened('settings-drawer', close);
     // focus the close button for keyboard users
-    const close = document.getElementById('settings-drawer-close');
-    setTimeout(() => { if (close) close.focus(); }, 30);
+    const closeBtn = document.getElementById('settings-drawer-close');
+    setTimeout(() => { if (closeBtn) closeBtn.focus(); }, 30);
   }
 
   function close() {
@@ -615,6 +700,10 @@
     const sb = settingsBtn();
     if (sb) sb.setAttribute('aria-expanded', 'false');
     if (typeof App._syncMobileTabActive === 'function') App._syncMobileTabActive(document.body.dataset.mobilePanel || 'units');
+    // Consume the history entry this sheet owns. Every dismissal path (X,
+    // scrim, Escape, any action row) lands here, so the entry can't leak and
+    // Back can never re-open a sheet the user already dismissed.
+    if (App.backTrap) App.backTrap.closed('settings-drawer');
     if (lastFocus && typeof lastFocus.focus === 'function') {
       try { lastFocus.focus(); } catch (_) {}
     }
@@ -631,7 +720,29 @@
     const scrim = document.getElementById('settings-drawer-scrim');
     if (scrim) scrim.addEventListener('click', close);
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && isOpen()) close();
+      if (e.key === 'Escape' && isOpen()) { close(); return; }
+      // Focus trap. The sheet declares role="dialog" aria-modal="true", but
+      // without this Tab walks straight out into the page behind it — which on
+      // mobile is content the user can't even see, since the sheet covers the
+      // whole viewport.
+      if (e.key !== 'Tab' || !isOpen()) return;
+      const r = root();
+      if (!r) return;
+      const focusable = Array.prototype.filter.call(
+        r.querySelectorAll(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
+          ' textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ),
+        el => el.offsetParent !== null || el === document.activeElement
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last  = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
     });
   }
 

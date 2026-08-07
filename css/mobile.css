@@ -86,6 +86,61 @@
     display: block !important;
     grid-template-rows: none !important;
   }
+
+  /* ── Sibling mode pages: subtract the tab bar too ─────────────────
+     Only #build-mode's inner .app-main was compensating for the fixed
+     bottom tab bar (see the calc() above). The other three top-level
+     sections in index.html — #collect-mode, #play-mode, #cards-mode —
+     are siblings of #build-mode, not children, so they inherited
+     `.mode-page { height: 100% }` and ran their last ~56px of content
+     underneath the tab bar where it could be neither read nor tapped.
+
+     ID selectors are deliberate: `.mode-page { height: 100% }` lives in
+     mode-shell.css (#37) and this file is #4, so a class-level rule here
+     would lose. `min-height: 0` is restated for self-documentation —
+     the `.mode-page { min-height: 0 !important }` rule above already
+     neutralises `#play-mode.play-root { min-height: 100% }`. */
+  #collect-mode,
+  #play-mode,
+  #cards-mode {
+    height: calc(100% - var(--m-tabbar-h) - var(--m-safe-bottom));
+    min-height: 0;
+  }
+
+  /* Collect needs nothing further: .collect-root is height:100% +
+     overflow:hidden with .collect-body as the real scroller, so shrinking
+     the section is enough to bring its scroll viewport above the tab bar.
+
+     Play has NO internal scroller — .play-shell is
+     `min-height: calc(100vh - 64px)` inside a `.mode-page` that is
+     `overflow: hidden`, so everything past one screen was silently
+     clipped (worse once the tab bar takes another 56px). Make the section
+     itself the scroll container and drop the viewport-derived min-height:
+     on mobile there is no 64px topbar to subtract, and the shell should
+     size to the compensated section instead. */
+  #play-mode {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  /* (1,1,0) — beats `.play-shell` in play-mode.css (#44), which loads
+     after this file and would otherwise win at equal specificity. */
+  #play-mode > .play-shell {
+    min-height: 0;
+    padding-bottom: 16px;
+  }
+
+  /* Cards: .cards-shell is `height: calc(100vh - 64px)`, and under
+     cards-mode.css's own 760px query `height:auto; min-height:100vh` —
+     both taller than the section, and .mode-page clips. Pin it to the
+     section so .cards-preview-wrap's own `overflow: auto` scrolls inside
+     the visible area. (1,1,0) beats cards-mode.css's (0,1,0); the
+     `@media print` rules there are `!important` so printing is unaffected. */
+  #cards-mode > .cards-shell {
+    height: 100%;
+    min-height: 0;
+  }
 }
 
 /* ── Single visible panel, switched by data-mobile-panel ──────── */
@@ -469,7 +524,46 @@
     padding: 10px 8px;
     min-height: 44px;
   }
-  .army-entry .qty-input,
+  /* Per-unit quantity field. This used to be written `.army-entry
+     .qty-input` and matched nothing — js/ui/army-list.js renders
+     `<input class="army-qty-input">` inside `<span class="army-entry-qty">`,
+     so the row's most-used control had no mobile touch sizing at all and
+     rendered at build-mode.css's 38x~20px.
+
+     44x44 is the Apple HIG target; WCAG 2.2 AA only floors at 24x24, and
+     the old (dead) 32x32 intent split the difference. The row can absorb
+     the full 44: .army-entry is already min-height:44px and
+     .army-entry-stats is a wrapping flex row, so only the stats line
+     grows.
+
+     Specificity: `body.build-mode-enhanced .army-entry-qty input`
+     (build-mode.css #41) sets width:38px and
+     `.army-entry-attached .army-entry-qty input` (card-chassis.css #45)
+     sets width:30px — both load after this file. Two things make this
+     win: min-width/min-height clamp width/height regardless of source
+     order, AND the 3-class selector out-specifies both anyway. */
+  /* Height deliberately set to 36, not the 44 the width uses. 44 forces the
+     whole .army-entry-stats row to 44 and grows every army row ~70px -> ~98px,
+     costing about three visible rows per screen on a phone — too steep a price
+     for a field that is typed into occasionally. 36 still clears the WCAG 2.2
+     AA 24x24 floor comfortably; the full 44 is kept on the width axis, which
+     costs nothing. */
+  .army-entry .army-entry-qty .army-qty-input {
+    min-height: 36px;
+    min-width: 44px;
+    box-sizing: border-box;
+  }
+  /* .army-entry-stat is `align-items: baseline` (build-mode.css). With a
+     44px-tall input in the Qty cell that drags the Pts/Total labels off
+     the optical centre, so re-centre — mobile-only, where the tall input
+     is. (0,2,0) beats build-mode.css's (0,1,0). */
+  .army-entry .army-entry-stat {
+    align-items: center;
+  }
+  /* Left at 32x32 on purpose: the only <button> in a row is
+     .army-entry-remove, a destructive action. 32 clears the WCAG 2.2 AA
+     24x24 floor without making accidental deletion easier on a list the
+     user scrolls with their thumb. */
   .army-entry button {
     min-height: 32px;
     min-width: 32px;
@@ -502,6 +596,72 @@
   .army-rule-item {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ── Tap feedback for what the rule above un-highlighted ──────────
+   `-webkit-tap-highlight-color: transparent` removes the platform's own
+   "you touched this" flash. .btn, .unit-card and .mobile-tabbar button
+   already replace it (style.css `.btn:active`, card-chassis.css
+   `.unit-card:active`, the `.mobile-tabbar button:active` rule earlier in
+   this file), but .army-entry, .army-entry-list li, .filter-chip and
+   .army-rule-item had nothing — so tapping an army row or a filter chip
+   looked identical to not tapping it until the async re-render landed.
+   These put deliberate feedback back. */
+@media (max-width: 820px) {
+  /* Army rows. Deliberately NO `transform` here: js/ui/flip-animations.js
+     drives touch drag-and-drop with inline transforms on exactly these
+     nodes and a CSS :active transform would fight it. Background +
+     border + a pressed-in inner shadow instead. Rows mid-drag are
+     excluded so card-chassis.css's `.army-entry.is-dragging` styling stays
+     authoritative, and the empty-state <li> is excluded so a
+     non-interactive row doesn't advertise a false affordance.
+
+     Specificity: `body.build-mode-enhanced .army-entry` (build-mode.css
+     #41, after this file) sets `background` at (0,2,1). The bare
+     `.army-entry:not(.is-dragging):active` reaches (0,3,0) — enough on
+     its own — and the `body.build-mode-enhanced …` variants reach (0,4,1)
+     so the enhanced DOM (the live default) is covered with margin. */
+  .army-entry:not(.is-dragging):active,
+  .army-entry-list li:not(.army-list-empty):not(.is-dragging):active,
+  body.build-mode-enhanced .army-entry:not(.is-dragging):active,
+  body.build-mode-enhanced .army-entry-list li:not(.army-list-empty):not(.is-dragging):active {
+    background: rgba(var(--accent-rgb, 200, 200, 200), 0.14);
+    border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.55);
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Filter chips. The chip's background is repainted by at least four
+     later files (style.css `.active`/`.excluded`, favorites.css
+     `.fav-chip.active`, collection.css `.collection-chip-*.active`), the
+     highest at (0,3,0) — and favorites.css is being edited concurrently.
+     Rather than chase every variant, paint over whatever background is
+     there with a full-bleed inset box-shadow: nothing in css/ sets
+     `box-shadow` or `transform` on .filter-chip, so (0,2,0) is enough and
+     stays correct if a new chip variant is added later. The inset shadow
+     honours the chip's 999px border-radius. */
+  .filter-chip:active {
+    box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.16);
+    transform: scale(0.94);
+  }
+
+  /* Army rules list rows. Only style.css (#1) styles these, so (0,2,0)
+     here beats its `.army-rule-item:hover` on source order — which also
+     means a stale sticky :hover from a previous tap can't mask the
+     press state. */
+  .army-rule-item:active {
+    background: rgba(var(--accent-rgb, 200, 200, 200), 0.16);
+    border-color: var(--accent, #e8c86a);
+  }
+
+  /* Keep the colour feedback under reduced motion — drop only the squash. */
+  body.reduce-motion .filter-chip:active {
+    transform: none;
+  }
+}
+@media (max-width: 820px) and (prefers-reduced-motion: reduce) {
+  .filter-chip:active {
+    transform: none;
   }
 }
 

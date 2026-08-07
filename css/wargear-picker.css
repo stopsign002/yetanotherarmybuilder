@@ -108,8 +108,9 @@
   flex-shrink: 0;
 }
 .wgp-btn {
-  width: 20px;
-  height: 20px;
+  /* 24x24 is the WCAG 2.2 AA (2.5.8) minimum target size. Was 20x20. */
+  width: 24px;
+  height: 24px;
   border: none;
   background: none;
   color: var(--text-muted);
@@ -181,4 +182,37 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   margin-top: 6px;
+}
+
+/* ── Touch sizing ───────────────────────────────────────────────────────── */
+/* The −/+ steppers were 20x20 with a 2px gap, so on a phone the two targets
+ * sat ~22px apart centre-to-centre and a thumb aimed at "remove a model"
+ * routinely landed on "add" instead. A transparent expanded hit area is NOT
+ * usable here: the two buttons are immediate siblings, so overlapping
+ * overlays would make the mis-tap worse, not better. Instead the pill grows
+ * to real 44x44 (Apple HIG) targets and the count between them widens to
+ * ~26px of dead space, which is what actually separates the two actions.
+ *
+ * Width check: 44 + 26 + 44 + (2 x 4px gap) + (2 x 4px pad) = ~130px. Inside
+ * a 320px viewport the detail pane leaves ~276px for .wgp-row, so the
+ * stepper (flex-shrink: 0) still leaves ~138px for the label, which has
+ * min-width: 0 and wraps. No horizontal overflow at any supported width. */
+@media (max-width: 820px) {
+  .wgp-row {
+    padding: 5px 0;
+    gap: 10px;
+  }
+  .wgp-stepper {
+    gap: 4px;
+    padding: 2px 4px;
+  }
+  .wgp-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+  .wgp-count {
+    min-width: 26px;
+    font-size: 14px;
+  }
 }

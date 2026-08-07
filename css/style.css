@@ -2004,24 +2004,53 @@ ul { list-style: none; }
 .filter-chips-clear {
   font-size: 14px;
   line-height: 1;
-  width: 18px;
-  height: 18px;
+  /* Was 18x18 with margin-left: 2px — under the WCAG 2.2 AA (2.5.8) 24x24
+     floor and effectively flush against the last role chip. */
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  margin-left: 2px;
+  margin-left: 8px;
   border-radius: 50%;
   border: none;
   background: transparent;
   color: var(--text-muted, #aaa);
   cursor: pointer;
   opacity: 0.7;
+  position: relative;   /* anchors the touch-target overlay below */
 }
 .filter-chips-clear:hover {
   opacity: 1;
   background: rgba(255,255,255,0.08);
   color: var(--text, #eee);
+}
+
+/* Touch: the Units panel is a primary mobile surface, so this needs a 44x44
+ * target. Growing the painted box to 44px would drag the whole wrapping chip
+ * row (chips are ~19px tall) up to 44px and eat a chunk of the roster. So the
+ * visible circle only goes to 32px and an invisible ::after carries the hit
+ * area out to 44x44. That is safe HERE specifically because roster.js appends
+ * this button LAST inside .filter-chips — nothing follows it on its line, so
+ * the 6px of bleed cannot swallow a chip's own target. */
+@media (max-width: 820px) {
+  .filter-chips-clear {
+    width: 32px;
+    height: 32px;
+    font-size: 17px;
+    margin-left: 10px;
+  }
+  .filter-chips-clear::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+  }
 }
 
 /* Unit card: hide the faction line when a specific faction/chapter is selected. */

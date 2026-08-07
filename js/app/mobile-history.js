@@ -1,142 +1,135 @@
-// app/mobile-history.js — wires the mobile panel + More drawer into the
-// browser history stack so the back button moves Detail → Units and
-// closes the More drawer instead of leaving the site.
+// app/mobile-history.js — makes the hardware/browser Back button behave on
+// mobile: one press closes exactly one thing, and nothing the user already
+// dismissed can come back.
 //
-// Activates only on mobile (matchMedia <= 820px). On desktop the wraps
-// are no-ops and popstate ignores us, so two-pane / three-pane layouts
-// stay completely unaffected.
+// ── Why this was rewritten ────────────────────────────────────────────────
+// The previous version monkey-patched App.setMobilePanel and App.settingsDrawer
+// from the outside. That could never balance its own history entries:
 //
-// Mechanics:
-//   - Tapping Details (App.setMobilePanel('detail')) pushes a history
-//     state tagged {yaab: 'panel:detail'}.
-//   - Opening the More drawer (App.settingsDrawer.open) pushes a state
-//     tagged {yaab: 'drawer'}.
-//   - popstate inspects the marker on the entry we just landed on and
-//     reconciles the UI to match. With no marker we tear down any
-//     drawer / detail panel state we previously installed.
+//   * It pushed an entry on EVERY entry into the Details panel, but the tab bar
+//     leaves Details by calling pwa-install's module-local setPanel(), which the
+//     wrapper can't see. Browsing N units left N stacked entries and N-1 back
+//     presses that did nothing at all, then a sudden exit from the site.
+//   * It pushed an entry when the More drawer opened, but the scrim, the X, the
+//     Escape key and every action row call settings-drawer's IIFE-local close(),
+//     which a wrapper on the exported App.settingsDrawer.close structurally
+//     cannot observe. So the entry leaked — and because popstate re-opened the
+//     drawer on the way back, Back acted as *redo* on a sheet the user had
+//     already dismissed.
 //
-// We don't try to consume stale entries when the user manually
-// navigates away (e.g. tapping Units from Detail). The popstate
-// reconciler is idempotent, so a stale "yaab:panel:detail" entry just
-// re-aligns the UI to detail when popped — defensible "back rewinds"
-// semantics.
+// The fix inverts the direction. Surfaces announce themselves; nothing is
+// patched. A surface calls App.backTrap.opened(id, closeFn) when it opens and
+// App.backTrap.closed(id) when it closes by any means. We keep one history
+// entry per live trap, so the stack always mirrors what is actually on screen.
+//
+// ── Contract for callers ──────────────────────────────────────────────────
+//   App.backTrap.opened(id, closeFn)  — an overlay opened. Pushes one entry.
+//                                       Re-calling with a live id is a no-op,
+//                                       so entries can never stack up.
+//   App.backTrap.closed(id)           — it closed by its own means. Consumes the
+//                                       entry (and any above it) so Back never
+//                                       replays it.
+//   App.backTrap.isTrapped(id)        — is this surface currently back-trapped?
+//
+// closeFn must be idempotent: we call it when Back pops past the trap, and the
+// surface will typically call closed(id) from inside its own close path. The
+// trap is removed from the stack BEFORE closeFn runs, so that re-entrant
+// closed() call is a cheap no-op rather than a loop.
+//
+// Pushes are gated on mobile (the desktop three-pane layout has no panel
+// switching and keeps its dropdown/Escape affordances). popstate is NOT gated —
+// entries pushed at phone width must still unwind correctly if the user rotates
+// or resizes past the breakpoint, which the old media-query-free reconciler got
+// wrong in the other direction.
 (function () {
   const App = window.App = window.App || {};
-  if (!App.hooks) return;
 
   const MQ = '(max-width: 820px)';
-  const MARK_PANEL  = 'panel:detail';
-  const MARK_DRAWER = 'drawer';
-
   function isMobile() {
     try { return window.matchMedia && window.matchMedia(MQ).matches; }
     catch (_) { return false; }
   }
 
-  let _replaying = false;
+  // Live traps, innermost last. Exactly one pushed history entry each.
+  const traps = [];
+  let seq = 0;
+  // popstate events we caused ourselves via history.go() and must not act on.
+  // A multi-step traversal fires popstate once, so this counts go() calls.
+  let swallow = 0;
 
-  function tryPush(mark) {
-    try { history.pushState({ yaab: mark }, ''); }
-    catch (_) { /* history API unavailable — ignore */ }
+  function indexOf(id) {
+    for (let i = 0; i < traps.length; i++) if (traps[i].id === id) return i;
+    return -1;
   }
 
-  // ── wrap App.setMobilePanel ───────────────────────────────────────────
-  function wrapSetPanel() {
-    const orig = App.setMobilePanel;
-    if (typeof orig !== 'function' || orig._yaabHistoryWrapped) return;
-    const wrapped = function (name) {
-      const prev = document.body && document.body.dataset.mobilePanel;
-      const r = orig.apply(this, arguments);
-      const now = document.body && document.body.dataset.mobilePanel;
-      if (!_replaying && isMobile() && now === 'detail' && prev !== 'detail') {
-        tryPush(MARK_PANEL);
-      }
-      return r;
-    };
-    wrapped._yaabHistoryWrapped = true;
-    App.setMobilePanel = wrapped;
-  }
-
-  // ── wrap App.settingsDrawer ───────────────────────────────────────────
-  // We have to wrap BOTH `open` and `toggle`. `toggle` is a closure in
-  // settings-drawer.js that calls the IIFE-local `open` directly, so
-  // wrapping `App.settingsDrawer.open` alone misses the More-tab path
-  // (pwa-install.js calls `toggle()` from the tab bar).
-  function wrapDrawer() {
-    const d = App.settingsDrawer;
-    if (!d || typeof d.open !== 'function' || d._yaabHistoryWrapped) return;
-    function maybePushAfterOpen(wasOpen) {
-      const isOpenNow = typeof d.isOpen === 'function' ? d.isOpen() : true;
-      if (!_replaying && isMobile() && !wasOpen && isOpenNow) {
-        tryPush(MARK_DRAWER);
-      }
-    }
-    const origOpen = d.open;
-    d.open = function () {
-      const wasOpen = typeof d.isOpen === 'function' ? d.isOpen() : false;
-      const r = origOpen.apply(this, arguments);
-      maybePushAfterOpen(wasOpen);
-      return r;
-    };
-    if (typeof d.toggle === 'function') {
-      const origToggle = d.toggle;
-      d.toggle = function () {
-        const wasOpen = typeof d.isOpen === 'function' ? d.isOpen() : false;
-        const r = origToggle.apply(this, arguments);
-        maybePushAfterOpen(wasOpen);
-        return r;
-      };
-    }
-    d._yaabHistoryWrapped = true;
-  }
-
-  // ── popstate reconciler ───────────────────────────────────────────────
-  function reconcile(mark) {
-    const drawer = App.settingsDrawer;
-    const drawerOpen = !!(drawer && typeof drawer.isOpen === 'function' && drawer.isOpen());
-    const onDetail = document.body && document.body.dataset.mobilePanel === 'detail';
-
-    if (mark === MARK_DRAWER) {
-      // Forward navigation back into the drawer state — re-open if needed.
-      if (!drawerOpen && drawer && typeof drawer.open === 'function') {
-        drawer.open();
-      }
-    } else if (mark === MARK_PANEL) {
-      // Forward navigation back into the detail state — close drawer,
-      // ensure detail panel is active.
-      if (drawerOpen && drawer && typeof drawer.close === 'function') {
-        drawer.close();
-      }
-      if (!onDetail && typeof App.setMobilePanel === 'function') {
-        App.setMobilePanel('detail');
-      }
-    } else {
-      // Past all of our markers (or a non-yaab entry) — tear down any
-      // back-trappable UI we'd installed. Drawer first, then return to
-      // Units (the list pane) if we're currently on Detail.
-      if (drawerOpen && drawer && typeof drawer.close === 'function') {
-        drawer.close();
-      }
-      if (onDetail && typeof App.setMobilePanel === 'function') {
-        App.setMobilePanel('units');
-      }
+  function opened(id, closeFn) {
+    if (!id || typeof closeFn !== 'function') return;
+    if (!isMobile()) return;
+    if (indexOf(id) !== -1) return;   // already trapped — never stack duplicates
+    const key = 'yaab:' + (++seq);
+    traps.push({ id: id, key: key, close: closeFn });
+    try {
+      history.pushState({ yaab: key }, '');
+    } catch (_) {
+      traps.pop();                    // history unavailable — stay consistent
     }
   }
 
+  function closed(id) {
+    const i = indexOf(id);
+    if (i === -1) return;
+    // Drop this trap and anything nested above it, then rewind the same number
+    // of entries. Splice FIRST so the popstate we're about to cause — and any
+    // re-entrant closed() from a nested surface — sees the updated stack.
+    const count = traps.length - i;
+    traps.length = i;
+    swallow++;
+    try {
+      history.go(-count);
+    } catch (_) {
+      swallow--;
+    }
+  }
+
+  function isTrapped(id) { return indexOf(id) !== -1; }
+
+  App.backTrap = { opened: opened, closed: closed, isTrapped: isTrapped };
+
+  // ── popstate ────────────────────────────────────────────────────────────
+  // Close everything above the entry we landed on, innermost first. One press
+  // closes one surface; a press with nothing trapped falls through to the
+  // browser and leaves the site, which is the correct exit.
   window.addEventListener('popstate', function (e) {
-    const mark = e && e.state && e.state.yaab;
-    _replaying = true;
-    try { reconcile(mark); }
-    finally { _replaying = false; }
+    if (swallow > 0) { swallow--; return; }
+    if (!traps.length) return;        // nothing of ours is live — not our event
+
+    const key = e && e.state && e.state.yaab;
+    let landed = -1;
+    if (key) {
+      for (let i = 0; i < traps.length; i++) {
+        if (traps[i].key === key) { landed = i; break; }
+      }
+    }
+    const orphaned = traps.splice(landed + 1);
+    for (let i = orphaned.length - 1; i >= 0; i--) {
+      try { orphaned[i].close(); } catch (_) {}
+    }
   });
 
-  // ── install ───────────────────────────────────────────────────────────
-  // Both target APIs are exposed at IIFE-load time by their owning
-  // modules. Bootstrap is the safest hook — by then every IIFE has run
-  // and any defensive re-wraps would also be in place. Belt-and-braces:
-  // also try to wrap immediately in case bootstrap never fires (e.g. an
-  // earlier hook threw).
-  function install() { wrapSetPanel(); wrapDrawer(); }
-  install();
-  App.hooks.bootstrap.push(install);
+  // ── the mobile Details panel ────────────────────────────────────────────
+  // pwa-install's setPanel() already announces every switch — including the tab
+  // bar's own calls, which is exactly the path the old wrapper missed. Details
+  // is a singleton trap: entering it once traps it, leaving by ANY route
+  // releases it, so browsing units can't accumulate dead entries.
+  const PANEL_TRAP = 'panel:detail';
+  document.addEventListener('yaab:mobile-panel-change', function (e) {
+    const panel = e && e.detail && e.detail.panel;
+    if (panel === 'detail') {
+      opened(PANEL_TRAP, function () {
+        if (typeof App.setMobilePanel === 'function') App.setMobilePanel('units');
+      });
+    } else {
+      closed(PANEL_TRAP);
+    }
+  });
 })();

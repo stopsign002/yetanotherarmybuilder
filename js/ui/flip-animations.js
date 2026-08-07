@@ -290,8 +290,13 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Drag-to-reorder. Pointer-based, no external deps.
+  // Drag-to-reorder / drag-to-attach. Pointer-based, no external deps.
   // We mutate state.currentArmy.entries and call UI.renderArmyList on drop.
+  //
+  // Mouse, touch and pen all share one code path (Pointer Events). The only
+  // real branch is HOW the drag arms: a mouse can afford a 6 px move
+  // threshold because the pointer has no competing job, whereas on touch the
+  // vertical axis belongs to the scroller — so touch arms on a long press.
   // ---------------------------------------------------------------------------
   function getArmy() {
     const App = window.App;
@@ -308,7 +313,7 @@
     if (list.dataset.yaabDragWired === '1') return;
     list.dataset.yaabDragWired = '1';
 
-    const DRAG_THRESHOLD_PX = 6; // must move this far before drag activates
+    const DRAG_THRESHOLD_PX = 6; // MOUSE: must move this far before drag activates
     // The vertical band on each side of an entry that registers as a
     // BETWEEN-SIBLINGS gap drop instead of an ATTACH-ONTO-BODY drop.
     // Top GAP_PX and bottom GAP_PX = reorder. Middle = attach. Tuned by
@@ -316,14 +321,92 @@
     // as "near the edge" on a ~64 px card.
     const GAP_PX = 14;
 
+    // TOUCH/PEN tunables.
+    //   LONG_PRESS_MS   — long enough that a flick-to-scroll never trips it,
+    //                     short enough that a deliberate press doesn't feel
+    //                     broken. 320 ms sits between iOS's ~500 ms callout
+    //                     and Android's ~300 ms, which is the window most
+    //                     touch sortables land in.
+    //   LONG_PRESS_SLOP — a finger is never perfectly still. Move further
+    //                     than this before the timer fires and we read the
+    //                     gesture as a scroll and get out of the way.
+    //   EDGE_SCROLL_*   — auto-scroll band at the top/bottom of the scroll
+    //                     container, and the per-frame speed cap at the very
+    //                     edge. Without this a long army list is undraggable
+    //                     on a phone: the finger runs out of screen.
+    const LONG_PRESS_MS       = 320;
+    const LONG_PRESS_SLOP_PX  = 10;
+    const EDGE_SCROLL_PX      = 64;
+    const EDGE_SCROLL_MAX_PX  = 16;
+
     let candidate = null;      // <li> the user pressed on (drag not yet active)
     let dragging = null;       // <li> actively being dragged
     let dragIndex = -1;
     let pointerId = null;
+    let pointerKind = 'mouse'; // e.pointerType of the active gesture
+    let startX = 0;
     let startY = 0;
+    let lastClientY = 0;       // latest finger/cursor Y — the auto-scroll loop reads it
+    let pressTimer = null;     // long-press arming timer (touch/pen only)
+    let scroller = null;       // scroll container the list lives in
+    let startScrollTop = 0;
+    let autoScrollRaf = 0;
+    let armedY = 0;            // clientY at the moment the drag armed
+    let dragMoved = false;     // has the pointer moved since arming?
+    let prevTouchAction = '';  // dragged element's inline touch-action, restored on drop
+    let prevUserSelect = '';   // body's inline user-select, restored on drop
     let lastDropTarget = null;
     let lastDropPos = null;    // 'before' | 'after' | 'attach'
     let lastAttachOk = null;   // last canAttach result (drives green/amber)
+
+    // Touch and pen need the long-press treatment; mouse does not. Anything
+    // we can't identify is treated as a mouse (that's the legacy behaviour).
+    function isTouchLike(kind) { return kind === 'touch' || kind === 'pen'; }
+
+    function buzz(ms) {
+      // Haptic confirmation that the drag armed. Unsupported on desktop and
+      // on iOS Safari — the transform lift below is the visual counterpart
+      // so the feedback never depends on it.
+      try { if (navigator.vibrate) navigator.vibrate(ms); } catch (_) {}
+    }
+
+    // Nearest scrollable ancestor. `.panel-body` is `overflow-y: auto` on both
+    // desktop and mobile, but resolve it at drag time rather than hard-coding
+    // a selector — expand-pane and cards-mode reparent things.
+    function findScroller(el) {
+      let n = el && el.parentElement;
+      while (n && n !== document.body && n !== document.documentElement) {
+        let oy = '';
+        try { oy = window.getComputedStyle(n).overflowY; } catch (_) {}
+        if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 1) return n;
+        n = n.parentElement;
+      }
+      return document.scrollingElement || document.documentElement;
+    }
+
+    // Viewport-space top/bottom of the scroll container, so the auto-scroll
+    // band can be compared against a raw clientY.
+    function scrollerBand(sc) {
+      if (!sc || sc === document.scrollingElement || sc === document.documentElement || sc === document.body) {
+        return { top: 0, bottom: window.innerHeight || document.documentElement.clientHeight };
+      }
+      const r = sc.getBoundingClientRect();
+      return { top: r.top, bottom: r.bottom };
+    }
+
+    function cancelLongPress() {
+      if (pressTimer !== null) { clearTimeout(pressTimer); pressTimer = null; }
+    }
+
+    // Give up on a press that turned out to be a scroll. We deliberately drop
+    // pointerId too, so the rest of the gesture is ignored wholesale and the
+    // browser is left to pan in peace.
+    function abandonCandidate() {
+      cancelLongPress();
+      candidate = null;
+      dragIndex = -1;
+      pointerId = null;
+    }
 
     function clearDropMarkers() {
       list.querySelectorAll(
@@ -366,9 +449,119 @@
 
     function activateDrag() {
       if (dragging || !candidate) return;
+      cancelLongPress();
       dragging = candidate;
       dragging.classList.add('is-dragging');
       try { dragging.setPointerCapture(pointerId); } catch (_) {}
+
+      // `.army-entry` carries `transition: transform 0.16s` (card-chassis.css)
+      // so the row would trail the pointer by a frame or six. Kill it for the
+      // duration of the drag — this is a render detail, not a behaviour
+      // change, and on touch a card that lags the finger reads as broken.
+      dragging.style.transition = 'none';
+
+      scroller = findScroller(list);
+      startScrollTop = scroller ? scroller.scrollTop : 0;
+      armedY = lastClientY;
+      dragMoved = false;
+
+      if (isTouchLike(pointerKind)) {
+        // From here on the gesture is ours. `touch-action` is latched by the
+        // browser when the gesture STARTS, so setting it now does not retake
+        // the current one — the non-passive `touchmove` handler below is what
+        // actually stops the pane scrolling. Set it anyway so a re-press on
+        // the lifted card can't hand the axis back mid-drag.
+        prevTouchAction = dragging.style.touchAction;
+        dragging.style.touchAction = 'none';
+        // A long press with the finger down would otherwise start a text
+        // selection / callout on the row underneath.
+        prevUserSelect = document.body.style.userSelect;
+        document.body.style.userSelect = 'none';
+        document.body.style.webkitUserSelect = 'none';
+        buzz(10);
+        // Confirm the arm BEFORE the finger moves — a long press that looks
+        // like nothing happened is indistinguishable from a dead feature.
+        applyDragTransform(0);
+        startAutoScroll();
+      }
+    }
+
+    // The lift. Touch gets an extra scale so the armed state is visible
+    // without a cursor or a hover to lean on; mouse keeps the plain
+    // translate it has always had.
+    function applyDragTransform(dy) {
+      if (!dragging) return;
+      dragging.style.transform = isTouchLike(pointerKind)
+        ? `translateY(${dy}px) scale(1.03)`
+        : `translateY(${dy}px)`;
+    }
+
+    // One place that turns "the pointer is at clientY" into a rendered frame,
+    // shared by pointermove and the auto-scroll loop. The scroll delta keeps
+    // the row under the pointer while the container moves beneath it.
+    function updateDrag(clientY) {
+      if (!dragging) return;
+      const scrolled = scroller ? scroller.scrollTop - startScrollTop : 0;
+      applyDragTransform(clientY - startY + scrolled);
+      paintDropTarget(clientY);
+    }
+
+    function startAutoScroll() {
+      if (autoScrollRaf) return;
+      const step = () => {
+        autoScrollRaf = 0;
+        if (!dragging) return;
+        // A long press that arms within the edge band (top or bottom row of a
+        // short pane) must not immediately run away from the finger. Wait for
+        // a deliberate move first.
+        if (!dragMoved && Math.abs(lastClientY - armedY) > 4) dragMoved = true;
+        if (scroller && dragMoved) {
+          const band = scrollerBand(scroller);
+          let dy = 0;
+          if (lastClientY < band.top + EDGE_SCROLL_PX) {
+            dy = -EDGE_SCROLL_MAX_PX * Math.min(1, (band.top + EDGE_SCROLL_PX - lastClientY) / EDGE_SCROLL_PX);
+          } else if (lastClientY > band.bottom - EDGE_SCROLL_PX) {
+            dy = EDGE_SCROLL_MAX_PX * Math.min(1, (lastClientY - (band.bottom - EDGE_SCROLL_PX)) / EDGE_SCROLL_PX);
+          }
+          if (dy) {
+            // Always move at least a pixel — a sub-pixel ramp that rounds to
+            // zero would stall the scroll right at the edge of the band.
+            const stepPx = dy > 0 ? Math.max(1, Math.round(dy)) : Math.min(-1, Math.round(dy));
+            const before = scroller.scrollTop;
+            scroller.scrollTop = before + stepPx;
+            // Only re-render if we actually moved (we're at the end otherwise).
+            if (scroller.scrollTop !== before) updateDrag(lastClientY);
+          }
+        }
+        autoScrollRaf = requestAnimationFrame(step);
+      };
+      autoScrollRaf = requestAnimationFrame(step);
+    }
+
+    function stopAutoScroll() {
+      if (autoScrollRaf) { cancelAnimationFrame(autoScrollRaf); autoScrollRaf = 0; }
+    }
+
+    // Undo everything activateDrag() put on the DOM. Split out because both
+    // the normal drop and the pointercancel path need it, and a half-restored
+    // element (stuck at `touch-action: none`, or still translated) is a much
+    // worse bug than a failed drag.
+    function releaseDragChrome(li) {
+      stopAutoScroll();
+      cancelLongPress();
+      if (li) {
+        try { li.releasePointerCapture(pointerId); } catch (_) {}
+        li.style.transform = '';
+        li.style.transition = '';
+        li.style.touchAction = prevTouchAction || '';
+        li.classList.remove('is-dragging');
+      }
+      document.body.style.userSelect = prevUserSelect || '';
+      document.body.style.webkitUserSelect = '';
+      prevTouchAction = '';
+      prevUserSelect = '';
+      scroller = null;
+      startScrollTop = 0;
     }
 
     function onPointerDown(e) {
@@ -388,23 +581,49 @@
       dragIndex = parseInt(li.dataset.index, 10);
       if (Number.isNaN(dragIndex)) { candidate = null; return; }
       pointerId = e.pointerId;
+      pointerKind = e.pointerType || 'mouse';
+      startX = e.clientX;
       startY = e.clientY;
+      lastClientY = e.clientY;
+      cancelLongPress();
       // We do NOT call setPointerCapture or add the drag class yet — wait
-      // until the user actually moves past the threshold. This preserves
-      // normal click-to-select behavior on the existing handler in events.js.
+      // until the user actually moves past the threshold (mouse) or holds
+      // still long enough (touch). This preserves normal click-to-select
+      // behavior on the existing handler in events.js.
+      if (isTouchLike(pointerKind)) {
+        // The grip is an unambiguous "I mean to drag this" target, so it arms
+        // straight away — no wait. Everything else has to earn it with a long
+        // press, otherwise the finger's vertical axis is the scroller's.
+        // (The grip is hidden on attached child rows, so those always take
+        // the long-press path.)
+        if (t.closest('.army-entry-handle')) activateDrag();
+        else pressTimer = setTimeout(() => { pressTimer = null; activateDrag(); }, LONG_PRESS_MS);
+      }
     }
 
     function onPointerMove(e) {
       if (e.pointerId !== pointerId) return;
+      lastClientY = e.clientY;
       if (!dragging) {
         if (!candidate) return;
+        if (isTouchLike(pointerKind)) {
+          // Still waiting on the long press. Any real movement means the user
+          // is scrolling, so bail out and leave the gesture to the browser.
+          const moved = Math.max(Math.abs(e.clientX - startX), Math.abs(e.clientY - startY));
+          if (moved > LONG_PRESS_SLOP_PX) abandonCandidate();
+          return;
+        }
         if (Math.abs(e.clientY - startY) < DRAG_THRESHOLD_PX) return;
         activateDrag();
       }
       if (!dragging) return;
-      const dy = e.clientY - startY;
-      dragging.style.transform = `translateY(${dy}px)`;
+      updateDrag(e.clientY);
+    }
 
+    // Hit-test + drop-indicator paint for a given pointer Y. Called on every
+    // move and on every auto-scroll frame (the finger can sit still while the
+    // list slides past under it).
+    function paintDropTarget(clientY) {
       // Hit-test every entry card (root AND nested children). Three
       // possible drop modes per hovered row:
       //   · top edge band  → reorder BEFORE (gap drop)
@@ -426,9 +645,9 @@
         // drop targets.
         if (row.dataset.entryId && forbidden.has(row.dataset.entryId)) continue;
         const r = row.getBoundingClientRect();
-        if (e.clientY < r.top || e.clientY > r.bottom) continue;
-        if (e.clientY < r.top + GAP_PX)        { target = row; pos = 'before'; break; }
-        if (e.clientY > r.bottom - GAP_PX)     { target = row; pos = 'after';  break; }
+        if (clientY < r.top || clientY > r.bottom) continue;
+        if (clientY < r.top + GAP_PX)          { target = row; pos = 'before'; break; }
+        if (clientY > r.bottom - GAP_PX)       { target = row; pos = 'after';  break; }
         target = row; pos = 'attach'; break;
       }
 
@@ -468,7 +687,9 @@
     function onPointerUp(e) {
       if (e.pointerId !== pointerId) return;
       if (!dragging) {
-        // Plain click — not a drag. Let the existing click handler do its job.
+        // Plain tap/click — not a drag. The long press never fired (or never
+        // got the chance). Let the existing click handler do its job.
+        cancelLongPress();
         candidate = null;
         pointerId = null;
         return;
@@ -478,9 +699,7 @@
       const target = lastDropTarget;
       const pos = lastDropPos;
 
-      try { li.releasePointerCapture(pointerId); } catch (_) {}
-      li.style.transform = '';
-      li.classList.remove('is-dragging');
+      releaseDragChrome(li);
       clearDropMarkers();
 
       // Suppress the synthetic click that follows a drag — otherwise the
@@ -544,13 +763,11 @@
       pointerId = null;
     }
 
+    // The OS can take the gesture off us at any moment — an incoming call, a
+    // system edge-swipe, a second finger landing. Reset everything.
     function onPointerCancel(e) {
       if (e.pointerId !== pointerId) return;
-      if (dragging) {
-        try { dragging.releasePointerCapture(pointerId); } catch (_) {}
-        dragging.style.transform = '';
-        dragging.classList.remove('is-dragging');
-      }
+      releaseDragChrome(dragging);
       clearDropMarkers();
       dragging = null;
       candidate = null;
@@ -558,10 +775,34 @@
       pointerId = null;
     }
 
+    // Non-passive ON PURPOSE, and registered here at wire time rather than
+    // when the drag arms. Two reasons:
+    //   1. `touch-action` is latched when a gesture begins, so flipping it
+    //      after the long press fires does nothing for the gesture in hand —
+    //      preventDefault() here is what actually keeps the pane from
+    //      scrolling out from under the dragged row.
+    //   2. Chrome decides whether touchmove is cancelable based on the
+    //      listeners present when the touch STARTS. A handler added later
+    //      would arrive to a stream of already-uncancelable events.
+    // It is scoped to the army list, so the rest of the page keeps its
+    // compositor-thread scrolling.
+    function onTouchMove(e) {
+      if (!dragging || !isTouchLike(pointerKind)) return;
+      if (e.cancelable) e.preventDefault();
+    }
+
+    // A long press also asks Android/iOS for the selection callout. Suppress
+    // it whenever our own long press owns (or is about to own) the gesture.
+    function onContextMenu(e) {
+      if (dragging || pressTimer !== null) e.preventDefault();
+    }
+
     list.addEventListener('pointerdown',   onPointerDown);
     list.addEventListener('pointermove',   onPointerMove);
     list.addEventListener('pointerup',     onPointerUp);
     list.addEventListener('pointercancel', onPointerCancel);
+    list.addEventListener('touchmove',     onTouchMove, { passive: false });
+    list.addEventListener('contextmenu',   onContextMenu);
   }
 
   // ---------------------------------------------------------------------------

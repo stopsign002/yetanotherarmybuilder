@@ -25,6 +25,24 @@
   background: rgba(230,214,168,0.08);
 }
 
+/* Cascade repair — DO NOT DELETE without moving the values somewhere later
+ * in the sheet order. mobile.css already sizes .detail-action-btn for touch
+ * (padding: 10px 14px / font-size: 14px / min-height: 44px) at <= 820px, but
+ * mobile.css is stylesheet #4 and this file is #16, so the `padding: 4px 7px`
+ * above beat it at equal specificity and the star/action buttons in the unit
+ * detail header stayed ~26px tall on phones. Re-declaring the same touch
+ * values here, from the later sheet, lets them actually apply. Kept in
+ * favorites.css (rather than editing mobile.css) so the file that broke it
+ * is the file that documents it. Breakpoint must stay in sync with
+ * mobile.css's 820px. */
+@media (max-width: 820px) {
+  .detail-action-btn {
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+}
+
 .fav-star {
   display: inline-block;
   font-size: 18px;

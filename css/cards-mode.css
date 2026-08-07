@@ -406,6 +406,29 @@
 }
 .cards-img-thumb:hover .cards-img-del { opacity: 1; }
 .cards-img-del:hover { background: #b32020; }
+
+/* Touch: the delete X was opacity: 0 and revealed only by :hover on the
+ * parent thumb. A touch device never fires that hover, so the control was
+ * either invisible (tap goes to the thumb's own handler and just *selects*
+ * the image) or, on browsers that fake a sticky hover, revealed only after a
+ * tap that already did something else. Where hover is unavailable it must
+ * simply always be visible. Both `hover: none` and `pointer: coarse` are
+ * listed so hybrid/stylus devices that report one but not the other are
+ * still covered. 28x28 clears the WCAG 2.2 AA 24x24 floor while staying a
+ * small fraction of the thumb, so the thumb itself is still easy to tap. */
+@media (hover: none), (pointer: coarse) {
+  .cards-img-del {
+    opacity: 1;
+    width: 28px;
+    height: 28px;
+    top: 3px;
+    right: 3px;
+    font-size: 17px;
+    line-height: 26px;
+    background: rgba(0, 0, 0, 0.82);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  }
+}
 .cards-link-btn {
   background: transparent;
   border: 0;
@@ -1591,8 +1614,38 @@
 
 /* Responsive: stack the rail above the preview on narrow viewports. */
 @media (max-width: 760px) {
-  .cards-shell { flex-direction: column; height: auto; min-height: 100vh; }
-  .cards-side { width: 100%; max-height: 50vh; border-right: 0; border-bottom: 1px solid #23272e; }
+  /* The stacked shell is taller than one viewport, but its ancestor
+   * #cards-mode is a .mode-page, which mode-shell.css gives `overflow:
+   * hidden` + a fixed height (and mobile.css pins to `height: 100%`). The
+   * shell's overflow was therefore CLIPPED, not scrolled — the bottom of the
+   * preview was unreachable. Make cards-mode itself the scroll container.
+   *
+   * `#cards-mode.mode-page` is id+class, so it out-specifies mode-shell.css's
+   * bare `.mode-page` no matter that mode-shell.css (#37) loads after
+   * cards-mode.css (#18) — specificity, not order, is what wins this one.
+   * The print block later in this file already forces `overflow: visible`
+   * under `body.cards-printing`, so printing is unaffected. */
+  #cards-mode.mode-page {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cards-shell {
+    flex-direction: column;
+    height: auto;
+    /* 100vh is the LARGE-viewport height — with a mobile URL bar on screen it
+     * is taller than what is actually visible. dvh tracks the live viewport.
+     * The vh line stays first as a fallback for browsers without dvh; they
+     * now scroll rather than clip, so they degrade to merely imperfect. */
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .cards-side {
+    width: 100%;
+    max-height: 50vh;
+    max-height: 50dvh;
+    border-right: 0;
+    border-bottom: 1px solid #23272e;
+  }
   .cards-preview-wrap { padding: 12px; }
 }
 

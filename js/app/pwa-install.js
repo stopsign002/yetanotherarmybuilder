@@ -75,10 +75,42 @@
   // Four tabs: Army | Units | Details | More. "More" opens the existing
   // Settings drawer (which already aggregates feature actions and toggles).
   // Active tab is marked via aria-current="page" so CSS can style it.
+  // Panes are switched with display:none, which destroys their layout box and
+  // resets scrollTop to 0. Without this, scrolling deep into a ~1000-unit
+  // roster, tapping a card (which auto-switches to Details) and coming back
+  // dumped the user at the top of the list every time.
+  const PANE_FOR = { army: '.panel-left', units: '.panel-center', detail: '.panel-right' };
+  const scrollMemory = {};
+
+  function paneBody(panel) {
+    const sel = PANE_FOR[panel];
+    if (!sel) return null;
+    const pane = document.querySelector(sel);
+    return pane ? pane.querySelector('.panel-body') : null;
+  }
+
+  function rememberScroll(panel) {
+    const el = paneBody(panel);
+    if (el) scrollMemory[panel] = el.scrollTop;
+  }
+
+  function restoreScroll(panel) {
+    const el = paneBody(panel);
+    if (!el) return;
+    const y = scrollMemory[panel];
+    if (!y) return;
+    // The pane was display:none until the attribute flip above, so it has no
+    // scroll height yet this frame — wait one frame before restoring.
+    requestAnimationFrame(() => { el.scrollTop = y; });
+  }
+
   function setPanel(name) {
     const valid = (name === 'army' || name === 'units' || name === 'detail') ? name : 'units';
+    const prev = document.body.dataset.mobilePanel;
+    if (prev && prev !== valid) rememberScroll(prev);
     document.body.dataset.mobilePanel = valid;
     try { localStorage.setItem(PANEL_KEY, valid); } catch (_) {}
+    if (prev !== valid) restoreScroll(valid);
     syncActiveTab(valid);
     // Notify listeners (mobile-shell.js binds to this for page-title updates).
     try {
@@ -115,6 +147,9 @@
     if (moreBtn) {
       if (moreOpen) moreBtn.setAttribute('aria-current', 'page');
       else moreBtn.removeAttribute('aria-current');
+      // settings-drawer calls us from both open() and close(), so this is the
+      // one place the disclosure state can stay honest.
+      moreBtn.setAttribute('aria-expanded', moreOpen ? 'true' : 'false');
     }
   }
   // Expose so settings-drawer can call us when it opens/closes.
@@ -130,8 +165,16 @@
   };
 
   function makeTab(panel, label, iconKey) {
+    // "More" is a disclosure for the settings sheet, not a panel tab, so it
+    // needs the expanded/controls pair. Without it a screen-reader user gets a
+    // button called "More" with no indication it opens anything or that it is
+    // currently open — and on mobile this tab bar is the only chrome there is.
+    const disclosure = panel
+      ? ''
+      : ' aria-haspopup="dialog" aria-expanded="false" aria-controls="settings-drawer-root"';
     return '<button type="button"' +
            (panel ? ' data-panel="' + panel + '"' : ' data-action="more"') +
+           disclosure +
            ' aria-label="' + label + '">' +
            '<span class="mtab-icon">' + ICONS[iconKey] + '</span>' +
            '<span class="mtab-label">' + label + '</span>' +
@@ -155,6 +198,18 @@
       if (!btn) return;
       const panel = btn.getAttribute('data-panel');
       if (panel) {
+        // Tapping the tab you're already on scrolls that pane to the top —
+        // the standard bottom-nav gesture, and previously a dead tap.
+        const drawerShut = !(App.settingsDrawer && typeof App.settingsDrawer.isOpen === 'function'
+                             && App.settingsDrawer.isOpen());
+        if (drawerShut && document.body.dataset.mobilePanel === panel) {
+          const body = paneBody(panel);
+          if (body) {
+            scrollMemory[panel] = 0;
+            body.scrollTo ? body.scrollTo({ top: 0, behavior: 'smooth' }) : (body.scrollTop = 0);
+          }
+          return;
+        }
         // Tapping a panel tab while the More sheet is open closes it
         // first — gives the user "navigate away" semantics without
         // forcing them to find the X button.
