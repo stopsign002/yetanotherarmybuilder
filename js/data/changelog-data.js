@@ -26,9 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.03-1',
-    lastUpdated: '2026-08-03T00:00:00Z',
+    version:     '2026.08.07-1',
+    lastUpdated: '2026-08-07T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-07', kind: 'fix',
+        title: 'The “hide allied units” switch is now actually reachable',
+        description:
+          'When allied units were added on 3 August the release notes pointed ' +
+          'at an “A” button in the toolbar for hiding them — but that button ' +
+          'never rendered, so there was no way to turn allies off. Grey ' +
+          'Knights players felt it worst: 51 of the 77 units on the Units tab ' +
+          'were borrowed Imperial Agents and Imperial Knights datasheets. ' +
+          'There is now a “Show allied units” switch in the Settings drawer ' +
+          '(the gear in the top bar), under Display, next to “Show Legends ' +
+          'units”. Turn it off and the Units tab lists only your own ' +
+          'faction’s datasheets; your choice is remembered. Thanks to ' +
+          'Justaskoch for reporting it.',
+      },
       {
         date: '2026-08-03', kind: 'feature',
         title: 'Allied units now show up on your faction’s Units tab',

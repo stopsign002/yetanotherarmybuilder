@@ -77,6 +77,27 @@
       isOn() { return lsBool('yaab_show_legends', false); },
     },
     {
+      key:   'yaab_show_allies',
+      label: 'Show allied units',
+      help:  'Include units borrowed from another codex (Imperial Agents, Daemonic Pact, Questoris Allies, …). Turn off to see only your own faction.',
+      defaultOn: true,
+      onChange(checked) {
+        // The toolbar hook action owns the side effects (persist + re-render).
+        // js/app/allies.js registers it with region:'icon', and the top-bar
+        // shelf whitelist in js/app/index.js drops non-whitelisted icon
+        // actions WITHOUT falling through to the Action Center — so this row
+        // is the toggle's only surface. clickToolbarBtn's hook fallback
+        // invokes the onClick even though no DOM button is ever mounted.
+        if (clickToolbarBtn('yaab-btn-allies')) return;
+        // Fallback: write the flag directly and re-render.
+        lsWrite('yaab_show_allies', checked ? '1' : '0');
+        if (typeof App.renderUnitRosterWithContext === 'function') {
+          App.renderUnitRosterWithContext();
+        }
+      },
+      isOn() { return lsBool('yaab_show_allies', true); },
+    },
+    {
       key:   'yaab_ork_math',
       label: 'Show points as Ork "teef"',
       help:  'Only takes effect while the Orks faction is active.',
@@ -541,13 +562,14 @@
       exportActions.forEach(a => b.appendChild(renderActionRow(a)));
     }
 
-    // DISPLAY (toggles 0..3)
+    // DISPLAY (toggles 0..4) — indices track the TOGGLES array above; keep
+    // these ranges in step when inserting a toggle.
     b.appendChild(renderSectionHeader('Display'));
-    [0, 1, 2, 3].forEach(i => b.appendChild(renderToggleRow(TOGGLES[i])));
+    [0, 1, 2, 3, 4].forEach(i => b.appendChild(renderToggleRow(TOGGLES[i])));
 
-    // AUDIO & INPUT (toggles 4..5)
+    // AUDIO & INPUT (toggles 5..6)
     b.appendChild(renderSectionHeader('Audio & input'));
-    [4, 5].forEach(i => b.appendChild(renderToggleRow(TOGGLES[i])));
+    [5, 6].forEach(i => b.appendChild(renderToggleRow(TOGGLES[i])));
 
     // HELP & SUPPORT
     b.appendChild(renderSectionHeader('Help & support'));
