@@ -137,12 +137,12 @@ Cross-cutting docs:
 - **Notes:** Army entries snapshot the full unit object at add-time and persist it (localStorage + cloud). Without rehydration, later data-layer changes (new ability flags, corrected points, `wargearProfile`) never reach old entries, so printed cards / the details pane render a stale datasheet. See `entry-rehydrate.js` for the per-mutation counterpart.
 
 ### `js/app/entry-rehydrate.js`
-- **Purpose:** Per-entry refresh of `unitData` snapshots on every `armyChange`.
-- **Exports:** `App.rehydrateEntryUnitData`. Registers `App.hooks.armyChange`.
-- **Depends on:** `App.state`, current faction data from `window.DC`.
+- **Purpose:** Per-entry refresh of `unitData` snapshots on every `armyChange`, plus repair of stale `selectedPts`.
+- **Exports:** `App.rehydrateEntryUnitData` (returns the number of entries repriced). Registers `App.hooks.armyChange`.
+- **Depends on:** `App.state`, current faction data from `window.DC`, `App.getPointsOverride` (optional), `UI.renderArmyList`.
 - **Storage:** none directly (mutates the in-memory army; `autosave.js` persists).
-- **DOM:** none.
-- **Notes:** Complements `rehydrate.js` — keeps the currently-edited army's entries current so a months-old add-time copy doesn't survive across data refreshes.
+- **DOM:** none (may trigger one `UI.renderArmyList` when a price changed).
+- **Notes:** Complements `rehydrate.js` — keeps the currently-edited army's entries current so a months-old add-time copy doesn't survive across data refreshes. Swapping `unitData` alone does NOT fix points: the billed cost lives on the entry as `selectedPts`, copied at add-time. When that value matches no squad option on the fresh datasheet, the entry is repriced for the SAME squad size (identified from `squadLabel`, else the pre-refresh snapshot, else a single-option datasheet) — never a different size, and never when a `yaab_points_overrides` entry exists for that unit. Re-entrancy-guarded so it can redraw from inside a `'render'` hook.
 
 ### `js/app/id-migration.js`
 - **Purpose:** One-time, per-device migration of stale Reserves / Requisitions unit-ids from dormant BattleScribe GUIDs to current 40kdc slug ids.
@@ -378,7 +378,7 @@ Cross-cutting docs:
 
 ### `js/app/points-override.js`
 - **Purpose:** Per-unit points override (dataslate edits).
-- **Exports:** `App.applyPointsOverrides` + detail-panel editable field.
+- **Exports:** `App.applyPointsOverrides`, `App.getPointsOverride(unitId)` (read-only probe, `null` when unset) + detail-panel editable field.
 - **Depends on:** `App.state`, `App.hooks`, `UI.renderArmyList`.
 - **Storage:** `localStorage.yaab_points_overrides` (`{ unitId: newPoints }`).
 - **DOM:** `points-override-*` classes.

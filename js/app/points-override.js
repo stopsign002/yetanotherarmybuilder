@@ -38,6 +38,13 @@
 
   const overrideCount = () => Object.keys(overrides).length;
 
+  // Read-only probe for other modules: the overridden cost for a unit, or null.
+  // entry-rehydrate.js uses it to leave hand-edited prices alone when it
+  // re-reads official costs onto old army entries.
+  App.getPointsOverride = function (unitId) {
+    return Object.prototype.hasOwnProperty.call(overrides, unitId) ? overrides[unitId] : null;
+  };
+
   // ── apply / restore ──────────────────────────────────────────────────────
 
   function snapshotOriginal(unit) {

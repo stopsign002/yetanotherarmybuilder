@@ -26,9 +26,25 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.07-5',
+    version:     '2026.08.07-6',
     lastUpdated: '2026-08-07T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-07', kind: 'fix',
+        title: 'Old armies now re-read corrected points',
+        description:
+          'A unit’s cost was copied into your army the moment you added it, ' +
+          'and it stayed at that number forever — so a datasheet whose price ' +
+          'we later corrected kept billing the old one. Orks Trukk was the ' +
+          'clearest case: for three weeks in July it showed 65 pts, because ' +
+          'our Munitorum import had picked up only its 4th-and-later surcharge ' +
+          'price and missed the 55 pt base. The data was fixed on 28 July, but ' +
+          'armies built before then kept charging 65. Saved armies now re-read ' +
+          'the current cost for the squad size you chose, so a lone Trukk is ' +
+          '55 pts again. Your own manual points overrides are left alone, and ' +
+          'the app will not change a squad size you picked. Thanks to ' +
+          'dangersteve for the report.',
+      },
       {
         date: '2026-08-07', kind: 'fix',
         title: 'The back button behaves properly on mobile',
