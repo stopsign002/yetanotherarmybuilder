@@ -26,7 +26,7 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.07-3',
+    version:     '2026.08.07-4',
     lastUpdated: '2026-08-07T00:00:00Z',
     entries: [
       {
@@ -38,7 +38,9 @@
           'stranded number underneath. The badge now aligns to the right of ' +
           'the name, the “Detachment” / “Stratagem” label moved above the name ' +
           'as a small caption, and the name is set in the same engraved serif ' +
-          'the unit datasheets use.',
+          'the unit datasheets use. The header block also has proper padding ' +
+          'now — its text used to sit flush against the edge of its tinted ' +
+          'panel.',
       },
       {
         date: '2026-08-07', kind: 'feature',

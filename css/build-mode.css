@@ -704,6 +704,13 @@ body.build-mode-enhanced .army-entry-remove:hover {
 .unit-detail-datasheet .detail-section { margin-top: 12px; }
 
 .unit-detail-rule .detail-banner-rule {
+  /* Same inset as the datasheet banner above. This rule used to set only the
+     background, so the tinted box ran edge-to-edge with the name and the
+     disposition chips flush against its left border — the padding was only ever
+     declared on the .unit-detail-datasheet variant, which the rule/detachment
+     header doesn't carry. */
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border, #2a2a2a);
   background:
     linear-gradient(135deg, rgba(var(--accent-rgb,200,200,200),0.18), transparent 60%),
     var(--panel-alt, #1a1a1a);
