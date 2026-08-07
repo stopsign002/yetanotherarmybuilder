@@ -131,16 +131,17 @@
     padding-bottom: 16px;
   }
 
-  /* Cards: .cards-shell is `height: calc(100vh - 64px)`, and under
-     cards-mode.css's own 760px query `height:auto; min-height:100vh` —
-     both taller than the section, and .mode-page clips. Pin it to the
-     section so .cards-preview-wrap's own `overflow: auto` scrolls inside
-     the visible area. (1,1,0) beats cards-mode.css's (0,1,0); the
-     `@media print` rules there are `!important` so printing is unaffected. */
-  #cards-mode > .cards-shell {
-    height: 100%;
-    min-height: 0;
-  }
+  /* Cards mode intentionally has NO .cards-shell height rule here.
+     css/cards-mode.css (its 760px block) owns the narrow-viewport layout: it
+     makes #cards-mode itself the scroll container and lets .cards-shell run to
+     its natural `min-height: 100dvh`, so the stacked rail + preview scroll.
+     A competing `#cards-mode > .cards-shell { height: 100%; min-height: 0 }`
+     used to live here, and because (1,1,0) beats cards-mode.css's (0,1,0) it
+     won — pinning the shell to the section height while the rail still claimed
+     up to 50dvh, which squeezed .cards-preview-wrap (the actual datacards, and
+     therefore every image on them) down to nothing. The `height` rule on
+     #cards-mode above is enough: it keeps the section clear of the tab bar,
+     and cards-mode.css scrolls inside it. */
 }
 
 /* ── Single visible panel, switched by data-mobile-panel ──────── */
