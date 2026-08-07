@@ -134,6 +134,27 @@
 .detachments-footer-pts { font-weight: 700; color: var(--text); }
 
 /* ── Detachment detail view (rendered into the Details pane on row click) ── */
+/* Force Disposition chips, sitting under the "DETACHMENT" kind label. Hover
+   shows the disposition's blurb via the title attribute. */
+.detail-dispositions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.detail-disposition {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(var(--accent-rgb, 200, 200, 200), 0.08);
+  color: var(--text, #e8e8e8);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  cursor: default;
+}
 .detail-detachment-block { margin: 0 0 14px; }
 .detail-detachment-block:last-child { margin-bottom: 0; }
 /* Boxed items (enhancements + stratagems) so each reads as a distinct card. */

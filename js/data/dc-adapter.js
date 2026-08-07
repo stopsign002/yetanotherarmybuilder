@@ -541,6 +541,40 @@
         SW_RESTRICTION,
     },
   };
+  // ── force dispositions ─────────────────────────────────────────────────────
+  // 11e tags every detachment with one or more Force Dispositions (a matched-play
+  // list must have one). 40kdc carries them as `force_dispositions: [id]` on the
+  // detachment plus a 5-entry dictionary, but the bundle entry point only exports
+  // the dictionary on newer builds — so prefer window.DC.forceDispositions and
+  // fall back to this copy. Fallback is fill-only: once the bundle ships the
+  // collection, upstream names/text win and this map stops being consulted.
+  const FORCE_DISPOSITIONS = {
+    'take-and-hold':   { name: 'Take and Hold',
+      text: 'An army oriented toward seizing and controlling ground across the battlefield.' },
+    'disruption':      { name: 'Disruption',
+      text: 'An army oriented toward unsettling the enemy and denying their plans.' },
+    'purge-the-foe':   { name: 'Purge the Foe',
+      text: 'An army oriented toward the wholesale destruction of enemy forces.' },
+    'priority-assets': { name: 'Priority Assets',
+      text: 'An army oriented toward securing high-value positions and objectives.' },
+    'reconnaissance':  { name: 'Reconnaissance',
+      text: 'An army oriented toward rapid scouting and battlefield intelligence.' },
+  };
+  // id → { id, name, text }. Unknown ids still render (title-cased slug) rather
+  // than vanishing, so a new upstream disposition shows up as a label, not a gap.
+  function toDispositions(ids) {
+    return (ids || []).map((id) => {
+      const dc = DC.forceDispositions && DC.forceDispositions.get
+        ? DC.forceDispositions.get(id) : null;
+      const fb = FORCE_DISPOSITIONS[id];
+      return {
+        id,
+        name: (dc && dc.name) || (fb && fb.name) || prettyKw(id),
+        text: (dc && dc.text) || (fb && fb.text) || '',
+      };
+    });
+  }
+
   // enhancement_id → verbatim enhancement text
   const MISSING_ENHANCEMENT_TEXT = {
     'a-giant-amongst-giants-champions-of-fenris':
@@ -1445,6 +1479,9 @@
              // for the detachment picker (js/app/detachment-picker.js). Straight
              // passthrough — null if upstream ever drops the field.
              points: (d.detachment_points != null ? d.detachment_points : null),
+             // 11e Force Disposition(s) — resolved id → {id, name, text} so the
+             // detail view can label the detachment without knowing 40kdc's ids.
+             dispositions: toDispositions(d.force_dispositions),
              stratagemIds: d.stratagem_ids || [] };
   }
 

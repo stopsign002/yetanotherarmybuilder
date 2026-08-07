@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.07-1',
+    version:     '2026.08.07-2',
     lastUpdated: '2026-08-07T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-07', kind: 'feature',
+        title: 'Detachments now show their Force Disposition',
+        description:
+          'Every 11th-edition detachment carries a Force Disposition — Take ' +
+          'and Hold, Disruption, Purge the Foe, Priority Assets or ' +
+          'Reconnaissance — and a matched-play army has to have one. Click a ' +
+          'detachment in the Detachments picker and it is now labelled right ' +
+          'under the name, so you can see what a detachment is built to do ' +
+          'before you commit to it. Hover the label for the one-line ' +
+          'description. Covers all 446 detachments.',
+      },
       {
         date: '2026-08-07', kind: 'fix',
         title: 'The “hide allied units” switch is now actually reachable',

@@ -1041,12 +1041,23 @@
       ? `<div class="detail-header-actions detail-banner-actions"><span class="detail-pts detail-banner-pts">${esc(String(det.points))} pt${det.points === 1 ? '' : 's'}</span></div>`
       : '';
 
+    // 11e Force Disposition(s), from 40kdc via dc-adapter. Rendered as chips on
+    // their own row under the name — a matched-play list must have one, so it's
+    // a thing players pick a detachment *for*, not a footnote.
+    const dispositions = det.dispositions || [];
+    const dispoRow = dispositions.length
+      ? `<div class="detail-meta detail-dispositions">${dispositions.map(d =>
+          `<span class="detail-disposition"${d.text ? ` title="${esc(d.text)}"` : ''}>${esc(d.name)}</span>`
+        ).join('')}</div>`
+      : '';
+
     let html = `<div class="unit-detail-content unit-detail-rule" data-detail-kind="detachment">
       <div class="detail-header detail-banner detail-banner-rule">
         <div class="detail-header-main">
           <div class="detail-name">${esc(det.name)}</div>
           <div class="detail-name-underline detail-name-underline-gold"></div>
           <div class="detail-meta detail-banner-subtitle"><span class="detail-rule-kind">Detachment</span></div>
+          ${dispoRow}
         </div>
         ${ptsBadge}
       </div>`;
