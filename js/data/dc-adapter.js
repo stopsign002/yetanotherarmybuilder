@@ -710,20 +710,36 @@
         };
         if (melee) row.WS = sv(st.WS != null ? st.WS : st.BS);
         else       row.BS = sv(st.BS);
-        const kws = (p.keywords || []).map((k) => k.keyword_id || k).filter(Boolean);
-        if (kws.length) {
-          row.Keywords = kws.map(prettyKw).join(', ');
+        const toks = (p.keywords || []).map(kwToken).filter(Boolean);
+        if (toks.length) {
+          row.Keywords = toks.map((t) => t.label).join(', ');
           // Attach weapon-keyword rule text so the datasheet tooltip lights up.
           // 40kdc keeps the core weapon-ability prose in the ability-text store
           // (lethal-hits, blast, torrent, sustained-hits, melta, …). Keyed by the
-          // DISPLAYED keyword token (prettyKw) so the renderer's per-token lookup
+          // DISPLAYED keyword token so the renderer's per-token lookup
           // (detail.js renderWeaponTable) matches, and so buildWeaponKwGlossary
           // picks these up for GDC-rendered rows too. Fills the gap left when the
           // BSData parser (which used to harvest _keywordDefs) went dormant.
+          //
+          // THREE keys per keyword, and all three are load-bearing:
+          //   "Anti-Infantry 4+"  the exact rendered token (this row's tooltip)
+          //   "Anti-Infantry"     rating-stripped — what detail.js's
+          //                       lookupWeaponKwDef falls back to for GDC rows
+          //   "Anti"              the BASE id. buildWeaponKwGlossary is a GLOBAL
+          //                       map across all factions, so dropping this key
+          //                       would delete the generic anti/sustained-hits/
+          //                       melta/rapid-fire entries that GDC-rendered rows
+          //                       rely on whenever no 40kdc weapon happens to
+          //                       carry that exact parameterization.
           const defs = {};
-          kws.forEach((kid) => {
-            const t = weaponKwText(kid);
-            if (t) defs[prettyKw(kid)] = t;
+          toks.forEach((t) => {
+            const txt = weaponKwText(t.id);
+            if (!txt) return;
+            defs[t.label] = txt;
+            const stripped = t.label.replace(/\s+\d+\+?$/, '');
+            if (stripped !== t.label) defs[stripped] = txt;
+            const base = prettyKw(t.id);
+            if (!defs[base]) defs[base] = txt;
           });
           if (Object.keys(defs).length) row._keywordDefs = defs;
         }
@@ -733,6 +749,33 @@
     return rows;
   }
   const prettyKw = (s) => String(s).replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  // 40kdc PARAMETERIZES weapon keywords — the rating lives in a sibling object,
+  // not in the id:
+  //   { keyword_id: 'anti',           parameters: { target_keyword: 'Infantry', threshold: 4 } }
+  //   { keyword_id: 'sustained-hits', parameters: { value: 1 } }
+  // 968 of 3859 keyword references (25%) carry one. Mapping to `keyword_id`
+  // alone rendered a bare "Anti, Sustained Hits, Rapid Fire, Melta" — and since
+  // damage-calc's analyzeKeywords matches on the rendered token
+  // (/^sustained hits (\d+)$/, /^melta (\d+)$/, /^anti-(.+?) (\d)\+?$/), every
+  // one of those failed to parse and contributed ZERO expected damage. The
+  // datasheet usually looked right only because detail.js prefers GDC rows.
+  // Returns { id, label }: `id` keeps the base form for rule-text lookup,
+  // `label` is what GW prints.
+  function kwToken(k) {
+    if (!k) return null;
+    if (typeof k === 'string') return { id: k, label: prettyKw(k) };
+    const id = k.keyword_id;
+    if (!id) return null;
+    const p = k.parameters || {};
+    if (id === 'anti') {
+      // Anti is the odd one: the target keyword is part of the printed name.
+      const t = p.target_keyword ? String(p.target_keyword) : '';
+      const n = p.threshold != null ? ' ' + p.threshold + '+' : '';
+      return { id, label: (t ? 'Anti-' + t : 'Anti') + n };
+    }
+    if (p.value != null) return { id, label: prettyKw(id) + ' ' + p.value };
+    return { id, label: prettyKw(id) };
+  }
   // Resolve a weapon keyword id to its rule text from the 40kdc ability-text
   // store, trying the full id then the base form with the trailing rating
   // stripped ("sustained-hits-1" → "sustained-hits", "anti-infantry-4" →

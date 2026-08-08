@@ -26,9 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.07-6',
-    lastUpdated: '2026-08-07T00:00:00Z',
+    version:     '2026.08.08-1',
+    lastUpdated: '2026-08-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-08', kind: 'fix',
+        title: 'Weapon abilities now show their ratings again',
+        description:
+          'Weapon abilities that carry a number — Sustained Hits 1, Rapid Fire 2, ' +
+          'Melta 2, Anti-Infantry 4+ — were losing that number on the way into the ' +
+          'app, so they read as a bare “Sustained Hits” or “Anti”. The datasheet ' +
+          'usually still looked right because we prefer a second text source there, ' +
+          'but everything that reads the numbers did not: the damage calculator was ' +
+          'silently scoring Sustained Hits, Rapid Fire and Melta as zero and ignoring ' +
+          'Anti entirely, so its expected-damage figures came out low on roughly a ' +
+          'quarter of all weapons. Ratings are now carried through, the calculator ' +
+          'counts them, and hovering a keyword still shows its rule. Anti abilities ' +
+          'with a two-word target (Anti-Epic Hero 2+) also parse correctly now.',
+      },
       {
         date: '2026-08-07', kind: 'fix',
         title: 'Old armies now re-read corrected points',

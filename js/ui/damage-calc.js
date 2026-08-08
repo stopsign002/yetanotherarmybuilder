@@ -133,14 +133,18 @@
         }
       }
       else if (/^anti-/i.test(kw)) {
-        const m = kw.match(/^anti-([^\s]+)\s+(\d)\+?$/i);
+        // Target keywords can be MULTI-WORD ("Anti-Epic Hero 4+"), so the label
+        // capture has to be lazy-anything rather than non-whitespace — the old
+        // /^anti-([^\s]+)\s+(\d)\+?$/ stopped at "Epic", failed the match, and
+        // fell through to the 4+ default with a truncated label.
+        const m = kw.match(/^anti-(.+?)\s+(\d)\+?$/i);
         if (m) {
           out.antiT = parseInt(m[2], 10);
           out.antiLabel = m[1];
         } else {
           // No parsed threshold — treat as 4+ default on the named keyword.
-          const m2 = kw.match(/^anti-([^\s]+)/i);
-          if (m2) { out.antiT = 4; out.antiLabel = m2[1]; }
+          const m2 = kw.match(/^anti-(.+)$/i);
+          if (m2) { out.antiT = 4; out.antiLabel = m2[1].trim(); }
         }
       }
       else if (/^rapid\s+fire\s+(\d+|d\d+)$/i.test(low)) {
