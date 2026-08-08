@@ -26,9 +26,40 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.08-1',
+    version:     '2026.08.08-2',
     lastUpdated: '2026-08-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-08', kind: 'fix',
+        title: 'Stratagem cards get their WHEN and TARGET back',
+        description:
+          '260 stratagems were showing only their effect — no “when” you may play ' +
+          'them and no “target” — which is most of what makes a stratagem card ' +
+          'usable. Our main data source stores those three parts separately and we ' +
+          'were reading just the effect, then preferring that stub over the ' +
+          'complete text we already had from our backup source. Both are now read ' +
+          'in full, and the complete card always wins. Restrictions are shown too ' +
+          'where they exist.',
+      },
+      {
+        date: '2026-08-08', kind: 'fix',
+        title: 'Stratagem phase filter now finds multi-phase stratagems',
+        description:
+          'About a fifth of stratagems can be used in more than one phase — ' +
+          '“shooting or fight” is the common pair — but we only recorded the first ' +
+          'one, so filtering the browser by Fight hid every shooting-or-fight ' +
+          'stratagem. All of a stratagem’s phases now count, and the card lists ' +
+          'them. Stratagems usable in any phase are labelled Any instead of being ' +
+          'filed under Command.',
+      },
+      {
+        date: '2026-08-08', kind: 'feature',
+        title: 'Stratagem cards show whose turn, and once-per-battle limits',
+        description:
+          'Cards now carry the turn a stratagem may be used in — your turn, your ' +
+          'opponent’s, or either — and flag the handful that are once per turn or ' +
+          'once per battle rather than the usual once per phase.',
+      },
       {
         date: '2026-08-08', kind: 'fix',
         title: 'Weapon abilities now show their ratings again',

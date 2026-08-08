@@ -139,7 +139,21 @@
   }
 
   function passesFilters(strat) {
-    if (activePhase !== 'All' && strat.phase !== activePhase) return false;
+    if (activePhase !== 'All') {
+      // A stratagem can fire in several phases (roughly a fifth of them do —
+      // "shooting or fight" is the common pair). Filter against the full list
+      // where we have it, falling back to the single `phase` string for the
+      // hardcoded core strats and any GDC-only entry.
+      const list = (Array.isArray(strat.phases) && strat.phases.length)
+        ? strat.phases
+        : (strat.phase ? [strat.phase] : []);
+      const hit = list.indexOf(activePhase) !== -1
+        // An all-phases strat is labelled "Any" and should also answer to a
+        // specific phase chip.
+        || (list.length >= 5)
+        || (activePhase === 'Any' && strat.phase === 'Any');
+      if (!hit) return false;
+    }
     if (activeQuery) {
       const q = activeQuery.toLowerCase();
       const hay = (strat.name + ' ' + strat.description).toLowerCase();
@@ -174,9 +188,28 @@
 
   // ── Render ───────────────────────────────────────────────────────────────
 
+  // 40kdc's player_turn values → the label on the card.
+  const TURN_LABEL = {
+    'your-turn':     'Your turn',
+    'opponent-turn': 'Opponent’s turn',
+    'either':        'Either turn',
+  };
+  // Once-per-phase is the default on all but a handful of stratagems, so only
+  // the exceptions are worth a tag.
+  const TIMING_LABEL = {
+    'once-per-turn':   'Once per turn',
+    'once-per-battle': 'Once per battle',
+  };
+
   function cardHtml(strat) {
     const phase = strat.phase || 'Any';
     const cost = (strat.cp == null) ? 1 : strat.cp;
+    // Show every phase the strat can be used in, not just the first.
+    const phaseLabel = (Array.isArray(strat.phases) && strat.phases.length > 1 && strat.phases.length < 5)
+      ? strat.phases.join(' / ')
+      : phase;
+    const turn = TURN_LABEL[strat.turn] || '';
+    const timing = TIMING_LABEL[strat.timing] || '';
     return ''
       + '<div class="strat-card" data-strat-phase="' + esc(phase) + '">'
       +   '<div class="strat-card-head">'
@@ -184,7 +217,9 @@
       +     '<div class="strat-cp" title="Command points">' + cost + ' CP</div>'
       +   '</div>'
       +   '<div class="strat-tags">'
-      +     '<span class="strat-tag strat-tag-phase">' + esc(phase) + '</span>'
+      +     '<span class="strat-tag strat-tag-phase">' + esc(phaseLabel) + '</span>'
+      +     (turn ? '<span class="strat-tag strat-tag-turn">' + esc(turn) + '</span>' : '')
+      +     (timing ? '<span class="strat-tag strat-tag-timing">' + esc(timing) + '</span>' : '')
       +     '<span class="strat-tag strat-tag-type">' + esc(strat.type || 'core') + '</span>'
       +   '</div>'
       +   '<div class="strat-desc">' + mdBold(strat.description) + '</div>'

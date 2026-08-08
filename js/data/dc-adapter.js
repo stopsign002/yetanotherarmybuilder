@@ -59,6 +59,29 @@
     if (!e) return '';
     return e.raw_text || e.effect || '';
   }
+  // Stratagem text specifically. The store holds stratagems STRUCTURED as
+  // { when, target, effect, restrictions? } rather than as prose — of the 374
+  // stratagem ability_ids, NOT ONE has raw_text. So textFor()'s
+  // `raw_text || effect` fallback was returning the effect alone and dropping
+  // the two fields that make a stratagem usable: when you may play it and what
+  // it may target.
+  //
+  // Emits the same "WHEN: … \n\n TARGET: …" stanza shape gdc.js:174-179
+  // produces, so both sources render identically through cards-mode's stanza
+  // splitter. Kept separate from textFor() rather than folded into it: unit
+  // abilities and detachment rules read from the same store, and a stray
+  // "WHEN:" on a unit card would be a regression.
+  function stratTextFor(id) {
+    const e = id && DC.abilityText[id];
+    if (!e) return '';
+    if (e.raw_text) return e.raw_text;
+    const parts = [];
+    if (e.when)         parts.push('WHEN: ' + e.when);
+    if (e.target)       parts.push('TARGET: ' + e.target);
+    if (e.effect)       parts.push('EFFECT: ' + e.effect);
+    if (e.restrictions) parts.push('RESTRICTIONS: ' + e.restrictions);
+    return parts.join('\n\n');
+  }
   // resolve an AbilityView/raw ability's name
   const abilityName = (a) => a && (a.name || (a.raw && a.raw.name)) || '';
 
@@ -1542,11 +1565,24 @@
       if (!s) return null;
       // Hand-authored fallback for strats 40kdc structured but hasn't written up
       // yet (fill-only → self-heals once upstream authors the ability_id text).
-      const description = textFor(s.ability_id) || MISSING_STRATAGEM_TEXT[id] || '';
+      const description = stratTextFor(s.ability_id) || MISSING_STRATAGEM_TEXT[id] || '';
+      // 484 of 2246 stratagems fire in MORE THAN ONE phase (340 are
+      // shooting+fight, 107 span all five). Keeping only phases[0] hid them
+      // from the browser's phase chips. `phase` stays a single string — it's
+      // the contract faction-rules.js and detail.js render — but a strat that
+      // covers every phase is labelled "Any", which is already a PHASES chip in
+      // js/app/stratagems.js, rather than being stranded under Command.
+      const phases = (s.phases || []).map(cap).filter(Boolean);
       return {
         name: s.name,
         cp: s.cp_cost != null ? s.cp_cost : null,
-        phase: cap((s.phases || [])[0] || ''),
+        phase: phases.length >= 5 ? 'Any' : (phases[0] || ''),
+        phases,
+        // Card fields every 11e stratagem carries: whose turn it may be used in,
+        // and how often. `timing` is once-per-phase on 2241 of 2246, so the
+        // renderer only shows the exceptions.
+        turn: s.player_turn || '',
+        timing: s.timing || '',
         type: s.type || '',
         description,
         source: '40kdc',
@@ -1574,18 +1610,31 @@
     const gdcByKey = new Map();
     gdcList.forEach((g) => { const k = foldName(g.name); if (k && !gdcByKey.has(k)) gdcByKey.set(k, g); });
     let nGdcFallback = 0;
+    // 40kdc owns WHICH strats exist and their CP/phase. For TEXT it only wins
+    // when it has a COMPLETE card — a WHEN and an EFFECT. Upstream authors some
+    // stratagems with an effect and no when/target, and unconditionally
+    // preferring 40kdc swapped GDC's full card for that stub. Self-healing in
+    // both directions: as upstream fills in `when`, 40kdc takes over on its own.
+    const isComplete = (t) => /\bWHEN:/.test(t || '') && /\bEFFECT:/.test(t || '');
     const out = dcList.map((d) => {
       const k = foldName(d.name);
       const g = gdcByKey.get(k);
-      const description = d.description || (g ? g.description : '');
-      if (!d.description && g && g.description) nGdcFallback++;
+      const gText = (g && g.description) ? g.description : '';
+      const useDc = isComplete(d.description) || !gText;
+      const description = useDc ? (d.description || gText) : gText;
+      if (!d.description && gText) nGdcFallback++;
       return {
         name: g ? g.name : titleCase(d.name),
         cp:   d.cp != null ? d.cp : (g ? g.cp : null),
         phase: d.phase || (g ? g.phase : ''),
+        // Multi-phase list from 40kdc; fall back to GDC's single phase so
+        // GDC-only strats still filter.
+        phases: (d.phases && d.phases.length) ? d.phases : ((g && g.phase) ? [g.phase] : []),
+        turn:   d.turn || (g ? (g.turn || '') : ''),
+        timing: d.timing || '',
         type:  d.type  || (g ? g.type  : ''),
         description,
-        source: d.description ? '40kdc' : (g && g.description ? 'gdc' : '40kdc'),
+        source: (description && description === d.description) ? '40kdc' : (gText ? 'gdc' : '40kdc'),
       };
     });
     detachment.gdcStratagems = out;

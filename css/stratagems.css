@@ -222,6 +222,18 @@
   /* defaults are fine */
 }
 
+/* Whose turn the strat may be used in — informational, so default styling. */
+.strat-tag-turn {
+  /* defaults are fine */
+}
+
+/* Only rendered for the exceptions to once-per-phase, so it's a real
+   restriction worth calling out rather than a neutral label. */
+.strat-tag-timing {
+  border-color: rgba(200, 140, 60, 0.45);
+  color: #d8a05a;
+}
+
 .strat-desc {
   font-size: 12.5px;
   line-height: 1.5;
