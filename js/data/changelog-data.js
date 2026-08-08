@@ -26,9 +26,28 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.08-2',
+    version:     '2026.08.08-3',
     lastUpdated: '2026-08-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-08', kind: 'fix',
+        title: 'Transport capacity is back on transport datasheets',
+        description:
+          'Rhinos, Land Raiders, Trukks and every other transport stopped showing ' +
+          'how many models they carry when we moved to the new data source — the ' +
+          'datasheet and card had a Transport section ready, but nothing was ' +
+          'filling it in. All 63 transports now show their capacity again, ' +
+          'including the models they cannot carry (Jump Pack, Terminator and so on).',
+      },
+      {
+        date: '2026-08-08', kind: 'fix',
+        title: 'Printed cards no longer say “unit” where the role goes',
+        description:
+          'Every unit card printed the literal word “unit” under its name. It now ' +
+          'shows the real battlefield role — Character, Epic Hero, Battleline, ' +
+          'Dedicated Transport or Fortification — and units that have no role are ' +
+          'simply left blank instead of getting a placeholder.',
+      },
       {
         date: '2026-08-08', kind: 'fix',
         title: 'Stratagem cards get their WHEN and TARGET back',

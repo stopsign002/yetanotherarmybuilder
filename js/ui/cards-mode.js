@@ -19,6 +19,16 @@
 
   const HOST_ID = 'cards-mode';
 
+  // 40kdc battlefield roles → the label printed on a unit card's sub-line.
+  // Anything not listed (most infantry) has no role upstream and gets no chip.
+  const ROLE_LABEL = {
+    'character':           'Character',
+    'epic-hero':           'Epic Hero',
+    'battleline':          'Battleline',
+    'dedicated-transport': 'Dedicated Transport',
+    'fortification':       'Fortification',
+  };
+
   // ── Layout presets ───────────────────────────────────────────────────────
   // Page sizes in millimetres (CSS @page works in mm). Each preset is the
   // physical sheet that goes through the printer; cols × rows is the grid
@@ -1427,8 +1437,16 @@
     const kwFooter = showUKw ? `<div class="dcc-keywords"><strong>KEYWORDS:</strong> ${esc(allKw.join(', '))}</div>` : '';
     const footerHtml = (showFKw || showUKw) ? `<footer class="dcc-foot" data-sec="keywords" data-sec-label="Keywords">${fkwFooter}${kwFooter}</footer>` : '';
 
-    const role = display.role ? `<span class="dcc-role">${esc(unit.type || '')}</span>` : '';
+    // Battlefield role. This printed the literal word "unit" on every card
+    // until now: `unit.type` is hardcoded to 'unit' by the 40kdc adapter, and
+    // this line rendered it verbatim. Prefer the real role where upstream has
+    // one; fall back to `type` only if it ever stops being the placeholder.
+    const roleText = ROLE_LABEL[unit.role]
+      || ((unit.type && unit.type !== 'unit') ? unit.type : '');
+    const role = (display.role && roleText) ? `<span class="dcc-role">${esc(roleText)}</span>` : '';
     const ptsHtml = (display.points && ptsLabel != null) ? `<span class="dcc-pts">${esc(String(ptsLabel))} pts</span>` : '';
+    // Gate on the rendered chip, not on the setting — the ~450 units with no
+    // upstream role would otherwise get an empty sub-line box.
     const showSubLine = !!role;
     const showInvuln = !!(display.invuln && unit.invulnSave);
     // Per-profile invuln: a BSData stat profile can carry its own

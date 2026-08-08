@@ -1433,6 +1433,27 @@
       id: u.id,
       name: u.name,
       type: 'unit',
+      // 40kdc's battlefield role (character / epic-hero / battleline /
+      // dedicated-transport / fortification), on 548 units. Deliberately NOT
+      // folded into `type`: detail.js suppresses the unit subtitle only when
+      // type === 'unit', so reusing it would start printing "character" as a
+      // subtitle on every Character datasheet. This is a separate field that
+      // only the card renderer reads. Note it is a different taxonomy from
+      // ui/role-icons.js, which derives Psyker/Vehicle/Monster from keywords —
+      // upstream `role` has no vehicle/monster and does have epic-hero.
+      role: u.role || null,
+      // 78 units carry a transport capacity. detail.js and cards-mode.js have
+      // rendered `unit.transportCapacity` all along, but the only thing that
+      // ever set it was the dormant BattleScribe parser — so since the 40kdc
+      // cutover the section has been dead on every datasheet. Composed to the
+      // same STRING shape those renderers expect (they esc()/descHtml() it).
+      transportCapacity: (function (tc) {
+        if (!tc || tc.capacity == null) return null;
+        let s = 'This model has a transport capacity of ' + tc.capacity + ' models.';
+        const ex = (tc.exclusion_keywords || []).filter(Boolean);
+        if (ex.length) s += ' It cannot transport ' + ex.join(' or ') + ' models.';
+        return s;
+      })(u.transport_capacity),
       stats: { M: modelStats[0].M, T: modelStats[0].T, SV: modelStats[0].SV,
                W: modelStats[0].W, LD: modelStats[0].LD, OC: modelStats[0].OC },
       modelStats: modelStats.length > 1 ? modelStats : [{ name: '', ...modelStats[0] }],
