@@ -178,6 +178,18 @@
   //     upstream data gap. Its datasheet ability "Purgation Run" has no text in
   //     the store, so we hand-author it from the printed card. (Its CORE "Deep
   //     Strike" is injected separately via MISSING_CORE_ABILITIES above.)
+  //   wazdakka-gutsmek / Fixit da Grot + Throttlerokkit Shokka Engine:
+  //     40kdc-data's units.json entry for wazdakka-gutsmek has NO ability_ids
+  //     key at all — an upstream data gap (every other Ork Epic Hero has one).
+  //     GDC's `abilities.other` carries both, and gdc.js WOULD normally fill
+  //     them in, but its add path is gated on `!hasNonCore` — and the frozen
+  //     consensus overlay already injects "WAAAGH! WAZDAKKA" as a non-core
+  //     ability, so the gate is closed before GDC gets a look. Patch the two
+  //     here instead; text verified verbatim against BOTH GDC and BSData.
+  //     "Throttlerokkit Shokka Engine" is the parent of the choose-N group
+  //     whose sub-abilities (Turbo Engine / Shokk Attack Engine / Pulse Jet)
+  //     already render — detail.js expects that parent to sit in the regular
+  //     Abilities section explaining the pick, same shape as Lion / Angron.
   const MISSING_UNIT_ABILITIES = {
     'eradicator-squad-with-heavy-bolters': [{
       name: 'Overlapping Detonations',
@@ -193,6 +205,18 @@
         'In your Shooting phase, after this unit has shot, it can make a ' +
         'normal move of up to D6". If it does, until the end of the turn, ' +
         'this unit is not eligible to declare a charge.',
+    }],
+    'wazdakka-gutsmek': [{
+      name: 'Fixit da Grot',
+      description:
+        'At the start of your Command phase, this model regains up to D3 ' +
+        'lost wounds.',
+    }, {
+      name: 'Throttlerokkit Shokka Engine',
+      description:
+        'In your Command phase, select one of the abilities in the ' +
+        'Throttlerokkit Shokka Engine section. Until the start of your next ' +
+        'Command phase, this model has that ability.',
     }],
     // (big-mek-in-mega-armour's More Dakka patch retired 2026-07-09 — fixed
     // upstream in 40kdc-data PR #72.)

@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.08-4',
-    lastUpdated: '2026-08-08T00:00:00Z',
+    version:     '2026.08.09-1',
+    lastUpdated: '2026-08-09T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-09', kind: 'fix',
+        title: 'Wazdakka Gutsmek gets his missing abilities back',
+        description:
+          'Wazdakka was missing "Fixit da Grot" (he regains up to D3 lost wounds ' +
+          'at the start of your Command phase) and "Throttlerokkit Shokka Engine" ' +
+          '(the rule that lets you pick one of Turbo Engine, Shokk Attack Engine ' +
+          'or Pulse Jet each Command phase). His datasheet in the upstream data ' +
+          'set lists no abilities at all, and the backup that normally fills that ' +
+          'gap was being skipped for him. Both abilities and their full rules text ' +
+          'now show on his card. Thanks to dangersteve for reporting it.',
+      },
       {
         date: '2026-08-08', kind: 'fix',
         title: 'The app reopens the army you actually had open',
