@@ -26,9 +26,36 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.09-1',
-    lastUpdated: '2026-08-09T00:00:00Z',
+    version:     '2026.08.09-2',
+    lastUpdated: '2026-08-09T02:00:00Z',
     entries: [
+      {
+        date: '2026-08-09', kind: 'fix',
+        title: 'Four more characters get their missing datasheet abilities back',
+        description:
+          'Same root cause as the Wazdakka fix below, now fixed properly rather ' +
+          'than one unit at a time. When the upstream data set lists no abilities ' +
+          'for a character, the app fills them in from the datasheet — but a ' +
+          'single correction the app itself had applied was enough to make the ' +
+          'unit look already covered, so the rest of its abilities were dropped. ' +
+          'The Emperor’s Champion now shows Armour of Faith and Sigismund’s ' +
+          'Heir, Kor’sarro Khan shows For the Khan! and Trophy Taker, Thulia ' +
+          'Ghuld shows Rod of the War Forge, Mechanicus Bodyguard and Secutor of ' +
+          'Olympus, and Commissar Graves on Foot shows Icon of Discipline and ' +
+          'Brutal Disciplinarian — all with full rules text. Every added ability ' +
+          'was checked against two independent data sources first.',
+      },
+      {
+        date: '2026-08-09', kind: 'fix',
+        title: 'A broken share link no longer nags you on every visit',
+        description:
+          'If you opened a share link that was corrupt or truncated, the app ' +
+          'showed an "URL import failed" error — and then showed it again every ' +
+          'single time you loaded the page, because the bad code stayed in the ' +
+          'address bar (and in any bookmark of it). Short of hand-editing the URL ' +
+          'there was no way to stop it. A share link now gets one attempt and is ' +
+          'cleared from the address bar either way.',
+      },
       {
         date: '2026-08-09', kind: 'fix',
         title: 'Wazdakka Gutsmek gets his missing abilities back',

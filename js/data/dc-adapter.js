@@ -967,6 +967,15 @@
         const isCore = raw.ability_type === 'core' || CORE_ABILITY_RE.test(name);
         // `id` kept so tooling (the stat checker's consensus removes) can
         // target the upstream ability; renderers ignore it.
+        //
+        // Everything appended to `abilities` BELOW this map is tagged
+        // `_injected: true` — hand-maps, the consensus overlay, the attachment
+        // role. Entries from this map are the only ones 40kdc itself linked on
+        // the datasheet, so `!a._injected` is the test for "upstream covers
+        // this unit's abilities". gdc.js gates its datasheet fill on exactly
+        // that; without the tag a single overlay-injected ability made a unit
+        // 40kdc links NOTHING for look covered, and its real abilities were
+        // silently dropped. Renderers ignore the flag.
         return { name, description: textFor(a.id), isCore, id: a.id };
       })
       .filter((a) => a.name);
@@ -980,7 +989,8 @@
         const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
         if (have.has(name.toLowerCase())) return;   // self-heal no-op
         have.add(name.toLowerCase());
-        abilities.push({ name, description: textFor(aid), isCore: CORE_ABILITY_RE.test(name) });
+        abilities.push({ name, description: textFor(aid), isCore: CORE_ABILITY_RE.test(name),
+                         _injected: true });
       });
     }
     // Inject any hand-patched core abilities the dataset omits for this unit.
@@ -1016,7 +1026,7 @@
         }
         if (!name || have.has(name.toLowerCase())) return;   // already present → no-op (self-heals post-upstream-fix)
         have.add(name.toLowerCase());
-        abilities.push({ name, description, isCore: false });
+        abilities.push({ name, description, isCore: false, _injected: true });
       });
     }
     // Consensus overlay adds (see abilityFixOv above). Core adds resolve
@@ -1055,14 +1065,14 @@
         const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
         if (have.has(name.toLowerCase())) return;   // self-heal no-op
         have.add(name.toLowerCase());
-        abilities.push({ name, description: textFor(aid), isCore: true });
+        abilities.push({ name, description: textFor(aid), isCore: true, _injected: true });
       });
       (abilityFixOv.addNamed || []).forEach((p) => {
         const name = p && p.name;
         if (!name || have.has(name.toLowerCase())) return;
         have.add(name.toLowerCase());
         abilities.push({ name, description: stripEchoedName(name, p.description || ''),
-                         isCore: CORE_ABILITY_RE.test(name) });
+                         isCore: CORE_ABILITY_RE.test(name), _injected: true });
       });
     }
     // Re-add the attachment ROLE as the core ability the printed datasheet
@@ -1074,7 +1084,8 @@
     const roleAbility = ATTACH_ROLE_ABILITY[u.attachment_role];
     if (roleAbility
         && !abilities.some((a) => a.name.toLowerCase() === roleAbility.name.toLowerCase())) {
-      abilities.push({ name: roleAbility.name, description: roleAbility.description, isCore: true });
+      abilities.push({ name: roleAbility.name, description: roleAbility.description, isCore: true,
+                       _injected: true });
     }
     // Route ability-modelled wargear abilities out of the normal Abilities
     // list. Their prose refers to "the bearer" of a wargear item (a single

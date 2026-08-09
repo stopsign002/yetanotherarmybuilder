@@ -646,7 +646,17 @@
         if (gAbils.length === 0 && gGroups.length === 0) return;
         const abils = Array.isArray(unit.abilities) ? unit.abilities : (unit.abilities = []);
         const byKey = new Map(abils.map(a => [nameKey(a.name), a]));
-        const hasNonCore = abils.some(a => !a.isCore);
+        // Gate the datasheet fill on whether 40kdc ITSELF linked a non-core
+        // ability — not on the merged list. dc-adapter tags everything it
+        // appends from a hand-map / the consensus overlay / the attachment role
+        // with `_injected`, and those used to count here: a unit whose 40kdc
+        // datasheet links NOTHING (exactly the case this fill exists for) had
+        // the gate slammed shut by one overlay-injected ability, and the rest of
+        // its printed datasheet was silently dropped. Wazdakka Gutsmek lost both
+        // "Fixit da Grot" and "Throttlerokkit Shokka Engine" to a single
+        // textless `WAAAGH! WAZDAKKA` entry. Ignoring `_injected` can only ever
+        // OPEN the gate, never close one that was open before.
+        const hasNonCore = abils.some(a => !a.isCore && !a._injected);
         gAbils.forEach(g => {
           const hit = byKey.get(nameKey(g.name));
           if (hit) {

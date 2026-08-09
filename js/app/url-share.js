@@ -35,15 +35,20 @@
       if (window.UI && typeof UI.toast === 'function') {
         UI.toast('Loaded from URL', 'success');
       }
+    } catch (err) {
+      if (window.UI && typeof UI.toast === 'function') {
+        UI.toast('URL import failed: ' + err.message, 'error', 5000);
+      }
+    } finally {
+      // Strip `?a=` on BOTH paths, not just success. A corrupt or undecodable
+      // share code used to survive in the address bar (and in any bookmark of
+      // it), so every subsequent load re-ran the import and re-showed the same
+      // error toast, with no in-app way to clear it short of editing the URL.
+      // One attempt per navigation is all a share link ever gets.
       try {
         const url = window.location.origin + window.location.pathname + window.location.hash;
         window.history.replaceState({}, '', url);
       } catch (_) {}
-    } catch (err) {
-      imported = false;
-      if (window.UI && typeof UI.toast === 'function') {
-        UI.toast('URL import failed: ' + err.message, 'error', 5000);
-      }
     }
     return true;
   }
