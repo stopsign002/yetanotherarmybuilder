@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.09-2',
-    lastUpdated: '2026-08-09T02:00:00Z',
+    version:     '2026.08.09-3',
+    lastUpdated: '2026-08-09T02:30:00Z',
     entries: [
+      {
+        date: '2026-08-09', kind: 'fix',
+        title: 'Five more units get a missing datasheet ability',
+        description:
+          'Ancient in Terminator Armour and Company Heroes were missing ' +
+          'Astartes Banner (+1 Objective Control), and Prosecutors, ' +
+          'Witchseekers and the Anathema Psykana Rhino were all missing ' +
+          'Daughters of the Abyss (Feel No Pain 3+ against Psychic Attacks and ' +
+          'mortal wounds). The upstream data set does not link these to their ' +
+          'datasheets; both of the sources we cross-check against say they ' +
+          'belong there, so they are now shown with their full rules text. ' +
+          'Note the Ancient’s Astartes Banner is a separate rule from Keep the ' +
+          'Banner High — you should now see both.',
+      },
       {
         date: '2026-08-09', kind: 'fix',
         title: 'Four more characters get their missing datasheet abilities back',

@@ -218,6 +218,50 @@
         'Throttlerokkit Shokka Engine section. Until the start of your next ' +
         'Command phase, this model has that ability.',
     }],
+    // The 40kdc datasheet links `keep-the-banner-high` but not the banner's OC
+    // ability. They are two DIFFERENT rules (this one is Objective Control; the
+    // other is Hit/Wound bonuses below Starting Strength), both printed on the
+    // sheet. GDC and BSData both carry both.
+    'ancient-in-terminator-armour': [{
+      name: 'Astartes Banner',
+      description:
+        'While this model is leading a unit, add 1 to the Objective Control ' +
+        'characteristic of models in that unit.',
+    }],
+    // Same ability name, DIFFERENT wording — the squad version keys off the
+    // unit containing an Ancient rather than off leading a unit, so this can't
+    // resolve through the shared ability-text store. (BSData files it as
+    // "Ancient Banner"; GDC — GW's own app data — calls it Astartes Banner, and
+    // GDC is what the rest of our ability fill follows.)
+    'company-heroes': [{
+      name: 'Astartes Banner',
+      description:
+        'While this unit contains an Ancient, add 1 to the Objective Control ' +
+        'characteristic of models in this unit.',
+    }],
+    // Sisters of Silence anti-psyker rule. 40kdc links none of the three
+    // datasheets to it; GDC and BSData both put it on all three. BSData models
+    // it as one shared rule linked from each unit (and names it in the singular)
+    // — the text is the same rule either way.
+    'prosecutors': [{
+      name: 'Daughters of the Abyss',
+      description:
+        'Models in this unit have the Feel No Pain 3+ ability against Psychic ' +
+        'Attacks and mortal wounds.',
+    }],
+    'witchseekers': [{
+      name: 'Daughters of the Abyss',
+      description:
+        'Models in this unit have the Feel No Pain 3+ ability against Psychic ' +
+        'Attacks and mortal wounds.',
+    }],
+    // Single-model unit, so GW prints the singular wording on this one.
+    'anathema-psykana-rhino': [{
+      name: 'Daughters of the Abyss',
+      description:
+        'This model has the Feel No Pain 3+ ability against Psychic Attacks ' +
+        'and mortal wounds.',
+    }],
     // (big-mek-in-mega-armour's More Dakka patch retired 2026-07-09 — fixed
     // upstream in 40kdc-data PR #72.)
   };
