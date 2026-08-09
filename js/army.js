@@ -83,6 +83,17 @@ window.Army = class Army {
     this.updatedAt = new Date().toISOString();
   }
 
+  // Mark the army as edited. Every mutator above stamps `updatedAt` itself,
+  // but fields written directly from the outside (name, pointsLimit — both in
+  // toJSON, and `name` is its own server column) had no way to say so. That is
+  // not cosmetic: sync's diff is `known[id] !== army.updatedAt`, so an edit
+  // that leaves the stamp alone is never enqueued and never reaches the
+  // server — and if another device later pushes anything, the unpushed edit is
+  // overwritten when this one pulls. Call this after any direct field write.
+  touch() {
+    this.updatedAt = new Date().toISOString();
+  }
+
   // Convenience accessor for the attachment graph.
   findByEntryId(entryId) {
     if (!entryId) return null;

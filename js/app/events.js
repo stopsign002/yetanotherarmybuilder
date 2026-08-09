@@ -162,10 +162,23 @@
 
     document.getElementById('army-name-input').addEventListener('input', e => {
       state.currentArmy.name = e.target.value || 'My Army';
+      // touch() + an armyChange are BOTH required. Without the stamp, sync's
+      // `known[id] !== updatedAt` diff never enqueues the rename, so it stays
+      // on this device forever; without the hook, nothing schedules the
+      // debounced autosave, so it never even reaches localStorage. This
+      // handler previously did neither — renaming an army was a memory-only
+      // edit that a pull from another browser would silently undo.
+      state.currentArmy.touch();
+      App.fireArmyChange('rename');
     });
 
     document.getElementById('points-limit-input').addEventListener('input', e => {
       state.currentArmy.pointsLimit = parseInt(e.target.value, 10) || 0;
+      // Same reason as the rename above. renderArmyList fires armyChange
+      // ('render'), which is what schedules the autosave, so only the stamp
+      // was missing here — the new limit was written to localStorage under an
+      // unchanged updatedAt and therefore never pushed.
+      state.currentArmy.touch();
       UI.renderArmyList(state.currentArmy);
     });
 

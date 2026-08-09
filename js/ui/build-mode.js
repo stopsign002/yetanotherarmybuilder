@@ -198,6 +198,10 @@
             const army = App.state && App.state.currentArmy;
             if (army) {
               army.pointsLimit = next;
+              // Stamp it, or sync's diff never sees the change (see Army#touch).
+              // The primary path above dispatches a real `input` event at the
+              // legacy field, so it inherits the stamp from that handler.
+              if (typeof army.touch === 'function') army.touch();
               if (window.UI && typeof UI.renderArmyList === 'function') UI.renderArmyList(army);
             }
           }

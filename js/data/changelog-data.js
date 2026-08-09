@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.09-3',
-    lastUpdated: '2026-08-09T02:30:00Z',
+    version:     '2026.08.09-4',
+    lastUpdated: '2026-08-09T03:00:00Z',
     entries: [
+      {
+        date: '2026-08-09', kind: 'fix',
+        title: 'Renaming an army and changing its points limit now actually save',
+        description:
+          'Renaming an army, or changing its points limit, was only ever ' +
+          'changing it on the device in front of you — the change was never ' +
+          'uploaded, so other devices never saw it. Worse, if you had the same ' +
+          'army open in another browser, the next time this one checked in it ' +
+          'would pull that other copy down and your rename would vanish, which ' +
+          'looked like the other browser was blocking the edit. Both now count ' +
+          'as real edits: they save straight away and sync like everything ' +
+          'else. If you have been losing renames, redo the rename once and it ' +
+          'will stick this time.',
+      },
       {
         date: '2026-08-09', kind: 'fix',
         title: 'Five more units get a missing datasheet ability',
