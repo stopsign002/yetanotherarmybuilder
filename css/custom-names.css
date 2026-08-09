@@ -1,0 +1,171 @@
+/* custom-names.css — user-given names for characters and units.
+   Owned by js/app/custom-names.js (Reserves instances + army-entry names)
+   plus the two shared render sites that show a datasheet subtitle:
+   js/ui/army-list.js and js/ui/cards-mode.js. */
+
+/* ── roster card: a named unique unit ─────────────────────────────────── */
+
+.unit-card.unit-card-named {
+  border-color: rgba(198, 160, 74, 0.55);
+  box-shadow: inset 3px 0 0 0 rgba(198, 160, 74, 0.75);
+}
+
+.unit-card .unit-card-subname {
+  padding: 0 0.65rem 0.15rem;
+  margin-top: -0.1rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted, #9a9a92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── unit detail pane ─────────────────────────────────────────────────── */
+
+.detail-datasheet-sub {
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted, #9a9a92);
+}
+
+/* ── the name widget (sits under the stockpile stepper) ───────────────── */
+
+.custom-name-widget {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.custom-name-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted, #9a9a92);
+  margin-bottom: 0.3rem;
+}
+
+.custom-name-hint {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--text-muted, #9a9a92);
+  opacity: 0.85;
+  margin-bottom: 0.4rem;
+}
+
+.custom-name-row { display: flex; }
+
+.custom-name-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text, #e8e8e2);
+  background: var(--bg-input, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.14));
+  border-radius: 3px;
+}
+
+.custom-name-input:focus {
+  outline: none;
+  border-color: rgba(198, 160, 74, 0.7);
+}
+
+.custom-name-sub {
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--text-muted, #9a9a92);
+}
+
+.custom-name-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+}
+
+.cn-btn {
+  padding: 0.32rem 0.6rem;
+  font: inherit;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  color: var(--text, #e8e8e2);
+  background: transparent;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.18));
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.cn-btn:hover { background: rgba(255, 255, 255, 0.06); }
+
+.cn-btn-primary {
+  border-color: rgba(198, 160, 74, 0.6);
+  color: #e6c980;
+}
+
+.cn-btn-danger:hover {
+  border-color: rgba(200, 80, 70, 0.7);
+  color: #e59a92;
+}
+
+/* ── army list row ────────────────────────────────────────────────────── */
+
+.army-entry-datasheet {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted, #9a9a92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── data cards ───────────────────────────────────────────────────────── */
+
+/* The datasheet name shown under a card's custom title. Scoped to its own
+   class so the shared .dcc-sub-line (also used by rule + stratagem cards)
+   is untouched. */
+.dcc-datasheet-name {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+/* Custom names aren't length-limited the way datasheet names are, and
+   .dcc-name has no auto-shrink — let a long one wrap rather than clip. */
+.dcc-card .dcc-name { overflow-wrap: anywhere; }
+
+.cards-spill-namerow {
+  display: block;
+  margin: 0 0 0.75rem;
+}
+
+.cards-spill-name {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text, #e8e8e2);
+  background: var(--bg-input, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.14));
+  border-radius: 3px;
+}
+
+.cards-spill-name:focus {
+  outline: none;
+  border-color: rgba(198, 160, 74, 0.7);
+}
+
+/* ── tournament PDF quick-reference ───────────────────────────────────── */
+
+.tp-quicklist-sub {
+  font-size: 0.82em;
+  opacity: 0.7;
+}

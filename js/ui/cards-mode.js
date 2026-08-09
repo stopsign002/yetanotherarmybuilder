@@ -548,6 +548,7 @@
   const DISPLAY_GROUPS = [
     { kind: 'unit', label: 'Unit cards', keys: [
       ['points',      'Points cost'],
+      ['customName',  'Custom unit names'],
       ['role',        'Role / type subtitle'],
       ['invuln',      'Invulnerable save (in SV cell)'],
       ['stats',       'Stat block (M/T/SV/W/LD/OC)'],
@@ -826,7 +827,7 @@
     if (!army || !Array.isArray(army.entries)) return [];
     return army.entries.map((entry, i) => ({
       id: 'u' + i,
-      label: (entry.unitName || (entry.unitData && entry.unitData.name) || 'Unit')
+      label: (entry.customName || entry.unitName || (entry.unitData && entry.unitData.name) || 'Unit')
            + (entry.count > 1 ? ' ×' + entry.count : ''),
       entry,
     }));
@@ -1445,9 +1446,17 @@
       || ((unit.type && unit.type !== 'unit') ? unit.type : '');
     const role = (display.role && roleText) ? `<span class="dcc-role">${esc(roleText)}</span>` : '';
     const ptsHtml = (display.points && ptsLabel != null) ? `<span class="dcc-pts">${esc(String(ptsLabel))} pts</span>` : '';
-    // Gate on the rendered chip, not on the setting — the ~450 units with no
-    // upstream role would otherwise get an empty sub-line box.
-    const showSubLine = !!role;
+    // A user-given name takes the card's title, and the real datasheet name
+    // drops into the sub-line so the sheet stays identifiable to an opponent.
+    const dsName = unit.name || entry.unitName || 'Unit';
+    const cardCustomName = (display.customName && entry.customName)
+      ? String(entry.customName) : '';
+    const dsChip = cardCustomName
+      ? `<span class="dcc-datasheet-name">${esc(dsName)}</span>` : '';
+    // Gate on the rendered chips, not on the settings — the ~450 units with no
+    // upstream role would otherwise get an empty sub-line box. A named card
+    // needs the sub-line even when it has no role at all.
+    const showSubLine = !!(role || dsChip);
     const showInvuln = !!(display.invuln && unit.invulnSave);
     // Per-profile invuln: a BSData stat profile can carry its own
     // invulnerable-save characteristic. Prefer it so a multi-statline sheet
@@ -1534,10 +1543,10 @@
       <header class="dcc-head">
         ${kickerHtml}
         <div class="dcc-name-line">
-          <h1 class="dcc-name">${esc(unit.name || entry.unitName || 'Unit')}</h1>
+          <h1 class="dcc-name">${esc(cardCustomName || dsName)}</h1>
           ${ptsHtml}
         </div>
-        ${showSubLine ? `<div class="dcc-sub-line">${role}</div>` : ''}
+        ${showSubLine ? `<div class="dcc-sub-line">${dsChip}${role}</div>` : ''}
       </header>
       ${statsHtml ? `<div class="dcc-stats-group" data-sec="stats" data-sec-label="Stat Block">${statsHtml}</div>` : ''}
       ${display.ranged ? renderWeaponsBlock(ranged, 'ranged', wgCounts) : ''}
@@ -3222,7 +3231,9 @@
   function unitCardById(id) {
     const u = gatherUnits().find(x => x.id === id);
     if (!u) return null;
-    return { kind: 'unit', id: u.id, html: renderUnitCard(u.entry), label: u.label };
+    // `entry` is carried so the card-options panel can resolve the army entry
+    // by object identity rather than by this positional id.
+    return { kind: 'unit', id: u.id, html: renderUnitCard(u.entry), label: u.label, entry: u.entry };
   }
 
   // The EFFECTIVE set of section keys currently on page 2 for a unit card:
@@ -3259,13 +3270,15 @@
     spillPanelId = id;
 
     const sections = sectionsOf(card.html);   // ordered { key, label }
-    if (sections.length === 0) {
-      // Nothing spillable — a bare card. Nothing to configure.
-      spillPanelId = null;
-      return;
-    }
+    // NOTE: a card with nothing spillable used to bail out here and never open
+    // the panel at all. It still opens now, because naming the card is the
+    // other thing this panel does and a minimal card must be nameable too.
     const active = effectiveSpillKeys(card);   // keys currently on page 2
     const hasOverride = Array.isArray(spillOverrides[id]);
+    const cardEntry = card.entry || null;
+    const entryDsName = cardEntry
+      ? ((cardEntry.unitData && cardEntry.unitData.name) || cardEntry.unitName || '')
+      : '';
 
     const backdrop = document.createElement('div');
     backdrop.id = 'cards-spill-backdrop';
@@ -3276,29 +3289,42 @@
     panel.id = 'cards-spill-panel';
     panel.className = 'cards-spill-panel';
     panel.setAttribute('role', 'dialog');
-    panel.setAttribute('aria-label', 'Send sections to page 2');
+    panel.setAttribute('aria-label', 'Card options');
     panel.innerHTML = `
       <header class="cards-spill-head">
         <div>
-          <div class="cards-spill-title">Page-2 split</div>
+          <div class="cards-spill-title">Card options</div>
           <div class="cards-spill-sub">${esc(card.label || 'Unit')}</div>
         </div>
         <button type="button" class="cards-spill-close" aria-label="Close" data-spill-close>×</button>
       </header>
-      <p class="cards-spill-help">
-        Tick a section to move the whole block to a continuation card.
-        ${hasOverride ? 'You’ve customised this card.' : 'Starting from the automatic guess.'}
-      </p>
-      <div class="cards-spill-list">
-        ${sections.map(s => `
-          <label class="cards-spill-row">
-            <input type="checkbox" data-spill-sec="${esc(s.key)}" ${active.has(s.key) ? 'checked' : ''}>
-            <span class="cards-spill-label">${esc(s.label)}</span>
-          </label>`).join('')}
-      </div>
-      <footer class="cards-spill-foot">
-        <button type="button" class="cards-link-btn" data-spill-reset ${hasOverride ? '' : 'disabled'}>Reset to auto</button>
-      </footer>`;
+      ${cardEntry ? `
+        <label class="cards-spill-namerow">
+          <span class="cards-spill-label">Card name</span>
+          <input type="text" class="cards-spill-name" maxlength="60"
+                 value="${esc(cardEntry.customName || '')}"
+                 placeholder="${esc(entryDsName)}">
+        </label>
+        <p class="cards-spill-help">
+          Names this unit on the card, with “${esc(entryDsName)}” as the subtitle.
+          The name is shared with the army list and every export.
+        </p>` : ''}
+      ${sections.length ? `
+        <p class="cards-spill-help">
+          Tick a section to move the whole block to a continuation card.
+          ${hasOverride ? 'You’ve customised this card.' : 'Starting from the automatic guess.'}
+        </p>
+        <div class="cards-spill-list">
+          ${sections.map(s => `
+            <label class="cards-spill-row">
+              <input type="checkbox" data-spill-sec="${esc(s.key)}" ${active.has(s.key) ? 'checked' : ''}>
+              <span class="cards-spill-label">${esc(s.label)}</span>
+            </label>`).join('')}
+        </div>
+        <footer class="cards-spill-foot">
+          <button type="button" class="cards-link-btn" data-spill-reset ${hasOverride ? '' : 'disabled'}>Reset to auto</button>
+        </footer>` : `
+        <p class="cards-spill-help">This card has no sections that can be split to a second page.</p>`}`;
 
     // Toggling a checkbox: on the FIRST manual change, seed the override from
     // the current EFFECTIVE set (so an auto guess becomes an explicit,
@@ -3323,6 +3349,52 @@
       const helpEl = panel.querySelector('.cards-spill-help');
       if (helpEl) helpEl.textContent = 'Tick a section to move the whole block to a continuation card. You’ve customised this card.';
     });
+    // Card name → entry.customName. Resolved by OBJECT IDENTITY against
+    // army.entries, never by this panel's card id: card ids are positional
+    // ('u0', 'u1', …) and shift whenever the army is reordered, which is
+    // exactly how the spill overrides above end up on the wrong unit.
+    if (cardEntry) {
+      const nameInput = panel.querySelector('.cards-spill-name');
+      let nameTimer = null;
+      const commitName = () => {
+        nameTimer = null;
+        const army = getCurrentArmy();
+        if (!army || typeof army.setCustomName !== 'function') return;
+        const idx = army.entries.indexOf(cardEntry);
+        if (idx < 0) return;   // entry deleted while the panel was open
+        army.setCustomName(idx, nameInput.value);
+        // setCustomName stamps updatedAt, which cardsStateSig() already
+        // hashes — but refresh directly so the preview updates as you type.
+        if (App.state && App.state.armyManager &&
+            typeof App.state.armyManager.saveArmy === 'function') {
+          App.state.armyManager.saveArmy(army);
+        }
+        refreshPreview();
+        refreshSummary();
+        const subEl = panel.querySelector('.cards-spill-sub');
+        if (subEl) {
+          const c = unitCardById(id);
+          if (c) subEl.textContent = c.label || 'Unit';
+        }
+      };
+      if (nameInput) {
+        nameInput.addEventListener('input', () => {
+          if (nameTimer) clearTimeout(nameTimer);
+          nameTimer = setTimeout(commitName, 250);
+        });
+        nameInput.addEventListener('change', () => {
+          if (nameTimer) clearTimeout(nameTimer);
+          commitName();
+        });
+        // A pending debounce would be lost when the panel is torn down.
+        nameInput.addEventListener('blur', () => {
+          if (!nameTimer) return;
+          clearTimeout(nameTimer);
+          commitName();
+        });
+      }
+    }
+
     panel.addEventListener('click', e => {
       if (e.target.closest('[data-spill-close]')) { closeSpillPanel(); return; }
       if (e.target.closest('[data-spill-reset]')) {

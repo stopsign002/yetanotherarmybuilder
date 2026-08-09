@@ -112,6 +112,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Collection | Owned/painted tracker (per unit) | `js/app/collection.js` |
 | Collection | Reserves: owned-units stockpile w/ quantity, default unit-pane view | `js/app/reserves.js` |
 | Collection | Requisition Requests: wishlist of units w/ quantity | `js/app/requisitions.js` |
+| Collection | Custom character/unit names (Reserves instances + per-army-entry names) | `js/app/custom-names.js` |
 | Polish | Confetti / save pulse / scanline / animated crest | `js/ui/celebrations.js`, `js/ui/save-pulse.js`, `js/ui/scanline.js`, `js/ui/animated-crest.js` |
 | Polish | Faction flavor quotes on empty army | `js/app/flavor.js` |
 | Polish | Hero CTA + Cmd+K hint + recent factions chip | `js/app/hero-state.js` |
@@ -164,6 +165,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_collection` | localStorage | `collection.js` | Per-unit owned/painted status | User data |
 | `yaab_reserves` | localStorage | `reserves.js` | Per-unit owned quantity (`{unitId: qty}`); cloud-synced | User data |
 | `yaab_requisitions` | localStorage | `requisitions.js` | Per-unit wishlist quantity (`{unitId: qty}`); cloud-synced | User data |
+| `yaab_custom_names` | localStorage | `custom-names.js` | Named Reserves instances (`{instanceId: {u: unitId, n: name, t: createdAt}}`) — each one is a unique unit split off the `yaab_reserves` stack; cloud-synced. Custom names on ARMY entries are NOT here: they live on `entry.customName` inside `yaab_armies` | User data |
 | `yaab_units_view` | localStorage | `reserves.js` | Active unit-pane view (`'reserves'` / `'requisitions'` / `'all'`) | User pref |
 | `yaab_crusade_rosters` | localStorage | `crusade.js` | Crusade rosters + XP + battle log | User data |
 | `yaab_match_state` | localStorage | `match-mode.js`, `stratagems.js` | Active match (CP, turn, VP) | Game-day state |

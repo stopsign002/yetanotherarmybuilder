@@ -26,9 +26,31 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.09-5',
-    lastUpdated: '2026-08-09T03:40:00Z',
+    version:     '2026.08.09-6',
+    lastUpdated: '2026-08-09T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-09', kind: 'feature',
+        title: 'Name your characters and units',
+        description:
+          'Your Blood Angels Captain can be Brother-Captain Gaius, and your ' +
+          'third Intercessor Squad can be Squad Gamma. In Reserves, click a ' +
+          'unit and use "Name one of these" — it splits one model off the ×N ' +
+          'stack as its own unique unit with its own card, so you still own the ' +
+          'same number of things, some of them just have names now. Remove the ' +
+          'name and it goes back on the stack. You can also name a unit already ' +
+          'in your army: click it in the army list, or click its card in Data ' +
+          'cards and use the new "Card name" box. Everywhere a named unit ' +
+          'appears — roster card, army list, detail panel, printed data card, ' +
+          'tournament PDF — the name you gave it is the title and the real ' +
+          'datasheet name sits underneath as a subtitle, so nobody is ever left ' +
+          'guessing what it actually is. Names travel with army codes, share ' +
+          'links and QR codes, and sync across your devices. Text and CSV ' +
+          'exports print them as 1x "Squad Gamma" Intercessor Squad, keeping ' +
+          'the datasheet name for your opponent and the organiser. Sharing a ' +
+          'code with someone on an older version still works — they just ' +
+          'won\'t see the names.',
+      },
       {
         date: '2026-08-09', kind: 'fix',
         title: 'Units could disappear from the army list while still costing points',

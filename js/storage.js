@@ -109,6 +109,13 @@ window.Storage = (() => {
     // byte-identical. Labels/items are re-derived from the unit's
     // wargearProfile on import.
     const hasWargear = (army.entries || []).some(e => e && e.wargear && e.wargear.length);
+    // 7th slot: the user's custom name for this entry ("Brother-Captain
+    // Gaius"). Same army-wide-flag pattern as attachments/wargear, so armies
+    // without custom names encode byte-identically to pre-feature v2 codes.
+    // Note this also forces the 5th slot ([entryId, parentId]) on, since a
+    // named entry needs a stable identity across an export/import round-trip.
+    // Old clients destructure only 6 slots and silently ignore the name.
+    const hasCustomNames = (army.entries || []).some(e => e && e.customName);
     data.e = (army.entries || []).map(entry => {
       const tuple = [entry.unitId, entry.count];
       const enhs = (entry.enhancements || []).map(e => [e.name, e.pts || 0]);
@@ -121,12 +128,13 @@ window.Storage = (() => {
       // emit selectedPts + enhPairs as placeholders even when empty so
       // the 5th slot lands at index 4. Same domino when the wargear slot
       // (index 5) is in play.
-      if (hasAttachments || hasWargear || hasPts || hasEnh) tuple.push(hasPts ? entry.selectedPts : null);
-      if (hasAttachments || hasWargear || hasEnh)           tuple.push(hasEnh ? enhs : null);
-      if (hasAttachments || hasWargear) {
+      if (hasAttachments || hasWargear || hasCustomNames || hasPts || hasEnh) tuple.push(hasPts ? entry.selectedPts : null);
+      if (hasAttachments || hasWargear || hasCustomNames || hasEnh)           tuple.push(hasEnh ? enhs : null);
+      if (hasAttachments || hasWargear || hasCustomNames) {
         tuple.push([entry.entryId || null, entry.attachedToEntryId || 0]);
       }
-      if (hasWargear) tuple.push(hasWg ? wgs : null);
+      if (hasWargear || hasCustomNames) tuple.push(hasWg ? wgs : null);
+      if (hasCustomNames)               tuple.push(entry.customName || null);
       return tuple;
     });
     return data;
@@ -179,7 +187,7 @@ window.Storage = (() => {
       }).filter(Boolean);
     };
     const entries = (data.e || []).map(tuple => {
-      const [unitId, count = 1, selectedPts = null, enhPairs = null, attachPair = null, wgTriples = null] = tuple;
+      const [unitId, count = 1, selectedPts = null, enhPairs = null, attachPair = null, wgTriples = null, customName = null] = tuple;
       const unitData = _findUnit(factions, lookupOrder, unitId);
       if (!unitData) {
         throw new Error(`Unit "${unitId}" from "${displayFaction}" is not loaded yet. Wait for background loading to finish, then try again.`);
@@ -208,6 +216,11 @@ window.Storage = (() => {
         squadLabel,
         enhancements,
         wargear: wargearFromTriples(wgTriples, unitData),
+        // This path builds `new Army({entries})` directly and bypasses
+        // Army.fromJSON's whitelist, so clamp the untrusted name here too.
+        customName: (typeof customName === 'string' && customName.trim())
+          ? customName.trim().slice(0, 60)
+          : undefined,
         entryId,
         attachedToEntryId,
       };
@@ -303,7 +316,15 @@ window.Storage = (() => {
       const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
       const total  = pts * entry.count + enhPts;
       const squad  = entry.squadLabel ? ` (${entry.squadLabel})` : '';
-      lines.push(`${indent}${entry.count}x ${entry.unitName}${squad} [${total} pts]`);
+      // A custom name is emitted as a quoted nickname BEFORE the datasheet
+      // name, never instead of it. The datasheet name has to survive so a
+      // tournament organiser can identify the unit and so pasting this list
+      // back into the Opponent box still resolves it (opponent.js strips the
+      // leading quoted label, then substring-matches the catalogue).
+      const nameOut = entry.customName
+        ? `"${entry.customName}" ${entry.unitName}`
+        : entry.unitName;
+      lines.push(`${indent}${entry.count}x ${nameOut}${squad} [${total} pts]`);
       (entry.enhancements || []).forEach(enh => {
         lines.push(`${indent}  + ${enh.name} [${enh.pts} pts]`);
       });
@@ -325,7 +346,12 @@ window.Storage = (() => {
   }
 
   function exportArmyToCSV(army) {
-    const rows = [['Unit Name', 'Models', 'Points Each', 'Quantity', 'Total Points']];
+    // The extra "Datasheet" column only appears when at least one entry is
+    // named, so CSVs of ordinary armies stay byte-identical to before.
+    const anyCustom = (army.entries || []).some(e => e && e.customName);
+    const rows = [anyCustom
+      ? ['Unit Name', 'Datasheet', 'Models', 'Points Each', 'Quantity', 'Total Points']
+      : ['Unit Name', 'Models', 'Points Each', 'Quantity', 'Total Points']];
     army.entries.forEach(entry => {
       const pts = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
       const models = entry.squadLabel
@@ -333,15 +359,13 @@ window.Storage = (() => {
         : (entry.unitData.squadOptions && entry.unitData.squadOptions[0] && entry.unitData.squadOptions[0].models != null
             ? entry.unitData.squadOptions[0].models
             : '');
-      rows.push([
-        entry.unitName,
-        models,
-        pts,
-        entry.count,
-        pts * entry.count,
-      ]);
+      rows.push(anyCustom
+        ? [entry.customName || entry.unitName, entry.unitName, models, pts, entry.count, pts * entry.count]
+        : [entry.unitName, models, pts, entry.count, pts * entry.count]);
     });
-    rows.push(['', '', '', 'Total', army.getTotalPoints()]);
+    rows.push(anyCustom
+      ? ['', '', '', '', 'Total', army.getTotalPoints()]
+      : ['', '', '', 'Total', army.getTotalPoints()]);
 
     return rows.map(row =>
       row.map(cell => {

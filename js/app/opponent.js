@@ -61,6 +61,22 @@
     // Strip trailing parentheticals like "(5 models)" or "(Warlord)".
     core = core.replace(/\s*\([^)]*\)\s*$/g, '').trim();
 
+    // A leading quoted nickname — `"Squad Gamma" Intercessor Squad`, which is
+    // how exportArmyToText emits a user-named unit — is a display label, not
+    // part of the datasheet name. Strip it so matchUnit sees only the sheet
+    // name: it ranks by longest catalogue match, so a nickname containing
+    // another unit's name ("Calgar's Honour Guard" Captain) would otherwise
+    // resolve to the wrong datasheet.
+    // Quotes are matched as PAIRS and apostrophes are allowed inside, since
+    // 40k names are full of them. Bare '…' is deliberately not handled — it's
+    // indistinguishable from a possessive and we never emit it.
+    const unquoted = core.replace(
+      /^(?:"([^"]{1,60})"|“([^”]{1,60})”|‘([^’]{1,60})’)\s+/, '').trim();
+    // Only accept the strip if a datasheet name actually remains; a line that
+    // is nothing but a quoted label keeps its original text rather than
+    // becoming empty and being rejected outright.
+    if (unquoted) core = unquoted;
+
     // Reject lines that became empty or obviously not a unit.
     if (!core) return null;
     if (core.length < 3) return null;

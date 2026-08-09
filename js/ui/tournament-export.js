@@ -427,14 +427,21 @@
     const limit = army.pointsLimit || 0;
 
     const rows = (army.entries || []).map(function (e) {
-      const name = e.unitName || (e.unitData && e.unitData.name) || '';
+      const dsName = e.unitName || (e.unitData && e.unitData.name) || '';
+      // A user-named unit leads with its custom name and carries the
+      // datasheet name underneath, so the sheet is still identifiable to an
+      // opponent or a tournament organiser reading the printout.
+      const name = e.customName || dsName;
+      const nameSub = e.customName
+        ? '<div class="tp-quicklist-sub">' + esc(dsName) + '</div>'
+        : '';
       const models = e.squadLabel || (e.count > 1 ? (e.count + ' units') : '1 unit');
       const eachPts = (e.selectedPts != null ? e.selectedPts : ((e.unitData && e.unitData.points) || 0));
       const enhPts = (e.enhancements || []).reduce(function (s, x) { return s + (x.pts || 0); }, 0);
       const linePts = eachPts * (e.count || 1) + enhPts;
       const enhNames = (e.enhancements || []).map(function (x) { return x.name; }).filter(Boolean).join(', ');
       return '<tr>' +
-        '<td>' + esc(name) + '</td>' +
+        '<td>' + esc(name) + nameSub + '</td>' +
         '<td>' + esc(models) + (e.count > 1 ? ' × ' + e.count : '') + '</td>' +
         '<td class="tp-num">' + linePts + '</td>' +
         '<td>' + esc(enhNames) + '</td>' +

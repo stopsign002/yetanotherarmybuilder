@@ -56,6 +56,10 @@
     const name     = (unit.name || '').toLowerCase();
     const fac      = (unit._factionName || '').toLowerCase();
     const ally     = ((unit._allyLabel || '') + ' ' + (unit._allySourceFaction || '')).toLowerCase();
+    // Extra searchable text that isn't the display name. custom-names.js sets
+    // it to the datasheet name on a user-named unit, so typing "Intercessor"
+    // still finds the squad you called "Squad Gamma".
+    const alias    = (unit._searchAlias || '').toLowerCase();
     const keywords = (unit.keywords || []).map(k => k.toLowerCase());
     for (let t = 0; t < tokens.length; t++) {
       const tok = tokens[t];
@@ -64,6 +68,7 @@
         name.indexOf(tok) !== -1 ||
         fac.indexOf(tok)  !== -1 ||
         (ally && ally.indexOf(tok) !== -1) ||
+        (alias && alias.indexOf(tok) !== -1) ||
         keywords.some(k => k.indexOf(tok) !== -1);
       if (!hit) return false;
     }

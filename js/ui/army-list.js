@@ -72,8 +72,9 @@
         <span class="army-entry-handle-dot"></span>
       </span>
       <div class="army-entry-body">
-        <div class="army-entry-name" title="${esc(entry.unitName)}">
-          <span class="army-entry-title">${esc(entry.unitName)}</span>
+        <div class="army-entry-name" title="${esc(entry.customName ? entry.customName + ' — ' + entry.unitName : entry.unitName)}">
+          <span class="army-entry-title">${esc(entry.customName || entry.unitName)}</span>
+          ${entry.customName ? `<span class="army-entry-datasheet">${esc(entry.unitName)}</span>` : ''}
         </div>
         ${subRow}
         ${enhBadges ? `<div class="army-enh-badges">${enhBadges}</div>` : ''}

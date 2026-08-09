@@ -51,14 +51,24 @@ window.Army = class Army {
    * @param {number} count
    * @param {object|null} squadOption  — { pts, models } from parser squadOptions
    * @param {Array} enhancements       — [{name, pts, description}] selected enhancements
+   * @param {Array} wargear            — [{optionId, choice, count, ...}] picker selections
+   * @param {object} opts              — { customName } user-given name for this entry
    */
-  addUnit(unitData, count = 1, squadOption = null, enhancements = [], wargear = []) {
+  addUnit(unitData, count = 1, squadOption = null, enhancements = [], wargear = [], opts = {}) {
     const selectedPts  = squadOption ? squadOption.pts  : (unitData.points || 0);
     const squadLabel   = squadOption && squadOption.models ? `${squadOption.models} models` : null;
-    // Entries with enhancements or wargear selections are always separate;
-    // plain entries can stack.
-    const existing = !enhancements.length && !(wargear && wargear.length) && this.entries.find(
+    // A user-named entry ("Brother-Captain Gaius") is a UNIQUE unit, not a
+    // stack — it never merges with anything, and nothing merges into it.
+    // `unitName` stays the datasheet name so every existing consumer (Rule of
+    // Three, voice commands, match-mode signatures) keeps working.
+    const customName = (opts && typeof opts.customName === 'string' && opts.customName.trim())
+      ? opts.customName.trim().slice(0, 60)
+      : null;
+    // Entries with enhancements, wargear selections, or a custom name are
+    // always separate; plain entries can stack.
+    const existing = !customName && !enhancements.length && !(wargear && wargear.length) && this.entries.find(
       e => e.unitId === unitData.id && e.selectedPts === selectedPts
+        && !e.customName
         && !(e.enhancements && e.enhancements.length) && !(e.wargear && e.wargear.length)
     );
     if (existing) {
@@ -76,6 +86,10 @@ window.Army = class Army {
         // label, items:[names], pts }] — pts per item, 0 until upstream
         // 40kdc ships 11e wargear costs.
         wargear: wargear || [],
+        // User-given name for this specific unit. Undefined (not null) when
+        // absent so it drops out of JSON.stringify entirely and saved armies
+        // without the feature stay byte-identical.
+        customName: customName || undefined,
         entryId: _mintEntryId(),
         attachedToEntryId: null,
       });
@@ -123,6 +137,23 @@ window.Army = class Army {
       this.entries[index].enhancements = enhancements || [];
       this.updatedAt = new Date().toISOString();
     }
+  }
+
+  // Name (or un-name) a single army entry. The custom name becomes the
+  // primary display name everywhere; `unitName` keeps the datasheet name and
+  // is shown as a subtitle. Passing an empty string clears it.
+  // Stamps updatedAt, which is what makes cards-mode's render signature and
+  // sync's dirty-check both notice the change.
+  setCustomName(index, name) {
+    const entry = this.entries[index];
+    if (!entry) return;
+    const next = (typeof name === 'string' && name.trim())
+      ? name.trim().slice(0, 60)
+      : undefined;
+    if (entry.customName === next) return;
+    if (next) entry.customName = next;
+    else delete entry.customName;
+    this.updatedAt = new Date().toISOString();
   }
 
   removeEntry(index) {
@@ -254,6 +285,12 @@ window.Army = class Army {
             count:       Number.isFinite(e.count) ? e.count : 1,
             selectedPts: Number.isFinite(e.selectedPts) ? e.selectedPts : undefined,
             squadLabel:  typeof e.squadLabel === 'string' ? e.squadLabel : null,
+            // User-given name for this entry. Clamped like every other
+            // untrusted string here; `undefined` when absent so pre-feature
+            // armies round-trip unchanged.
+            customName:  (typeof e.customName === 'string' && e.customName.trim())
+              ? e.customName.trim().slice(0, 60)
+              : undefined,
             enhancements: Array.isArray(e.enhancements) ? e.enhancements : [],
             // Wargear picker selections — rebuild each from a fixed shape
             // (same untrusted-input policy as the rest of the entry).

@@ -189,7 +189,14 @@
     for (let i = 0; i < allUnits.length; i++) {
       const u = allUnits[i];
       if (!u || !u.id) continue;
-      const qty = qtyMap[u.id] || 0;
+      // Naming a unit moves it out of the qty map and into custom-names.js's
+      // instance store. Counting both keeps this total unchanged by the split
+      // — you still own the same models, some of them just have names now.
+      // (Requisitions has no named instances, so only Reserves adds them.)
+      const named = (_view === VIEW_RESERVES && App.CustomNames &&
+        typeof App.CustomNames.countFor === 'function')
+        ? App.CustomNames.countFor(u.id) : 0;
+      const qty = (qtyMap[u.id] || 0) + named;
       if (qty <= 0) continue;
       if (factionFilter !== 'all' &&
           u._factionName !== factionFilter &&
@@ -328,9 +335,15 @@
   }
 
   function totalOwnedUnitTypes() {
-    let n = 0;
-    for (const k in QTY) if (QTY[k] > 0) n++;
-    return n;
+    const seen = new Set();
+    for (const k in QTY) if (QTY[k] > 0) seen.add(k);
+    // Naming your only Intercessor Squad moves it out of QTY entirely — without
+    // this the toggle badge would drop to 0 while a named card is on screen.
+    if (App.CustomNames && typeof App.CustomNames.all === 'function') {
+      const recs = App.CustomNames.all();
+      Object.keys(recs).forEach(id => { if (recs[id] && recs[id].u) seen.add(recs[id].u); });
+    }
+    return seen.size;
   }
 
   // ── roster filter predicates ─────────────────────────────────────────
@@ -350,6 +363,10 @@
     const pred = function reservesPredicate(unit) {
       if (!isBuildMode()) return true;
       if (_view !== VIEW_RESERVES) return true;
+      // A named instance (custom-names.js) is a synthetic unit whose id is an
+      // instance id, not a datasheet id — it has no QTY entry by design. Let
+      // it through; the module only injects instances into this view anyway.
+      if (unit && unit._yaabInstance) return true;
       return getQty(unit && unit.id) > 0;
     };
     pred._isReservesPredicate = true;
@@ -359,6 +376,10 @@
 
     const dedupe = function reservesDedupe(unit) {
       if (!isBuildMode()) return true;
+      // Named instances are unique by construction — never qty-checked, and
+      // never collapsed into the base unit-id's seen-set (which would hide
+      // every instance of a datasheet after the first).
+      if (unit && unit._yaabInstance) return true;
       let qty;
       if (_view === VIEW_RESERVES) {
         qty = getQty(unit && unit.id);
@@ -426,7 +447,10 @@
       const u = allUnits[i];
       if (!u || !u.id) continue;
       if (faction !== 'all' && u._factionName !== faction) continue;
-      if (getQty(u.id) > 0) { hasMatch = true; break; }
+      const named = (App.CustomNames && typeof App.CustomNames.countFor === 'function')
+        ? App.CustomNames.countFor(u.id) : 0;
+      // A fully-named stack has qty 0 but is very much not empty.
+      if (getQty(u.id) + named > 0) { hasMatch = true; break; }
     }
     note.hidden = hasMatch;
   }
@@ -437,6 +461,12 @@
   function getSelectedUnit() {
     const s = App.state;
     if (!s) return null;
+    // A named instance's id is not a datasheet id, so stepping it would write
+    // junk keys into yaab_reserves. The stepper always edits the underlying
+    // unnamed stack.
+    if (s.selectedUnit && s.selectedUnit._yaabInstance) {
+      return s.selectedUnit._yaabInstance.base;
+    }
     if (s.selectedUnit) return s.selectedUnit;
     // Fall back to the army-entry the user clicked (events.js sets
     // selectedArmyEntryIndex AND clears selectedUnit when reading from
@@ -602,7 +632,12 @@
     const idx = parseInt(li.dataset.index, 10);
     const entry = isNaN(idx) ? null : (army.entries || [])[idx];
     if (!entry || !entry.unitId) return;
-    const owned = getQty(entry.unitId);
+    // Named instances still count as models you own — without them, naming a
+    // unit would make this warning fire spuriously the moment the split
+    // dropped the unnamed count below what the army uses.
+    const named = (App.CustomNames && typeof App.CustomNames.countFor === 'function')
+      ? App.CustomNames.countFor(entry.unitId) : 0;
+    const owned = getQty(entry.unitId) + named;
     const inArmy = totalArmyCount(army, entry.unitId);
     let badge = li.querySelector('.reserves-warn');
     const wantBadge = owned > 0 && inArmy > owned;

@@ -29,6 +29,9 @@
     'yaab_points_overrides',
     'yaab_cards_prefs',
     'yaab_cards_presets',
+    // Named Reserves instances. (Custom names on ARMY entries need no key here
+    // — they ride entry.customName through Army.toJSON on the army sync path.)
+    'yaab_custom_names',
   ];
   const BAG_KEY_SET = new Set(SYNCED_BAG_KEYS);
 

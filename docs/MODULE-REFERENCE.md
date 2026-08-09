@@ -432,6 +432,16 @@ Cross-cutting docs:
 - **DOM:** `#unit-grid`.
 - **Notes:** Sibling to `reserves.js`. Both quantity bags are migrated from old BSData ids by `id-migration.js`.
 
+### `js/app/custom-names.js`
+- **Purpose:** User-given names for characters and units. In Reserves, naming a unit splits one model off the `×N` stack as a unique unit with its own card (custom name as the title, datasheet name as a subtitle). Army entries carry the same idea as `entry.customName`, editable from the detail pane and from the Data-cards per-card panel.
+- **Exports:** `App.CustomNames` (`list`, `countFor`, `all`, `create`, `rename`, `remove`, `instanceUnit`, `isInstance`, `entryDisplayName`, `entrySubName`). Registers `bootstrap`, `selectionChange`, `cardClassContributors`.
+- **Wraps (rather than editing shared files):** `UI.renderUnitRoster` (injects instance clones into the Reserves view), `App.findUnit` (resolves an instance id to its clone so the existing card-click handler works), `Army.prototype.addUnit` (translates a clone to its base unit + `{customName}` so both add paths are covered).
+- **Depends on:** `reserves.js` (`App.Reserves.getQty/setQty/getView`), `army.js` (`addUnit` opts, `setCustomName`, the `fromJSON` whitelist), `App.renderUnitRosterWithContext`, `App.getMode`.
+- **Storage:** `localStorage.yaab_custom_names` (`{instanceId: {u, n, t}}`, **cloud-synced**). Army-entry names ride `entry.customName` in `yaab_armies` instead. Instance ids are opaque `ci_*` so `id-migration.js` needs no knowledge of them.
+- **DOM:** `#unit-grid` (MutationObserver → `.unit-card-subname`), `#unit-detail-panel` (MutationObserver → `.custom-name-widget`, mounted after `reserves.js`'s stockpile stepper inside `.detail-add-section`).
+- **Consumed by:** `storage.js` (YAAB1 7th tuple slot, text + CSV export), `ui/army-list.js`, `ui/cards-mode.js` (card header + the per-card options panel), `ui/tournament-export.js`, `app/opponent.js` (strips a leading quoted nickname when parsing a pasted list).
+- **Notes:** Every touchpoint in `reserves.js` / `cards-mode.js` is guarded (`App.CustomNames && …`), so a load failure degrades to pre-feature behaviour. Naming is a **split**, not an addition — `reserves.js`'s points badge, empty-state note, owned-types count and "⚠ owns N" warning all add `countFor()` back in so the totals are unchanged by naming.
+
 ### `js/app/starter-lists.js`
 - **Purpose:** Curated starter army gallery + "Surprise me" random.
 - **Exports:** `App.openStarterLists`, `App.starterListsRollRandom`, `App.surpriseMe`.
