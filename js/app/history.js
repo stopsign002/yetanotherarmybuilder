@@ -39,6 +39,13 @@
     try {
       const data = JSON.parse(snap);
       const army = Army.fromJSON(data);
+      // `fromJSON` faithfully restores the SNAPSHOT's `updatedAt` — which is
+      // in the past. Undoing is a new edit, so stamp it now. Without this,
+      // rendering fires armyChange('render') → autosave persists the army
+      // with a backwards timestamp → sync's last-write-wins rejects the push
+      // and pulls the cloud copy back down, silently undoing the undo.
+      // `js/app/army-diff.js` does the same thing when reverting a snapshot.
+      army.updatedAt = new Date().toISOString();
       suppress = true;
       App.state.currentArmy = army;
       if (App.state.armyManager) App.state.armyManager.currentArmy = army;

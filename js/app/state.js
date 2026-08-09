@@ -26,6 +26,47 @@
     activeBuildTab: 'detail',
   };
 
+  // ── Remember which army is loaded, across reloads ─────────────────────
+  // `App.state.currentArmy` is assigned from ~15 places (the Load modal,
+  // undo/redo, URL share, starter lists, crusade, kill-team, sync
+  // adoptions…). Rather than teach every one of them to persist, the
+  // property itself records the id.
+  //
+  // Why: boot used to pick the army with the newest `updatedAt` and call it
+  // "current". That is the army you last EDITED, not the one you last had
+  // OPEN — loading an older list to look at it doesn't touch its timestamp,
+  // and sync re-pins `updatedAt` to server clocks on every adopt. So leaving
+  // the site and coming back later silently swapped you to a different army.
+  // `js/app/index.js` reads this back at boot; sync's placeholder-promote
+  // honours it too.
+  //
+  // Device-local on purpose: NOT in `SYNCED_BAG_KEYS` (see docs/SYNC.md §1) —
+  // "which army am I looking at" is per-device, like the active mode/tab.
+  const CURRENT_ARMY_KEY = 'yaab_current_army_id';
+  let _currentArmy = null;
+  Object.defineProperty(App.state, 'currentArmy', {
+    configurable: true,
+    enumerable: true,
+    get() { return _currentArmy; },
+    set(army) {
+      _currentArmy = army || null;
+      try {
+        if (_currentArmy && _currentArmy.id) {
+          localStorage.setItem(CURRENT_ARMY_KEY, _currentArmy.id);
+        } else {
+          localStorage.removeItem(CURRENT_ARMY_KEY);
+        }
+      } catch (_) { /* private mode / quota — remembering is best-effort */ }
+    },
+  });
+
+  // Last army the user had open on this device, or null. Only an id — the
+  // caller resolves it against `armyManager.armies` and falls back if the
+  // army is gone (deleted here, or deleted on another device and pulled).
+  App.getPersistedCurrentArmyId = function () {
+    try { return localStorage.getItem(CURRENT_ARMY_KEY) || null; } catch (_) { return null; }
+  };
+
   // VIRTUAL_PARENTS used to group "Imperium - Adeptus Astartes - <Chapter>"
   // sub-faction files under a synthetic parent so the UI could expose a
   // Chapter sub-dropdown. BSData (wh40k-10e) has since flattened those files

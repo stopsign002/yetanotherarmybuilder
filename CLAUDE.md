@@ -156,6 +156,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab` DB / `gst` | IndexedDB | `js/db.js` | (Dormant) raw `.gst` + `Library *.cat` XML — only `bsdata.js` wrote this | Dropped on a `DB_VERSION` bump |
 | `yaab_bsdata_filelist_10e_v2` | sessionStorage | `bsdata.js` (dormant) | **Unused** — dormant BattleScribe file listing | n/a |
 | `yaab_armies` | localStorage | `army.js` | Saved armies (Array of `Army.toJSON()`) | User data — never invalidate silently |
+| `yaab_current_army_id` | localStorage | `state.js` | Id of the army the user last had open on this device. Written by the `App.state.currentArmy` setter (an accessor, so every assignment site is covered); read at boot by `app/index.js` and by sync's placeholder-promote. Device-local, NOT cloud-synced | Falls back to newest-`updatedAt` if the id is gone |
 | `yaab_factions` | localStorage | `storage.js` | Legacy; unused by active path | Kept for back-compat |
 | `yaab_recent_factions` | localStorage | `hero-state.js` | Recently-selected factions chip | User data |
 | `yaab_favorites` | localStorage | `favorites.js` | Starred unit ids | User data |

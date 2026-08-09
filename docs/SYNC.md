@@ -22,6 +22,7 @@ The system is *offline-first*: every write hits localStorage first and the netwo
 ### NOT synced (intentional)
 
 - **Device prefs** — `yaab_sound_enabled`, `yaab_voice_enabled`, `yaab_reduced_motion` (if any), `yaab_pwa_dismissed`, `yaab_mobile_panel`. These are per-device by design.
+- **`yaab_current_army_id`** — which army this device has open. Deliberately device-local: two devices can sit on different armies, and syncing it would yank one of them. Written by the `App.state.currentArmy` accessor in [state.js](../js/app/state.js); see section 6.4.
 - **Ephemeral game-day state** — `yaab_match_state`, `yaab_opponent`. Live for one game and shouldn't bleed across devices.
 - **Faction game data** — comes from the embedded 40kdc bundle (`window.DC`, via `js/data/dc-adapter.js`), rebuilt locally each load. It's a deterministic function of the dataset, never user data, so it's never synced. (Sync is data-source-agnostic regardless.)
 - **Auth hint** — `yaab_auth_session_hint` is a UI hint, not user data. The cookie is the truth.
@@ -132,9 +133,11 @@ Three branches at [sync.js#L417](../js/app/sync.js#L417):
 
 ### 6.4. Promote untouched currentArmy
 
-If, after section 2, `App.state.currentArmy` is still the *fresh boot placeholder* — empty `entries`, name `'New Army'` (or empty), and not in `mgr.armies` — promote the most-recently-updated stored army to `currentArmy` ([sync.js#L444](../js/app/sync.js#L444)).
+If, after section 2, `App.state.currentArmy` is still the *fresh boot placeholder* — empty `entries`, name `'New Army'` (or empty), and not in `mgr.armies` — promote a stored army to `currentArmy` ([sync.js#L444](../js/app/sync.js#L444)). The pick is `yaab_current_army_id` (the army this device last had open) if that id is still present, else most-recently-updated.
 
-History: without this, signing in on a fresh device would pull the user's armies into `mgr.armies` but leave `App.state.currentArmy` as the empty placeholder created at boot, so the user saw their list of saved armies but the main view showed an empty new-army screen. (Commit `86942bb`.)
+**Once per page load only**, guarded by `_promotedPlaceholder`. `pullAll` also runs on every `visibilitychange → visible`, and ungated the block would seize a placeholder the user had *deliberately* opened: click New Army, walk away, come back, and the app has swapped you onto an old list. Deliberately starting a new army is not "untouched" — only the boot-time placeholder is.
+
+History: without the promote at all, signing in on a fresh device would pull the user's armies into `mgr.armies` but leave `App.state.currentArmy` as the empty placeholder created at boot, so the user saw their list of saved armies but the main view showed an empty new-army screen. (Commit `86942bb`.) Without the once-per-load gate and the remembered-id preference, returning to the tab after a while silently changed which army was loaded.
 
 After all four sections: `mgr.save()`, `App.renderAll()`, toast a summary, kick `drainQueue`.
 
@@ -175,7 +178,7 @@ Listeners are installed in `installListeners` ([sync.js#L511](../js/app/sync.js#
 | `online` | Reset `_backoffMs`, `drainQueue`. |
 | `offline` | No-op (placeholder for a future offline pip). |
 | `pagehide` | `flushPendingNow` — see section 4. |
-| `storage` (cross-tab) | If the changed key is `yaab_armies`, reload `mgr.armies` from `mgr._load()` and re-render. We deliberately don't react to `yaab_sync_queue` — the originating tab is already draining, and the listener tab would just race. |
+| `storage` (cross-tab) | If the changed key is `yaab_armies`, reload `mgr.armies` from `mgr._load()`, **re-point `App.state.currentArmy` at the reloaded object with the same id**, and re-render. `_load()` builds brand-new `Army` objects, so without the re-point the active army becomes a detached copy: the other tab's edits never appear, and this tab's next save writes its pre-reload content back over them. We deliberately don't react to `yaab_sync_queue` — the originating tab is already draining, and the listener tab would just race. |
 | `visibilitychange → visible` | `drainQueue` + `pullAll` to spot cross-device updates. |
 
 `BroadcastChannel('yaab-sync')` is allocated when available ([sync.js#L542](../js/app/sync.js#L542)) and `bcPost` is called from `drainQueue` after each successful push, but the receive handler is a no-op placeholder. Reserved for future cross-tab coordination (e.g. "stop draining, the other tab already has it").

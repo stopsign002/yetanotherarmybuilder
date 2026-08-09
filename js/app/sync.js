@@ -51,6 +51,10 @@
   let _armyTimer = null;
   let _bagTimer = null;
   let _bc = null;                   // BroadcastChannel('yaab-sync')
+  // One-shot per page load: pullAll may promote a boot-time "New Army"
+  // placeholder to a real stored army, but only on its first run — see the
+  // comment at the promote block in pullAll.
+  let _promotedPlaceholder = false;
 
   // ── Helpers ──────────────────────────────────────────────────────────
   function nowIso() { return new Date().toISOString(); }
@@ -568,21 +572,35 @@
 
       // 4. Persist locally + re-render. If the user is sitting on the
       // empty default "New Army" placeholder (created at boot before
-      // sign-in), switch them to the most-recently-updated stored army
-      // so the synced content actually shows. Skip if they've already
-      // started editing — entries.length > 0 or non-default name.
+      // sign-in), switch them to a stored army so the synced content
+      // actually shows. Skip if they've already started editing —
+      // entries.length > 0 or non-default name.
+      //
+      // Only ever on the FIRST pull of this page load. This exists for the
+      // boot / just-signed-in case (commit 86942bb); pullAll also runs on
+      // every `visibilitychange → visible`, and left ungated it would grab
+      // a placeholder the user had deliberately opened — click New Army,
+      // go away for a bit, come back, and the app has swapped you onto an
+      // old army. Deliberately starting a new list is not "untouched".
       if (mgr) mgr.save();
       const cur = App.state && App.state.currentArmy;
       const curIsUntouched = !!cur
         && (!cur.entries || cur.entries.length === 0)
         && (cur.name === 'New Army' || !cur.name)
         && !mgr.armies.some(a => a.id === cur.id);
-      if (mgr.armies.length > 0 && curIsUntouched) {
+      if (!_promotedPlaceholder && mgr.armies.length > 0 && curIsUntouched) {
+        _promotedPlaceholder = true;
+        // Prefer whichever army this device last had open (state.js keeps
+        // the id); most-recently-updated is only the fallback.
+        const rememberedId = typeof App.getPersistedCurrentArmyId === 'function'
+          ? App.getPersistedCurrentArmyId()
+          : null;
         const sorted = [...mgr.armies].sort((a, b) =>
           new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
         );
-        App.state.currentArmy = sorted[0];
-        mgr.currentArmy = sorted[0];
+        const pick = (rememberedId && mgr.armies.find(a => a.id === rememberedId)) || sorted[0];
+        App.state.currentArmy = pick;
+        mgr.currentArmy = pick;
       }
       if (App && typeof App.renderAll === 'function') App.renderAll();
 
@@ -668,6 +686,19 @@
         const mgr = App.state && App.state.armyManager;
         if (mgr) {
           mgr.armies = mgr._load();
+          // _load() rebuilds every Army as a NEW object, so App.state
+          // .currentArmy is now a detached copy of a row that's still in
+          // the list — the other tab's edits don't show, and this tab's
+          // next save writes the pre-reload content back over them.
+          // Re-point at the reloaded object with the same id.
+          const cur = App.state && App.state.currentArmy;
+          if (cur) {
+            const fresh = mgr.armies.find(a => a.id === cur.id);
+            if (fresh && fresh !== cur) {
+              App.state.currentArmy = fresh;
+              mgr.currentArmy = fresh;
+            }
+          }
           if (typeof App.renderAll === 'function') App.renderAll();
         }
       }

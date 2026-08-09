@@ -9,10 +9,21 @@
     state.armyManager = new ArmyManager();
 
     if (state.armyManager.armies.length > 0) {
+      // Reopen the army the user actually had open (js/app/state.js records
+      // its id on every assignment). Fall back to most-recently-updated only
+      // when there's nothing remembered or that army is gone — picking by
+      // `updatedAt` alone reopens the last army you EDITED, which is not the
+      // same thing: viewing an older list never bumps its timestamp, and sync
+      // re-pins `updatedAt` to server clocks, so coming back after a while
+      // used to drop you on a different army than the one you left open.
+      const rememberedId = typeof App.getPersistedCurrentArmyId === 'function'
+        ? App.getPersistedCurrentArmyId()
+        : null;
+      const remembered = rememberedId ? state.armyManager.getArmy(rememberedId) : null;
       const sorted = [...state.armyManager.armies].sort((a, b) =>
         new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
       );
-      state.currentArmy = sorted[0];
+      state.currentArmy = remembered || sorted[0];
       state.armyManager.currentArmy = state.currentArmy;
     } else {
       state.currentArmy = state.armyManager.newArmy();

@@ -26,9 +26,32 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.08-3',
+    version:     '2026.08.08-4',
     lastUpdated: '2026-08-08T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-08', kind: 'fix',
+        title: 'The app reopens the army you actually had open',
+        description:
+          'Coming back to the site after a while could drop you on a different ' +
+          'army than the one you left open — usually whichever list you had ' +
+          'edited most recently. The app was guessing from timestamps instead of ' +
+          'remembering; simply viewing a list never updates its timestamp, so the ' +
+          'guess was often wrong. It now remembers which army you were on, per ' +
+          'device, and reopens that one. Starting a new empty list and stepping ' +
+          'away no longer swaps you onto an old army either, and a change made in ' +
+          'one browser tab now shows properly in your other tabs.',
+      },
+      {
+        date: '2026-08-08', kind: 'fix',
+        title: 'Undo sticks when you are signed in',
+        description:
+          'With an account, an undo could quietly come back a few seconds later ' +
+          'or the next time you returned to the tab. Undo was restoring the ' +
+          'old version complete with its old save time, so cloud sync decided ' +
+          'your undo was the stale copy and pulled the pre-undo army back down. ' +
+          'Undo now counts as a fresh edit, so it wins.',
+      },
       {
         date: '2026-08-08', kind: 'fix',
         title: 'Transport capacity is back on transport datasheets',
