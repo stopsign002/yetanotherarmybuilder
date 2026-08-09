@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.09-4',
-    lastUpdated: '2026-08-09T03:00:00Z',
+    version:     '2026.08.09-5',
+    lastUpdated: '2026-08-09T03:40:00Z',
     entries: [
+      {
+        date: '2026-08-09', kind: 'fix',
+        title: 'Units could disappear from the army list while still costing points',
+        description:
+          'If you removed a leader, whatever it was leading stopped showing in ' +
+          'the army list — but it was still in the army, still being charged ' +
+          'for, and still synced. It would then reappear the next time you ' +
+          'reloaded, which looked like a unit you deleted coming back on its ' +
+          'own. Attachments more than three deep were dropped from the list the ' +
+          'same way. Every unit in your army now always appears in the list, so ' +
+          'the rows and the points total can no longer disagree. If a list has ' +
+          'been mysteriously over its points, this is very likely why.',
+      },
       {
         date: '2026-08-09', kind: 'fix',
         title: 'Renaming an army and changing its points limit now actually save',

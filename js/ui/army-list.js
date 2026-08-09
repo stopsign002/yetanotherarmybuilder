@@ -176,9 +176,21 @@
     // `Army.entries` is NOT mutated by attachment ops — only the
     // `attachedToEntryId` field — so the array index that legacy click
     // handlers depend on stays stable.
+    // Every live entryId, so a pointer at a REMOVED parent can be recognised.
+    // Removing a leader does not clear `attachedToEntryId` on the units it was
+    // leading, so those pointers dangle. They used to fall through every branch
+    // below — skipped at root level as "a child", and never claimed by a parent
+    // because the parent is gone — leaving the unit invisible in the list while
+    // it was still in `entries`, still billed by getTotalPoints(), and still
+    // synced. Reloading then made it reappear (Army.fromJSON nulls unresolvable
+    // pointers), which reads as "a unit I deleted came back".
+    const liveIds = new Set();
+    army.entries.forEach(e => { if (e && e.entryId) liveIds.add(e.entryId); });
+    const isOrphan = e => !!e.attachedToEntryId && !liveIds.has(e.attachedToEntryId);
+
     const childrenByParent = new Map(); // parentEntryId → entry[]
     army.entries.forEach(e => {
-      if (!e || !e.attachedToEntryId) return;
+      if (!e || !e.attachedToEntryId || isOrphan(e)) return;
       const arr = childrenByParent.get(e.attachedToEntryId) || [];
       arr.push(e);
       childrenByParent.set(e.attachedToEntryId, arr);
@@ -190,16 +202,30 @@
     // the depth-3 container.
     const MAX_DEPTH = 3;
 
-    function totalForCluster(entry) {
+    // `seen` is not optional bookkeeping: this walks childrenByParent
+    // independently of the render pass, so an attachment cycle recursed until
+    // the stack blew — and because it runs inside renderEntry, that exception
+    // aborted the WHOLE army list, not just one row.
+    function totalForCluster(entry, seen) {
+      seen = seen || new Set();
+      if (seen.has(entry)) return 0;
+      seen.add(entry);
       let sum = _entryTotalPts(entry);
       const kids = childrenByParent.get(entry.entryId) || [];
-      kids.forEach(k => { sum += totalForCluster(k); });
+      kids.forEach(k => { sum += totalForCluster(k, seen); });
       return sum;
     }
 
+    // Guarantees every entry is rendered exactly once. Doubles as cycle
+    // protection: a A→B, B→A pair resolves on both sides, so neither is a root
+    // and Army.fromJSON will not repair it either — without this both units
+    // would vanish from the list while still counting toward points.
+    const rendered = new Set();
+
     function renderEntry(entry, depth) {
+      rendered.add(entry);
       const index   = army.entries.indexOf(entry);
-      const kids    = childrenByParent.get(entry.entryId) || [];
+      const kids    = (childrenByParent.get(entry.entryId) || []).filter(k => !rendered.has(k));
       // The pill shows only the IMMEDIATE attached subtotal — depth-1
       // sum, not the full cluster total — so it stays readable on
       // dense clusters.
@@ -210,10 +236,16 @@
         attachedSubtotal: pillSubtotal,
         army,
       });
-      if (kids.length > 0 && depth < MAX_DEPTH) {
+      if (kids.length > 0) {
         const subList = document.createElement('ul');
         subList.className = 'army-entry-attachments';
-        kids.forEach(child => subList.appendChild(renderEntry(child, depth + 1)));
+        // Past MAX_DEPTH, genuinely flatten into the depth-3 container — hold
+        // the depth constant instead of skipping the branch. `depth < MAX_DEPTH`
+        // here used to DROP those children entirely, which the comment above
+        // said it flattened; same invisible-but-still-billed outcome as an
+        // orphan.
+        kids.forEach(child => subList.appendChild(
+          renderEntry(child, Math.min(depth + 1, MAX_DEPTH))));
         // Place children INSIDE the parent's body so the visual nesting
         // reads as ownership, not just adjacency. CSS handles the indent
         // and the connector line.
@@ -226,7 +258,18 @@
 
     army.entries.forEach(entry => {
       if (!entry) return;
-      if (entry.attachedToEntryId) return;   // Children rendered by their parent.
+      // Children are rendered by their parent — but an entry pointing at a
+      // parent that no longer exists is a root now, not a child.
+      if (entry.attachedToEntryId && !isOrphan(entry)) return;
+      list.appendChild(renderEntry(entry, 0));
+    });
+
+    // Backstop: anything the passes above did not reach (an attachment cycle,
+    // where every member has a live parent so none qualifies as a root) is
+    // rendered at top level. Nothing in `entries` may be silently invisible —
+    // the user is being charged points for it.
+    army.entries.forEach(entry => {
+      if (!entry || rendered.has(entry)) return;
       list.appendChild(renderEntry(entry, 0));
     });
   };
