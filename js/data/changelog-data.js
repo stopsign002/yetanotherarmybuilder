@@ -26,9 +26,26 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.13-2',
-    lastUpdated: '2026-08-13T21:40:00Z',
+    version:     '2026.08.13-3',
+    lastUpdated: '2026-08-13T22:10:00Z',
     entries: [
+      {
+        date: '2026-08-13', kind: 'fix',
+        title: 'Wargear rules now match what GW prints — 27 corrections',
+        description:
+          'A batch of wargear items were showing rules text shared from ' +
+          'another datasheet, and in several cases it was the wrong rule ' +
+          'outright. Storm Shield said "Wounds characteristic of 4" (the old ' +
+          '10th-edition rule) instead of a 4+ invulnerable save on the ' +
+          'Lieutenant, Thunderwolf Cavalry, Vanguard Veterans and Wolf Guard ' +
+          'Headtakers — while the Wolf Guard Battle Leader’s version really ' +
+          'is a Wounds change, and now says so. Simulacrum Imperialis said ' +
+          '"+1 Leadership" on five Sisters units instead of generating ' +
+          'Miracle dice. Also corrected: Slabshield (Wounds 7, not 4), ' +
+          'Grav-talon ([LANCE]), Weavefield Crest, Teleport Crest, Cult Icon, ' +
+          'Phantasm Grenade Launcher, and the T’au Battlesuit and Weapon ' +
+          'Support Systems. 27 fixes across 23 datasheets in 8 factions.',
+      },
       {
         date: '2026-08-13', kind: 'fix',
         title: 'Damaged profiles are back on vehicles and monsters',
