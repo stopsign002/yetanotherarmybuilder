@@ -26,9 +26,26 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.09-6',
-    lastUpdated: '2026-08-09T00:00:00Z',
+    version:     '2026.08.13-1',
+    lastUpdated: '2026-08-13T21:00:00Z',
     entries: [
+      {
+        date: '2026-08-13', kind: 'fix',
+        title: 'Necrons: Tesseract Vault C’tan powers, and two wrong Resurrection Orbs',
+        description:
+          'The Tesseract Vault’s "Powers of the C’tan" tells you to pick two ' +
+          'C’tan Powers weapons each Shooting phase, but the datasheet listed ' +
+          'none of them — the upstream dataset ships no profiles for them. ' +
+          'Antimatter Meteor, Cosmic Fire and Time’s Arrow are now on the ' +
+          'datasheet with full profiles and keywords. ' +
+          'Separately, the Catacomb Command Barge and the Lokhust Lord were ' +
+          'both showing the wrong Resurrection Orb rules. They were being given ' +
+          'the Overlord’s wording — "while the bearer is leading a unit" — ' +
+          'which is unusable on the Barge, since it is a Vehicle and cannot ' +
+          'lead a unit at all. Both now show what GW actually prints: the Barge ' +
+          'resurrects a NECRONS INFANTRY or MOUNTED unit within 6", and the ' +
+          'Lokhust Lord resurrects its own unit.',
+      },
       {
         date: '2026-08-09', kind: 'feature',
         title: 'Name your characters and units',

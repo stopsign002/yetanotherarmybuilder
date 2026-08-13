@@ -1204,6 +1204,27 @@
         }
       });
     }
+    // Overlay wargear-ability REWRITES — the mirror of `updateNamed`, for the
+    // wargear list. Needed because a wargear ability that arrives via the item
+    // scan above is keyed GLOBALLY by item id: `resurrection-orb` is one shared
+    // entry in the ability-text store, but GW prints a DIFFERENT rule on the
+    // Catacomb Command Barge (select a unit within 6") than on the Overlord
+    // ("this unit resurrects"), because the Barge is a Vehicle that cannot
+    // lead. `addWargear` cannot fix that — the item scan has already inserted
+    // the shared text under the same name, so the add dedupes to a silent
+    // no-op. Gated on `expectContains` so it self-heals the moment upstream
+    // carries the right wording.
+    if (abilityFixOv && Array.isArray(abilityFixOv.updateWargear)) {
+      abilityFixOv.updateWargear.forEach((p) => {
+        if (!p || !p.name) return;
+        const key = p.name.toLowerCase();
+        const target = wargearAbilities.find((x) => (x.name || '').toLowerCase() === key);
+        if (!target) return;   // not on this datasheet → no-op
+        if (p.expectContains && !(target.description || '').toLowerCase()
+              .includes(String(p.expectContains).toLowerCase())) return;   // already correct → no-op
+        target.description = p.description || '';
+      });
+    }
     // ── Structured wargear profile (drives the wargear picker) ─────────
     // 40kdc authors each datasheet's wargear options as machine-readable
     // swap/add records (replaces + replacement/replacement_choice +
@@ -1900,6 +1921,47 @@
         const fixes = all[fid + '::' + u.id];
         if (!fixes) return;
         fixes.forEach((fx) => {
+          // `add` rows inject a weapon the dataset is missing ENTIRELY — the
+          // `match`/`set` path below can only rewrite rows that already exist,
+          // so an absent weapon was previously uncorrectable at the overlay
+          // layer (Tesseract Vault's three C'tan Powers are the motivating
+          // case: the ability tells you to pick two, and 40kdc ships none).
+          // Writes BOTH lists because the renderers prefer `gdc*Weapons`
+          // whenever either exists (detail.js `useGdcWeapons`), so a row added
+          // to `u.weapons` alone would stay invisible. Self-healing: skipped
+          // per-list once a weapon of that name is present, so it no-ops the
+          // day upstream ships the profiles.
+          if (fx.add) {
+            const a = fx.add;
+            const nm = String(a.name || '');
+            if (!nm) return;
+            const key = nm.toLowerCase();
+            const melee = a.mode === 'melee';
+            if (!(u.weapons || []).some((w) => String(w.name || '').toLowerCase() === key)) {
+              const row = { name: nm, _typeName: melee ? 'Melee' : 'Ranged',
+                            Range: melee ? 'Melee' : (a.Range || '—'),
+                            A: a.A, S: a.S, AP: a.AP, D: a.D, _injected: true };
+              if (melee) row.WS = a.BSWS; else row.BS = a.BSWS;
+              if (a.Keywords) row.Keywords = a.Keywords;
+              (u.weapons = u.weapons || []).push(row);
+            }
+            if (Array.isArray(u.gdcRangedWeapons) || Array.isArray(u.gdcMeleeWeapons)) {
+              const lk = melee ? 'gdcMeleeWeapons' : 'gdcRangedWeapons';
+              if (!Array.isArray(u[lk])) u[lk] = [];
+              const present = u[lk].some((w) => ((w && w.profiles) || [])
+                .some((p) => String((p && p.name) || (w && w.name) || '').toLowerCase() === key));
+              if (!present) {
+                u[lk].push({ active: true, name: nm, _injected: true, profiles: [{
+                  name: nm, range: melee ? '' : (a.Range || ''),
+                  attacks: a.A, skill: a.BSWS, strength: a.S, ap: a.AP, damage: a.D,
+                  keywords: a.Keywords
+                    ? String(a.Keywords).split(',').map((s) => s.trim()).filter(Boolean)
+                    : [],
+                }] });
+              }
+            }
+            return;   // an add row carries no match/set
+          }
           const wantName = String((fx.match && fx.match.name) || '').toLowerCase();
           const wantMode = (fx.match && fx.match.mode) || 'ranged';
           const exp = fx.expect || {};
