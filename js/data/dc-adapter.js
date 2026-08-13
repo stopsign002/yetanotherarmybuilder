@@ -1040,13 +1040,13 @@
     // Inject any hand-patched core abilities the dataset omits for this unit.
     const patchIds = MISSING_CORE_ABILITIES[u.id];
     if (patchIds) {
-      const have = new Set(abilities.map((a) => a.name.toLowerCase()));
+      const have = new Set(abilities.map((a) => abilityNameKey(a.name)));
       patchIds.forEach((aid) => {
         let av = null;
         try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
         const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
-        if (have.has(name.toLowerCase())) return;   // already present → no-op (self-heals post-upstream-fix)
-        have.add(name.toLowerCase());
+        if (have.has(abilityNameKey(name))) return;   // already present → no-op (self-heals post-upstream-fix)
+        have.add(abilityNameKey(name));
         abilities.push({ name, description: textFor(aid), isCore: true });
       });
     }
@@ -1055,7 +1055,7 @@
     // store) or a hand-authored { name, description } object (store has none).
     const unitPatches = MISSING_UNIT_ABILITIES[u.id];
     if (unitPatches) {
-      const have = new Set(abilities.map((a) => a.name.toLowerCase()));
+      const have = new Set(abilities.map((a) => abilityNameKey(a.name)));
       unitPatches.forEach((patch) => {
         let name, description;
         if (patch && typeof patch === 'object') {
@@ -1068,8 +1068,8 @@
           name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
           description = textFor(aid);
         }
-        if (!name || have.has(name.toLowerCase())) return;   // already present → no-op (self-heals post-upstream-fix)
-        have.add(name.toLowerCase());
+        if (!name || have.has(abilityNameKey(name))) return;   // already present → no-op (self-heals post-upstream-fix)
+        have.add(abilityNameKey(name));
         abilities.push({ name, description, isCore: false, _injected: true });
       });
     }
@@ -1079,7 +1079,7 @@
     // existing ability's description in place — gated on `expectContains` so
     // it self-heals once upstream 40kdc-abilities carries the new text.
     if (abilityFixOv) {
-      const have = new Set(abilities.map((a) => a.name.toLowerCase()));
+      const have = new Set(abilities.map((a) => abilityNameKey(a.name)));
       // GW's faction packs print the ability name at the head of the rules
       // paragraph — "Adaptive Instincts (Once per turn, per unit): In the Fight
       // phase, …" — and the FAQ processor lifts the paragraph verbatim. Every
@@ -1107,14 +1107,14 @@
         let av = null;
         try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
         const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
-        if (have.has(name.toLowerCase())) return;   // self-heal no-op
-        have.add(name.toLowerCase());
+        if (have.has(abilityNameKey(name))) return;   // self-heal no-op
+        have.add(abilityNameKey(name));
         abilities.push({ name, description: textFor(aid), isCore: true, _injected: true });
       });
       (abilityFixOv.addNamed || []).forEach((p) => {
         const name = p && p.name;
-        if (!name || have.has(name.toLowerCase())) return;
-        have.add(name.toLowerCase());
+        if (!name || have.has(abilityNameKey(name))) return;
+        have.add(abilityNameKey(name));
         abilities.push({ name, description: stripEchoedName(name, p.description || ''),
                          isCore: CORE_ABILITY_RE.test(name), _injected: true });
       });
@@ -1677,6 +1677,20 @@
   const titleCase = (s) => String(s || '').toLowerCase().split(' ')
     .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w)).join(' ');
   const foldName = (s) => String(s || '').toLowerCase().replace(/[‘’]/g, "'").replace(/[^a-z0-9]/g, '');
+
+  // Ability-name key for the "is this already present?" guards on every
+  // injection path (hand patches + overlay addCore/addNamed). Mirrors gdc.js's
+  // nameKey: a TRAILING parenthetical or [bracket] qualifier is stripped, so
+  // "Carrier Wave (Aura)" and "Carrier Wave" are recognised as the same
+  // ability. Without that, an overlay entry whose name omits the suffix 40kdc
+  // ships slipped past the guard and the datasheet rendered the ability twice.
+  // Only ever used to SKIP an injection, so over-matching keeps 40kdc's own
+  // entry — the 40kdc-first behaviour the guards already intend.
+  const abilityNameKey = (s) => String(s || '').toLowerCase()
+    .replace(/[‘’]/g, "'")
+    .replace(/\s*\([^)]*\)\s*$/, '')
+    .replace(/\s*\[[^\]]*\]\s*$/, '')
+    .replace(/[^a-z0-9]/g, '');
 
   // Build this detachment's stratagems from 40kdc (authoritative 11e structure +
   // CP/phase), with text from the 40kdc-abilities store where it's authored.

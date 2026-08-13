@@ -26,9 +26,30 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.13-1',
-    lastUpdated: '2026-08-13T21:00:00Z',
+    version:     '2026.08.13-2',
+    lastUpdated: '2026-08-13T21:40:00Z',
     entries: [
+      {
+        date: '2026-08-13', kind: 'fix',
+        title: 'Damaged profiles are back on vehicles and monsters',
+        description:
+          'Degrading statlines returned in 11th edition, but the ' +
+          '"Damaged: X-Y wounds remaining" block was missing from every ' +
+          'datasheet that has one — 220 of them, from the Tesseract Vault to ' +
+          'the Exorcist to the Gladiator Lancer. It now shows up in the ' +
+          'Abilities section on the datasheet and on printed data cards, so ' +
+          'you can see what a model loses as it takes damage without looking ' +
+          'it up.',
+      },
+      {
+        date: '2026-08-13', kind: 'fix',
+        title: 'No more abilities listed twice',
+        description:
+          'Some datasheets showed the same ability twice — once with its ' +
+          'qualifier and once without, like "Carrier Wave (Aura)" followed by ' +
+          'a second "Carrier Wave" with identical text on the Catacomb ' +
+          'Command Barge. Duplicates are now recognised and dropped.',
+      },
       {
         date: '2026-08-13', kind: 'fix',
         title: 'Necrons: Tesseract Vault C’tan powers, and two wrong Resurrection Orbs',

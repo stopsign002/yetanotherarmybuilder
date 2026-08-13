@@ -590,6 +590,25 @@
       .filter(a => a.name);
   }
 
+  // 11e degrading statlines. GW carries them per datasheet as
+  // abilities.damaged = { range: {en}, description: {en} } — e.g. range
+  // "1-8 WOUNDS REMAINING". 40kdc links none of them (the bundle defines 5
+  // damaged-* ability ids, all Titans, and no unit references one), so GDC is
+  // the only source and every affected datasheet rendered without its Damaged
+  // block. NOT the same thing as the deliberate drop in parser/entry.js
+  // (DAMAGED_RE): that belongs to the dormant BSData/10e path, where these were
+  // vestigial entries carrying no text. In 11e they are real rules.
+  function project11Damaged(ds) {
+    if (!ds || !ds.abilities || !ds.abilities.damaged) return null;
+    const d = ds.abilities.damaged;
+    const description = cleanMarkup(pickText(d.description));
+    if (!description) return null;
+    const range = pickText(d.range);
+    // GW prints the range in caps ("1-8 WOUNDS REMAINING"); lowercase it so it
+    // sits alongside the other ability names instead of shouting.
+    return { name: range ? ('Damaged: ' + range.toLowerCase()) : 'Damaged', description };
+  }
+
   // For the ability index, the SM PARENT faction needs every chapter's file too:
   // in 40kdc the chapters have zero units, so chapter-unique units (Emperor's
   // Champion, Grey Hunters, Death Company…) live under the parent — but their
@@ -626,7 +645,8 @@
       (Array.isArray(p.datasheets) ? p.datasheets : []).forEach(ds => {
         const k = nameKey(pickText(ds && ds.name));   // 11th name is a { en } object
         if (!k || idx.has(k)) return;
-        idx.set(k, { abilities: project11Abilities(ds), primarch: project11PrimarchGroups(ds) });
+        idx.set(k, { abilities: project11Abilities(ds), primarch: project11PrimarchGroups(ds),
+                     damaged: project11Damaged(ds) });
       });
     });
     return idx;
@@ -643,7 +663,8 @@
         if (!entry) return;
         const gAbils = entry.abilities || [];
         const gGroups = entry.primarch || [];
-        if (gAbils.length === 0 && gGroups.length === 0) return;
+        const gDamaged = entry.damaged || null;
+        if (gAbils.length === 0 && gGroups.length === 0 && !gDamaged) return;
         const abils = Array.isArray(unit.abilities) ? unit.abilities : (unit.abilities = []);
         const byKey = new Map(abils.map(a => [nameKey(a.name), a]));
         // Gate the datasheet fill on whether 40kdc ITSELF linked a non-core
@@ -699,6 +720,20 @@
             byKey.set(nameKey(g.name), na);
           });
         });
+        // Damaged profile — ALWAYS added when missing, like the primarch
+        // groups and unlike the hasNonCore-gated fill: it is part of every
+        // affected printed datasheet and 40kdc never links it, so gating it
+        // behind "this unit has no abilities" would hide it on exactly the
+        // vehicles and monsters that have one. `_typeName: 'damaged'` is
+        // already in detail.js's and cards-mode.js's standard-typename sets,
+        // so it renders in the normal Abilities section rather than being
+        // mistaken for a choose-N sub-ability. Self-healing name dedupe.
+        if (gDamaged && !byKey.has(nameKey(gDamaged.name))) {
+          const na = { name: gDamaged.name, description: gDamaged.description,
+                       isCore: false, _typeName: 'damaged' };
+          abils.push(na);
+          byKey.set(nameKey(gDamaged.name), na);
+        }
       });
     });
   }
