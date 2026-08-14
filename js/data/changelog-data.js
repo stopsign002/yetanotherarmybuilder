@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.13-3',
-    lastUpdated: '2026-08-13T22:10:00Z',
+    version:     '2026.08.14-1',
+    lastUpdated: '2026-08-14T14:00:00Z',
     entries: [
+      {
+        date: '2026-08-14', kind: 'fix',
+        title: '126 datasheets gained abilities they were missing',
+        description:
+          'A batch of abilities that belong on the printed datasheet were ' +
+          'simply absent from ours — Rites of Battle on Captains, Litany of ' +
+          'Hate on Chaplains, Psychic Hood on Librarians, Narthecium on ' +
+          'Apothecaries, Cherub on Sisters squads, Hail of Bolts on ' +
+          'Intercessors, and many more across most factions. 118 datasheets ' +
+          'gained a missing ability, plus a handful of weapon and ' +
+          'invulnerable-save corrections. Every one of these was cross-checked ' +
+          'against three independent sources and only applied where all three ' +
+          'agreed, so the datasheet you see matches what GW prints.',
+      },
       {
         date: '2026-08-13', kind: 'fix',
         title: 'Wargear rules now match what GW prints — 27 corrections',
