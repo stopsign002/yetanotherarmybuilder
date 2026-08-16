@@ -69,6 +69,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Build | Space Marine chapter roster delineation (11e generic-vs-chapter split) | `js/app/sm-chapter-filter.js` |
 | Build | Army Rules + Detachment Rule + Enhancements + Stratagems panel | `js/ui/faction-rules.js` |
 | Build | Composition validation (Rule of Three, no warlord) | `js/app/validation.js` |
+| Build | King of the Coliseum format box (600pt rules + live list checks) | `js/app/kotc.js` |
 | Build | Undo / redo (50-snapshot stack, Cmd/Ctrl+Z) | `js/app/history.js` |
 | Build | Starter lists + "Surprise me" generator | `js/app/starter-lists.js` |
 | Build | Favorites (star units) + Recents chip row | `js/app/favorites.js` |
@@ -176,6 +177,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_tournament_cfg` | localStorage | `tournament-export.js` | Tournament PDF preferences | User data |
 | `yaab_points_overrides` | localStorage | `points-override.js` | Dataslate-style point edits | User data |
 | `yaab_kt_mode` | localStorage | `kill-team.js` | Kill Team mode flag | User pref |
+| `yaab_kotc_enabled` | localStorage | `kotc.js` | King of the Coliseum checks on/off (`'1'`/`'0'`) — device pref, deliberately NOT army data so it stays out of the YAAB1 export and cloud sync | User pref |
 | `yaab_show_legends` | localStorage | `legends-toggle.js` | Show [Legends] units | User pref |
 | `yaab_show_allies` | localStorage | `allies.js` | Show allied units on a host faction's roster (**defaults on**) | User pref |
 | `yaab_ork_math` | localStorage | `ork-math.js` | Teef-math toggle | User pref |
@@ -191,7 +193,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_sync_state_at` | localStorage | `sync.js` | Last successful state-bag (KV) push timestamp | Cleared on sign-out |
 | `yaab_mode` | localStorage | `mode-shell.js` | Active top-level mode (`'build'` / `'collect'` / `'play'`) | User pref |
 | `yaab_play_tab` | localStorage | `play-mode.js` | Active Play-mode sub-tab (`match` / `stratagems` / `calc` / `opponent` / `deploy`) | User pref |
-| `yaab_details_state` | localStorage | `details-persist.js` | Open/closed state of `<details>` boxes (army setup, army rules) | User pref |
+| `yaab_details_state` | localStorage | `details-persist.js` | Open/closed state of `<details>` boxes (army setup, detachments, KOTC, army rules) | User pref |
 | `yaab_reduced_motion` | localStorage | `settings-drawer.js` | App-level reduced-motion override (in addition to OS pref) | User pref |
 | `yaab_show_collection_badges` | localStorage | `collection.js`, `settings-drawer.js` | Toggle for the painted-status badges on unit cards | User pref |
 | `yaab_collect_debug` | localStorage | `collect-mode.js` | Dev flag for verbose Collect-mode logging | Dev flag |

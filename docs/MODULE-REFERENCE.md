@@ -232,6 +232,14 @@ Cross-cutting docs:
 - **DOM:** `validation-*` classes.
 - **Notes:** Non-blocking. Warnings appear in left panel as a list.
 
+### `js/app/kotc.js`
+- **Purpose:** "King of the Coliseum" box under Army setup — explains the 600pt format's restrictions and checks the army against them live.
+- **Exports:** `App.KOTC` (`isEnabled`, `setEnabled`, `evaluate(army)`, `render`, `POINTS`).
+- **Depends on:** `App.state` (`currentArmy`, `selectedDetachments`), `App.hooks` (`bootstrap`, `armyChange`, `selectionChange`), `App.getAvailableDetachments`, `UI.renderArmyList`, `UI.escapeHtml`.
+- **Storage:** `yaab_kotc_enabled` (localStorage, `'1'`/`'0'`). Open/closed state via `details-persist.js`.
+- **DOM:** `#kotc-section` / `#kotc-summary` badge `#kotc-status` / `#kotc-body`, `css/kotc.css`.
+- **Notes:** Eight checks — 600 pts, exactly one detachment, a warlord, 2 Infantry units (warlord excluded), no Epic Heroes, nothing above T9, at most one T9 unit, Battleline ×2 / everything else ×1. Advisory only, like `validation.js` — nothing is blocked. yaab has no per-entry warlord flag, so the warlord/Infantry checks assume the arrangement most favourable to the player (a non-Infantry Character carries the warlord role if one exists). Rules render in a neutral state until the checkbox is ticked and the army has units. Detachment toggles don't fire `selectionChange`, so it also listens for `.detachment-row-cb` changes.
+
 ### `js/app/history.js`
 - **Purpose:** Undo/redo snapshot stack driven by `armyChange`.
 - **Exports:** Toolbar buttons (undo/redo).

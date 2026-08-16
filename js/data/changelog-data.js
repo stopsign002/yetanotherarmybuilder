@@ -26,9 +26,27 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.14-1',
-    lastUpdated: '2026-08-14T14:00:00Z',
+    version:     '2026.08.16-1',
+    lastUpdated: '2026-08-16T12:00:00Z',
     entries: [
+      {
+        date: '2026-08-16', kind: 'feature',
+        title: 'King of the Coliseum list checker',
+        description:
+          'A new "King of the Coliseum" box sits under Army setup in the left ' +
+          'panel. It lays out the format\'s restrictions — 600 points, one ' +
+          'detachment of any size, a warlord plus at least 2 Infantry units, ' +
+          'no Epic Heroes, nothing above Toughness 9 and only one unit at ' +
+          'Toughness 9, and 2 copies of a Battleline datasheet but only 1 of ' +
+          'anything else — and, once you tick it on, checks your list against ' +
+          'every one of them as you build. Each rule shows green or red with ' +
+          'exactly what is wrong (which datasheet is doubled up, which model ' +
+          'is too tough), the box header carries an issue count so you can ' +
+          'see a problem with the box collapsed, and a one-click button sets ' +
+          'your points limit to 600. It also totals your detachment points, ' +
+          'since the lower spend picks the twist. Advisory only — nothing is ' +
+          'blocked or removed.',
+      },
       {
         date: '2026-08-14', kind: 'fix',
         title: '126 datasheets gained abilities they were missing',

@@ -11,6 +11,7 @@
   const TARGET_IDS = [
     'army-setup-section',
     'detachments-section',
+    'kotc-section',
     'army-rules-collapsible',
   ];
 
