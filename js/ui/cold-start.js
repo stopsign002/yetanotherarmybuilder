@@ -50,7 +50,7 @@
             '<div class="cold-start-bar-fill" id="cold-start-bar"></div>' +
           '</div>' +
           '<div class="cold-start-status">' +
-            '<span class="cold-start-status-name" id="cold-start-status-name">Reaching BSData</span>' +
+            '<span class="cold-start-status-name" id="cold-start-status-name">Loading game data</span>' +
             '<span class="cold-start-status-count" id="cold-start-status-count">0 / ' + EXPECTED_TOTAL + '</span>' +
           '</div>' +
         '</div>' +
@@ -59,11 +59,17 @@
           'Skip — load with what we have so far' +
         '</button>' +
         '<div class="cold-start-error" id="cold-start-error" role="alert">' +
-          '<h2 class="cold-start-error-title">Could not reach BSData.</h2>' +
+          // Copy rewritten 2026-08-16. It used to blame BSData and GitHub rate
+          // limits, which stopped being the failure mode on 2026-07-28 when the
+          // GDC snapshot moved to our own origin (js/gdc.js RAW_ROOT =
+          // 'data/gdc/'). Since the service worker landed, the app shell itself
+          // is cached, so reaching this screen means the FACTION DATA is what
+          // could not load — not the app.
+          '<h2 class="cold-start-error-title">Couldn\'t load the game data.</h2>' +
           '<ul class="cold-start-error-list">' +
-            '<li>Your network may be offline.</li>' +
-            '<li>GitHub may be rate-limited (try again in 15 minutes).</li>' +
-            '<li>Try refreshing or check your connection.</li>' +
+            '<li>You may be offline, and this device hasn\'t loaded this data before.</li>' +
+            '<li>The app itself is stored on your device — anything loaded previously still works.</li>' +
+            '<li>Retry, or continue with whatever is already saved here.</li>' +
           '</ul>' +
           '<div class="cold-start-error-actions">' +
             '<button type="button" class="cold-start-btn-retry" id="cold-start-btn-retry">Retry</button>' +
@@ -180,7 +186,7 @@
       // We don't poke that DOM, just observe what bsdata-load.js wrote there.
       const liveName = readLiveName();
       if (liveName) setCurrentName(liveName);
-      else if (count === 0) setCurrentName('Reaching BSData');
+      else if (count === 0) setCurrentName('Loading game data');
       else if (factions[count - 1]) setCurrentName(factions[count - 1].factionName || '');
 
       // Total: prefer the reported total from the existing widget if present.

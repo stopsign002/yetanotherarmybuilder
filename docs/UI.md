@@ -60,7 +60,7 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 | `events.js` | `App.wireEvents` — every direct + delegated DOM listener. |
 | `index.js` | `DOMContentLoaded` bootstrap + `App.mountArmyToolbarActions` (toolbar region routing). |
 | `topbar.js` | Wires top app bar (faction chip mirror, ⌘K, Action Center, status row). |
-| `sw-register.js` | Registers `/sw.js` after `window.load`. |
+| `sw-register.js` | Registers `/sw.js` after `window.load` (`updateViaCache: 'none'`). See the "Service worker" section of `CLAUDE.md`. |
 | `keyboard.js` | `/` to focus search, arrows + Enter + `a` for roster nav. |
 | `command-palette.js` | Cmd/Ctrl+K fuzzy command palette + `?` keyboard help overlay. |
 | `validation.js` | Advisory 10e composition checks (Rule of Three, no warlord). |
@@ -172,7 +172,7 @@ Create `js/app/<feature>.js` (or `js/ui/<feature>.js` if it owns DOM). IIFE that
 4. Owns its own modal markup (created on first open) — do NOT add markup to `index.html`.
 5. Owns its own localStorage key (`yaab_<feature>`). Document it in `CLAUDE.md` Storage table.
 
-Then: add the `<script>` to `index.html` between the `FEATURE-MODULES-START`/`END` markers, add the path to `sw.js` PRECACHE, and bump `SHELL` in `sw.js`.
+Then: add the `<script>` to `index.html` between the `FEATURE-MODULES-START`/`END` markers. **Nothing to do for the service worker** — see below.
 
 ### Add a stat / field to the unit detail
 Edit `UI.renderUnitDetail` in `js/ui/detail.js`. If the field is data-derived, add it to the unit object built in `js/data/dc-adapter.js` (the live data source — the `js/parser/` tree is dormant; see `docs/PARSER.md`). No `DB_VERSION` bump is needed: the adapter rebuilds factions from `window.DC` each load, so there's no faction cache to invalidate.
@@ -187,10 +187,14 @@ Push an action onto `App.hooks.armyToolbarActions` with `region: 'tools-menu'`, 
 Push onto `App.hooks.armyToolbarActions` with `region: 'primary'` AND `priority: 'visible'` (or add the action's id to `PRIMARY_VISIBLE_IDS` in `js/app/index.js`). For an icon-shelf button: `region: 'icon'` + add id to `ICON_VISIBLE_IDS`.
 
 ### Add a CSS-only design tweak
-Create `css/<feature>.css`, link it from `index.html` `<head>`, and add to `sw.js` PRECACHE. Bump `SHELL`.
+Create `css/<feature>.css` and link it from `index.html` `<head>`. **Nothing to do for the service worker** — see below.
 
 ### Add a service-worker-cached asset
-Add the URL to `PRECACHE` in `sw.js`. Bump `SHELL`. The activate handler will evict the prior cache.
+**There is nothing to do.** `sw.js` is stale-while-revalidate, so any same-origin GET the page makes is cached on first use and revalidated on every use afterwards. The old `PRECACHE` / `SHELL` recipe described here no longer exists — that design served the shell cache-first and is exactly why the worker was killed in April 2026.
+
+Do **not** add paths to `SHELL` in `sw.js`. It is deliberately limited to the offline *navigation fallback* (`/`, `/index.html`, the manifest and the icons); everything index.html references is requested on every load anyway, so precaching it would download ~14 MB twice on the install visit for no extra coverage.
+
+Two things are never cached: anything under `/api/` and anything under `/data/`. If your feature needs offline data, put it in IndexedDB (`js/db.js`) like `js/gdc.js` does, not in the service worker. Full reasoning in the "Service worker" section of `CLAUDE.md`.
 
 ### Change faction data / unit fields
 Edit `js/data/dc-adapter.js` (the live data source mapping `window.DC` into the parser output shape). No `DB_VERSION` bump is needed — the adapter rebuilds factions on every load (no faction IndexedDB cache). Don't hand-edit `js/vendor/dc-bundle.js`; it's generated and auto-refreshed. The `js/parser/` tree is dormant. See `docs/PARSER.md`.

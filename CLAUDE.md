@@ -27,7 +27,7 @@ not tests). The app itself needs no `npm install` — vendored deps are committe
 | `index.html` | Single-page shell. Hardcoded `<script>` order matters. Holds the topbar + 3-pane layout + modal mounts. |
 | `css/*.css` | One file per feature surface. `style.css` is the base; everything else is additive. |
 | `css/auth.css` | Auth UI styling (sign-in button, dropdown, auth modal). |
-| `sw.js` | Kill-switch for the retired app-shell service worker. Self-unregisters and clears legacy `yaab-shell-v*` caches. New visits don't register a SW. |
+| `sw.js` | **App-shell service worker.** Network-first navigations, stale-while-revalidate assets, `/api` + `/data` never touched. Its four rules and the rollback are in the "Service worker" section below. `sw-kill.js` is the emergency kill switch. |
 | `manifest.json` | PWA manifest (installable). |
 | `js/db.js` | `YaabDB` IndexedDB wrapper: `factions` + `gst` + `gdc` + `cardBackImages` stores. (The adapter does NOT cache factions here — they're rebuilt from `window.DC` each load.) |
 | `js/vendor/dc-bundle.js` | **Generated.** Embedded 40kdc 11e dataset + ability-text store, exposed as `window.DC`. Built offline by `build/`. Do not hand-edit. |
@@ -121,6 +121,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Polish | Legends-units toggle | `js/app/legends-toggle.js` |
 | Build | Allied units on the host faction's roster (Daemonic Pact, Imperial Agents, …) | `js/data/dc-adapter.js` (`attachAlliedUnits`), `js/app/allies.js` |
 | Polish | PWA install prompt + mobile tab bar | `js/app/pwa-install.js` |
+| Polish | App-shell service worker (installable + offline) | `sw.js`, `js/app/sw-register.js` |
 | Polish | Bug-report modal (server-backed, signed-in users post to `/api/bugs`; admin Reports tab marks fixed) | `js/app/bug-report.js` |
 | Polish | "What's new" updates modal — versioned, dated, user-facing changelog. **All shippable changes must add an entry to `js/data/changelog-data.js`.** | `js/app/changelog.js`, `js/data/changelog-data.js` |
 | Polish | Top app bar (chip mirror, ⌘K, Action Center) | `js/app/topbar.js`, `js/ui/action-center.js` |
@@ -182,6 +183,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_show_allies` | localStorage | `allies.js` | Show allied units on a host faction's roster (**defaults on**) | User pref |
 | `yaab_ork_math` | localStorage | `ork-math.js` | Teef-math toggle | User pref |
 | `yaab_pwa_dismissed` | localStorage | `pwa-install.js` | Install banner dismissal | User pref |
+| `yaab-shell-<token>` | Cache API | `sw.js` | The app shell (~200 entries, ~14 MB). Name carries the deployed `?v=` token; `activate()` deletes every other key | Rotated wholesale on each release/data deploy |
 | `yaab_mobile_panel` | localStorage | `pwa-install.js` | Last-active mobile tab | User pref |
 | `yaab_tour_seen` | localStorage | `first-time-tour.js` | First-run tour completed | One-shot |
 | `yaab_sound_enabled` | localStorage | `sound-fx.js` (orphan) | Opt-in WebAudio toggle | User pref |
@@ -202,22 +204,47 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_cards_selection` | localStorage | `cards-mode.js` | Card-exporter deselections (excluded card ids per category: units/rules/strats); device-local, NOT cloud-synced | User selection |
 | `yaab_cards_spill` | localStorage | `cards-mode.js` | Per-unit-card manual page-split overrides (`{cardId: [sectionKey,…]}` of whole sections sent to the continuation card); device-local, NOT cloud-synced. Absent card → automatic whole-section split | User selection |
 
-The kill-switch in `sw.js` self-unregisters and clears any legacy `yaab-shell-v*` caches; no Cache API entries are maintained anymore.
+The app-shell service worker maintains exactly one Cache API entry, `yaab-shell-<version-token>` — see the section below.
 
-## Service worker (retired)
+## Service worker
 
-The app-shell service worker has been retired. Existing installs are migrated by the kill-switch in `sw.js`: it deletes legacy `yaab-shell-v*` caches, unregisters itself, and navigates open clients so the next page load is SW-free. New visits don't register a SW. `js/app/sw-register.js` is a defensive helper that proactively unregisters anything still registered. Code updates ship live with the next reload — no SHELL bumping required.
+`sw.js` is a real app-shell worker again as of 2026-08-16. It was a **kill switch** from 2026-04-27 (commit `ad3fca7`) until then, because the version before it precached the shell and served it **cache-first**, so every fix needed a `SHELL` bump and two reloads to appear and the bug report was always "works in a private window but not my normal browser, and a hard refresh doesn't help."
+
+It is back because Chrome will not offer "Install app" without a registered worker that has a fetch handler — that was the only missing installability criterion. Offline support comes with it, and matters more than it sounds: the whole dataset is in `js/vendor/dc-bundle.js` and all user data is in localStorage, so the only thing yaab was still fetching to boot was its own code.
+
+**The four rules** (the full text lives at the top of `sw.js`; the same block, naming yaab as the cautionary tale, is in `sites/boop`, `sites/fuel` and `sites/meds`):
+
+1. **`sw.js` is never cached by itself** — Caddy `no-cache` on `*.js`, `updateViaCache:'none'` on the registration, and `ours()` refuses to intercept `/sw.js`. A cached worker can't be replaced by a fixed one, and this is what keeps `sw-kill.js` reachable.
+2. **Navigations are network-first** with a 1500 ms timeout, falling back to the cached shell. A deploy can never be invisible.
+3. **Static assets are stale-while-revalidate, never cache-first.** The cache self-heals within one extra load even if `VERSION` never moves. This is the precise line the old one got wrong.
+4. **`/api/` and `/data/` are never touched.** `/api` is user data behind an auth cookie. `/data` is 48 MB — 11 MB of GDC prose that `js/gdc.js` already read-throughs into IndexedDB (so those requests never recur), plus 37 MB of dormant BSData XML. Mind the near-collision: `js/data/community-feed.json` is under `/js/`, so it IS cached.
+
+**`SHELL` is deliberately tiny** — `/`, `/index.html`, `/manifest.json` and the icons. It is the *offline navigation fallback*, not a precache list. All 192 files index.html references are requested on every load anyway, so rule 3 caches them on load #1 for free; precaching them would download ~14 MB twice on the install visit for no extra coverage. **Do not add files to `SHELL` when you add a module.**
+
+**`VERSION` is the cache name and carries the `?v=` token**, stamped by `scripts/stamp-assets.mjs` in the same pass as `index.html`. This coupling is load-bearing: the Cache API keys on the full URL including the query, so a release rotates ~190 cache keys at once, and if `VERSION` didn't move with them `activate()` would never drop the superseded generation and the cache would grow ~14 MB per release. Never hand-edit it. Measured rotation lag after a deploy: ~3.3 s from the reload settling.
+
+**Rollback, three levels:**
+
+- **L1 — stop new installs.** Revert `js/app/sw-register.js` to a no-op. Existing installs keep working correctly (rules 2 + 3 mean they still see every deploy). Cleans nothing up.
+- **L2 — the real one.** `cp sw-kill.js sw.js`, revert `sw-register.js`, `node scripts/stamp-assets.mjs`, commit, push. Every client drops the worker and all caches on its **next navigation**, guaranteed by the three mechanisms in rule 1. **Leave it in place ≥30 days** before restoring `sw.js` from git — the previous retirement sat for 3.5 months, which is why returning to a real worker needed no migration.
+- **L3 — one device.** The console one-liner at the bottom of `sw.js`.
+
+**Verify with** `~/sites/base/browser/browse.sh run ./scripts/pwa-check.mjs <outdir>` — 25 assertions covering installability, cache hygiene (one cache, name equal to the live `?v=` stamp, nothing under `/api` or `/data`) and an offline reload.
+
+**The regression test that matters** is not in that script, because it needs a real deploy between two page loads: bump `version` in `js/data/changelog-data.js`, run `stamp-assets.mjs`, then do an **ordinary reload** (F5 — not Ctrl+Shift+R, DevTools closed) and confirm the change is visible on *that* load. Do it twice; historically the failure showed on the second deploy.
 
 ## HTTP caching / cache-busting
 
-Two layers keep a parser/datasheet fix from getting stuck behind a browser's cached copy of the old code (the failure mode behind the kind of "I already fixed this but a user still reports it" bug):
+Three layers now keep a parser/datasheet fix from getting stuck behind a cached copy of the old code (the failure mode behind the kind of "I already fixed this but a user still reports it" bug). They compose rather than compete: layer 1 decides freshness, layer 2 changes the URL so a stale copy can't be matched at all, and layer 3 (the service worker) only ever *adds* an offline fallback — it is network-first for navigations and never cache-first for anything, so it cannot override either of the other two.
 
 1. **Revalidation headers (the guarantee).** The host Caddy config (`~/sites/base/conf.d/yetanotherarmybuilder.caddy`) serves `/`, `*.html`, `*.js`, and `*.css` with `Cache-Control: no-cache`. The browser keeps its copy but must revalidate with an `If-None-Match` on every load; Caddy answers `304` when the file is unchanged (one tiny round-trip) and `200` with fresh bytes when it changed. So a fix goes live on the next *ordinary* reload — no hard-refresh. Deliberately **not** applied to `data/bsdata/**` (multi-MB XML the app caches itself via IndexedDB + `index.json` SHAs) or the woff2 fonts (immutable).
 2. **Version stamp (belt-and-suspenders).** `scripts/stamp-assets.mjs` appends `?v=<App.CHANGELOG.version>` to every local `js/`+`css/` reference in `index.html`, so the URLs themselves change each release — covering heuristic/proxy caches that ignore `no-cache`. The version is read from `js/data/changelog-data.js`, so there is one source of truth. **After bumping the changelog version, run `node scripts/stamp-assets.mjs`** (or `--check` in CI to fail on a stale stamp). Re-running is idempotent; font preloads are intentionally skipped so they keep matching the CSS `@font-face` URLs.
 
    **Data-only deploys stamp too.** The nightly refresh redeploys `js/vendor/dc-bundle.js` without a release, so it runs `stamp-assets.mjs --data <bundle-md5>`, which stamps `?v=<version>-d<md5-8>`. Do **not** "fix" this by bumping the changelog version instead: `changelog.js` lights the "What's new" dot by comparing `App.CHANGELOG.version` against `yaab_changelog_seen`, so a daily bump would badge every user over an unchanged changelog. `--check` accepts the bare version *or* the version with a `-d…` suffix, so a data-only deploy never reads as a stale stamp.
 
-Because layer 1 guarantees freshness on its own, forgetting layer 2 degrades gracefully (you just lose the proxy-cache coverage) — it never reintroduces the stale-fix bug.
+3. **Service worker (offline, not freshness).** `sw.js` caches the shell so the app boots with no network. It is stale-while-revalidate for assets and network-first for navigations, and `stamp-assets.mjs` moves its cache name in lockstep with layer 2 — so a new `?v=` URL is a guaranteed cache miss and goes to the network. See the "Service worker" section above for the four rules and the rollback.
+
+Because layer 1 guarantees freshness on its own, forgetting layer 2 degrades gracefully (you just lose the proxy-cache coverage) — it never reintroduces the stale-fix bug. Layer 3 is designed so that forgetting *it* is equally harmless: the cache self-heals within one extra load.
 
 ## Quick-reference for navigation
 
@@ -249,7 +276,7 @@ Common questions and where to look first.
    - [ ] Opened `js/data/changelog-data.js`.
    - [ ] Added a `{ date, kind, title, description }` entry at the TOP of `entries:` (newest first).
    - [ ] Bumped the top-of-file `version` and `lastUpdated` fields.
-   - [ ] Ran `node scripts/stamp-assets.mjs` so the cache-bust `?v=` in `index.html` matches the new version (see "HTTP caching / cache-busting" above). Staged the updated `index.html` too.
+   - [ ] Ran `node scripts/stamp-assets.mjs` so the cache-bust `?v=` in `index.html` matches the new version (see "HTTP caching / cache-busting" above). Staged the updated `index.html` **and `sw.js`** — one run rewrites both, and the service worker's cache name must not lag the asset URLs.
    - [ ] Staged `js/data/changelog-data.js` alongside the code change so they ship together.
 
    If you don't do this, the change does not exist as far as the user is concerned. Treat a missing changelog entry the same as a broken build.

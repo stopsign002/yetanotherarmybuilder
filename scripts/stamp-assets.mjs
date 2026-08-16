@@ -28,10 +28,18 @@
 // The release version stays visible in the URL, the cache key still changes,
 // and the changelog is untouched.
 //
+// It also stamps the service worker's cache name (`const VERSION` in sw.js)
+// from the same token. That coupling is load-bearing rather than tidy: the
+// Cache API keys on the full URL including the query, so a release rotates all
+// ~190 asset cache keys at once, and if VERSION did not move with them the
+// worker's activate() would never drop the superseded generation and the cache
+// would grow by ~14 MB per release. One token, one source of truth, stamped in
+// the same pass, so the two cannot disagree.
+//
 // Usage (no deps):
 //   node scripts/stamp-assets.mjs                # stamp using changelog version
 //   node scripts/stamp-assets.mjs --data <hash>  # …plus a data-only suffix
-//   node scripts/stamp-assets.mjs --check        # exit 1 if index.html is stale
+//   node scripts/stamp-assets.mjs --check        # exit 1 if index.html or sw.js is stale
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
@@ -40,6 +48,9 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const INDEX = resolve(ROOT, 'index.html');
 const CHANGELOG = resolve(ROOT, 'js/data/changelog-data.js');
+const SW = resolve(ROOT, 'sw.js');
+const SW_PREFIX = 'yaab-shell-';
+const SW_VERSION_RE = /(const VERSION = ')([^']*)(';)/;
 
 const checkOnly = process.argv.includes('--check');
 const dataIx = process.argv.indexOf('--data');
@@ -72,6 +83,22 @@ const stamped = html.replace(ASSET_RE, (_full, pre, path, post) => {
 // data suffix. Both are current: the second is what a nightly bundle refresh
 // leaves behind, and failing CI on it would make every data-only deploy look
 // like a stale stamp.
+// The service worker's cache name carries the same token. Read it up front so
+// both --check and the write path can see it: index.html and sw.js are stamped
+// in ONE pass, and neither may early-exit before the other is handled. (An
+// earlier version of this script returned as soon as index.html was already
+// current, which would have silently left a stale VERSION behind on any run
+// where only sw.js needed moving.)
+const plainToken = decodeURIComponent(token);
+const swSrc = await readFile(SW, 'utf8');
+const swMatch = swSrc.match(SW_VERSION_RE);
+if (!swMatch) {
+  console.error(`FATAL: could not find \`const VERSION = '…';\` in sw.js`);
+  process.exit(2);
+}
+const swHave = swMatch[2];
+const swWant = SW_PREFIX + plainToken;
+
 if (checkOnly) {
   const okRe = new RegExp(`^${version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(-d[0-9a-f]{1,8})?$`);
   const stale = [];
@@ -79,19 +106,32 @@ if (checkOnly) {
     const got = mm[3] ? decodeURIComponent(mm[3]) : '';
     if (!okRe.test(got)) stale.push(`${mm[2]} (v=${got || 'none'})`);
   }
-  if (stale.length) {
-    console.error(`[stamp] STALE: ${stale.length} asset(s) not stamped at v=${version}[-d…]. `
-      + `First: ${stale[0]}. Run: node scripts/stamp-assets.mjs`);
+  // sw.js is held to the same rule: bare release version, or that version
+  // carrying a nightly data suffix.
+  const swStale = !(swHave.startsWith(SW_PREFIX) && okRe.test(swHave.slice(SW_PREFIX.length)));
+  if (stale.length || swStale) {
+    if (stale.length) {
+      console.error(`[stamp] STALE: ${stale.length} asset(s) not stamped at v=${version}[-d…]. `
+        + `First: ${stale[0]}.`);
+    }
+    if (swStale) console.error(`[stamp] STALE: sw.js VERSION is '${swHave}', expected '${SW_PREFIX}${version}[-d…]'.`);
+    console.error('[stamp] Run: node scripts/stamp-assets.mjs');
     process.exit(1);
   }
-  console.log(`[stamp] index.html is current at v=${version}[-d…] (${count} assets).`);
+  console.log(`[stamp] index.html (${count} assets) and sw.js are current at v=${version}[-d…].`);
   process.exit(0);
 }
 
 if (stamped === html) {
-  console.log(`[stamp] index.html already at v=${decodeURIComponent(token)} (${count} assets).`);
-  process.exit(0);
+  console.log(`[stamp] index.html already at v=${plainToken} (${count} assets).`);
+} else {
+  await writeFile(INDEX, stamped, 'utf8');
+  console.log(`[stamp] stamped ${count} js/css assets in index.html with ?v=${plainToken}.`);
 }
 
-await writeFile(INDEX, stamped, 'utf8');
-console.log(`[stamp] stamped ${count} js/css assets in index.html with ?v=${decodeURIComponent(token)}.`);
+if (swHave === swWant) {
+  console.log(`[stamp] sw.js VERSION already ${swWant}.`);
+} else {
+  await writeFile(SW, swSrc.replace(SW_VERSION_RE, `$1${swWant}$3`), 'utf8');
+  console.log(`[stamp] sw.js VERSION: ${swHave} -> ${swWant}`);
+}

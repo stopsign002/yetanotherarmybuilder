@@ -201,12 +201,12 @@ Cross-cutting docs:
 - **Notes:** Auth status drives account dropdown visibility; admin link gated by `App.Auth.isAdmin()`.
 
 ### `js/app/sw-register.js`
-- **Purpose:** Defensive helper that proactively unregisters any leftover service worker.
+- **Purpose:** Registers the app-shell service worker (`/sw.js`) after `window.load`.
 - **Exports:** none.
 - **Depends on:** `navigator.serviceWorker`.
-- **Storage:** none.
+- **Storage:** none directly (`sw.js` owns the `yaab-shell-<token>` Cache API entry).
 - **DOM:** none.
-- **Notes:** The app-shell SW has been retired. `/sw.js` is now a kill-switch that self-unregisters and clears `yaab-shell-v*` caches. New visits do NOT register an SW. If you see "service worker disabled" comments, that's intentional.
+- **Notes:** Loaded last in `index.html` and deferred to `load` so it doesn't compete with the ~190 boot requests. Fire-and-forget: the catch is silent and non-fatal, because without a worker the app behaves exactly as before, just with more round trips and no install prompt. `updateViaCache: 'none'` is **not optional** — it keeps `/sw.js` out of the HTTP cache on update checks, which is what makes `app/sw-kill.js` reachable. **Never version this URL** (`/sw.js?v=…`): a changed script URL creates a second registration instead of updating the first. `stamp-assets.mjs`'s regex only matches `src=`/`href=` attributes, so it can't reach the string — keep it that way. This file did the OPPOSITE (unregistered everything) from 2026-04-27 to 2026-08-16; see the "Service worker" section of `CLAUDE.md` for the four rules and the rollback.
 
 ### `js/app/keyboard.js`
 - **Purpose:** Global keyboard shortcuts.

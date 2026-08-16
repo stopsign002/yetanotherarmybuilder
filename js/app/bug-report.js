@@ -52,7 +52,22 @@
       }
     }
 
+    // Report the cache NAME, not just active/not-active. Since the app-shell
+    // service worker landed (app/sw.js), "the browser is serving me old code"
+    // is a real possible cause of a report, and the cache name carries the
+    // deployed version token — so a stale-cache report is diagnosable from the
+    // report alone instead of needing the reporter's device.
     const swActive = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+    let swDetail = swActive ? 'active' : 'not active';
+    try {
+      if (swActive && window.caches && caches.keys) {
+        const names = await caches.keys();
+        const shell = names.filter(n => n.indexOf('yaab-shell-') === 0);
+        // More than one shell cache means activate() didn't evict the old
+        // generation — worth seeing, so list them all rather than the first.
+        if (shell.length) swDetail += ' (' + shell.join(', ') + ')';
+      }
+    } catch (_) { /* Cache API unavailable — leave the plain verdict */ }
     const totalUnits = (state.allUnits && state.allUnits.length) || 0;
     const numFactions = (state.factions && state.factions.length) || 0;
     const detachmentName = (state.selectedDetachments && state.selectedDetachments.length)
@@ -67,7 +82,7 @@
       'Date/time:        ' + new Date().toISOString(),
       'User agent:       ' + (navigator.userAgent || '(unknown)'),
       'Viewport:         ' + viewport,
-      'Service worker:   ' + (swActive ? 'active' : 'not active'),
+      'Service worker:   ' + swDetail,
       'Factions loaded:  ' + numFactions,
       'Total units:      ' + totalUnits,
       'Faction filter:   ' + factionFilter,

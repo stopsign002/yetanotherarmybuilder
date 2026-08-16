@@ -40,7 +40,7 @@ localStorage `yaab_armies`
 10. `App.fireBootstrap(state)` runs every `App.hooks.bootstrap[]` entry.
 11. `App.autoLoadFromBSData()` returns immediately and starts the background load via `BSData.loadAllFactions` (overridden by `dc-adapter.js`). The adapter builds each faction from `window.DC`, runs the GDC overlay + `reconcileStrats()`, then fires the same per-faction callback — so each faction, as it's built, is pushed into `state.factions`, triggering `rebuildAllUnits` + `buildChaptersMap` + `updateFactionFilter` + `renderUnitRosterWithContext`. No XML fetch or DOM parsing happens; the only live network call is the GDC fallback text.
 12. `topbar.js` IIFE runs (loaded after `app/index.js`) and wires the top-bar chip mirror, ⌘K trigger, Action Center button, status row.
-13. `sw-register.js` defensively unregisters any leftover service worker. New visits do NOT register a SW (the app-shell SW was retired; `/sw.js` is now a kill-switch that self-unregisters and clears legacy `yaab-shell-v*` caches).
+13. `sw-register.js` registers `/sw.js` after `window.load`, with `updateViaCache: 'none'` so the worker script is never served from the HTTP cache. Registration is fire-and-forget — without a worker the app behaves exactly as before, just with more round trips and no install prompt. (From 2026-04-27 to 2026-08-16 this file did the opposite and unregistered everything; see the "Service worker" section of `CLAUDE.md`.)
 
 ## Memory model
 
@@ -58,7 +58,7 @@ localStorage `yaab_armies`
 | `yaab_bsdata_filelist_10e_v2` | sessionStorage | **Unused** — dormant BattleScribe file listing. |
 | `yaab_armies` | localStorage | User data — never invalidate silently |
 | `yaab_factions` | localStorage | Legacy — kept only for back-compat; not on the active read path |
-| `yaab-shell-v*` | Cache API | Retired — the kill-switch in `sw.js` deletes any leftover `yaab-shell-*` cache on next visit. Do not add new precached assets here. |
+| `yaab-shell-<token>` | Cache API | The app shell, ~200 entries / ~14 MB, written by `sw.js`. The name carries the deployed `?v=` token and `activate()` deletes every other key, so exactly one generation exists at a time. **Excludes `/api/` and `/data/` entirely.** Do not add entries to `SHELL` — assets are cached on first use by stale-while-revalidate. |
 
 `BSData.clearFactionCache()` wipes legacy session keys + the IndexedDB `factions` and `gst` stores in one call.
 
@@ -120,7 +120,7 @@ Implemented in `js/app/lazy-modules.js` (wired in `index.html` between `app/inde
 3. Rewires the in-DOM placeholder button to the real action's `onClick`. Splices the placeholder out of the hook array.
 4. For modules without a button (e.g. `lore` triggered via `.detail-faction` clicks), uses capture-phase delegated listeners that pre-empt the real handler until the module loads.
 
-Currently every feature module is also eager-loaded from `index.html` and from `sw.js` PRECACHE. Lazy-modules.js is an opt-in path waiting to replace the eager block.
+Currently every feature module is also eager-loaded from `index.html`. Lazy-modules.js is an opt-in path waiting to replace the eager block. (The service worker needs no per-module registration: it is stale-while-revalidate, so any URL the page requests is cached on first use.)
 
 ## Script load order rules
 

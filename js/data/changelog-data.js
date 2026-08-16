@@ -26,9 +26,30 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.16-1',
-    lastUpdated: '2026-08-16T12:00:00Z',
+    version:     '2026.08.16-2',
+    lastUpdated: '2026-08-16T19:00:00Z',
     entries: [
+      {
+        date: '2026-08-16', kind: 'feature',
+        title: 'YAAB can now be installed as an app — and works offline',
+        description:
+          'On Android and desktop Chrome you can now install YAAB properly: ' +
+          'it gets its own icon, opens in its own window with no address bar ' +
+          'or tabs eating the screen, and shows up alongside your other apps. ' +
+          'Look for "Install app" in the browser menu, or the entry in ' +
+          'Settings. On iPhone it is Share → Add to Home Screen. ' +
+          'The bigger change is that YAAB now works with no internet at all. ' +
+          'Everything it needs — the full datasheet library, points, rules ' +
+          'text and your saved armies — already lived on your device; the ' +
+          'only thing it was still fetching every time was the app itself. ' +
+          'That is now stored too, so once you have loaded YAAB once, it ' +
+          'opens and works on venue wifi, on a plane, or with the phone in ' +
+          'airplane mode. It also starts noticeably faster, because it stops ' +
+          're-checking 190 files with the server on every single visit. ' +
+          'Updates still reach you immediately on an ordinary reload — the ' +
+          'app always asks the server first and only falls back to its stored ' +
+          'copy when the network does not answer.',
+      },
       {
         date: '2026-08-16', kind: 'feature',
         title: 'King of the Coliseum list checker',

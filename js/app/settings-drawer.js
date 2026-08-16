@@ -156,9 +156,16 @@
 
   // ── Action rows ─────────────────────────────────────────────────────
   function pwaInstallAvailable() {
-    // Already installed → hide. We can't reliably detect a captured
-    // beforeinstallprompt event without an exported API, so otherwise
-    // surface the action and let onInstallClick bail if no prompt.
+    // pwa-install.js now exports this — it can see whether a
+    // beforeinstallprompt was actually captured, which is the only way to know
+    // the row will do anything when clicked. Prefer it.
+    try {
+      if (typeof App.pwaInstallAvailable === 'function') return App.pwaInstallAvailable();
+    } catch (_) {}
+    // Fallback for the load-order case where pwa-install.js hasn't run yet:
+    // already installed → hide, otherwise surface it and let onInstallClick
+    // bail if there is no prompt. (Also the honest answer on iOS, where
+    // beforeinstallprompt never fires at all — see issue #60.)
     try {
       if (window.matchMedia &&
           window.matchMedia('(display-mode: standalone)').matches) return false;

@@ -96,7 +96,7 @@
     'yaab-btn-legends':          'settings',
     'yaab-btn-allies':           'settings',
     'yaab-btn-bug-report':       'settings',
-    'yaab-btn-pwa-install':      'settings',
+    'yaab-btn-install':          'settings',
     'yaab-btn-ork-math':         'settings',
   };
 
@@ -138,7 +138,7 @@
     'yaab-btn-legends':          'Show or hide Legends-only units.',
     'yaab-btn-allies':           'Show or hide allied units from other codexes.',
     'yaab-btn-bug-report':       'Report an issue or attach diagnostic data.',
-    'yaab-btn-pwa-install':      'Install the app to your home screen.',
+    'yaab-btn-install':          'Install the app to your home screen.',
     'yaab-btn-ork-math':         'Toggle Ork numerals (TEEF mode).',
   };
 
