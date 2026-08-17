@@ -48,6 +48,11 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const INDEX = resolve(ROOT, 'index.html');
 const CHANGELOG = resolve(ROOT, 'js/data/changelog-data.js');
+// The build id printed on the boot splash. It exists so that "am I actually
+// running the new code?" is answerable by LOOKING at the loading screen,
+// without DevTools — the question that has cost hours every time a caching
+// problem is suspected.
+const BUILD_RE = /(<span id="boot-build"[^>]*>|<div class="boot-splash-build" id="boot-build">)([^<]*)(<)/;
 const SW = resolve(ROOT, 'sw.js');
 const SW_PREFIX = 'yaab-shell-';
 const SW_VERSION_RE = /(const VERSION = ')([^']*)(';)/;
@@ -74,10 +79,13 @@ const ASSET_RE = /(\b(?:src|href)=")((?:js|css)\/[^"?]+\.(?:js|css))(?:\?v=[^"]*
 const ASSET_RE_CHECK = /(\b(?:src|href)=")((?:js|css)\/[^"?]+\.(?:js|css))(?:\?v=([^"]*))?(")/g;
 
 let count = 0;
-const stamped = html.replace(ASSET_RE, (_full, pre, path, post) => {
+let stamped = html.replace(ASSET_RE, (_full, pre, path, post) => {
   count++;
   return `${pre}${path}?v=${token}${post}`;
 });
+// …and the build id shown on the boot splash.
+const buildText = `build ${dataHash ? `${version}-d${dataHash}` : version}`;
+stamped = stamped.replace(BUILD_RE, (_f, pre, _old, post) => `${pre}${buildText}${post}`);
 
 // --check accepts EITHER the bare release version or that version carrying a
 // data suffix. Both are current: the second is what a nightly bundle refresh
@@ -109,12 +117,16 @@ if (checkOnly) {
   // sw.js is held to the same rule: bare release version, or that version
   // carrying a nightly data suffix.
   const swStale = !(swHave.startsWith(SW_PREFIX) && okRe.test(swHave.slice(SW_PREFIX.length)));
-  if (stale.length || swStale) {
+  const bm = html.match(BUILD_RE);
+  const buildHave = bm ? bm[2].replace(/^build /, '') : null;
+  const buildStale = !buildHave || !okRe.test(buildHave);
+  if (stale.length || swStale || buildStale) {
     if (stale.length) {
       console.error(`[stamp] STALE: ${stale.length} asset(s) not stamped at v=${version}[-d…]. `
         + `First: ${stale[0]}.`);
     }
     if (swStale) console.error(`[stamp] STALE: sw.js VERSION is '${swHave}', expected '${SW_PREFIX}${version}[-d…]'.`);
+    if (buildStale) console.error(`[stamp] STALE: boot-splash build id is '${buildHave || 'missing'}', expected '${version}[-d…]'.`);
     console.error('[stamp] Run: node scripts/stamp-assets.mjs');
     process.exit(1);
   }

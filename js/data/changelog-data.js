@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.17-2',
-    lastUpdated: '2026-08-17T03:00:00Z',
+    version:     '2026.08.17-3',
+    lastUpdated: '2026-08-17T03:40:00Z',
     entries: [
+      {
+        date: '2026-08-17', kind: 'change',
+        title: 'The loading screen now shows which build you are running',
+        description:
+          'A small build number appears under the loading bar. If you ever ' +
+          'suspect your browser is showing you an old version of YAAB, that ' +
+          'number answers it in one glance — compare it with the version in ' +
+          'this What\u2019s New window. Separately, YAAB will no longer fall ' +
+          'back to its stored copy of the page just because your connection ' +
+          'is slow; it only does that when you are genuinely offline. A slow ' +
+          'connection was being mistaken for no connection, which could leave ' +
+          'a device showing an older version for far longer than it should.',
+      },
       {
         date: '2026-08-17', kind: 'fix',
         title: 'Fixed a case where updates could stop reaching your device',

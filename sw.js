@@ -25,9 +25,11 @@
 //      the registration passes updateViaCache:'none', and ours() below refuses
 //      to intercept /sw.js. A cached service worker cannot be replaced by a
 //      fixed one — and that is also what makes app/sw-kill.js reachable.
-//   2. NAVIGATIONS ARE NETWORK-FIRST with a short timeout, falling back to the
-//      cached shell. A deploy can therefore never be invisible; a bad
-//      connection still paints.
+//   2. NAVIGATIONS ARE NETWORK-FIRST, falling back to the cached shell ONLY
+//      when the network genuinely fails. Explicitly NOT on a timer: "slow" and
+//      "offline" are different, a timer cannot tell them apart, and any device
+//      routinely slower than the timer would be pinned to a stale shell — the
+//      same invisible-deploy bug, wearing a different hat.
 //   3. STATIC ASSETS ARE STALE-WHILE-REVALIDATE, NEVER CACHE-FIRST. Even if
 //      VERSION never moves, every cached file is re-fetched in the background
 //      on use and the cache self-heals within one extra load. This is the
@@ -57,13 +59,7 @@
 // Nothing in SHELL below is a js/css file, and stamp-assets.mjs only stamps
 // those — so no SHELL entry needs a ?v= suffix appended here to match what the
 // page will request.
-const VERSION = 'yaab-shell-2026.08.17-2';
-
-// How long a navigation waits for the network before falling back to cache.
-// Short on purpose: past about a second and a half on a phone you have already
-// decided the app is broken, and the cached shell boots into a UI that
-// revalidates everything it shows anyway.
-const NAV_TIMEOUT_MS = 1500;
+const VERSION = 'yaab-shell-2026.08.17-3';
 
 // Precached on install: ONLY what a cold OFFLINE navigation needs before the
 // page can start asking for things itself.
@@ -140,37 +136,36 @@ self.addEventListener('fetch', (e) => {
 async function navigateWith(req) {
   const cache = await caches.open(VERSION);
 
-  // Start the network request ONCE and attach the cache write to it directly,
-  // so the write happens whenever the response eventually lands — not only
-  // when it beats the timeout below.
+  // NO TIMEOUT. The cached shell is served ONLY when the network genuinely
+  // fails (offline, DNS failure, connection refused) — never merely because it
+  // was slow.
   //
-  // This ordering is load-bearing. The first version raced `fetch(req)` inside
-  // the try and only wrote the cache on the winning path, which ORPHANED the
-  // request on timeout: a device consistently slower than NAV_TIMEOUT_MS would
-  // serve its stale cached shell on every single load and never refresh it,
-  // so a deploy could stay invisible on that device indefinitely. That is the
-  // exact failure rule 2 exists to prevent, reintroduced through the back door.
-  // Now a timeout costs at most ONE stale paint and self-heals on the next
-  // load.
+  // There used to be a 1500ms race here, copied from the fuel/meds pattern.
+  // It is wrong for this site and it is wrong in a way that keeps costing
+  // hours: "slow" and "offline" are not the same thing, and a timer cannot
+  // tell them apart. Any device that is routinely slower than the timer gets
+  // the stale shell on every load, which is indistinguishable from the
+  // cache-first bug this whole file exists to prevent — and it is invisible to
+  // whoever shipped the deploy, because their connection is fast.
   //
-  // Store under a FIXED key, never under req. Shared armies arrive as
-  // /?a=YAAB1:<blob>, so keying on the request would mint a separate cache
-  // entry per shared link and the cache would grow without bound.
-  //
-  // Only a real 200 is worth storing: a cached 5xx error page would be
-  // indistinguishable from the app until the next deploy.
-  const net = fetch(req).then((res) => {
-    if (res && res.ok) cache.put('/index.html', res.clone()).catch(() => {});
-    return res;
-  }).catch(() => null);
-
+  // A hanging network now hangs the navigation, exactly as it would with no
+  // service worker installed. That is the honest baseline: this worker is here
+  // to make yaab work OFFLINE, not to paper over a bad connection at the cost
+  // of correctness. Offline still works, because fetch rejects immediately
+  // rather than hanging.
   try {
-    const fast = await withTimeout(net, NAV_TIMEOUT_MS);
-    if (fast) return fast;
-  } catch (_) { /* too slow — fall through to cache, `net` keeps going */ }
+    const net = await fetch(req);
+    // Cache under a FIXED key, never under req. Shared armies arrive as
+    // /?a=YAAB1:<blob>, so keying on the request would mint a separate cache
+    // entry per shared link and the cache would grow without bound.
+    //
+    // Only a real 200 is worth storing: a cached 5xx error page would be
+    // indistinguishable from the app until the next deploy.
+    if (net && net.ok) cache.put('/index.html', net.clone()).catch(() => {});
+    if (net) return net;
+  } catch (_) { /* genuinely unreachable — fall through to the cached shell */ }
 
   return (await cache.match('/index.html')) || (await cache.match('/'))
-      || (await net)
       || new Response('Offline', { status: 503, headers: { 'content-type': 'text/plain' } });
 }
 
@@ -205,12 +200,6 @@ async function staleWhileRevalidate(req) {
   return hit || (await net) || new Response('', { status: 504 });
 }
 
-function withTimeout(p, ms) {
-  return Promise.race([
-    p,
-    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms)),
-  ]);
-}
 
 // ── Kill switch ──────────────────────────────────────────────────────────────
 // Per device, from a console on the page:
