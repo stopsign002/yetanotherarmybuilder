@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.17-3',
-    lastUpdated: '2026-08-17T03:40:00Z',
+    version:     '2026.08.17-4',
+    lastUpdated: '2026-08-17T04:10:00Z',
     entries: [
+      {
+        date: '2026-08-17', kind: 'fix',
+        title: 'App icon: removed a stray line under the crest',
+        description:
+          'The icon artwork had a short line hanging below the crest — left ' +
+          'over from the original drawing, where it sat invisibly on the dark ' +
+          'background. Phone launchers that re-colour app icons (Android\u2019s ' +
+          'themed icons, for one) turned that invisible line into a visible ' +
+          'stripe. It is gone from the artwork now. If your home-screen icon ' +
+          'still shows it, remove and re-add YAAB to your home screen — the ' +
+          'launcher keeps its own copy of the icon from when you installed it.',
+      },
       {
         date: '2026-08-17', kind: 'change',
         title: 'The loading screen now shows which build you are running',

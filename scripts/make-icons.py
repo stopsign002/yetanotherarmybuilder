@@ -56,7 +56,10 @@ CREST_STROKE = 14
 
 PENTAGON = [(256, 160), (336, 216), (304, 320), (208, 320), (176, 216)]
 
-DIVIDER = [(256, 160), (256, 404)]
+# Ends at the pentagon bottom (320), NOT the 404 the source art used:
+# that overhang is invisible dark-on-dark here, but a themed launcher
+# icon re-colours it and it shows as a stub hanging below the crest.
+DIVIDER = [(256, 160), (256, 320)]
 DIVIDER_STROKE = 10
 
 BEZIER_STEPS = 32             # flattening resolution for each quadratic
