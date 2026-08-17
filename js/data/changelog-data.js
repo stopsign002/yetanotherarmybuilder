@@ -26,9 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.16-2',
-    lastUpdated: '2026-08-16T19:00:00Z',
+    version:     '2026.08.17-1',
+    lastUpdated: '2026-08-17T02:30:00Z',
     entries: [
+      {
+        date: '2026-08-17', kind: 'fix',
+        title: 'The loading screen is back, and startup is faster',
+        description:
+          'Opening YAAB in a new tab showed a blank page for most of the ' +
+          'wait — the loading screen existed, but it only appeared in the ' +
+          'last second and a half, long after you needed it. It now shows ' +
+          'within half a second and stays until the app is actually ready. ' +
+          'Startup itself is also quicker: the units pane was re-sorting the ' +
+          'entire 1,700-entry unit list dozens of times while the factions ' +
+          'loaded, almost always throwing the result away. That work now ' +
+          'happens only when something has genuinely changed, which takes a ' +
+          'couple of seconds off every cold load. More startup work is still ' +
+          'on the list.',
+      },
       {
         date: '2026-08-16', kind: 'feature',
         title: 'YAAB can now be installed as an app — and works offline',

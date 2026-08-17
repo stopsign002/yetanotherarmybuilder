@@ -57,7 +57,7 @@
 // Nothing in SHELL below is a js/css file, and stamp-assets.mjs only stamps
 // those — so no SHELL entry needs a ?v= suffix appended here to match what the
 // page will request.
-const VERSION = 'yaab-shell-2026.08.16-2';
+const VERSION = 'yaab-shell-2026.08.17-1';
 
 // How long a navigation waits for the network before falling back to cache.
 // Short on purpose: past about a second and a half on a phone you have already

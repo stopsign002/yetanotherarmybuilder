@@ -1,7 +1,30 @@
 // ui/cold-start.js — first-visit splash overlay + cold/warm-start detection while BSData loads.
 (function () {
   const App = window.App = window.App || {};
-  if (!App.hooks || !App.hooks.bootstrap) return;
+
+  // ── Hand off from the static boot splash ───────────────────────────────
+  // index.html carries a #boot-splash in its markup, because THIS module
+  // cannot cover the slow part of a cold load: it runs from
+  // App.hooks.bootstrap, which fires at DOMContentLoaded, and DOMContentLoaded
+  // is itself ~13s in (factions are built and the roster repainted during
+  // script execution). Measured before this existed: splash in at 12896ms,
+  // out at 14680ms — a 1.8s flash at the end of a 15s wait.
+  //
+  // Defined and armed BEFORE the App.hooks guard below, so a boot that never
+  // reaches the hook system still clears the overlay rather than leaving the
+  // app hidden behind it forever.
+  function removeBootSplash() {
+    const el = document.getElementById('boot-splash');
+    if (!el || el._going) return;
+    el._going = true;
+    el.classList.add('is-going');
+    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+  }
+  App.removeBootSplash = removeBootSplash;
+  // Backstop: whatever else happens, never leave it up past window load.
+  window.addEventListener('load', () => setTimeout(removeBootSplash, 1500));
+
+  if (!App.hooks || !App.hooks.bootstrap) { removeBootSplash(); return; }
 
   // ── Tunables ──────────────────────────────────────────────────────────
   const EXPECTED_TOTAL    = 32;     // approximate catalogue count for percentage
@@ -319,6 +342,10 @@
       }
 
       if (isCold) start();
+      // Hand over only once our own overlay is up (or we've decided there
+      // won't be one), so there is never a frame of half-built app between
+      // the two.
+      removeBootSplash();
       // Warm: no splash. App is already rendering with cached factions.
     })();
   });
