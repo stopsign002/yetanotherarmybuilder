@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.17-1',
-    lastUpdated: '2026-08-17T02:30:00Z',
+    version:     '2026.08.17-2',
+    lastUpdated: '2026-08-17T03:00:00Z',
     entries: [
+      {
+        date: '2026-08-17', kind: 'fix',
+        title: 'Fixed a case where updates could stop reaching your device',
+        description:
+          'If your connection was slow enough that the page took more than a ' +
+          'second and a half to answer, YAAB would show you the copy stored ' +
+          'on your device — which is correct — but then forget to refresh ' +
+          'that stored copy afterwards. On a device that was consistently ' +
+          'that slow, it would keep showing the same stored copy every time ' +
+          'and never pick up new versions. It now always refreshes in the ' +
+          'background, so a slow load costs you one out-of-date page at ' +
+          'worst. This is also why the new loading screen may not have ' +
+          'appeared for you yet.',
+      },
       {
         date: '2026-08-17', kind: 'fix',
         title: 'The loading screen is back, and startup is faster',

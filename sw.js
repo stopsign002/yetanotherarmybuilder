@@ -57,7 +57,7 @@
 // Nothing in SHELL below is a js/css file, and stamp-assets.mjs only stamps
 // those — so no SHELL entry needs a ?v= suffix appended here to match what the
 // page will request.
-const VERSION = 'yaab-shell-2026.08.17-1';
+const VERSION = 'yaab-shell-2026.08.17-2';
 
 // How long a navigation waits for the network before falling back to cache.
 // Short on purpose: past about a second and a half on a phone you have already
@@ -139,18 +139,38 @@ self.addEventListener('fetch', (e) => {
 
 async function navigateWith(req) {
   const cache = await caches.open(VERSION);
+
+  // Start the network request ONCE and attach the cache write to it directly,
+  // so the write happens whenever the response eventually lands — not only
+  // when it beats the timeout below.
+  //
+  // This ordering is load-bearing. The first version raced `fetch(req)` inside
+  // the try and only wrote the cache on the winning path, which ORPHANED the
+  // request on timeout: a device consistently slower than NAV_TIMEOUT_MS would
+  // serve its stale cached shell on every single load and never refresh it,
+  // so a deploy could stay invisible on that device indefinitely. That is the
+  // exact failure rule 2 exists to prevent, reintroduced through the back door.
+  // Now a timeout costs at most ONE stale paint and self-heals on the next
+  // load.
+  //
+  // Store under a FIXED key, never under req. Shared armies arrive as
+  // /?a=YAAB1:<blob>, so keying on the request would mint a separate cache
+  // entry per shared link and the cache would grow without bound.
+  //
+  // Only a real 200 is worth storing: a cached 5xx error page would be
+  // indistinguishable from the app until the next deploy.
+  const net = fetch(req).then((res) => {
+    if (res && res.ok) cache.put('/index.html', res.clone()).catch(() => {});
+    return res;
+  }).catch(() => null);
+
   try {
-    const net = await withTimeout(fetch(req), NAV_TIMEOUT_MS);
-    // Store under a FIXED key, never under req. Shared armies arrive as
-    // /?a=YAAB1:<blob>, so keying on the request would mint a separate cache
-    // entry per shared link and the cache would grow without bound.
-    //
-    // Only a real 200 is worth storing: a cached 5xx error page would be
-    // indistinguishable from the app until the next deploy.
-    if (net && net.ok) cache.put('/index.html', net.clone()).catch(() => {});
-    if (net) return net;
-  } catch (_) { /* offline or too slow — fall through to cache */ }
+    const fast = await withTimeout(net, NAV_TIMEOUT_MS);
+    if (fast) return fast;
+  } catch (_) { /* too slow — fall through to cache, `net` keeps going */ }
+
   return (await cache.match('/index.html')) || (await cache.match('/'))
+      || (await net)
       || new Response('Offline', { status: 503, headers: { 'content-type': 'text/plain' } });
 }
 
