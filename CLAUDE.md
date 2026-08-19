@@ -26,6 +26,8 @@ not tests). The app itself needs no `npm install` — vendored deps are committe
 |---|---|
 | `index.html` | Single-page shell. Hardcoded `<script>` order matters. Holds the topbar + 3-pane layout + modal mounts. |
 | `css/*.css` | One file per feature surface. `style.css` is the base; everything else is additive. |
+| `css/themes/*.css` | **Interchangeable themes.** Never linked from `index.html` — `js/theme-boot.js` appends the chosen one at parse time, so the default theme loads none of it. See "Themes" below. |
+| `js/theme-boot.js` | **The only non-`defer` script.** Sits last in `<head>`; reads `yaab_theme` and applies the theme before first paint. Owns the theme registry (`window.YAAB_THEMES`). |
 | `css/auth.css` | Auth UI styling (sign-in button, dropdown, auth modal). |
 | `sw.js` | **App-shell service worker.** Network-first navigations, stale-while-revalidate assets, `/api` + `/data` never touched. Its four rules and the rollback are in the "Service worker" section below. `sw-kill.js` is the emergency kill switch. |
 | `manifest.json` | PWA manifest (installable). |
@@ -127,6 +129,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Polish | Top app bar (chip mirror, ⌘K, Action Center) | `js/app/topbar.js`, `js/ui/action-center.js` |
 | Polish | Top-bar Export dropdown (mirrors panel-footer Export menu) | `js/ui/topbar-export.js` |
 | Polish | Settings drawer (sound, motion, badges, replay tour, sign-out) | `js/app/settings-drawer.js` |
+| Polish | Interchangeable themes (Appearance picker in the Settings drawer) | `js/theme-boot.js`, `js/app/themes.js`, `css/themes/` |
 | Polish | Mobile chrome (sticky points pill, dynamic title, back arrow) | `js/app/mobile-shell.js` |
 | Polish | Faction-themed audio stingers + particle bursts | `js/app/faction-fx.js` |
 | Polish | FLIP-style add-to-army flight ghost + drag-to-reorder | `js/ui/flip-animations.js` |
@@ -196,6 +199,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_mode` | localStorage | `mode-shell.js` | Active top-level mode (`'build'` / `'collect'` / `'play'`) | User pref |
 | `yaab_play_tab` | localStorage | `play-mode.js` | Active Play-mode sub-tab (`match` / `stratagems` / `calc` / `opponent` / `deploy`) | User pref |
 | `yaab_details_state` | localStorage | `details-persist.js` | Open/closed state of `<details>` boxes (army setup, detachments, KOTC, army rules) | User pref |
+| `yaab_theme` | localStorage | `theme-boot.js`, `themes.js` | Chosen visual theme id (`grimdark` \| `brutalist` \| `brutalist-dark`); cloud-synced, so the choice follows the account | User pref |
 | `yaab_reduced_motion` | localStorage | `settings-drawer.js` | App-level reduced-motion override (in addition to OS pref) | User pref |
 | `yaab_show_collection_badges` | localStorage | `collection.js`, `settings-drawer.js` | Toggle for the painted-status badges on unit cards | User pref |
 | `yaab_collect_debug` | localStorage | `collect-mode.js` | Dev flag for verbose Collect-mode logging | Dev flag |
@@ -205,6 +209,77 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_cards_spill` | localStorage | `cards-mode.js` | Per-unit-card manual page-split overrides (`{cardId: [sectionKey,…]}` of whole sections sent to the continuation card); device-local, NOT cloud-synced. Absent card → automatic whole-section split | User selection |
 
 The app-shell service worker maintains exactly one Cache API entry, `yaab-shell-<version-token>` — see the section below.
+
+## Themes
+
+Three interchangeable themes, chosen under **Appearance** in the Settings
+drawer. Added 2026-08-19.
+
+| id | Name | Stylesheet |
+|---|---|---|
+| `grimdark` | Grimdark — the original look | none |
+| `brutalist` | Neo-Brutalist | `css/themes/brutalist.css` |
+| `brutalist-dark` | Neo-Brutalist Dark | same file, `:root[data-yaab-theme="brutalist-dark"]` |
+
+**The default theme loads nothing.** That is the design constraint, not a
+side effect: `grimdark` has no stylesheet and sets no root attribute, so on a
+default install the whole feature costs one `localStorage` read. It was
+verified by pixel-diffing a full-page screenshot of the live site, desktop and
+phone, against the same shot taken before any of this existed — 0 of 1,296,000
+and 0 of 329,160 pixels differ. Re-run that diff before changing anything here.
+
+Three pieces:
+
+- **`js/theme-boot.js`** — the registry (`window.YAAB_THEMES`) plus `apply()`.
+  It is the **only script on the page that is not `defer`**, and it must stay
+  last in `<head>`: it appends the theme's `<link>`, which has to land after
+  every other stylesheet to win on cascade order and has to be in the document
+  before first paint or the user watches the theme get applied. The CSP
+  (`script-src 'self'`) is why it is a file rather than an inline block.
+  It borrows the `?v=` stamp off `css/style.css` — `scripts/stamp-assets.mjs`
+  only rewrites URLs literally present in `index.html`, and this one never is.
+- **`js/app/themes.js`** — `App.Themes.{list,get,set,remapAccent}`. Switching
+  is a live swap of that one `<link>` with no reload; because every theme is
+  override-only, removing it restores the default completely. It also listens
+  for `storage` on `yaab_theme`, which is what makes a cloud pull (sync.js
+  fires a synthetic `storage` event per key it overwrites) repaint the app on a
+  second device.
+- **`css/themes/brutalist.css`** — token overrides + component overrides.
+
+### The accent is the faction colour
+
+`App.FACTION_COLORS` is a palette of pastels at HSL L ≈ 78%, chosen against the
+default theme's near-black panels. On a white ground they vanish — and the 4px
+hard offset shadow under a selected unit card, which is the loudest place the
+faction colour appears in that style, becomes a pale smudge.
+
+So a theme declares an `accentMode` and `App.Themes.remapAccent` **re-lights
+the same faction hue** for that theme's ground: same hue, different
+lightness/saturation, never a different colour. `App.applyFactionColor`
+(`js/app/state.js`) calls it and takes the palette back unchanged when the
+active theme declares `accentMode: null` — which the default theme does, so its
+behaviour is byte-identical to before. Faction colours are written **inline** on
+`<html>`, so they beat the `:root` values in any theme stylesheet; the values in
+a theme's `:root` block are only what shows before a faction is picked, and they
+are kept in step with the `MODES` table in `themes.js` so there is no flash.
+
+### Writing another theme
+
+Add an entry to `THEMES` in `js/theme-boot.js` and a stylesheet under
+`css/themes/`. Two things will bite:
+
+1. **Specificity, not order.** The theme link loads last, so an equal-specificity
+   rule wins — but `css/detail-redesign.css` qualifies almost everything with
+   `.unit-detail-content`, `css/unit-card-themes.css` uses
+   `.unit-card.faction-x:hover`, and `css/mobile.css` hides its phone chrome
+   inside a media query. Mirror those selectors rather than reaching for
+   `!important`. `browse.sh run` + a rule-tracing probe answers "why did my
+   override lose" in one shot; guessing does not.
+2. **Hardcoded pastels.** ~175 rules across `css/` set a text colour above 62%
+   luminance for the dark default. Five surfaces (`cards-mode`, `admin`, the
+   stratagems modal, `voice-coach`, `cold-start`) paint their own dark ground
+   and are fine; everything else needs re-pointing. `brutalist.css` does it via
+   six `--nb-*` semantic tokens rather than 175 literals — copy that shape.
 
 ## Service worker
 

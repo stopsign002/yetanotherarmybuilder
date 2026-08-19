@@ -32,6 +32,11 @@
     // Named Reserves instances. (Custom names on ARMY entries need no key here
     // — they ride entry.customName through Army.toJSON on the army sync path.)
     'yaab_custom_names',
+    // Chosen visual theme (js/app/themes.js). Bag-synced so the choice made in
+    // Settings follows the account to a second device rather than being a
+    // per-browser preference. Pulling it fires the synthetic `storage` event
+    // below, which is what themes.js listens on to repaint without a reload.
+    'yaab_theme',
   ];
   const BAG_KEY_SET = new Set(SYNCED_BAG_KEYS);
 

@@ -594,6 +594,58 @@
     return wrap;
   }
 
+  // ── Theme picker rows ───────────────────────────────────────────────
+  // A radiogroup rather than the toggle rows above: themes are mutually
+  // exclusive and there are three of them, and a stack of switches would let
+  // the user turn all of them off. Each row shows the theme's three-colour
+  // swatch so the choice is visible without applying it.
+  function renderThemeRow(theme, activeId) {
+    const isActive = theme.id === activeId;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'settings-theme-row' + (isActive ? ' is-active' : '');
+    btn.id = 'set-theme-' + theme.id;
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+
+    const sw = document.createElement('span');
+    sw.className = 'settings-theme-swatch';
+    sw.setAttribute('aria-hidden', 'true');
+    (theme.swatch || []).forEach(c => {
+      const i = document.createElement('i');
+      i.style.background = c;
+      sw.appendChild(i);
+    });
+
+    const text = document.createElement('span');
+    text.className = 'settings-theme-text';
+    const name = document.createElement('span');
+    name.className = 'settings-theme-name';
+    name.textContent = theme.name;
+    const blurb = document.createElement('span');
+    blurb.className = 'settings-theme-blurb';
+    blurb.textContent = theme.blurb;
+    text.appendChild(name);
+    text.appendChild(blurb);
+
+    const check = document.createElement('span');
+    check.className = 'settings-theme-check';
+    check.setAttribute('aria-hidden', 'true');
+    check.textContent = isActive ? '\u2713' : '';
+
+    btn.appendChild(sw);
+    btn.appendChild(text);
+    btn.appendChild(check);
+
+    btn.addEventListener('click', () => {
+      if (theme.id === activeId) return;
+      try { App.Themes.set(theme.id); } catch (_) { return; }
+      // App.Themes.set re-renders this drawer, so the rows repaint themselves.
+      if (window.UI && UI.toast) UI.toast('Theme: ' + theme.name, 'success', 1800);
+    });
+    return btn;
+  }
+
   function renderActionRow(a) {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -640,6 +692,26 @@
     if (accountActions.length) {
       b.appendChild(renderSectionHeader('Account'));
       accountActions.forEach(a => b.appendChild(renderActionRow(a)));
+    }
+
+    // APPEARANCE — theme picker. Directly after Account, because it is an
+    // account-level preference (it cloud-syncs with the rest of the bag) and
+    // because burying a whole-app restyle under Export and Display makes it
+    // undiscoverable. Absent entirely if js/theme-boot.js failed to load,
+    // in which case the app is on the default theme and there is nothing to
+    // choose between.
+    if (App.Themes && typeof App.Themes.list === 'function') {
+      const themes = App.Themes.list();
+      if (themes.length > 1) {
+        b.appendChild(renderSectionHeader('Appearance'));
+        const group = document.createElement('div');
+        group.className = 'settings-theme-group';
+        group.setAttribute('role', 'radiogroup');
+        group.setAttribute('aria-label', 'Theme');
+        const activeId = App.Themes.get();
+        themes.forEach(t => group.appendChild(renderThemeRow(t, activeId)));
+        b.appendChild(group);
+      }
     }
 
     // EXPORT — desktop export-dropdown items, surfaced here for mobile.

@@ -26,9 +26,25 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.17-4',
-    lastUpdated: '2026-08-17T04:10:00Z',
+    version:     '2026.08.19-1',
+    lastUpdated: '2026-08-19T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-19', kind: 'feature',
+        title: 'Themes \u2014 pick a different look in Settings',
+        description:
+          'Settings \u2192 Appearance now has a theme picker. \u201CGrimdark\u201D is ' +
+          'the look YAAB has always had and stays the default \u2014 if you never ' +
+          'open the picker, nothing about the app changes. Two new ones sit ' +
+          'next to it: \u201CNeo-Brutalist\u201D, a stark white page with heavy black ' +
+          'borders and hard offset shadows, and a dark version of the same ' +
+          'idea with white ink on near-black. In both of them the accent ' +
+          'colour \u2014 the shadow that falls under the unit card you have ' +
+          'selected, the filled chips, the points bar \u2014 is your army\u2019s ' +
+          'faction colour, so a Blood Angels list looks different from a ' +
+          'Necron one. Switching is instant, no reload, and if you are signed ' +
+          'in your choice follows your account to your other devices.',
+      },
       {
         date: '2026-08-17', kind: 'fix',
         title: 'App icon: removed a stray line under the crest',

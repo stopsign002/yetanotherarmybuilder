@@ -313,3 +313,73 @@ body.reduce-motion .settings-action-row { animation: none !important; transition
 
 /* ── Body class while drawer is open: prevent scroll bleed ── */
 body.settings-drawer-open { overflow: hidden; }
+
+/* ── Theme picker (Appearance section) ────────────────────── */
+/* Additive: every rule below is a NEW class introduced with the theme picker
+ * in js/app/settings-drawer.js. Nothing above this comment is modified, so
+ * appending this file cannot change how the default theme looks anywhere
+ * else. Themes restyle these through the same tokens as everything else. */
+.settings-theme-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.settings-theme-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.settings-theme-row:hover { background: rgba(var(--accent-rgb), 0.08); }
+.settings-theme-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.settings-theme-row.is-active {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.10);
+}
+
+/* Three-band swatch: ground, ink, accent — the three decisions a theme makes. */
+.settings-theme-swatch {
+  flex: 0 0 auto;
+  display: flex;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.settings-theme-swatch i { flex: 1 1 0; display: block; }
+
+.settings-theme-text { flex: 1 1 auto; min-width: 0; }
+.settings-theme-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+.settings-theme-blurb {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.settings-theme-check {
+  flex: 0 0 auto;
+  width: 14px;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--accent);
+}
+body.reduce-motion .settings-theme-row { transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .settings-theme-row { transition: none; }
+}

@@ -204,7 +204,18 @@
       ? factionName.split(' - ').pop().trim()
       : (factionName || '');
     const colors = App.FACTION_COLORS[shortName] || App.FACTION_COLORS[factionName] || App.DEFAULT_ACCENT;
-    const [accent, hover, dark, rgb] = colors;
+    // Themes may need a different TINT of the same faction hue: the pastels
+    // above are tuned for this app's near-black default panels and wash out
+    // on a light ground. App.Themes.remapAccent re-lights them for whatever
+    // theme is active and returns null for the default theme, which is why
+    // the default path below is unchanged. See js/app/themes.js.
+    let [accent, hover, dark, rgb] = colors;
+    if (App.Themes && typeof App.Themes.remapAccent === 'function') {
+      try {
+        const themed = App.Themes.remapAccent(colors);
+        if (themed) [accent, hover, dark, rgb] = themed;
+      } catch (_) {}
+    }
     root.style.setProperty('--accent',       accent);
     root.style.setProperty('--accent-hover', hover);
     root.style.setProperty('--accent-dark',  dark);

@@ -1,0 +1,807 @@
+/* ============================================================
+   css/themes/brutalist.css — Neo-Brutalist theme (light + dark)
+   ------------------------------------------------------------
+   NOT LINKED FROM index.html. js/theme-boot.js appends it to
+   <head> at parse time, and only when the user has actually
+   chosen a brutalist theme — which is what makes the default
+   'grimdark' look bit-for-bit untouched by this file existing.
+
+   Two variants, one file, so switching light <-> dark is an
+   attribute flip with no second network request:
+     :root                                     -> light
+     :root[data-yaab-theme="brutalist-dark"]   -> dark
+
+   ACCENT = FACTION COLOUR. Everything loud in here — the hard
+   shadow under a selected unit card, chip fills, CP badges, the
+   points bar — paints with var(--accent), which js/app/state.js
+   writes INLINE on <html> from App.FACTION_COLORS, re-lit for
+   this theme's ground by App.Themes.remapAccent. Inline styles
+   beat this stylesheet, so the faction always wins. The values
+   in :root below are only what shows before a faction is picked.
+
+   CSP-safe: no external fonts, no remote assets.
+   ============================================================ */
+
+/* ── Tokens: LIGHT ───────────────────────────────────────── */
+:root {
+  --nb-ink:       #0a0a0a;   /* borders + hard shadows */
+  --nb-paper:     #ffffff;
+  --nb-inset:     #efece4;   /* stat cells, wells */
+
+  --bg:           #ffffff;
+  --panel-bg:     #ffffff;
+  --panel-alt:    #f4f1ea;
+  --card-bg:      #ffffff;
+  --card-hover:   #f4f1ea;
+
+  /* No-faction fallback: the light-mode re-light of App.DEFAULT_ACCENT.
+     Kept in step with MODES.light in js/app/themes.js so the pre-bootstrap
+     frame matches what applyFactionColor writes a moment later — otherwise
+     the page flashes one accent and then snaps to another. */
+  --accent:       #757575;
+  --accent-hover: #5e5e5e;
+  --accent-dark:  #4a4a4a;
+  --accent-rgb:   117, 117, 117;
+  --accent-on:    #ffffff;
+
+  --text:         #0a0a0a;
+  --text-muted:   #4a4a4a;
+  --border:       #0a0a0a;
+  --border-light: #0a0a0a;
+
+  --success:      #0a8a4a;
+  --warning:      #d97e00;
+  --danger:       #e02222;
+
+  --radius:       0px;
+  --radius-lg:    0px;
+  --shadow:       4px 4px 0 var(--nb-ink);
+  --shadow-lg:    8px 8px 0 var(--nb-ink);
+
+  --font:         'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-body:    var(--font);
+  --font-display: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono:    ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+
+  /* css/topbar.css tokens */
+  --topbar-bg:     var(--panel-bg);
+  --topbar-border: var(--nb-ink);
+  --topbar-blur:   0px;
+}
+
+/* ── Tokens: DARK — inverted ink, white borders AND white hard
+   shadows. That inversion is the whole point of the variant, not
+   an oversight. ──────────────────────────────────────────────── */
+:root[data-yaab-theme="brutalist-dark"] {
+  --nb-ink:       #f2f0ea;
+  --nb-paper:     #131217;
+  --nb-inset:     #26242c;
+
+  --bg:           #131217;
+  --panel-bg:     #131217;
+  --panel-alt:    #1c1a22;
+  --card-bg:      #17161c;
+  --card-hover:   #201e27;
+
+  /* Dark-mode re-light of App.DEFAULT_ACCENT — see the light block. */
+  --accent:       #b8b8b8;
+  --accent-hover: #d1d1d1;
+  --accent-dark:  #999999;
+  --accent-rgb:   184, 184, 184;
+  --accent-on:    #0a0a0a;
+
+  --text:         #f2f0ea;
+  --text-muted:   #a8a49a;
+  --border:       #f2f0ea;
+  --border-light: #f2f0ea;
+
+  --success:      #35d98a;
+  --warning:      #ffb054;
+  --danger:       #ff6255;
+
+  --topbar-bg:     var(--panel-bg);
+  --topbar-border: var(--nb-ink);
+}
+:root[data-yaab-theme="brutalist-dark"] body { background: var(--bg); color: var(--text); }
+
+/* ── Boot splash ─────────────────────────────────────────────
+   index.html inlines the splash's CSS in a <style> INSIDE <body>,
+   deliberately, so it paints without waiting on a stylesheet
+   round trip. That puts it later in document order than this
+   file, so equal specificity would lose — hence the
+   :root[data-yaab-theme] prefix on every rule here. Without this
+   block a brutalist user gets ~13s of the dark gold splash before
+   a white app appears under it. ─────────────────────────────── */
+:root[data-yaab-theme] #boot-splash {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+}
+:root[data-yaab-theme] .boot-splash-title { letter-spacing: 0.14em; font-weight: 800; }
+:root[data-yaab-theme] .boot-splash-sub   { color: var(--text-muted); font-family: var(--font-mono); }
+:root[data-yaab-theme] .boot-splash-build { color: var(--text-muted); opacity: 0.55; font-family: var(--font-mono); }
+:root[data-yaab-theme] .boot-splash-bar {
+  background: var(--nb-inset);
+  border: 2px solid var(--nb-ink);
+  border-radius: 0;
+}
+:root[data-yaab-theme] .boot-splash-bar i { background: var(--nb-ink); border-radius: 0; }
+/* The mark's fill/stroke are presentation attributes on the <path>, which any
+   CSS declaration outranks. */
+:root[data-yaab-theme] .boot-splash-mark path { stroke: var(--nb-ink); }
+:root[data-yaab-theme] .boot-splash-mark path[fill]:not([fill="none"]) { fill: var(--nb-ink); stroke: none; }
+:root[data-yaab-theme] .boot-splash-mark path:last-child { stroke: var(--nb-paper); fill: none; }
+
+/* ── Global: kill rounding, glows, atmosphere ────────────── */
+*:not(.spinner) { border-radius: 0 !important; }
+
+/* Static SVG atmosphere layers + hero underline (css/theming-pass.css) */
+body[data-mode="build"]   #build-mode::before,
+body[data-mode="build"]   #build-mode::after,
+body[data-mode="collect"] #collect-mode::before,
+body[data-mode="collect"] #collect-mode::after,
+body[data-mode="play"]    #play-mode::before,
+body[data-mode="play"]    #play-mode::after,
+body[data-mode="build"]   .build-hero::after { display: none !important; }
+
+.faction-glyph, .faction-glyph-hero, .topbar-brand-glyph { filter: none !important; }
+.unit-card .role-icon, .unit-card[class*="role-"] .unit-card-name::before { text-shadow: none; }
+
+::selection { background: var(--accent); color: var(--accent-on); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+/* ── Typography ──────────────────────────────────────────── */
+.panel-header h2,
+.detail-name,
+.unit-card-name,
+.ds-name,
+.detail-section-title,
+.modal-header h3,
+.army-rules-title,
+.topbar-brand-mark,
+.topbar-action-label,
+.topbar-mode-tab {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.panel-header h2 { color: var(--text); letter-spacing: 0.06em; }
+.detail-name { text-transform: uppercase; letter-spacing: 0.005em; }
+.topbar-brand-mark { font-weight: 900; letter-spacing: 0.08em; }
+.strat-section-label { font-family: var(--font-mono); letter-spacing: 0.14em; }
+
+/* Data / labels go mono */
+.form-label, .section-label, .army-rules-title, .detail-section-title,
+.army-entries-header, .unit-count-badge, .stat-name, .keyword-tag,
+.weapons-table th, .load-status, .toolbar-status,
+.detail-faction, .cp-badge, .strat-phase-badge, .enh-cb-pts,
+.enhancement-pts-badge, .army-enh-badge, .weapon-kw-tag,
+.core-ability-tag, .filter-chip, .weapons-subsection-title {
+  font-family: var(--font-mono);
+}
+.stat-value, .points-current, .points-limit, .detail-pts,
+.unit-card-pts, .army-entry-total, .army-entry-pts {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+/* ── Topbar ──────────────────────────────────────────────── */
+.topbar {
+  background: var(--topbar-bg);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom: 3px solid var(--nb-ink);
+  box-shadow: none;
+}
+.topbar-brand { border: 2px solid transparent; }
+.topbar-brand:hover { color: var(--text); border-color: var(--nb-ink); background: var(--accent); }
+.topbar-modes { border: 2px solid var(--nb-ink); background: var(--panel-bg); padding: 0; height: 34px; }
+.topbar-mode-tab { color: var(--text-muted); transition: none; }
+.topbar-mode-tab:hover { color: var(--text); background: var(--panel-alt); transform: none; }
+.topbar-mode-tab[aria-selected="true"] {
+  color: var(--accent-on);
+  background: var(--accent);
+  box-shadow: none;
+}
+.topbar-action-btn {
+  border: 2px solid var(--nb-ink);
+  color: var(--text);
+  background: var(--panel-bg);
+  transition: none;
+}
+.topbar-action-btn:hover,
+.topbar-action-btn[aria-expanded="true"] {
+  background: var(--accent);
+  border-color: var(--nb-ink);
+  color: var(--accent-on);
+  transform: translate(-2px, -2px);
+  box-shadow: 2px 2px 0 var(--nb-ink);
+}
+.topbar-army-name, .topbar-army-select {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+}
+.topbar-points-bar-wrap { background: var(--nb-inset); border: 1px solid var(--nb-ink); }
+
+/* ── Panels / layout ─────────────────────────────────────── */
+.panel-left  { border-right: none; }
+.resize-handle { background: var(--nb-ink); }
+.resize-handle:hover, .resize-handle.dragging { background: var(--accent); }
+.panel-header {
+  background: var(--panel-alt);
+  border-bottom: 3px solid var(--nb-ink);
+}
+.panel-footer { border-top: 3px solid var(--nb-ink); background: var(--panel-alt); }
+
+/* ── Cards, list items, wells ────────────────────────────── */
+.unit-card,
+.faction-item,
+.army-entry,
+.saved-army-item,
+.army-rule-item,
+.enhancement-cb-item,
+.detail-ability {
+  background: var(--card-bg);
+  border: 2px solid var(--nb-ink);
+}
+.unit-card { transition: none; }
+.unit-card::before { width: 5px; }
+.unit-card:hover {
+  border-color: var(--nb-ink);
+  background: var(--card-bg);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--nb-ink);
+}
+.unit-card:active { transform: translate(0, 0); box-shadow: none; }
+/* THE faction moment: a selected card's hard shadow is the faction colour. */
+.unit-card.selected {
+  border-color: var(--nb-ink);
+  background: var(--card-bg);
+  box-shadow: 4px 4px 0 var(--accent);
+  transform: translate(-2px, -2px);
+}
+.army-entry:hover, .faction-item:hover, .army-rule-item:hover {
+  border-color: var(--nb-ink);
+  background: var(--card-hover);
+}
+.stat-cell, .detail-stat-cell, .unit-stats-table .stat-cell {
+  background: var(--nb-inset);
+  border: 1px solid var(--nb-ink);
+}
+.stat-name { color: var(--text-muted); }
+.stat-value { color: var(--text); }
+
+.army-setup-section,
+.army-rules-collapsible {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+}
+.army-setup-section[open], .army-rules-collapsible[open] { background: var(--panel-bg); }
+.army-setup-summary { color: var(--text); font-family: var(--font-mono); }
+.army-setup-body, .army-rules-collapsible > .army-rules-section { border-top: 2px solid var(--nb-ink); }
+.army-entries-header { border-bottom: 2px solid var(--nb-ink); color: var(--text); }
+.army-selection-section { background: var(--panel-bg); border: 2px solid var(--nb-ink); }
+
+.points-summary {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+  box-shadow: 4px 4px 0 var(--nb-ink);
+}
+.points-bar-wrap, .build-hero-bar-wrap { background: var(--nb-inset); border: 1px solid var(--nb-ink); }
+.points-bar { background: var(--accent); }
+
+.detail-add-section {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+  box-shadow: 4px 4px 0 var(--accent);
+}
+.detail-ordinal { background: var(--panel-bg); border: 2px solid var(--nb-ink); border-left: 6px solid var(--accent); }
+.wl-model-block { background: var(--panel-alt); border-left: 4px solid var(--nb-ink); }
+.wl-composition { background: var(--panel-alt); border: 1px solid var(--nb-ink); color: var(--text); }
+.strat-section { background: var(--panel-alt); border: 2px solid var(--nb-ink); border-left: 6px solid var(--accent); }
+
+/* ── Tags / chips / badges ───────────────────────────────── */
+.keyword-tag, .detail-faction {
+  background: transparent;
+  border: 1.5px solid var(--nb-ink);
+  color: var(--text);
+}
+.core-ability-tag { color: var(--text); background: transparent; border: 1.5px solid var(--nb-ink); }
+.weapon-kw-tag { background: transparent; border: 1px solid var(--nb-ink); }
+.leader-unit-tag, .ledby-tag, .ledby-more-pill {
+  background: transparent;
+  border: 1.5px solid var(--nb-ink);
+  color: var(--text);
+}
+.cp-badge, .stratagem-cp-badge, .enhancement-pts-badge, .enh-cb-pts, .strat-phase-badge {
+  background: var(--accent);
+  border: 1px solid var(--nb-ink);
+  color: var(--accent-on);
+}
+.army-enh-badge { background: var(--panel-alt); border: 1px solid var(--nb-ink); color: var(--text); }
+.filter-chip {
+  border: 2px solid var(--nb-ink);
+  background: var(--panel-bg);
+  color: var(--text);
+  transition: none;
+}
+.filter-chip:hover { background: var(--panel-alt); color: var(--text); }
+.filter-chip.active {
+  background: var(--accent);
+  border-color: var(--nb-ink);
+  color: var(--accent-on);
+}
+.filter-chip.excluded {
+  background: var(--danger);
+  border-color: var(--nb-ink);
+  color: #fff;
+  text-decoration-color: #fff;
+}
+.weapons-subsection-title.ranged, .weapons-subsection-title.melee {
+  color: var(--text);
+  background: transparent;
+  border: 1.5px solid var(--nb-ink);
+}
+
+/* ── Buttons — the offset-shadow "press" ─────────────────── */
+.btn {
+  border: 2px solid var(--nb-ink);
+  box-shadow: 3px 3px 0 var(--nb-ink);
+  transition: none;
+  font-weight: 700;
+}
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--nb-ink); }
+.btn:active { transform: translate(3px, 3px); box-shadow: none; }
+.btn-accent { background: var(--accent); color: var(--accent-on); border-color: var(--nb-ink); }
+.btn-accent:hover { background: var(--accent-hover); border-color: var(--nb-ink); }
+.btn-outline { background: var(--panel-bg); color: var(--text); border-color: var(--nb-ink); }
+.btn-outline:hover { background: var(--panel-alt); border-color: var(--nb-ink); }
+.btn-danger { border-color: var(--nb-ink); }
+.btn-google-search { border: 2px solid var(--nb-ink); opacity: 1; }
+
+/* ── Forms ───────────────────────────────────────────────── */
+.form-input, .form-select, .search-input {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+  color: var(--text);
+  transition: none;
+}
+.form-input:focus, .form-select:focus, .search-input:focus {
+  border-color: var(--nb-ink);
+  box-shadow: 3px 3px 0 var(--accent);
+}
+.form-select option { background: var(--panel-bg); color: var(--text); }
+.army-entry-qty input { background: var(--panel-bg); border: 2px solid var(--nb-ink); color: var(--text); }
+.enhancement-cb-item input[type="checkbox"] { accent-color: var(--accent); }
+.upload-area { border: 3px dashed var(--nb-ink); background: var(--panel-bg); }
+.upload-area:hover, .upload-area.dragover { border-color: var(--accent); background: var(--panel-alt); }
+
+/* ── Modals / drawers / menus / tooltips / toasts ────────── */
+.modal-backdrop { background: rgba(10,10,10,0.55); backdrop-filter: none; }
+.modal {
+  background: var(--panel-bg);
+  border: 3px solid var(--nb-ink);
+  box-shadow: 10px 10px 0 var(--nb-ink);
+}
+.modal-header { border-bottom: 2px solid var(--nb-ink); }
+.modal-footer { border-top: 2px solid var(--nb-ink); }
+.settings-drawer { background: var(--panel-bg); border-left: 3px solid var(--nb-ink); box-shadow: -8px 0 0 rgba(10,10,10,0.15); }
+.settings-drawer-header { border-bottom: 3px solid var(--nb-ink); }
+.dropdown-menu {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+  box-shadow: 5px 5px 0 var(--nb-ink);
+}
+.dropdown-menu [role="menuitem"]:hover { background: var(--accent); color: var(--accent-on); }
+.global-tooltip {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+  color: var(--text);
+  box-shadow: 4px 4px 0 var(--nb-ink);
+}
+.toast {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+  border-left: 8px solid var(--accent);
+  box-shadow: 4px 4px 0 var(--nb-ink);
+  color: var(--text);
+  font-weight: 600;
+}
+.toast.toast-success { border-left-color: var(--success); }
+.toast.toast-error   { border-left-color: var(--danger); }
+.toast.toast-warning { border-left-color: var(--warning); }
+
+/* ── Settings drawer rows ────────────────────────────────── */
+/* css/settings-drawer.css paints these with rgba(255,255,255,.02) fills that
+   vanish on white, and with a pill toggle that reads as an accident next to
+   square everything-else. */
+.settings-section-heading { color: var(--text); border-bottom: 2px solid var(--nb-ink); letter-spacing: 0.14em; }
+.settings-action-row {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+  color: var(--text);
+  transition: none;
+}
+.settings-action-row:hover {
+  background: var(--accent);
+  border-color: var(--nb-ink);
+  color: var(--accent-on);
+}
+.settings-action-row.is-danger:hover { background: var(--danger); border-color: var(--nb-ink); color: #fff; }
+.settings-toggle-row:hover { background: var(--panel-alt); }
+.settings-toggle-switch { background: var(--panel-bg); border: 2px solid var(--nb-ink); }
+.settings-toggle-knob { background: var(--nb-ink); }
+.settings-toggle-input:checked ~ .settings-toggle-knob { background: var(--accent-on); }
+.settings-toggle-switch:has(.settings-toggle-input:checked) { background: var(--accent); border-color: var(--nb-ink); }
+.settings-about-card { background: var(--panel-alt); border: 2px solid var(--nb-ink); }
+
+/* Theme picker (js/app/settings-drawer.js). The generic rules in
+   css/settings-drawer.css already token-follow; these only harden the
+   selected-state border and swap the soft ring for a hard offset shadow. */
+.settings-theme-row { border: 2px solid var(--nb-ink); background: var(--panel-bg); transition: none; }
+.settings-theme-row:hover { background: var(--panel-alt); }
+.settings-theme-row.is-active {
+  border-color: var(--nb-ink);
+  background: var(--panel-bg);
+  box-shadow: 4px 4px 0 var(--accent);
+}
+.settings-theme-swatch { border: 2px solid var(--nb-ink); }
+.settings-theme-check { color: var(--accent); }
+
+/* ── Tables ──────────────────────────────────────────────── */
+.weapons-table th { border-bottom: 2px solid var(--nb-ink); color: var(--text); }
+.weapons-table td { border-bottom: 1px solid var(--nb-ink); }
+.weapons-table tr:hover td { background: var(--panel-alt); }
+.weapon-type-ranged { color: var(--accent-dark); font-weight: 700; }
+.weapon-type-melee  { color: var(--danger); font-weight: 700; }
+.detail-section-title, .section-label, .weapons-section h4 {
+  color: var(--text);
+  border-bottom: 2px solid var(--nb-ink);
+}
+.detail-header { border-bottom: 3px solid var(--nb-ink); }
+
+/* ── Scrollbars ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--panel-alt); border-left: 1px solid var(--nb-ink); }
+::-webkit-scrollbar-thumb { background: var(--nb-ink); border: 2px solid var(--panel-alt); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ── Misc hardcoded-dark cleanups ────────────────────────── */
+.load-status-count { color: var(--accent-dark); }
+:root[data-yaab-theme="brutalist-dark"] .load-status-count { color: var(--accent); }
+.search-clear { background: var(--nb-ink); color: var(--nb-paper); }
+.search-clear:hover { background: var(--accent); color: var(--accent-on); }
+.detail-section-title-primarch { color: var(--text); border-bottom-color: var(--nb-ink); }
+.detail-section-primarch { border: 2px solid var(--nb-ink); background: var(--panel-alt); }
+.strat-cp, .stratagem-cp-hero { color: var(--accent-dark); }
+:root[data-yaab-theme="brutalist-dark"] .strat-cp,
+:root[data-yaab-theme="brutalist-dark"] .stratagem-cp-hero { color: var(--accent); }
+.detail-section-title-leader, .detail-section-title-ledbby { color: var(--text); border-bottom-color: var(--nb-ink); }
+.toolbar-status::before { border-radius: 50% !important; }
+.toolbar-divider { background: var(--nb-ink); }
+
+/* ============================================================
+   SEMANTIC INK
+   ------------------------------------------------------------
+   The app hardcodes a small recurring palette of pastel accent
+   colours — blue for ranged/leader, orange for melee, green for
+   Led By, gold for stratagems/Legends/favourites, red for
+   over-limit — chosen against the default theme's near-black
+   panels. On the light ground they are invisible, and the
+   meaning goes with them.
+
+   These six tokens are those same six meanings re-lit for the
+   current ground, and the block that follows re-points every
+   selector that used a literal at them. The dark variant sets
+   them back to (near) the originals, so one set of component
+   rules serves both.
+
+   The selector list was found MECHANICALLY, not by eye: every
+   rule under css/ declaring a text colour above 62% luminance,
+   minus the five surfaces that paint their own dark ground and
+   therefore keep their light text — cards-mode, admin, the
+   stratagems modal, voice-coach and cold-start. If you add a
+   pastel literal to a token-backed surface, it belongs here too.
+   ============================================================ */
+:root {
+  --nb-blue:   #1667a8;
+  --nb-orange: #9a5000;
+  --nb-green:  #0a6b34;
+  --nb-gold:   #8a6410;
+  --nb-red:    #a3201c;
+  --nb-purple: #5c2a94;
+}
+:root[data-yaab-theme="brutalist-dark"] {
+  --nb-blue:   #5ab5e8;
+  --nb-orange: #e8955a;
+  --nb-green:  #a8e88a;
+  --nb-gold:   #f5c842;
+  --nb-red:    #ff8b8b;
+  --nb-purple: #dcc1f2;
+}
+
+/* ── Blue: ranged weapons, Leader sections, allies, info ──── */
+.unit-detail-content .weapons-section-banner-ranged,
+.unit-detail-content .detail-section-title-leader,
+.unit-detail-content .detail-stat-pillar-invuln,
+.weapons-subsection-title.ranged,
+.weapon-type-ranged,
+.detail-section-title-leader,
+.leader-unit-tag,
+.diff-row.diff-meta .diff-icon,
+.changelog-kind-change,
+.al-row-load .al-icon,
+.al-row-save .al-icon,
+.al-row-export .al-icon,
+.al-row-import .al-icon { color: var(--nb-blue); border-color: var(--nb-blue); }
+.unit-card.unit-card-ally::after,
+.unit-card.unit-card-ally.unit-card-legends::after,
+.detail-ally-tag,
+.toolbar-icons button#yaab-btn-allies.is-on { color: var(--nb-blue); border-color: var(--nb-blue); }
+.weapon-kw-tag.weapon-kw-blue { background: transparent; border: 1px solid var(--nb-blue); color: var(--nb-blue); }
+
+/* ── Orange: melee weapons, restrictions, unsaved ────────── */
+.unit-detail-content .weapons-section-banner-melee,
+.unit-detail-content .strat-section-label-restrict,
+.weapons-subsection-title.melee,
+.weapon-type-melee,
+.enh-cb-ineligible-note,
+.changelog-kind-fix,
+.build-hero-status.is-unsaved,
+.al-row-qty .al-icon { color: var(--nb-orange); border-color: var(--nb-orange); }
+.weapon-kw-tag.weapon-kw-orange { background: transparent; border: 1px solid var(--nb-orange); color: var(--nb-orange); }
+
+/* ── Green: Led By, additions, saved, wins ───────────────── */
+.unit-detail-content .detail-section-title-ledbby,
+.detail-section-title-ledbby,
+.ledby-tag,
+.ledby-more-pill,
+.diff-delta.neg,
+.diff-pts.neg,
+.diff-row.diff-added .diff-icon,
+.diff-row.diff-enh-added .diff-icon,
+.diff-row.diff-added .diff-text,
+.changelog-kind-feature,
+.collect-battle-verdict-win,
+.al-row-add .al-icon,
+.build-hero-status.is-saved { color: var(--nb-green); border-color: var(--nb-green); }
+
+/* ── Gold: stratagems, Legends, favourites, primarch, wargear ── */
+.detail-disposition,
+.unit-detail-content .detail-section-title-strat,
+.unit-detail-content .strat-section-label,
+.unit-detail-content .detail-section-title-primarch,
+.unit-detail-content .detail-section-title-wargear,
+.detail-section-title-primarch,
+.enh-cb-upgrade-tag,
+.unit-card.unit-card-legends::after,
+.detail-legends-tag,
+.toolbar-icons button.is-on,
+.fav-star.is-starred,
+.detail-action-btn:hover .fav-star,
+.yaab-dp-token-placed,
+.yaab-dp-readout,
+.bug-report-warn,
+.qr-share-warn,
+.cn-btn-primary,
+.diff-row.diff-count .diff-icon,
+.collect-battle-verdict-draw { color: var(--nb-gold); border-color: var(--nb-gold); }
+/* The wargear/primarch bands carry a gold fill + gold left bar as well. */
+.unit-detail-content .detail-section-title-wargear,
+.unit-detail-content .detail-section > .detail-section-title-wargear,
+.unit-detail-content .detail-section-title-primarch {
+  background: var(--nb-inset);
+  border-color: var(--nb-ink);
+  border-left-color: var(--nb-gold);
+  color: var(--text);
+}
+
+/* ── Red: errors, over-limit, removals ───────────────────── */
+.auth-error,
+.topbar-points .points-current.over-limit,
+.diff-row.diff-removed .diff-text,
+.cn-btn-danger:hover,
+.bug-report-status-error,
+.collect-battle-verdict-loss,
+.al-row-remove .al-icon,
+.play-match-vp-opp { color: var(--nb-red); border-color: var(--nb-red); }
+.weapon-kw-tag.weapon-kw-red { background: transparent; border: 1px solid var(--nb-red); color: var(--nb-red); }
+.weapon-kw-tag.weapon-kw-purple { background: transparent; border: 1px solid var(--nb-purple); color: var(--nb-purple); }
+.weapon-kw-tag.has-tooltip { border-color: var(--nb-ink); border-bottom-style: dashed; }
+
+/* ── Neutral: text that was only ever "light grey on dark" ── */
+.unit-detail-content .strat-section-text,
+.al-row-print .al-icon,
+.al-row-undo .al-icon,
+.al-row-redo .al-icon,
+.collection-status-btn.collection-status-unpainted.active,
+.panel-header h2:hover { color: var(--text); }
+
+/* Filter chips: the collection / favourites variants each ship their own
+   pale-tint active state at a higher specificity than the generic
+   .filter-chip.active rule above. All of them mean the same thing here. */
+.filter-chip.fav-chip.active,
+.filter-chip.collection-chip-owned.active,
+.filter-chip.collection-chip-needs.active,
+.filter-chip.collection-chip-painted.active {
+  background: var(--accent);
+  border-color: var(--nb-ink);
+  color: var(--accent-on);
+}
+.filter-chip.fav-chip.active .fav-chip-glyph { color: var(--accent-on); }
+.filter-chip.excluded:hover { background: var(--danger); color: #fff; }
+
+/* ── Play mode: no ground of its own ─────────────────────────
+   Every other big surface that hardcodes light text also paints
+   its own dark panel. #play-mode does not — it sits straight on
+   --bg, so on the light variant its whole cockpit was white text
+   on white. These are the same rules with the literal swapped
+   for the token that already means "text on the page ground". */
+.play-section-head h3,
+.play-btn,
+.play-empty h3, .play-cta h4,
+.play-match-wounds-val,
+.play-opponent-col h4,
+.play-hero-army,
+.play-btn-ghost:hover,
+.play-match-turn-val,
+.play-tab:hover,
+.play-drawer-toggle,
+.play-chip-head { color: var(--text); }
+.play-hero-meta,
+.play-chip-desc,
+.play-hero-sub,
+.play-tab,
+.play-help,
+.play-btn-ghost,
+.play-empty p, .play-cta p,
+.play-match-phase,
+.play-drawer-count { color: var(--text-muted); }
+
+/* ============================================================
+   DETAIL PANE
+   ------------------------------------------------------------
+   css/detail-redesign.css qualifies almost everything with
+   `.unit-detail-content`, which outranks a bare class selector
+   no matter how late this file loads. These rules exist purely
+   to match that specificity — the declarations are the same
+   intent as the equivalents further up.
+   ============================================================ */
+.unit-detail-content .detail-stat-cell,
+.unit-detail-content .detail-stat-pillar {
+  background: var(--nb-inset);
+  border: 1px solid var(--nb-ink);
+}
+.unit-detail-content .detail-section-title,
+.unit-detail-content .weapons-section-banner {
+  border: 1px solid var(--nb-ink);
+  border-left: 4px solid var(--accent);
+  color: var(--text);
+}
+.unit-detail-content .detail-add-section {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+}
+.unit-detail-content .detail-ability,
+.unit-detail-content .detail-section:not(.detail-section-primarch) .detail-ability {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+}
+.unit-detail-content .detail-banner-full .detail-ordinal {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+  border-left: 6px solid var(--accent);
+}
+
+/* ============================================================
+   PER-FACTION UNIT CARDS
+   ------------------------------------------------------------
+   css/unit-card-themes.css gives every card a faction gradient,
+   a translucent left stripe and a SOFT TINTED GLOW on hover, all
+   at `.unit-card.faction-x` specificity. The glow is the exact
+   effect this style exists to refuse, and on white the stripe
+   tints are invisible anyway. Ink for structure; the faction
+   colour stays where it says the most — the hard offset shadow
+   under the selected card.
+   ============================================================ */
+.unit-card[class*="faction-"] {
+  transition: none;
+  border-left: 5px solid var(--nb-ink);
+  background-image: none;
+}
+.unit-card[class*="faction-"]:hover {
+  border-left-color: var(--nb-ink);
+  box-shadow: 4px 4px 0 var(--nb-ink);
+}
+.unit-card.selected[class*="faction-"],
+.unit-card.selected[class*="faction-"]:hover,
+.unit-card.selected:hover {
+  border-left-color: var(--accent);
+  box-shadow: 4px 4px 0 var(--accent);
+}
+
+/* ============================================================
+   DISPLAY FACE
+   ------------------------------------------------------------
+   Most headings read --font-display and so follow the token
+   swap at the top of this file. These twelve name 'Cinzel'
+   directly, so they stayed a Roman serif in a theme whose whole
+   voice is a grotesque — the details pane and the Game Day and
+   Build heroes were the visible ones. (cards-mode.css also
+   hardcodes Cinzel and is deliberately left alone: those are
+   PRINT templates for physical data cards, not app chrome.)
+   ============================================================ */
+.play-hero-title,
+.play-tabs-title,
+.play-section-head h3,
+.play-empty h3, .play-cta h4,
+.play-drawer-title,
+.build-hero-faction,
+.build-hero-points-readout,
+.build-rules-header,
+.build-rules-stratagems-title,
+body.build-mode-enhanced .army-entry-name,
+.unit-detail-datasheet .detail-name,
+.unit-detail-rule .detail-name,
+.unit-detail-content .detail-name,
+.unit-detail-content .strat-card-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+/* Section bands stay in the mono label face (see "Data / labels go mono"
+   above) — detail-redesign.css names Cinzel on them at a specificity the
+   generic rule can't reach. */
+.unit-detail-content .detail-section-title,
+.unit-detail-content .weapons-section-banner,
+.unit-detail-content .strat-section-label,
+.strat-section-label {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+/* ── Play mode: the quick-stratagems drawer ──────────────────
+   The one surface in play mode that DOES paint its own ground —
+   a near-black gradient with a blur — while its text follows the
+   tokens above. On the light variant that was dark-on-dark. */
+.play-drawer {
+  background: var(--panel-alt);
+  border-top: 3px solid var(--nb-ink);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* ============================================================
+   MOBILE CHROME
+   ------------------------------------------------------------
+   css/mobile.css builds the phone shell — bottom tab bar, the
+   sticky points pill, a forced-dark topbar — out of hardcoded
+   near-blacks rather than tokens, because the app had exactly
+   one palette when they were written. On the light variant that
+   left the two bars a phone user cannot avoid looking at as
+   dark-on-dark. Same media query as the source so the pairing
+   stays obvious; specificity ties and this file loads later.
+   ============================================================ */
+@media (max-width: 820px) {
+  .topbar { background: var(--topbar-bg) !important; }
+  .mobile-tabbar {
+    background: var(--panel-alt);
+    border-top: 3px solid var(--nb-ink);
+  }
+  .mobile-tabbar button:active { background: var(--card-hover); }
+  .mobile-tabbar .mtab-badge { background: var(--accent); color: var(--accent-on); border: 1px solid var(--nb-ink); }
+  .mobile-pts-pill {
+    background: var(--panel-alt);
+    border-bottom: 3px solid var(--nb-ink);
+  }
+  .mobile-pts-pill-bar { background: var(--nb-inset); border: 1px solid var(--nb-ink); }
+  .mobile-pts-pill-value.over { color: var(--danger); }
+  .mobile-pts-pill-bar-fill.over { background: var(--danger); }
+  .mobile-pts-pill-bar-fill.near { background: var(--warning); }
+  .mobile-back-btn:active { background: var(--card-hover); }
+  /* mobile.css re-declares these with the DEFAULT theme's fallback literal
+     baked into the var() call, which is harmless — but it also reverts the
+     add-section to a gradient, so restate the flat panel. */
+  .detail-add-section { background: var(--panel-bg); }
+}

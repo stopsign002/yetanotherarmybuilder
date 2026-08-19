@@ -624,7 +624,23 @@ Cross-cutting docs:
 - **Depends on:** every toggle module + `App.Auth`.
 - **Storage:** `localStorage.yaab_reduced_motion`. Reads many other keys.
 - **DOM:** `#settings-drawer-root`, `#settings-drawer-scrim`, `#settings-drawer-body`.
-- **Notes:** Reduced-motion override stacks on top of OS pref.
+- **Notes:** Reduced-motion override stacks on top of OS pref. The **Appearance** section (theme picker) sits directly after Account — it is an account-level preference and cloud-syncs with the rest of the bag.
+
+### `js/app/themes.js`
+- **Purpose:** Runtime half of the theme system — switching, persistence, cross-tab/cloud reaction, and the faction-accent re-light.
+- **Exports:** `App.Themes = { list, get, current, set, remapAccent }`.
+- **Depends on:** `window.YAAB_THEMES` (from `js/theme-boot.js`); calls `App.applyFactionColor`.
+- **Storage:** `localStorage.yaab_theme` (in `SYNCED_BAG_KEYS`).
+- **DOM:** swaps `#yaab-theme-css` and the `data-yaab-theme` attribute on `<html>`.
+- **Notes:** Loads right after `state.js`, before `index.js` makes the first `applyFactionColor` call. `remapAccent` returns `null` for the default theme, which is what keeps that path unchanged. Writes the key with a plain `localStorage.setItem` **on purpose** — `sync.js` monkey-patches it, and that is what pushes the choice to the account.
+
+### `js/theme-boot.js` (not under `js/app/`)
+- **Purpose:** Pre-paint theme loader + the theme registry.
+- **Exports:** `window.YAAB_THEMES = { list, byId, apply, stored, DEFAULT_ID, STORAGE_KEY }`.
+- **Depends on:** nothing.
+- **Storage:** reads `localStorage.yaab_theme`.
+- **DOM:** appends the theme `<link>` to `<head>`; sets `data-yaab-theme` and the `theme-color` meta.
+- **Notes:** The **only non-`defer` script on the page**, and it must stay last in `<head>` — see the "Themes" section of `app/CLAUDE.md` for why both of those are load-bearing. On the default theme it reads one key and returns without touching the document.
 
 ---
 
