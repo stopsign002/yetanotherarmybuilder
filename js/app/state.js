@@ -198,24 +198,33 @@
   };
   App.DEFAULT_ACCENT = ['#c8c8c8', '#e0e0e0', '#909090', '200, 200, 200'];
 
-  App.applyFactionColor = function (factionName) {
-    const root = document.documentElement;
+  // THE one place a faction name becomes colours. Accepts either a full
+  // "Imperium - Adeptus Astartes - Blood Angels" or an already-short
+  // "Blood Angels", and returns the [accent, hover, dark, rgb] tuple.
+  //
+  // Everything that paints a faction colour must come through here, because
+  // this is also where the active theme gets to re-light it. The palette above
+  // is tuned for the default theme's near-black panels; on a light ground
+  // those pastels are invisible. App.Themes.remapAccent returns null for the
+  // default theme, so that path is byte-identical to a bare lookup.
+  // See js/app/themes.js and the "Themes" section of CLAUDE.md.
+  App.factionPalette = function (factionName) {
     const shortName = factionName && factionName.includes(' - ')
       ? factionName.split(' - ').pop().trim()
       : (factionName || '');
     const colors = App.FACTION_COLORS[shortName] || App.FACTION_COLORS[factionName] || App.DEFAULT_ACCENT;
-    // Themes may need a different TINT of the same faction hue: the pastels
-    // above are tuned for this app's near-black default panels and wash out
-    // on a light ground. App.Themes.remapAccent re-lights them for whatever
-    // theme is active and returns null for the default theme, which is why
-    // the default path below is unchanged. See js/app/themes.js.
-    let [accent, hover, dark, rgb] = colors;
     if (App.Themes && typeof App.Themes.remapAccent === 'function') {
       try {
         const themed = App.Themes.remapAccent(colors);
-        if (themed) [accent, hover, dark, rgb] = themed;
+        if (themed) return themed;
       } catch (_) {}
     }
+    return colors;
+  };
+
+  App.applyFactionColor = function (factionName) {
+    const root = document.documentElement;
+    const [accent, hover, dark, rgb] = App.factionPalette(factionName);
     root.style.setProperty('--accent',       accent);
     root.style.setProperty('--accent-hover', hover);
     root.style.setProperty('--accent-dark',  dark);

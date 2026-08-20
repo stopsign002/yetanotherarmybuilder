@@ -269,7 +269,9 @@
     // Apply faction-color dot via inline style (FACTION_COLORS lookup).
     side.querySelectorAll('[data-faction-color]').forEach(el => {
       const sn = el.getAttribute('data-faction-color');
-      const palette = (App.FACTION_COLORS && (App.FACTION_COLORS[sn])) || App.DEFAULT_ACCENT;
+      const palette = (typeof App.factionPalette === 'function')
+        ? App.factionPalette(sn)
+        : ((App.FACTION_COLORS && App.FACTION_COLORS[sn]) || App.DEFAULT_ACCENT);
       if (palette && palette[0]) el.style.background = palette[0];
     });
 
@@ -508,7 +510,9 @@
 
     side.querySelectorAll('[data-faction-color]').forEach(el => {
       const sn = el.getAttribute('data-faction-color');
-      const palette = (App.FACTION_COLORS && App.FACTION_COLORS[sn]) || App.DEFAULT_ACCENT;
+      const palette = (typeof App.factionPalette === 'function')
+        ? App.factionPalette(sn)
+        : ((App.FACTION_COLORS && App.FACTION_COLORS[sn]) || App.DEFAULT_ACCENT);
       if (palette && palette[0]) el.style.background = palette[0];
     });
     side.querySelectorAll('.collect-faction-row').forEach(btn => {

@@ -805,3 +805,341 @@ body.build-mode-enhanced .army-entry-name,
      add-section to a gradient, so restate the flat panel. */
   .detail-add-section { background: var(--panel-bg); }
 }
+
+/* ============================================================
+   GHOST TOKENS
+   ------------------------------------------------------------
+   35 CSS variables are referenced across css/ and defined
+   NOWHERE — `var(--panel-bg-2, #1a1a1a)`, `var(--input-bg,
+   #1a1a1a)`, `var(--surface, …)` and friends. Every one of those
+   silently takes its hardcoded near-black fallback.
+
+   In the default theme that is invisible: the fallbacks were
+   picked to match the dark palette, so the app looks right by
+   accident. Under any other theme it is ~50 rules painting black
+   boxes on a white page, and it is why the damage calculator's
+   inputs, the community search, the activity rows, the army-diff
+   panels and the tournament fields all came out unreadable.
+
+   Defining them here fixes that whole class at once. Filed
+   against the app as a real bug — the right long-term fix is for
+   css/style.css to define them, not for each theme to patch
+   around it. (--dcc-*, --dx and --dy are excluded on purpose:
+   those are set inline by cards-mode.js and particle-fx.js and
+   are supposed to be absent until then.)
+   ============================================================ */
+:root {
+  --panel-bg-2:    var(--panel-alt);
+  --panel-bg-3:    var(--nb-inset);
+  --panel-bg-alt:  var(--panel-alt);
+  --surface:       var(--panel-bg);
+  --surface-2:     var(--panel-alt);
+  --surface2:      var(--panel-alt);
+  --input-bg:      var(--panel-bg);
+  --bg-input:      var(--panel-bg);
+  --bg-alt:        var(--panel-alt);
+  --hover-bg:      var(--card-hover);
+  --muted:         var(--text-muted);
+  --border-subtle: var(--nb-ink);
+  --border-faint:  var(--nb-ink);
+  --radius-sm:     0px;
+  --radius-md:     0px;
+  --mono:          var(--font-mono);
+  --ui-font:       var(--font);
+  /* Per-module accents that all mean "the current faction colour". */
+  --lore-accent:      var(--accent);
+  --lore-accent-dark: var(--nb-ink);
+  --lore-accent-rgb:  var(--accent-rgb);
+  --community-accent: var(--accent);
+  --starter-accent:   var(--accent);
+}
+
+/* ============================================================
+   KILL LAYER
+   ------------------------------------------------------------
+   Brutalism has no soft light: no glow, no frosted glass, no
+   type shadow. Global rather than per-selector because the rule
+   is categorical — a new glow added next month should also be
+   refused, and there is nothing here worth keeping one of.
+
+   The cards-mode exclusion is deliberate: `.dcc-*` are the PRINT
+   templates for physical data cards. Their shadows are ink on
+   paper, not app chrome, and they must not change with the theme
+   you happen to be running the app in.
+   ============================================================ */
+*:not([class*="dcc-"]) { text-shadow: none !important; }
+* {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+/* Every `filter:` in css/ is a decorative drop-shadow glow on a crest,
+   faction glyph or banner — checked one by one, there are seven. */
+.faction-glyph, .faction-glyph-hero, .topbar-brand-glyph,
+.atmosphere-crest, .atmosphere-crest-pulse, .faction-banner,
+[class*="crest"], [class*="glyph"] { filter: none !important; }
+
+/* ============================================================
+   MODULE CHASSIS
+   ------------------------------------------------------------
+   Every lazy-loaded tool behind the Action Center — match mode,
+   the damage calculator, crusade, kill team, the deployment
+   planner, synergy, lore, analytics, opponent/matchup, army
+   history, the community feed, the activity log, tournament
+   export, stratagems, the command palette, the changelog, bug
+   report, points overrides, QR share — ships its own card and
+   panel classes. They inherit the token layer (so they are the
+   right COLOUR already) but keep 1px hairlines, soft fills and
+   rounded chrome, which is not this style.
+
+   One list, one chassis: 2px ink, flat panel, no radius.
+   ============================================================ */
+.mm-shell, .mm-topbar, .mm-phases, .mm-col, .mm-cp, .mm-timer-display,
+.mm-unit, .mm-primary-row, .mm-secondary, .mm-total, .mm-history, .mm-empty,
+.strat-modal, .strat-head, .strat-controls, .strat-section, .strat-card, .strat-empty,
+.lore-modal, .lore-browse, .lore-browse-item, .lore-footer,
+.yaab-dc-modal, .yaab-dc-section, .yaab-dc-dist, .yaab-dc-details,
+.community-modal, .community-card, .community-toolbar, .community-empty, .community-card-preview,
+.starter-modal, .starter-card, .starter-toolbar, .starter-empty,
+.diff-modal, .diff-picker, .diff-totals, .diff-list, .diff-snap, .diff-empty,
+.activity-modal, .al-day, .al-empty, .al-icon, .al-summary,
+.tp-modal, .tp-opponents, .tp-summary, .tp-page, .tp-reference-box, .tp-stage, .tp-cover,
+.yaab-syn-modal, .yaab-syn-section, .yaab-syn-empty,
+.kt-modal, .kt-section, .kt-template, .kt-mission-card, .kt-mission-display,
+.kt-empty, .kt-banner, .kt-section-status,
+.crusade-modal, .crusade-section, .crusade-roster-card, .crusade-picker,
+.crusade-empty, .crusade-intro, .crusade-honour-row, .crusade-scar-row,
+.crusade-unit-row, .crusade-battle-row, .crusade-detail-row,
+.action-center-sheet, .ac-card, .ac-section,
+.cmdp-modal, .cmdp-help-modal,
+.changelog-modal, .changelog-day, .changelog-item,
+.bug-report-modal, .points-override-modal, .qr-share-modal,
+.points-override-list, .points-override-row, .bug-report-diag,
+.yaab-dp-modal, .yaab-dp-side, .yaab-dp-popup, .yaab-dp-toolbar, .yaab-dp-empty-state,
+.yaab-opp-modal, .yaab-opp-preview, .yaab-mu-modal, .yaab-mu-section, .yaab-mu-side,
+.yaab-an-modal, .yaab-tour-tooltip, .auth-menu,
+.play-match-grid > div, .play-opponent-col, .play-chip-body {
+  background: var(--panel-bg);
+  border: 2px solid var(--nb-ink);
+  box-shadow: none;
+  transition: none;
+}
+
+/* Overlays sit on top of the page and get the deeper shadow, like .modal. */
+.mm-shell, .strat-modal, .lore-modal, .yaab-dc-modal, .community-modal,
+.starter-modal, .diff-modal, .activity-modal, .tp-modal, .yaab-syn-modal,
+.kt-modal, .crusade-modal, .action-center-sheet, .cmdp-modal, .cmdp-help-modal,
+.changelog-modal, .bug-report-modal, .points-override-modal, .qr-share-modal,
+.yaab-dp-modal, .yaab-opp-modal, .yaab-mu-modal, .yaab-an-modal {
+  border-width: 3px;
+  box-shadow: 10px 10px 0 var(--nb-ink);
+}
+/* Their headers and footers get the heavy rule the modal chassis uses. */
+.strat-head, .lore-header, .community-toolbar, .starter-toolbar,
+.al-tabs, .tp-notes-header, .kt-template-head, .crusade-section-head,
+.action-center-titlebar, .changelog-header, .yaab-mu-header, .yaab-opp-footer,
+.yaab-dc-sec-title, .yaab-syn-section-head, .mm-topbar, .mm-col-head {
+  border-bottom: 3px solid var(--nb-ink);
+}
+
+/* ── Controls ────────────────────────────────────────────────
+   Same story, and the one that actually broke: a control whose
+   fill came from a ghost token was a black box you could not
+   read your own typing in. */
+.strat-search, .community-search, .community-filter, .starter-search,
+.al-filter, .diff-select, .points-override-search, .points-override-input,
+.qr-share-url, .yaab-opp-textarea, .action-center-search, .cmdp-input,
+.yaab-dp-select, .custom-name-input, .cards-spill-name,
+.yaab-dc-row select, .yaab-dc-row input, .yaab-dc-grid5 input, .yaab-dc-grid4 input,
+.yaab-dp-popup input[type="text"], .tp-opp-row input[type="text"],
+.crusade-field input, .crusade-field input[type="date"], .crusade-field select,
+.crusade-field textarea, .crusade-inline input[type="number"],
+.collection-dash-filter select, .topbar-army-name, .topbar-army-select,
+.topbar-points-limit-input, .build-hero-points-limit-input,
+body.build-mode-enhanced .army-entry-qty input {
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 2px solid var(--nb-ink);
+  box-shadow: none;
+  transition: none;
+}
+.strat-search:focus, .community-search:focus, .starter-search:focus,
+.al-filter:focus, .action-center-search:focus, .cmdp-input:focus,
+.points-override-search:focus, .yaab-opp-textarea:focus,
+.yaab-dc-row input:focus, .yaab-dc-grid5 input:focus, .yaab-dc-grid4 input:focus {
+  border-color: var(--nb-ink);
+  box-shadow: 3px 3px 0 var(--accent);
+  outline: none;
+}
+
+/* ── Buttons: the offset-shadow press, everywhere ─────────── */
+.mm-btn, .mm-btn-round, .mm-btn-sm, .mm-btn-close,
+.lore-btn, .yaab-dp-btn, .kt-banner-action, .strat-use,
+.tp-generate, .starter-btn-surprise, .yaab-mu-roster-btn,
+.community-card-preview, .diff-picker-arrow, .crusade-row-remove {
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 2px solid var(--nb-ink);
+  box-shadow: 3px 3px 0 var(--nb-ink);
+  transition: none;
+}
+.mm-btn:hover, .mm-btn-round:hover, .mm-btn-sm:hover, .lore-btn:hover,
+.yaab-dp-btn:hover, .kt-banner-action:hover, .strat-use:hover,
+.tp-generate:hover, .starter-btn-surprise:hover, .yaab-mu-roster-btn:hover,
+.community-card-preview:hover {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--nb-ink);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--nb-ink);
+}
+.mm-btn:active, .mm-btn-round:active, .lore-btn:active, .yaab-dp-btn:active,
+.kt-banner-action:active, .strat-use:active, .tp-generate:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+.mm-btn-accent { background: var(--accent); color: var(--accent-on); }
+.mm-btn-ghost { box-shadow: none; }
+
+/* ── Selected / active: accent fill, never a pale wash ────── */
+.mm-phase-active, .strat-chip.is-on, .community-tag-chip.active,
+.yaab-dc-preset.active, .al-tab.is-active, .cmdp-row.active,
+.yaab-dp-btn.yaab-dp-btn-active, .yaab-dp-swatch.yaab-dp-swatch-active,
+.build-detail-tab.is-active, .tp-progress.is-active, .kt-switch.kt-switch-on,
+.collect-subtab.is-active, .play-tab.is-active {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--nb-ink);
+}
+.mm-phase-active .mm-phase-idx, .mm-phase-active .mm-phase-name { color: var(--accent-on); }
+
+/* ── Chips + tags: outline, not tint ─────────────────────── */
+.strat-chip, .strat-tag, .community-tag-chip, .community-card-tag,
+.community-card-pill, .starter-card-pill, .kt-template-pill, .yaab-dc-preset,
+.yaab-dc-kwb, .yaab-mu-kw, .changelog-kind, .al-tab, .crusade-rank-pip {
+  background: transparent;
+  border: 1.5px solid var(--nb-ink);
+  color: var(--text);
+  transition: none;
+}
+.strat-chip:hover, .community-tag-chip:hover, .yaab-dc-preset:hover { background: var(--panel-alt); }
+
+/* ── Wells: recessed, inset fill + hairline ──────────────── */
+.mm-cp, .mm-timer-display, .stockpile-stepper, .wgp-stepper,
+.reserves-view-count, .yaab-dc-hist, .yaab-dc-out-grid,
+.changelog-refresh-tip kbd, .cmdp-footer kbd, .cmdp-help-keys kbd,
+.auth-recovery-code, .unit-detail-datasheet .detail-stat-strip,
+.build-hero-bar-wrap, .yaab-dp-readout, .crusade-xp-bar-wrap,
+.tp-progress, .al-day-summary, .yaab-mu-stat-strip {
+  background: var(--nb-inset);
+  border: 1px solid var(--nb-ink);
+  color: var(--text);
+}
+
+/* ── Module-specific leftovers ───────────────────────────── */
+/* Stratagems hardcodes six near-blacks rather than tokens. */
+.strat-chip { background: transparent; }
+.strat-chip:hover { background: var(--panel-alt); }
+.strat-card { background: var(--card-bg); }
+.strat-head, .strat-controls { background: var(--panel-alt); }
+.strat-search { background: var(--panel-bg); }
+.strat-tag { background: transparent; }
+.strat-tag-timing { color: var(--nb-orange); border-color: var(--nb-orange); }
+.strat-desc { color: var(--text); }
+
+/* Lore: dark modal, gradient divider, tinted browse tiles. */
+.lore-modal { background: var(--panel-bg); border-top: 6px solid var(--accent); }
+.lore-body, .lore-footer, .lore-browse { background: var(--panel-bg); }
+.lore-divider { background: var(--nb-ink); height: 3px; }
+.lore-browse-item { background: var(--panel-alt); }
+.lore-browse-item:hover { background: var(--accent); color: var(--accent-on); }
+.lore-paragraph, .lore-tagline { color: var(--text); }
+
+/* Deployment planner: the battlefield is paper with an ink grid, not a
+   glowing dark table. */
+.yaab-dp-field-wrap { background: var(--nb-inset); border: 3px solid var(--nb-ink); }
+.yaab-dp-side { background: var(--panel-alt); }
+.yaab-dp-btn.yaab-dp-btn-danger { color: var(--nb-red); border-color: var(--nb-red); }
+.yaab-dp-token-placed, .yaab-dp-readout { color: var(--nb-gold); }
+.yaab-dp-swatch { border: 2px solid var(--nb-ink); }
+
+/* Changelog kind pills — the last three hardcoded pastels. */
+.changelog-kind-feature { color: var(--nb-green); border-color: var(--nb-green); }
+.changelog-kind-fix     { color: var(--nb-orange); border-color: var(--nb-orange); }
+.changelog-kind-change  { color: var(--nb-blue); border-color: var(--nb-blue); }
+
+/* Community + starter cards carry a pastel faction tint on the border. */
+.community-card, .starter-card { border-color: var(--nb-ink); }
+.community-card:hover, .starter-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--nb-ink);
+}
+
+/* ============================================================
+   TEXT ON AN ACCENT FILL
+   ------------------------------------------------------------
+   Filling a container with var(--accent) is only half the job:
+   any descendant that sets its OWN colour keeps it, and the ones
+   that usually do are coloured var(--accent) — so the label
+   vanishes into the fill it is sitting on. The command palette's
+   selected row was a solid faction-coloured bar with no text in
+   it at all.
+
+   `!important`, deliberately, and it is the only place in this
+   file that reaches for it. The alternative is re-stating every
+   module's own three-class rule (`.cmdp-row.active .cmdp-label`
+   and a dozen like it) and adding to that list forever. The
+   invariant is absolute — nothing sitting on an accent fill may
+   keep its own colour — and the declaration is colour-only, so
+   it cannot surprise anything about layout.
+   ============================================================ */
+.filter-chip.active *,
+.filter-chip.fav-chip.active *,
+.filter-chip.collection-chip-owned.active *,
+.filter-chip.collection-chip-needs.active *,
+.filter-chip.collection-chip-painted.active *,
+.topbar-mode-tab[aria-selected="true"] *,
+.topbar-action-btn:hover *,
+.topbar-action-btn[aria-expanded="true"] *,
+.btn-accent *,
+.mm-phase-active *, .mm-btn-accent *, .mm-btn:hover *,
+.strat-chip.is-on *, .strat-use:hover *,
+.community-tag-chip.active *, .community-card-preview:hover *,
+.yaab-dc-preset.active *,
+.al-tab.is-active *,
+.cmdp-row.active *,
+.yaab-dp-btn.yaab-dp-btn-active *, .yaab-dp-btn:hover *,
+.build-detail-tab.is-active *,
+.tp-progress.is-active *,
+.kt-switch.kt-switch-on *, .kt-banner-action:hover *,
+.collect-subtab.is-active *, .play-tab.is-active *,
+.lore-browse-item:hover *, .lore-btn:hover *,
+.dropdown-menu [role="menuitem"]:hover *,
+.settings-action-row:hover *,
+.cp-badge *, .stratagem-cp-badge *, .enhancement-pts-badge *, .strat-phase-badge * {
+  color: var(--accent-on) !important;
+}
+/* The excluded chip fills with --danger, not --accent, so its contrast
+   colour is white rather than whatever reads on the faction hue. */
+.filter-chip.excluded, .filter-chip.excluded *,
+.settings-action-row.is-danger:hover * { color: #fff !important; }
+
+/* ── Lore: body copy was still a Roman serif ─────────────── */
+.lore-paragraph, .lore-tagline, .lore-body, .lore-faction-name, .lore-browse-title {
+  font-family: var(--font);
+}
+.lore-faction-name { font-weight: 900; letter-spacing: 0.04em; }
+.lore-paragraph { text-align: left; }
+
+/* The planner's battlefield surround and unit rail resisted the plain-class
+   rules above — something in the module out-specifies them and it was not
+   worth another round of tracing for two panels. Qualified by the modal, which
+   wins outright. The canvas itself is painted by deployment-planner.js
+   (ctx.fillStyle '#5d7d52'), so the green mat is a JS concern, not a CSS one —
+   left alone deliberately: it reads as a gaming table, which is the point. */
+.yaab-dp-modal .yaab-dp-field-wrap {
+  background: var(--nb-inset);
+  background-image: none;
+  border: 3px solid var(--nb-ink);
+}
+.yaab-dp-modal .yaab-dp-side { background: var(--panel-alt); }
+.yaab-dp-modal .yaab-dp-canvas-host { box-shadow: 6px 6px 0 var(--nb-ink); }

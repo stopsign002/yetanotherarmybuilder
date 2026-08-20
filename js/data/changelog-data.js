@@ -26,9 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.19-1',
-    lastUpdated: '2026-08-19T00:00:00Z',
+    version:     '2026.08.20-1',
+    lastUpdated: '2026-08-20T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-20', kind: 'fix',
+        title: 'Neo-Brutalist themes: the rest of the app',
+        description:
+          'The first pass covered Build, Collect and Play. Every tool behind ' +
+          '\u201CAll tools\u2026\u201D now gets the same treatment \u2014 match tracker, ' +
+          'damage calculator, stratagems, lore, crusade, kill team, the ' +
+          'deployment planner, army history, the community feed, the activity ' +
+          'log, tournament prep, the command palette and the rest. Several of ' +
+          'them were not just off-style but genuinely unreadable in the light ' +
+          'theme: the damage calculator\u2019s input boxes were black, the ' +
+          'stratagem card titles were dark-on-dark, and the command ' +
+          'palette\u2019s selected row was a solid colour bar with no visible ' +
+          'text. The Grimdark theme is unchanged.',
+      },
       {
         date: '2026-08-19', kind: 'feature',
         title: 'Themes \u2014 pick a different look in Settings',

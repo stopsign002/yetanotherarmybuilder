@@ -31,7 +31,12 @@
   }
 
   function accentFor(factionName) {
-    const colors = App.FACTION_COLORS || {};
+    // App.factionPalette is the single lookup: it does the short-name split
+    // AND lets the active theme re-light the hue for its own ground. Reading
+    // App.FACTION_COLORS directly here is what left this module painting the
+    // dark theme's pastels onto a light page. See js/app/state.js.
+    if (typeof App.factionPalette === 'function') return App.factionPalette(factionName)[0];
+    const colors = (App && App.FACTION_COLORS) || {};
     const short = shortFaction(factionName);
     const tuple = colors[short] || colors[factionName] || App.DEFAULT_ACCENT || ['#666'];
     return tuple[0];

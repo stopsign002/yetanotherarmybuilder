@@ -98,7 +98,12 @@
     const entry = match ? match.entry : null;
 
     // Apply faction accent to modal so border / divider pick up the colour.
-    const palette = (App.FACTION_COLORS && App.FACTION_COLORS[key]) || App.DEFAULT_ACCENT;
+    // Via App.factionPalette, not a raw FACTION_COLORS read: the palette is
+    // tuned for the default theme's dark panels, and writing it inline here
+    // put an invisible pastel headline on the light theme's white modal.
+    const palette = (typeof App.factionPalette === 'function')
+      ? App.factionPalette(key)
+      : ((App.FACTION_COLORS && App.FACTION_COLORS[key]) || App.DEFAULT_ACCENT);
     if (palette) {
       modalEl.style.setProperty('--lore-accent', palette[0]);
       modalEl.style.setProperty('--lore-accent-dark', palette[2]);
