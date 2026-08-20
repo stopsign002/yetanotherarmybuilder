@@ -439,20 +439,22 @@
       note.hidden = true;
       return;
     }
-    const state = App.state || {};
-    const allUnits = state.allUnits || [];
-    const faction = state.factionFilter || 'all';
-    let hasMatch = false;
-    for (let i = 0; i < allUnits.length; i++) {
-      const u = allUnits[i];
-      if (!u || !u.id) continue;
-      if (faction !== 'all' && u._factionName !== faction) continue;
-      const named = (App.CustomNames && typeof App.CustomNames.countFor === 'function')
-        ? App.CustomNames.countFor(u.id) : 0;
-      // A fully-named stack has qty 0 but is very much not empty.
-      if (getQty(u.id) + named > 0) { hasMatch = true; break; }
-    }
-    note.hidden = hasMatch;
+    // Deliberately computeViewTotal() rather than a loop of its own. This
+    // function used to walk allUnits itself and match with a bare
+    // `u._factionName !== state.factionFilter`, which is NOT how this view
+    // decides what belongs to a faction: a Space Marine CHAPTER ships zero
+    // units of its own and inherits the generic Space Marines roster through
+    // App.getEffectiveFilter().linkedFactions (see app/sm-chapter-filter.js).
+    // So on Blood Angels — or any of the eleven chapters — every reserved
+    // unit carries `_factionName: "… - Space Marines"`, the bare comparison
+    // matched none of them, and the pane showed "Your Reserves are empty"
+    // stacked directly on top of the reserves. The count badge in the header
+    // was right at the same moment, because IT already used computeViewTotal:
+    // the tab read "Reserves 6" while the note underneath said there were
+    // none. Two implementations of "is this unit in this view" is what let
+    // them disagree, so now there is one.
+    const totals = computeViewTotal();
+    note.hidden = !!(totals && totals.types > 0);
   }
 
   // ── stockpile widget injected into the Details pane ─────────────────

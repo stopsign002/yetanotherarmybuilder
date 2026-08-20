@@ -2190,3 +2190,52 @@ body[data-mode="play"] #play-mode > .play-shell::after { display: none !importan
   outline: none;
 }
 .collect-search::placeholder { color: var(--text-faint); font-weight: 600; }
+
+/* css/reserves.css:120 — the Reserves / Requisitions empty-state note. Its
+   fill is a white-alpha gradient over `rgba(0,0,0,0.15)`, which on the cream
+   ground is neither white nor cream but a muddy grey slab, and its 1px dashed
+   hairline all but vanishes next to the 2px ink everything else is drawn in.
+   A dashed edge is right here — it is the one box on the page that is a
+   PLACEHOLDER rather than a thing — so it keeps the dash and gets the weight.
+
+   The title also read `var(--reserves-accent)`, i.e. the faction colour. On a
+   red faction that renders "YOUR RESERVES ARE EMPTY" as 900-weight red caps,
+   which looks like a failure; it is a hint. Ink, and the accent stays on the
+   one thing in the box you are meant to press. */
+.reserves-empty-note, .requisitions-empty-note {
+  background: var(--nb-paper);
+  background-image: none;
+  border: var(--nb-bw) dashed var(--nb-ink);
+  color: var(--text);
+}
+.reserves-empty-title, .requisitions-empty-title {
+  color: var(--text);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+.reserves-empty-body, .requisitions-empty-body { color: var(--text-muted); }
+.reserves-empty-link {
+  background: var(--nb-hot);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--nb-on-hot);
+  box-shadow: var(--nb-sh-chip);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: var(--nb-press);
+}
+.reserves-empty-link:hover {
+  background: var(--nb-hot);
+  color: var(--nb-on-hot);
+  transform: translate(1px, 1px);
+  box-shadow: var(--nb-sh-press);
+}
+/* The ×N stack badge on a reserved unit's card. */
+.reserves-qty-badge, .reserves-card-badge, .requisitions-qty-badge {
+  background: var(--accent);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--accent-on);
+  box-shadow: var(--nb-sh-chip);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}

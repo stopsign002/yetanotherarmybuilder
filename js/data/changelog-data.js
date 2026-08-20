@@ -26,9 +26,28 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.20-2',
-    lastUpdated: '2026-08-20T20:30:00Z',
+    version:     '2026.08.20-3',
+    lastUpdated: '2026-08-20T21:15:00Z',
     entries: [
+      {
+        date: '2026-08-20', kind: 'fix',
+        title: 'Reserves said \u201Cempty\u201D while showing your reserves',
+        description:
+          'On any Space Marine chapter \u2014 Blood Angels, Dark Angels, Space ' +
+          'Wolves, all eleven \u2014 the Reserves view showed the ' +
+          '\u201CYour Reserves are empty\u201D notice sitting directly on top ' +
+          'of the units you actually have reserved, which pushed the cards ' +
+          'down the pane and made the list look like it was filling from the ' +
+          'bottom. The tab beside it was reading \u201CReserves 6\u201D at the ' +
+          'same moment. A chapter ships no units of its own and inherits the ' +
+          'generic Space Marines roster, so every reserved unit is filed ' +
+          'under \u201CSpace Marines\u201D \u2014 and the empty-state check was ' +
+          'comparing that against \u201CBlood Angels\u201D and finding nothing. ' +
+          'The count badge already knew better; the two were asking the same ' +
+          'question in two different places. Now there is only one. Non-chapter ' +
+          'factions were never affected, and the notice still appears when your ' +
+          'Reserves really are empty.',
+      },
       {
         date: '2026-08-20', kind: 'change',
         title: 'Neo-Brutalist: a proper redraw, object by object',
