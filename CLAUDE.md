@@ -53,6 +53,7 @@ not tests). The app itself needs no `npm install` — vendored deps are committe
 | `js/data/` | Static JSON-ish data: lore, stratagems, community feed. |
 | `js/ui/` | DOM-rendering modules. Each attaches to `window.UI`. See `docs/UI.md`. |
 | `js/app/` | Bootstrap, state, events, and feature modules. Each attaches to `window.App`. See `docs/UI.md` and `docs/MODULE-REFERENCE.md`. |
+| `fonts/` | Faces a THEME needs, as opposed to the app's own. Today just `Archivo-100-900.woff2` (variable 100-900, latin subset, 34KB), loaded by an `@font-face` inside `css/themes/brutalist.css` and therefore fetched only by users on a brutalist theme. Same file ledger and Tandem use for the same look. `font-src` is `'self'`, so it is served from here rather than Google. |
 | `js/vendor/` | `html2pdf.bundle.min.js`, `qrcode.min.js`, `fonts/cinzel-{400,600}.woff2`, `fonts/ebgaramond{,-italic}.woff2` (EB Garamond — variable roman + italic, latin subset; body serif for the cards-mode "Industrial Stencil" template). |
 | `docs/` | Architecture / parser / UI reference + per-module deep dive. Read `docs/MODULE-REFERENCE.md` first for an exhaustive per-file index. |
 
@@ -244,7 +245,16 @@ Three pieces:
   for `storage` on `yaab_theme`, which is what makes a cloud pull (sync.js
   fires a synthetic `storage` event per key it overwrites) repaint the app on a
   second device.
-- **`css/themes/brutalist.css`** — token overrides + component overrides.
+- **`css/themes/brutalist.css`** — token overrides + component overrides,
+  plus its own `@font-face`. Two things in it are worth copying rather than
+  re-deriving. **A theme needs a GROUND and a PAPER that differ**: the first
+  version of this one painted `--bg`, `--panel-bg` and `--card-bg` all
+  `#ffffff`, so nothing had anything to stand out against and no offset
+  shadow had a surface to fall on — the app rendered as a wireframe. It is
+  now a cream page with white sheets on it. And **a theme that asks for a
+  weight the system fonts do not have must ship the face**: every
+  `font-weight: 900` in here was being synthesised off Helvetica until
+  Archivo was self-hosted.
 
 ### The accent is the faction colour
 

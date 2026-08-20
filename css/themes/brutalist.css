@@ -22,17 +22,48 @@
    CSP-safe: no external fonts, no remote assets.
    ============================================================ */
 
-/* ── Tokens: LIGHT ───────────────────────────────────────── */
-:root {
-  --nb-ink:       #0a0a0a;   /* borders + hard shadows */
-  --nb-paper:     #ffffff;
-  --nb-inset:     #efece4;   /* stat cells, wells */
+/* ── The face ─────────────────────────────────────────────────
+   Archivo, self-hosted. The 900 weight is load-bearing — this
+   style's whole voice is a heavy grotesque shouting in caps, and
+   Helvetica (which this theme used to borrow off the system)
+   tops out at 700 on most machines, so every "font-weight: 900"
+   below was silently rendering as a synthesised smudge.
+   Variable 100–900 in one 34KB file. font-src is 'self', so it
+   is served from /fonts rather than Google — same arrangement as
+   ledger and Tandem, which use this identical file.
+   ──────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(../../fonts/Archivo-100-900.woff2) format('woff2');
+}
 
-  --bg:           #ffffff;
-  --panel-bg:     #ffffff;
-  --panel-alt:    #f4f1ea;
-  --card-bg:      #ffffff;
-  --card-hover:   #f4f1ea;
+/* ── Tokens: LIGHT ───────────────────────────────────────────
+   THE GROUND IS CREAM, THE PAPER IS WHITE. That split is the
+   single most important value in this file and it is what the
+   theme was missing: everything used to be #ffffff on #ffffff,
+   so a card was distinguishable from the page only by its
+   outline and the whole app read as a wireframe. Cards, rows,
+   inputs and bars are white sheets LAID ON a cream desk, and
+   they cast a hard offset shadow onto it. Take the cream away
+   and the shadows have nothing to fall on.
+   ──────────────────────────────────────────────────────────── */
+:root {
+  --nb-ink:       #111111;   /* borders, hard shadows, body text */
+  --nb-paper:     #ffffff;   /* cards, rows, inputs — the sheets */
+  --nb-ground:    #f5f1e8;   /* the page under them */
+  --nb-sunken:    #fff8dd;   /* hover + focus fill: warm, not grey */
+  --nb-inset:     #efe9dc;   /* stat cells, wells, meter tracks */
+  --nb-rule:      #ddd6c8;   /* hairline INSIDE a white sheet */
+  --nb-shadow:    #111111;   /* what the offset shadow is drawn in */
+
+  --bg:           var(--nb-ground);
+  --panel-bg:     var(--nb-paper);
+  --panel-alt:    var(--nb-ground);
+  --card-bg:      var(--nb-paper);
+  --card-hover:   var(--nb-sunken);
 
   /* No-faction fallback: the light-mode re-light of App.DEFAULT_ACCENT.
      Kept in step with MODES.light in js/app/themes.js so the pre-bootstrap
@@ -44,62 +75,107 @@
   --accent-rgb:   117, 117, 117;
   --accent-on:    #ffffff;
 
-  --text:         #0a0a0a;
-  --text-muted:   #4a4a4a;
-  --border:       #0a0a0a;
-  --border-light: #0a0a0a;
+  /* The one loud constant. The faction accent moves with the army, so a
+     brutalist page needs a colour that does NOT — for the thing that is
+     merely "on" rather than "yours". Ledger and Tandem both use this
+     yellow for exactly that and it is why their active states read. */
+  --nb-hot:       #ffd43b;
+  --nb-on-hot:    #111111;
 
-  --success:      #0a8a4a;
-  --warning:      #d97e00;
-  --danger:       #e02222;
+  --text:         #111111;
+  --text-muted:   #555555;
+  --text-faint:   #7a7368;
+  --border:       #111111;
+  --border-light: #111111;
+
+  --success:      #148f4a;
+  --warning:      #b96a00;
+  --danger:       #e5484d;
 
   --radius:       0px;
   --radius-lg:    0px;
-  --shadow:       4px 4px 0 var(--nb-ink);
-  --shadow-lg:    8px 8px 0 var(--nb-ink);
 
-  --font:         'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* ── Geometry ──────────────────────────────────────────────
+     Three border weights and three shadow depths, and nothing
+     else in this file may invent a fourth. The depth encodes
+     how far off the page a thing sits: an overlay is furthest,
+     then a card, then a button, then a chip, then nothing.
+     Ledger's spec: cards 5px, buttons/nav 3px, chips 2px.
+     ───────────────────────────────────────────────────────── */
+  --nb-bw:        2px;      /* every component */
+  --nb-bw-heavy:  3px;      /* structural rules: topbar, panel head */
+  --nb-bw-hair:   1px;      /* only inside a sheet, in --nb-rule */
+
+  --nb-sh-chip:   2px 2px 0 var(--nb-shadow);
+  --nb-sh-btn:    3px 3px 0 var(--nb-shadow);
+  --nb-sh-card:   5px 5px 0 var(--nb-shadow);
+  --nb-sh-over:  10px 10px 0 var(--nb-shadow);
+  --nb-sh-press:  1px 1px 0 var(--nb-shadow);   /* the compressed hover */
+
+  /* The "press". Ledger asks for ~100ms ease-out on the shadow
+     compressing, and that one transition is the only motion this
+     style allows — everything else in here sets transition:none. */
+  --nb-press:     box-shadow 100ms ease-out, transform 100ms ease-out;
+
+  --shadow:       var(--nb-sh-btn);
+  --shadow-lg:    var(--nb-sh-card);
+
+  --font:         'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-body:    var(--font);
-  --font-display: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-mono:    ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  --font-display: var(--font);
+  /* Deliberately NOT a monospace. The label slots below (stat names,
+     keyword tags, section bands, points) used to route here and came out
+     as terminal text, which is a different style entirely — brutalism
+     sets its data in the same heavy grotesque as everything else and
+     leans on tabular figures for the alignment a mono was there for. */
+  --font-mono:    var(--font);
 
   /* css/topbar.css tokens */
-  --topbar-bg:     var(--panel-bg);
+  --topbar-bg:     var(--nb-paper);
   --topbar-border: var(--nb-ink);
   --topbar-blur:   0px;
 }
 
 /* ── Tokens: DARK — inverted ink, white borders AND white hard
    shadows. That inversion is the whole point of the variant, not
-   an oversight. ──────────────────────────────────────────────── */
-:root[data-yaab-theme="brutalist-dark"] {
-  --nb-ink:       #f2f0ea;
-  --nb-paper:     #131217;
-  --nb-inset:     #26242c;
+   an oversight.
 
-  --bg:           #131217;
-  --panel-bg:     #131217;
-  --panel-alt:    #1c1a22;
-  --card-bg:      #17161c;
-  --card-hover:   #201e27;
+   One thing does not invert: a pure-black offset on a near-black
+   ground is invisible, so --nb-shadow is a warm grey here rather
+   than the border colour. The shadow is still hard-edged and
+   unblurred — a block, never a glow. ────────────────────────── */
+:root[data-yaab-theme="brutalist-dark"] {
+  --nb-ink:       #f0ece2;
+  --nb-paper:     #1d1b16;
+  --nb-ground:    #14130f;
+  --nb-sunken:    #2b2721;
+  --nb-inset:     #26231d;
+  --nb-rule:      #3b362d;
+  --nb-shadow:    #4a443a;
 
   /* Dark-mode re-light of App.DEFAULT_ACCENT — see the light block. */
   --accent:       #b8b8b8;
   --accent-hover: #d1d1d1;
   --accent-dark:  #999999;
   --accent-rgb:   184, 184, 184;
-  --accent-on:    #0a0a0a;
+  --accent-on:    #111111;
 
-  --text:         #f2f0ea;
-  --text-muted:   #a8a49a;
-  --border:       #f2f0ea;
-  --border-light: #f2f0ea;
+  /* Yellow keeps black text in BOTH appearances — it is bright enough
+     that inverting it to cream would fail contrast either way. */
+  --nb-hot:       #ffd43b;
+  --nb-on-hot:    #111111;
+
+  --text:         #f5f1e8;
+  --text-muted:   #a8a294;
+  --text-faint:   #837d70;
+  --border:       #f0ece2;
+  --border-light: #f0ece2;
 
   --success:      #35d98a;
   --warning:      #ffb054;
   --danger:       #ff6255;
 
-  --topbar-bg:     var(--panel-bg);
+  --topbar-bg:     var(--nb-paper);
   --topbar-border: var(--nb-ink);
 }
 :root[data-yaab-theme="brutalist-dark"] body { background: var(--bg); color: var(--text); }
@@ -122,7 +198,7 @@
 :root[data-yaab-theme] .boot-splash-build { color: var(--text-muted); opacity: 0.55; font-family: var(--font-mono); }
 :root[data-yaab-theme] .boot-splash-bar {
   background: var(--nb-inset);
-  border: 2px solid var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
   border-radius: 0;
 }
 :root[data-yaab-theme] .boot-splash-bar i { background: var(--nb-ink); border-radius: 0; }
@@ -150,186 +226,393 @@ body[data-mode="build"]   .build-hero::after { display: none !important; }
 ::selection { background: var(--accent); color: var(--accent-on); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
 
-/* ── Typography ──────────────────────────────────────────── */
+/* ── Typography ──────────────────────────────────────────────
+   Two voices and no third. NAMES are set heavy (800–900) and
+   tight; LABELS are set heavy, UPPERCASE and widely tracked.
+   Everything else is 600 body. That pairing — a black grotesque
+   shouting a caption at 10px next to a 20px name — is what makes
+   ledger and Tandem read as brutalist rather than as "a light
+   theme with square corners", and it is what this file was
+   missing while it borrowed Helvetica and a monospace.
+   ──────────────────────────────────────────────────────────── */
+body, .panel-body, .unit-card, .detail-body { font-family: var(--font); }
+body { font-weight: 500; }
+
+/* NAMES — heavy, tight, the loudest type on the page. */
 .panel-header h2,
 .detail-name,
 .unit-card-name,
 .ds-name,
-.detail-section-title,
 .modal-header h3,
 .army-rules-title,
 .topbar-brand-mark,
-.topbar-action-label,
-.topbar-mode-tab {
+.army-entry-name,
+.saved-army-name,
+.strat-card-name {
   font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: 0.01em;
+  font-weight: 900;
+  letter-spacing: -0.01em;
 }
-.panel-header h2 { color: var(--text); letter-spacing: 0.06em; }
-.detail-name { text-transform: uppercase; letter-spacing: 0.005em; }
-.topbar-brand-mark { font-weight: 900; letter-spacing: 0.08em; }
-.strat-section-label { font-family: var(--font-mono); letter-spacing: 0.14em; }
+.detail-name { text-transform: uppercase; letter-spacing: -0.02em; }
+.unit-card-name { letter-spacing: -0.015em; }
+.topbar-brand-mark { font-weight: 900; letter-spacing: 0.06em; }
 
-/* Data / labels go mono */
-.form-label, .section-label, .army-rules-title, .detail-section-title,
+/* PANEL HEADS — the ARMY / UNITS / DETAILS band. Caps, tracked,
+   black. These name the three columns and should read as signage. */
+.panel-header h2 {
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 900;
+}
+
+/* LABELS — the caption voice. Was a monospace, which reads as a
+   terminal readout; brutalism sets its captions in the same
+   grotesque, 900, in caps, tracked open. `tabular-nums` is what
+   the mono was actually earning its keep for (stat columns that
+   must not jitter), and Archivo has real tabular figures. */
+.form-label, .section-label, .army-rules-title,
 .army-entries-header, .unit-count-badge, .stat-name, .keyword-tag,
 .weapons-table th, .load-status, .toolbar-status,
 .detail-faction, .cp-badge, .strat-phase-badge, .enh-cb-pts,
 .enhancement-pts-badge, .army-enh-badge, .weapon-kw-tag,
-.core-ability-tag, .filter-chip, .weapons-subsection-title {
-  font-family: var(--font-mono);
+.core-ability-tag, .filter-chip, .weapons-subsection-title,
+.detail-section-title, .strat-section-label, .settings-section-heading,
+.topbar-action-label, .topbar-mode-tab, .army-setup-summary,
+.detail-pts-label, .points-label {
+  font-family: var(--font);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
 }
+/* A keyword tag is a NOUN, not a caption — it stays caps but does not
+   need the wide caption tracking at 9px, where it just falls apart. */
+.keyword-tag, .weapon-kw-tag, .core-ability-tag, .detail-faction {
+  letter-spacing: 0.06em;
+}
+.strat-section-label, .settings-section-heading { letter-spacing: 0.16em; }
+
+/* NUMBERS — statlines, points, totals. Heavy and tabular, so a
+   column of them lines up and a changing points total does not
+   shuffle the digits either side of it. */
 .stat-value, .points-current, .points-limit, .detail-pts,
-.unit-card-pts, .army-entry-total, .army-entry-pts {
-  font-family: var(--font-mono);
-  font-weight: 700;
+.unit-card-pts, .army-entry-total, .army-entry-pts,
+.weapons-table td, .detail-stat-value, .mobile-pts-pill-value,
+.build-hero-points-readout {
+  font-family: var(--font);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+/* Body copy inside a datasheet is the one place that is NOT shouting:
+   ability rules text is read, not scanned. 600 keeps it firmly in the
+   same family without turning three paragraphs into a headline. */
+.detail-ability-text, .detail-ability p, .ability-desc, .strat-desc,
+.wl-composition, .detail-wargear-text, .lore-paragraph {
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-/* ── Topbar ──────────────────────────────────────────────── */
+/* ── Topbar ──────────────────────────────────────────────────
+   A white bar on the cream ground, cut off by a heavy ink rule.
+   Its buttons are the app's most-clicked objects, so they get the
+   full treatment: 2px ink, 3px offset shadow, and the press.
+   ──────────────────────────────────────────────────────────── */
 .topbar {
   background: var(--topbar-bg);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  border-bottom: 3px solid var(--nb-ink);
+  border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
   box-shadow: none;
 }
-.topbar-brand { border: 2px solid transparent; }
-.topbar-brand:hover { color: var(--text); border-color: var(--nb-ink); background: var(--accent); }
-.topbar-modes { border: 2px solid var(--nb-ink); background: var(--panel-bg); padding: 0; height: 34px; }
-.topbar-mode-tab { color: var(--text-muted); transition: none; }
-.topbar-mode-tab:hover { color: var(--text); background: var(--panel-alt); transform: none; }
+.topbar-brand { border: var(--nb-bw) solid transparent; }
+.topbar-brand:hover {
+  color: var(--nb-on-hot);
+  border-color: var(--nb-ink);
+  background: var(--nb-hot);
+}
+
+/* The mode tabs are ONE bordered block subdivided by ink, like a
+   segmented control stamped out of a single sheet — not four
+   floating buttons. Only the divider between them is drawn. */
+.topbar-modes {
+  border: var(--nb-bw) solid var(--nb-ink);
+  background: var(--nb-paper);
+  padding: 0;
+  height: 34px;
+  box-shadow: var(--nb-sh-chip);
+}
+.topbar-mode-tab {
+  color: var(--text-muted);
+  transition: none;
+  border-right: var(--nb-bw) solid var(--nb-ink);
+  font-size: 11px;
+}
+.topbar-mode-tab:last-child { border-right: 0; }
+.topbar-mode-tab:hover { color: var(--text); background: var(--nb-sunken); transform: none; }
 .topbar-mode-tab[aria-selected="true"] {
   color: var(--accent-on);
   background: var(--accent);
   box-shadow: none;
 }
+
 .topbar-action-btn {
-  border: 2px solid var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
-  background: var(--panel-bg);
-  transition: none;
+  background: var(--nb-paper);
+  box-shadow: var(--nb-sh-btn);
+  transition: var(--nb-press);
+  font-size: 11px;
 }
 .topbar-action-btn:hover,
 .topbar-action-btn[aria-expanded="true"] {
-  background: var(--accent);
+  background: var(--nb-hot);
   border-color: var(--nb-ink);
-  color: var(--accent-on);
-  transform: translate(-2px, -2px);
-  box-shadow: 2px 2px 0 var(--nb-ink);
+  color: var(--nb-on-hot);
+  transform: translate(1px, 1px);
+  box-shadow: var(--nb-sh-press);
 }
+.topbar-action-btn:active { transform: translate(3px, 3px); box-shadow: none; }
 .topbar-army-name, .topbar-army-select {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
 }
-.topbar-points-bar-wrap { background: var(--nb-inset); border: 1px solid var(--nb-ink); }
+.topbar-points-bar-wrap {
+  background: var(--nb-inset);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
+/* The live status read-out in the middle of the bar. */
+.topbar-hero-slot .build-hero-faction { font-weight: 900; letter-spacing: 0.08em; }
+.toolbar-status, .load-status { color: var(--text-muted); }
 
-/* ── Panels / layout ─────────────────────────────────────── */
-.panel-left  { border-right: none; }
+/* ── Panels / layout ─────────────────────────────────────────
+   THE GROUND. All three columns are the cream desk; every card
+   inside them is a white sheet laid on top. Before this the
+   columns were #ffffff and so were the cards, which is why the
+   whole app read as a wireframe — an outline is not a surface.
+   ──────────────────────────────────────────────────────────── */
+.panel-left, .panel-center, .panel-right { background: var(--nb-ground); }
+.panel-left  { border-right: var(--nb-bw) solid var(--nb-ink); }
+.panel-right { border-left:  var(--nb-bw) solid var(--nb-ink); }
 .resize-handle { background: var(--nb-ink); }
 .resize-handle:hover, .resize-handle.dragging { background: var(--accent); }
-.panel-header {
-  background: var(--panel-alt);
-  border-bottom: 3px solid var(--nb-ink);
-}
-.panel-footer { border-top: 3px solid var(--nb-ink); background: var(--panel-alt); }
 
-/* ── Cards, list items, wells ────────────────────────────── */
+/* The column head is a white signage band, cut off by a heavy rule.
+   It is the only white full-bleed surface in a column, which is what
+   makes the cream below it read as ground. */
+.panel-header {
+  background: var(--nb-paper);
+  border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
+}
+.panel-footer {
+  border-top: var(--nb-bw-heavy) solid var(--nb-ink);
+  background: var(--nb-paper);
+}
+/* theming-pass.css slides an accent underline beneath the panel title.
+   A soft 2px rule under a 900 cap is the wrong emphasis for this style —
+   the weight already does that job — so the accent goes to a solid
+   block set BEFORE the word instead, which is a brutalist bullet. */
+.panel-header h2::after { display: none !important; }
+.panel-header h2::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  background: var(--accent);
+  border: var(--nb-bw) solid var(--nb-ink);
+  vertical-align: baseline;
+}
+
+/* ── Cards, list items, wells ────────────────────────────────
+   A card is a white sheet with a 2px ink edge that CASTS A HARD
+   SHADOW onto the cream. The shadow is not a hover affordance —
+   it is the resting state, and it is the single strongest signal
+   in the style. Hovering COMPRESSES it (5px -> 1px) so the sheet
+   appears to be pressed down onto the desk; that is the "press"
+   ledger's handoff asks for, and it is why the transition token
+   exists.
+   ──────────────────────────────────────────────────────────── */
 .unit-card,
 .faction-item,
-.army-entry,
 .saved-army-item,
 .army-rule-item,
 .enhancement-cb-item,
 .detail-ability {
   background: var(--card-bg);
-  border: 2px solid var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-card);
+  transition: var(--nb-press);
 }
-.unit-card { transition: none; }
-.unit-card::before { width: 5px; }
-.unit-card:hover {
+.unit-card::before { width: 6px; }
+.unit-card:hover,
+.faction-item:hover,
+.saved-army-item:hover,
+.army-rule-item:hover {
+  border-color: var(--nb-ink);
+  background: var(--nb-sunken);
+  transform: translate(4px, 4px);
+  box-shadow: var(--nb-sh-press);
+}
+.unit-card:active { transform: translate(5px, 5px); box-shadow: none; }
+
+/* THE faction moment. A selected card keeps its ink edge — the
+   structure never changes colour — and re-draws its shadow in the
+   faction accent, at full depth even while the pointer is over it.
+   Stated at every specificity unit-card-themes.css reaches for,
+   because that file qualifies with `.unit-card.faction-x`. */
+.unit-card.selected,
+.unit-card.selected:hover {
   border-color: var(--nb-ink);
   background: var(--card-bg);
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--nb-ink);
+  box-shadow: 5px 5px 0 var(--accent);
+  transform: translate(0, 0);
 }
-.unit-card:active { transform: translate(0, 0); box-shadow: none; }
-/* THE faction moment: a selected card's hard shadow is the faction colour. */
-.unit-card.selected {
-  border-color: var(--nb-ink);
+
+/* A row in a list is NOT a card: it is dense, it stacks, and giving
+   every one of them a 5px shadow turns the column into corduroy.
+   Rows get the ink edge and the warm hover fill, and nothing else. */
+.army-entry {
   background: var(--card-bg);
-  box-shadow: 4px 4px 0 var(--accent);
-  transform: translate(-2px, -2px);
+  border: var(--nb-bw) solid var(--nb-ink);
+  transition: var(--nb-press);
 }
-.army-entry:hover, .faction-item:hover, .army-rule-item:hover {
-  border-color: var(--nb-ink);
-  background: var(--card-hover);
-}
+.army-entry:hover { border-color: var(--nb-ink); background: var(--nb-sunken); }
+
+/* Statlines. A row of hard-edged cells butted together reads as one
+   stamped strip, so the cells share a 2px ink edge rather than each
+   drawing a hairline of their own. */
 .stat-cell, .detail-stat-cell, .unit-stats-table .stat-cell {
   background: var(--nb-inset);
-  border: 1px solid var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
 }
-.stat-name { color: var(--text-muted); }
+.stat-name { color: var(--text-muted); font-size: 8px; }
 .stat-value { color: var(--text); }
 
+/* Collapsible boxes in the Army column — each is a sheet. */
 .army-setup-section,
-.army-rules-collapsible {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
+.army-rules-collapsible,
+.army-selection-section {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-card);
 }
-.army-setup-section[open], .army-rules-collapsible[open] { background: var(--panel-bg); }
-.army-setup-summary { color: var(--text); font-family: var(--font-mono); }
-.army-setup-body, .army-rules-collapsible > .army-rules-section { border-top: 2px solid var(--nb-ink); }
-.army-entries-header { border-bottom: 2px solid var(--nb-ink); color: var(--text); }
-.army-selection-section { background: var(--panel-bg); border: 2px solid var(--nb-ink); }
+.army-setup-section[open], .army-rules-collapsible[open] { background: var(--nb-paper); }
+/* The summary row is the box's own header band: inked off from the body
+   below it exactly like a panel header is. */
+.army-setup-summary {
+  color: var(--text);
+  background: var(--nb-paper);
+}
+.army-setup-summary:hover { background: var(--nb-sunken); }
+.army-setup-body,
+.army-rules-collapsible > .army-rules-section {
+  border-top: var(--nb-bw) solid var(--nb-ink);
+}
+.army-entries-header {
+  border-bottom: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text);
+}
 
 .points-summary {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
-  box-shadow: 4px 4px 0 var(--nb-ink);
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-card);
 }
-.points-bar-wrap, .build-hero-bar-wrap { background: var(--nb-inset); border: 1px solid var(--nb-ink); }
+/* Meters: an ink-edged track with a flat accent fill and no radius.
+   Same object as Tandem's day-progress bar. */
+.points-bar-wrap, .build-hero-bar-wrap {
+  background: var(--nb-inset);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
 .points-bar { background: var(--accent); }
 
 .detail-add-section {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
-  box-shadow: 4px 4px 0 var(--accent);
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: 5px 5px 0 var(--accent);
 }
-.detail-ordinal { background: var(--panel-bg); border: 2px solid var(--nb-ink); border-left: 6px solid var(--accent); }
-.wl-model-block { background: var(--panel-alt); border-left: 4px solid var(--nb-ink); }
-.wl-composition { background: var(--panel-alt); border: 1px solid var(--nb-ink); color: var(--text); }
-.strat-section { background: var(--panel-alt); border: 2px solid var(--nb-ink); border-left: 6px solid var(--accent); }
+.detail-ordinal {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  border-left: 6px solid var(--accent);
+}
+.wl-model-block { background: var(--nb-inset); border-left: 4px solid var(--nb-ink); }
+.wl-composition { background: var(--nb-inset); border: var(--nb-bw) solid var(--nb-ink); color: var(--text); }
+.strat-section { background: var(--nb-paper); border: var(--nb-bw) solid var(--nb-ink); border-left: 6px solid var(--accent); }
 
-/* ── Tags / chips / badges ───────────────────────────────── */
-.keyword-tag, .detail-faction {
-  background: transparent;
-  border: 1.5px solid var(--nb-ink);
+/* ── Tags / chips / badges ───────────────────────────────────
+   A keyword is a STAMPED BLOCK, not an outlined pill. That is the
+   difference between Tandem's `PVT` / `AL` / `41D` blocks and a
+   row of hairline lozenges, and it is most of why the unit cards
+   used to read as a form rather than a datasheet. Filled where
+   the tag is an identity (faction, cost, state), inked-outline
+   where it is merely a keyword and there are eight of them.
+   ──────────────────────────────────────────────────────────── */
+.keyword-tag {
+  background: var(--nb-inset);
+  border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
+  padding: 1px 5px;
 }
-.core-ability-tag { color: var(--text); background: transparent; border: 1.5px solid var(--nb-ink); }
-.weapon-kw-tag { background: transparent; border: 1px solid var(--nb-ink); }
+/* The faction line under a unit's name IS its identity — inked solid. */
+.detail-faction {
+  background: var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--nb-paper);
+}
+.core-ability-tag {
+  color: var(--nb-on-hot);
+  background: var(--nb-hot);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
+/* Weapon keywords sit INSIDE a white card and there are several per
+   weapon, so they stay light — but hard-edged, and never dashed. */
+.weapon-kw-tag {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text);
+  text-decoration: none !important;
+  border-bottom-style: solid !important;
+}
 .leader-unit-tag, .ledby-tag, .ledby-more-pill {
-  background: transparent;
-  border: 1.5px solid var(--nb-ink);
+  background: var(--nb-inset);
+  border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
 }
+/* Costs and CP are the loud numbers — accent block, ink edge, shadow. */
 .cp-badge, .stratagem-cp-badge, .enhancement-pts-badge, .enh-cb-pts, .strat-phase-badge {
   background: var(--accent);
-  border: 1px solid var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
   color: var(--accent-on);
+  box-shadow: var(--nb-sh-chip);
 }
-.army-enh-badge { background: var(--panel-alt); border: 1px solid var(--nb-ink); color: var(--text); }
+.army-enh-badge { background: var(--nb-hot); border: var(--nb-bw) solid var(--nb-ink); color: var(--nb-on-hot); }
+
+/* Filter chips: the row under the search box. Resting = white sheet
+   with a 2px chip shadow; on = accent fill, shadow kept so an active
+   chip still stands off the page rather than sinking into it. */
 .filter-chip {
-  border: 2px solid var(--nb-ink);
-  background: var(--panel-bg);
+  border: var(--nb-bw) solid var(--nb-ink);
+  background: var(--nb-paper);
   color: var(--text);
-  transition: none;
+  box-shadow: var(--nb-sh-chip);
+  transition: var(--nb-press);
 }
-.filter-chip:hover { background: var(--panel-alt); color: var(--text); }
+.filter-chip:hover {
+  background: var(--nb-sunken);
+  color: var(--text);
+  transform: translate(1px, 1px);
+  box-shadow: var(--nb-sh-press);
+}
 .filter-chip.active {
   background: var(--accent);
   border-color: var(--nb-ink);
   color: var(--accent-on);
+  box-shadow: var(--nb-sh-chip);
+  transform: none;
 }
 .filter-chip.excluded {
   background: var(--danger);
@@ -337,133 +620,276 @@ body[data-mode="build"]   .build-hero::after { display: none !important; }
   color: #fff;
   text-decoration-color: #fff;
 }
+/* The Reserves / Requisitions / Faction units / All factions switch is
+   one stamped strip, same construction as the topbar mode tabs. */
+.unit-view-tab, .units-view-switch > button {
+  border: var(--nb-bw) solid var(--nb-ink);
+  background: var(--nb-paper);
+  box-shadow: var(--nb-sh-chip);
+}
 .weapons-subsection-title.ranged, .weapons-subsection-title.melee {
-  color: var(--text);
-  background: transparent;
-  border: 1.5px solid var(--nb-ink);
+  color: var(--nb-paper);
+  background: var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
 }
 
-/* ── Buttons — the offset-shadow "press" ─────────────────── */
-.btn {
-  border: 2px solid var(--nb-ink);
-  box-shadow: 3px 3px 0 var(--nb-ink);
-  transition: none;
-  font-weight: 700;
+/* ── Section bands ───────────────────────────────────────────
+   RANGED WEAPONS / WARGEAR / CORE ABILITIES and friends. These
+   were a pale grey strip with a thin accent stripe, which is the
+   softest thing brutalism has a word for. A band is a solid ink
+   bar with paper type: it divides the datasheet the way a rule
+   divides a printed page.
+   ──────────────────────────────────────────────────────────── */
+.detail-section-title,
+.weapons-section h4,
+.section-label {
+  background: var(--nb-ink);
+  color: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  border-bottom: var(--nb-bw) solid var(--nb-ink);
+  padding: 4px 8px;
 }
-.btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--nb-ink); }
+.detail-header { border-bottom: var(--nb-bw-heavy) solid var(--nb-ink); }
+
+/* ── Buttons — the offset-shadow "press" ─────────────────────
+   Resting 3px off the page; hover pushes it 2px INTO the page
+   (shadow 3 -> 1, box moves toward the shadow) and the click
+   seats it flush. Ledger's ~100ms ease-out is the only motion in
+   this style, so it is worth getting the direction right: the
+   old rule moved the box AWAY from the shadow on hover, which
+   reads as lifting, and brutalist buttons press.
+   ──────────────────────────────────────────────────────────── */
+.btn {
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-btn);
+  transition: var(--nb-press);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.btn:hover { transform: translate(2px, 2px); box-shadow: var(--nb-sh-press); }
 .btn:active { transform: translate(3px, 3px); box-shadow: none; }
 .btn-accent { background: var(--accent); color: var(--accent-on); border-color: var(--nb-ink); }
 .btn-accent:hover { background: var(--accent-hover); border-color: var(--nb-ink); }
-.btn-outline { background: var(--panel-bg); color: var(--text); border-color: var(--nb-ink); }
-.btn-outline:hover { background: var(--panel-alt); border-color: var(--nb-ink); }
-.btn-danger { border-color: var(--nb-ink); }
-.btn-google-search { border: 2px solid var(--nb-ink); opacity: 1; }
+.btn-outline { background: var(--nb-paper); color: var(--text); border-color: var(--nb-ink); }
+.btn-outline:hover { background: var(--nb-sunken); border-color: var(--nb-ink); }
+.btn-danger { border-color: var(--nb-ink); background: var(--danger); color: #fff; }
+.btn-google-search { border: var(--nb-bw) solid var(--nb-ink); opacity: 1; box-shadow: var(--nb-sh-chip); }
 
-/* ── Forms ───────────────────────────────────────────────── */
+/* ── Forms ───────────────────────────────────────────────────
+   A field is SUNKEN, not raised: warm fill, ink edge, no shadow.
+   That is Tandem's login exactly, and it is what tells you at a
+   glance which rectangles you can type into and which you press.
+   ──────────────────────────────────────────────────────────── */
 .form-input, .form-select, .search-input {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
+  background: var(--nb-sunken);
+  border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
+  font-weight: 600;
   transition: none;
+}
+.form-input::placeholder, .search-input::placeholder {
+  color: var(--text-faint);
+  font-weight: 600;
 }
 .form-input:focus, .form-select:focus, .search-input:focus {
   border-color: var(--nb-ink);
-  box-shadow: 3px 3px 0 var(--accent);
+  background: var(--nb-paper);
+  box-shadow: var(--nb-sh-btn);
+  outline: none;
 }
-.form-select option { background: var(--panel-bg); color: var(--text); }
-.army-entry-qty input { background: var(--panel-bg); border: 2px solid var(--nb-ink); color: var(--text); }
-.enhancement-cb-item input[type="checkbox"] { accent-color: var(--accent); }
-.upload-area { border: 3px dashed var(--nb-ink); background: var(--panel-bg); }
-.upload-area:hover, .upload-area.dragover { border-color: var(--accent); background: var(--panel-alt); }
-
-/* ── Modals / drawers / menus / tooltips / toasts ────────── */
-.modal-backdrop { background: rgba(10,10,10,0.55); backdrop-filter: none; }
-.modal {
-  background: var(--panel-bg);
-  border: 3px solid var(--nb-ink);
-  box-shadow: 10px 10px 0 var(--nb-ink);
-}
-.modal-header { border-bottom: 2px solid var(--nb-ink); }
-.modal-footer { border-top: 2px solid var(--nb-ink); }
-.settings-drawer { background: var(--panel-bg); border-left: 3px solid var(--nb-ink); box-shadow: -8px 0 0 rgba(10,10,10,0.15); }
-.settings-drawer-header { border-bottom: 3px solid var(--nb-ink); }
-.dropdown-menu {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
-  box-shadow: 5px 5px 0 var(--nb-ink);
-}
-.dropdown-menu [role="menuitem"]:hover { background: var(--accent); color: var(--accent-on); }
-.global-tooltip {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
+.form-select option { background: var(--nb-paper); color: var(--text); }
+.form-label { color: var(--text); }
+.army-entry-qty input {
+  background: var(--nb-sunken);
+  border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
-  box-shadow: 4px 4px 0 var(--nb-ink);
+  font-weight: 900;
+}
+
+/* Checkboxes: a hard 2px ink square that fills with the accent.
+   `appearance:none` on purpose — `accent-color` leaves the native
+   rounded box, which is the one radius `border-radius:0` cannot
+   reach because it is drawn by the platform, not by CSS. */
+.enhancement-cb-item input[type="checkbox"],
+.detachment-item input[type="checkbox"],
+.settings-toggle-row input[type="checkbox"]:not(.settings-toggle-input),
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+}
+input[type="checkbox"]:checked { background: var(--accent); }
+input[type="checkbox"]:checked::after {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2.5px solid var(--nb-ink);
+  border-bottom: 2.5px solid var(--nb-ink);
+  transform: translateY(-1px) rotate(-45deg);
+}
+.upload-area { border: var(--nb-bw-heavy) dashed var(--nb-ink); background: var(--nb-paper); }
+.upload-area:hover, .upload-area.dragover { border-color: var(--accent); background: var(--nb-sunken); }
+
+/* ── Modals / drawers / menus / tooltips / toasts ────────────
+   An overlay is the furthest thing from the page, so it gets the
+   deepest shadow (10px) and the heavy 3px edge. The scrim is ink
+   at 55% with no blur — brutalism has no frosted glass.
+   ──────────────────────────────────────────────────────────── */
+.modal-backdrop { background: rgba(17,17,17,0.55); backdrop-filter: none; }
+.modal {
+  background: var(--nb-paper);
+  border: var(--nb-bw-heavy) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-over);
+}
+.modal-header {
+  border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
+  background: var(--nb-paper);
+}
+.modal-footer {
+  border-top: var(--nb-bw-heavy) solid var(--nb-ink);
+  background: var(--nb-ground);
+}
+.settings-drawer {
+  background: var(--nb-ground);
+  border-left: var(--nb-bw-heavy) solid var(--nb-ink);
+  box-shadow: none;
+}
+.settings-drawer-header {
+  border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
+  background: var(--nb-paper);
+}
+.settings-drawer-header h2, .settings-drawer-title {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.dropdown-menu {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-card);
+}
+.dropdown-menu [role="menuitem"] { font-weight: 700; }
+.dropdown-menu [role="menuitem"]:hover { background: var(--nb-hot); color: var(--nb-on-hot); }
+.global-tooltip {
+  background: var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--nb-paper);
+  box-shadow: var(--nb-sh-btn);
+  font-weight: 700;
 }
 .toast {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
   border-left: 8px solid var(--accent);
-  box-shadow: 4px 4px 0 var(--nb-ink);
+  box-shadow: var(--nb-sh-card);
   color: var(--text);
-  font-weight: 600;
+  font-weight: 700;
 }
 .toast.toast-success { border-left-color: var(--success); }
 .toast.toast-error   { border-left-color: var(--danger); }
 .toast.toast-warning { border-left-color: var(--warning); }
 
-/* ── Settings drawer rows ────────────────────────────────── */
-/* css/settings-drawer.css paints these with rgba(255,255,255,.02) fills that
-   vanish on white, and with a pill toggle that reads as an accident next to
-   square everything-else. */
-.settings-section-heading { color: var(--text); border-bottom: 2px solid var(--nb-ink); letter-spacing: 0.14em; }
-.settings-action-row {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
+/* ── Settings drawer rows ────────────────────────────────────
+   css/settings-drawer.css paints these with rgba(255,255,255,.02)
+   fills that vanish on a light ground, and with a pill toggle
+   that reads as an accident next to square everything-else. On
+   the cream drawer ground each row becomes a white sheet with the
+   button-depth shadow, so the drawer looks like the rest of the
+   app instead of like a stock settings list.
+   ──────────────────────────────────────────────────────────── */
+.settings-section-heading {
   color: var(--text);
-  transition: none;
+  border-bottom: var(--nb-bw) solid var(--nb-ink);
+}
+.settings-action-row,
+.settings-toggle-row {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-btn);
+  color: var(--text);
+  font-weight: 700;
+  transition: var(--nb-press);
 }
 .settings-action-row:hover {
-  background: var(--accent);
+  background: var(--nb-hot);
   border-color: var(--nb-ink);
-  color: var(--accent-on);
+  color: var(--nb-on-hot);
+  transform: translate(2px, 2px);
+  box-shadow: var(--nb-sh-press);
 }
+.settings-action-row:active { transform: translate(3px, 3px); box-shadow: none; }
 .settings-action-row.is-danger:hover { background: var(--danger); border-color: var(--nb-ink); color: #fff; }
-.settings-toggle-row:hover { background: var(--panel-alt); }
-.settings-toggle-switch { background: var(--panel-bg); border: 2px solid var(--nb-ink); }
+.settings-toggle-row:hover { background: var(--nb-sunken); }
+
+/* The toggle: a hard-edged track with a square knob that slides.
+   Not a pill — the one radius this style will not spend. */
+.settings-toggle-switch {
+  background: var(--nb-inset);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
 .settings-toggle-knob { background: var(--nb-ink); }
-.settings-toggle-input:checked ~ .settings-toggle-knob { background: var(--accent-on); }
-.settings-toggle-switch:has(.settings-toggle-input:checked) { background: var(--accent); border-color: var(--nb-ink); }
-.settings-about-card { background: var(--panel-alt); border: 2px solid var(--nb-ink); }
+.settings-toggle-input:checked ~ .settings-toggle-knob { background: var(--nb-on-hot); }
+.settings-toggle-switch:has(.settings-toggle-input:checked) {
+  background: var(--nb-hot);
+  border-color: var(--nb-ink);
+}
+.settings-about-card {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-btn);
+}
 
 /* Theme picker (js/app/settings-drawer.js). The generic rules in
    css/settings-drawer.css already token-follow; these only harden the
    selected-state border and swap the soft ring for a hard offset shadow. */
-.settings-theme-row { border: 2px solid var(--nb-ink); background: var(--panel-bg); transition: none; }
-.settings-theme-row:hover { background: var(--panel-alt); }
+.settings-theme-row {
+  border: var(--nb-bw) solid var(--nb-ink);
+  background: var(--nb-paper);
+  box-shadow: var(--nb-sh-btn);
+  transition: var(--nb-press);
+}
+.settings-theme-row:hover {
+  background: var(--nb-sunken);
+  transform: translate(2px, 2px);
+  box-shadow: var(--nb-sh-press);
+}
 .settings-theme-row.is-active {
   border-color: var(--nb-ink);
-  background: var(--panel-bg);
-  box-shadow: 4px 4px 0 var(--accent);
+  background: var(--nb-paper);
+  box-shadow: 5px 5px 0 var(--accent);
+  transform: none;
 }
-.settings-theme-swatch { border: 2px solid var(--nb-ink); }
+.settings-theme-name { font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
+.settings-theme-swatch { border: var(--nb-bw) solid var(--nb-ink); }
 .settings-theme-check { color: var(--accent); }
 
-/* ── Tables ──────────────────────────────────────────────── */
-.weapons-table th { border-bottom: 2px solid var(--nb-ink); color: var(--text); }
-.weapons-table td { border-bottom: 1px solid var(--nb-ink); }
-.weapons-table tr:hover td { background: var(--panel-alt); }
-.weapon-type-ranged { color: var(--accent-dark); font-weight: 700; }
-.weapon-type-melee  { color: var(--danger); font-weight: 700; }
-.detail-section-title, .section-label, .weapons-section h4 {
+/* ── Tables ──────────────────────────────────────────────────
+   Head rule is ink (it separates two kinds of thing); the rules
+   between rows are a hairline in --nb-rule, because they separate
+   two of the SAME thing and 2px of black between every weapon
+   turns a datasheet into a spreadsheet.
+   ──────────────────────────────────────────────────────────── */
+.weapons-table th {
+  border-bottom: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
-  border-bottom: 2px solid var(--nb-ink);
 }
-.detail-header { border-bottom: 3px solid var(--nb-ink); }
+.weapons-table td { border-bottom: var(--nb-bw-hair) solid var(--nb-rule); }
+.weapons-table tr:hover td { background: var(--nb-sunken); }
+.weapon-type-ranged { color: var(--nb-blue); font-weight: 900; }
+.weapon-type-melee  { color: var(--nb-orange); font-weight: 900; }
 
 /* ── Scrollbars ──────────────────────────────────────────── */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: var(--panel-alt); border-left: 1px solid var(--nb-ink); }
-::-webkit-scrollbar-thumb { background: var(--nb-ink); border: 2px solid var(--panel-alt); }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--nb-ground); border-left: var(--nb-bw) solid var(--nb-ink); }
+::-webkit-scrollbar-thumb { background: var(--nb-ink); border: 2px solid var(--nb-ground); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* ── Misc hardcoded-dark cleanups ────────────────────────── */
@@ -670,27 +1096,71 @@ body[data-mode="build"]   .build-hero::after { display: none !important; }
 .unit-detail-content .detail-stat-cell,
 .unit-detail-content .detail-stat-pillar {
   background: var(--nb-inset);
-  border: 1px solid var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
 }
+/* The datasheet's section bands, at the specificity detail-redesign.css
+   uses. Solid ink bar, paper type — see "Section bands" above for why. */
 .unit-detail-content .detail-section-title,
 .unit-detail-content .weapons-section-banner {
-  border: 1px solid var(--nb-ink);
-  border-left: 4px solid var(--accent);
-  color: var(--text);
+  background: var(--nb-ink);
+  color: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  border-left: var(--nb-bw) solid var(--nb-ink);
+  padding: 4px 8px;
 }
 .unit-detail-content .detail-add-section {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: 5px 5px 0 var(--accent);
 }
+/* An ability is a sheet inside the datasheet: white, inked, and it casts
+   the button-depth shadow rather than the card-depth one, because it is
+   nested inside a card that is already casting the deeper one. */
 .unit-detail-content .detail-ability,
 .unit-detail-content .detail-section:not(.detail-section-primarch) .detail-ability {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-btn);
 }
 .unit-detail-content .detail-banner-full .detail-ordinal {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
   border-left: 6px solid var(--accent);
+}
+/* The hero: the unit's name is the biggest type in the app, so it gets
+   the ground rather than a tinted band, and the name carries the weight. */
+.unit-detail-content .detail-header,
+.unit-detail-datasheet .detail-header {
+  background: var(--nb-paper);
+  border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
+}
+/* detail-redesign.css slides a short accent underline under the name.
+   Same call as the panel headers: at 900 the weight already does it. */
+.unit-detail-content .detail-name::after { display: none !important; }
+.unit-detail-content .detail-faction {
+  background: var(--nb-ink);
+  color: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  text-decoration: none !important;
+}
+/* Weapon rows: hairline INSIDE the sheet, never ink — a 2px black rule
+   between every weapon turns a four-weapon datasheet into a grid. */
+.unit-detail-content .weapons-table td,
+.unit-detail-content .weapons-table tr:not(:last-child) td {
+  border-bottom: var(--nb-bw-hair) solid var(--nb-rule);
+}
+.unit-detail-content .weapons-table th {
+  border-bottom: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text);
+}
+.unit-detail-content .weapons-table tr:hover td { background: var(--nb-sunken); }
+/* The keyword chips under a weapon: hard blocks, and the dashed
+   underline that detail-redesign.css draws on them is not this style. */
+.unit-detail-content .weapon-kw-tag,
+.unit-detail-content .core-ability-tag {
+  border-style: solid !important;
+  text-decoration: none !important;
+  border-width: var(--nb-bw) !important;
 }
 
 /* ============================================================
@@ -705,19 +1175,27 @@ body[data-mode="build"]   .build-hero::after { display: none !important; }
    under the selected card.
    ============================================================ */
 .unit-card[class*="faction-"] {
-  transition: none;
-  border-left: 5px solid var(--nb-ink);
+  transition: var(--nb-press);
+  border-left: 6px solid var(--nb-ink);
   background-image: none;
+  box-shadow: var(--nb-sh-card);
 }
 .unit-card[class*="faction-"]:hover {
   border-left-color: var(--nb-ink);
-  box-shadow: 4px 4px 0 var(--nb-ink);
+  background: var(--nb-sunken);
+  transform: translate(4px, 4px);
+  box-shadow: var(--nb-sh-press);
 }
+/* Selected keeps its ink edge and re-draws the shadow in the faction
+   colour, at full depth, hovered or not — see "Cards" above. */
 .unit-card.selected[class*="faction-"],
 .unit-card.selected[class*="faction-"]:hover,
 .unit-card.selected:hover {
+  border-color: var(--nb-ink);
   border-left-color: var(--accent);
-  box-shadow: 4px 4px 0 var(--accent);
+  background: var(--card-bg);
+  box-shadow: 5px 5px 0 var(--accent);
+  transform: translate(0, 0);
 }
 
 /* ============================================================
@@ -786,16 +1264,16 @@ body.build-mode-enhanced .army-entry-name,
 @media (max-width: 820px) {
   .topbar { background: var(--topbar-bg) !important; }
   .mobile-tabbar {
-    background: var(--panel-alt);
-    border-top: 3px solid var(--nb-ink);
+    background: var(--nb-paper);
+    border-top: var(--nb-bw-heavy) solid var(--nb-ink);
   }
   .mobile-tabbar button:active { background: var(--card-hover); }
-  .mobile-tabbar .mtab-badge { background: var(--accent); color: var(--accent-on); border: 1px solid var(--nb-ink); }
+  .mobile-tabbar .mtab-badge { background: var(--accent); color: var(--accent-on); border: var(--nb-bw) solid var(--nb-ink); }
   .mobile-pts-pill {
-    background: var(--panel-alt);
-    border-bottom: 3px solid var(--nb-ink);
+    background: var(--nb-paper);
+    border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
   }
-  .mobile-pts-pill-bar { background: var(--nb-inset); border: 1px solid var(--nb-ink); }
+  .mobile-pts-pill-bar { background: var(--nb-inset); border: var(--nb-bw) solid var(--nb-ink); }
   .mobile-pts-pill-value.over { color: var(--danger); }
   .mobile-pts-pill-bar-fill.over { background: var(--danger); }
   .mobile-pts-pill-bar-fill.near { background: var(--warning); }
@@ -803,7 +1281,7 @@ body.build-mode-enhanced .army-entry-name,
   /* mobile.css re-declares these with the DEFAULT theme's fallback literal
      baked into the var() call, which is harmless — but it also reverts the
      add-section to a gradient, so restate the flat panel. */
-  .detail-add-section { background: var(--panel-bg); }
+  .detail-add-section { background: var(--nb-paper); }
 }
 
 /* ============================================================
@@ -829,16 +1307,16 @@ body.build-mode-enhanced .army-entry-name,
    are supposed to be absent until then.)
    ============================================================ */
 :root {
-  --panel-bg-2:    var(--panel-alt);
+  --panel-bg-2:    var(--nb-ground);
   --panel-bg-3:    var(--nb-inset);
-  --panel-bg-alt:  var(--panel-alt);
-  --surface:       var(--panel-bg);
-  --surface-2:     var(--panel-alt);
-  --surface2:      var(--panel-alt);
-  --input-bg:      var(--panel-bg);
-  --bg-input:      var(--panel-bg);
-  --bg-alt:        var(--panel-alt);
-  --hover-bg:      var(--card-hover);
+  --panel-bg-alt:  var(--nb-ground);
+  --surface:       var(--nb-paper);
+  --surface-2:     var(--nb-ground);
+  --surface2:      var(--nb-ground);
+  --input-bg:      var(--nb-sunken);
+  --bg-input:      var(--nb-sunken);
+  --bg-alt:        var(--nb-ground);
+  --hover-bg:      var(--nb-sunken);
   --muted:         var(--text-muted);
   --border-subtle: var(--nb-ink);
   --border-faint:  var(--nb-ink);
@@ -918,9 +1396,9 @@ body.build-mode-enhanced .army-entry-name,
 .yaab-opp-modal, .yaab-opp-preview, .yaab-mu-modal, .yaab-mu-section, .yaab-mu-side,
 .yaab-an-modal, .yaab-tour-tooltip, .auth-menu,
 .play-match-grid > div, .play-opponent-col, .play-chip-body {
-  background: var(--panel-bg);
-  border: 2px solid var(--nb-ink);
-  box-shadow: none;
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-btn);
   transition: none;
 }
 
@@ -930,15 +1408,19 @@ body.build-mode-enhanced .army-entry-name,
 .kt-modal, .crusade-modal, .action-center-sheet, .cmdp-modal, .cmdp-help-modal,
 .changelog-modal, .bug-report-modal, .points-override-modal, .qr-share-modal,
 .yaab-dp-modal, .yaab-opp-modal, .yaab-mu-modal, .yaab-an-modal {
-  border-width: 3px;
-  box-shadow: 10px 10px 0 var(--nb-ink);
+  border-width: var(--nb-bw-heavy);
+  box-shadow: var(--nb-sh-over);
 }
 /* Their headers and footers get the heavy rule the modal chassis uses. */
 .strat-head, .lore-header, .community-toolbar, .starter-toolbar,
 .al-tabs, .tp-notes-header, .kt-template-head, .crusade-section-head,
 .action-center-titlebar, .changelog-header, .yaab-mu-header, .yaab-opp-footer,
 .yaab-dc-sec-title, .yaab-syn-section-head, .mm-topbar, .mm-col-head {
-  border-bottom: 3px solid var(--nb-ink);
+  border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
+  background: var(--nb-paper);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 /* ── Controls ────────────────────────────────────────────────
@@ -956,10 +1438,11 @@ body.build-mode-enhanced .army-entry-name,
 .collection-dash-filter select, .topbar-army-name, .topbar-army-select,
 .topbar-points-limit-input, .build-hero-points-limit-input,
 body.build-mode-enhanced .army-entry-qty input {
-  background: var(--panel-bg);
+  background: var(--nb-sunken);
   color: var(--text);
-  border: 2px solid var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
   box-shadow: none;
+  font-weight: 600;
   transition: none;
 }
 .strat-search:focus, .community-search:focus, .starter-search:focus,
@@ -976,21 +1459,24 @@ body.build-mode-enhanced .army-entry-qty input {
 .lore-btn, .yaab-dp-btn, .kt-banner-action, .strat-use,
 .tp-generate, .starter-btn-surprise, .yaab-mu-roster-btn,
 .community-card-preview, .diff-picker-arrow, .crusade-row-remove {
-  background: var(--panel-bg);
+  background: var(--nb-paper);
   color: var(--text);
-  border: 2px solid var(--nb-ink);
-  box-shadow: 3px 3px 0 var(--nb-ink);
-  transition: none;
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-btn);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: var(--nb-press);
 }
 .mm-btn:hover, .mm-btn-round:hover, .mm-btn-sm:hover, .lore-btn:hover,
 .yaab-dp-btn:hover, .kt-banner-action:hover, .strat-use:hover,
 .tp-generate:hover, .starter-btn-surprise:hover, .yaab-mu-roster-btn:hover,
 .community-card-preview:hover {
-  background: var(--accent);
-  color: var(--accent-on);
+  background: var(--nb-hot);
+  color: var(--nb-on-hot);
   border-color: var(--nb-ink);
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 var(--nb-ink);
+  transform: translate(2px, 2px);
+  box-shadow: var(--nb-sh-press);
 }
 .mm-btn:active, .mm-btn-round:active, .lore-btn:active, .yaab-dp-btn:active,
 .kt-banner-action:active, .strat-use:active, .tp-generate:active {
@@ -1016,9 +1502,12 @@ body.build-mode-enhanced .army-entry-qty input {
 .strat-chip, .strat-tag, .community-tag-chip, .community-card-tag,
 .community-card-pill, .starter-card-pill, .kt-template-pill, .yaab-dc-preset,
 .yaab-dc-kwb, .yaab-mu-kw, .changelog-kind, .al-tab, .crusade-rank-pip {
-  background: transparent;
-  border: 1.5px solid var(--nb-ink);
+  background: var(--nb-inset);
+  border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   transition: none;
 }
 .strat-chip:hover, .community-tag-chip:hover, .yaab-dc-preset:hover { background: var(--panel-alt); }
@@ -1031,16 +1520,16 @@ body.build-mode-enhanced .army-entry-qty input {
 .build-hero-bar-wrap, .yaab-dp-readout, .crusade-xp-bar-wrap,
 .tp-progress, .al-day-summary, .yaab-mu-stat-strip {
   background: var(--nb-inset);
-  border: 1px solid var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
 }
 
 /* ── Module-specific leftovers ───────────────────────────── */
 /* Stratagems hardcodes six near-blacks rather than tokens. */
-.strat-chip { background: transparent; }
-.strat-chip:hover { background: var(--panel-alt); }
+.strat-chip { background: var(--nb-paper); box-shadow: var(--nb-sh-chip); }
+.strat-chip:hover { background: var(--nb-sunken); }
 .strat-card { background: var(--card-bg); }
-.strat-head, .strat-controls { background: var(--panel-alt); }
+.strat-head, .strat-controls { background: var(--nb-ground); }
 .strat-search { background: var(--panel-bg); }
 .strat-tag { background: transparent; }
 .strat-tag-timing { color: var(--nb-orange); border-color: var(--nb-orange); }
@@ -1050,8 +1539,8 @@ body.build-mode-enhanced .army-entry-qty input {
 .lore-modal { background: var(--panel-bg); border-top: 6px solid var(--accent); }
 .lore-body, .lore-footer, .lore-browse { background: var(--panel-bg); }
 .lore-divider { background: var(--nb-ink); height: 3px; }
-.lore-browse-item { background: var(--panel-alt); }
-.lore-browse-item:hover { background: var(--accent); color: var(--accent-on); }
+.lore-browse-item { background: var(--nb-paper); box-shadow: var(--nb-sh-btn); }
+.lore-browse-item:hover { background: var(--nb-hot); color: var(--nb-on-hot); }
 .lore-paragraph, .lore-tagline { color: var(--text); }
 
 /* Deployment planner: the battlefield is paper with an ink grid, not a
@@ -1069,9 +1558,10 @@ body.build-mode-enhanced .army-entry-qty input {
 
 /* Community + starter cards carry a pastel faction tint on the border. */
 .community-card, .starter-card { border-color: var(--nb-ink); }
+.community-card, .starter-card { box-shadow: var(--nb-sh-card); transition: var(--nb-press); }
 .community-card:hover, .starter-card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--nb-ink);
+  transform: translate(4px, 4px);
+  box-shadow: var(--nb-sh-press);
 }
 
 /* ============================================================
@@ -1143,3 +1633,560 @@ body.build-mode-enhanced .army-entry-qty input {
 }
 .yaab-dp-modal .yaab-dp-side { background: var(--panel-alt); }
 .yaab-dp-modal .yaab-dp-canvas-host { box-shadow: 6px 6px 0 var(--nb-ink); }
+
+/* ============================================================
+   SPECIFICITY FIXES
+   ------------------------------------------------------------
+   Everything below lost a cascade fight to a base stylesheet
+   and is restated at the weight needed to win it. Each one is
+   annotated with WHO it is losing to, because that is the fact
+   a future edit needs and the only way to tell a legitimate
+   `!important` here from a lazy one. Nothing new is expressed
+   in this section — every declaration is the same intent as its
+   equivalent above.
+   ============================================================ */
+
+/* css/aaa-polish.css:258 sets `border-color: var(--accent) !important` plus a
+   blurred double shadow on the selected card. The blur is exactly what this
+   style refuses, and the accent belongs in the OFFSET, not in the structure:
+   ink is the skeleton and it never changes colour. */
+.unit-card.selected,
+.unit-card.selected:hover,
+.unit-card.selected[class*="faction-"],
+.unit-card.selected[class*="faction-"]:hover {
+  border-color: var(--nb-ink) !important;
+  border-left-color: var(--accent) !important;
+  border-left-width: 6px !important;
+  box-shadow: 5px 5px 0 var(--accent) !important;
+  background: var(--card-bg) !important;
+  transform: none !important;
+}
+
+/* css/unit-card-themes.css:31 gives every faction card a translucent-white
+   left stripe and a per-faction gradient. Both were authored for a near-black
+   ground: on cream the gradient washes the sheet out to the same tone as the
+   desk it is lying on, which is what made the cards look like cut-outs rather
+   than paper. Ink stripe, flat white sheet. */
+.unit-card[class*="faction-"] {
+  background: var(--card-bg);
+  background-image: none;
+  border-left: 6px solid var(--nb-ink);
+}
+.unit-card[class*="faction-"]:hover {
+  background: var(--nb-sunken);
+  background-image: none;
+}
+
+/* css/detail-redesign.css:123 draws a 56x2 accent bar under the unit name at
+   0.7 opacity with a 1px radius — a soft rule under a 900 cap, which is the
+   one emphasis this style has no use for. The name already carries it. */
+.detail-name-underline, .detail-name-underline-gold { display: none !important; }
+
+/* The weapons table's column heads (RNG / A / BS / S / AP / D) live INSIDE
+   the section band, so once the band went solid ink they were mid-grey on
+   near-black. Anything sitting on the ink bar is paper, full stop. */
+.detail-section-title *,
+.unit-detail-content .detail-section-title *,
+.unit-detail-content .weapons-section-banner *,
+.weapons-section h4 * {
+  color: var(--nb-paper) !important;
+}
+
+/* css/reserves.css:13 builds the Reserves / Requisitions / Faction units /
+   All factions switch as a soft 6px-radius group on a 4%-white fill — the
+   one control in the Units column and the least brutalist object on the page.
+   Same construction as the topbar mode tabs: one stamped strip, subdivided
+   by ink, casting a chip shadow. */
+.reserves-view-toggle {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-chip);
+  padding: 0;
+}
+.reserves-view-btn {
+  border-right: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text-muted);
+  background: var(--nb-paper);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: none;
+}
+.reserves-view-btn:last-child { border-right: 0; }
+.reserves-view-btn:hover { background: var(--nb-sunken); color: var(--text); }
+.reserves-view-btn.is-active,
+.reserves-view-btn[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-on);
+}
+.reserves-view-btn.is-active *,
+.reserves-view-btn[aria-selected="true"] * { color: var(--accent-on) !important; }
+.reserves-view-count {
+  background: var(--nb-inset);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text);
+  font-weight: 900;
+}
+
+/* css/hero-state.css:110 — the "Ctrl K" affordance in the search bar. It was
+   a tinted lozenge; a keycap in this style is a stamped block. */
+.yaab-kbd-hint {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text);
+  box-shadow: var(--nb-sh-chip);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.yaab-kbd-hint:hover { background: var(--nb-hot); color: var(--nb-on-hot); }
+
+/* css/topbar.css sets the action buttons at weight 500 on the BUTTON, so the
+   label rule further up (which targets the inner span) never applied to the
+   ones that render their text directly. */
+.topbar-action-btn, .topbar-action-label {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+/* Weapon-ability chips carry meaning in their COLOUR (blue = ranged-ish,
+   orange = a rule that triggers, red = a rule that kills), and that meaning
+   is worth keeping — but a row of chips each outlined in a different hue
+   reads as decoration. Ink edge for every one of them, colour in the type. */
+.weapon-kw-tag, .strat-tag, .changelog-kind,
+.unit-detail-content .weapon-kw-tag {
+  border-color: var(--nb-ink) !important;
+  background: var(--nb-paper);
+}
+
+/* css/style.css:550 tints the selected army entry; the row treatment above
+   is the intent, and the accent belongs on its left edge where it lines the
+   entries up into a readable column. */
+.army-entry.selected, .army-entry.is-selected {
+  background: var(--nb-sunken);
+  border-color: var(--nb-ink);
+  border-left: 6px solid var(--accent);
+}
+
+/* css/detachments.css builds the Detachments list with 1px hairlines, a 4px
+   radius and a custom checkbox drawn as a scaling ::before dot. It is a LIST
+   of rows, so it follows the row rule rather than the card rule: ink edge,
+   warm hover, no shadow — and the points badge is a stamped block, not a
+   ghost outline. The selected row takes the accent on its left edge, which is
+   what lines a column of them up. */
+.detachment-row {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  transition: none;
+}
+.detachment-row:hover { border-color: var(--nb-ink); background: var(--nb-sunken); }
+.detachment-row.selected {
+  background: var(--nb-sunken);
+  border-color: var(--nb-ink);
+  border-left: 6px solid var(--accent);
+}
+.detachment-row.viewing { border-color: var(--nb-ink); background: var(--nb-sunken); }
+.detachment-row-name { font-weight: 700; }
+.detachment-row.selected .detachment-row-name { font-weight: 900; }
+.detachment-row-pts,
+.detachment-row.selected .detachment-row-pts {
+  background: var(--nb-inset);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.detachment-row.selected .detachment-row-pts { background: var(--accent); color: var(--accent-on); }
+/* The checkbox: same hard square as everywhere else. `::before` is the base
+   file's scaling dot — replaced by the tick drawn in the Forms block. */
+.detachment-row-cb {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
+.detachment-row-cb::before { display: none !important; }
+.detachment-row-cb:hover { border-color: var(--nb-ink); background: var(--nb-sunken); }
+.detachment-row-cb:checked { background: var(--accent); border-color: var(--nb-ink); }
+.detachments-group-label {
+  color: var(--text);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.detachments-footer { border-top: var(--nb-bw) solid var(--nb-ink); }
+.detachments-total {
+  background: var(--accent);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--accent-on);
+  font-weight: 900;
+}
+
+/* css/detail-redesign.css:75-108 gives five section bands a meaning-carrying
+   hue — blue Leader, green Led By, gold Stratagems, bronze Wargear, gold-leaf
+   Primarch — and expresses each as a 6%-alpha wash with a 3px coloured left
+   bar. The MEANING is worth keeping; the wash is not: at 6% on either ground
+   it is a smudge, and a 3px stripe is the softest divider this style has.
+   Same hue, stated as a SOLID BLOCK with an ink edge. Every one of the five
+   is a light pastel, so the type on them is ink-black in both appearances —
+   the same reason --nb-on-hot does not invert.
+   The `.detail-section >` variants exist because that file restates the left
+   bar at child-combinator specificity 200 lines later. */
+.unit-detail-content .detail-section-title-leader,
+.unit-detail-content .detail-section > .detail-section-title-leader { --nb-band: #5ab5e8; }
+.unit-detail-content .detail-section-title-ledbby,
+.unit-detail-content .detail-section > .detail-section-title-ledbby { --nb-band: #a8e88a; }
+.unit-detail-content .detail-section-title-strat,
+.unit-detail-content .detail-section > .detail-section-title-strat { --nb-band: #f5c842; }
+.unit-detail-content .detail-section-title-wargear,
+.unit-detail-content .detail-section > .detail-section-title-wargear { --nb-band: #cdb488; }
+.unit-detail-content .detail-section-title-primarch { --nb-band: #e7c87a; }
+
+.unit-detail-content .detail-section-title-leader,
+.unit-detail-content .detail-section-title-ledbby,
+.unit-detail-content .detail-section-title-strat,
+.unit-detail-content .detail-section-title-wargear,
+.unit-detail-content .detail-section-title-primarch,
+.unit-detail-content .detail-section > .detail-section-title-leader,
+.unit-detail-content .detail-section > .detail-section-title-ledbby,
+.unit-detail-content .detail-section > .detail-section-title-strat,
+.unit-detail-content .detail-section > .detail-section-title-wargear {
+  background: var(--nb-band);
+  color: #111111;
+  border: var(--nb-bw) solid var(--nb-ink);
+  border-left: var(--nb-bw) solid var(--nb-ink);
+  border-bottom: var(--nb-bw) solid var(--nb-ink);
+  padding: 4px 8px;
+}
+.unit-detail-content .detail-section-title-leader *,
+.unit-detail-content .detail-section-title-ledbby *,
+.unit-detail-content .detail-section-title-strat *,
+.unit-detail-content .detail-section-title-wargear *,
+.unit-detail-content .detail-section-title-primarch * { color: #111111 !important; }
+/* The Primarch section draws its own box around the band; keep them one object. */
+.unit-detail-content .detail-section-primarch {
+  border: var(--nb-bw) solid var(--nb-ink);
+  background: var(--nb-paper);
+  box-shadow: var(--nb-sh-btn);
+}
+
+/* css/atmosphere.css:8 tiles a white hex-mesh at 3.5% opacity behind every
+   panel body. On a near-black ground it is atmosphere; on cream it is a
+   smudge, and in either case it is texture — this style's ground is flat
+   stock and the interest comes from the ink on it, not from the paper. */
+.panel-body { background-image: none !important; }
+
+/* css/allies.css:50 — the "ALLY · <detachment>" tag under an allied unit's
+   name. Outlined lozenge in the base; a stamped block here, same as the
+   faction tag it sits beside. Blue is the app's allied colour and it means
+   something, so it stays — as the FILL. */
+.detail-ally-tag {
+  background: var(--nb-blue);
+  color: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+:root[data-yaab-theme="brutalist-dark"] .detail-ally-tag { color: #111111; }
+.detail-ally-tag * { color: inherit !important; }
+/* css/allies.css:7 marks allied unit cards with a corner ::after ribbon. */
+.unit-card.unit-card-ally::after {
+  background: var(--nb-blue);
+  color: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
+:root[data-yaab-theme="brutalist-dark"] .unit-card.unit-card-ally::after { color: #111111; }
+
+/* ── The army roster rows ────────────────────────────────────
+   css/build-mode.css:462 builds the entry as a 1px card with an
+   8px radius, a glowing 3px accent stripe and a blurred lift on
+   hover. It is a ROW in a list, so it follows the row rule: ink
+   edge, warm hover, and the accent moved into a solid left block
+   that lines the column up. Qualified with `body.build-mode-
+   enhanced` because that is the specificity the source uses.
+   ──────────────────────────────────────────────────────────── */
+body.build-mode-enhanced .army-entry,
+.army-entry-card {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: none;
+  transition: none;
+}
+body.build-mode-enhanced .army-entry:hover,
+.army-entry-card:hover {
+  border-color: var(--nb-ink);
+  background: var(--nb-sunken);
+  transform: none;
+  box-shadow: none;
+}
+/* The stripe is the entry's faction bar. Solid block, no glow, no radius. */
+.army-entry-stripe {
+  width: 6px;
+  background: var(--accent);
+  box-shadow: none;
+  border-right: var(--nb-bw) solid var(--nb-ink);
+}
+.army-entry-handle-dot { background: var(--nb-ink); }
+body.build-mode-enhanced .army-entry-name,
+body.build-mode-enhanced .army-entry-title { font-weight: 900; letter-spacing: -0.01em; }
+.army-entry-stat-label {
+  color: var(--text-muted);
+  opacity: 1;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+body.build-mode-enhanced .army-entry-pts { color: var(--text); font-weight: 900; }
+body.build-mode-enhanced .army-entry-total { color: var(--accent-dark); font-weight: 900; }
+:root[data-yaab-theme="brutalist-dark"] body.build-mode-enhanced .army-entry-total { color: var(--accent); }
+body.build-mode-enhanced .army-entry-qty input {
+  background: var(--nb-sunken);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text);
+  font-weight: 900;
+}
+body.build-mode-enhanced .army-entry-qty input:focus {
+  border-color: var(--nb-ink);
+  background: var(--nb-paper);
+  box-shadow: var(--nb-sh-chip);
+}
+body.build-mode-enhanced .army-entry-remove {
+  border: var(--nb-bw) solid var(--nb-ink);
+  background: var(--nb-paper);
+  color: var(--text);
+}
+body.build-mode-enhanced .army-entry-remove:hover { background: var(--danger); color: #fff; }
+
+/* css/validation.css — the composition-warnings banner. A 10%-alpha amber
+   wash with a 3px left bar and a 6px radius; here it is a white sheet with
+   a solid WARNING block down its left edge, which is louder at a glance and
+   is the same object as the accent bar on a selected row. */
+.validation-banner {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  border-left: 8px solid var(--warning);
+  color: var(--text);
+  box-shadow: var(--nb-sh-btn);
+}
+.validation-banner-title {
+  color: var(--text);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+.validation-banner-list li { color: var(--text); }
+
+/* ============================================================
+   PLAY MODE ("Game Day")
+   ------------------------------------------------------------
+   The one mode with no panel chassis of its own — it sits
+   straight on the page ground and draws its structure from
+   hairlines and an underlined tab. Both go: the tab strip
+   becomes the same stamped segmented control the topbar and the
+   Units column already use, and its sections get sheets to sit
+   on. css/play-mode.css hardcodes white-alpha for every one of
+   these, which is why they had to be restated rather than
+   inherited.
+   ============================================================ */
+.play-tabs {
+  border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
+  gap: 12px;
+}
+.play-tabs-title {
+  font-family: var(--font);
+  color: var(--text-muted);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+.play-tabs-strip { gap: 0; }
+.play-tab {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  border-right-width: 0;
+  border-bottom: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text-muted);
+  font-weight: 900;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0;
+  transition: none;
+}
+.play-tab:last-child { border-right-width: var(--nb-bw); }
+.play-tab:hover { color: var(--text); background: var(--nb-sunken); }
+.play-tab.is-on {
+  color: var(--accent-on);
+  background: var(--accent);
+  border-bottom-color: var(--nb-ink);
+}
+.play-tab.is-on * { color: var(--accent-on) !important; }
+
+.play-hero-title, .play-section-head h3, .play-drawer-title {
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+.play-section {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-card);
+}
+.play-empty, .play-cta, .play-empty-mini {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-btn);
+}
+/* Every button in the cockpit is pressed at the table, often in a hurry —
+   they get the full button treatment rather than the flat fill they had. */
+.play-btn, .play-btn-primary, .play-btn-ghost, .play-chip-use, .play-drawer-toggle {
+  background: var(--nb-paper);
+  color: var(--text);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-btn);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: var(--nb-press);
+}
+.play-btn-primary { background: var(--accent); color: var(--accent-on); }
+.play-btn-primary * { color: var(--accent-on) !important; }
+.play-btn:hover, .play-btn-primary:hover, .play-btn-ghost:hover,
+.play-chip-use:hover, .play-drawer-toggle:hover {
+  transform: translate(2px, 2px);
+  box-shadow: var(--nb-sh-press);
+}
+.play-btn:active, .play-btn-primary:active { transform: translate(3px, 3px); box-shadow: none; }
+.play-help, .play-hint-quiet { color: var(--text-muted); }
+.play-drawer-head { border-bottom: var(--nb-bw) solid var(--nb-ink); background: var(--nb-paper); }
+.play-drawer-empty { color: var(--text-muted); }
+.play-drawer-count, .play-drawer-cp {
+  background: var(--accent);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--accent-on);
+  font-weight: 900;
+}
+.play-drawer-cp-idle { background: var(--nb-inset); color: var(--text); }
+.play-cp-dot, .play-match-cp-dots span {
+  background: var(--accent);
+  border: var(--nb-bw-hair) solid var(--nb-ink);
+}
+.play-match-label { font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; }
+.play-match-cp-val, .play-match-turn-val, .play-match-wounds-val,
+.play-match-vp-you, .play-match-vp-opp { font-weight: 900; font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   COLLECT MODE
+   ------------------------------------------------------------
+   Mostly already right, because its cards ride the shared
+   chassis. What is left is the three things it builds itself:
+   the sub-tab strip, the faction rail, and the five-way paint
+   status control on every card — which is the densest cluster
+   of buttons in the app and was still drawing 1px hairlines.
+   ============================================================ */
+.collect-subtabs {
+  border: var(--nb-bw) solid var(--nb-ink);
+  background: var(--nb-paper);
+  box-shadow: var(--nb-sh-chip);
+  padding: 0;
+}
+.collect-subtab {
+  border-right: var(--nb-bw) solid var(--nb-ink);
+  background: var(--nb-paper);
+  color: var(--text-muted);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: none;
+}
+.collect-subtab:last-child { border-right: 0; }
+.collect-subtab:hover { background: var(--nb-sunken); color: var(--text); }
+
+.collect-faction-row {
+  border: var(--nb-bw) solid var(--nb-ink);
+  background: var(--nb-paper);
+  transition: none;
+}
+.collect-faction-row:hover { background: var(--nb-sunken); }
+.collect-faction-row.is-active, .collect-faction-row.is-on {
+  background: var(--nb-sunken);
+  border-left: 6px solid var(--accent);
+}
+.collect-faction-name { font-weight: 700; }
+.collect-faction-count { font-weight: 900; font-variant-numeric: tabular-nums; }
+.collect-faction-dot { border: var(--nb-bw-hair) solid var(--nb-ink); }
+.collect-faction-bar-wrap, .collection-dash-faction-bar-wrap {
+  background: var(--nb-inset);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
+.collect-faction-bar, .collection-dash-faction-bar { background: var(--accent); }
+
+/* The paint-status control: five buttons that are one object. */
+.collect-unit-status-row .collection-status-btn,
+.collection-status-btn {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: none;
+}
+.collection-status-btn:hover { background: var(--nb-sunken); }
+.collection-status-btn.is-on, .collection-status-btn.active,
+.collection-status-btn[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--nb-ink);
+}
+.collection-status-btn.is-on *, .collection-status-btn[aria-pressed="true"] * {
+  color: var(--accent-on) !important;
+}
+.collect-unit-card { box-shadow: var(--nb-sh-card); }
+.collect-unit-name { font-weight: 900; letter-spacing: -0.01em; }
+.collect-unit-pts { font-weight: 900; font-variant-numeric: tabular-nums; }
+.collect-filter-chip {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-chip);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.collect-filter-chip.is-on, .collect-filter-chip.active {
+  background: var(--accent);
+  color: var(--accent-on);
+}
+.collect-empty, .collect-detail-empty, .collection-dash-empty { color: var(--text-muted); }
+
+/* css/theming-pass.css:157 pins two 32px accent corner-brackets to the
+   viewport in Play mode — a HUD flourish that belongs to the grimdark
+   cockpit. This style's frame is the topbar rule and the panel edges; a
+   floating bracket that lines up with nothing is decoration, and the "kill
+   rounding/glows/atmosphere" block above already refuses its siblings. */
+body[data-mode="play"] #play-mode > .play-shell::before,
+body[data-mode="play"] #play-mode > .play-shell::after { display: none !important; }
+
+/* css/collect-mode.css:179 — the selected faction in the rail. `.active`,
+   not `.is-active`; the accent goes on the left edge, same as every other
+   selected row in the app. */
+.collect-faction-row.active {
+  background: var(--nb-sunken);
+  border-color: var(--nb-ink);
+  border-left: 6px solid var(--accent);
+}
+.collect-faction-row.active .collect-faction-name { font-weight: 900; }
+
+/* css/collect-mode.css:351 — Collect's own search box, which does not share
+   a class with the roster's. Sunken like every other field. */
+.collect-search, .collect-search:not(:focus) {
+  background: var(--nb-sunken);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--text);
+  font-weight: 600;
+}
+.collect-search:focus {
+  background: var(--nb-paper);
+  border-color: var(--nb-ink);
+  box-shadow: var(--nb-sh-btn);
+  outline: none;
+}
+.collect-search::placeholder { color: var(--text-faint); font-weight: 600; }

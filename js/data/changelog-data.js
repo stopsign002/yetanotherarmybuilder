@@ -26,9 +26,36 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.20-1',
-    lastUpdated: '2026-08-20T00:00:00Z',
+    version:     '2026.08.20-2',
+    lastUpdated: '2026-08-20T20:30:00Z',
     entries: [
+      {
+        date: '2026-08-20', kind: 'change',
+        title: 'Neo-Brutalist: a proper redraw, object by object',
+        description:
+          'The two Neo-Brutalist themes had the right idea and the wrong ' +
+          'values, so every box has been gone over against the reference ' +
+          'design the look is meant to match. The biggest one: the page is ' +
+          'now a cream ground with white cards laid on it, instead of white ' +
+          'on white \u2014 cards, panels and rows had nothing to stand out ' +
+          'against, and nothing to cast a shadow onto, so the whole app read ' +
+          'as a wireframe. Cards now sit 5px off the page on a hard black ' +
+          'shadow and press down when you hover them; buttons and chips do ' +
+          'the same at their own depths. The type is Archivo now rather than ' +
+          'borrowed Helvetica, so the heavy weights the style is built on ' +
+          'actually render \u2014 names are set black and tight, labels are ' +
+          'black caps, and the statlines and points use real tabular figures ' +
+          'instead of a monospace that made the datasheets look like a ' +
+          'terminal. Keyword tags, faction tags and points badges are stamped ' +
+          'blocks instead of hairline outlines; datasheet section bands ' +
+          '(Ranged Weapons, Wargear, Core Abilities) are solid bars; form ' +
+          'fields are sunken and warm so you can tell at a glance what you ' +
+          'type into and what you press. Also fixed a pile of surfaces that ' +
+          'had stayed soft: the Settings drawer, the Detachments list, the ' +
+          'roster entries and their warnings banner, the Reserves/Requisitions ' +
+          'switch, Game Day\u2019s tab strip and buttons, and Collect\u2019s ' +
+          'paint-status controls. The Grimdark theme is untouched.',
+      },
       {
         date: '2026-08-20', kind: 'fix',
         title: 'Neo-Brutalist themes: the rest of the app',
