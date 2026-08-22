@@ -1195,7 +1195,17 @@ input[type="checkbox"]:checked::after {
    ============================================================ */
 .unit-card[class*="faction-"] {
   transition: var(--nb-press);
-  border-left: 6px solid var(--nb-ink);
+  /* --nb-bw, NOT 6px. This started as an override of the 3px translucent
+     stripe unit-card-themes.css puts on every faction card, and inherited a
+     width from it rather than from this theme. The result was a card whose
+     left edge was 3x the other three — 6px against `--nb-bw: 2px`, which this
+     file's own token comment calls "every component" — so a resting card read
+     as having a heavy bar down one side rather than an even ink frame. The
+     stripe is not the faction signal here anyway: per the note above, the
+     faction colour lives in the offset shadow under a selected card, and the
+     accent moment on hover/selected is the ::before overlay, which is
+     unaffected by this and still 6px. */
+  border-left: var(--nb-bw) solid var(--nb-ink);
   background-image: none;
   box-shadow: var(--nb-sh-card);
 }
@@ -1206,12 +1216,14 @@ input[type="checkbox"]:checked::after {
   box-shadow: var(--nb-sh-press);
 }
 /* Selected keeps its ink edge and re-draws the shadow in the faction
-   colour, at full depth, hovered or not — see "Cards" above. */
+   colour, at full depth, hovered or not — see "Cards" above. The left edge
+   stays ink like the other three; the accent arrives as the offset shadow and
+   the ::before stripe. Mirrors the !important block near the end of this file
+   — if you change one, change both. */
 .unit-card.selected[class*="faction-"],
 .unit-card.selected[class*="faction-"]:hover,
 .unit-card.selected:hover {
   border-color: var(--nb-ink);
-  border-left-color: var(--accent);
   background: var(--card-bg);
   box-shadow: 5px 5px 0 var(--accent);
   transform: translate(0, 0);
@@ -1694,14 +1706,21 @@ body.build-mode-enhanced .army-entry-qty input {
 /* css/aaa-polish.css:258 sets `border-color: var(--accent) !important` plus a
    blurred double shadow on the selected card. The blur is exactly what this
    style refuses, and the accent belongs in the OFFSET, not in the structure:
-   ink is the skeleton and it never changes colour. */
+   ink is the skeleton and it never changes colour.
+
+   That last sentence is the rule, and this block used to break it: it set
+   `border-left-color: var(--accent)` and `border-left-width: 6px`, so
+   selecting a card put back the very uneven left edge the resting state was
+   fixed for. The accent has two places to speak here already — the 5px offset
+   shadow below, and the ::before overlay, which is 6px and opaque while the
+   card is selected. Those give the accent stripe without deforming the frame,
+   so the border stays 2px ink on all four sides. */
 .unit-card.selected,
 .unit-card.selected:hover,
 .unit-card.selected[class*="faction-"],
 .unit-card.selected[class*="faction-"]:hover {
   border-color: var(--nb-ink) !important;
-  border-left-color: var(--accent) !important;
-  border-left-width: 6px !important;
+  border-width: var(--nb-bw) !important;
   box-shadow: 5px 5px 0 var(--accent) !important;
   background: var(--card-bg) !important;
   transform: none !important;
@@ -1711,12 +1730,38 @@ body.build-mode-enhanced .army-entry-qty input {
    left stripe and a per-faction gradient. Both were authored for a near-black
    ground: on cream the gradient washes the sheet out to the same tone as the
    desk it is lying on, which is what made the cards look like cut-outs rather
-   than paper. Ink stripe, flat white sheet. */
+   than paper. Ink edge, flat white sheet.
+
+   This is the SECOND `.unit-card[class*="faction-"]` block in this file (the
+   other is under PER-FACTION UNIT CARDS above) and, being later, it is the one
+   that wins. Both carried `border-left: 6px` and both had to change — fixing
+   only the first looks correct in the source and changes nothing on screen.
+   `--nb-bw` keeps the card's four edges equal; 6px made the left one 3x the
+   others and read as a bar stuck to the side of the sheet. Note the other 6px
+   left borders in this file (.detail-ordinal, .strat-section,
+   .army-entry.selected) are deliberate and stay: they are `var(--accent)`
+   stripes marking a row, not structural ink on a box. */
 .unit-card[class*="faction-"] {
   background: var(--card-bg);
   background-image: none;
-  border-left: 6px solid var(--nb-ink);
+  border-left: var(--nb-bw) solid var(--nb-ink);
 }
+
+/* css/allies.css:29 tints an allied card's whole border a translucent teal,
+   authored for the near-black ground. Left alone here it produced the same
+   uneven-edge effect the border-left fix above was for, just in colour rather
+   than width: the theme re-inks the LEFT edge, so an ally card ended up with
+   three washed-out teal sides and one black one. Ink for structure — the ALLY
+   corner badge is already restyled to --nb-blue above and is what says "from
+   another codex". Stated at the specificity allies.css uses, and again with
+   the faction attribute, because unit-card-themes.css qualifies that far. */
+.unit-card.unit-card-ally,
+.unit-card.unit-card-ally[class*="faction-"],
+.unit-card.unit-card-legends,
+.unit-card.unit-card-legends[class*="faction-"] {
+  border-color: var(--nb-ink);
+}
+
 .unit-card[class*="faction-"]:hover {
   background: var(--nb-sunken);
   background-image: none;

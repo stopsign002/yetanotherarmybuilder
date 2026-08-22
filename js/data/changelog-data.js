@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.22-1',
-    lastUpdated: '2026-08-22T00:00:00Z',
+    version:     '2026.08.22-2',
+    lastUpdated: '2026-08-22T13:30:00Z',
     entries: [
+      {
+        date: '2026-08-22', kind: 'fix',
+        title: 'Neo-Brutalist: unit cards had one heavy edge',
+        description:
+          'On both Neo-Brutalist themes every unit card was drawn with a black ' +
+          'bar down its left side three times thicker than its other three ' +
+          'edges, so a card looked like it had a shadow stuck to one side ' +
+          'instead of an even inked frame. The left edge now matches the top, ' +
+          'right and bottom, the way every other box in the theme already did. ' +
+          'The faction colour still appears exactly where it did before — as ' +
+          'the offset shadow under a selected card, and as the accent stripe ' +
+          'that slides in when you hover or select one.',
+      },
       {
         date: '2026-08-22', kind: 'change',
         title: 'The app starts noticeably faster',
