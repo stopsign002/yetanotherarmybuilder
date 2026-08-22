@@ -429,17 +429,34 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   }
 }
+/* Ten call sites in js/ui/cards-mode.js, several of them destructive ("Delete
+   preset", "Reset typography", "Reset to defaults"), all of them rendered as
+   bare underlined words. They are controls and they get control chrome —
+   quieter than .cards-btn below so they still read as the secondary row, but
+   a box you can see and aim at. Hardcoded darks rather than tokens on purpose:
+   the whole cards sidebar paints its own dark ground in every theme
+   (app/CLAUDE.md), so these have to match that chrome, not the page's. */
 .cards-link-btn {
-  background: transparent;
-  border: 0;
-  color: var(--accent, #c8c8c8);
+  background: #20232a;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  color: #cfd4de;
   font-size: 12px;
-  padding: 4px 12px;
+  font-weight: 600;
+  padding: 5px 10px;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
-.cards-link-btn:hover { color: #fff; }
+.cards-link-btn:hover:not(:disabled) {
+  background: #2a2e36;
+  border-color: #3f4550;
+  color: #fff;
+}
+.cards-link-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+/* Deleting a preset is not the same press as renaming one. The inline colour
+   in cards-mode.js already tints the label; give the box the same warning. */
+#cards-preset-delete { border-color: #573233; background: #2b2124; }
+#cards-preset-delete:hover:not(:disabled) { background: #3a2729; border-color: #7a4244; }
 
 /* Footer: print button */
 .cards-side-foot {

@@ -2621,7 +2621,7 @@
           <span class="cards-field-label">Upload new image</span>
           <input type="file" id="cards-back-file" accept="image/*" class="cards-file">
           ${cardBack.name ? `<div class="cards-help" style="margin:4px 0 0">Active: ${esc(cardBack.name)}</div>` : ''}
-          ${cardBack.src ? `<button type="button" class="cards-link-btn" id="cards-back-clear" style="padding:4px 0">Use no image</button>` : ''}
+          ${cardBack.src ? `<button type="button" class="cards-link-btn" id="cards-back-clear">Use no image</button>` : ''}
         </div>
         ${renderImageGallery()}
         <div class="cards-field" style="padding:8px 12px 0">

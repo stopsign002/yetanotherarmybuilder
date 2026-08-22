@@ -330,6 +330,7 @@
 }
 .collect-unit-name {
   flex: 1 1 auto;
+  min-width: 0;
   font-weight: 500;
   font-size: 13px;
   color: var(--text, #e0e0e0);
@@ -337,7 +338,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The points are the fixed half of this row and the name is the elastic one.
+   Without these two the pts box is shrinkable and "190 pts" breaks at its
+   space onto a second line next to a long name — which makes that one card
+   taller than the rest of its grid row. Ellipsising the NAME is the intended
+   behaviour (js/ui/collect-mode.js puts the full text in a title), but only
+   the name. */
 .collect-unit-pts {
+  flex: 0 0 auto;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
   font-size: 12px;
   color: var(--text-muted, #a8a8a8);

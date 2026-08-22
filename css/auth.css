@@ -128,17 +128,32 @@
   margin-top: 10px;
 }
 
+/* "Create an account" and "Forgot password? Use recovery code" are real
+   actions sitting directly under a solid "Sign in" — they are BUTTONS, not
+   footnotes, and they wear the same box, height and padding as the primary
+   they sit beside, with a quieter fill so they do not compete for the press.
+   Every value is a token, so all three themes are covered by construction
+   (the brutalist sheet loads later and restates .btn's border + hard shadow
+   over the top, which is exactly what that theme's buttons should look like).
+
+   The `white-space: normal` is load-bearing: .btn is nowrap, and the recovery
+   label is wider than the modal, so it used to run straight out through the
+   right border (scrollWidth 386 vs clientWidth 366 on desktop). It wraps
+   inside the box now instead of overflowing it. */
 .btn-link {
-  background: transparent;
-  border: 0;
-  color: var(--accent, #d4a356);
-  text-decoration: underline;
+  background: var(--panel-alt, #28282f);
+  border: 1px solid var(--border-light, #4a4a54);
+  color: var(--text, #e0e0e0);
+  text-decoration: none;
   cursor: pointer;
-  padding: 4px 0;
-  text-align: left;
-  font: inherit;
+  text-align: center;
+  white-space: normal;
 }
-.btn-link:hover { filter: brightness(1.15); }
+.btn-link:hover {
+  background: var(--card-hover, #34343c);
+  border-color: var(--accent, #d4a356);
+  color: var(--text, #e0e0e0);
+}
 
 /* ── Recovery code display ───────────────────────────────────────── */
 .auth-recovery-code {

@@ -381,7 +381,8 @@
         html +=
           '<div class="unit-card collect-unit-card collection-' + status + '" data-unit-id="' + htmlEsc(u.id) + '">' +
             '<div class="collect-unit-card-head">' +
-              '<span class="collect-unit-name">' + htmlEsc(u.name || 'Unit') + '</span>' +
+              '<span class="collect-unit-name" title="' + htmlEsc(u.name || 'Unit') + '">' +
+                htmlEsc(u.name || 'Unit') + '</span>' +
               '<span class="collect-unit-pts">' + htmlEsc(pts) + '</span>' +
             '</div>' +
             '<div class="collect-unit-status-row">' +

@@ -899,8 +899,15 @@ input[type="checkbox"]:checked::after {
 .search-clear:hover { background: var(--accent); color: var(--accent-on); }
 .detail-section-title-primarch { color: var(--text); border-bottom-color: var(--nb-ink); }
 .detail-section-primarch { border: 2px solid var(--nb-ink); background: var(--panel-alt); }
-.strat-cp, .stratagem-cp-hero { color: var(--accent-dark); }
-:root[data-yaab-theme="brutalist-dark"] .strat-cp,
+/* .stratagem-cp-hero is bare gold text on the panel, so it needs re-pointing
+   at an accent that reads on this ground. .strat-cp is NOT the same thing: it
+   is a chip FILLED with var(--accent), so re-colouring its type to another
+   shade of the accent painted it on itself — 1.82 on the light variant and
+   1.00 (literally invisible) on the dark one. It already had the right answer
+   in css/stratagems.css: var(--accent-on), which js/app/state.js recomputes
+   per faction from the accent's luminance, so it is correct for every faction
+   by construction rather than for the one that was screenshotted. */
+.stratagem-cp-hero { color: var(--accent-dark); }
 :root[data-yaab-theme="brutalist-dark"] .stratagem-cp-hero { color: var(--accent); }
 .detail-section-title-leader, .detail-section-title-ledbby { color: var(--text); border-bottom-color: var(--nb-ink); }
 .toolbar-status::before { border-radius: 50% !important; }
@@ -1040,7 +1047,6 @@ input[type="checkbox"]:checked::after {
 .al-row-print .al-icon,
 .al-row-undo .al-icon,
 .al-row-redo .al-icon,
-.collection-status-btn.collection-status-unpainted.active,
 .panel-header h2:hover { color: var(--text); }
 
 /* Filter chips: the collection / favourites variants each ship their own
@@ -1082,7 +1088,20 @@ input[type="checkbox"]:checked::after {
 .play-btn-ghost,
 .play-empty p, .play-cta p,
 .play-match-phase,
-.play-drawer-count { color: var(--text-muted); }
+.play-drawer-count,
+/* These five were missed the first time round. Their CONTAINERS are repainted
+   to --nb-paper further down this file, so on the light variant they were
+   white-alpha on white: the Match tiles' CP / Turn / Score / Models-alive
+   captions and "No opponent loaded yet." both measured 1.00 — not low
+   contrast, invisible. Found by sweeping css/play-mode.css for every
+   `color: rgba(255,255,255,…)` rather than by chasing the two that were
+   reported, which is why the score separator, the drawer caret and the chip
+   phase line are in here too. */
+.play-empty-mini,
+.play-match-label,
+.play-match-vp-sep,
+.play-drawer-caret,
+.play-chip-phase { color: var(--text-muted); }
 
 /* ============================================================
    DETAIL PANE
@@ -1510,7 +1529,14 @@ body.build-mode-enhanced .army-entry-qty input {
   letter-spacing: 0.06em;
   transition: none;
 }
-.strat-chip:hover, .community-tag-chip:hover, .yaab-dc-preset:hover { background: var(--panel-alt); }
+/* Excluding the selected state is load-bearing, not tidy: these hover rules
+   come AFTER the accent-fill block above at the same specificity, so a
+   hovered chip that was already ON lost its accent background while the
+   SEMANTIC INK block below kept painting its type var(--accent-on) — white
+   on cream, ratio 1.06. Same shape as the topbar hover bug in issue #68. */
+.strat-chip:hover:not(.is-on),
+.community-tag-chip:hover:not(.active),
+.yaab-dc-preset:hover:not(.active) { background: var(--panel-alt); }
 
 /* ── Wells: recessed, inset fill + hairline ──────────────── */
 .mm-cp, .mm-timer-display, .stockpile-stepper, .wgp-stepper,
@@ -1527,7 +1553,7 @@ body.build-mode-enhanced .army-entry-qty input {
 /* ── Module-specific leftovers ───────────────────────────── */
 /* Stratagems hardcodes six near-blacks rather than tokens. */
 .strat-chip { background: var(--nb-paper); box-shadow: var(--nb-sh-chip); }
-.strat-chip:hover { background: var(--nb-sunken); }
+.strat-chip:hover:not(.is-on) { background: var(--nb-sunken); }
 .strat-card { background: var(--card-bg); }
 .strat-head, .strat-controls { background: var(--nb-ground); }
 .strat-search { background: var(--panel-bg); }
@@ -1588,25 +1614,44 @@ body.build-mode-enhanced .army-entry-qty input {
 .filter-chip.collection-chip-needs.active *,
 .filter-chip.collection-chip-painted.active *,
 .topbar-mode-tab[aria-selected="true"] *,
-.topbar-action-btn:hover *,
-.topbar-action-btn[aria-expanded="true"] *,
 .btn-accent *,
-.mm-phase-active *, .mm-btn-accent *, .mm-btn:hover *,
-.strat-chip.is-on *, .strat-use:hover *,
-.community-tag-chip.active *, .community-card-preview:hover *,
+.mm-phase-active *, .mm-btn-accent *,
+.strat-chip.is-on *,
+.community-tag-chip.active *,
 .yaab-dc-preset.active *,
 .al-tab.is-active *,
 .cmdp-row.active *,
-.yaab-dp-btn.yaab-dp-btn-active *, .yaab-dp-btn:hover *,
+.yaab-dp-btn.yaab-dp-btn-active *,
 .build-detail-tab.is-active *,
 .tp-progress.is-active *,
-.kt-switch.kt-switch-on *, .kt-banner-action:hover *,
+.kt-switch.kt-switch-on *,
 .collect-subtab.is-active *, .play-tab.is-active *,
-.lore-browse-item:hover *, .lore-btn:hover *,
-.dropdown-menu [role="menuitem"]:hover *,
-.settings-action-row:hover *,
 .cp-badge *, .stratagem-cp-badge *, .enhancement-pts-badge *, .strat-phase-badge * {
   color: var(--accent-on) !important;
+}
+/* ...but a HOVER in this theme does not fill with the accent, it fills with
+   --nb-hot, the one loud constant. Those hovers were in the list above, so
+   their inner spans were painted --accent-on — which is #ffffff whenever the
+   faction accent is dark, i.e. white type on the yellow fill at ratio 1.43.
+   The topbar's Settings / Account / Export labels were the visible case; the
+   dropdown menu, the settings rows, the lore and matchup buttons and the
+   stratagem Use button all had it too. --nb-hot's contrast colour is
+   --nb-on-hot, in both appearances, and it is what the buttons themselves
+   already set on their own text. */
+.topbar-action-btn:hover *,
+.topbar-action-btn[aria-expanded="true"] *,
+.topbar-brand:hover *,
+.mm-btn:hover *, .mm-btn-round:hover *, .mm-btn-sm:hover *,
+.strat-use:hover *,
+.community-card-preview:hover *,
+.yaab-dp-btn:hover:not(.yaab-dp-btn-active) *,
+.kt-banner-action:hover *,
+.lore-browse-item:hover *, .lore-btn:hover *,
+.tp-generate:hover *, .starter-btn-surprise:hover *, .yaab-mu-roster-btn:hover *,
+.dropdown-menu [role="menuitem"]:hover *,
+.settings-action-row:hover *,
+.reserves-empty-link * {
+  color: var(--nb-on-hot) !important;
 }
 /* The excluded chip fills with --danger, not --accent, so its contrast
    colour is white rather than whatever reads on the faction hue. */
@@ -2133,6 +2178,23 @@ body.build-mode-enhanced .army-entry-remove:hover { background: var(--danger); c
 .collection-status-btn:hover { background: var(--nb-sunken); }
 .collection-status-btn.is-on, .collection-status-btn.active,
 .collection-status-btn[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--nb-ink);
+}
+/* css/collection.css gives each status its own pale active fill at THREE
+   classes of specificity, so the accent fill above lost the background while
+   still winning the colour — and the selected button came out as
+   var(--accent-on) on #ccc, i.e. white on light grey at 1.61, the least
+   legible of the five when it is the one that matters. Mirror the selectors
+   rather than reach for !important (app/CLAUDE.md rule 1). The status is
+   named on the button face, so the colour coding was decoration; the accent
+   fill is what "selected" means everywhere else in this theme. */
+.collection-status-btn.collection-status-none.active,
+.collection-status-btn.collection-status-unpainted.active,
+.collection-status-btn.collection-status-primed.active,
+.collection-status-btn.collection-status-painting.active,
+.collection-status-btn.collection-status-done.active {
   background: var(--accent);
   color: var(--accent-on);
   border-color: var(--nb-ink);
