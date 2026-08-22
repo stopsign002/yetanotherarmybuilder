@@ -114,6 +114,10 @@ body { padding-top: var(--topbar-h); }
   align-items: center;
   flex: 1 1 auto;
   min-width: 0;
+  /* Backstop. min-width:0 lets the slot BE narrow; it does not stop a child
+     from painting outside it. Whatever the hero grows into next, it stops
+     here rather than on top of the action buttons. */
+  overflow: hidden;
 }
 .topbar-hero-slot:empty { display: none; }
 
@@ -146,9 +150,23 @@ body { padding-top: var(--topbar-h); }
   gap: 10px;
   flex: 0 1 auto;
   min-width: 0;
+  overflow: hidden;
+  /* Reserve room for the points read-out. Both this and .build-hero-points can
+     shrink, and flex-shrink is proportional to base size — so a long faction
+     name (base ~718px against the read-out's ~90px) barely yields, and it is
+     the NUMBER that gets squeezed out and clipped instead of the name being
+     ellipsised. Capping the name's share inverts that: the read-out always has
+     its ~90px, and the name gives way. Real names reach this cap — "Black
+     Templars" at 1201px brutalist left only 6px of slack. */
+  max-width: calc(100% - 110px);
 }
 .build-hero--in-topbar .build-hero-status { font-size: 11px; }
-.build-hero--in-topbar .build-hero-faction { font-size: 13px; padding: 0; margin: 0; }
+.build-hero--in-topbar .build-hero-faction {
+  font-size: 13px; padding: 0; margin: 0;
+  /* The one variable-length part of the strip, so it is the part that gives
+     way first — ellipsised rather than clipped mid-glyph by the slot. */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .build-hero--in-topbar .build-hero-subtitle {
   display: inline-flex;
   align-items: center;
@@ -182,16 +200,45 @@ body { padding-top: var(--topbar-h); }
 .build-hero--in-topbar .build-hero-name,
 .build-hero--in-topbar .build-hero-subtitle { display: none !important; }
 
+/* `safe center`, not `center`. Between the mobile breakpoint (820px) and
+   ~1100px the action buttons are already at full width, so the hero slot can
+   end up narrower than the points read-out on its own — 89px of slot for an
+   84px read-out at 900px under brutalist. A CENTRED flex item whose content is
+   wider than its box overflows BOTH sides equally and nothing clips it, which
+   is how "0 / 2000 PTS" came to be painted straight through the ACCOUNT button
+   while the slot itself still ended 10-16px clear of it. `safe` drops the
+   centring to flex-start exactly when it would overflow, and changes nothing
+   at the widths where it already fits. */
 .build-hero--in-topbar .build-hero-points {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   flex: 1 1 auto;
   min-width: 0;
-  justify-content: center;
+  justify-content: safe center;
 }
 .build-hero--in-topbar .build-hero-points-readout { font-size: 13px; padding: 0; }
 .build-hero--in-topbar .build-hero-points-current { font-size: 14px; }
+
+/* Below ~1200px the hero cannot have everything. The action buttons are already
+   at their full width by then, and the hero slot gets only what is left over:
+   measured on the live site, 345px of slot at 1100 down to 49px at 860 — against
+   a points read-out that alone needs 84-92px. So the strip sheds, in order of
+   what is least worth keeping:
+     <= 1200px  drop the status + faction text, keep the number. (The faction is
+                named in the army panel a few pixels below; the points total is
+                not shown anywhere else in the chrome.)
+     <= 1000px  drop the hero altogether — below this even the bare read-out is
+                wider than the slot, so anything left would only be clipped.
+   Thresholds are the measured fit points with a margin, and they are the same
+   for both themes: brutalist's action buttons are wider, so it runs out of room
+   first, and one threshold that satisfies it satisfies Grimdark too. */
+@media (max-width: 1200px) {
+  .build-hero--in-topbar .build-hero-main { display: none !important; }
+}
+@media (max-width: 1000px) {
+  .topbar-hero-slot { display: none !important; }
+}
 
 /* Hide the progress bar + percentage in the topbar — the "current /
    limit PTS" readout already communicates points. The bar wrap and
