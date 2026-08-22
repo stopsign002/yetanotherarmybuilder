@@ -26,9 +26,27 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.20-3',
-    lastUpdated: '2026-08-20T21:15:00Z',
+    version:     '2026.08.22-1',
+    lastUpdated: '2026-08-22T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-22', kind: 'change',
+        title: 'The app starts noticeably faster',
+        description:
+          'Loading the app used to rebuild the whole unit list 38 separate ' +
+          'times before it had finished starting up. Every faction that ' +
+          'finished loading triggered another full pass over all ~1,700 units ' +
+          '— re-running every filter you have set (search, faction, role ' +
+          'chips, Favourites, Reserves, Collection, Legends, Kill Team) from ' +
+          'scratch, each time. Only two of those 38 passes actually put ' +
+          'anything on screen; the other 36 were thrown away, because the ' +
+          'factions all arrive in the same instant and the browser never gets ' +
+          'a chance to draw between them. That wasted work was about two ' +
+          'thirds of the entire startup. The repaints are now folded together ' +
+          'into a single one, so the app spends that time getting ready ' +
+          'instead of redoing itself. Nothing about what you see has changed ' +
+          '— same roster, same filters, same scroll position.',
+      },
       {
         date: '2026-08-20', kind: 'fix',
         title: 'Reserves said \u201Cempty\u201D while showing your reserves',

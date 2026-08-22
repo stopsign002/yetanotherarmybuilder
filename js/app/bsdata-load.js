@@ -33,7 +33,13 @@
               hide:   state.chapterFactions,
               extras: Object.keys(state.chaptersMap),
             });
-            App.renderUnitRosterWithContext();
+            // Coalesced, not immediate. The live loader (dc-adapter.js) hands
+            // us every faction in one synchronous forEach, so rendering here
+            // repainted the roster ~34 times without the browser ever getting
+            // a frame to paint any of them — 34 full filter passes over the
+            // whole unit list, all but the last thrown away. The rAF gate in
+            // render.js folds them into one. See App.scheduleRosterRender.
+            App.scheduleRosterRender();
           }
 
           // Snappy first paint: restore the faction (and chapter/detachment if
@@ -74,6 +80,10 @@
       if (typeof App.rehydrateEntryUnitData === 'function') {
         try { App.rehydrateEntryUnitData(); } catch (_) {}
       }
+      // Boot is done — if the coalescing gate still has a frame queued (it
+      // will if nothing above rendered directly, and rAF never fires at all
+      // in a background tab), turn it into a render now.
+      if (typeof App.flushRosterRender === 'function') App.flushRosterRender();
     } catch (err) {
       console.error('[BSData] Auto-load failed:', err);
       UI.toast('Could not load BSData: ' + err.message, 'error', 6000);
