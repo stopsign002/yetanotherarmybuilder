@@ -26,9 +26,25 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.22-2',
-    lastUpdated: '2026-08-22T13:30:00Z',
+    version:     '2026.08.22-3',
+    lastUpdated: '2026-08-22T14:30:00Z',
     entries: [
+      {
+        date: '2026-08-22', kind: 'fix',
+        title: 'Neo-Brutalist: the Details panel looked half-finished',
+        description:
+          'Several boxes in the unit Details panel had no visible fill or ' +
+          'edge on either Neo-Brutalist theme — the Reserves and Requisitions ' +
+          'rows in particular were effectively invisible, and the section ' +
+          'blocks around the weapons, stats and abilities sat on a tint you ' +
+          'could not see. They were still wearing colours picked for the dark ' +
+          'default theme: a fill of 3% white, which shows up on near-black and ' +
+          'not at all on cream, and in one case a fully transparent border. ' +
+          'Every one of them now uses the theme\u2019s own paper, inset and ' +
+          'ink values, so the panel reads as the same set of inked boxes as ' +
+          'the rest of the app. Nothing moved — the panel holds exactly as ' +
+          'much as it did before.',
+      },
       {
         date: '2026-08-22', kind: 'fix',
         title: 'Neo-Brutalist: unit cards had one heavy edge',

@@ -2346,3 +2346,81 @@ body[data-mode="play"] #play-mode > .play-shell::after { display: none !importan
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
+
+/* ============================================================
+   DETAIL PANE — boxes still dressed for the dark ground
+   ------------------------------------------------------------
+   Audited 2026-08-22 by walking every box in the pane and asking
+   which stylesheet set its border/background. The answer was not
+   "the theme missed them" — every one of the 55 boxes gets SOME
+   rule from this file. The gap was subtler and is why the pane
+   read as unstyled: the theme restyled the *special* variants
+   (wargear / leader / strat / primarch section heads, abilities,
+   tags, weapon bands) and left the DEFAULT containers on the
+   base rules, which were authored for a near-black ground.
+
+   Concretely, base CSS fills these with `rgba(255,255,255,0.03)`
+   — 3% white, which is a visible lift on #14130f and literally
+   nothing on #ffffff — and `reserves.css` gives .stockpile-row
+   `1px solid transparent`. So they were not mis-styled, they were
+   invisible: no fill, and either a hairline or no edge at all,
+   inside a style whose whole language is a hard 2px edge.
+
+   Weight follows the token comment at the top of this file:
+   `--nb-bw` for a component, `--nb-bw-hair` in `--nb-rule` for a
+   line INSIDE a sheet. No shadows are added here on purpose —
+   depth encodes distance off the page, and these sit flush on the
+   sheet. The things that genuinely float (the add-to-army block,
+   ability cards, buttons) already carry theirs.
+   ============================================================ */
+
+/* Section containers. 1px ink + an invisible fill -> component
+   weight and real paper. */
+.unit-detail-content .detail-section,
+.unit-detail-content .detail-stats-section {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
+
+/* The wargear/weapons well is a WELL, not a component sitting on
+   the sheet — `--nb-inset` is documented for exactly this ("stat
+   cells, wells, meter tracks") — so it takes the hairline weight
+   in `--nb-rule` rather than a 2px ink edge. That is also why it
+   stays 1px: taking it to `--nb-bw` cost 2px of content width and
+   started wrapping the longer weapon names ("Great axe of Khorne
+   – Sweep") onto a second line in the pane's real width. The fill
+   is the fix here; the edge was never the problem.
+   `border-top: none` on the attached variant is deliberate in
+   detail-redesign.css — the well hangs off its section head. */
+.unit-detail-content .wg-box {
+  background: var(--nb-inset);
+  border: var(--nb-bw-hair) solid var(--nb-rule);
+  /* Gives back the 2px the section container above spent going from
+     the base 1px to `--nb-bw`, so this pass changes how the pane
+     looks and not how much fits in it. Measured: the weapon row's
+     inner width is 386px both before and after, and the long names
+     ("Great axe of Khorne – Sweep") wrap onto two lines either way
+     at the pane's default width — that wrap is pre-existing and is
+     NOT something this block introduced or fixed. Drop this padding
+     line and the rows lose 2px for nothing. */
+  padding: 0 1px 1px;
+}
+.unit-detail-content .wg-box.wg-box-attached {
+  border-top: none;
+}
+
+/* Rows inside that well are lines in a sheet, not boxes on it —
+   hairline in --nb-rule, not the full ink they were inheriting,
+   which put a black rule between every weapon. */
+.unit-detail-content .wg-weapon {
+  border-bottom: var(--nb-bw-hair) solid var(--nb-rule);
+}
+.unit-detail-content .wg-weapon:last-child { border-bottom: none; }
+
+/* Reserves / Requisitions rows: `1px solid transparent` + 2.5%
+   white from reserves.css, i.e. nothing at all on paper. */
+.unit-detail-content .stockpile-row,
+.detail-add-section .stockpile-row {
+  background: var(--nb-inset);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
