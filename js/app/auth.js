@@ -82,6 +82,31 @@
     return data;
   }
 
+  // Wipe every localStorage key that belonged to the account we just left and
+  // reset the in-memory army list, so the UI stops showing armies that are no
+  // longer on this device.
+  //
+  // The key list is App.Sync.ACCOUNT_LOCAL_KEYS and is NOT duplicated here —
+  // read the comment on it in js/app/sync.js for the cross-account leak (issue
+  // #51) that two hand-copied copies of this list caused.
+  //
+  // If App.Sync is somehow absent the sync layer never loaded, which means
+  // there is no queue to drain and nothing can reach the cloud, so wiping
+  // nothing is safe rather than fail-open.
+  function forgetAccountData() {
+    try {
+      const keys = (App.Sync && App.Sync.ACCOUNT_LOCAL_KEYS) || [];
+      for (let i = 0; i < keys.length; i++) {
+        try { localStorage.removeItem(keys[i]); } catch (_) {}
+      }
+      if (App.state && App.state.armyManager) {
+        App.state.armyManager.armies = [];
+        App.state.currentArmy = App.state.armyManager.newArmy();
+        if (typeof App.renderAll === 'function') App.renderAll();
+      }
+    } catch (_) {}
+  }
+
   const Auth = {
     onChange(fn) {
       if (typeof fn === 'function') _listeners.push(fn);
@@ -162,6 +187,28 @@
       try { await jsonFetch('/logout', { method: 'POST' }); }
       catch (_) {}
       setUser(null);
+    },
+
+    // The ONE sign-out flow. Two entry points call it: the topbar auth-button
+    // menu (js/ui/auth-button.js) and the Settings drawer (js/app/
+    // settings-drawer.js). They used to be two copies of these twenty lines,
+    // hand-copied wipe list included, and the lists drifted — issue #51.
+    // A new sign-out entry point calls this; it does not copy the body.
+    //
+    // "Also remove data" clears everything in App.Sync.ACCOUNT_LOCAL_KEYS,
+    // which includes yaab_theme: the chosen theme is account-synced, so it
+    // goes with the rest of the account's data and the app falls back to the
+    // default theme on the next load.
+    //
+    // Returns { removedData } so a caller can tell which branch ran.
+    async signOut() {
+      const keep = confirm('Sign out?\n\nClick OK to keep your synced data on this device. Click Cancel to also remove it from this device.');
+      try { await Auth.logout(); } catch (_) {}
+      if (!keep) forgetAccountData();
+      if (window.UI && typeof UI.toast === 'function') {
+        UI.toast('Signed out.', 'info', 2200);
+      }
+      return { removedData: !keep };
     },
 
     async recover(username, recoveryCode, newPassword) {

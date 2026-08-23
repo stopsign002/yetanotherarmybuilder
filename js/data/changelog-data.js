@@ -26,9 +26,38 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.22-3',
-    lastUpdated: '2026-08-22T14:30:00Z',
+    version:     '2026.08.23-1',
+    lastUpdated: '2026-08-23T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-23', kind: 'fix',
+        title: 'Sign out from Settings now clears everything it promises to',
+        description:
+          'There were two Sign out buttons \u2014 one in the account menu in ' +
+          'the top bar, one in the Settings drawer \u2014 and they did not do ' +
+          'the same thing. Choosing \u201Calso remove it from this device\u201D ' +
+          'in the Settings drawer left five things behind: the queue of changes ' +
+          'waiting to be uploaded, plus your reserves, requisitions and both ' +
+          'data-card settings. On a shared device that was a real problem: the ' +
+          'next person to sign in would have had the previous account\u2019s ' +
+          'pending armies and settings uploaded into THEIR cloud account. Both ' +
+          'buttons now run one shared piece of code that clears every ' +
+          'account-synced key, so they cannot drift apart again. One visible ' +
+          'consequence: your chosen theme is account-synced too, so removing ' +
+          'your data on sign-out now resets the app to the default theme.',
+      },
+      {
+        date: '2026-08-23', kind: 'fix',
+        title: 'Detachment changes now notify the rest of the app',
+        description:
+          'Ticking or unticking a detachment did not tell the app\u2019s ' +
+          'feature modules that the selection had changed, even though ' +
+          'everything else about picking an army did. Most features had no way ' +
+          'to notice a detachment toggle without inventing their own ' +
+          'workaround. They are told properly now, so anything that depends on ' +
+          'which detachments you have chosen \u2014 the King of the Castle ' +
+          'scoring box being the visible one \u2014 keeps up on its own.',
+      },
       {
         date: '2026-08-22', kind: 'fix',
         title: 'Neo-Brutalist: the Details panel looked half-finished',

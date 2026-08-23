@@ -175,12 +175,32 @@
   }
 
   // ── Account state helper ────────────────────────────────────────────
+  // App.Auth's accessor is getCurrentUser() (js/app/auth.js). This used to
+  // probe only for `getUser()` and `.user`, NEITHER of which App.Auth has ever
+  // exposed, so it always returned null and the whole Account section of this
+  // drawer was permanently stuck in its signed-out shape: a signed-in user was
+  // offered "Sign in" and "Create account", and never "Sync now", "Change
+  // password" or "Sign out". That matters most on mobile, where the topbar
+  // (and with it the account menu in js/ui/auth-button.js) is display:none at
+  // <=820px and this drawer is the ONLY account UI there — signed-in phone
+  // users had no way to sign out at all. Found while proving issue #51, whose
+  // leak this bug had been keeping latent.
   function getAuthUser() {
     try {
+      if (App.Auth && typeof App.Auth.getCurrentUser === 'function') return App.Auth.getCurrentUser();
       if (App.Auth && typeof App.Auth.getUser === 'function') return App.Auth.getUser();
       if (App.Auth && App.Auth.user) return App.Auth.user;
     } catch (_) {}
     return null;
+  }
+
+  // Keep the drawer honest about the session: sign in / out from anywhere else
+  // (the topbar menu, the auth modal, a 401 mid-session) must repaint the
+  // Account rows, not leave a stale "Signed in as …" or a stale "Sign in".
+  if (App.Auth && typeof App.Auth.onChange === 'function') {
+    App.Auth.onChange(function () {
+      try { if (isOpen()) render(); } catch (_) {}
+    });
   }
 
   // The topbar is display:none at <=820px, so anything that only ever mounted
@@ -349,24 +369,17 @@
         id: 'sign-out',
         label: 'Sign out',
         section: 'account',
+        // Same implementation as the topbar auth button — App.Auth.signOut()
+        // owns the confirm, the logout, the localStorage wipe and the toast.
+        // This used to inline its own wipe list, and that list was missing
+        // yaab_sync_queue plus four SYNCED_BAG_KEYS entries, which leaked one
+        // user's pending sync ops into the next user's cloud account (issue
+        // #51). Do not re-inline it here.
         run: async function () {
-          const keep = confirm('Sign out?\n\nClick OK to keep your synced data on this device. Click Cancel to also remove it from this device.');
-          try { if (App.Auth) await App.Auth.logout(); } catch (_) {}
-          if (!keep) {
-            try {
-              ['yaab_armies', 'yaab_favorites', 'yaab_recents', 'yaab_collection',
-                'yaab_crusade_rosters', 'yaab_deployments', 'yaab_points_overrides',
-                'yaab_sync_known', 'yaab_sync_state_at']
-                .forEach(k => localStorage.removeItem(k));
-              if (App.state && App.state.armyManager) {
-                App.state.armyManager.armies = [];
-                App.state.currentArmy = App.state.armyManager.newArmy();
-                if (typeof App.renderAll === 'function') App.renderAll();
-              }
-            } catch (_) {}
+          if (App.Auth && typeof App.Auth.signOut === 'function') {
+            await App.Auth.signOut();
           }
           close();
-          if (window.UI && UI.toast) UI.toast('Signed out.', 'info', 2200);
         },
       } : null,
 

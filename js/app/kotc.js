@@ -358,13 +358,12 @@
     }
   });
 
-  // Detachment toggles don't fire selectionChange (see App.setSelectedDetachments),
-  // so listen for the picker's own checkbox and re-render after it has run.
-  document.addEventListener('change', (e) => {
-    const cb = e.target.closest && e.target.closest('.detachment-row-cb');
-    if (!cb) return;
-    setTimeout(render, 0);
-  });
+  // (Removed: a document-level '.detachment-row-cb' change listener that
+  // re-rendered on a setTimeout, because App.setSelectedDetachments used not to
+  // fire selectionChange. It does now — see issue #57 and the comment at the
+  // end of js/app/detachment-picker.js — so the selectionChange registration
+  // below covers detachment toggles and the workaround would only have made
+  // render() run twice per toggle.)
 
   App.KOTC = {
     isEnabled,

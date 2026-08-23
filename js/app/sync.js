@@ -48,6 +48,33 @@
   const BAG_DEBOUNCE   = 1500;
   const BACKOFF_MAX_MS = 30000;
 
+  // Every localStorage key that holds data belonging to the signed-in
+  // ACCOUNT rather than to this device. This is exactly what "Sign out → also
+  // remove data" wipes, and it is DERIVED from SYNCED_BAG_KEYS instead of
+  // being hand-written, so adding a synced bag key can never silently open a
+  // new cross-account leak.
+  //
+  // Why it lives here and is exported: there used to be two hand-copied
+  // literals — js/ui/auth-button.js and js/app/settings-drawer.js — and they
+  // drifted. The drawer's copy was missing yaab_sync_queue, so signing out
+  // there with "also remove data" left user A's pending putArmy/putState ops
+  // in the queue; when user B signed in on the same device drainQueue()
+  // pushed A's armies and A's entire state bag up into B's cloud account. It
+  // was also missing four SYNCED_BAG_KEYS entries (reserves, requisitions,
+  // cards prefs, cards presets), which leaked the same way. See issue #51.
+  //
+  // Both sign-out paths now go through App.Auth.signOut(), which reads THIS
+  // list. Do not re-inline it at a call site.
+  const ACCOUNT_LOCAL_KEYS = Object.freeze([
+    // Not bag-synced — armies are pushed per-id from ArmyManager.save() (see
+    // the header comment) — but just as account-scoped, so it wipes too.
+    'yaab_armies',
+    ...SYNCED_BAG_KEYS,
+    KNOWN_KEY,     // yaab_sync_known
+    STATE_BAG_TS,  // yaab_sync_state_at
+    QUEUE_KEY,     // yaab_sync_queue — the one whose absence caused #51
+  ]);
+
   const API_ARMIES = '/api/armies';
   const API_STATE  = '/api/state';
 
@@ -754,6 +781,10 @@
 
   App.Sync = {
     init,
+    // Exported for App.Auth.signOut() — see the comment on ACCOUNT_LOCAL_KEYS.
+    // Frozen: callers read it, nobody mutates it.
+    ACCOUNT_LOCAL_KEYS,
+    SYNCED_BAG_KEYS: Object.freeze(SYNCED_BAG_KEYS.slice()),
     notifyArmiesChanged,
     notifyKeyChanged,
     pullAll,

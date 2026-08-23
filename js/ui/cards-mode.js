@@ -3618,6 +3618,13 @@
   // chosen file fired `change` on a detached node and the delegated
   // handler never saw it. Only rebuild when something cards actually
   // render from has changed.
+  //
+  // NOTE the signature deliberately includes `detachmentNames`, so it does NOT
+  // suppress a detachment toggle — and since issue #57 those now fire
+  // selectionChange (js/app/detachment-picker.js). What keeps a toggle made in
+  // Build mode from rebuilding the print preview is the separate
+  // `App.getMode() === 'cards'` gate in onArmyStateMaybeChanged below. Don't
+  // drop that gate on the assumption this signature guard already covers it.
   let _lastCardsSig = '';
   function cardsStateSig() {
     const s = App.state || {};

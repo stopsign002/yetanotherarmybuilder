@@ -108,6 +108,24 @@
         window.ArmyManager && ArmyManager.isNamed && ArmyManager.isNamed(state.currentArmy)) {
       state.armyManager.saveArmy(state.currentArmy);
     }
+
+    // js/app/hooks.js documents selectionChange as firing on faction, chapter
+    // AND detachment changes, but this function never fired it, so every
+    // module following the hook-first convention silently missed detachment
+    // toggles and had to hand-roll a `.detachment-row-cb` change listener
+    // instead (issue #57; kotc.js carried exactly that workaround).
+    //
+    // Fired LAST, after the three refreshes above and after the save, so
+    // listeners see fully settled state — reserves.js in particular injects
+    // its widget into the unit detail that refreshOpenDetail() has just
+    // rebuilt, and would be wiped out if it ran first.
+    //
+    // Fires on programmatic restores (persist:false) too: a load or a share-
+    // code apply IS a selection change as far as a listener is concerned, and
+    // the hook doc draws no distinction. Cheap either way — the roster render
+    // path (js/app/render.js:95) already fans this hook out to ~25 listeners
+    // on every repaint, so one more fire per detachment toggle is noise.
+    if (typeof App.fireSelectionChange === 'function') App.fireSelectionChange();
   };
 
   // Toggle one detachment in/out of the current selection.

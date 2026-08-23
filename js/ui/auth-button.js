@@ -112,28 +112,15 @@
       menu.appendChild(mkItem('Change password', () => {
         if (UI.showAuthModal) UI.showAuthModal('change-password');
       }));
+      // One shared implementation with the Settings drawer's Sign out — the
+      // confirm, the logout, the localStorage wipe and the toast all live in
+      // App.Auth.signOut(). This used to inline its own wipe list and the
+      // drawer inlined a different one; see issue #51 and the comment on
+      // App.Sync.ACCOUNT_LOCAL_KEYS. Do not re-inline it here.
       menu.appendChild(mkItem('Sign out', async () => {
-        const keep = confirm('Sign out?\n\nClick OK to keep your synced data on this device. Click Cancel to also remove it from this device.');
-        try {
-          if (App.Auth) await App.Auth.logout();
-        } catch (_) {}
-        if (!keep) {
-          try {
-            // yaab_sync_queue MUST be in this list — otherwise pending ops
-            // queued under user A drain to user B's cloud bag if A signs
-            // out (with "remove data") and B signs in on the same device.
-            ['yaab_armies', 'yaab_favorites', 'yaab_recents', 'yaab_collection',
-              'yaab_crusade_rosters', 'yaab_deployments', 'yaab_points_overrides',
-              'yaab_sync_known', 'yaab_sync_state_at', 'yaab_sync_queue']
-              .forEach(k => localStorage.removeItem(k));
-            if (App.state && App.state.armyManager) {
-              App.state.armyManager.armies = [];
-              App.state.currentArmy = App.state.armyManager.newArmy();
-              if (typeof App.renderAll === 'function') App.renderAll();
-            }
-          } catch (_) {}
+        if (App.Auth && typeof App.Auth.signOut === 'function') {
+          await App.Auth.signOut();
         }
-        if (UI.toast) UI.toast('Signed out.', 'info', 2200);
       }));
     }
 
