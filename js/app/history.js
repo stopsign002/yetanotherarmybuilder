@@ -44,7 +44,7 @@
       // rendering fires armyChange('render') → autosave persists the army
       // with a backwards timestamp → sync's last-write-wins rejects the push
       // and pulls the cloud copy back down, silently undoing the undo.
-      // `js/app/army-diff.js` does the same thing when reverting a snapshot.
+      // Reverting a snapshot follows the same path.
       army.updatedAt = new Date().toISOString();
       suppress = true;
       App.state.currentArmy = army;

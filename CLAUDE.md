@@ -84,21 +84,12 @@ Grouped by user intent. One module per row; module path is the search target.
 | Build | Persist `<details>` open/closed state across reloads | `js/app/details-persist.js` |
 | Modes | Build / Collect / Play container switcher (top-level mode shell) | `js/app/mode-shell.js` |
 | Modes | Build mode page (hero + rules pinboard tab + roster polish) | `js/ui/build-mode.js` |
-| Modes | Collect mode page (Painting / Crusade / Kill Team sub-tabs) | `js/ui/collect-mode.js` |
+| Modes | Collect mode page (Painting) | `js/ui/collect-mode.js` |
 | Account & sync | Username/password auth | `js/app/auth.js`, `js/ui/auth-modal.js` |
 | Account & sync | Top-bar account button | `js/ui/auth-button.js` |
 | Account & sync | Cloud sync of armies + KV bag | `js/app/sync.js` |
 | Account & sync | Admin panel (approve/revoke users, bug reports, image moderation) | `js/app/admin.js` |
 | Account & sync | Admin-only pending-approval banner | `js/app/pending-approval-banner.js` |
-| Game Day | Match-mode overlay (CP, turns, phases, wounds, VP) | `js/app/match-mode.js` |
-| Game Day | Stratagem browser (detachment + faction + core) | `js/app/stratagems.js` |
-| Game Day | Crusade campaign tracker (rosters, XP, ranks, scars) | `js/app/crusade.js` |
-| Game Day | Kill Team mode (cap points, filter roster, mission roller) | `js/app/kill-team.js` |
-| Game Day | Deployment planner (drag/drop battlefield, per-army) | `js/ui/deployment-planner.js` |
-| Game Day | Dice roller (click stat cell to roll d6) | `js/ui/dice-roller.js` |
-| Analyze | Synergy detector (leaders, keyword combos) | `js/ui/synergy.js` |
-| Analyze | Army-diff history (labeled snapshots, two-version compare) | `js/app/army-diff.js` |
-| Analyze | Activity log (passive session history, 30-day persistence) | `js/app/activity-log.js` |
 | Print & Export | Cards mode — printable data-card designer (templates, presets, page-split) | `js/ui/cards-mode.js`, `css/cards-mode.css` |
 | Print & Export | Full datasheet pages inside the tournament PDF bundle | `js/ui/tournament-export.js` |
 | Print & Export | Tournament-prep PDF bundle | `js/ui/tournament-export.js` |
@@ -106,7 +97,6 @@ Grouped by user intent. One module per row; module path is the search target.
 | Print & Export | QR share (mobile-to-mobile) | `js/app/qr-share.js` |
 | Print & Export | YAAB1 string export/import (compact deflate) | `js/storage.js` |
 | Browse | Faction lore browser modal | `js/app/lore.js`, `js/data/lore-data.js` |
-| Browse | Community feed (curated army lists) | `js/app/community-feed.js`, `js/data/community-feed.json` |
 | Browse | First-time guided tour (retired; `js/app/first-time-tour.js` is a no-op stub — `App.replayTour` and `App.startTour` are empty so callers in `settings-drawer.js` don't crash. The Settings drawer "Replay onboarding tour" entry is still present but does nothing.) | `js/app/first-time-tour.js` |
 | Collection | Owned/painted tracker (per unit) | `js/app/collection.js` |
 | Collection | Reserves: owned-units stockpile w/ quantity, default unit-pane view | `js/app/reserves.js` |
@@ -168,15 +158,11 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_requisitions` | localStorage | `requisitions.js` | Per-unit wishlist quantity (`{unitId: qty}`); cloud-synced | User data |
 | `yaab_custom_names` | localStorage | `custom-names.js` | Named Reserves instances (`{instanceId: {u: unitId, n: name, t: createdAt}}`) — each one is a unique unit split off the `yaab_reserves` stack; cloud-synced. Custom names on ARMY entries are NOT here: they live on `entry.customName` inside `yaab_armies` | User data |
 | `yaab_units_view` | localStorage | `reserves.js` | Active unit-pane view (`'reserves'` / `'requisitions'` / `'all'`) | User pref |
-| `yaab_crusade_rosters` | localStorage | `crusade.js` | Crusade rosters + XP + battle log | User data |
-| `yaab_match_state` | localStorage | `match-mode.js`, `stratagems.js` | Active match (CP, turn, VP) | Game-day state |
 | `yaab_opponent` | localStorage | `opponent.js` | Last-pasted opponent army | User data |
 | `yaab_army_snapshots` | localStorage | `army-diff.js` | Labeled save snapshots (max 20/army) | User data |
-| `yaab_activity_log` | localStorage | `activity-log.js` | Per-day event log (30-day retention) | Auto-prunes |
 | `yaab_deployments` | localStorage | `deployment-planner.js` | Per-army deployment maps | User data |
 | `yaab_tournament_cfg` | localStorage | `tournament-export.js` | Tournament PDF preferences | User data |
 | `yaab_points_overrides` | localStorage | `points-override.js` | Dataslate-style point edits | User data |
-| `yaab_kt_mode` | localStorage | `kill-team.js` | Kill Team mode flag | User pref |
 | `yaab_kotc_enabled` | localStorage | `kotc.js` | King of the Coliseum checks on/off (`'1'`/`'0'`) — device pref, deliberately NOT army data so it stays out of the YAAB1 export and cloud sync | User pref |
 | `yaab_show_legends` | localStorage | `legends-toggle.js` | Show [Legends] units | User pref |
 | `yaab_show_allies` | localStorage | `allies.js` | Show allied units on a host faction's roster (**defaults on**) | User pref |

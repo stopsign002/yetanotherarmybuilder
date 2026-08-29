@@ -30,23 +30,14 @@
   <link rel="stylesheet" href="css/quirky.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/legends-toggle.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/allies.css?v=2026.08.29-1-d21890bba" />
-  <link rel="stylesheet" href="css/match-mode.css?v=2026.08.29-1-d21890bba" />
-  <link rel="stylesheet" href="css/army-diff.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/favorites.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/tournament-export.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/cards-mode.css?v=2026.08.29-1-d21890bba" />
-  <link rel="stylesheet" href="css/deployment-planner.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/lore.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/utilities.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/collection.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/reserves.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/requisitions.css?v=2026.08.29-1-d21890bba" />
-  <link rel="stylesheet" href="css/synergy.css?v=2026.08.29-1-d21890bba" />
-  <link rel="stylesheet" href="css/stratagems.css?v=2026.08.29-1-d21890bba" />
-  <link rel="stylesheet" href="css/crusade.css?v=2026.08.29-1-d21890bba" />
-  <link rel="stylesheet" href="css/kill-team.css?v=2026.08.29-1-d21890bba" />
-  <link rel="stylesheet" href="css/activity-log.css?v=2026.08.29-1-d21890bba" />
-  <link rel="stylesheet" href="css/community-feed.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/design-pass.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/hero-state.css?v=2026.08.29-1-d21890bba" />
   <link rel="stylesheet" href="css/atmosphere.css?v=2026.08.29-1-d21890bba" />
@@ -619,12 +610,9 @@
   <script defer src="js/app/events.js?v=2026.08.29-1-d21890bba"></script>
 
   <!-- Feature modules (all extend via App.hooks; safe to reorder within block).
-       Lazy-loaded modules (Match Mode, Tournament Export, Crusade, Kill Team,
-       Deployment Planner, Synergy, Lore, History/army-diff, Community Feed,
-       Activity Log) are NOT listed here —
+       Lazy-loaded modules (Tournament Export, Lore) are NOT listed here —
        they're injected on first user trigger by js/app/lazy-modules.js. -->
   <!-- FEATURE-MODULES-START -->
-  <script defer src="js/parser/report.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/history.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/url-share.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/validation.js?v=2026.08.29-1-d21890bba"></script>
@@ -637,7 +625,6 @@
   <script defer src="js/app/flavor.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/ork-math.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/nickname.js?v=2026.08.29-1-d21890bba"></script>
-  <script defer src="js/ui/dice-roller.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/legends-toggle.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/allies.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/sm-chapter-filter.js?v=2026.08.29-1-d21890bba"></script>
@@ -656,19 +643,10 @@
        js/app/reserves.js, and before js/app/index.js bootstraps. -->
   <script defer src="js/app/custom-names.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/data/stratagems-data.js?v=2026.08.29-1-d21890bba"></script>
-  <script defer src="js/app/stratagems.js?v=2026.08.29-1-d21890bba"></script>
-  <script defer src="js/app/match-mode.js?v=2026.08.29-1-d21890bba"></script>
-  <script defer src="js/app/army-diff.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/ui/tournament-export.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/ui/cards-mode.js?v=2026.08.29-1-d21890bba"></script>
-  <script defer src="js/ui/deployment-planner.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/data/lore-data.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/lore.js?v=2026.08.29-1-d21890bba"></script>
-  <script defer src="js/ui/synergy.js?v=2026.08.29-1-d21890bba"></script>
-  <script defer src="js/app/crusade.js?v=2026.08.29-1-d21890bba"></script>
-  <script defer src="js/app/kill-team.js?v=2026.08.29-1-d21890bba"></script>
-  <script defer src="js/app/activity-log.js?v=2026.08.29-1-d21890bba"></script>
-  <script defer src="js/app/community-feed.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/hero-state.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/search-clear.js?v=2026.08.29-1-d21890bba"></script>
   <script defer src="js/app/details-persist.js?v=2026.08.29-1-d21890bba"></script>

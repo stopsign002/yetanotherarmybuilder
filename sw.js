@@ -39,9 +39,6 @@
 //      read-throughs into IndexedDB (so those requests never recur after the
 //      first load), plus 37 MB of dormant BSData XML. Caching either would
 //      store a second copy of something the app already owns.
-//      Mind the near-collision: js/data/community-feed.json lives under /js/,
-//      NOT /data/, and IS cached. That is deliberate — it is what finally makes
-//      community-feed.js's "load this page once online to cache it" true.
 //
 // If you find yourself wanting cache-first for JS to shave another round trip:
 // don't. The round trip is already off the critical path, and the failure mode

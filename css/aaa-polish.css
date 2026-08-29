@@ -242,7 +242,6 @@
  * what card-chassis.css already provides. */
 .unit-card.selected,
 .starter-card.is-selected,
-.community-card.is-selected,
 .yaab-card.is-selected,
 .yaab-card.selected {
   border-color: var(--accent, #fff) !important;

@@ -67,12 +67,7 @@
   // Sections: 'game-day' | 'analyze' | 'export' | 'browse' | 'collection' | 'settings'
   const ID_TO_SECTION = {
     // Game Day
-    'yaab-btn-match':            'game-day',
-    'yaab-btn-stratagems':       'game-day',
-    'yaab-btn-deploy':           'game-day',
     // Analyze
-    'yaab-btn-synergy':          'analyze',
-    'yaab-btn-history':          'analyze',
     // Print & Export
     'yaab-btn-tournament':       'export',
     'yaab-btn-share':            'export',
@@ -80,13 +75,9 @@
     // Browse
     'yaab-btn-lore':             'browse',
     'yaab-btn-starter-lists':    'browse',
-    'yaab-btn-community-feed':   'browse',
     'yaab-btn-replay-tour':      'browse',
     // Collection
     'yaab-btn-collection':       'collection',
-    'yaab-btn-crusade':          'collection',
-    'yaab-btn-kill-team':        'collection',
-    'yaab-btn-activity-log':     'collection',
     // Settings
     'yaab-btn-points-override':  'settings',
     'yaab-btn-legends':          'settings',
@@ -110,22 +101,13 @@
   // Short, intent-driven descriptions for known actions. Falls back to
   // the action's `title` (then label) when the id is unknown.
   const ID_TO_DESC = {
-    'yaab-btn-match':            'Track turns, command points, and damage live during a game.',
-    'yaab-btn-stratagems':       'Browse stratagems for your detachment.',
-    'yaab-btn-deploy':           'Drag your units onto a battlefield.',
-    'yaab-btn-synergy':          'Detect interactions between units in your list.',
-    'yaab-btn-history':          'Browse and diff past versions of this army.',
     'yaab-btn-tournament':       'Generate a tournament prep PDF bundle.',
     'yaab-btn-share':            'Copy a shareable URL for this army.',
     'yaab-btn-qr-share':         'Show a QR code so a teammate can grab the list.',
     'yaab-btn-lore':             'Browse faction lore and background.',
     'yaab-btn-starter-lists':    'Curated starter armies and a randomizer.',
-    'yaab-btn-community-feed':   'Browse community army lists.',
     'yaab-btn-replay-tour':      'Restart the first-time walkthrough.',
     'yaab-btn-collection':       'Track owned models and painting progress.',
-    'yaab-btn-crusade':          'Crusade campaign tracker.',
-    'yaab-btn-kill-team':        'Switch to small-format Kill Team mode.',
-    'yaab-btn-activity-log':     'View a log of recent edits.',
     'yaab-btn-points-override':  'Override unit points for dataslates.',
     'yaab-btn-legends':          'Show or hide Legends-only units.',
     'yaab-btn-allies':           'Show or hide allied units from other codexes.',

@@ -105,8 +105,7 @@
 #collect-mode .muted { color: var(--text-muted, #a8a8a8); }
 
 /* ── PAINTING TAB layout ───────────────────────────────────────────── */
-.collect-paint-layout,
-.collect-crusade-layout {
+.collect-paint-layout {
   display: grid;
   grid-template-columns: 240px 1fr;
   gap: 18px;
@@ -114,8 +113,7 @@
 }
 
 /* Mobile dropdown picker; hidden on wide screens. */
-.collect-paint-mobile-picker,
-.collect-crusade-mobile-picker {
+.collect-paint-mobile-picker {
   display: none;
   width: 100%;
   background: var(--panel-bg, #22222a);
@@ -127,8 +125,7 @@
 }
 
 /* Faction sidebar */
-.collect-paint-sidebar,
-.collect-crusade-sidebar {
+.collect-paint-sidebar {
   background: var(--panel-bg, #22222a);
   border: 1px solid var(--border, #3a3a44);
   border-radius: var(--radius, 6px);
@@ -223,8 +220,7 @@
 }
 
 /* ── faction main pane (Painting) ──────────────────────────────────── */
-.collect-paint-main,
-.collect-crusade-main {
+.collect-paint-main {
   min-width: 0; /* allow grid item to shrink, prevents overflow */
 }
 .collect-main-head {
@@ -371,13 +367,6 @@
   border-radius: var(--radius, 6px);
 }
 .collect-detail-empty p { margin: 10px 0; }
-
-.collect-crusade-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-  margin-bottom: 18px;
-}
 .collect-stat {
   display: flex;
   flex-direction: column;
@@ -399,10 +388,6 @@
   letter-spacing: 0.06em;
   color: var(--text-muted, #a8a8a8);
 }
-
-.collect-crusade-section {
-  margin-bottom: 22px;
-}
 .collect-section-title {
   font-family: var(--font-display, 'Cinzel', Georgia, serif);
   font-size: 14px;
@@ -412,76 +397,6 @@
   margin: 0 0 8px;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border, #3a3a44);
-}
-
-.collect-crusade-unit-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.collect-crusade-unit {
-  padding: 8px 12px;
-  background: var(--panel-bg, #22222a);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
-}
-.collect-crusade-unit-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-.collect-crusade-unit-name {
-  font-weight: 500;
-  color: var(--text, #e0e0e0);
-}
-.collect-crusade-unit-label {
-  font-style: italic;
-  color: var(--text-muted, #a8a8a8);
-  font-size: 12px;
-}
-.collect-crusade-unit-rank {
-  margin-left: auto;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--accent, #fff);
-  background: rgba(var(--accent-rgb, 255, 255, 255), 0.1);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: 3px;
-  padding: 2px 6px;
-}
-.collect-crusade-unit-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-size: 12px;
-  color: var(--text-muted, #a8a8a8);
-  font-variant-numeric: tabular-nums;
-}
-
-.collect-crusade-battle-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.collect-crusade-battle {
-  display: grid;
-  grid-template-columns: 80px 1fr 0.8fr 0.8fr 70px 80px;
-  gap: 8px;
-  align-items: center;
-  padding: 6px 10px;
-  background: var(--panel-bg, #22222a);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: 4px;
-  font-size: 12px;
 }
 .collect-battle-date  { font-variant-numeric: tabular-nums; color: var(--text-muted, #a8a8a8); }
 .collect-battle-vs    { font-weight: 500; }
@@ -608,16 +523,13 @@
   #collect-mode .collect-body {
     padding: 12px 14px;
   }
-  .collect-paint-layout,
-  .collect-crusade-layout {
+  .collect-paint-layout {
     grid-template-columns: 1fr;
   }
-  .collect-paint-sidebar,
-  .collect-crusade-sidebar {
+  .collect-paint-sidebar {
     display: none;
   }
-  .collect-paint-mobile-picker,
-  .collect-crusade-mobile-picker {
+  .collect-paint-mobile-picker {
     display: block;
     margin-bottom: 12px;
   }
@@ -625,8 +537,4 @@
     margin-left: 0;
     width: 100%;
   }
-  .collect-crusade-battle {
-    grid-template-columns: 1fr 1fr;
-  }
-  .collect-crusade-battle .collect-battle-verdict { grid-column: 1 / -1; }
 }

@@ -24,7 +24,6 @@
   .settings-drawer-scrim,
   .strat-backdrop,
   .lore-backdrop,
-  .mm-backdrop,
   .action-center-scrim {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;

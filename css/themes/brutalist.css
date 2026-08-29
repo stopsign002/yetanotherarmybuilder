@@ -959,12 +959,7 @@ input[type="checkbox"]:checked::after {
 .weapon-type-ranged,
 .detail-section-title-leader,
 .leader-unit-tag,
-.diff-row.diff-meta .diff-icon,
-.changelog-kind-change,
-.al-row-load .al-icon,
-.al-row-save .al-icon,
-.al-row-export .al-icon,
-.al-row-import .al-icon { color: var(--nb-blue); border-color: var(--nb-blue); }
+.changelog-kind-change { color: var(--nb-blue); border-color: var(--nb-blue); }
 .unit-card.unit-card-ally::after,
 .unit-card.unit-card-ally.unit-card-legends::after,
 .detail-ally-tag,
@@ -978,8 +973,7 @@ input[type="checkbox"]:checked::after {
 .weapon-type-melee,
 .enh-cb-ineligible-note,
 .changelog-kind-fix,
-.build-hero-status.is-unsaved,
-.al-row-qty .al-icon { color: var(--nb-orange); border-color: var(--nb-orange); }
+.build-hero-status.is-unsaved { color: var(--nb-orange); border-color: var(--nb-orange); }
 .weapon-kw-tag.weapon-kw-orange { background: transparent; border: 1px solid var(--nb-orange); color: var(--nb-orange); }
 
 /* ── Green: Led By, additions, saved, wins ───────────────── */
@@ -987,14 +981,8 @@ input[type="checkbox"]:checked::after {
 .detail-section-title-ledbby,
 .ledby-tag,
 .ledby-more-pill,
-.diff-delta.neg,
-.diff-pts.neg,
-.diff-row.diff-added .diff-icon,
-.diff-row.diff-enh-added .diff-icon,
-.diff-row.diff-added .diff-text,
 .changelog-kind-feature,
 .collect-battle-verdict-win,
-.al-row-add .al-icon,
 .build-hero-status.is-saved { color: var(--nb-green); border-color: var(--nb-green); }
 
 /* ── Gold: stratagems, Legends, favourites, primarch, wargear ── */
@@ -1010,12 +998,9 @@ input[type="checkbox"]:checked::after {
 .toolbar-icons button.is-on,
 .fav-star.is-starred,
 .detail-action-btn:hover .fav-star,
-.yaab-dp-token-placed,
-.yaab-dp-readout,
 .bug-report-warn,
 .qr-share-warn,
 .cn-btn-primary,
-.diff-row.diff-count .diff-icon,
 .collect-battle-verdict-draw { color: var(--nb-gold); border-color: var(--nb-gold); }
 /* The wargear/primarch bands carry a gold fill + gold left bar as well. */
 .unit-detail-content .detail-section-title-wargear,
@@ -1030,20 +1015,15 @@ input[type="checkbox"]:checked::after {
 /* ── Red: errors, over-limit, removals ───────────────────── */
 .auth-error,
 .topbar-points .points-current.over-limit,
-.diff-row.diff-removed .diff-text,
 .cn-btn-danger:hover,
 .bug-report-status-error,
-.collect-battle-verdict-loss,
-.al-row-remove .al-icon { color: var(--nb-red); border-color: var(--nb-red); }
+.collect-battle-verdict-loss { color: var(--nb-red); border-color: var(--nb-red); }
 .weapon-kw-tag.weapon-kw-red { background: transparent; border: 1px solid var(--nb-red); color: var(--nb-red); }
 .weapon-kw-tag.weapon-kw-purple { background: transparent; border: 1px solid var(--nb-purple); color: var(--nb-purple); }
 .weapon-kw-tag.has-tooltip { border-color: var(--nb-ink); border-bottom-style: dashed; }
 
 /* ── Neutral: text that was only ever "light grey on dark" ── */
 .unit-detail-content .strat-section-text,
-.al-row-print .al-icon,
-.al-row-undo .al-icon,
-.al-row-redo .al-icon,
 .panel-header h2:hover { color: var(--text); }
 
 /* Filter chips: the collection / favourites variants each ship their own
@@ -1342,27 +1322,17 @@ body.build-mode-enhanced .army-entry-name,
 
    One list, one chassis: 2px ink, flat panel, no radius.
    ============================================================ */
-.mm-shell, .mm-topbar, .mm-phases, .mm-col, .mm-cp, .mm-timer-display,
-.mm-unit, .mm-primary-row, .mm-secondary, .mm-total, .mm-history, .mm-empty,
+
 .strat-modal, .strat-head, .strat-controls, .strat-section, .strat-card, .strat-empty,
 .lore-modal, .lore-browse, .lore-browse-item, .lore-footer,
-.community-modal, .community-card, .community-toolbar, .community-empty, .community-card-preview,
 .starter-modal, .starter-card, .starter-toolbar, .starter-empty,
-.diff-modal, .diff-picker, .diff-totals, .diff-list, .diff-snap, .diff-empty,
-.activity-modal, .al-day, .al-empty, .al-icon, .al-summary,
+.activity-modal,
 .tp-modal, .tp-opponents, .tp-summary, .tp-page, .tp-reference-box, .tp-stage, .tp-cover,
-.yaab-syn-modal, .yaab-syn-section, .yaab-syn-empty,
-.kt-modal, .kt-section, .kt-template, .kt-mission-card, .kt-mission-display,
-.kt-empty, .kt-banner, .kt-section-status,
-.crusade-modal, .crusade-section, .crusade-roster-card, .crusade-picker,
-.crusade-empty, .crusade-intro, .crusade-honour-row, .crusade-scar-row,
-.crusade-unit-row, .crusade-battle-row, .crusade-detail-row,
 .action-center-sheet, .ac-card, .ac-section,
 .cmdp-modal, .cmdp-help-modal,
 .changelog-modal, .changelog-day, .changelog-item,
 .bug-report-modal, .points-override-modal, .qr-share-modal,
 .points-override-list, .points-override-row, .bug-report-diag,
-.yaab-dp-modal, .yaab-dp-side, .yaab-dp-popup, .yaab-dp-toolbar, .yaab-dp-empty-state,
 .yaab-tour-tooltip, .auth-menu {
   background: var(--nb-paper);
   border: var(--nb-bw) solid var(--nb-ink);
@@ -1371,19 +1341,15 @@ body.build-mode-enhanced .army-entry-name,
 }
 
 /* Overlays sit on top of the page and get the deeper shadow, like .modal. */
-.mm-shell, .strat-modal, .lore-modal, .community-modal,
-.starter-modal, .diff-modal, .activity-modal, .tp-modal, .yaab-syn-modal,
-.kt-modal, .crusade-modal, .action-center-sheet, .cmdp-modal, .cmdp-help-modal,
-.changelog-modal, .bug-report-modal, .points-override-modal, .qr-share-modal,
-.yaab-dp-modal {
+ .strat-modal, .lore-modal,
+.starter-modal, .activity-modal, .tp-modal, .action-center-sheet, .cmdp-modal, .cmdp-help-modal,
+.changelog-modal, .bug-report-modal, .points-override-modal, .qr-share-modal {
   border-width: var(--nb-bw-heavy);
   box-shadow: var(--nb-sh-over);
 }
 /* Their headers and footers get the heavy rule the modal chassis uses. */
-.strat-head, .lore-header, .community-toolbar, .starter-toolbar,
-.al-tabs, .tp-notes-header, .kt-template-head, .crusade-section-head,
-.action-center-titlebar, .changelog-header,
-.yaab-syn-section-head, .mm-topbar, .mm-col-head {
+.strat-head, .lore-header, .starter-toolbar, .tp-notes-header,
+.action-center-titlebar, .changelog-header {
   border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
   background: var(--nb-paper);
   font-weight: 900;
@@ -1395,13 +1361,8 @@ body.build-mode-enhanced .army-entry-name,
    Same story, and the one that actually broke: a control whose
    fill came from a ghost token was a black box you could not
    read your own typing in. */
-.strat-search, .community-search, .community-filter, .starter-search,
-.al-filter, .diff-select, .points-override-search, .points-override-input,
-.qr-share-url, .action-center-search, .cmdp-input,
-.yaab-dp-select, .custom-name-input, .cards-spill-name,
-.yaab-dp-popup input[type="text"], .tp-opp-row input[type="text"],
-.crusade-field input, .crusade-field input[type="date"], .crusade-field select,
-.crusade-field textarea, .crusade-inline input[type="number"],
+.strat-search, .starter-search, .points-override-search, .points-override-input,
+.qr-share-url, .action-center-search, .cmdp-input, .custom-name-input, .cards-spill-name, .tp-opp-row input[type="text"],
 .collection-dash-filter select, .topbar-army-name, .topbar-army-select,
 .topbar-points-limit-input, .build-hero-points-limit-input,
 body.build-mode-enhanced .army-entry-qty input {
@@ -1412,8 +1373,7 @@ body.build-mode-enhanced .army-entry-qty input {
   font-weight: 600;
   transition: none;
 }
-.strat-search:focus, .community-search:focus, .starter-search:focus,
-.al-filter:focus, .action-center-search:focus, .cmdp-input:focus,
+.strat-search:focus, .starter-search:focus, .action-center-search:focus, .cmdp-input:focus,
 .points-override-search:focus {
   border-color: var(--nb-ink);
   box-shadow: 3px 3px 0 var(--accent);
@@ -1421,10 +1381,9 @@ body.build-mode-enhanced .army-entry-qty input {
 }
 
 /* ── Buttons: the offset-shadow press, everywhere ─────────── */
-.mm-btn, .mm-btn-round, .mm-btn-sm, .mm-btn-close,
-.lore-btn, .yaab-dp-btn, .kt-banner-action, .strat-use,
-.tp-generate, .starter-btn-surprise,
-.community-card-preview, .diff-picker-arrow, .crusade-row-remove {
+
+.lore-btn, .strat-use,
+.tp-generate, .starter-btn-surprise {
   background: var(--nb-paper);
   color: var(--text);
   border: var(--nb-bw) solid var(--nb-ink);
@@ -1434,40 +1393,31 @@ body.build-mode-enhanced .army-entry-qty input {
   letter-spacing: 0.06em;
   transition: var(--nb-press);
 }
-.mm-btn:hover, .mm-btn-round:hover, .mm-btn-sm:hover, .lore-btn:hover,
-.yaab-dp-btn:hover, .kt-banner-action:hover, .strat-use:hover,
-.tp-generate:hover, .starter-btn-surprise:hover,
-.community-card-preview:hover {
+ .lore-btn:hover, .strat-use:hover,
+.tp-generate:hover, .starter-btn-surprise:hover {
   background: var(--nb-hot);
   color: var(--nb-on-hot);
   border-color: var(--nb-ink);
   transform: translate(2px, 2px);
   box-shadow: var(--nb-sh-press);
 }
-.mm-btn:active, .mm-btn-round:active, .lore-btn:active, .yaab-dp-btn:active,
-.kt-banner-action:active, .strat-use:active, .tp-generate:active {
+ .lore-btn:active, .strat-use:active, .tp-generate:active {
   transform: translate(3px, 3px);
   box-shadow: none;
 }
-.mm-btn-accent { background: var(--accent); color: var(--accent-on); }
-.mm-btn-ghost { box-shadow: none; }
 
 /* ── Selected / active: accent fill, never a pale wash ────── */
-.mm-phase-active, .strat-chip.is-on, .community-tag-chip.active,
-.al-tab.is-active, .cmdp-row.active,
-.yaab-dp-btn.yaab-dp-btn-active, .yaab-dp-swatch.yaab-dp-swatch-active,
-.build-detail-tab.is-active, .tp-progress.is-active, .kt-switch.kt-switch-on,
+ .strat-chip.is-on, .cmdp-row.active,
+.build-detail-tab.is-active, .tp-progress.is-active,
 .collect-subtab.is-active {
   background: var(--accent);
   color: var(--accent-on);
   border-color: var(--nb-ink);
 }
-.mm-phase-active .mm-phase-idx, .mm-phase-active .mm-phase-name { color: var(--accent-on); }
 
 /* ── Chips + tags: outline, not tint ─────────────────────── */
-.strat-chip, .strat-tag, .community-tag-chip, .community-card-tag,
-.community-card-pill, .starter-card-pill, .kt-template-pill,
-.changelog-kind, .al-tab, .crusade-rank-pip {
+.strat-chip, .strat-tag, .starter-card-pill,
+.changelog-kind {
   background: var(--nb-inset);
   border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
@@ -1481,16 +1431,15 @@ body.build-mode-enhanced .army-entry-qty input {
    hovered chip that was already ON lost its accent background while the
    SEMANTIC INK block below kept painting its type var(--accent-on) — white
    on cream, ratio 1.06. Same shape as the topbar hover bug in issue #68. */
-.strat-chip:hover:not(.is-on),
-.community-tag-chip:hover:not(.active) { background: var(--panel-alt); }
+.strat-chip:hover:not(.is-on) { background: var(--panel-alt); }
 
 /* ── Wells: recessed, inset fill + hairline ──────────────── */
-.mm-cp, .mm-timer-display, .stockpile-stepper, .wgp-stepper,
+ .stockpile-stepper, .wgp-stepper,
 .reserves-view-count,
 .changelog-refresh-tip kbd, .cmdp-footer kbd, .cmdp-help-keys kbd,
 .auth-recovery-code, .unit-detail-datasheet .detail-stat-strip,
-.build-hero-bar-wrap, .yaab-dp-readout, .crusade-xp-bar-wrap,
-.tp-progress, .al-day-summary {
+.build-hero-bar-wrap,
+.tp-progress {
   background: var(--nb-inset);
   border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
@@ -1515,23 +1464,15 @@ body.build-mode-enhanced .army-entry-qty input {
 .lore-browse-item:hover { background: var(--nb-hot); color: var(--nb-on-hot); }
 .lore-paragraph, .lore-tagline { color: var(--text); }
 
-/* Deployment planner: the battlefield is paper with an ink grid, not a
-   glowing dark table. */
-.yaab-dp-field-wrap { background: var(--nb-inset); border: 3px solid var(--nb-ink); }
-.yaab-dp-side { background: var(--panel-alt); }
-.yaab-dp-btn.yaab-dp-btn-danger { color: var(--nb-red); border-color: var(--nb-red); }
-.yaab-dp-token-placed, .yaab-dp-readout { color: var(--nb-gold); }
-.yaab-dp-swatch { border: 2px solid var(--nb-ink); }
-
 /* Changelog kind pills — the last three hardcoded pastels. */
 .changelog-kind-feature { color: var(--nb-green); border-color: var(--nb-green); }
 .changelog-kind-fix     { color: var(--nb-orange); border-color: var(--nb-orange); }
 .changelog-kind-change  { color: var(--nb-blue); border-color: var(--nb-blue); }
 
 /* Community + starter cards carry a pastel faction tint on the border. */
-.community-card, .starter-card { border-color: var(--nb-ink); }
-.community-card, .starter-card { box-shadow: var(--nb-sh-card); transition: var(--nb-press); }
-.community-card:hover, .starter-card:hover {
+ .starter-card { border-color: var(--nb-ink); }
+ .starter-card { box-shadow: var(--nb-sh-card); transition: var(--nb-press); }
+ .starter-card:hover {
   transform: translate(4px, 4px);
   box-shadow: var(--nb-sh-press);
 }
@@ -1561,15 +1502,10 @@ body.build-mode-enhanced .army-entry-qty input {
 .filter-chip.collection-chip-painted.active *,
 .topbar-mode-tab[aria-selected="true"] *,
 .btn-accent *,
-.mm-phase-active *, .mm-btn-accent *,
 .strat-chip.is-on *,
-.community-tag-chip.active *,
-.al-tab.is-active *,
 .cmdp-row.active *,
-.yaab-dp-btn.yaab-dp-btn-active *,
 .build-detail-tab.is-active *,
 .tp-progress.is-active *,
-.kt-switch.kt-switch-on *,
 .collect-subtab.is-active *,
 .cp-badge *, .stratagem-cp-badge *, .enhancement-pts-badge *, .strat-phase-badge * {
   color: var(--accent-on) !important;
@@ -1586,11 +1522,7 @@ body.build-mode-enhanced .army-entry-qty input {
 .topbar-action-btn:hover *,
 .topbar-action-btn[aria-expanded="true"] *,
 .topbar-brand:hover *,
-.mm-btn:hover *, .mm-btn-round:hover *, .mm-btn-sm:hover *,
 .strat-use:hover *,
-.community-card-preview:hover *,
-.yaab-dp-btn:hover:not(.yaab-dp-btn-active) *,
-.kt-banner-action:hover *,
 .lore-browse-item:hover *, .lore-btn:hover *,
 .tp-generate:hover *, .starter-btn-surprise:hover *,
 .dropdown-menu [role="menuitem"]:hover *,
@@ -1609,20 +1541,6 @@ body.build-mode-enhanced .army-entry-qty input {
 }
 .lore-faction-name { font-weight: 900; letter-spacing: 0.04em; }
 .lore-paragraph { text-align: left; }
-
-/* The planner's battlefield surround and unit rail resisted the plain-class
-   rules above — something in the module out-specifies them and it was not
-   worth another round of tracing for two panels. Qualified by the modal, which
-   wins outright. The canvas itself is painted by deployment-planner.js
-   (ctx.fillStyle '#5d7d52'), so the green mat is a JS concern, not a CSS one —
-   left alone deliberately: it reads as a gaming table, which is the point. */
-.yaab-dp-modal .yaab-dp-field-wrap {
-  background: var(--nb-inset);
-  background-image: none;
-  border: 3px solid var(--nb-ink);
-}
-.yaab-dp-modal .yaab-dp-side { background: var(--panel-alt); }
-.yaab-dp-modal .yaab-dp-canvas-host { box-shadow: 6px 6px 0 var(--nb-ink); }
 
 /* ============================================================
    SPECIFICITY FIXES

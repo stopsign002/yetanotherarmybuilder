@@ -31,20 +31,23 @@
     entries: [
       {
         date: '2026-08-29', kind: 'change',
-        title: 'Play mode and the analysis tools have been removed',
+        title: 'A large group of features has been removed',
         description:
-          'A group of features has been taken out: Play mode (the game-day ' +
-          'cockpit), the damage calculator, army analytics, the list coach, ' +
-          'the side-by-side matchup viewer with its opponent paste-in box, ' +
-          'and voice commands. The calculators and scoring tools were never ' +
-          'a concept we were happy with \u2014 YAAB is for building lists, ' +
-          'not for simulating dice \u2014 and Play mode is being redesigned ' +
-          'from scratch rather than patched, so it has gone while that work ' +
-          'happens. Everything about building, saving, sharing and printing ' +
-          'an army is untouched, as are the match tracker, stratagems ' +
-          'browser, deployment planner, synergy detector, Crusade, Kill ' +
-          'Team, Cards and Collect. If the app was left on the Play tab it ' +
-          'will simply open in Build next time.',
+          'YAAB is now focused on building, saving, sharing and printing an ' +
+          'army list, and a lot of things that had grown around that have ' +
+          'been taken out: Play mode, the damage calculator, army analytics, ' +
+          'the list coach, the matchup viewer and its opponent paste-in box, ' +
+          'voice commands, the stratagem browser, match mode, the deployment ' +
+          'planner, the dice roller, the synergy detector, army history and ' +
+          'diffing, the community feed, the activity log, and the Crusade ' +
+          'and Kill Team trackers (including their tabs in Collect). ' +
+          'The calculators and scoring tools were never a concept we were ' +
+          'happy with, and Play mode is being redesigned from scratch rather ' +
+          'than patched. What stays: the whole builder, detachments, ' +
+          'enhancements, wargear, reserves and requisitions, the army rules ' +
+          'and stratagems reference, King of the Coliseum, the painting ' +
+          'tracker in Collect, data cards, tournament export, faction lore, ' +
+          'sharing and your saved armies. Nothing you have saved is affected.',
       },
       {
         date: '2026-08-23', kind: 'fix',

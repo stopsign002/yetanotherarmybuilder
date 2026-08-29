@@ -15,18 +15,6 @@
   //                    real handler is found, used to invoke the user's intent.
   const MODULES = [
     {
-      id: 'match-mode',
-      srcs: ['js/app/match-mode.js'],
-      placeholders: [{
-        kind: 'toolbar',
-        id: 'yaab-btn-match',
-        region: 'primary',
-        label: 'Match',
-        category: 'game',
-        title: 'Start a game-day match tracker',
-      }],
-    },
-    {
       id: 'tournament-export',
       srcs: ['js/ui/tournament-export.js'],
       placeholders: [{
@@ -36,57 +24,6 @@
         label: 'Tournament',
         category: 'analysis',
         title: 'Generate tournament prep PDF',
-      }],
-    },
-    {
-      id: 'crusade',
-      srcs: ['js/app/crusade.js'],
-      placeholders: [{
-        kind: 'toolbar',
-        id: 'yaab-btn-crusade',
-        region: 'primary',
-        label: 'Crusade',
-        category: 'game',
-        title: 'Crusade campaign tracker',
-      }],
-    },
-    {
-      id: 'kill-team',
-      srcs: ['js/app/kill-team.js'],
-      placeholders: [{
-        kind: 'toolbar',
-        id: 'yaab-btn-kill-team',
-        region: 'primary',
-        label: 'Kill Team',
-        category: 'game',
-        title: 'Toggle small-format game mode',
-      }],
-    },
-    {
-      id: 'deployment-planner',
-      srcs: ['js/ui/deployment-planner.js'],
-      placeholders: [{
-        kind: 'toolbar',
-        // Deployment planner registers without an id; key by label so we can
-        // match the real action when it loads.
-        id: 'yaab-btn-deploy',
-        matchByLabel: 'Deploy',
-        region: 'primary',
-        label: 'Deploy',
-        category: 'game',
-        title: 'Deployment planner — drag units onto a battlefield',
-      }],
-    },
-    {
-      id: 'synergy',
-      srcs: ['js/ui/synergy.js'],
-      placeholders: [{
-        kind: 'toolbar',
-        id: 'yaab-btn-synergy',
-        region: 'icon',
-        label: '⟡',
-        ariaLabel: 'Synergy detector',
-        title: 'Detected synergies in your army',
       }],
     },
     {
@@ -109,42 +46,6 @@
           try { App.openFactionLore(name); } catch (_) {}
         }
       },
-    },
-    {
-      id: 'army-diff',
-      srcs: ['js/app/army-diff.js'],
-      placeholders: [{
-        kind: 'toolbar',
-        id: 'yaab-btn-history',
-        region: 'primary',
-        label: 'History',
-        category: 'data',
-        title: 'View army version history',
-      }],
-    },
-    {
-      id: 'community-feed',
-      srcs: ['js/app/community-feed.js'],
-      placeholders: [{
-        kind: 'toolbar',
-        id: 'yaab-btn-community-feed',
-        region: 'primary',
-        label: 'Community',
-        category: 'data',
-        title: 'Browse community army lists',
-      }],
-    },
-    {
-      id: 'activity-log',
-      srcs: ['js/app/activity-log.js'],
-      placeholders: [{
-        kind: 'toolbar',
-        id: 'yaab-btn-activity-log',
-        region: 'primary',
-        label: 'Activity',
-        category: 'data',
-        title: 'View session activity log',
-      }],
     },
   ];
 

@@ -1706,7 +1706,7 @@
       // from the browser's phase chips. `phase` stays a single string — it's
       // the contract faction-rules.js and detail.js render — but a strat that
       // covers every phase is labelled "Any", which is already a PHASES chip in
-      // js/app/stratagems.js, rather than being stranded under Command.
+      // the stratagem list, rather than being stranded under Command.
       const phases = (s.phases || []).map(cap).filter(Boolean);
       return {
         name: s.name,

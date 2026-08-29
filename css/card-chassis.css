@@ -27,7 +27,6 @@
 .unit-card,
 .army-entry,
 .starter-card,
-.community-card,
 .ac-card {
   background: var(--yaab-card-bg);
   border: 1px solid var(--yaab-card-border-soft);
@@ -45,7 +44,6 @@
 .yaab-card,
 .unit-card,
 .starter-card,
-.community-card,
 .ac-card {
   padding: var(--yaab-card-pad);
 }
@@ -72,7 +70,6 @@
 .yaab-card:hover,
 .unit-card:hover,
 .starter-card:hover,
-.community-card:hover,
 .ac-card:hover {
   transform: translateY(-1px);
   border-color: rgba(var(--yaab-card-accent-rgb), 0.55);
@@ -89,7 +86,6 @@
 .yaab-card:active,
 .unit-card:active,
 .starter-card:active,
-.community-card:active,
 .ac-card:active {
   transform: translateY(0) scale(0.985);
   box-shadow: none;
@@ -100,7 +96,6 @@
 .unit-card:focus-visible,
 .army-entry:focus-visible,
 .starter-card:focus-visible,
-.community-card:focus-visible,
 .ac-card:focus-visible {
   outline: none;
   box-shadow: var(--yaab-card-shadow-a);
@@ -116,7 +111,6 @@
 .yaab-card.is-selected,
 .yaab-card.selected,
 .unit-card.selected,
-.community-card.is-selected,
 .starter-card.is-selected {
   border-color: var(--yaab-card-accent);
   background: linear-gradient(
@@ -329,7 +323,6 @@
   .unit-card,
   .army-entry,
   .starter-card,
-  .community-card,
   .ac-card,
   .yaab-flip-ghost {
     transition: none !important;
@@ -338,7 +331,6 @@
   .yaab-card:hover,
   .unit-card:hover,
   .starter-card:hover,
-  .community-card:hover,
   .ac-card:hover {
     transform: none;
   }

@@ -20,10 +20,7 @@ Each attaches methods onto `window.UI`.
 | `datasheet.js` | `UI.renderDatasheet`, `UI.renderArmyDatasheets`, `UI.printUnitDatasheet`, `UI.printArmyDatasheets`, `UI.printCurrentArmy`. Registers a detail-action button. |
 | `dropdown.js` | `UI.initDropdowns()` — click-to-toggle + keyboard for Tools/More/Export menus. |
 | `action-center.js` | `UI.actionCenter` — slide-in sheet with 6 sections (Game Day / Analyze / Print & Export / Browse / Collection / Settings). |
-| `deployment-planner.js` | `UI.deploymentPlanner.open/close` — drag-drop battlefield, per-army. |
-| `synergy.js` | Detects leader attachments + keyword combos in current army. Toolbar-icon button. |
 | `tournament-export.js` | "Tournament Prep" multi-page PDF bundle. |
-| `dice-roller.js` | Click any stat cell to roll d6, shown as a floating badge. |
 | `celebrations.js` | Confetti, rolling-points tween, landing pulse, shimmer. `armyChange` hook. |
 | `save-pulse.js` | Pulses Save while the current army has unsaved mutations. |
 | `scanline.js` | Tactical-display sweep on faction switch + body classes for active-panel accent stripes. |
@@ -73,13 +70,6 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 | `favorites.js` | Star/unstar units, Recents chip, filter view. |
 | `collection.js` | Owned/painted tracker. |
 | `starter-lists.js` | Curated starter armies + "Surprise me". |
-| `match-mode.js` | Game-day overlay (CP, turns, phases, wounds, VP). |
-| `kill-team.js` | Small-format mode. `App.toggleKillTeamMode`. |
-| `stratagems.js` | Stratagem browser modal. |
-| `crusade.js` | Campaign tracker (XP, ranks, scars, battle log). |
-| `army-diff.js` | Labeled snapshots on save + two-version diff modal. |
-| `activity-log.js` | Passive session change history, in-memory + per-day localStorage. |
-| `community-feed.js` | Read-only browsable feed of curated lists. |
 | `lore.js` | `App.openFactionLore` — faction lore browser modal. |
 | `bug-report.js` | Diagnostics modal + prefilled GitHub issue URL. |
 | `first-time-tour.js` | One-shot 3-step guided tour. |
