@@ -128,13 +128,20 @@ const browser = await chromium.launch();
   check('desktop: all sheets pre-rendered in DOM', sheetStates.total === 3, JSON.stringify(sheetStates));
   check('desktop: exactly one sheet visible', sheetStates.visible === 1);
 
-  // Sheet actually renders datasheet content (stats + a weapons table).
+  // Sheet actually renders the Details-pane datasheet (stat pillars +
+  // weapon section), with the builder chrome stripped.
   const sheetHasContent = await page.$eval('.play-sheet:not([hidden])', el => ({
-    stats: !!el.querySelector('.dcc-stats'),
-    name: (el.querySelector('.dcc-name') || {}).textContent || '',
-    weapons: !!el.querySelector('.dcc-weapons, .dcc-section'),
+    detail: !!el.querySelector('.unit-detail-content'),
+    stats: !!el.querySelector('.detail-stat-pillar'),
+    name: (el.querySelector('.detail-name') || {}).textContent || '',
+    weapons: !!el.querySelector('.detail-weapons-section'),
+    addBtn: !!el.querySelector('#btn-detail-add, .detail-add-btn'),
+    enhCheckbox: !!el.querySelector('.enhancement-cb'),
   }));
-  check('desktop: visible sheet has stat block', sheetHasContent.stats, sheetHasContent.name);
+  check('desktop: visible sheet is the Details-pane datasheet', sheetHasContent.detail && sheetHasContent.stats, sheetHasContent.name);
+  check('desktop: sheet has weapon tables', sheetHasContent.weapons);
+  check('desktop: no Add-to-Army / enhancement checkboxes on sheet',
+    !sheetHasContent.addBtn && !sheetHasContent.enhCheckbox);
 
   // Switching: click the 3rd chip; no network requests may fire.
   let reqs = 0;
@@ -152,6 +159,12 @@ const browser = await chromium.launch();
   await page.waitForTimeout(100);
   const afterArrow = await page.$eval('.play-sheet:not([hidden])', el => el.dataset.entryId);
   check('desktop: ArrowLeft pages to previous sheet', afterArrow === seed.entryIds[1]);
+
+  // The leader entry (now visible) carries an enhancement — its sheet shows
+  // it as a read-only Enhancements section.
+  const leaderEnh = await page.$eval('.play-sheet:not([hidden])', el =>
+    [...el.querySelectorAll('.detail-section-title')].some(t => /enhancements/i.test(t.textContent)));
+  check('desktop: leader sheet lists its enhancement read-only', leaderEnh);
 
   // Tabs.
   for (const [tab, expectSel] of [
@@ -326,7 +339,7 @@ const browser = await chromium.launch();
   const before = await page.$eval('.play-sheet:not([hidden])', el => el.dataset.entryId);
   await page.evaluate(() => {
     const panel = document.querySelector('.play-panel[data-panel="sheets"]');
-    const card = panel.querySelector('.play-sheet:not([hidden]) .dcc-head');
+    const card = panel.querySelector('.play-sheet:not([hidden]) .detail-header');
     function touchEv(type, x, y) {
       const t = new Touch({ identifier: 1, target: card, clientX: x, clientY: y });
       return new TouchEvent(type, { changedTouches: [t], bubbles: true, cancelable: true });

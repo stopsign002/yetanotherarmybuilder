@@ -162,10 +162,20 @@
     </div>`;
   }
 
-  UI.renderUnitDetail = function (unit, detachmentEnhancements = [], selectedEnhancements = []) {
+  // opts (all optional):
+  //   host     — element to render into instead of #unit-detail-panel. Lets
+  //              other surfaces (Play mode) show the same datasheet without
+  //              stealing the build-mode Details pane.
+  //   gameView — game-day rendering: drop the builder chrome (Add to Army,
+  //              squad-size stepper, wargear picker, enhancement checkboxes,
+  //              hook action buttons) and render selectedEnhancements as a
+  //              read-only section instead.
+  UI.renderUnitDetail = function (unit, detachmentEnhancements = [], selectedEnhancements = [], opts = {}) {
     const esc = UI.escapeHtml;
-    const panel = document.getElementById('unit-detail-panel');
-    const empty = document.getElementById('unit-detail-empty');
+    const panel = opts.host || document.getElementById('unit-detail-panel');
+    if (!panel) return;
+    const gameView = !!opts.gameView;
+    const empty = opts.host ? null : document.getElementById('unit-detail-empty');
     if (empty) empty.style.display = 'none';
 
     const stats        = unit.stats        || {};
@@ -234,10 +244,10 @@
         </div>
         <div class="detail-header-actions detail-banner-actions">
           ${ptsStackHtml}
-          ${(window.App && App.hooks && App.hooks.detailActions || []).map(a =>
+          ${(gameView ? [] : (window.App && App.hooks && App.hooks.detailActions || [])).map(a =>
             `<button class="detail-action-btn" data-action-id="${esc(a.id)}" title="${esc(a.title || '')}">${a.html || esc(a.label || '')}</button>`
           ).join('')}
-          <button class="btn-google-search" id="btn-google-images" data-unit="${esc(unit.name)}" title="Search Google Images">
+          <button class="btn-google-search"${opts.host ? '' : ' id="btn-google-images"'} data-unit="${esc(unit.name)}" title="Search Google Images">
             <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -265,7 +275,7 @@
     const sizeLabel = (opt) => opt
       ? (opt.models ? `${opt.models} models — ${opt.pts} pts` : `${opt.pts} pts`)
       : '—';
-    html += `
+    if (!gameView) html += `
       <div class="detail-add-section">
         <div class="detail-add-row">
           ${hasSquadChoice ? `
@@ -676,7 +686,7 @@
       let out = `<div class="detail-section detail-wargear-abilities-section">
         <div class="detail-section-title detail-section-title-wargear">Wargear</div>`;
       out += wg;
-      if (unit.wargearProfile) out += `<div id="detail-wargear-picker"></div>`;
+      if (unit.wargearProfile && !gameView) out += `<div id="detail-wargear-picker"></div>`;
       out += waHtml;
       out += `</div>`;
       return out;
@@ -809,7 +819,20 @@
     // where the feature lives, with a contextual hint when they haven't
     // selected a detachment yet. Epic Heroes with no detachment loaded
     // get nothing (the "pick a detachment" hint would be misleading).
-    if (anyEligible || (detachmentEnhancements && detachmentEnhancements.length > 0)) {
+    if (gameView) {
+      // Game-day view: the enhancements this entry actually took, read-only.
+      if ((selectedEnhancements || []).length > 0) {
+        html += `<div class="detail-section">
+          <div class="detail-section-title">Enhancements</div>`;
+        selectedEnhancements.forEach(e => {
+          html += `<div class="detail-ability">
+            <span class="detail-ability-name">${esc(e.name)}${e.pts ? ` (+${esc(String(e.pts))} pts)` : ''}</span>
+            <span class="detail-ability-desc">${UI.mdBold(e.description || '—')}</span>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+    } else if (anyEligible || (detachmentEnhancements && detachmentEnhancements.length > 0)) {
       const selectedNames = new Set((selectedEnhancements || []).map(e => e.name));
       html += `<div class="detail-section" id="detail-enhancements-section">
         <div class="detail-section-title">Enhancements</div>`;
@@ -872,11 +895,14 @@
 
     // Fill the wargear picker (points-only mode; no-op when the unit has no
     // priced options).
-    if (unit.wargearProfile && window.App && App.WargearPicker) {
+    if (unit.wargearProfile && !gameView && window.App && App.WargearPicker) {
       try { App.WargearPicker.mount(unit, panel); } catch (_) {}
     }
 
-    document.getElementById('btn-google-images').addEventListener('click', e => {
+    // Scoped to the render target — hosted renders (Play mode) keep one
+    // datasheet per host, so getElementById would always hit the first copy.
+    const googleBtn = panel.querySelector('.btn-google-search');
+    if (googleBtn) googleBtn.addEventListener('click', e => {
       const name = e.currentTarget.dataset.unit;
       window.open('https://www.google.com/search?q=' + encodeURIComponent('warhammer 40k ' + name + ' miniature') + '&tbm=isch', 'yaab_img');
     });

@@ -261,7 +261,7 @@
     body.addEventListener('touchstart', e => {
       touch = null;
       if (_activeTab !== 'sheets') return;
-      if (e.target.closest('.dcc-weapons, .play-tracker')) return;
+      if (e.target.closest('.dcc-weapons, .detail-weapons-section, .play-tracker')) return;
       const t = e.changedTouches && e.changedTouches[0];
       if (t) touch = { x: t.clientX, y: t.clientY };
     }, { passive: true });
@@ -492,9 +492,25 @@
         +   '<button type="button" class="play-dead" aria-pressed="false">☠ Mark destroyed</button>'
         +   wounds
         + '</div>'
-        + cardArticle('unit', cr.renderUnitCard(entry))
+        + '<div class="play-detail-host"></div>'
         + '</div>';
     }).join('');
+    // Datasheets are the build-mode Details pane, rendered into each sheet's
+    // host (UI.renderUnitDetail with opts.host + gameView — no Add to Army,
+    // no pickers; the entry's own enhancements render read-only).
+    ordered.forEach(({ entry }) => {
+      const sheet = panel.querySelector('.play-sheet[data-entry-id="' + entry.entryId + '"]');
+      const host = sheet && sheet.querySelector('.play-detail-host');
+      if (!host) return;
+      const unit = (typeof App.findUnit === 'function' && App.findUnit(entry.unitId, army.factionName))
+        || entry.unitData || {};
+      try {
+        UI.renderUnitDetail(unit, [], entry.enhancements || [], { host, gameView: true });
+      } catch (e) {
+        host.innerHTML = '<p class="muted">Could not render this datasheet.</p>';
+        try { console.warn('[play-mode] renderUnitDetail failed:', e && e.message); } catch (_) {}
+      }
+    });
   }
 
   function renderStrats(root, cr) {

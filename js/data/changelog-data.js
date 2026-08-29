@@ -26,8 +26,8 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.29-3',
-    lastUpdated: '2026-08-29T12:00:00Z',
+    version:     '2026.08.29-4',
+    lastUpdated: '2026-08-29T14:00:00Z',
     entries: [
       {
         date: '2026-08-29', kind: 'feature',
@@ -38,7 +38,10 @@
           'switcher (swipe between sheets on a phone, arrow keys on ' +
           'desktop), with tabs for your stratagems, army and detachment ' +
           'rules, and enhancements — everything pre-loaded, so switching is ' +
-          'instant. Light in-game tracking on top: a CP counter, and a ' +
+          'instant. Datasheets use the same layout as the builder’s ' +
+          'Details pane (with the builder controls stripped), so nothing ' +
+          'looks unfamiliar mid-game. Light in-game tracking on top: a CP ' +
+          'counter, and a ' +
           'wounds stepper plus a destroyed toggle on each unit, remembered ' +
           'per army until you hit Reset game. Find it via the Play button ' +
           'in the top bar, or under Play in the Settings menu (now on ' +

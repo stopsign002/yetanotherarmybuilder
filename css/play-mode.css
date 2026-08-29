@@ -340,9 +340,21 @@
   color: var(--text);
   white-space: nowrap;
 }
-.play-sheet.is-dead .dcc-card {
+.play-sheet.is-dead .play-detail-host {
   opacity: 0.45;
   filter: grayscale(0.8);
+}
+
+/* The datasheet is the build-mode Details pane (`.unit-detail-content`
+ * markup from UI.renderUnitDetail) — all its own styling travels with the
+ * class names; this is just the panel-shaped container it normally gets
+ * from #panel-right. */
+.play-detail-host {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 12px;
+  overflow: hidden;
 }
 
 /* ── Enhancements tab extras ────────────────────────────────────────── */

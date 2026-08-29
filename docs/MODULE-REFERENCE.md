@@ -654,9 +654,9 @@ Cross-cutting docs:
 ### `js/ui/play-mode.js`
 - **Purpose:** Play mode — fast-switching game-day reference (owns `#play-mode`). Persistent unit switcher + Sheets / Stratagems / Rules / Enhancements tabs, everything pre-rendered so switching is class-toggling only. Light tracking: CP counter, per-entry wounds stepper + destroyed toggle.
 - **Exports:** `App.openPlayMode` (entry point), `App.playMode.{activate, refresh}`.
-- **Depends on:** `App.CardRenderers` (the facade `cards-mode.js` exposes over its card renderers/gatherers), `App.hooks.{modeChange, armyChange, selectionChange, bootstrap, armyToolbarActions}`, `App.state`, `UI.escapeHtml`.
+- **Depends on:** `UI.renderUnitDetail` with `opts.host` + `opts.gameView` (datasheets are the build-mode Details pane, builder chrome stripped); `App.CardRenderers` (the facade `cards-mode.js` exposes over its card renderers/gatherers) for the stratagem/rule cards and gatherers; `App.hooks.{modeChange, armyChange, selectionChange, bootstrap, armyToolbarActions}`, `App.state`, `UI.escapeHtml`.
 - **Storage:** `localStorage.yaab_play_view` (active tab + last sheet per army — device-local), `yaab_play_game` (per-army CP + per-entry wounds/dead, capped at the 10 most-recently-touched armies — device-local, deliberately NOT cloud-synced).
-- **DOM:** `#play-mode` host; card markup reuses the `.dcc-*` classes, re-scaled for screen by the `#play-mode`-scoped block in `css/play-mode.css`.
+- **DOM:** `#play-mode` host. Datasheets render `.unit-detail-content` markup into per-sheet `.play-detail-host` divs; the Stratagems/Rules/Enhancements tabs reuse the `.dcc-*` card classes, re-scaled for screen by the `#play-mode`-scoped block in `css/play-mode.css`.
 - **Notes:** Lazy-built on first activate; re-renders on army/selection change (dirty-flagged while hidden). Game state is keyed by `entryId` so it survives re-renders and army edits. Entry points: the top-bar shelf "Play" button (`btn-play-mode`, whitelisted in `TOPBAR_SHELF_IDS`) and the `go-play` Settings-drawer row (both widths).
 
 ### `js/ui/topbar-export.js`
