@@ -716,14 +716,22 @@
       exportActions.forEach(a => b.appendChild(renderActionRow(a)));
     }
 
-    // DISPLAY (toggles 0..4) — indices track the TOGGLES array above; keep
-    // these ranges in step when inserting a toggle.
-    b.appendChild(renderSectionHeader('Display'));
-    [0, 1, 2, 3, 4].forEach(i => b.appendChild(renderToggleRow(TOGGLES[i])));
+    // Sections name their toggles BY KEY, not by position in TOGGLES.
+    // This used to be `[0,1,2,3,4]` / `[5,6]` index ranges with a comment
+    // telling you to keep them in step; removing a toggle left a hole, and
+    // renderToggleRow(undefined) threw on `t.key` — which took the whole
+    // drawer down, and with it the mobile "More" tab, whose only job is to
+    // open it. A missing key now drops that row and nothing else.
+    const byKey = (k) => TOGGLES.filter(t => t && t.key === k);
+    const renderToggles = (keys) => keys.forEach(
+      k => byKey(k).forEach(t => b.appendChild(renderToggleRow(t))));
 
-    // AUDIO & INPUT (toggles 5..6)
+    b.appendChild(renderSectionHeader('Display'));
+    renderToggles(['yaab_show_legends', 'yaab_show_allies', 'yaab_ork_math',
+                   'yaab_show_collection_badges', 'yaab_reduced_motion']);
+
     b.appendChild(renderSectionHeader('Audio & input'));
-    [5, 6].forEach(i => b.appendChild(renderToggleRow(TOGGLES[i])));
+    renderToggles(['yaab_sound_enabled']);
 
     // HELP & SUPPORT
     b.appendChild(renderSectionHeader('Help & support'));
