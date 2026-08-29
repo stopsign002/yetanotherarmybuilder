@@ -143,6 +143,20 @@ const browser = await chromium.launch();
   check('desktop: no Add-to-Army / enhancement checkboxes on sheet',
     !sheetHasContent.addBtn && !sheetHasContent.enhCheckbox);
 
+  // No points anywhere in play mode: no banner points stack, no ordinal
+  // pricing box, no "pts" in the header or the unit chips.
+  const noPts = await page.evaluate(() => {
+    const root = document.querySelector('#play-mode');
+    return {
+      stack: !!root.querySelector('.detail-pts-stack'),
+      ordinal: !!root.querySelector('.detail-ordinal'),
+      headerPts: /\bpts\b/i.test(document.querySelector('.play-header').textContent),
+      chipPts: [...root.querySelectorAll('.play-unit-chip')].some(c => /\d+\s*pts/i.test(c.textContent)),
+    };
+  });
+  check('desktop: no points info anywhere in play mode',
+    !noPts.stack && !noPts.ordinal && !noPts.headerPts && !noPts.chipPts, JSON.stringify(noPts));
+
   // Switching: click the 3rd chip; no network requests may fire.
   let reqs = 0;
   const onReq = () => { reqs++; };

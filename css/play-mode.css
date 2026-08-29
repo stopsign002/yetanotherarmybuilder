@@ -52,11 +52,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.play-army-pts {
-  font-size: 13px;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
 .play-cp {
   display: flex;
   align-items: center;
@@ -207,17 +202,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.play-chip-side {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.play-chip-pts {
-  font-size: 11px;
-  color: var(--text-muted);
-}
 .play-chip-w {
+  flex: 0 0 auto;
   font-size: 11px;
   font-weight: 700;
   padding: 1px 6px;
@@ -372,19 +358,21 @@
   padding: 14px 12px;
   overflow: hidden;
 }
+/* With the points stack and ordinal-pricing box gone (gameView), the
+ * banner is just name + faction + flavor — tighten it so the stat strip
+ * and weapons start higher. */
+#play-mode .unit-detail-datasheet .detail-banner {
+  padding: 8px 12px;
+  margin-bottom: 6px;
+}
+#play-mode .detail-banner-full .detail-meta { margin-top: 0; }
 
 /* ── Enhancements tab extras ────────────────────────────────────────── */
-/* Long enhancement names + the TAKEN/pts cluster fight for one line; let
- * the cluster drop below the name instead of squeezing it into mid-word
- * breaks. */
+/* Long enhancement names + the TAKEN badge fight for one line; let the
+ * badge drop below the name instead of squeezing it into mid-word breaks. */
 #play-mode .play-enh-card .dcc-name-line { flex-wrap: wrap; }
-.play-enh-side {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-}
 .play-enh-taken-badge {
+  margin-left: auto;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -450,11 +438,6 @@
   text-overflow: clip;
 }
 #play-mode .dcc-sub-line { flex-wrap: wrap; row-gap: 3px; }
-#play-mode .dcc-pts {
-  font-size: 13px;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
 #play-mode .dcc-inv { font-size: 12px; padding: 1px 6px; border-radius: 3px; }
 #play-mode .dcc-sub-line { gap: 8px; margin-top: 3px; }
 #play-mode .dcc-stats { gap: 3px; margin-top: 3px; }
@@ -523,7 +506,6 @@
     border-bottom-color: var(--accent);
   }
   .play-unit-chip.is-leader { margin-left: 0; width: auto; }
-  .play-chip-pts { display: none; }
 
   .play-panel { padding: 10px; }
   .play-card-list { grid-template-columns: 1fr; gap: 10px; }

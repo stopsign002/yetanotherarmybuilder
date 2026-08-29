@@ -187,7 +187,7 @@
       root.dataset.activeTab = _activeTab;
       root.innerHTML = ''
         + '<header class="play-header">'
-        +   '<div class="play-title"><span class="play-army-name"></span><span class="play-army-pts"></span></div>'
+        +   '<div class="play-title"><span class="play-army-name"></span></div>'
         +   '<div class="play-cp" role="group" aria-label="Command points">'
         +     '<button type="button" class="play-cp-btn" data-cp="-1" aria-label="Spend a command point">&minus;</button>'
         +     '<span class="play-cp-val" aria-live="polite">0 CP</span>'
@@ -425,13 +425,10 @@
     }
     layout.hidden = false; header.hidden = false; empty.hidden = true;
 
-    // Header title.
+    // Header title. No points anywhere in play mode — game-day is rules
+    // reference, not list-building.
     const nameEl = root.querySelector('.play-army-name');
-    const ptsEl = root.querySelector('.play-army-pts');
     if (nameEl) nameEl.textContent = (army && army.name) || (faction && faction.factionName) || '';
-    let pts = 0;
-    try { pts = army && army.getTotalPoints ? army.getTotalPoints() : 0; } catch (_) {}
-    if (ptsEl) ptsEl.textContent = pts ? (pts + ' pts') : '';
 
     renderSheets(root, cr, army);
     renderStrats(root, cr);
@@ -468,16 +465,11 @@
     switcher.innerHTML = ordered.map(({ entry, isLeader }) => {
       const name = entry.customName || entry.unitName || (entry.unitData && entry.unitData.name) || 'Unit';
       const count = entry.count > 1 ? ' ×' + entry.count : '';
-      let epts = 0;
-      try { epts = army.getEntryPoints ? army.getEntryPoints(army.entries.indexOf(entry)) : 0; } catch (_) {}
       return '<button type="button" class="play-unit-chip' + (isLeader ? ' is-leader' : '')
         + '" role="tab" aria-selected="false" data-entry-id="' + esc(entry.entryId) + '">'
         + (isLeader ? '<span class="play-chip-lead" aria-hidden="true">⤷</span>' : '')
         + '<span class="play-chip-name">' + esc(name + count) + '</span>'
-        + '<span class="play-chip-side">'
-        +   '<span class="play-chip-w" hidden></span>'
-        +   (epts ? '<span class="play-chip-pts">' + epts + '</span>' : '')
-        + '</span>'
+        + '<span class="play-chip-w" hidden></span>'
         + '</button>';
     }).join('');
     panel.innerHTML = ordered.map(({ entry }) => {
@@ -584,7 +576,6 @@
           return '<article class="dcc-card dcc-card-rule dcc-tpl-classic play-enh-card">'
             + '<header class="dcc-head dcc-head-rule"><div class="dcc-name-line">'
             +   '<h1 class="dcc-name">' + esc(enh.name) + '</h1>'
-            +   (enh.pts ? '<span class="dcc-pts">+' + esc(String(enh.pts)) + ' pts</span>' : '')
             + '</div>'
             + '<div class="dcc-sub-line"><span class="dcc-role">ENHANCEMENT</span>'
             +   '<button type="button" class="play-enh-carrier" data-entry-id="' + esc(entry.entryId) + '">'
@@ -606,10 +597,7 @@
             + (takenNames.has(e.name) ? ' is-taken' : '') + '">'
             + '<header class="dcc-head dcc-head-rule"><div class="dcc-name-line">'
             +   '<h1 class="dcc-name">' + esc(e.name) + '</h1>'
-            +   '<span class="play-enh-side">'
-            +     (takenNames.has(e.name) ? '<span class="play-enh-taken-badge">TAKEN</span>' : '')
-            +     (e.pts ? '<span class="dcc-pts">+' + esc(String(e.pts)) + ' pts</span>' : '')
-            +   '</span>'
+            +   (takenNames.has(e.name) ? '<span class="play-enh-taken-badge">TAKEN</span>' : '')
             + '</div></header>'
             + '<div class="dcc-section dcc-rule-body"><div class="dcc-rule-text">' + cr.descHtml(e.description) + '</div></div>'
             + '</article>'

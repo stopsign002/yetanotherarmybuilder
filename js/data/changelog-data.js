@@ -26,8 +26,8 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.29-5',
-    lastUpdated: '2026-08-29T15:00:00Z',
+    version:     '2026.08.29-6',
+    lastUpdated: '2026-08-29T16:00:00Z',
     entries: [
       {
         date: '2026-08-29', kind: 'feature',
@@ -48,7 +48,9 @@
           'Exit button in the header (or the Back button). Find it via the ' +
           'Play button in the top bar, or under Play in the Settings menu ' +
           '(now on desktop too). Unlike the old cockpit-style Play mode ' +
-          'this one is reference-first: no phase tracker, no scorepad.',
+          'this one is reference-first: no phase tracker, no scorepad, and ' +
+          'no points anywhere — game-day is rules reference, and the space ' +
+          'goes to rules text instead.',
       },
       {
         date: '2026-08-29', kind: 'fix',

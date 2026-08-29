@@ -222,7 +222,9 @@
     // Points render as a right-aligned stack (big value + "POINTS" caption).
     // Multi-tier costs (e.g. "75 / 150") keep the first tier prominent and
     // dim the rest.
-    const ptsStackHtml = ptsOpts.length > 0
+    // gameView drops every price: points are list-building information and
+    // the space is better spent on rules text at the table.
+    const ptsStackHtml = (!gameView && ptsOpts.length > 0)
       ? `<div class="detail-pts-stack">
           <div class="detail-pts detail-banner-pts detail-pts-value">${ptsOpts.map((p, i) =>
             i === 0 ? esc(String(p)) : `<span class="detail-pts-sub">${esc(String(p))}</span>`
@@ -262,7 +264,7 @@
           <div class="detail-meta detail-banner-subtitle">
             ${subtitleParts.join('')}
           </div>
-          ${ordinalNoteHtml(unit)}
+          ${gameView ? '' : ordinalNoteHtml(unit)}
         </div>
       </div>
     `;
@@ -826,7 +828,7 @@
           <div class="detail-section-title">Enhancements</div>`;
         selectedEnhancements.forEach(e => {
           html += `<div class="detail-ability">
-            <span class="detail-ability-name">${esc(e.name)}${e.pts ? ` (+${esc(String(e.pts))} pts)` : ''}</span>
+            <span class="detail-ability-name">${esc(e.name)}</span>
             <span class="detail-ability-desc">${UI.mdBold(e.description || '—')}</span>
           </div>`;
         });
