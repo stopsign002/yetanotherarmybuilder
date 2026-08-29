@@ -32,8 +32,9 @@
   let _rendered   = false;   // renderAll has run at least once
   let _dirty      = true;    // army/selection changed while hidden
   let _activeTab  = 'sheets';
-  let _activeEntry = null;   // entryId of the visible sheet
-  let _entryOrder = [];      // entryIds in switcher order (for swipe prev/next)
+  let _activeEntry = null;   // virtual id of the visible sheet
+  let _entryOrder = [];      // virtual ids in switcher order (for swipe prev/next)
+  let _virtual = [];         // [{vid, entry, isLeader, copy}] from the last render
   let _saveTimer  = 0;
 
   // ── helpers ───────────────────────────────────────────────────────────
@@ -102,10 +103,10 @@
     mut(g);
     g.touchedAt = Date.now();
     if (!g.startedAt) g.startedAt = new Date().toISOString();
-    // GC: drop tracking for entries no longer in the army.
+    // GC: drop tracking for entries (or split copies) no longer in the army.
     const army = getArmy();
     if (army && army.id === armyId && Array.isArray(army.entries)) {
-      const live = new Set(army.entries.map(e => e.entryId).filter(Boolean));
+      const live = liveVids(army);
       Object.keys(g.units).forEach(id => { if (!live.has(id)) delete g.units[id]; });
     }
     all[armyId] = g;
@@ -132,8 +133,27 @@
   });
 
   // ── army entry ordering + wound math ──────────────────────────────────
+  // A stacked entry (count > 1) is N identical squads on the table, so play
+  // mode ALWAYS splits it: one virtual sheet per copy, each with its own
+  // wound/dead tracking. Virtual ids are `entryId` for copy 1 and
+  // `entryId::i` for the rest, so single-copy entries keep their stored
+  // game state unchanged.
+  function virtualId(entry, i) { return i === 0 ? entry.entryId : entry.entryId + '::' + i; }
+  function baseId(vid) { return String(vid).split('::')[0]; }
+  // Every live virtual id for the current army (for game-state GC).
+  function liveVids(army) {
+    const out = new Set();
+    ((army && army.entries) || []).forEach(e => {
+      if (!e || !e.entryId) return;
+      const n = Math.max(1, e.count || 1);
+      for (let i = 0; i < n; i++) out.add(virtualId(e, i));
+    });
+    return out;
+  }
   // Attached leaders sit immediately after their bodyguard entry so the
-  // switcher reads like the army list does ("who is this squad, who leads it").
+  // switcher reads like the army list does ("who is this squad, who leads
+  // it"); leaders follow the FIRST copy of a split squad, further copies
+  // come after them.
   function orderedEntries(army) {
     const entries = (army && Array.isArray(army.entries)) ? army.entries : [];
     const byParent = new Map();   // parent entryId -> [leader entries]
@@ -149,9 +169,20 @@
       }
     });
     const out = [];
+    const pushCopies = (e, isLeader, only) => {
+      const n = Math.max(1, e.count || 1);
+      for (let i = 0; i < n; i++) {
+        if (only != null && i !== only) continue;
+        out.push({ entry: e, isLeader, vid: virtualId(e, i), copy: n > 1 ? { i: i + 1, n } : null });
+      }
+    };
     roots.forEach(e => {
-      out.push({ entry: e, isLeader: false });
-      (byParent.get(e.entryId) || []).forEach(l => out.push({ entry: l, isLeader: true }));
+      pushCopies(e, false, 0);
+      (byParent.get(e.entryId) || []).forEach(l => pushCopies(l, true, null));
+      const n = Math.max(1, e.count || 1);
+      for (let i = 1; i < n; i++) {
+        out.push({ entry: e, isLeader: false, vid: virtualId(e, i), copy: { i: i + 1, n } });
+      }
     });
     return out;
   }
@@ -329,14 +360,14 @@
     writeGame(army.id, g => { g.cp = Math.max(0, (g.cp || 0) + delta); });
     applyGameState();
   }
-  function onWounds(entryId, delta) {
+  function onWounds(vid, delta) {
     const army = getArmy(); if (!army || !army.id) return;
-    const entry = (army.entries || []).find(e => e && e.entryId === entryId);
+    const entry = (army.entries || []).find(e => e && e.entryId === baseId(vid));
     if (!entry) return;
     const meta = unitMeta(entry);
     if (!meta.maxW) return;
     writeGame(army.id, g => {
-      const u = g.units[entryId] || (g.units[entryId] = { w: meta.maxW, dead: false });
+      const u = g.units[vid] || (g.units[vid] = { w: meta.maxW, dead: false });
       if (typeof u.w !== 'number') u.w = meta.maxW;
       u.w = Math.min(meta.maxW, Math.max(0, u.w + delta));
       // Single models: 0 wounds IS dead (and healing back revives). Squads
@@ -345,13 +376,13 @@
     });
     applyGameState();
   }
-  function onDead(entryId) {
+  function onDead(vid) {
     const army = getArmy(); if (!army || !army.id) return;
-    const entry = (army.entries || []).find(e => e && e.entryId === entryId);
+    const entry = (army.entries || []).find(e => e && e.entryId === baseId(vid));
     if (!entry) return;
     const meta = unitMeta(entry);
     writeGame(army.id, g => {
-      const u = g.units[entryId] || (g.units[entryId] = { w: meta.maxW, dead: false });
+      const u = g.units[vid] || (g.units[vid] = { w: meta.maxW, dead: false });
       u.dead = !u.dead;
     });
     applyGameState();
@@ -374,14 +405,13 @@
     const g = (army && army.id) ? gameFor(army.id) : { cp: 0, units: {} };
     const cpEl = _root.querySelector('.play-cp-val');
     if (cpEl) cpEl.textContent = g.cp + ' CP';
-    const entries = (army && army.entries) || [];
-    entries.forEach(entry => {
-      if (!entry || !entry.entryId) return;
+    _virtual.forEach(({ vid, entry }) => {
+      if (!entry || !vid) return;
       const meta = unitMeta(entry);
-      const u = g.units[entry.entryId] || {};
+      const u = g.units[vid] || {};
       const w = (typeof u.w === 'number') ? Math.min(meta.maxW, Math.max(0, u.w)) : meta.maxW;
       const dead = !!u.dead;
-      const sheet = _root.querySelector('.play-sheet[data-entry-id="' + entry.entryId + '"]');
+      const sheet = _root.querySelector('.play-sheet[data-entry-id="' + vid + '"]');
       if (sheet) {
         sheet.classList.toggle('is-dead', dead);
         const wVal = sheet.querySelector('.play-w-val');
@@ -393,7 +423,7 @@
           deadBtn.textContent = dead ? '☠ Destroyed' : '☠ Mark destroyed';
         }
       }
-      const chip = _root.querySelector('.play-unit-chip[data-entry-id="' + entry.entryId + '"]');
+      const chip = _root.querySelector('.play-unit-chip[data-entry-id="' + vid + '"]');
       if (chip) {
         chip.classList.toggle('is-dead', dead);
         const badge = chip.querySelector('.play-chip-w');
@@ -453,7 +483,8 @@
     const switcher = root.querySelector('.play-switcher');
     const panel = root.querySelector('.play-panel[data-panel="sheets"]');
     const ordered = orderedEntries(army);
-    _entryOrder = ordered.map(o => o.entry.entryId).filter(Boolean);
+    _virtual = ordered;
+    _entryOrder = ordered.map(o => o.vid).filter(Boolean);
     if (!ordered.length) {
       switcher.innerHTML = '';
       panel.innerHTML = '<div class="play-panel-empty"><p class="muted">No units in this army yet.</p>'
@@ -462,17 +493,17 @@
       if (btn) btn.addEventListener('click', () => { if (App.setMode) App.setMode('build'); });
       return;
     }
-    switcher.innerHTML = ordered.map(({ entry, isLeader }) => {
+    switcher.innerHTML = ordered.map(({ entry, isLeader, vid, copy }) => {
       const name = entry.customName || entry.unitName || (entry.unitData && entry.unitData.name) || 'Unit';
-      const count = entry.count > 1 ? ' ×' + entry.count : '';
+      const label = name + (copy ? ' #' + copy.i : '');
       return '<button type="button" class="play-unit-chip' + (isLeader ? ' is-leader' : '')
-        + '" role="tab" aria-selected="false" data-entry-id="' + esc(entry.entryId) + '">'
+        + '" role="tab" aria-selected="false" data-entry-id="' + esc(vid) + '">'
         + (isLeader ? '<span class="play-chip-lead" aria-hidden="true">⤷</span>' : '')
-        + '<span class="play-chip-name">' + esc(name + count) + '</span>'
+        + '<span class="play-chip-name">' + esc(label) + '</span>'
         + '<span class="play-chip-w" hidden></span>'
         + '</button>';
     }).join('');
-    panel.innerHTML = ordered.map(({ entry }) => {
+    panel.innerHTML = ordered.map(({ entry, vid }) => {
       const meta = unitMeta(entry);
       const wounds = meta.maxW
         ? '<div class="play-wounds" role="group" aria-label="Wounds remaining">'
@@ -481,8 +512,8 @@
           + '<button type="button" class="play-w-btn" data-w="1" aria-label="Heal a wound">+</button>'
           + '</div>'
         : '';
-      return '<div class="play-sheet" data-entry-id="' + esc(entry.entryId) + '" hidden>'
-        + '<div class="play-tracker" data-entry-id="' + esc(entry.entryId) + '">'
+      return '<div class="play-sheet" data-entry-id="' + esc(vid) + '" hidden>'
+        + '<div class="play-tracker" data-entry-id="' + esc(vid) + '">'
         +   '<button type="button" class="play-dead" aria-pressed="false">☠ Mark destroyed</button>'
         +   wounds
         + '</div>'
@@ -492,8 +523,8 @@
     // Datasheets are the build-mode Details pane, rendered into each sheet's
     // host (UI.renderUnitDetail with opts.host + gameView — no Add to Army,
     // no pickers; the entry's own enhancements render read-only).
-    ordered.forEach(({ entry }) => {
-      const sheet = panel.querySelector('.play-sheet[data-entry-id="' + entry.entryId + '"]');
+    ordered.forEach(({ entry, vid }) => {
+      const sheet = panel.querySelector('.play-sheet[data-entry-id="' + vid + '"]');
       const host = sheet && sheet.querySelector('.play-detail-host');
       if (!host) return;
       const unit = (typeof App.findUnit === 'function' && App.findUnit(entry.unitId, army.factionName))

@@ -26,8 +26,8 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.29-6',
-    lastUpdated: '2026-08-29T16:00:00Z',
+    version:     '2026.08.29-7',
+    lastUpdated: '2026-08-29T17:00:00Z',
     entries: [
       {
         date: '2026-08-29', kind: 'feature',
@@ -43,7 +43,10 @@
           'looks unfamiliar mid-game. Light in-game tracking on top: a CP ' +
           'counter, and a ' +
           'wounds stepper plus a destroyed toggle on each unit, remembered ' +
-          'per army until you hit Reset game. On phones Play mode takes the ' +
+          'per army until you hit Reset game. A stacked entry (the same ' +
+          'squad with a quantity of 2+) always splits into separate sheets ' +
+          'in Play mode — #1, #2, … — each tracked on its own, because on ' +
+          'the table they are separate squads. On phones Play mode takes the ' +
           'whole screen — the bottom tab bar disappears; leave with the ' +
           'Exit button in the header (or the Back button). Find it via the ' +
           'Play button in the top bar, or under Play in the Settings menu ' +

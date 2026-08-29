@@ -294,6 +294,36 @@ const browser = await chromium.launch();
   check('desktop: reset clears CP + dead', afterReset.cp === '0 CP' && afterReset.dead === false,
     JSON.stringify(afterReset));
 
+  // Stacked squads (count > 1) always split into one sheet per copy, with
+  // independent tracking.
+  await page.evaluate(() => { App.state.currentArmy.entries[2].count = 2; App.playMode.refresh(); });
+  await page.waitForTimeout(300);
+  const split = await page.evaluate(id => {
+    const chips = [...document.querySelectorAll('.play-unit-chip')];
+    const mine = chips.filter(c => c.dataset.entryId === id || c.dataset.entryId.startsWith(id + '::'));
+    return {
+      total: chips.length,
+      copies: mine.map(c => ({ vid: c.dataset.entryId, label: c.textContent.trim() })),
+      sheets: document.querySelectorAll('.play-sheet').length,
+    };
+  }, seed.entryIds[2]);
+  check('desktop: stacked squad splits into one chip per copy',
+    split.copies.length === 2 && split.total === 4, JSON.stringify(split.copies));
+  check('desktop: split copies numbered #1/#2',
+    split.copies[0].label.includes('#1') && split.copies[1].label.includes('#2'));
+  check('desktop: one pre-rendered sheet per copy', split.sheets === 4, split.sheets + ' sheets');
+  const vid2 = seed.entryIds[2] + '::1';
+  await page.click(`.play-unit-chip[data-entry-id="${vid2}"]`);
+  await page.click(`.play-sheet[data-entry-id="${vid2}"] .play-dead`);
+  await page.waitForTimeout(250);
+  const indep = await page.evaluate(({ v1, v2 }) => ({
+    c2dead: document.querySelector(`.play-unit-chip[data-entry-id="${v2}"]`).classList.contains('is-dead'),
+    c1dead: document.querySelector(`.play-unit-chip[data-entry-id="${v1}"]`).classList.contains('is-dead'),
+  }), { v1: seed.entryIds[2], v2: vid2 });
+  check('desktop: split copies track dead independently', indep.c2dead && !indep.c1dead, JSON.stringify(indep));
+  await page.evaluate(() => { App.state.currentArmy.entries[2].count = 1; App.playMode.refresh(); });
+  await page.waitForTimeout(200);
+
   // Exit button leaves play mode.
   const exitBtn = await page.$('.play-exit');
   check('desktop: Exit button present in header', !!exitBtn);
