@@ -475,8 +475,26 @@
     _rendered = true; _dirty = false;
   }
 
-  function cardArticle(kind, html) {
-    return '<article class="dcc-card dcc-card-' + kind + ' dcc-tpl-classic">' + html + '</article>';
+  // Grouped Details-pane renders: emit group headers + one host div per
+  // item, then call UI.renderRuleDetail into each host — the exact markup
+  // build mode shows when a stratagem/rule/enhancement is clicked.
+  // groups: [{label, items}]; render(item, host) fills one host.
+  function renderRuleHosts(panel, groups, render) {
+    panel.innerHTML = groups.map((g, gi) =>
+      '<h2 class="play-group-head">' + esc(g.label) + '</h2>'
+      + '<div class="play-card-list">'
+      + g.items.map((_, ii) =>
+          '<div class="play-detail-host play-rule-host" data-g="' + gi + '" data-i="' + ii + '"></div>'
+        ).join('')
+      + '</div>'
+    ).join('');
+    panel.querySelectorAll('.play-rule-host').forEach(host => {
+      const item = groups[+host.dataset.g].items[+host.dataset.i];
+      try { render(item, host); } catch (e) {
+        host.innerHTML = '<p class="muted">Could not render this entry.</p>';
+        try { console.warn('[play-mode] rule render failed:', e && e.message); } catch (_) {}
+      }
+    });
   }
 
   function renderSheets(root, cr, army) {
@@ -558,22 +576,24 @@
         : 'Core stratagems';
       group(label).items.push(item);
     });
-    panel.innerHTML = groups.map(g =>
-      '<h2 class="play-group-head">' + esc(g.label) + '</h2>'
-      + '<div class="play-card-list">'
-      + g.items.map(item => cardArticle('strat', cr.renderStratagemCard(item))).join('')
-      + '</div>'
-    ).join('');
+    renderRuleHosts(panel, groups, (item, host) => {
+      const s = item.strat || {};
+      UI.renderRuleDetail({
+        type: 'stratagem',
+        name: s.name,
+        description: s.description,
+        cp: s.cp != null ? s.cp : null,
+        phase: s.phase || null,
+      }, { host, gameView: true });
+    });
   }
 
   function renderRules(root, cr, faction) {
     const panel = root.querySelector('.play-panel[data-panel="rules"]');
-    let html = '';
+    const groups = [];
     const armyRules = (faction && Array.isArray(faction.armyRules)) ? faction.armyRules.filter(r => r && r.name) : [];
     if (armyRules.length) {
-      html += '<h2 class="play-group-head">Army rules</h2><div class="play-card-list">'
-        + armyRules.map(r => cardArticle('rule', cr.renderRuleCard({ kind: 'army', rule: r, label: r.name }))).join('')
-        + '</div>';
+      groups.push({ label: 'Army rules', items: armyRules.map(r => ({ rule: r, kindLabel: 'Army Rule' })) });
     }
     const seen = new Set();
     cr.getSelectedDetachments().forEach(det => {
@@ -581,17 +601,27 @@
       const rules = det.rules.filter(r => r && r.name && !seen.has(r.name));
       rules.forEach(r => seen.add(r.name));
       if (!rules.length) return;
-      html += '<h2 class="play-group-head">' + esc(det.name || 'Detachment') + '</h2><div class="play-card-list">'
-        + rules.map(r => cardArticle('rule', cr.renderRuleCard({ kind: 'detachment', rule: r, label: r.name }))).join('')
-        + '</div>';
+      groups.push({
+        label: det.name || 'Detachment',
+        items: rules.map(r => ({ rule: r, kindLabel: 'Detachment Rule' })),
+      });
     });
-    panel.innerHTML = html
-      || '<div class="play-panel-empty"><p class="muted">No rules to show &mdash; pick a faction and detachment first.</p></div>';
+    if (!groups.length) {
+      panel.innerHTML = '<div class="play-panel-empty"><p class="muted">No rules to show &mdash; pick a faction and detachment first.</p></div>';
+      return;
+    }
+    renderRuleHosts(panel, groups, (item, host) => {
+      UI.renderRuleDetail({
+        type: 'rule',
+        kindLabel: item.kindLabel,
+        name: item.rule.name,
+        description: item.rule.description,
+      }, { host, gameView: true });
+    });
   }
 
   function renderEnhance(root, cr, army) {
     const panel = root.querySelector('.play-panel[data-panel="enhance"]');
-    let html = '';
     // The army's chosen enhancements first, each linked to its carrier.
     const taken = [];
     ((army && army.entries) || []).forEach(entry => {
@@ -600,43 +630,48 @@
       });
     });
     const takenNames = new Set(taken.map(t => t.enh.name));
+    const groups = [];
     if (taken.length) {
-      html += '<h2 class="play-group-head">In this army</h2><div class="play-card-list">'
-        + taken.map(({ enh, entry }) => {
-          const carrier = entry.customName || entry.unitName || 'Unit';
-          return '<article class="dcc-card dcc-card-rule dcc-tpl-classic play-enh-card">'
-            + '<header class="dcc-head dcc-head-rule"><div class="dcc-name-line">'
-            +   '<h1 class="dcc-name">' + esc(enh.name) + '</h1>'
-            + '</div>'
-            + '<div class="dcc-sub-line"><span class="dcc-role">ENHANCEMENT</span>'
-            +   '<button type="button" class="play-enh-carrier" data-entry-id="' + esc(entry.entryId) + '">'
-            +     'On: ' + esc(carrier) + '</button>'
-            + '</div></header>'
-            + '<div class="dcc-section dcc-rule-body"><div class="dcc-rule-text">' + cr.descHtml(enh.description) + '</div></div>'
-            + '</article>';
-        }).join('')
-        + '</div>';
+      groups.push({ label: 'In this army', items: taken.map(t => ({ enh: t.enh, entry: t.entry, kind: 'taken' })) });
     }
     // Everything the selected detachments offer, for reference.
     cr.getSelectedDetachments().forEach(det => {
       const enhs = (det && Array.isArray(det.enhancements)) ? det.enhancements.filter(e => e && e.name) : [];
       if (!enhs.length) return;
-      html += '<h2 class="play-group-head">' + esc(det.name || 'Detachment') + ' enhancements</h2>'
-        + '<div class="play-card-list play-enh-all">'
-        + enhs.map(e =>
-            '<article class="dcc-card dcc-card-rule dcc-tpl-classic play-enh-card'
-            + (takenNames.has(e.name) ? ' is-taken' : '') + '">'
-            + '<header class="dcc-head dcc-head-rule"><div class="dcc-name-line">'
-            +   '<h1 class="dcc-name">' + esc(e.name) + '</h1>'
-            +   (takenNames.has(e.name) ? '<span class="play-enh-taken-badge">TAKEN</span>' : '')
-            + '</div></header>'
-            + '<div class="dcc-section dcc-rule-body"><div class="dcc-rule-text">' + cr.descHtml(e.description) + '</div></div>'
-            + '</article>'
-          ).join('')
-        + '</div>';
+      groups.push({
+        label: (det.name || 'Detachment') + ' enhancements',
+        items: enhs.map(e => ({ enh: e, kind: 'all' })),
+      });
     });
-    panel.innerHTML = html
-      || '<div class="play-panel-empty"><p class="muted">No enhancements &mdash; pick a detachment first.</p></div>';
+    if (!groups.length) {
+      panel.innerHTML = '<div class="play-panel-empty"><p class="muted">No enhancements &mdash; pick a detachment first.</p></div>';
+      return;
+    }
+    renderRuleHosts(panel, groups, (item, host) => {
+      UI.renderRuleDetail({
+        type: 'enhancement',
+        name: item.enh.name,
+        description: item.enh.description,
+      }, { host, gameView: true });
+      const main = host.querySelector('.detail-header-main');
+      if (item.kind === 'taken' && item.entry && main) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'play-enh-carrier';
+        btn.dataset.entryId = item.entry.entryId;
+        btn.textContent = 'On: ' + (item.entry.customName || item.entry.unitName || 'Unit');
+        main.appendChild(btn);
+      } else if (item.kind === 'all' && takenNames.has(item.enh.name)) {
+        host.classList.add('is-taken');
+        const eyebrow = host.querySelector('.detail-eyebrow');
+        if (eyebrow) {
+          const badge = document.createElement('span');
+          badge.className = 'play-enh-taken-badge';
+          badge.textContent = 'TAKEN';
+          eyebrow.appendChild(badge);
+        }
+      }
+    });
   }
 
   // ── activation + hooks ────────────────────────────────────────────────

@@ -975,10 +975,17 @@
     }).join('') + '</div>';
   }
 
-  UI.renderRuleDetail = function (data) {
+  // opts mirrors renderUnitDetail: `host` renders into a supplied element
+  // (Play mode shows every stratagem/rule/enhancement with this exact
+  // markup), `gameView` drops the list-building chrome (enhancement point
+  // cost — a stratagem's CP stays, that's a game resource). `data.kindLabel`
+  // optionally overrides the eyebrow (e.g. "Detachment Rule").
+  UI.renderRuleDetail = function (data, opts = {}) {
     const esc = UI.escapeHtml;
-    const panel = document.getElementById('unit-detail-panel');
-    const empty = document.getElementById('unit-detail-empty');
+    const panel = opts.host || document.getElementById('unit-detail-panel');
+    if (!panel) return;
+    const gameView = !!opts.gameView;
+    const empty = opts.host ? null : document.getElementById('unit-detail-empty');
     if (empty) empty.style.display = 'none';
 
     const existing = panel.querySelector('.unit-detail-content');
@@ -997,6 +1004,7 @@
     let kindLabel = 'Army Rule';
     if (isEnhancement) kindLabel = 'Enhancement';
     else if (isStratagem) kindLabel = 'Stratagem';
+    if (data.kindLabel) kindLabel = String(data.kindLabel);
 
     let sectionTitle = 'Rule';
     if (isEnhancement) sectionTitle = 'Enhancement';
@@ -1012,7 +1020,7 @@
         <div class="detail-pts-caption">${esc(caption)}</div>
       </div>
     </div>`;
-    if (isEnhancement && data.pts) headerActions = stack(data.pts, 'pts');
+    if (isEnhancement && data.pts && !gameView) headerActions = stack(data.pts, 'pts');
     else if (isStratagem && data.cp != null) headerActions = stack(data.cp, 'CP');
 
     // The phase used to trail the kind label on one line ("STRATAGEM · Shooting"),

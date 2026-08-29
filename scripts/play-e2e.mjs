@@ -153,7 +153,8 @@ const browser = await chromium.launch();
   const noPts = await page.evaluate(() => {
     const root = document.querySelector('#play-mode');
     return {
-      stack: !!root.querySelector('.detail-pts-stack'),
+      // CP stacks are fine (game resource); any stack captioned "pts" is not.
+      stack: [...root.querySelectorAll('.detail-pts-caption')].some(c => /pts|points/i.test(c.textContent)),
       ordinal: !!root.querySelector('.detail-ordinal'),
       headerPts: /\bpts\b/i.test(document.querySelector('.play-header').textContent),
       chipPts: [...root.querySelectorAll('.play-unit-chip')].some(c => /\d+\s*pts/i.test(c.textContent)),
@@ -187,9 +188,9 @@ const browser = await chromium.launch();
 
   // Tabs.
   for (const [tab, expectSel] of [
-    ['strats', '.play-panel[data-panel="strats"] .dcc-card-strat'],
-    ['rules', '.play-panel[data-panel="rules"] .dcc-card-rule'],
-    ['enhance', '.play-panel[data-panel="enhance"] .dcc-card'],
+    ['strats', '.play-panel[data-panel="strats"] .unit-detail-rule'],
+    ['rules', '.play-panel[data-panel="rules"] .unit-detail-rule'],
+    ['enhance', '.play-panel[data-panel="enhance"] .unit-detail-rule'],
   ]) {
     await page.click(`.play-tab[data-tab="${tab}"]`);
     const el = await page.waitForSelector(expectSel, { timeout: 5000 }).catch(() => null);
@@ -204,26 +205,36 @@ const browser = await chromium.launch();
     return {
       heads,
       hasCore: coreName && panel.textContent.toUpperCase().includes(coreName.toUpperCase()),
-      hasBold: !!panel.querySelector('strong'),
-      cards: panel.querySelectorAll('.dcc-card-strat').length,
+      // Details-pane rendering bolds only genuine **markers**; this faction's
+      // prose has none (verified), so assert the inverse responsibility:
+      // mdBold must never leak literal ** into rendered text.
+      noLiteralMarkers: !panel.textContent.includes('**')
+        && !document.querySelector('.play-panel[data-panel="rules"]').textContent.includes('**'),
+      cards: panel.querySelectorAll('.unit-detail-rule').length,
+      cpStacks: [...panel.querySelectorAll('.detail-pts-caption')].filter(c => /cp/i.test(c.textContent)).length,
+      stanzas: !!panel.querySelector('.strat-sections .strat-section-label'),
     };
   });
-  check('desktop: stratagem cards rendered', strat.cards > 5, strat.cards + ' cards');
+  check('desktop: stratagem cards rendered as Details-pane rules', strat.cards > 5, strat.cards + ' cards');
+  check('desktop: stratagems keep their CP stack', strat.cpStacks > 5, strat.cpStacks + ' CP stacks');
+  check('desktop: WHEN/TARGET/EFFECT stanza layout present', strat.stanzas);
   check('desktop: detachment stratagem group header present',
     strat.heads.some(h => h.includes(seed.dets[0])), JSON.stringify(strat.heads));
   check('desktop: core stratagems present', !!strat.hasCore);
-  check('desktop: **bold** converted to <strong>', strat.hasBold);
+  check('desktop: no literal ** markers leak into rendered text', strat.noLiteralMarkers);
 
   // Rules tab: army rules group + faction army rule name.
   const rules = await page.evaluate(() => {
     const panel = document.querySelector('.play-panel[data-panel="rules"]');
     return {
       heads: [...panel.querySelectorAll('.play-group-head')].map(h => h.textContent),
-      cards: panel.querySelectorAll('.dcc-card-rule').length,
+      cards: panel.querySelectorAll('.unit-detail-rule').length,
+      detEyebrow: [...panel.querySelectorAll('.detail-eyebrow')].some(e => /detachment rule/i.test(e.textContent)),
     };
   });
   check('desktop: rules tab has Army rules group', rules.heads.some(h => /army rules/i.test(h)));
-  check('desktop: rules cards rendered', rules.cards >= 1, rules.cards + ' cards');
+  check('desktop: rules rendered as Details-pane rules', rules.cards >= 1, rules.cards + ' cards');
+  check('desktop: detachment rules labelled as such', rules.detEyebrow);
 
   // Enhancements: taken enhancement listed with carrier link; link jumps to sheet.
   await page.click('.play-tab[data-tab="enhance"]');
@@ -418,7 +429,7 @@ const browser = await chromium.launch();
 
   // Tabs reachable + strats render on phone.
   await page.click('.play-tab[data-tab="strats"]');
-  const stratCard = await page.waitForSelector('.play-panel[data-panel="strats"] .dcc-card-strat', { timeout: 5000 }).catch(() => null);
+  const stratCard = await page.waitForSelector('.play-panel[data-panel="strats"] .unit-detail-rule', { timeout: 5000 }).catch(() => null);
   check('phone: stratagems tab renders', !!stratCard);
 
   await page.screenshot({ path: `${OUT}/phone-final.png`, fullPage: false });

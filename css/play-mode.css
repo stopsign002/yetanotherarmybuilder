@@ -1,15 +1,12 @@
 /* css/play-mode.css — Play mode: fast-switching game-day reference.
  *
  * Layout + controls are styled with the app's theme tokens so all three
- * themes work by construction. The datasheet/stratagem/rule cards reuse the
- * cards-mode `.dcc-*` markup and its parchment skin ON PURPOSE — a printed-
- * card look is theme-agnostic and matches what Cards mode prints — but the
- * print CSS is sized in mm for physical 4x6 sheets, so the `#play-mode`
- * id-scoped block at the bottom re-scales it for on-screen reading. Those
- * overrides must stay id-scoped: cards-mode.js injects a runtime
- * `<style>` that restyles `.dcc-card` at class specificity (texture,
- * radius, typography multipliers), and the id scope is what keeps the
- * user's PRINT settings from leaking into Play mode.
+ * themes work by construction. Every content surface — datasheets,
+ * stratagems, rules, enhancements — is the build-mode Details pane
+ * (`.unit-detail-content` markup from UI.renderUnitDetail /
+ * UI.renderRuleDetail, gameView-stripped), rendered into `.play-detail-host`
+ * containers, so all of its styling (and every theme's overrides) travels
+ * with the class names.
  */
 
 #play-mode { padding: 0; }
@@ -249,7 +246,7 @@
 }
 /* Rules read better single-column at full width. */
 .play-panel[data-panel="rules"] .play-card-list { grid-template-columns: 1fr; }
-.play-panel[data-panel="rules"] .dcc-card { max-width: 820px; }
+.play-panel[data-panel="rules"] .play-rule-host { max-width: 820px; }
 
 .play-panel-empty,
 .play-empty {
@@ -362,12 +359,9 @@
  * so the sheet opens straight at the stat strip. */
 #play-mode .unit-detail-content .detail-stats-section:first-child { margin-top: 0; }
 
-/* ── Enhancements tab extras ────────────────────────────────────────── */
-/* Long enhancement names + the TAKEN badge fight for one line; let the
- * badge drop below the name instead of squeezing it into mid-word breaks. */
-#play-mode .play-enh-card .dcc-name-line { flex-wrap: wrap; }
+/* ── Enhancements tab extras (decorations appended by play-mode.js) ─── */
 .play-enh-taken-badge {
-  margin-left: auto;
+  margin-left: 8px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -375,82 +369,36 @@
   border-radius: 3px;
   background: #2f5d34;
   color: #eaf5ea;
+  vertical-align: middle;
 }
-.play-enh-card.is-taken { outline: 2px solid rgba(47, 93, 52, 0.7); }
+.play-rule-host.is-taken { border-color: rgba(47, 93, 52, 0.9); }
 .play-enh-carrier {
-  margin-left: auto;
+  display: block;
+  margin-top: 6px;
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 3px 8px;
-  border: 1px solid #6a4f1f;
-  border-radius: 4px;
-  background: rgba(184, 144, 82, 0.25);
-  color: #1c1308;
+  padding: 4px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 120ms ease;
+  transition: background 120ms ease, border-color 120ms ease;
 }
-.play-enh-carrier:hover { background: rgba(184, 144, 82, 0.5); }
+.play-enh-carrier:hover { background: var(--card-hover); border-color: var(--accent); }
 
-/* ── dcc print-card re-scaling (screen, not 4x6 paper) ──────────────── *
- * cards-mode.css sizes everything in mm for print; at screen distance the
- * body text lands around 9.5px. The typography multipliers cards-mode.css
- * already routes every font through are the lever: bump them ~1.55x here
- * and re-point the handful of fixed-size bits (points pill, CP badge,
- * weapon stat columns). Also restate background/radius/muls that the
- * cards-texture <style> injects at class specificity, so the user's PRINT
- * texture/typography settings never restyle Play mode. */
-#play-mode .dcc-card {
-  width: auto;
-  height: auto;
-  background: #ecdfb9;
-  background-blend-mode: normal;
-  border-radius: 12px;
-  padding: 12px 14px;
-  gap: 8px;
-  --dcc-safe: 0mm;
-  --dcc-head-radius: 8px;
-  --dcc-stat-radius: 4px;
-  --dcc-head-section-radius: 2px;
-  --dcc-name-mul: 1.55;
-  --dcc-sub-mul: 1.45;
-  --dcc-stat-mul: 1.5;
-  --dcc-heading-mul: 1.55;
-  --dcc-w-mul: 1.5;
-  --dcc-body-mul: 1.58;
-  --dcc-fine-mul: 1.5;
-}
-#play-mode .dcc-head { padding: 6px 10px; }
-#play-mode .dcc-name-line { gap: 8px; }
-/* Print cards ellipsize long names to protect a fixed 4x6 layout; on screen
- * the card grows, so let names wrap instead of truncating. */
-#play-mode .dcc-name {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-}
-#play-mode .dcc-sub-line { flex-wrap: wrap; row-gap: 3px; }
-#play-mode .dcc-inv { font-size: 12px; padding: 1px 6px; border-radius: 3px; }
-#play-mode .dcc-sub-line { gap: 8px; margin-top: 3px; }
-#play-mode .dcc-stats { gap: 3px; margin-top: 3px; }
-#play-mode .dcc-stat-cell { padding: 4px 3px; }
-#play-mode .dcc-section-head { padding: 4px 8px; gap: 6px; }
-#play-mode .dcc-ability-row { margin-bottom: 5px; }
-#play-mode .dcc-foot { padding-top: 5px; }
-/* CP badge on stratagem cards. */
-#play-mode .dcc-cp-num { font-size: 24px; }
-#play-mode .dcc-cp-lbl { font-size: 10px; }
-#play-mode .dcc-head-strat .dcc-cp { top: 6px; right: 8px; padding: 4px 8px; border-radius: 4px; }
-#play-mode .dcc-head-strat .dcc-name-line { padding-right: 60px; }
-/* Weapon stat columns: the print widths (5-7.5mm) are too narrow once the
- * fonts are scaled up. */
-#play-mode .dcc-num-range { width: 44px; }
-#play-mode .dcc-num-att   { width: 46px; }
-#play-mode .dcc-num-bs    { width: 36px; }
-#play-mode .dcc-num-dmg   { width: 46px; }
+/* Rule/stratagem/enhancement hosts are smaller panels in a grid; trim the
+ * pane-sized banner spacing so the grid stays dense, and drop the inner
+ * section-title band ("STRATAGEM" / "ENHANCEMENT" / "Rule") — the eyebrow
+ * above the name already says it. */
+.play-rule-host { padding: 10px 12px; }
+#play-mode .play-rule-host .detail-banner { padding: 0; margin-bottom: 4px; background: none; border-bottom: 0; }
+#play-mode .play-rule-host .detail-section-title { display: none; }
+#play-mode .play-rule-host .detail-section { margin-top: 4px; }
 
 /* ── Mobile (single breakpoint, same as the rest of the app) ────────── */
 @media (max-width: 820px) {
@@ -505,5 +453,4 @@
   .play-panel { padding: 10px; }
   .play-card-list { grid-template-columns: 1fr; gap: 10px; }
   .play-tracker { padding: 6px 8px; gap: 8px; }
-  #play-mode .dcc-card { padding: 10px 10px; border-radius: 8px; }
 }

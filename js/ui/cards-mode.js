@@ -3668,25 +3668,14 @@
     if (typeof App.setMode === 'function') App.setMode('cards');
   };
 
-  // ── Shared renderer surface (Play mode) ─────────────────────────────────
-  // Runs the private card renderers with the display prefs forced all-on and
-  // the default (non-stencil) template, restoring the user's cards-mode
-  // settings afterwards. INVARIANT: the renderers are synchronous — if any
-  // of them ever awaits, this swap-in/swap-out corrupts the user's cards
-  // prefs mid-render. The gatherers are pure reads of App.state and are
-  // exposed as-is.
-  function withNeutralSettings(fn) {
-    const savedDisplay = display, savedTemplate = templateId;
-    display = Object.assign({}, DEFAULT_DISPLAY);
-    templateId = DEFAULT_TEMPLATE;
-    try { return fn(); } finally { display = savedDisplay; templateId = savedTemplate; }
-  }
+  // ── Shared data surface (Play mode) ─────────────────────────────────────
+  // The gatherers are pure reads of App.state — the deduped multi-detachment
+  // union of units/rules/stratagems this module already computes for the
+  // card exporter. Play mode consumes these and renders them through the
+  // Details-pane renderers (UI.renderUnitDetail / UI.renderRuleDetail), not
+  // through this module's print-card renderers.
   App.CardRenderers = {
-    renderUnitCard:      entry => withNeutralSettings(() => renderUnitCard(entry)),
-    renderRuleCard:      item  => withNeutralSettings(() => renderRuleCard(item)),
-    renderStratagemCard: item  => withNeutralSettings(() => renderStratagemCard(item)),
     gatherUnits, gatherRules, gatherStratagems,
     getSelectedDetachments, getFaction, getCurrentArmy,
-    descHtml: text => descHtml(text),
   };
 })();
