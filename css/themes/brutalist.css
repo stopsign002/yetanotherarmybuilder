@@ -216,8 +216,6 @@ body[data-mode="build"]   #build-mode::before,
 body[data-mode="build"]   #build-mode::after,
 body[data-mode="collect"] #collect-mode::before,
 body[data-mode="collect"] #collect-mode::after,
-body[data-mode="play"]    #play-mode::before,
-body[data-mode="play"]    #play-mode::after,
 body[data-mode="build"]   .build-hero::after { display: none !important; }
 
 .faction-glyph, .faction-glyph-hero, .topbar-brand-glyph { filter: none !important; }
@@ -933,7 +931,7 @@ input[type="checkbox"]:checked::after {
    rule under css/ declaring a text colour above 62% luminance,
    minus the five surfaces that paint their own dark ground and
    therefore keep their light text — cards-mode, admin, the
-   stratagems modal, voice-coach and cold-start. If you add a
+   stratagems modal and cold-start. If you add a
    pastel literal to a token-backed surface, it belongs here too.
    ============================================================ */
 :root {
@@ -1036,8 +1034,7 @@ input[type="checkbox"]:checked::after {
 .cn-btn-danger:hover,
 .bug-report-status-error,
 .collect-battle-verdict-loss,
-.al-row-remove .al-icon,
-.play-match-vp-opp { color: var(--nb-red); border-color: var(--nb-red); }
+.al-row-remove .al-icon { color: var(--nb-red); border-color: var(--nb-red); }
 .weapon-kw-tag.weapon-kw-red { background: transparent; border: 1px solid var(--nb-red); color: var(--nb-red); }
 .weapon-kw-tag.weapon-kw-purple { background: transparent; border: 1px solid var(--nb-purple); color: var(--nb-purple); }
 .weapon-kw-tag.has-tooltip { border-color: var(--nb-ink); border-bottom-style: dashed; }
@@ -1062,46 +1059,6 @@ input[type="checkbox"]:checked::after {
 }
 .filter-chip.fav-chip.active .fav-chip-glyph { color: var(--accent-on); }
 .filter-chip.excluded:hover { background: var(--danger); color: #fff; }
-
-/* ── Play mode: no ground of its own ─────────────────────────
-   Every other big surface that hardcodes light text also paints
-   its own dark panel. #play-mode does not — it sits straight on
-   --bg, so on the light variant its whole cockpit was white text
-   on white. These are the same rules with the literal swapped
-   for the token that already means "text on the page ground". */
-.play-section-head h3,
-.play-btn,
-.play-empty h3, .play-cta h4,
-.play-match-wounds-val,
-.play-opponent-col h4,
-.play-hero-army,
-.play-btn-ghost:hover,
-.play-match-turn-val,
-.play-tab:hover,
-.play-drawer-toggle,
-.play-chip-head { color: var(--text); }
-.play-hero-meta,
-.play-chip-desc,
-.play-hero-sub,
-.play-tab,
-.play-help,
-.play-btn-ghost,
-.play-empty p, .play-cta p,
-.play-match-phase,
-.play-drawer-count,
-/* These five were missed the first time round. Their CONTAINERS are repainted
-   to --nb-paper further down this file, so on the light variant they were
-   white-alpha on white: the Match tiles' CP / Turn / Score / Models-alive
-   captions and "No opponent loaded yet." both measured 1.00 — not low
-   contrast, invisible. Found by sweeping css/play-mode.css for every
-   `color: rgba(255,255,255,…)` rather than by chasing the two that were
-   reported, which is why the score separator, the drawer caret and the chip
-   phase line are in here too. */
-.play-empty-mini,
-.play-match-label,
-.play-match-vp-sep,
-.play-drawer-caret,
-.play-chip-phase { color: var(--text-muted); }
 
 /* ============================================================
    DETAIL PANE
@@ -1240,11 +1197,6 @@ input[type="checkbox"]:checked::after {
    hardcodes Cinzel and is deliberately left alone: those are
    PRINT templates for physical data cards, not app chrome.)
    ============================================================ */
-.play-hero-title,
-.play-tabs-title,
-.play-section-head h3,
-.play-empty h3, .play-cta h4,
-.play-drawer-title,
 .build-hero-faction,
 .build-hero-points-readout,
 .build-rules-header,
@@ -1267,18 +1219,6 @@ body.build-mode-enhanced .army-entry-name,
   font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 0.12em;
-}
-
-/* ── Play mode: the quick-stratagems drawer ──────────────────
-   The one surface in play mode that DOES paint its own ground —
-   a near-black gradient with a blur — while its text follows the
-   tokens above. On the light variant that was dark-on-dark. */
-.play-drawer {
-  background: var(--panel-alt);
-  border-top: 3px solid var(--nb-ink);
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
 }
 
 /* ============================================================
@@ -1406,7 +1346,6 @@ body.build-mode-enhanced .army-entry-name,
 .mm-unit, .mm-primary-row, .mm-secondary, .mm-total, .mm-history, .mm-empty,
 .strat-modal, .strat-head, .strat-controls, .strat-section, .strat-card, .strat-empty,
 .lore-modal, .lore-browse, .lore-browse-item, .lore-footer,
-.yaab-dc-modal, .yaab-dc-section, .yaab-dc-dist, .yaab-dc-details,
 .community-modal, .community-card, .community-toolbar, .community-empty, .community-card-preview,
 .starter-modal, .starter-card, .starter-toolbar, .starter-empty,
 .diff-modal, .diff-picker, .diff-totals, .diff-list, .diff-snap, .diff-empty,
@@ -1424,9 +1363,7 @@ body.build-mode-enhanced .army-entry-name,
 .bug-report-modal, .points-override-modal, .qr-share-modal,
 .points-override-list, .points-override-row, .bug-report-diag,
 .yaab-dp-modal, .yaab-dp-side, .yaab-dp-popup, .yaab-dp-toolbar, .yaab-dp-empty-state,
-.yaab-opp-modal, .yaab-opp-preview, .yaab-mu-modal, .yaab-mu-section, .yaab-mu-side,
-.yaab-an-modal, .yaab-tour-tooltip, .auth-menu,
-.play-match-grid > div, .play-opponent-col, .play-chip-body {
+.yaab-tour-tooltip, .auth-menu {
   background: var(--nb-paper);
   border: var(--nb-bw) solid var(--nb-ink);
   box-shadow: var(--nb-sh-btn);
@@ -1434,19 +1371,19 @@ body.build-mode-enhanced .army-entry-name,
 }
 
 /* Overlays sit on top of the page and get the deeper shadow, like .modal. */
-.mm-shell, .strat-modal, .lore-modal, .yaab-dc-modal, .community-modal,
+.mm-shell, .strat-modal, .lore-modal, .community-modal,
 .starter-modal, .diff-modal, .activity-modal, .tp-modal, .yaab-syn-modal,
 .kt-modal, .crusade-modal, .action-center-sheet, .cmdp-modal, .cmdp-help-modal,
 .changelog-modal, .bug-report-modal, .points-override-modal, .qr-share-modal,
-.yaab-dp-modal, .yaab-opp-modal, .yaab-mu-modal, .yaab-an-modal {
+.yaab-dp-modal {
   border-width: var(--nb-bw-heavy);
   box-shadow: var(--nb-sh-over);
 }
 /* Their headers and footers get the heavy rule the modal chassis uses. */
 .strat-head, .lore-header, .community-toolbar, .starter-toolbar,
 .al-tabs, .tp-notes-header, .kt-template-head, .crusade-section-head,
-.action-center-titlebar, .changelog-header, .yaab-mu-header, .yaab-opp-footer,
-.yaab-dc-sec-title, .yaab-syn-section-head, .mm-topbar, .mm-col-head {
+.action-center-titlebar, .changelog-header,
+.yaab-syn-section-head, .mm-topbar, .mm-col-head {
   border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
   background: var(--nb-paper);
   font-weight: 900;
@@ -1460,9 +1397,8 @@ body.build-mode-enhanced .army-entry-name,
    read your own typing in. */
 .strat-search, .community-search, .community-filter, .starter-search,
 .al-filter, .diff-select, .points-override-search, .points-override-input,
-.qr-share-url, .yaab-opp-textarea, .action-center-search, .cmdp-input,
+.qr-share-url, .action-center-search, .cmdp-input,
 .yaab-dp-select, .custom-name-input, .cards-spill-name,
-.yaab-dc-row select, .yaab-dc-row input, .yaab-dc-grid5 input, .yaab-dc-grid4 input,
 .yaab-dp-popup input[type="text"], .tp-opp-row input[type="text"],
 .crusade-field input, .crusade-field input[type="date"], .crusade-field select,
 .crusade-field textarea, .crusade-inline input[type="number"],
@@ -1478,8 +1414,7 @@ body.build-mode-enhanced .army-entry-qty input {
 }
 .strat-search:focus, .community-search:focus, .starter-search:focus,
 .al-filter:focus, .action-center-search:focus, .cmdp-input:focus,
-.points-override-search:focus, .yaab-opp-textarea:focus,
-.yaab-dc-row input:focus, .yaab-dc-grid5 input:focus, .yaab-dc-grid4 input:focus {
+.points-override-search:focus {
   border-color: var(--nb-ink);
   box-shadow: 3px 3px 0 var(--accent);
   outline: none;
@@ -1488,7 +1423,7 @@ body.build-mode-enhanced .army-entry-qty input {
 /* ── Buttons: the offset-shadow press, everywhere ─────────── */
 .mm-btn, .mm-btn-round, .mm-btn-sm, .mm-btn-close,
 .lore-btn, .yaab-dp-btn, .kt-banner-action, .strat-use,
-.tp-generate, .starter-btn-surprise, .yaab-mu-roster-btn,
+.tp-generate, .starter-btn-surprise,
 .community-card-preview, .diff-picker-arrow, .crusade-row-remove {
   background: var(--nb-paper);
   color: var(--text);
@@ -1501,7 +1436,7 @@ body.build-mode-enhanced .army-entry-qty input {
 }
 .mm-btn:hover, .mm-btn-round:hover, .mm-btn-sm:hover, .lore-btn:hover,
 .yaab-dp-btn:hover, .kt-banner-action:hover, .strat-use:hover,
-.tp-generate:hover, .starter-btn-surprise:hover, .yaab-mu-roster-btn:hover,
+.tp-generate:hover, .starter-btn-surprise:hover,
 .community-card-preview:hover {
   background: var(--nb-hot);
   color: var(--nb-on-hot);
@@ -1519,10 +1454,10 @@ body.build-mode-enhanced .army-entry-qty input {
 
 /* ── Selected / active: accent fill, never a pale wash ────── */
 .mm-phase-active, .strat-chip.is-on, .community-tag-chip.active,
-.yaab-dc-preset.active, .al-tab.is-active, .cmdp-row.active,
+.al-tab.is-active, .cmdp-row.active,
 .yaab-dp-btn.yaab-dp-btn-active, .yaab-dp-swatch.yaab-dp-swatch-active,
 .build-detail-tab.is-active, .tp-progress.is-active, .kt-switch.kt-switch-on,
-.collect-subtab.is-active, .play-tab.is-active {
+.collect-subtab.is-active {
   background: var(--accent);
   color: var(--accent-on);
   border-color: var(--nb-ink);
@@ -1531,8 +1466,8 @@ body.build-mode-enhanced .army-entry-qty input {
 
 /* ── Chips + tags: outline, not tint ─────────────────────── */
 .strat-chip, .strat-tag, .community-tag-chip, .community-card-tag,
-.community-card-pill, .starter-card-pill, .kt-template-pill, .yaab-dc-preset,
-.yaab-dc-kwb, .yaab-mu-kw, .changelog-kind, .al-tab, .crusade-rank-pip {
+.community-card-pill, .starter-card-pill, .kt-template-pill,
+.changelog-kind, .al-tab, .crusade-rank-pip {
   background: var(--nb-inset);
   border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
@@ -1547,16 +1482,15 @@ body.build-mode-enhanced .army-entry-qty input {
    SEMANTIC INK block below kept painting its type var(--accent-on) — white
    on cream, ratio 1.06. Same shape as the topbar hover bug in issue #68. */
 .strat-chip:hover:not(.is-on),
-.community-tag-chip:hover:not(.active),
-.yaab-dc-preset:hover:not(.active) { background: var(--panel-alt); }
+.community-tag-chip:hover:not(.active) { background: var(--panel-alt); }
 
 /* ── Wells: recessed, inset fill + hairline ──────────────── */
 .mm-cp, .mm-timer-display, .stockpile-stepper, .wgp-stepper,
-.reserves-view-count, .yaab-dc-hist, .yaab-dc-out-grid,
+.reserves-view-count,
 .changelog-refresh-tip kbd, .cmdp-footer kbd, .cmdp-help-keys kbd,
 .auth-recovery-code, .unit-detail-datasheet .detail-stat-strip,
 .build-hero-bar-wrap, .yaab-dp-readout, .crusade-xp-bar-wrap,
-.tp-progress, .al-day-summary, .yaab-mu-stat-strip {
+.tp-progress, .al-day-summary {
   background: var(--nb-inset);
   border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
@@ -1630,14 +1564,13 @@ body.build-mode-enhanced .army-entry-qty input {
 .mm-phase-active *, .mm-btn-accent *,
 .strat-chip.is-on *,
 .community-tag-chip.active *,
-.yaab-dc-preset.active *,
 .al-tab.is-active *,
 .cmdp-row.active *,
 .yaab-dp-btn.yaab-dp-btn-active *,
 .build-detail-tab.is-active *,
 .tp-progress.is-active *,
 .kt-switch.kt-switch-on *,
-.collect-subtab.is-active *, .play-tab.is-active *,
+.collect-subtab.is-active *,
 .cp-badge *, .stratagem-cp-badge *, .enhancement-pts-badge *, .strat-phase-badge * {
   color: var(--accent-on) !important;
 }
@@ -1659,7 +1592,7 @@ body.build-mode-enhanced .army-entry-qty input {
 .yaab-dp-btn:hover:not(.yaab-dp-btn-active) *,
 .kt-banner-action:hover *,
 .lore-browse-item:hover *, .lore-btn:hover *,
-.tp-generate:hover *, .starter-btn-surprise:hover *, .yaab-mu-roster-btn:hover *,
+.tp-generate:hover *, .starter-btn-surprise:hover *,
 .dropdown-menu [role="menuitem"]:hover *,
 .settings-action-row:hover *,
 .reserves-empty-link * {
@@ -2067,103 +2000,6 @@ body.build-mode-enhanced .army-entry-remove:hover { background: var(--danger); c
 .validation-banner-list li { color: var(--text); }
 
 /* ============================================================
-   PLAY MODE ("Game Day")
-   ------------------------------------------------------------
-   The one mode with no panel chassis of its own — it sits
-   straight on the page ground and draws its structure from
-   hairlines and an underlined tab. Both go: the tab strip
-   becomes the same stamped segmented control the topbar and the
-   Units column already use, and its sections get sheets to sit
-   on. css/play-mode.css hardcodes white-alpha for every one of
-   these, which is why they had to be restated rather than
-   inherited.
-   ============================================================ */
-.play-tabs {
-  border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
-  gap: 12px;
-}
-.play-tabs-title {
-  font-family: var(--font);
-  color: var(--text-muted);
-  font-weight: 900;
-  letter-spacing: 0.16em;
-}
-.play-tabs-strip { gap: 0; }
-.play-tab {
-  background: var(--nb-paper);
-  border: var(--nb-bw) solid var(--nb-ink);
-  border-right-width: 0;
-  border-bottom: var(--nb-bw) solid var(--nb-ink);
-  color: var(--text-muted);
-  font-weight: 900;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 0;
-  transition: none;
-}
-.play-tab:last-child { border-right-width: var(--nb-bw); }
-.play-tab:hover { color: var(--text); background: var(--nb-sunken); }
-.play-tab.is-on {
-  color: var(--accent-on);
-  background: var(--accent);
-  border-bottom-color: var(--nb-ink);
-}
-.play-tab.is-on * { color: var(--accent-on) !important; }
-
-.play-hero-title, .play-section-head h3, .play-drawer-title {
-  font-weight: 900;
-  letter-spacing: 0.08em;
-}
-.play-section {
-  background: var(--nb-paper);
-  border: var(--nb-bw) solid var(--nb-ink);
-  box-shadow: var(--nb-sh-card);
-}
-.play-empty, .play-cta, .play-empty-mini {
-  background: var(--nb-paper);
-  border: var(--nb-bw) solid var(--nb-ink);
-  box-shadow: var(--nb-sh-btn);
-}
-/* Every button in the cockpit is pressed at the table, often in a hurry —
-   they get the full button treatment rather than the flat fill they had. */
-.play-btn, .play-btn-primary, .play-btn-ghost, .play-chip-use, .play-drawer-toggle {
-  background: var(--nb-paper);
-  color: var(--text);
-  border: var(--nb-bw) solid var(--nb-ink);
-  box-shadow: var(--nb-sh-btn);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  transition: var(--nb-press);
-}
-.play-btn-primary { background: var(--accent); color: var(--accent-on); }
-.play-btn-primary * { color: var(--accent-on) !important; }
-.play-btn:hover, .play-btn-primary:hover, .play-btn-ghost:hover,
-.play-chip-use:hover, .play-drawer-toggle:hover {
-  transform: translate(2px, 2px);
-  box-shadow: var(--nb-sh-press);
-}
-.play-btn:active, .play-btn-primary:active { transform: translate(3px, 3px); box-shadow: none; }
-.play-help, .play-hint-quiet { color: var(--text-muted); }
-.play-drawer-head { border-bottom: var(--nb-bw) solid var(--nb-ink); background: var(--nb-paper); }
-.play-drawer-empty { color: var(--text-muted); }
-.play-drawer-count, .play-drawer-cp {
-  background: var(--accent);
-  border: var(--nb-bw) solid var(--nb-ink);
-  color: var(--accent-on);
-  font-weight: 900;
-}
-.play-drawer-cp-idle { background: var(--nb-inset); color: var(--text); }
-.play-cp-dot, .play-match-cp-dots span {
-  background: var(--accent);
-  border: var(--nb-bw-hair) solid var(--nb-ink);
-}
-.play-match-label { font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; }
-.play-match-cp-val, .play-match-turn-val, .play-match-wounds-val,
-.play-match-vp-you, .play-match-vp-opp { font-weight: 900; font-variant-numeric: tabular-nums; }
-
-/* ============================================================
    COLLECT MODE
    ------------------------------------------------------------
    Mostly already right, because its cards ride the shared
@@ -2263,14 +2099,6 @@ body.build-mode-enhanced .army-entry-remove:hover { background: var(--danger); c
   color: var(--accent-on);
 }
 .collect-empty, .collect-detail-empty, .collection-dash-empty { color: var(--text-muted); }
-
-/* css/theming-pass.css:157 pins two 32px accent corner-brackets to the
-   viewport in Play mode — a HUD flourish that belongs to the grimdark
-   cockpit. This style's frame is the topbar rule and the panel edges; a
-   floating bracket that lines up with nothing is decoration, and the "kill
-   rounding/glows/atmosphere" block above already refuses its siblings. */
-body[data-mode="play"] #play-mode > .play-shell::before,
-body[data-mode="play"] #play-mode > .play-shell::after { display: none !important; }
 
 /* css/collect-mode.css:179 — the selected faction in the rail. `.active`,
    not `.is-active`; the accent goes on the left edge, same as every other

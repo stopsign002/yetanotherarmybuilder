@@ -85,7 +85,6 @@ Grouped by user intent. One module per row; module path is the search target.
 | Modes | Build / Collect / Play container switcher (top-level mode shell) | `js/app/mode-shell.js` |
 | Modes | Build mode page (hero + rules pinboard tab + roster polish) | `js/ui/build-mode.js` |
 | Modes | Collect mode page (Painting / Crusade / Kill Team sub-tabs) | `js/ui/collect-mode.js` |
-| Modes | Play mode cockpit (5 sub-tabs + quick stratagems drawer) | `js/ui/play-mode.js` |
 | Account & sync | Username/password auth | `js/app/auth.js`, `js/ui/auth-modal.js` |
 | Account & sync | Top-bar account button | `js/ui/auth-button.js` |
 | Account & sync | Cloud sync of armies + KV bag | `js/app/sync.js` |
@@ -95,13 +94,9 @@ Grouped by user intent. One module per row; module path is the search target.
 | Game Day | Stratagem browser (detachment + faction + core) | `js/app/stratagems.js` |
 | Game Day | Crusade campaign tracker (rosters, XP, ranks, scars) | `js/app/crusade.js` |
 | Game Day | Kill Team mode (cap points, filter roster, mission roller) | `js/app/kill-team.js` |
-| Game Day | Opponent paste-in + side-by-side matchup viewer | `js/app/opponent.js`, `js/ui/matchup.js` |
 | Game Day | Deployment planner (drag/drop battlefield, per-army) | `js/ui/deployment-planner.js` |
 | Game Day | Dice roller (click stat cell to roll d6) | `js/ui/dice-roller.js` |
-| Analyze | Analytics dashboard (live via `armyChange` hook) | `js/ui/analytics.js` |
-| Analyze | Damage calculator (10e attack simulator) | `js/ui/damage-calc.js` |
 | Analyze | Synergy detector (leaders, keyword combos) | `js/ui/synergy.js` |
-| Analyze | List coach (heuristic composition / threats / points / synergy modal) | `js/ui/list-coach.js` |
 | Analyze | Army-diff history (labeled snapshots, two-version compare) | `js/app/army-diff.js` |
 | Analyze | Activity log (passive session history, 30-day persistence) | `js/app/activity-log.js` |
 | Print & Export | Cards mode — printable data-card designer (templates, presets, page-split) | `js/ui/cards-mode.js`, `css/cards-mode.css` |
@@ -191,14 +186,12 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_mobile_panel` | localStorage | `pwa-install.js` | Last-active mobile tab | User pref |
 | `yaab_tour_seen` | localStorage | `first-time-tour.js` | First-run tour completed | One-shot |
 | `yaab_sound_enabled` | localStorage | `sound-fx.js` (orphan) | Opt-in WebAudio toggle | User pref |
-| `yaab_voice_enabled` | localStorage | `voice-commands.js` (orphan) | Opt-in voice-control toggle | User pref |
 | `yaab_parse_debug` | localStorage | `parser/report.js` | Parse-coverage console logging | Dev flag |
 | `yaab_auth_session_hint` | localStorage | `auth.js` | Cosmetic `{username}` hint so the topbar can render "signed in" instantly on reload (cookie is source of truth) | Cleared on sign-out |
 | `yaab_sync_queue` | localStorage | `sync.js` | FIFO of pending `{op, id?, ts, mutationId}` sync operations; coalesced on enqueue | Drained as ops succeed |
 | `yaab_sync_known` | localStorage | `sync.js` | `{ armyId -> updated_at }` last seen on the server; drives LWW push/pull decisions | Cleared on sign-out |
 | `yaab_sync_state_at` | localStorage | `sync.js` | Last successful state-bag (KV) push timestamp | Cleared on sign-out |
-| `yaab_mode` | localStorage | `mode-shell.js` | Active top-level mode (`'build'` / `'collect'` / `'play'`) | User pref |
-| `yaab_play_tab` | localStorage | `play-mode.js` | Active Play-mode sub-tab (`match` / `stratagems` / `calc` / `opponent` / `deploy`) | User pref |
+| `yaab_mode` | localStorage | `mode-shell.js` | Active top-level mode (`'build'` / `'collect'`) | User pref |
 | `yaab_details_state` | localStorage | `details-persist.js` | Open/closed state of `<details>` boxes (army setup, detachments, KOTC, army rules) | User pref |
 | `yaab_theme` | localStorage | `theme-boot.js`, `themes.js` | Chosen visual theme id (`grimdark` \| `brutalist` \| `brutalist-dark`); cloud-synced, so the choice follows the account | User pref |
 | `yaab_reduced_motion` | localStorage | `settings-drawer.js` | App-level reduced-motion override (in addition to OS pref) | User pref |
@@ -287,7 +280,7 @@ Add an entry to `THEMES` in `js/theme-boot.js` and a stylesheet under
    override lose" in one shot; guessing does not.
 2. **Hardcoded pastels.** ~175 rules across `css/` set a text colour above 62%
    luminance for the dark default. Five surfaces (`cards-mode`, `admin`, the
-   stratagems modal, `voice-coach`, `cold-start`) paint their own dark ground
+   stratagems modal, `cold-start`) paint their own dark ground
    and are fine; everything else needs re-pointing. `brutalist.css` does it via
    six `--nb-*` semantic tokens rather than 175 literals — copy that shape.
 

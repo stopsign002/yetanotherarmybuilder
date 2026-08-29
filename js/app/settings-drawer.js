@@ -141,17 +141,6 @@
       },
       isOn() { return lsBool('yaab_sound_enabled', true); },
     },
-    {
-      key:   'yaab_voice_enabled',
-      label: 'Voice commands',
-      help:  'Hands-free dictation. Chrome, Edge, and Safari only.',
-      defaultOn: false,
-      onChange(checked) {
-        if (clickToolbarBtn('yaab-btn-voice')) return;
-        lsWrite('yaab_voice_enabled', checked ? '1' : '0');
-      },
-      isOn() { return lsBool('yaab_voice_enabled', false); },
-    },
   ];
 
   // ── Action rows ─────────────────────────────────────────────────────
@@ -244,15 +233,8 @@
         visible: isMobileWidth,
         run() { goToMode('collect'); },
       },
-      {
-        id: 'go-play',
-        label: mode === 'play' ? 'Play ✓' : 'Play',
-        section: 'go',
-        visible: isMobileWidth,
-        run() { goToMode('play'); },
-      },
       // The Action Center holds every hook-registered feature (match mode,
-      // stratagems, damage calc, deployment planner, analytics, …). Its only
+      // stratagems, deployment planner, …). Its only
       // trigger was #topbar-action-center, which nothing ever clicked — so
       // this is the first working entry point on ANY viewport, not just mobile.
       {

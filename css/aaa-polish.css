@@ -122,10 +122,6 @@
 }
 .detail-add-row .btn { height: 32px; }
 
-/* Damage-calc action row buttons share the default tier. */
-.yaab-dc-actions .btn { height: 32px; min-height: 32px; }
-.yaab-dc-actions .yaab-dc-go { height: 36px; min-height: 36px; }
-
 /* =====================================================================
  * 2. FOCUS RING — uniform accessibility ring across buttons + cards.
  * ===================================================================== */
@@ -171,14 +167,12 @@
 .detail-section-title,
 .collect-section-title,
 .modal-header h3,
-.yaab-dc-sec-title,
 .army-rules-title {
   position: relative;
 }
 
 .detail-section-title::after,
 .collect-section-title::after,
-.yaab-dc-sec-title::after,
 .army-rules-title::after {
   content: '';
   position: absolute;
@@ -207,15 +201,6 @@
   border-radius: 0 2px 2px 0;
   opacity: 0.75;
   pointer-events: none;
-}
-
-/* =====================================================================
- * 4. TYPOGRAPHY RHYTHM — unify section titles to Cinzel display.
- * ===================================================================== */
-
-.yaab-dc-sec-title {
-  font-family: var(--font-display, 'Cinzel', Georgia, serif);
-  letter-spacing: 0.06em;
 }
 
 /* =====================================================================
@@ -269,12 +254,9 @@
 /* Tab strip active state — accent underline. Matches the section-title
  * indicator visual language. (build-mode.css already gives the build
  * detail tabs an underline; we extend the same treatment to the collect
- * sub-tabs and the play-mode game-day tabs so all three modes share a
- * consistent active-tab visual.) */
-.collect-subtab,
-.play-tab { position: relative; }
-.collect-subtab.active::after,
-.play-tab.is-on::after {
+ * sub-tabs so both modes share a consistent active-tab visual.) */
+.collect-subtab { position: relative; }
+.collect-subtab.active::after {
   content: '';
   position: absolute;
   left: 12px;

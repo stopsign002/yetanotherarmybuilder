@@ -89,19 +89,16 @@
 
   /* ── Sibling mode pages: subtract the tab bar too ─────────────────
      Only #build-mode's inner .app-main was compensating for the fixed
-     bottom tab bar (see the calc() above). The other three top-level
-     sections in index.html — #collect-mode, #play-mode, #cards-mode —
+     bottom tab bar (see the calc() above). The other top-level
+     sections in index.html — #collect-mode, #cards-mode —
      are siblings of #build-mode, not children, so they inherited
      `.mode-page { height: 100% }` and ran their last ~56px of content
      underneath the tab bar where it could be neither read nor tapped.
 
      ID selectors are deliberate: `.mode-page { height: 100% }` lives in
      mode-shell.css (#37) and this file is #4, so a class-level rule here
-     would lose. `min-height: 0` is restated for self-documentation —
-     the `.mode-page { min-height: 0 !important }` rule above already
-     neutralises `#play-mode.play-root { min-height: 100% }`. */
+     would lose. `min-height: 0` is restated for self-documentation. */
   #collect-mode,
-  #play-mode,
   #cards-mode {
     height: calc(100% - var(--m-tabbar-h) - var(--m-safe-bottom));
     min-height: 0;
@@ -109,27 +106,7 @@
 
   /* Collect needs nothing further: .collect-root is height:100% +
      overflow:hidden with .collect-body as the real scroller, so shrinking
-     the section is enough to bring its scroll viewport above the tab bar.
-
-     Play has NO internal scroller — .play-shell is
-     `min-height: calc(100vh - 64px)` inside a `.mode-page` that is
-     `overflow: hidden`, so everything past one screen was silently
-     clipped (worse once the tab bar takes another 56px). Make the section
-     itself the scroll container and drop the viewport-derived min-height:
-     on mobile there is no 64px topbar to subtract, and the shell should
-     size to the compensated section instead. */
-  #play-mode {
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-  /* (1,1,0) — beats `.play-shell` in play-mode.css (#44), which loads
-     after this file and would otherwise win at equal specificity. */
-  #play-mode > .play-shell {
-    min-height: 0;
-    padding-bottom: 16px;
-  }
+     the section is enough to bring its scroll viewport above the tab bar. */
 
   /* Cards mode intentionally has NO .cards-shell height rule here.
      css/cards-mode.css (its 760px block) owns the narrow-viewport layout: it

@@ -318,9 +318,8 @@ window.Storage = (() => {
       const squad  = entry.squadLabel ? ` (${entry.squadLabel})` : '';
       // A custom name is emitted as a quoted nickname BEFORE the datasheet
       // name, never instead of it. The datasheet name has to survive so a
-      // tournament organiser can identify the unit and so pasting this list
-      // back into the Opponent box still resolves it (opponent.js strips the
-      // leading quoted label, then substring-matches the catalogue).
+      // tournament organiser can identify the unit, and so any importer
+      // reading this list back can still resolve it.
       const nameOut = entry.customName
         ? `"${entry.customName}" ${entry.unitName}`
         : entry.unitName;

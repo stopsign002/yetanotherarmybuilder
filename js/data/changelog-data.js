@@ -26,9 +26,26 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.23-1',
-    lastUpdated: '2026-08-23T00:00:00Z',
+    version:     '2026.08.29-1',
+    lastUpdated: '2026-08-29T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-29', kind: 'change',
+        title: 'Play mode and the analysis tools have been removed',
+        description:
+          'A group of features has been taken out: Play mode (the game-day ' +
+          'cockpit), the damage calculator, army analytics, the list coach, ' +
+          'the side-by-side matchup viewer with its opponent paste-in box, ' +
+          'and voice commands. The calculators and scoring tools were never ' +
+          'a concept we were happy with \u2014 YAAB is for building lists, ' +
+          'not for simulating dice \u2014 and Play mode is being redesigned ' +
+          'from scratch rather than patched, so it has gone while that work ' +
+          'happens. Everything about building, saving, sharing and printing ' +
+          'an army is untouched, as are the match tracker, stratagems ' +
+          'browser, deployment planner, synergy detector, Crusade, Kill ' +
+          'Team, Cards and Collect. If the app was left on the Play tab it ' +
+          'will simply open in Build next time.',
+      },
       {
         date: '2026-08-23', kind: 'fix',
         title: 'Sign out from Settings now clears everything it promises to',

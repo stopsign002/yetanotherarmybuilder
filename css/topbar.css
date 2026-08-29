@@ -500,5 +500,5 @@ body.reduce-motion .topbar-action-btn { transition: none; }
   .topbar-action-btn { transition: none; }
 }
 
-/* Hide Build/Collect/Play mode nav until all modes are ready. */
+/* Hide Build/Collect/Cards mode nav until all modes are ready. */
 .topbar-modes { display: none !important; }

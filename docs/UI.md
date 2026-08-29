@@ -20,9 +20,6 @@ Each attaches methods onto `window.UI`.
 | `datasheet.js` | `UI.renderDatasheet`, `UI.renderArmyDatasheets`, `UI.printUnitDatasheet`, `UI.printArmyDatasheets`, `UI.printCurrentArmy`. Registers a detail-action button. |
 | `dropdown.js` | `UI.initDropdowns()` — click-to-toggle + keyboard for Tools/More/Export menus. |
 | `action-center.js` | `UI.actionCenter` — slide-in sheet with 6 sections (Game Day / Analyze / Print & Export / Browse / Collection / Settings). |
-| `analytics.js` | `UI.openAnalytics` / `UI.closeAnalytics` / `UI.toggleAnalytics` — dashboard modal, live via `armyChange`. |
-| `damage-calc.js` | `UI.openDamageCalc` — 10e attack simulator. Detail-action `Σ` button + toolbar. |
-| `matchup.js` | `UI.openOpponentPaste`, `UI.openMatchup` — opponent paste + side-by-side. |
 | `deployment-planner.js` | `UI.deploymentPlanner.open/close` — drag-drop battlefield, per-army. |
 | `synergy.js` | Detects leader attachments + keyword combos in current army. Toolbar-icon button. |
 | `tournament-export.js` | "Tournament Prep" multi-page PDF bundle. |
@@ -32,12 +29,10 @@ Each attaches methods onto `window.UI`.
 | `scanline.js` | Tactical-display sweep on faction switch + body classes for active-panel accent stripes. |
 | `animated-crest.js` | Rotating hex crest in the empty unit-detail panel when a faction is selected. |
 | `cold-start.js` | First-visit splash overlay + cold/warm-start detection during BSData load. **Orphan: not in index.html.** |
-| `list-coach.js` | Heuristic list-coach modal (composition / threats / synergy). **Orphan: not in index.html.** |
 | `auth-button.js` | Top-bar Sign-in / username button + dropdown menu. See `docs/AUTH.md`. |
 | `auth-modal.js` | `UI.showAuthModal(mode)` for login/register/recover/change-password. See `docs/AUTH.md`. |
 | `build-mode.js` | Orchestrator for the BUILD mode page: hero header, rules pinboard tab, roster polish. Mounted by `mode-shell.js`. |
 | `collect-mode.js` | Orchestrator for the COLLECT mode page (Painting / Crusade / Kill Team sub-tabs). Mounted by `mode-shell.js`. |
-| `play-mode.js` | Game-day cockpit: 5 sub-tabs (match / stratagems / calc / opponent / deploy) + quick stratagems drawer. Mounted by `mode-shell.js`. Persists active sub-tab in `yaab_play_tab`. |
 | `topbar-export.js` | Export button + dropdown in the topbar (next to the account button). Each item programmatically clicks the original (now-hidden) panel-footer Export button so existing event wiring keeps firing. |
 | `faction-glyphs.js` | Inline-SVG geometric faction glyphs (24×24 viewBox, `currentColor`) + DOM injection helpers. Original abstract geometry — no GW iconography. |
 | `role-icons.js` | Small role icon prefix on unit cards (Character / Psyker / Vehicle / Monster / Battleline / Infantry). Registered as `cardClassContributor`; also exposes `App.classifyUnitRole(unit)`. |
@@ -82,7 +77,6 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 | `kill-team.js` | Small-format mode. `App.toggleKillTeamMode`. |
 | `stratagems.js` | Stratagem browser modal. |
 | `crusade.js` | Campaign tracker (XP, ranks, scars, battle log). |
-| `opponent.js` | Opponent army state + paste-in parser (YAAB1 + plain text). |
 | `army-diff.js` | Labeled snapshots on save + two-version diff modal. |
 | `activity-log.js` | Passive session change history, in-memory + per-day localStorage. |
 | `community-feed.js` | Read-only browsable feed of curated lists. |
@@ -91,14 +85,13 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 | `first-time-tour.js` | One-shot 3-step guided tour. |
 | `lazy-modules.js` | Defer-on-first-click loader. **Orphan: not in index.html.** |
 | `sound-fx.js` | Opt-in synthesized WebAudio sfx. **Orphan: not in index.html.** |
-| `voice-commands.js` | Opt-in WebSpeech voice control. **Orphan: not in index.html.** |
 | `auth.js` | `App.Auth`: session state + auth API client. See `docs/AUTH.md`. |
 | `sync.js` | `App.Sync`: offline-first cloud sync. See `docs/SYNC.md`. |
 | `autosave.js` | `armyChange` listener that debounces (500ms) and calls `ArmyManager.saveArmy()` on any mutation. Skips `'save'` / `'delete'` kinds (recursion guard) and the default `'New Army'` placeholder name. |
 | `details-persist.js` | Remembers which `<details>` boxes are open across reloads. Targets `army-setup-section` + `army-rules-collapsible`. Persists to `yaab_details_state`. |
 | `faction-fx.js` | Faction-themed add stingers (synthesized WebAudio, no samples) + accent-colored particle bursts at the FLIP landing site + body class for hero-banner SVG. Reduced-motion + sound-enabled gated. |
 | `mobile-shell.js` | Mobile-only chrome (`max-width: 820px`): sticky points pill at top of Army panel, dynamic page-title in topbar, back-arrow in Detail panel header. Pure additive — desktop is untouched. Re-evaluates on resize. |
-| `mode-shell.js` | Build / Collect / Play mode container switching + persistence. Owns `yaab_mode` and the `App.hooks.modeChange` bus. Loads first among the mode modules so `build-mode` / `collect-mode` / `play-mode` can register their panels. |
+| `mode-shell.js` | Build / Collect mode container switching + persistence. Owns `yaab_mode` and the `App.hooks.modeChange` bus. Loads first among the mode modules so `build-mode` / `collect-mode` can register their panels. |
 | `points-filter.js` | Comparator tokens in the unit search bar (`<=200`, `>=100`, `=150`, `<100`, `>50`, plus `≤`/`≥`). Multiple tokens AND together. A unit passes if ANY of its squad/variant costs satisfies the constraint. `roster.js` strips the same tokens before name/keyword matching. |
 | `settings-drawer.js` | Slide-in Settings drawer (triggered from `#topbar-settings`). Routes to existing toggles (sound, voice, ork-math, legends, kill-team, collection badges, reduced motion) + utility actions (replay tour, clear caches, sign out). Owns `yaab_reduced_motion`. |
 | `admin.js` | Server-backed admin panel (account approvals, image moderation, bug-report review). `App.Admin = { open, close, isAdmin }`. Visible only when `App.Auth.isAdmin()`. |
@@ -116,7 +109,7 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 `bootstrap`, `armyChange`, `selectionChange`, `armyToolbarActions`, `detailActions`, `rosterFilters`, `cardClassContributors`, `modeChange`. See `docs/ARCHITECTURE.md` for callback signatures.
 
 ### `window.UI` (functions)
-`init`, `escapeHtml`, `toast`, `setLoadProgress`, `updateFactionFilter`, `updateFactionRules`, `renderUnitRoster`, `createUnitCard`, `renderStatCell`, `renderUnitDetail`, `renderRuleDetail`, `clearUnitDetail`, `renderArmyList`, `createArmyEntryEl`, `showLoadModal`/`hideLoadModal`, `showImportModal`/`hideImportModal`, `showExportModal`/`hideExportModal`, `renderDatasheet`, `renderArmyDatasheets`, `printUnitDatasheet`, `printArmyDatasheets`, `printCurrentArmy`, `initDropdowns`, `actionCenter.{open,close,toggle,isOpen,registerAction,clearActions,render}`, `openAnalytics`/`closeAnalytics`/`toggleAnalytics`, `openDamageCalc`, `openOpponentPaste`/`openMatchup`, `deploymentPlanner.{open,close}`, `openListCoach`.
+`init`, `escapeHtml`, `toast`, `setLoadProgress`, `updateFactionFilter`, `updateFactionRules`, `renderUnitRoster`, `createUnitCard`, `renderStatCell`, `renderUnitDetail`, `renderRuleDetail`, `clearUnitDetail`, `renderArmyList`, `createArmyEntryEl`, `showLoadModal`/`hideLoadModal`, `showImportModal`/`hideImportModal`, `showExportModal`/`hideExportModal`, `renderDatasheet`, `renderArmyDatasheets`, `printUnitDatasheet`, `printArmyDatasheets`, `printCurrentArmy`, `initDropdowns`, `actionCenter.{open,close,toggle,isOpen,registerAction,clearActions,render}`, `deploymentPlanner.{open,close}`.
 
 ### Other globals
 - `window.Storage` — `saveFactionData`, `loadFactionData`, `addFaction`, `removeFaction`, `exportArmyToString`, `importArmyFromString`, `exportArmyToText`, `exportArmyToCSV`.
@@ -207,13 +200,12 @@ Edit `App.FACTION_COLORS` in `js/app/state.js`. Key is the full faction name OR 
 
 ## Top-level modes (Build / Collect / Play)
 
-`js/app/mode-shell.js` is the container switcher. The page renders three sibling panels (`#build-mode`, `#collect-mode`, `#play-mode`); mode-shell shows exactly one and stamps `<body data-mode="...">` for CSS. Mode is persisted to `yaab_mode` (`'build'` default). Mode switching also fires the `App.hooks.modeChange` bus — callback signature `(newMode, prevMode) => void`.
+`js/app/mode-shell.js` is the container switcher. The page renders sibling panels (`#build-mode`, `#collect-mode`, `#cards-mode`); mode-shell shows exactly one and stamps `<body data-mode="...">` for CSS. Mode is persisted to `yaab_mode` (`'build'` default). Mode switching also fires the `App.hooks.modeChange` bus — callback signature `(newMode, prevMode) => void`.
 
 | Mode | Module | Persists |
 |---|---|---|
 | `build` | `js/ui/build-mode.js` | — (default mode; uses standard 3-pane layout + hero) |
 | `collect` | `js/ui/collect-mode.js` | reads `yaab_collection`, `yaab_crusade_rosters`, `yaab_kt_mode` |
-| `play` | `js/ui/play-mode.js` | sub-tab in `yaab_play_tab`; match state in `yaab_match_state` |
 
 The build mode is the historical 3-pane app; collect and play modes are alternative top-level surfaces that reuse the same data (current army, factions, collection, etc.) but render their own DOM trees. To add a fourth mode: add the panel id to `VALID` in `mode-shell.js`, create the module, and listen on `modeChange` to lazy-build content on first activation.
 
@@ -226,10 +218,10 @@ The build mode is the historical 3-pane app; collect and play modes are alternat
 5. Pick a detachment → Detachment Rule + Enhancements appear.
 6. Click a unit card → right panel shows stats, weapons (with keyword tooltips), abilities, Led By, Wargear, Keywords, Enhancements.
 7. Quantity + squad option → Add to Army → toast confirms; left-panel points update.
-8. Check enhancement → points update; save-pulse animates; analytics modal (if open) refreshes.
+8. Check enhancement → points update; save-pulse animates.
 9. Save → reopen Load modal → army listed with correct points.
 10. Export → copy `YAAB1:` → New → Import → paste → all selections restore.
 11. Cmd/Ctrl+Z (undo) and Cmd/Ctrl+Shift+Z (redo) → state mutates correctly.
-12. Cmd/Ctrl+K → command palette; type `analytics` → Enter → modal opens.
+12. Cmd/Ctrl+K → command palette; type `stratagems` → Enter → modal opens.
 13. Disable network in DevTools → reload → faction data still loads (it's embedded in `js/vendor/dc-bundle.js`, no fetch); only the live GDC fallback text degrades gracefully.
 14. Resize browser → left/right panel drag handles still work; unit grid reflows.

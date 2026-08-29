@@ -68,13 +68,9 @@
   const ID_TO_SECTION = {
     // Game Day
     'yaab-btn-match':            'game-day',
-    'yaab-btn-dmgcalc':          'game-day',
-    'yaab-btn-opponent':         'game-day',
-    'yaab-btn-matchup':          'game-day',
     'yaab-btn-stratagems':       'game-day',
     'yaab-btn-deploy':           'game-day',
     // Analyze
-    'yaab-btn-analytics':        'analyze',
     'yaab-btn-synergy':          'analyze',
     'yaab-btn-history':          'analyze',
     // Print & Export
@@ -115,12 +111,8 @@
   // the action's `title` (then label) when the id is unknown.
   const ID_TO_DESC = {
     'yaab-btn-match':            'Track turns, command points, and damage live during a game.',
-    'yaab-btn-dmgcalc':          'Simulate attacks and roll for damage.',
-    'yaab-btn-opponent':         'Paste your opponent’s list to compare.',
-    'yaab-btn-matchup':          'Side-by-side matchup against the loaded opponent.',
     'yaab-btn-stratagems':       'Browse stratagems for your detachment.',
     'yaab-btn-deploy':           'Drag your units onto a battlefield.',
-    'yaab-btn-analytics':        'Charts: roles, points, keywords, breakdowns.',
     'yaab-btn-synergy':          'Detect interactions between units in your list.',
     'yaab-btn-history':          'Browse and diff past versions of this army.',
     'yaab-btn-tournament':       'Generate a tournament prep PDF bundle.',

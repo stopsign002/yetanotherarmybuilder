@@ -27,22 +27,6 @@
       }],
     },
     {
-      id: 'damage-calc',
-      srcs: ['js/ui/damage-calc.js'],
-      placeholders: [
-        {
-          kind: 'toolbar',
-          id: 'yaab-btn-dmgcalc',
-          region: 'primary',
-          label: 'Calc',
-          category: 'analysis',
-          title: 'Damage calculator',
-        },
-        // (detail-pane Σ "simulate attack" placeholder removed alongside the
-        // real action in damage-calc.js)
-      ],
-    },
-    {
       id: 'tournament-export',
       srcs: ['js/ui/tournament-export.js'],
       placeholders: [{
@@ -125,40 +109,6 @@
           try { App.openFactionLore(name); } catch (_) {}
         }
       },
-    },
-    {
-      id: 'analytics',
-      srcs: ['js/ui/analytics.js'],
-      placeholders: [{
-        kind: 'toolbar',
-        id: 'yaab-btn-analytics',
-        region: 'primary',
-        label: 'Analytics',
-        category: 'analysis',
-        title: 'Army analytics dashboard',
-      }],
-    },
-    {
-      id: 'opponent',
-      srcs: ['js/app/opponent.js', 'js/ui/matchup.js'],
-      placeholders: [
-        {
-          kind: 'toolbar',
-          id: 'yaab-btn-opponent',
-          region: 'primary',
-          label: 'Opponent',
-          category: 'game',
-          title: "Paste your opponent's army to compare",
-        },
-        {
-          kind: 'toolbar',
-          id: 'yaab-btn-matchup',
-          region: 'primary',
-          label: 'Matchup',
-          category: 'analysis',
-          title: 'View side-by-side matchup',
-        },
-      ],
     },
     {
       id: 'army-diff',

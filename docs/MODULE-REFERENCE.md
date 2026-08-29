@@ -447,7 +447,7 @@ Cross-cutting docs:
 - **Depends on:** `reserves.js` (`App.Reserves.getQty/setQty/getView`), `army.js` (`addUnit` opts, `setCustomName`, the `fromJSON` whitelist), `App.renderUnitRosterWithContext`, `App.getMode`.
 - **Storage:** `localStorage.yaab_custom_names` (`{instanceId: {u, n, t}}`, **cloud-synced**). Army-entry names ride `entry.customName` in `yaab_armies` instead. Instance ids are opaque `ci_*` so `id-migration.js` needs no knowledge of them.
 - **DOM:** `#unit-grid` (MutationObserver → `.unit-card-subname`), `#unit-detail-panel` (MutationObserver → `.custom-name-widget`, mounted after `reserves.js`'s stockpile stepper inside `.detail-add-section`).
-- **Consumed by:** `storage.js` (YAAB1 7th tuple slot, text + CSV export), `ui/army-list.js`, `ui/cards-mode.js` (card header + the per-card options panel), `ui/tournament-export.js`, `app/opponent.js` (strips a leading quoted nickname when parsing a pasted list).
+- **Consumed by:** `storage.js` (YAAB1 7th tuple slot, text + CSV export), `ui/army-list.js`, `ui/cards-mode.js` (card header + the per-card options panel), `ui/tournament-export.js`.
 - **Notes:** Every touchpoint in `reserves.js` / `cards-mode.js` is guarded (`App.CustomNames && …`), so a load failure degrades to pre-feature behaviour. Naming is a **split**, not an addition — `reserves.js`'s points badge, empty-state note, owned-types count and "⚠ owns N" warning all add `countFor()` back in so the totals are unchanged by naming.
 
 ### `js/app/starter-lists.js`
@@ -489,14 +489,6 @@ Cross-cutting docs:
 - **Storage:** `localStorage.yaab_crusade_rosters` (full roster state).
 - **DOM:** `crusade-*`.
 - **Notes:** 5 rank tiers. 18 honour types + custom. Battle-army flow bridges crusade ↔ active army.
-
-### `js/app/opponent.js`
-- **Purpose:** Opponent army state + paste-in parser (YAAB1 + plain text).
-- **Exports:** Toolbar button.
-- **Depends on:** `App.state`, `App.hooks`.
-- **Storage:** `localStorage.yaab_opponent`.
-- **DOM:** `yaab-opponent-*`.
-- **Notes:** Plain-text parser tries name fuzzy-matching against `App.state.allUnits`.
 
 ### `js/app/army-diff.js`
 - **Purpose:** Labeled snapshots on save + two-version diff modal.
@@ -570,14 +562,6 @@ Cross-cutting docs:
 - **DOM:** none.
 - **Notes:** No sample files — all synthesized. Audio context may be suspended (user gesture required).
 
-### `js/app/voice-commands.js`
-- **Purpose:** Opt-in WebSpeech voice control.
-- **Exports:** Toolbar button.
-- **Depends on:** Web Speech API (Chrome / Edge only), `App.state`, `App.hooks`, `UI.toast`.
-- **Storage:** `localStorage.yaab_voice_enabled`.
-- **DOM:** `yaab-voice-*`.
-- **Notes:** Browser-dependent. Fuzzy unit-name matching.
-
 ### `js/app/faction-fx.js`
 - **Purpose:** Faction-themed add-to-army stingers + particle bursts + hero-banner archetype class.
 - **Exports:** `App.factionFx = { playAddStinger, particleBurst, archetypeForFaction, syncBanner }`.
@@ -607,7 +591,7 @@ Cross-cutting docs:
 - **Exports:** `App.setMode(modeName)`, `App.getMode()`. Owns `App.fireModeChange`.
 - **Depends on:** `App.hooks.modeChange`.
 - **Storage:** `localStorage.yaab_mode`.
-- **DOM:** `body[data-mode]`, `.mode-page` elements (`#build-mode`, `#collect-mode`, `#play-mode`, `#cards-mode`).
+- **DOM:** `body[data-mode]`, `.mode-page` elements (`#build-mode`, `#collect-mode`, `#cards-mode`).
 - **Notes:** Loaded first among the mode modules. Bootstrap fires modeChange so build/collect/play modules can build their panels lazily.
 
 ### `js/app/points-filter.js`
@@ -771,14 +755,6 @@ Cross-cutting docs:
 - **DOM:** `#collect-mode` panel + sub-tabs.
 - **Notes:** Lazy-built on first activate.
 
-### `js/ui/play-mode.js`
-- **Purpose:** Play mode cockpit with 5 sub-tabs (match / strats / calc / opponent / deploy).
-- **Exports:** none (hook-registered).
-- **Depends on:** `App.hooks.bootstrap`, `App.hooks.modeChange`, `App.state`.
-- **Storage:** `localStorage.yaab_play_tab` (active sub-tab).
-- **DOM:** `#play-mode` panel + sub-tabs.
-- **Notes:** Owns the quick-stratagems drawer in this mode.
-
 ### `js/ui/cards-mode.js`
 - **Purpose:** Cards mode — full-page printable data-card designer (owns `#cards-mode`).
 - **Exports:** `App.openCardsMode` (entry point); shares `App.setMode` / `App.getMode` with `mode-shell.js`.
@@ -858,38 +834,6 @@ Cross-cutting docs:
 - **Storage:** sessionStorage `yaab_warmed_up`.
 - **DOM:** `#cold-start-overlay`, `#cold-start-close`.
 - **Notes:** Loaded in `index.html`. First-visit splash + cold/warm-start detection while the dataset loads.
-
-### `js/ui/list-coach.js`
-- **Purpose:** Heuristic list-coach modal (composition / threats / synergy scoring).
-- **Exports:** `UI.openListCoach`.
-- **Depends on:** `App.state.currentArmy`, `App.hooks.armyToolbarActions`.
-- **Storage:** none.
-- **DOM:** list-coach modal.
-- **Notes:** Loaded in `index.html`; registers a toolbar action. Heuristic scoring only (composition / threats / points / synergy).
-
-### `js/ui/analytics.js`
-- **Purpose:** Army analytics dashboard modal. Live via `armyChange`.
-- **Exports:** `UI.openAnalytics`, `UI.closeAnalytics`, `UI.toggleAnalytics`.
-- **Depends on:** `App.hooks`, `App.state`, weapon keyword glossary.
-- **Storage:** none.
-- **DOM:** analytics modal.
-- **Notes:** Weapon multiplicity heuristic uses `(N)` parenthesized counts. Dice parsing (`D3` → 2, `D6` → 3.5). Units grouped by role.
-
-### `js/ui/damage-calc.js`
-- **Purpose:** 10e attack simulator (Σ button on detail header + toolbar).
-- **Exports:** `UI.openDamageCalc`.
-- **Depends on:** `App.hooks.detailActions`, `App.hooks.armyToolbarActions`, `App.state`.
-- **Storage:** none.
-- **DOM:** damage-calc modal.
-- **Notes:** Computes expected + min/max damage. Weapon keyword multipliers (Lethal Hits, Sustained Hits, Devastating Wounds, etc.).
-
-### `js/ui/matchup.js`
-- **Purpose:** Opponent paste-in modal + side-by-side matchup viewer.
-- **Exports:** `UI.openOpponentPaste`, `UI.openMatchup`.
-- **Depends on:** `Storage.importArmyFromString`, `App.state`.
-- **Storage:** none directly (uses `app/opponent.js`'s key).
-- **DOM:** matchup modal.
-- **Notes:** Pastes opponent YAAB1 code or JSON; imports + side-by-side panels.
 
 ### `js/ui/deployment-planner.js`
 - **Purpose:** Drag-drop battlefield deployment planner per army.

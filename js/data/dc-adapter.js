@@ -846,7 +846,7 @@
   //   { keyword_id: 'sustained-hits', parameters: { value: 1 } }
   // 968 of 3859 keyword references (25%) carry one. Mapping to `keyword_id`
   // alone rendered a bare "Anti, Sustained Hits, Rapid Fire, Melta" — and since
-  // damage-calc's analyzeKeywords matches on the rendered token
+  // the keyword renderers match on the rendered token
   // (/^sustained hits (\d+)$/, /^melta (\d+)$/, /^anti-(.+?) (\d)\+?$/), every
   // one of those failed to parse and contributed ZERO expected damage. The
   // datasheet usually looked right only because detail.js prefers GDC rows.
@@ -1252,7 +1252,7 @@
     // linked to the unit via 4 wargear options, yet never reached us. The
     // datasheet still showed them (it renders the GDC rows, which list every
     // profile on the sheet), so the gap was invisible on screen while
-    // damage-calc / list-coach / analytics could not see the weapons at all.
+    // list-coach / analytics could not see the weapons at all.
     //
     // Only `replacement`/`replacement_choice` are read — NOT `replaces`, which is
     // what the model gives up and is normally already in the default loadout.

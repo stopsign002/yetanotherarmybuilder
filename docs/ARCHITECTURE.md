@@ -85,10 +85,10 @@ Defined in `js/app/hooks.js`. Every hook is an array of callbacks; failure in on
 | `armyChange` | after every `Army` mutation (add/remove/qty/enhancement/new/load/import/save) | `(army, kind?) => void` | Used by history (snapshot), validation (re-check), analytics (re-render), save-pulse, sound-fx, deployment, opponent matchup, celebrations. |
 | `selectionChange` | after faction / chapter / detachment dropdown changes | `(state) => void` | Used by hero-state, scanline, animated-crest, lore button, flavor, nickname, ork-math, activity-log, favorites. |
 | `armyToolbarActions` | read once at boot by `App.mountArmyToolbarActions` | n/a (data) | Action shape: `{ id, region?, priority?, category?, label, title?, ariaLabel?, className?, onClick }`. |
-| `detailActions` | read by `ui/detail.js` when rendering the unit detail header | n/a (data) | Action shape: `{ id, title, html, label?, onClick(unit) }`. Star (favorites), Print (datasheet), Σ (damage-calc) live here. |
+| `detailActions` | read by `ui/detail.js` when rendering the unit detail header | n/a (data) | Action shape: `{ id, title, html, label?, onClick(unit) }`. Star (favorites) and Print (datasheet) live here. |
 | `rosterFilters` | called per-unit during `UI.renderUnitRoster` filtering | `(unit) => boolean` | Returning `false` hides the unit. Used by legends-toggle, kill-team, favorites (filtered view), collection (status filter). |
 | `cardClassContributors` | called per-unit during card render | `(unit) => string \| null` | Adds extra class names to the `.unit-card`. Used by legends-toggle (`.unit-legends`), collection (status badges), role-icons, unit-card-themes (`faction-<slug>`). |
-| `modeChange` | after `mode-shell.js` switches the visible top-level container | `(newMode, prevMode) => void` | Modes are `'build'` / `'collect'` / `'play'`. Used by `build-mode`, `collect-mode`, `play-mode` to lazy-build their panels on first activation. |
+| `modeChange` | after `mode-shell.js` switches the visible top-level container | `(newMode, prevMode) => void` | Modes are `'build'` / `'collect'`. Used by `build-mode` and `collect-mode` to lazy-build their panels on first activation. |
 
 ## Toolbar region routing
 
