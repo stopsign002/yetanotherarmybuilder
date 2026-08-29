@@ -1,0 +1,119 @@
+/* split-entry.css — the per-entry action buttons on army-list cards.
+   Owns .army-entry-actions (the wrapper around the action buttons + the
+   remove ×, emitted by js/ui/army-list.js) and .army-entry-split.
+
+   The remove × is styled across five files (style.css, build-mode.css,
+   card-chassis.css, expand-pane.css, themes/brutalist.css). Rather than
+   mirroring it five more times, the action buttons take their box from ONE
+   rule here and only their COLOUR from the theme blocks at the bottom — the
+   house rule is that every control wears the site's styling in every theme,
+   and six near-identical copies of a button rule is how one of them gets
+   missed. */
+
+.army-entry-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+/* Matches .army-entry-remove's box in build-mode.css so the two sit as a pair
+   rather than as a styled button next to a loose glyph. */
+.army-entry-action {
+  align-self: flex-start;
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  padding: 4px 5px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.army-entry-action svg { display: block; }
+
+/* Constructive, so it takes the faction accent — deliberately NOT the red the
+   remove × takes on hover. Two icon buttons 2px apart on a thumb-scrolled list
+   must not look alike when one of them deletes the unit. */
+.army-entry-action:hover,
+.army-entry-action:focus-visible {
+  color: var(--accent, #fff);
+  background: rgba(var(--accent-rgb, 255,255,255), 0.14);
+  border-color: rgba(var(--accent-rgb, 255,255,255), 0.35);
+}
+
+.army-entry-action:focus-visible {
+  outline: 2px solid var(--accent, #fff);
+  outline-offset: 1px;
+}
+
+.army-entry-action:active { transform: scale(0.94); }
+
+/* Nested bodyguard/leader mini-cards: shrink to match card-chassis.css's
+   smaller remove ×. An attached entry can still have count > 1, so the split
+   button really does render here. */
+.army-entry-attached .army-entry-action { padding: 2px 3px; }
+.army-entry-attached .army-entry-action svg { width: 11px; height: 11px; }
+
+/* Expanded left pane: expand-pane.css pulls the remove × out of flow
+   (position:absolute; top:4px; right:6px). Position the WRAPPER instead, so
+   the actions stay a group and no per-button offset has to be hand-tuned. */
+@media (min-width: 821px) {
+  .panel-left.panel-expanded .army-entry-card .army-entry-actions {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    margin: 0;
+  }
+  .panel-left.panel-expanded .army-entry-card .army-entry-remove {
+    position: static;
+    top: auto;
+    right: auto;
+  }
+}
+
+/* Phone: mobile.css already floors .army-entry button at 32x32 for WCAG 2.2
+   AA. Widen the gap so the constructive and destructive targets are not
+   thumb-adjacent. */
+@media (max-width: 820px) {
+  .army-entry-actions { gap: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .army-entry-action { transition: none; }
+  .army-entry-action:active { transform: none; }
+}
+
+/* ── Neo-Brutalist themes ───────────────────────────────────────────
+   brutalist.css gives .army-entry-remove a hard ink border on paper and fills
+   it with --danger on hover. Mirror the box, keep the accent fill, so the pair
+   reads as two controls of the same family with different consequences. */
+:root[data-yaab-theme="brutalist"] .army-entry-action,
+:root[data-yaab-theme="brutalist-dark"] .army-entry-action {
+  border: var(--nb-bw, 2px) solid var(--nb-ink);
+  background: var(--nb-paper);
+  color: var(--text);
+  border-radius: 0;
+  margin-top: 0;
+}
+
+:root[data-yaab-theme="brutalist"] .army-entry-action:hover,
+:root[data-yaab-theme="brutalist"] .army-entry-action:focus-visible,
+:root[data-yaab-theme="brutalist-dark"] .army-entry-action:hover,
+:root[data-yaab-theme="brutalist-dark"] .army-entry-action:focus-visible {
+  background: var(--nb-hot);
+  color: var(--nb-on-hot);
+  border-color: var(--nb-ink);
+}
+
+:root[data-yaab-theme="brutalist"] .army-entry-actions,
+:root[data-yaab-theme="brutalist-dark"] .army-entry-actions {
+  gap: 4px;
+}

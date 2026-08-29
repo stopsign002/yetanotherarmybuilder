@@ -73,6 +73,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Build | Army Rules + Detachment Rule + Enhancements + Stratagems panel | `js/ui/faction-rules.js` |
 | Build | Composition validation (Rule of Three, no warlord) | `js/app/validation.js` |
 | Build | King of the Coliseum format box (600pt rules + live list checks) | `js/app/kotc.js` |
+| Build | Split a stacked army entry (`count > 1`) into separate units, so each can take its own Leader | `js/app/split-entry.js`, `js/ui/army-list.js` |
 | Build | Undo / redo (50-snapshot stack, Cmd/Ctrl+Z) | `js/app/history.js` |
 | Build | Favorites (star units) + Recents chip row | `js/app/favorites.js` |
 | Build | Auto-suggest army nickname from faction | `js/app/nickname.js` |
@@ -125,7 +126,7 @@ Grouped by user intent. One module per row; module path is the search target.
 ## Module conventions
 
 - No build step for APP code. No `import`/`export`. Plain `<script src>` in `index.html`. Each file is an IIFE that attaches to `window.WahapediaParser`, `window.UI`, `window.App`, `window.YaabDB`, or one of the legacy globals (`Storage`, `Army`, `ArmyManager`, `BSData`). The ONE exception is the offline data-bundle build under `build/` (esbuild → `js/vendor/dc-bundle.js`); its output is a static `.js` loaded like any other asset. Don't introduce a bundler/framework/TypeScript for the app itself.
-- **Hook-first architecture**. Feature modules MUST register via `App.hooks` — do NOT edit shared files (`events.js`, `detail.js`, `index.html` toolbar, etc.) to add a new feature. Push onto `App.hooks.armyToolbarActions`, `App.hooks.detailActions`, `App.hooks.bootstrap`, `App.hooks.armyChange`, `App.hooks.selectionChange`, `App.hooks.rosterFilters`, `App.hooks.cardClassContributors`, or `App.hooks.modeChange` from your new module's IIFE. See `js/app/hooks.js`.
+- **Hook-first architecture**. Feature modules MUST register via `App.hooks` — do NOT edit shared files (`events.js`, `detail.js`, `index.html` toolbar, etc.) to add a new feature. Push onto `App.hooks.armyToolbarActions`, `App.hooks.detailActions`, `App.hooks.bootstrap`, `App.hooks.armyChange`, `App.hooks.selectionChange`, `App.hooks.rosterFilters`, `App.hooks.cardClassContributors`, `App.hooks.armyEntryActions` (icon buttons on an army-list row), or `App.hooks.modeChange` from your new module's IIFE. See `js/app/hooks.js`.
 - **Toolbar regions**: `primary` (Tools menu by default), `icon` (top-bar icon shelf or More menu), `tools-menu`, `more-menu`, `export-menu`. See `js/app/index.js` for the routing rules.
 - **Lazy loading**: heavy feature modules can be deferred via `js/app/lazy-modules.js` placeholders. The placeholder registers a stub action; on first click it injects the real script(s) and rewires the in-DOM button. Currently ALL feature modules are also eager-loaded from `index.html`, so lazy-modules.js is an opt-in path that is not yet wired into the page.
 - Script load order in `index.html` — see `docs/ARCHITECTURE.md`. Within a folder, hooks resolve lazily by name so leaf order is mostly defensive.

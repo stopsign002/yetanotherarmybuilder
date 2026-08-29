@@ -56,6 +56,26 @@
     const subRow = (squadHtml || attachedPillHtml)
       ? `<div class="army-entry-subline">${squadHtml}${attachedPillHtml}</div>`
       : '';
+    // Per-entry icon buttons contributed via App.hooks.armyEntryActions
+    // (see hooks.js). Rendered to the LEFT of the remove ×, inside a shared
+    // .army-entry-actions wrapper so the whole cluster can be positioned as one
+    // unit — expand-pane.css absolutely-positions the actions in the expanded
+    // left pane, and doing that per-button would need a hardcoded offset per
+    // button.
+    const entryActions = ((window.App && App.hooks && App.hooks.armyEntryActions) || [])
+      .filter(act => {
+        try { return !act.visible || act.visible(entry, index, army); }
+        catch (e) { console.warn('[armyEntryActions.visible]', act && act.id, e); return false; }
+      })
+      .map(act => {
+        let label = act.title || '';
+        try { if (typeof act.ariaLabel === 'function') label = act.ariaLabel(entry) || label; }
+        catch (e) { console.warn('[armyEntryActions.ariaLabel]', act && act.id, e); }
+        return `<button type="button" class="army-entry-action ${esc(act.className || '')}"`
+             + ` data-entry-action="${esc(act.id)}" data-entry-id="${esc(entry.entryId || '')}"`
+             + ` title="${esc(act.title || '')}" aria-label="${esc(label)}">${act.svg || ''}</button>`;
+      })
+      .join('');
     // New richer markup. Preserves the original element classes + data-* attrs
     // that events.js delegates on (.army-entry, .army-qty-input,
     // .army-entry-remove, data-index). The grid is replaced by a flex layout
@@ -95,7 +115,10 @@
           </span>
         </div>
       </div>
-      <button class="army-entry-remove" data-index="${index}" title="Remove" aria-label="Remove unit">&times;</button>
+      <span class="army-entry-actions">
+        ${entryActions}
+        <button class="army-entry-remove" data-index="${index}" title="Remove" aria-label="Remove ${esc(entry.customName || entry.unitName)}">&times;</button>
+      </span>
     `;
     return li;
   };
@@ -108,6 +131,37 @@
     const pts    = entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData.points || 0);
     const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
     return pts * entry.count + enhPts;
+  }
+
+  // One delegated listener for every armyEntryActions button, installed on
+  // first render and never rebound. It runs in the CAPTURE phase and stops
+  // propagation, so the entry-select handler in events.js (which fires on any
+  // click inside .army-entry) cannot also treat an action click as "select this
+  // row" — the same reason the remove × is handled before that fallthrough.
+  //
+  // The entry is resolved by entryId, not by the array index in data-index: an
+  // action is allowed to splice `army.entries`, and an index read from markup
+  // rendered before that splice would point at the wrong entry afterwards.
+  let actionsBound = false;
+  function bindEntryActions(list) {
+    if (actionsBound || !list) return;
+    actionsBound = true;
+    list.addEventListener('click', function (ev) {
+      const btn = ev.target.closest('.army-entry-action');
+      if (!btn || !list.contains(btn)) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      const state = (window.App && App.state) || {};
+      const current = state.currentArmy;
+      if (!current) return;
+      const act = ((window.App && App.hooks && App.hooks.armyEntryActions) || [])
+        .find(a => a && a.id === btn.dataset.entryAction);
+      if (!act || typeof act.onClick !== 'function') return;
+      const entry = current.findByEntryId(btn.dataset.entryId);
+      if (!entry) return;
+      try { act.onClick(entry, current.entries.indexOf(entry), current, ev); }
+      catch (e) { console.warn('[armyEntryActions.onClick]', act.id, e); }
+    }, true);
   }
 
   UI.renderArmyList = function (army) {
@@ -158,6 +212,7 @@
     }
 
     const list = document.getElementById('army-entry-list');
+    bindEntryActions(list);
     list.innerHTML = '';
 
     if (!army.entries || army.entries.length === 0) {

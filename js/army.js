@@ -171,6 +171,81 @@ window.Army = class Army {
     this.updatedAt = new Date().toISOString();
   }
 
+  // Peel ONE copy off a stacked entry into its own entry, spliced in directly
+  // after the original. This is the only way to give two copies of the same
+  // datasheet separate identities: `addUnit` merges plain duplicates into a
+  // single entry with `count: N` (see the merge at the top of this class), and
+  // everything that makes a unit distinct — the attachment graph
+  // (`attachedToEntryId` points at ONE `entryId`), a custom name, an
+  // enhancement — hangs off the entry, not off a copy inside it. So a stacked
+  // squad cannot be told apart from its twin: a leader dragged onto the card
+  // attaches to the whole stack, and the list/export shows one line either way.
+  //
+  // Points are unchanged by design, and that is load-bearing rather than a
+  // happy accident. `getEntryOrdinalSurcharge` is exactly F(before + count) -
+  // F(before) for F(x) = max(0, x - threshold), so the per-entry surcharges
+  // telescope in array order and sum to F(totalCopies) no matter how the copies
+  // are partitioned. `selectedPts` and wargear are both billed per-copy, so
+  // N-1 + 1 bills the same as N. Enhancements are billed once per ENTRY and are
+  // deliberately NOT copied (an enhancement is unique per army in 11e), so they
+  // stay on the original and the total still matches.
+  //
+  // Returns the new entry, or null when the entry can't be split.
+  splitEntry(index) {
+    const src = this.entries[index];
+    if (!src) return null;
+    const count = Number.isFinite(src.count) ? src.count : 0;
+    if (count < 2) return null;
+
+    const copy = {
+      unitId:   src.unitId,
+      unitName: src.unitName,
+      // Shared by REFERENCE on purpose — do not deep-copy this.
+      // `entry-rehydrate.js` decides whether to refresh an entry with
+      // `fresh !== prevUnit`, and `attachments.js` identity-compares unit
+      // objects against its prose reverse-index. A cloned unitData would be
+      // "not the loaded unit" to both and would silently stop matching.
+      // `addUnit` already shares one unitData across every entry of a
+      // datasheet, so this is the existing invariant, not a new shortcut.
+      unitData: src.unitData,
+      count: 1,
+      selectedPts: src.selectedPts,
+      // Copied because `getEntryWargearBasePts` derives the squad size from
+      // squadLabel first and selectedPts second; dropping either would reprice
+      // the peeled copy at a different tier than the squad it came from.
+      squadLabel: src.squadLabel,
+      // Not copied: an enhancement may only be taken once per army.
+      enhancements: [],
+      // Deep-copied so a later setWargear on one entry cannot mutate the array
+      // the other is still reading.
+      wargear: (src.wargear || []).map(w => ({
+        optionId: w.optionId,
+        choice:   w.choice,
+        count:    w.count,
+        label:    w.label,
+        items:    Array.isArray(w.items) ? w.items.slice() : [],
+        pts:      w.pts,
+      })),
+      // Not copied: a custom name denotes one specific named model. Splitting a
+      // named stack is in fact the way to make it coherent — the name stays on
+      // a now-single model and the peeled copy is anonymous.
+      customName: undefined,
+      entryId: _mintEntryId(),
+      // Inherited, so a split is "one copy peeled off, identical in every other
+      // respect". If the source was a root the copy is a root; if the source was
+      // itself attached to a leader the copy is too. Nothing here enforces one
+      // child per parent (flip-animations.js assigns the pointer with no
+      // uniqueness check), so inheriting creates no state the user could not
+      // already reach by dragging — and dropping the copy in a gap detaches it.
+      attachedToEntryId: src.attachedToEntryId || null,
+    };
+
+    src.count = count - 1;
+    this.entries.splice(index + 1, 0, copy);
+    this.updatedAt = new Date().toISOString();
+    return copy;
+  }
+
   updateCount(index, count) {
     if (count <= 0) {
       this.removeEntry(index);

@@ -434,6 +434,14 @@ Cross-cutting docs:
 - **Consumed by:** `storage.js` (YAAB1 7th tuple slot, text + CSV export), `ui/army-list.js`, `ui/cards-mode.js` (card header + the per-card options panel), `ui/tournament-export.js`.
 - **Notes:** Every touchpoint in `reserves.js` / `cards-mode.js` is guarded (`App.CustomNames && …`), so a load failure degrades to pre-feature behaviour. Naming is a **split**, not an addition — `reserves.js`'s points badge, empty-state note, owned-types count and "⚠ owns N" warning all add `countFor()` back in so the totals are unchanged by naming.
 
+### `js/app/split-entry.js`
+- **Purpose:** The "peel one copy off" icon button on any army-list entry showing `count > 1`. `Army.addUnit` merges plain duplicates into one entry with a quantity, but everything that gives a unit its own identity — the attachment graph, a custom name, an enhancement — hangs off the ENTRY, so a stacked squad cannot take its own Leader. This is the way back out of a stack.
+- **Exports:** nothing. Pushes one action onto `App.hooks.armyEntryActions`.
+- **Depends on:** `army.js` (`splitEntry`), `App.state` (`selectedArmyEntryIndex`, `armyManager`), `UI.renderArmyList`, `UI.renderUnitDetail`, `UI.toast`.
+- **Storage:** none of its own — the split is a mutation of `yaab_armies` via `Army.splitEntry`.
+- **DOM:** none directly; `ui/army-list.js` renders the button from the hook and owns the delegated click listener.
+- **Notes:** Points are unchanged by a split, by construction — see the comment on `Army.splitEntry`. Enhancements and `customName` deliberately stay with the ORIGINAL entry (an enhancement is unique per army; a custom name names one model), and the toast says so when either applied. It re-renders the detail pane after splitting because `wargear-picker.js` caches the entry's ARRAY INDEX in a module-local that only `mount()` refreshes — see issue #71 for the same latent bug on the remove path.
+
 ### `js/app/bug-report.js`
 - **Purpose:** Server-backed bug-report modal with auto-attached diagnostics.
 - **Exports:** `App.BugReport = { open }`.

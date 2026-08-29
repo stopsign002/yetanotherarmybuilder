@@ -42,7 +42,11 @@
       if (isBattleline || isTransport) return;
       const name = e.unitName || (e.unitData && e.unitData.name) || '';
       if (!name) return;
-      byName.set(name, (byName.get(name) || 0) + 1);
+      // Count COPIES, not entries. `count` is how many of the datasheet this
+      // entry represents, and the same three models warn or don't purely on
+      // whether the user happens to have them stacked (addUnit merges plain
+      // duplicates) or split across entries. kotc.js:87 already reads copies.
+      byName.set(name, (byName.get(name) || 0) + (Number.isFinite(e.count) ? e.count : 1));
     });
     byName.forEach((count, name) => {
       if (count > 3) {

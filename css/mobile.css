@@ -535,10 +535,12 @@
   .army-entry .army-entry-stat {
     align-items: center;
   }
-  /* Left at 32x32 on purpose: the only <button> in a row is
-     .army-entry-remove, a destructive action. 32 clears the WCAG 2.2 AA
-     24x24 floor without making accidental deletion easier on a list the
-     user scrolls with their thumb. */
+  /* Left at 32x32 on purpose. 32 clears the WCAG 2.2 AA 24x24 floor without
+     making accidental deletion easier on a list the user scrolls with their
+     thumb. A row now holds MORE than one button — .army-entry-remove plus any
+     App.hooks.armyEntryActions button (today the split control) — so
+     split-entry.css widens .army-entry-actions' gap at this width to keep the
+     constructive and destructive targets from sitting thumb-adjacent. */
   .army-entry button {
     min-height: 32px;
     min-width: 32px;

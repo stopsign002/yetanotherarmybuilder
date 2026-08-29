@@ -30,6 +30,21 @@
 
     // Extra card-class contributors. Entry: fn(unit) -> string | null.
     cardClassContributors: [],
+
+    // Icon buttons rendered on each army-list entry card, to the left of the
+    // remove ×. Kept as a hook so a per-entry action does not have to be
+    // special-cased into events.js or army-list.js (editing guidance #2).
+    // Entries: {
+    //   id,                       // stable; also the click-dispatch key
+    //   className,                // extra class on the <button>
+    //   title, ariaLabel(entry),  // ariaLabel gets the entry so it can name the unit
+    //   svg,                      // inline markup, symbol-only, stroke="currentColor"
+    //   visible(entry, index, army) -> bool,
+    //   onClick(entry, index, army, ev)
+    // }
+    // The dispatcher resolves the entry by `entryId` (stable) rather than by
+    // array index, so an action that splices entries cannot mis-target.
+    armyEntryActions: [],
   };
 
   App.fireBootstrap = function (state) {

@@ -26,9 +26,32 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.29-1',
+    version:     '2026.08.29-2',
     lastUpdated: '2026-08-29T00:00:00Z',
     entries: [
+      {
+        date: '2026-08-29', kind: 'feature',
+        title: 'Split a stacked unit into separate units',
+        description:
+          'Adding the same datasheet twice used to give you one card with a ' +
+          'quantity of 2, and there was no way back out of it. That mattered ' +
+          'most for Leaders: a character attaches to a CARD, so two Necron ' +
+          'Warriors squads stacked into one line could not take a Cryptek ' +
+          'each. Any unit showing more than one copy now has a small split ' +
+          'button next to the remove x — press it to peel one copy off into ' +
+          'its own line, which you can then attach a Leader to, name, or give ' +
+          'its own enhancement. Your points do not change when you split. ' +
+          'Enhancements and a custom name stay with the original unit.',
+      },
+      {
+        date: '2026-08-29', kind: 'fix',
+        title: 'Rule of Three now counts models, not lines',
+        description:
+          'The Rule of Three check counted LINES in your army rather than ' +
+          'copies, so four of the same unit stacked into one line with a ' +
+          'quantity of 4 never triggered the warning, while the same four ' +
+          'units on separate lines did. It now counts copies either way.',
+      },
       {
         date: '2026-08-29', kind: 'change',
         title: 'A large group of features has been removed',
