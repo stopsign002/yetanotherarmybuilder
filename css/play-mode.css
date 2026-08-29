@@ -1,0 +1,495 @@
+/* css/play-mode.css — Play mode: fast-switching game-day reference.
+ *
+ * Layout + controls are styled with the app's theme tokens so all three
+ * themes work by construction. The datasheet/stratagem/rule cards reuse the
+ * cards-mode `.dcc-*` markup and its parchment skin ON PURPOSE — a printed-
+ * card look is theme-agnostic and matches what Cards mode prints — but the
+ * print CSS is sized in mm for physical 4x6 sheets, so the `#play-mode`
+ * id-scoped block at the bottom re-scales it for on-screen reading. Those
+ * overrides must stay id-scoped: cards-mode.js injects a runtime
+ * `<style>` that restyles `.dcc-card` at class specificity (texture,
+ * radius, typography multipliers), and the id scope is what keeps the
+ * user's PRINT settings from leaking into Play mode.
+ */
+
+#play-mode { padding: 0; }
+
+/* An author `display: flex` beats the UA's `[hidden] { display: none }`,
+ * so every toggled region needs this guard or `hidden` silently stops
+ * hiding (the invisible-overlay bug class). */
+#play-mode [hidden] { display: none !important; }
+
+.play-root {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header: army name · CP counter · reset ─────────────────────────── */
+.play-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-bg);
+}
+.play-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.play-army-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.play-army-pts {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.play-cp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.play-cp-btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.play-cp-btn:hover {
+  background: var(--card-hover);
+  border-color: var(--accent);
+}
+.play-cp-val {
+  min-width: 58px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.play-reset {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+.play-reset:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: rgba(231, 76, 60, 0.08);
+}
+
+/* ── Tab strip ──────────────────────────────────────────────────────── */
+.play-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 2px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-bg);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.play-tabs::-webkit-scrollbar { display: none; }
+.play-tab {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.play-tab:hover { color: var(--text); }
+.play-tab.is-on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Two-pane layout: unit switcher rail + content ──────────────────── */
+.play-layout {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+.play-switcher {
+  flex: 0 0 250px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--panel-bg);
+}
+/* The rail belongs to the Sheets tab only. */
+.play-root:not([data-active-tab="sheets"]) .play-switcher { display: none; }
+
+.play-unit-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 10px;
+  border: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.play-unit-chip:hover { background: var(--card-hover); }
+.play-unit-chip.is-on {
+  border-left-color: var(--accent);
+  border-color: var(--accent);
+  background: var(--card-hover);
+}
+.play-unit-chip.is-leader { margin-left: 14px; width: calc(100% - 14px); }
+.play-chip-lead {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.play-chip-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.play-chip-side {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.play-chip-pts {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.play-chip-w {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--warning);
+  color: #1a1a1a;
+}
+.play-unit-chip.is-dead {
+  opacity: 0.45;
+}
+.play-unit-chip.is-dead .play-chip-name { text-decoration: line-through; }
+
+/* ── Content panels ─────────────────────────────────────────────────── */
+.play-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+.play-panel {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 16px;
+}
+.play-panel[hidden] { display: none; }
+
+.play-group-head {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 18px 0 10px;
+}
+.play-group-head:first-child { margin-top: 0; }
+.play-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+/* Rules read better single-column at full width. */
+.play-panel[data-panel="rules"] .play-card-list { grid-template-columns: 1fr; }
+.play-panel[data-panel="rules"] .dcc-card { max-width: 820px; }
+
+.play-panel-empty,
+.play-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+}
+.play-empty { flex: 1 1 auto; }
+.play-empty h2 {
+  font-family: var(--font-display);
+  color: var(--text);
+  margin: 0;
+}
+.play-go-build {
+  padding: 10px 18px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-on);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.play-go-build:hover { background: var(--accent-hover); }
+
+/* ── Datasheet page: tracker strip + one visible sheet ──────────────── */
+.play-sheet {
+  max-width: 800px;
+  margin: 0 auto;
+}
+.play-sheet[hidden] { display: none; }
+.play-tracker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-bg);
+}
+.play-dead {
+  padding: 8px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+.play-dead:hover { color: var(--text); border-color: var(--danger); }
+.play-dead.is-on {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #ffffff;
+}
+.play-wounds {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.play-w-btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.play-w-btn:hover { background: var(--card-hover); border-color: var(--accent); }
+.play-w-num {
+  min-width: 74px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+.play-sheet.is-dead .dcc-card {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+/* ── Enhancements tab extras ────────────────────────────────────────── */
+/* Long enhancement names + the TAKEN/pts cluster fight for one line; let
+ * the cluster drop below the name instead of squeezing it into mid-word
+ * breaks. */
+#play-mode .play-enh-card .dcc-name-line { flex-wrap: wrap; }
+.play-enh-side {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.play-enh-taken-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #2f5d34;
+  color: #eaf5ea;
+}
+.play-enh-card.is-taken { outline: 2px solid rgba(47, 93, 52, 0.7); }
+.play-enh-carrier {
+  margin-left: auto;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 3px 8px;
+  border: 1px solid #6a4f1f;
+  border-radius: 4px;
+  background: rgba(184, 144, 82, 0.25);
+  color: #1c1308;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.play-enh-carrier:hover { background: rgba(184, 144, 82, 0.5); }
+
+/* ── dcc print-card re-scaling (screen, not 4x6 paper) ──────────────── *
+ * cards-mode.css sizes everything in mm for print; at screen distance the
+ * body text lands around 9.5px. The typography multipliers cards-mode.css
+ * already routes every font through are the lever: bump them ~1.55x here
+ * and re-point the handful of fixed-size bits (points pill, CP badge,
+ * weapon stat columns). Also restate background/radius/muls that the
+ * cards-texture <style> injects at class specificity, so the user's PRINT
+ * texture/typography settings never restyle Play mode. */
+#play-mode .dcc-card {
+  width: auto;
+  height: auto;
+  background: #ecdfb9;
+  background-blend-mode: normal;
+  border-radius: 12px;
+  padding: 12px 14px;
+  gap: 8px;
+  --dcc-safe: 0mm;
+  --dcc-head-radius: 8px;
+  --dcc-stat-radius: 4px;
+  --dcc-head-section-radius: 2px;
+  --dcc-name-mul: 1.55;
+  --dcc-sub-mul: 1.45;
+  --dcc-stat-mul: 1.5;
+  --dcc-heading-mul: 1.55;
+  --dcc-w-mul: 1.5;
+  --dcc-body-mul: 1.58;
+  --dcc-fine-mul: 1.5;
+}
+#play-mode .dcc-head { padding: 6px 10px; }
+#play-mode .dcc-name-line { gap: 8px; }
+/* Print cards ellipsize long names to protect a fixed 4x6 layout; on screen
+ * the card grows, so let names wrap instead of truncating. */
+#play-mode .dcc-name {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+#play-mode .dcc-sub-line { flex-wrap: wrap; row-gap: 3px; }
+#play-mode .dcc-pts {
+  font-size: 13px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+#play-mode .dcc-inv { font-size: 12px; padding: 1px 6px; border-radius: 3px; }
+#play-mode .dcc-sub-line { gap: 8px; margin-top: 3px; }
+#play-mode .dcc-stats { gap: 3px; margin-top: 3px; }
+#play-mode .dcc-stat-cell { padding: 4px 3px; }
+#play-mode .dcc-section-head { padding: 4px 8px; gap: 6px; }
+#play-mode .dcc-ability-row { margin-bottom: 5px; }
+#play-mode .dcc-foot { padding-top: 5px; }
+/* CP badge on stratagem cards. */
+#play-mode .dcc-cp-num { font-size: 24px; }
+#play-mode .dcc-cp-lbl { font-size: 10px; }
+#play-mode .dcc-head-strat .dcc-cp { top: 6px; right: 8px; padding: 4px 8px; border-radius: 4px; }
+#play-mode .dcc-head-strat .dcc-name-line { padding-right: 60px; }
+/* Weapon stat columns: the print widths (5-7.5mm) are too narrow once the
+ * fonts are scaled up. */
+#play-mode .dcc-num-range { width: 44px; }
+#play-mode .dcc-num-att   { width: 46px; }
+#play-mode .dcc-num-bs    { width: 36px; }
+#play-mode .dcc-num-dmg   { width: 46px; }
+
+/* ── Mobile (single breakpoint, same as the rest of the app) ────────── */
+@media (max-width: 820px) {
+  .play-header {
+    gap: 8px;
+    padding: 8px 10px;
+    flex-wrap: wrap;
+  }
+  .play-title { flex-basis: 100%; }
+  .play-cp { margin-right: auto; }
+  .play-tabs { padding: 0 6px; }
+  .play-tab { padding: 10px 10px; font-size: 12px; }
+
+  /* Switcher becomes a horizontal chip strip pinned above the sheet. */
+  .play-layout { flex-direction: column; }
+  .play-switcher {
+    flex: 0 0 auto;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  .play-switcher::-webkit-scrollbar { display: none; }
+  .play-unit-chip {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 52vw;
+    padding: 8px 10px;
+    border-left: 1px solid var(--border);
+    border-bottom: 3px solid transparent;
+  }
+  .play-unit-chip.is-on {
+    border-left-color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .play-unit-chip.is-leader { margin-left: 0; width: auto; }
+  .play-chip-pts { display: none; }
+
+  .play-panel { padding: 10px; }
+  .play-card-list { grid-template-columns: 1fr; gap: 10px; }
+  .play-tracker { padding: 6px 8px; gap: 8px; }
+  #play-mode .dcc-card { padding: 10px 10px; border-radius: 8px; }
+}

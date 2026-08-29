@@ -78,8 +78,15 @@
      1fr row still claims space — leaving a dead strip below app-main
      that the user sees as "the panel ends halfway down the screen."
      Drop the grid on mobile so app-main's calc(100% - tabbar - safe)
-     drives the layout directly. */
-  body.build-mode-enhanced #build-mode {
+     drives the layout directly.
+
+     The :not([hidden]) guard is load-bearing: this rule is (1,1,0)
+     !important, which beats mode-shell.css's `.mode-page[hidden]
+     { display: none !important }` at (0,2,0) — so without the guard,
+     #build-mode stayed VISIBLE on mobile while Collect / Cards / Play
+     was active, and the active mode rendered a full viewport below the
+     fold (body overflow:hidden made it look simply blank). */
+  body.build-mode-enhanced #build-mode:not([hidden]) {
     display: block !important;
     grid-template-rows: none !important;
   }
@@ -96,7 +103,8 @@
      mode-shell.css (#37) and this file is #4, so a class-level rule here
      would lose. `min-height: 0` is restated for self-documentation. */
   #collect-mode,
-  #cards-mode {
+  #cards-mode,
+  #play-mode {
     height: calc(100% - var(--m-tabbar-h) - var(--m-safe-bottom));
     min-height: 0;
   }

@@ -651,6 +651,14 @@ Cross-cutting docs:
 - **DOM:** `#cards-mode` host; injected `#cards-texture-style` + `#cards-print-style` stylesheets; `#cards-spill-panel` / `#cards-spill-backdrop`.
 - **Notes:** `@media print` CSS hides everything else. Textures via inline SVG data URLs (`feTurbulence`). Card-back images stored in IDB (`YaabDB.images`), not in prefs. Typography multipliers 0.5 – 2.0×. Presets sync via the KV state bag; selection + spill stay device-local.
 
+### `js/ui/play-mode.js`
+- **Purpose:** Play mode — fast-switching game-day reference (owns `#play-mode`). Persistent unit switcher + Sheets / Stratagems / Rules / Enhancements tabs, everything pre-rendered so switching is class-toggling only. Light tracking: CP counter, per-entry wounds stepper + destroyed toggle.
+- **Exports:** `App.openPlayMode` (entry point), `App.playMode.{activate, refresh}`.
+- **Depends on:** `App.CardRenderers` (the facade `cards-mode.js` exposes over its card renderers/gatherers), `App.hooks.{modeChange, armyChange, selectionChange, bootstrap, armyToolbarActions}`, `App.state`, `UI.escapeHtml`.
+- **Storage:** `localStorage.yaab_play_view` (active tab + last sheet per army — device-local), `yaab_play_game` (per-army CP + per-entry wounds/dead, capped at the 10 most-recently-touched armies — device-local, deliberately NOT cloud-synced).
+- **DOM:** `#play-mode` host; card markup reuses the `.dcc-*` classes, re-scaled for screen by the `#play-mode`-scoped block in `css/play-mode.css`.
+- **Notes:** Lazy-built on first activate; re-renders on army/selection change (dirty-flagged while hidden). Game state is keyed by `entryId` so it survives re-renders and army edits. Entry points: the top-bar shelf "Play" button (`btn-play-mode`, whitelisted in `TOPBAR_SHELF_IDS`) and the `go-play` Settings-drawer row (both widths).
+
 ### `js/ui/topbar-export.js`
 - **Purpose:** Top-bar Export ▾ button mirror.
 - **Exports:** none (hook-registered).

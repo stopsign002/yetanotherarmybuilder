@@ -216,6 +216,8 @@ body[data-mode="build"]   #build-mode::before,
 body[data-mode="build"]   #build-mode::after,
 body[data-mode="collect"] #collect-mode::before,
 body[data-mode="collect"] #collect-mode::after,
+body[data-mode="play"]    #play-mode::before,
+body[data-mode="play"]    #play-mode::after,
 body[data-mode="build"]   .build-hero::after { display: none !important; }
 
 .faction-glyph, .faction-glyph-hero, .topbar-brand-glyph { filter: none !important; }

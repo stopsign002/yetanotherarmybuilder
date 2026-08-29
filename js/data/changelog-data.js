@@ -26,9 +26,35 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.29-2',
-    lastUpdated: '2026-08-29T00:00:00Z',
+    version:     '2026.08.29-3',
+    lastUpdated: '2026-08-29T12:00:00Z',
     entries: [
+      {
+        date: '2026-08-29', kind: 'feature',
+        title: 'Play mode is back — a fast-switching game-day reference',
+        description:
+          'A rebuilt Play mode for using your army at the table. Every ' +
+          'datasheet in your list is one tap away on a persistent unit ' +
+          'switcher (swipe between sheets on a phone, arrow keys on ' +
+          'desktop), with tabs for your stratagems, army and detachment ' +
+          'rules, and enhancements — everything pre-loaded, so switching is ' +
+          'instant. Light in-game tracking on top: a CP counter, and a ' +
+          'wounds stepper plus a destroyed toggle on each unit, remembered ' +
+          'per army until you hit Reset game. Find it via the Play button ' +
+          'in the top bar, or under Play in the Settings menu (now on ' +
+          'desktop too). Unlike the old cockpit-style Play mode this one ' +
+          'is reference-first: no phase tracker, no scorepad.',
+      },
+      {
+        date: '2026-08-29', kind: 'fix',
+        title: 'Collect and Cards modes rendered blank on phones',
+        description:
+          'On a phone, switching to Collect or Cards left the screen looking ' +
+          'empty: a mobile layout rule kept the (hidden) Build page occupying ' +
+          'the viewport, so the mode you switched to rendered a full screen ' +
+          'below the fold with no way to scroll to it. Found while building ' +
+          'the new Play mode, which hit the same wall.',
+      },
       {
         date: '2026-08-29', kind: 'feature',
         title: 'Split a stacked unit into separate units',

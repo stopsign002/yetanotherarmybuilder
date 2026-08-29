@@ -84,6 +84,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Modes | Build / Collect / Play container switcher (top-level mode shell) | `js/app/mode-shell.js` |
 | Modes | Build mode page (hero + rules pinboard tab + roster polish) | `js/ui/build-mode.js` |
 | Modes | Collect mode page (Painting) | `js/ui/collect-mode.js` |
+| Modes | Play mode — fast-switching game-day reference (unit switcher, stratagems/rules/enhancements tabs, CP + wound tracking) | `js/ui/play-mode.js`, `css/play-mode.css` |
 | Account & sync | Username/password auth | `js/app/auth.js`, `js/ui/auth-modal.js` |
 | Account & sync | Top-bar account button | `js/ui/auth-button.js` |
 | Account & sync | Cloud sync of armies + KV bag | `js/app/sync.js` |
@@ -173,6 +174,8 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_reduced_motion` | localStorage | `settings-drawer.js` | App-level reduced-motion override (in addition to OS pref) | User pref |
 | `yaab_show_collection_badges` | localStorage | `collection.js`, `settings-drawer.js` | Toggle for the painted-status badges on unit cards | User pref |
 | `yaab_collect_debug` | localStorage | `collect-mode.js` | Dev flag for verbose Collect-mode logging | Dev flag |
+| `yaab_play_view` | localStorage | `play-mode.js` | Play mode's active tab + last-viewed sheet per army; device-local | User pref |
+| `yaab_play_game` | localStorage | `play-mode.js` | Per-army game tracking (CP, per-entry wounds/dead); capped at the 10 most-recently-touched armies, cleared per army by "Reset game"; device-local, deliberately NOT cloud-synced | User data |
 | `yaab_changelog_seen` | localStorage | `changelog.js` | Last `App.CHANGELOG.version` the user has opened — drives the "unseen" red dot on the Updates icon | User pref |
 | `yaab_cards_presets` | localStorage | `cards-mode.js` | Named snapshots of every card-render setting (colours, typography, layout, back-image id, …); cloud-synced | User data |
 | `yaab_cards_selection` | localStorage | `cards-mode.js` | Card-exporter deselections (excluded card ids per category: units/rules/strats); device-local, NOT cloud-synced | User selection |

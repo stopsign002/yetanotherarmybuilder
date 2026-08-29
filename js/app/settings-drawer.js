@@ -192,6 +192,15 @@
         visible: isMobileWidth,
         run() { goToMode('collect'); },
       },
+      // Play is deliberately NOT mobile-gated: with .topbar-modes hidden at
+      // every width, this row (plus the Tools-menu action) is its entry point
+      // on desktop too.
+      {
+        id: 'go-play',
+        label: mode === 'play' ? 'Play ✓' : 'Play',
+        section: 'go',
+        run() { goToMode('play'); },
+      },
       // Release notes. Mounted only into the topbar icon shelf, so phone users
       // could never read them.
       {

@@ -18,11 +18,13 @@
    moving overlays with a single fixed ::before holding the SVG stack. */
 
 body[data-mode="build"]   #build-mode,
-body[data-mode="collect"] #collect-mode { position: relative; }
+body[data-mode="collect"] #collect-mode,
+body[data-mode="play"]    #play-mode { position: relative; }
 
 /* Children always sit above the static decoration. */
 body[data-mode="build"]   #build-mode > *,
-body[data-mode="collect"] #collect-mode > * { position: relative; z-index: 1; }
+body[data-mode="collect"] #collect-mode > *,
+body[data-mode="play"]    #play-mode > * { position: relative; z-index: 1; }
 
 /* ──────────────────────────────────────────────────────────────────────
    1. BUILD mode — workshop / forge tactical feel.

@@ -62,6 +62,7 @@
     'yaab-btn-auth',
     'yaab-btn-bug-report',
     'yaab-btn-changelog',
+    'btn-play-mode',
   ]);
 
   function buildIconButton(a) {

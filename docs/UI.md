@@ -187,6 +187,8 @@ Edit `App.FACTION_COLORS` in `js/app/state.js`. Key is the full faction name OR 
 |---|---|---|
 | `build` | `js/ui/build-mode.js` | — (default mode; uses standard 3-pane layout + hero) |
 | `collect` | `js/ui/collect-mode.js` | reads `yaab_collection`, `yaab_crusade_rosters`, `yaab_kt_mode` |
+| `cards` | `js/ui/cards-mode.js` | see its MODULE-REFERENCE entry (not in `RESUMABLE` — reopening lands in Build) |
+| `play` | `js/ui/play-mode.js` | `yaab_play_view`, `yaab_play_game` (not in `RESUMABLE` — game state survives independently) |
 
 The build mode is the historical 3-pane app; collect and play modes are alternative top-level surfaces that reuse the same data (current army, factions, collection, etc.) but render their own DOM trees. To add a fourth mode: add the panel id to `VALID` in `mode-shell.js`, create the module, and listen on `modeChange` to lazy-build content on first activation.
 
