@@ -233,21 +233,6 @@
         visible: isMobileWidth,
         run() { goToMode('collect'); },
       },
-      // The Action Center holds every hook-registered feature (match mode,
-      // stratagems, deployment planner, …). Its only
-      // trigger was #topbar-action-center, which nothing ever clicked — so
-      // this is the first working entry point on ANY viewport, not just mobile.
-      {
-        id: 'go-all-tools',
-        label: 'All tools…',
-        section: 'go',
-        run() {
-          close();
-          if (window.UI && UI.actionCenter && typeof UI.actionCenter.open === 'function') {
-            UI.actionCenter.open();
-          }
-        },
-      },
       // Release notes. Mounted only into the topbar icon shelf, so phone users
       // could never read them.
       {
