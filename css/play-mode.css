@@ -358,14 +358,9 @@
   padding: 14px 12px;
   overflow: hidden;
 }
-/* With the points stack and ordinal-pricing box gone (gameView), the
- * banner is just name + faction + flavor — tighten it so the stat strip
- * and weapons start higher. */
-#play-mode .unit-detail-datasheet .detail-banner {
-  padding: 8px 12px;
-  margin-bottom: 6px;
-}
-#play-mode .detail-banner-full .detail-meta { margin-top: 0; }
+/* gameView renders no banner at all (the switcher chip names the unit),
+ * so the sheet opens straight at the stat strip. */
+#play-mode .unit-detail-content .detail-stats-section:first-child { margin-top: 0; }
 
 /* ── Enhancements tab extras ────────────────────────────────────────── */
 /* Long enhancement names + the TAKEN badge fight for one line; let the

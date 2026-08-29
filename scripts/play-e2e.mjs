@@ -133,15 +133,20 @@ const browser = await chromium.launch();
   const sheetHasContent = await page.$eval('.play-sheet:not([hidden])', el => ({
     detail: !!el.querySelector('.unit-detail-content'),
     stats: !!el.querySelector('.detail-stat-pillar'),
-    name: (el.querySelector('.detail-name') || {}).textContent || '',
     weapons: !!el.querySelector('.detail-weapons-section'),
     addBtn: !!el.querySelector('#btn-detail-add, .detail-add-btn'),
     enhCheckbox: !!el.querySelector('.enhancement-cb'),
+    banner: !!el.querySelector('.detail-banner'),
+    name: !!el.querySelector('.detail-name'),
+    google: !!el.querySelector('.btn-google-search'),
   }));
-  check('desktop: visible sheet is the Details-pane datasheet', sheetHasContent.detail && sheetHasContent.stats, sheetHasContent.name);
+  check('desktop: visible sheet is the Details-pane datasheet', sheetHasContent.detail && sheetHasContent.stats);
   check('desktop: sheet has weapon tables', sheetHasContent.weapons);
   check('desktop: no Add-to-Army / enhancement checkboxes on sheet',
     !sheetHasContent.addBtn && !sheetHasContent.enhCheckbox);
+  check('desktop: no banner/name/faction/google on sheet (chip names the unit)',
+    !sheetHasContent.banner && !sheetHasContent.name && !sheetHasContent.google,
+    JSON.stringify({ banner: sheetHasContent.banner, name: sheetHasContent.name, google: sheetHasContent.google }));
 
   // No points anywhere in play mode: no banner points stack, no ordinal
   // pricing box, no "pts" in the header or the unit chips.
@@ -398,7 +403,7 @@ const browser = await chromium.launch();
   const before = await page.$eval('.play-sheet:not([hidden])', el => el.dataset.entryId);
   await page.evaluate(() => {
     const panel = document.querySelector('.play-panel[data-panel="sheets"]');
-    const card = panel.querySelector('.play-sheet:not([hidden]) .detail-header');
+    const card = panel.querySelector('.play-sheet:not([hidden]) .unit-detail-content');
     function touchEv(type, x, y) {
       const t = new Touch({ identifier: 1, target: card, clientX: x, clientY: y });
       return new TouchEvent(type, { changedTouches: [t], bubbles: true, cancelable: true });

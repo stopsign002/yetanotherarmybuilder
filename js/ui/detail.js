@@ -237,7 +237,9 @@
     // actions stack; the meta row + ordinal-pricing box sit BELOW on a
     // full-width row (inside the old flex column they were squeezed to the
     // left half of the card for the banner's whole height).
-    html += `
+    // gameView skips the banner entirely — the unit is already named by the
+    // play-mode switcher chip, so the sheet opens straight at the stat strip.
+    if (!gameView) html += `
       <div class="detail-header detail-banner">
         <div class="detail-banner-row">
         <div class="detail-header-main">
