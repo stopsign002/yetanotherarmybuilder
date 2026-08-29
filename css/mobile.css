@@ -22,9 +22,7 @@
   .topbar,
   .modal-backdrop,
   .settings-drawer-scrim,
-  .strat-backdrop,
-  .lore-backdrop,
-  .action-center-scrim {
+  .strat-backdrop {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }

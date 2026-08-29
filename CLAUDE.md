@@ -74,9 +74,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Build | Composition validation (Rule of Three, no warlord) | `js/app/validation.js` |
 | Build | King of the Coliseum format box (600pt rules + live list checks) | `js/app/kotc.js` |
 | Build | Undo / redo (50-snapshot stack, Cmd/Ctrl+Z) | `js/app/history.js` |
-| Build | Starter lists + "Surprise me" generator | `js/app/starter-lists.js` |
 | Build | Favorites (star units) + Recents chip row | `js/app/favorites.js` |
-| Build | Points overrides (dataslate edits, per-unit) | `js/app/points-override.js` |
 | Build | Auto-suggest army nickname from faction | `js/app/nickname.js` |
 | Build | Cmd/Ctrl+K command palette + `?` keyboard help | `js/app/command-palette.js` |
 | Build | Comparator points filter in search bar (`<=200`, `>=100`, `=150`) | `js/app/points-filter.js` |
@@ -91,13 +89,9 @@ Grouped by user intent. One module per row; module path is the search target.
 | Account & sync | Admin panel (approve/revoke users, bug reports, image moderation) | `js/app/admin.js` |
 | Account & sync | Admin-only pending-approval banner | `js/app/pending-approval-banner.js` |
 | Print & Export | Cards mode — printable data-card designer (templates, presets, page-split) | `js/ui/cards-mode.js`, `css/cards-mode.css` |
-| Print & Export | Full datasheet pages inside the tournament PDF bundle | `js/ui/tournament-export.js` |
-| Print & Export | Tournament-prep PDF bundle | `js/ui/tournament-export.js` |
 | Print & Export | URL-shareable armies (`?a=YAAB1:...`) | `js/app/url-share.js` |
 | Print & Export | QR share (mobile-to-mobile) | `js/app/qr-share.js` |
 | Print & Export | YAAB1 string export/import (compact deflate) | `js/storage.js` |
-| Browse | Faction lore browser modal | `js/app/lore.js`, `js/data/lore-data.js` |
-| Browse | First-time guided tour (retired; `js/app/first-time-tour.js` is a no-op stub — `App.replayTour` and `App.startTour` are empty so callers in `settings-drawer.js` don't crash. The Settings drawer "Replay onboarding tour" entry is still present but does nothing.) | `js/app/first-time-tour.js` |
 | Collection | Owned/painted tracker (per unit) | `js/app/collection.js` |
 | Collection | Reserves: owned-units stockpile w/ quantity, default unit-pane view | `js/app/reserves.js` |
 | Collection | Requisition Requests: wishlist of units w/ quantity | `js/app/requisitions.js` |
@@ -105,14 +99,12 @@ Grouped by user intent. One module per row; module path is the search target.
 | Polish | Confetti / save pulse / scanline / animated crest | `js/ui/celebrations.js`, `js/ui/save-pulse.js`, `js/ui/scanline.js`, `js/ui/animated-crest.js` |
 | Polish | Faction flavor quotes on empty army | `js/app/flavor.js` |
 | Polish | Hero CTA + Cmd+K hint + recent factions chip | `js/app/hero-state.js` |
-| Polish | Ork "teef" math (faction-themed point display) | `js/app/ork-math.js` |
 | Polish | Legends-units toggle | `js/app/legends-toggle.js` |
 | Build | Allied units on the host faction's roster (Daemonic Pact, Imperial Agents, …) | `js/data/dc-adapter.js` (`attachAlliedUnits`), `js/app/allies.js` |
 | Polish | PWA install prompt + mobile tab bar | `js/app/pwa-install.js` |
 | Polish | App-shell service worker (installable + offline) | `sw.js`, `js/app/sw-register.js` |
 | Polish | Bug-report modal (server-backed, signed-in users post to `/api/bugs`; admin Reports tab marks fixed) | `js/app/bug-report.js` |
 | Polish | "What's new" updates modal — versioned, dated, user-facing changelog. **All shippable changes must add an entry to `js/data/changelog-data.js`.** | `js/app/changelog.js`, `js/data/changelog-data.js` |
-| Polish | Top app bar (chip mirror, ⌘K, Action Center) | `js/app/topbar.js`, `js/ui/action-center.js` |
 | Polish | Top-bar Export dropdown (mirrors panel-footer Export menu) | `js/ui/topbar-export.js` |
 | Polish | Settings drawer (sound, motion, badges, replay tour, sign-out) | `js/app/settings-drawer.js` |
 | Polish | Interchangeable themes (Appearance picker in the Settings drawer) | `js/theme-boot.js`, `js/app/themes.js`, `css/themes/` |
@@ -162,16 +154,13 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_army_snapshots` | localStorage | `army-diff.js` | Labeled save snapshots (max 20/army) | User data |
 | `yaab_deployments` | localStorage | `deployment-planner.js` | Per-army deployment maps | User data |
 | `yaab_tournament_cfg` | localStorage | `tournament-export.js` | Tournament PDF preferences | User data |
-| `yaab_points_overrides` | localStorage | `points-override.js` | Dataslate-style point edits | User data |
 | `yaab_kotc_enabled` | localStorage | `kotc.js` | King of the Coliseum checks on/off (`'1'`/`'0'`) — device pref, deliberately NOT army data so it stays out of the YAAB1 export and cloud sync | User pref |
 | `yaab_show_legends` | localStorage | `legends-toggle.js` | Show [Legends] units | User pref |
 | `yaab_show_allies` | localStorage | `allies.js` | Show allied units on a host faction's roster (**defaults on**) | User pref |
-| `yaab_ork_math` | localStorage | `ork-math.js` | Teef-math toggle | User pref |
 | `yaab_pwa_dismissed` | localStorage | `pwa-install.js` | Install banner dismissal | User pref |
 | `yaab-shell-<token>` | Cache API | `sw.js` | The app shell (~200 entries, ~14 MB). Name carries the deployed `?v=` token; `activate()` deletes every other key | Rotated wholesale on each release/data deploy |
 | `yaab_mobile_panel` | localStorage | `pwa-install.js` | Last-active mobile tab | User pref |
 | `yaab_tour_seen` | localStorage | `first-time-tour.js` | First-run tour completed | One-shot |
-| `yaab_sound_enabled` | localStorage | `sound-fx.js` (orphan) | Opt-in WebAudio toggle | User pref |
 | `yaab_parse_debug` | localStorage | `parser/report.js` | Parse-coverage console logging | Dev flag |
 | `yaab_auth_session_hint` | localStorage | `auth.js` | Cosmetic `{username}` hint so the topbar can render "signed in" instantly on reload (cookie is source of truth) | Cleared on sign-out |
 | `yaab_sync_queue` | localStorage | `sync.js` | FIFO of pending `{op, id?, ts, mutationId}` sync operations; coalesced on enqueue | Drained as ops succeed |

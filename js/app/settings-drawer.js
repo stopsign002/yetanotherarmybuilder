@@ -98,17 +98,6 @@
       isOn() { return lsBool('yaab_show_allies', true); },
     },
     {
-      key:   'yaab_ork_math',
-      label: 'Show points as Ork "teef"',
-      help:  'Only takes effect while the Orks faction is active.',
-      defaultOn: false,
-      onChange(checked) {
-        if (clickToolbarBtn('yaab-btn-teef')) return;
-        lsWrite('yaab_ork_math', checked ? '1' : '0');
-      },
-      isOn() { return lsBool('yaab_ork_math', false); },
-    },
-    {
       key:   'yaab_show_collection_badges',
       label: 'Show painting status badges on cards',
       help:  'Display owned / painted indicators on unit cards.',
@@ -130,39 +119,9 @@
       },
       isOn() { return lsBool('yaab_reduced_motion', false); },
     },
-    {
-      key:   'yaab_sound_enabled',
-      label: 'Sound effects',
-      help:  'Subtle clicks and chimes during edits and saves.',
-      defaultOn: true,
-      onChange(checked) {
-        if (clickToolbarBtn('yaab-btn-sound')) return;
-        lsWrite('yaab_sound_enabled', checked ? '1' : '0');
-      },
-      isOn() { return lsBool('yaab_sound_enabled', true); },
-    },
   ];
 
   // ── Action rows ─────────────────────────────────────────────────────
-  function pwaInstallAvailable() {
-    // pwa-install.js now exports this — it can see whether a
-    // beforeinstallprompt was actually captured, which is the only way to know
-    // the row will do anything when clicked. Prefer it.
-    try {
-      if (typeof App.pwaInstallAvailable === 'function') return App.pwaInstallAvailable();
-    } catch (_) {}
-    // Fallback for the load-order case where pwa-install.js hasn't run yet:
-    // already installed → hide, otherwise surface it and let onInstallClick
-    // bail if there is no prompt. (Also the honest answer on iOS, where
-    // beforeinstallprompt never fires at all — see issue #60.)
-    try {
-      if (window.matchMedia &&
-          window.matchMedia('(display-mode: standalone)').matches) return false;
-    } catch (_) {}
-    if (window.navigator && window.navigator.standalone === true) return false;
-    return true;
-  }
-
   // ── Account state helper ────────────────────────────────────────────
   // App.Auth's accessor is getCurrentUser() (js/app/auth.js). This used to
   // probe only for `getUser()` and `.user`, NEITHER of which App.Auth has ever
@@ -379,15 +338,6 @@
 
       // ── HELP ─────────────────────────────────────────────────────────
       {
-        id: 'replay-tour',
-        label: 'Replay onboarding tour',
-        section: 'help',
-        run() {
-          close();
-          if (typeof App.replayTour === 'function') App.replayTour();
-        },
-      },
-      {
         id: 'kbd-shortcuts',
         label: 'Keyboard shortcuts',
         section: 'help',
@@ -404,20 +354,6 @@
         run() {
           close();
           clickToolbarBtn('yaab-btn-bug-report');
-        },
-      },
-      {
-        id: 'install-app',
-        label: 'Install as desktop app',
-        section: 'help',
-        visible: pwaInstallAvailable,
-        run() {
-          if (typeof App.pwaInstall === 'function') {
-            App.pwaInstall();
-          } else {
-            clickToolbarBtn('yaab-btn-install');
-          }
-          close();
         },
       },
       {
@@ -712,11 +648,8 @@
       k => byKey(k).forEach(t => b.appendChild(renderToggleRow(t))));
 
     b.appendChild(renderSectionHeader('Display'));
-    renderToggles(['yaab_show_legends', 'yaab_show_allies', 'yaab_ork_math',
+    renderToggles(['yaab_show_legends', 'yaab_show_allies',
                    'yaab_show_collection_badges', 'yaab_reduced_motion']);
-
-    b.appendChild(renderSectionHeader('Audio & input'));
-    renderToggles(['yaab_sound_enabled']);
 
     // HELP & SUPPORT
     b.appendChild(renderSectionHeader('Help & support'));

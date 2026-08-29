@@ -24,17 +24,13 @@
     });
   }
 
-  // ── Help (?) — keyboard help, falling back to tour replay ───────────
+  // ── Help (?) — keyboard help ────────────────────────────────────────
   function bindHelp() {
     const help = $('topbar-help');
     if (!help) return;
     help.addEventListener('click', () => {
       if (typeof App.openKeyboardHelp === 'function') {
         App.openKeyboardHelp();
-        return;
-      }
-      if (typeof App.replayTour === 'function') {
-        App.replayTour();
         return;
       }
       if (typeof App.openCommandPalette === 'function') App.openCommandPalette();

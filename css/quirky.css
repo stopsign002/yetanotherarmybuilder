@@ -11,17 +11,6 @@
   color: var(--accent, #c8c8c8);
 }
 
-/* TEEF toggle button — faint pulse when active. */
-#yaab-btn-teef {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-#yaab-btn-teef.is-active {
-  background: var(--accent, #c8c8c8);
-  color: var(--accent-on, #111);
-  border-color: var(--accent-dark, #909090);
-}
-
 /* Dice roll badge floating above a stat cell. */
 .detail-stat-cell,
 .stat-cell {

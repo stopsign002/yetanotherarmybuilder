@@ -492,15 +492,6 @@
   // Registration
   // ---------------------------------------------------------------------------
 
-  App.hooks.armyToolbarActions.push({
-    id: 'yaab-btn-cmdp',
-    region: 'icon',
-    label: '⌘K',
-    ariaLabel: 'Command palette',
-    title: 'Open command palette (Cmd/Ctrl+K)',
-    onClick: openPalette,
-  });
-
   App.hooks.bootstrap.push(function () {
     // DOM bindings are already installed above; nothing faction-dependent here.
   });

@@ -62,22 +62,7 @@
     } catch (_) { /* older Safari */ }
   }
 
-  App.hooks.armyToolbarActions.push({
-    id: BTN_ID,
-    region: 'icon',
-    label: '⬇',
-    ariaLabel: 'Install as app',
-    title: 'Install to home screen',
-    onClick: onInstallClick,
-  });
 
-  // Exported for the Settings drawer, which is the only surface that actually
-  // renders an install affordance: js/app/index.js drops every region:'icon'
-  // action not on its inline/shelf allow-lists, and this one isn't on either,
-  // so #yaab-btn-install has never existed in the DOM. settings-drawer.js:429
-  // has been probing for App.pwaInstall since it was written and never finding
-  // it (it worked anyway, via clickToolbarBtn's hook fallback).
-  //
   // pwaInstallAvailable() is the honest version of the drawer's own check: the
   // row should appear only when clicking it will actually do something, which
   // needs a captured prompt — not merely "we aren't already installed".

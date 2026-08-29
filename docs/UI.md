@@ -19,8 +19,6 @@ Each attaches methods onto `window.UI`.
 | `army-list.js` | `UI.renderArmyList`, `UI.createArmyEntryEl`. Left-panel entries + points bar. |
 | `datasheet.js` | `UI.renderDatasheet`, `UI.renderArmyDatasheets`, `UI.printUnitDatasheet`, `UI.printArmyDatasheets`, `UI.printCurrentArmy`. Registers a detail-action button. |
 | `dropdown.js` | `UI.initDropdowns()` — click-to-toggle + keyboard for Tools/More/Export menus. |
-| `action-center.js` | `UI.actionCenter` — slide-in sheet with 6 sections (Game Day / Analyze / Print & Export / Browse / Collection / Settings). |
-| `tournament-export.js` | "Tournament Prep" multi-page PDF bundle. |
 | `celebrations.js` | Confetti, rolling-points tween, landing pulse, shimmer. `armyChange` hook. |
 | `save-pulse.js` | Pulses Save while the current army has unsaved mutations. |
 | `scanline.js` | Tactical-display sweep on faction switch + body classes for active-panel accent stripes. |
@@ -65,16 +63,9 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 | `nickname.js` | Auto-suggested army nickname placeholder. |
 | `hero-state.js` | Empty-army CTA, Cmd+K hint badge, recent-faction chip row. |
 | `legends-toggle.js` | Show/hide `[Legends]` units. |
-| `ork-math.js` | Convert points → "teef" when Orks selected. |
-| `points-override.js` | `App.applyPointsOverrides` + per-unit cost edits (dataslate). |
 | `favorites.js` | Star/unstar units, Recents chip, filter view. |
 | `collection.js` | Owned/painted tracker. |
-| `starter-lists.js` | Curated starter armies + "Surprise me". |
-| `lore.js` | `App.openFactionLore` — faction lore browser modal. |
 | `bug-report.js` | Diagnostics modal + prefilled GitHub issue URL. |
-| `first-time-tour.js` | One-shot 3-step guided tour. |
-| `lazy-modules.js` | Defer-on-first-click loader. **Orphan: not in index.html.** |
-| `sound-fx.js` | Opt-in synthesized WebAudio sfx. **Orphan: not in index.html.** |
 | `auth.js` | `App.Auth`: session state + auth API client. See `docs/AUTH.md`. |
 | `sync.js` | `App.Sync`: offline-first cloud sync. See `docs/SYNC.md`. |
 | `autosave.js` | `armyChange` listener that debounces (500ms) and calls `ArmyManager.saveArmy()` on any mutation. Skips `'save'` / `'delete'` kinds (recursion guard) and the default `'New Army'` placeholder name. |

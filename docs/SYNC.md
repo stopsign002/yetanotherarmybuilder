@@ -28,7 +28,6 @@ The system is *offline-first*: every write hits localStorage first and the netwo
 
 ### NOT synced (intentional)
 
-- **Device prefs** — `yaab_sound_enabled`, `yaab_reduced_motion` (if any), `yaab_pwa_dismissed`, `yaab_mobile_panel`. These are per-device by design.
   **`yaab_theme` is the deliberate exception** and is bag-synced: it is chosen under *Account* in the Settings drawer, and a theme that only applied on the laptop would not be what "my account looks like this" means. `themes.js` listens for the synthetic `storage` event the bag pull fires (section 5) so a second device repaints without a reload.
 - **`yaab_current_army_id`** — which army this device has open. Deliberately device-local: two devices can sit on different armies, and syncing it would yank one of them. Written by the `App.state.currentArmy` accessor in [state.js](../js/app/state.js); see section 6.4.
 - **Faction game data** — comes from the embedded 40kdc bundle (`window.DC`, via `js/data/dc-adapter.js`), rebuilt locally each load. It's a deterministic function of the dataset, never user data, so it's never synced. (Sync is data-source-agnostic regardless.)

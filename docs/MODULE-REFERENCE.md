@@ -376,22 +376,6 @@ Cross-cutting docs:
 - **DOM:** `#yaab-btn-allies`, `.unit-card-ally`, `.detail-ally-tag`.
 - **Notes:** Presentation only — the units themselves are attached by `attachAlliedUnits()` in `js/data/dc-adapter.js`, which stamps `_allyOf` / `_allyLabel` / `_allySourceFaction` / `_allyRuleIds` / `_allyDetachments` on a per-host **clone**. Unlike the Legends toggle this one defaults ON (allies are legal units; the toggle is for decluttering). The detail tag is emitted inline by `js/ui/detail.js`, not via MutationObserver.
 
-### `js/app/ork-math.js`
-- **Purpose:** Convert points display to "teef" when Orks selected.
-- **Exports:** none (DOM-replace via MutationObserver-style render hook).
-- **Depends on:** `App.state`, `App.hooks.selectionChange`.
-- **Storage:** `localStorage.yaab_ork_math` (toggle).
-- **DOM:** various points spans.
-- **Notes:** Cosmetic only — does not change the underlying army totals.
-
-### `js/app/points-override.js`
-- **Purpose:** Per-unit points override (dataslate edits).
-- **Exports:** `App.applyPointsOverrides`, `App.getPointsOverride(unitId)` (read-only probe, `null` when unset) + detail-panel editable field.
-- **Depends on:** `App.state`, `App.hooks`, `UI.renderArmyList`.
-- **Storage:** `localStorage.yaab_points_overrides` (`{ unitId: newPoints }`).
-- **DOM:** `points-override-*` classes.
-- **Notes:** Applied when reading unit cost; original BSData value is preserved.
-
 ### `js/app/wargear-picker.js`
 - **Purpose:** Wargear picker in the unit details pane (configure-then-add).
 - **Exports:** `App.WargearPicker` (incl. `takeSelections()`).
@@ -450,22 +434,6 @@ Cross-cutting docs:
 - **Consumed by:** `storage.js` (YAAB1 7th tuple slot, text + CSV export), `ui/army-list.js`, `ui/cards-mode.js` (card header + the per-card options panel), `ui/tournament-export.js`.
 - **Notes:** Every touchpoint in `reserves.js` / `cards-mode.js` is guarded (`App.CustomNames && …`), so a load failure degrades to pre-feature behaviour. Naming is a **split**, not an addition — `reserves.js`'s points badge, empty-state note, owned-types count and "⚠ owns N" warning all add `countFor()` back in so the totals are unchanged by naming.
 
-### `js/app/starter-lists.js`
-- **Purpose:** Curated starter army gallery + "Surprise me" random.
-- **Exports:** `App.openStarterLists`, `App.starterListsRollRandom`, `App.surpriseMe`.
-- **Depends on:** `App.state`, `App.applyImportedSelections`, `UI.renderArmyList`, `UI.toast`, `js/data/starter-*.json`.
-- **Storage:** none.
-- **DOM:** `modal-starter-lists`.
-- **Notes:** Bridges to active army (saves current first, then loads).
-
-### `js/app/lore.js`
-- **Purpose:** Faction lore browser modal.
-- **Exports:** `App.openFactionLore`. Toolbar button + detail-panel `.detail-faction` click delegation.
-- **Depends on:** `App.state`, `App.FACTION_LORE` (`js/data/lore-data.js`), `UI.escapeHtml`.
-- **Storage:** none.
-- **DOM:** `yaab-lore-modal`.
-- **Notes:** Faction guess: `selectedUnit → detachmentFaction → selectedChapter → factionFilter`.
-
 ### `js/app/bug-report.js`
 - **Purpose:** Server-backed bug-report modal with auto-attached diagnostics.
 - **Exports:** `App.BugReport = { open }`.
@@ -481,30 +449,6 @@ Cross-cutting docs:
 - **Storage:** `localStorage.yaab_changelog_seen` (last seen version → drives unseen-dot badge).
 - **DOM:** `modal-changelog`, `changelog-*`.
 - **Notes:** Renders a hard-refresh tip (Ctrl+Shift+R / ⌘⇧R, platform-detected) above entries. Every shippable change MUST add an entry.
-
-### `js/app/first-time-tour.js`
-- **Purpose:** Retired guided tour. Stub.
-- **Exports:** `App.replayTour`, `App.startTour` (both no-ops).
-- **Depends on:** none.
-- **Storage:** `localStorage.yaab_tour_seen` (legacy flag).
-- **DOM:** none.
-- **Notes:** Kept so `settings-drawer.js` "Replay onboarding tour" doesn't crash.
-
-### `js/app/lazy-modules.js`
-- **Purpose:** Defer feature modules until first user trigger; placeholder actions populate menus at boot.
-- **Exports:** Module registry.
-- **Depends on:** `App.hooks`, `UI.toast`.
-- **Storage:** none.
-- **DOM:** none directly.
-- **Notes:** Wired into `index.html` between `app/index.js` and the feature-modules block. Placeholder pushes onto `armyToolbarActions` BEFORE `mountArmyToolbarActions` runs. On first click, injects real `<script>`s in dependency order, awaits `load`, fires newly-registered `bootstrap` hooks, and rewires the in-DOM button.
-
-### `js/app/sound-fx.js`
-- **Purpose:** Opt-in synthesized WebAudio sfx.
-- **Exports:** `App.playSound(key)`, `App.isSoundEnabled()`.
-- **Depends on:** Web Audio API.
-- **Storage:** `localStorage.yaab_sound_enabled`.
-- **DOM:** none.
-- **Notes:** No sample files — all synthesized. Audio context may be suspended (user gesture required).
 
 ### `js/app/faction-fx.js`
 - **Purpose:** Faction-themed add-to-army stingers + particle bursts + hero-banner archetype class.
@@ -675,14 +619,6 @@ Cross-cutting docs:
 > the full-datasheet section of the PDF bundle) and `js/ui/cards-mode.js` (printable
 > data cards). Nothing else references the old `UI.printDatasheet*` API.
 
-### `js/ui/action-center.js`
-- **Purpose:** Slide-in sheet replacing Tools/More dropdowns. Sections: Game Day / Analyze / Print & Export / Browse / Collection / Settings.
-- **Exports:** `UI.actionCenter = { open, close, toggle, isOpen, registerAction, clearActions, render }`.
-- **Depends on:** `App.hooks.armyToolbarActions` (read at boot).
-- **Storage:** none.
-- **DOM:** `#action-center-root`, `#action-center-close`, `#action-center-scrim`, `#action-center-search`, `#action-center-body`, `#action-center-empty`.
-- **Notes:** Coexists with Tools/More dropdowns. Lazy-init on first `ensureInit()`. Esc to close. Search filters cards by label/title.
-
 ### `js/ui/build-mode.js`
 - **Purpose:** Build-mode orchestrator: hero header, rules pinboard tab, roster polish.
 - **Exports:** none (hook-registered).
@@ -770,14 +706,6 @@ Cross-cutting docs:
 - **Storage:** sessionStorage `yaab_warmed_up`.
 - **DOM:** `#cold-start-overlay`, `#cold-start-close`.
 - **Notes:** Loaded in `index.html`. First-visit splash + cold/warm-start detection while the dataset loads.
-
-### `js/ui/tournament-export.js`
-- **Purpose:** Tournament-prep multi-page PDF bundle.
-- **Exports:** none (hook-registered toolbar button).
-- **Depends on:** `js/vendor/html2pdf.bundle.min.js` (defer-loaded), `App.state.currentArmy`.
-- **Storage:** `localStorage.yaab_tournament_cfg` (user prefs).
-- **DOM:** tournament-export modal.
-- **Notes:** Uses `@media print` CSS for the PDF render pass.
 
 ### `js/ui/faction-glyphs.js`
 - **Purpose:** Inline-SVG geometric faction glyphs + injection helpers.

@@ -241,7 +241,6 @@
 /* Selected unit-card / army-entry: dial up the accent border + tint over
  * what card-chassis.css already provides. */
 .unit-card.selected,
-.starter-card.is-selected,
 .yaab-card.is-selected,
 .yaab-card.selected {
   border-color: var(--accent, #fff) !important;

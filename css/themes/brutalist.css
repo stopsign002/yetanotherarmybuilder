@@ -307,7 +307,7 @@ body { font-weight: 500; }
    ability rules text is read, not scanned. 600 keeps it firmly in the
    same family without turning three paragraphs into a headline. */
 .detail-ability-text, .detail-ability p, .ability-desc, .strat-desc,
-.wl-composition, .detail-wargear-text, .lore-paragraph {
+.wl-composition, .detail-wargear-text {
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
@@ -1324,15 +1324,10 @@ body.build-mode-enhanced .army-entry-name,
    ============================================================ */
 
 .strat-modal, .strat-head, .strat-controls, .strat-section, .strat-card, .strat-empty,
-.lore-modal, .lore-browse, .lore-browse-item, .lore-footer,
-.starter-modal, .starter-card, .starter-toolbar, .starter-empty,
 .activity-modal,
-.tp-modal, .tp-opponents, .tp-summary, .tp-page, .tp-reference-box, .tp-stage, .tp-cover,
-.action-center-sheet, .ac-card, .ac-section,
 .cmdp-modal, .cmdp-help-modal,
 .changelog-modal, .changelog-day, .changelog-item,
-.bug-report-modal, .points-override-modal, .qr-share-modal,
-.points-override-list, .points-override-row, .bug-report-diag,
+.bug-report-modal, .qr-share-modal, .bug-report-diag,
 .yaab-tour-tooltip, .auth-menu {
   background: var(--nb-paper);
   border: var(--nb-bw) solid var(--nb-ink);
@@ -1341,15 +1336,14 @@ body.build-mode-enhanced .army-entry-name,
 }
 
 /* Overlays sit on top of the page and get the deeper shadow, like .modal. */
- .strat-modal, .lore-modal,
-.starter-modal, .activity-modal, .tp-modal, .action-center-sheet, .cmdp-modal, .cmdp-help-modal,
-.changelog-modal, .bug-report-modal, .points-override-modal, .qr-share-modal {
+ .strat-modal, .activity-modal, .cmdp-modal, .cmdp-help-modal,
+.changelog-modal, .bug-report-modal, .qr-share-modal {
   border-width: var(--nb-bw-heavy);
   box-shadow: var(--nb-sh-over);
 }
 /* Their headers and footers get the heavy rule the modal chassis uses. */
-.strat-head, .lore-header, .starter-toolbar, .tp-notes-header,
-.action-center-titlebar, .changelog-header {
+.strat-head,
+.changelog-header {
   border-bottom: var(--nb-bw-heavy) solid var(--nb-ink);
   background: var(--nb-paper);
   font-weight: 900;
@@ -1361,8 +1355,8 @@ body.build-mode-enhanced .army-entry-name,
    Same story, and the one that actually broke: a control whose
    fill came from a ghost token was a black box you could not
    read your own typing in. */
-.strat-search, .starter-search, .points-override-search, .points-override-input,
-.qr-share-url, .action-center-search, .cmdp-input, .custom-name-input, .cards-spill-name, .tp-opp-row input[type="text"],
+.strat-search,
+.qr-share-url, .cmdp-input, .custom-name-input, .cards-spill-name,
 .collection-dash-filter select, .topbar-army-name, .topbar-army-select,
 .topbar-points-limit-input, .build-hero-points-limit-input,
 body.build-mode-enhanced .army-entry-qty input {
@@ -1373,8 +1367,7 @@ body.build-mode-enhanced .army-entry-qty input {
   font-weight: 600;
   transition: none;
 }
-.strat-search:focus, .starter-search:focus, .action-center-search:focus, .cmdp-input:focus,
-.points-override-search:focus {
+.strat-search:focus, .cmdp-input:focus {
   border-color: var(--nb-ink);
   box-shadow: 3px 3px 0 var(--accent);
   outline: none;
@@ -1382,8 +1375,7 @@ body.build-mode-enhanced .army-entry-qty input {
 
 /* ── Buttons: the offset-shadow press, everywhere ─────────── */
 
-.lore-btn, .strat-use,
-.tp-generate, .starter-btn-surprise {
+ .strat-use {
   background: var(--nb-paper);
   color: var(--text);
   border: var(--nb-bw) solid var(--nb-ink);
@@ -1393,22 +1385,21 @@ body.build-mode-enhanced .army-entry-qty input {
   letter-spacing: 0.06em;
   transition: var(--nb-press);
 }
- .lore-btn:hover, .strat-use:hover,
-.tp-generate:hover, .starter-btn-surprise:hover {
+  .strat-use:hover {
   background: var(--nb-hot);
   color: var(--nb-on-hot);
   border-color: var(--nb-ink);
   transform: translate(2px, 2px);
   box-shadow: var(--nb-sh-press);
 }
- .lore-btn:active, .strat-use:active, .tp-generate:active {
+  .strat-use:active {
   transform: translate(3px, 3px);
   box-shadow: none;
 }
 
 /* ── Selected / active: accent fill, never a pale wash ────── */
  .strat-chip.is-on, .cmdp-row.active,
-.build-detail-tab.is-active, .tp-progress.is-active,
+.build-detail-tab.is-active,
 .collect-subtab.is-active {
   background: var(--accent);
   color: var(--accent-on);
@@ -1416,7 +1407,7 @@ body.build-mode-enhanced .army-entry-qty input {
 }
 
 /* ── Chips + tags: outline, not tint ─────────────────────── */
-.strat-chip, .strat-tag, .starter-card-pill,
+.strat-chip, .strat-tag,
 .changelog-kind {
   background: var(--nb-inset);
   border: var(--nb-bw) solid var(--nb-ink);
@@ -1438,8 +1429,7 @@ body.build-mode-enhanced .army-entry-qty input {
 .reserves-view-count,
 .changelog-refresh-tip kbd, .cmdp-footer kbd, .cmdp-help-keys kbd,
 .auth-recovery-code, .unit-detail-datasheet .detail-stat-strip,
-.build-hero-bar-wrap,
-.tp-progress {
+.build-hero-bar-wrap {
   background: var(--nb-inset);
   border: var(--nb-bw) solid var(--nb-ink);
   color: var(--text);
@@ -1456,26 +1446,10 @@ body.build-mode-enhanced .army-entry-qty input {
 .strat-tag-timing { color: var(--nb-orange); border-color: var(--nb-orange); }
 .strat-desc { color: var(--text); }
 
-/* Lore: dark modal, gradient divider, tinted browse tiles. */
-.lore-modal { background: var(--panel-bg); border-top: 6px solid var(--accent); }
-.lore-body, .lore-footer, .lore-browse { background: var(--panel-bg); }
-.lore-divider { background: var(--nb-ink); height: 3px; }
-.lore-browse-item { background: var(--nb-paper); box-shadow: var(--nb-sh-btn); }
-.lore-browse-item:hover { background: var(--nb-hot); color: var(--nb-on-hot); }
-.lore-paragraph, .lore-tagline { color: var(--text); }
-
 /* Changelog kind pills — the last three hardcoded pastels. */
 .changelog-kind-feature { color: var(--nb-green); border-color: var(--nb-green); }
 .changelog-kind-fix     { color: var(--nb-orange); border-color: var(--nb-orange); }
 .changelog-kind-change  { color: var(--nb-blue); border-color: var(--nb-blue); }
-
-/* Community + starter cards carry a pastel faction tint on the border. */
- .starter-card { border-color: var(--nb-ink); }
- .starter-card { box-shadow: var(--nb-sh-card); transition: var(--nb-press); }
- .starter-card:hover {
-  transform: translate(4px, 4px);
-  box-shadow: var(--nb-sh-press);
-}
 
 /* ============================================================
    TEXT ON AN ACCENT FILL
@@ -1505,7 +1479,6 @@ body.build-mode-enhanced .army-entry-qty input {
 .strat-chip.is-on *,
 .cmdp-row.active *,
 .build-detail-tab.is-active *,
-.tp-progress.is-active *,
 .collect-subtab.is-active *,
 .cp-badge *, .stratagem-cp-badge *, .enhancement-pts-badge *, .strat-phase-badge * {
   color: var(--accent-on) !important;
@@ -1523,8 +1496,6 @@ body.build-mode-enhanced .army-entry-qty input {
 .topbar-action-btn[aria-expanded="true"] *,
 .topbar-brand:hover *,
 .strat-use:hover *,
-.lore-browse-item:hover *, .lore-btn:hover *,
-.tp-generate:hover *, .starter-btn-surprise:hover *,
 .dropdown-menu [role="menuitem"]:hover *,
 .settings-action-row:hover *,
 .reserves-empty-link * {
@@ -1534,13 +1505,6 @@ body.build-mode-enhanced .army-entry-qty input {
    colour is white rather than whatever reads on the faction hue. */
 .filter-chip.excluded, .filter-chip.excluded *,
 .settings-action-row.is-danger:hover * { color: #fff !important; }
-
-/* ── Lore: body copy was still a Roman serif ─────────────── */
-.lore-paragraph, .lore-tagline, .lore-body, .lore-faction-name, .lore-browse-title {
-  font-family: var(--font);
-}
-.lore-faction-name { font-weight: 900; letter-spacing: 0.04em; }
-.lore-paragraph { text-align: left; }
 
 /* ============================================================
    SPECIFICITY FIXES

@@ -25,9 +25,7 @@
    ========================================================================= */
 .yaab-card,
 .unit-card,
-.army-entry,
-.starter-card,
-.ac-card {
+.army-entry {
   background: var(--yaab-card-bg);
   border: 1px solid var(--yaab-card-border-soft);
   border-radius: var(--yaab-card-radius);
@@ -42,9 +40,7 @@
 
 /* Padding by default — tighter for the army-entry list rows. */
 .yaab-card,
-.unit-card,
-.starter-card,
-.ac-card {
+.unit-card {
   padding: var(--yaab-card-pad);
 }
 .army-entry { padding: var(--yaab-card-pad-tight); }
@@ -68,9 +64,7 @@
    every cursor pass — the chassis still gives it border + shadow polish.
    ========================================================================= */
 .yaab-card:hover,
-.unit-card:hover,
-.starter-card:hover,
-.ac-card:hover {
+.unit-card:hover {
   transform: translateY(-1px);
   border-color: rgba(var(--yaab-card-accent-rgb), 0.55);
   box-shadow: var(--yaab-card-shadow-h);
@@ -84,9 +78,7 @@
 
 /* Active squash. */
 .yaab-card:active,
-.unit-card:active,
-.starter-card:active,
-.ac-card:active {
+.unit-card:active {
   transform: translateY(0) scale(0.985);
   box-shadow: none;
 }
@@ -94,9 +86,7 @@
 /* Keyboard focus ring for accessibility. */
 .yaab-card:focus-visible,
 .unit-card:focus-visible,
-.army-entry:focus-visible,
-.starter-card:focus-visible,
-.ac-card:focus-visible {
+.army-entry:focus-visible {
   outline: none;
   box-shadow: var(--yaab-card-shadow-a);
 }
@@ -110,8 +100,7 @@
    ========================================================================= */
 .yaab-card.is-selected,
 .yaab-card.selected,
-.unit-card.selected,
-.starter-card.is-selected {
+.unit-card.selected {
   border-color: var(--yaab-card-accent);
   background: linear-gradient(
     180deg,
@@ -322,16 +311,12 @@
   .yaab-card,
   .unit-card,
   .army-entry,
-  .starter-card,
-  .ac-card,
   .yaab-flip-ghost {
     transition: none !important;
     animation: none !important;
   }
   .yaab-card:hover,
-  .unit-card:hover,
-  .starter-card:hover,
-  .ac-card:hover {
+  .unit-card:hover {
     transform: none;
   }
   .army-entry.just-added,

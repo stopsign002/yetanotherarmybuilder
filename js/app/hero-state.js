@@ -42,40 +42,6 @@
 
   const HERO_ID = 'yaab-hero-cta';
 
-  function hasSurpriseMe() {
-    // Detect a "surprise me" entry-point. Prefer an explicit App API if it
-    // ever appears; otherwise fall back to the starter-lists modal — its
-    // gallery exposes the Surprise Me button there.
-    if (typeof App.starterListsRollRandom === 'function') return true;
-    if (typeof App.surpriseMe === 'function') return true;
-    // Starter-lists modal exists if its toolbar action got registered.
-    return !!document.getElementById('yaab-btn-starter-lists');
-  }
-
-  function rollSurpriseMe() {
-    if (typeof App.starterListsRollRandom === 'function') return App.starterListsRollRandom();
-    if (typeof App.surpriseMe === 'function') return App.surpriseMe();
-    // Fallback: open the starter-lists gallery, then click its Surprise Me
-    // after the modal renders. Mirrors how command-palette handles "Save as PDF".
-    const trigger = document.getElementById('yaab-btn-starter-lists');
-    if (!trigger) return;
-    trigger.click();
-    setTimeout(() => {
-      const btn = document.getElementById('starter-btn-surprise');
-      if (btn) btn.click();
-    }, 60);
-  }
-
-  function hasOpenStarterLists() {
-    if (typeof App.openStarterLists === 'function') return true;
-    return !!document.getElementById('yaab-btn-starter-lists');
-  }
-  function openStarterLists() {
-    if (typeof App.openStarterLists === 'function') return App.openStarterLists();
-    const trigger = document.getElementById('yaab-btn-starter-lists');
-    if (trigger) trigger.click();
-  }
-
   function focusFactionDropdown() {
     const sel = document.getElementById('army-faction-select');
     if (!sel) return;
@@ -110,9 +76,6 @@
       return wrap;
     }
 
-    const showStarter  = hasOpenStarterLists();
-    const showSurprise = hasSurpriseMe();
-
     let buttons = '';
     buttons +=
       '<button type="button" class="yaab-hero-btn" data-action="pick-faction">' +
@@ -124,20 +87,6 @@
         '<span class="yaab-hero-btn-title">Load saved</span>' +
         '<span class="yaab-hero-btn-sub">Open a previous list</span>' +
       '</button>';
-    if (showStarter) {
-      buttons +=
-        '<button type="button" class="yaab-hero-btn" data-action="starter">' +
-          '<span class="yaab-hero-btn-title">Try a starter list</span>' +
-          '<span class="yaab-hero-btn-sub">Curated intro armies</span>' +
-        '</button>';
-    }
-    if (showSurprise) {
-      buttons +=
-        '<button type="button" class="yaab-hero-btn" data-action="surprise">' +
-          '<span class="yaab-hero-btn-title">Surprise me</span>' +
-          '<span class="yaab-hero-btn-sub">Roll a random army</span>' +
-        '</button>';
-    }
 
     wrap.innerHTML =
       '<div class="yaab-hero-headline">Build your army</div>' +
@@ -150,8 +99,6 @@
       const a = btn.getAttribute('data-action');
       if (a === 'pick-faction') focusFactionDropdown();
       else if (a === 'load-saved') clickLoadArmy();
-      else if (a === 'starter') openStarterLists();
-      else if (a === 'surprise') rollSurpriseMe();
     });
 
     return wrap;

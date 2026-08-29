@@ -26,14 +26,11 @@
   <link rel="stylesheet" href="css/mobile.css?v=2026.08.29-1-d767597be" />
   <link rel="stylesheet" href="css/celebrations.css?v=2026.08.29-1-d767597be" />
   <link rel="stylesheet" href="css/command-palette.css?v=2026.08.29-1-d767597be" />
-  <link rel="stylesheet" href="css/starter-lists.css?v=2026.08.29-1-d767597be" />
   <link rel="stylesheet" href="css/quirky.css?v=2026.08.29-1-d767597be" />
   <link rel="stylesheet" href="css/legends-toggle.css?v=2026.08.29-1-d767597be" />
   <link rel="stylesheet" href="css/allies.css?v=2026.08.29-1-d767597be" />
   <link rel="stylesheet" href="css/favorites.css?v=2026.08.29-1-d767597be" />
-  <link rel="stylesheet" href="css/tournament-export.css?v=2026.08.29-1-d767597be" />
   <link rel="stylesheet" href="css/cards-mode.css?v=2026.08.29-1-d767597be" />
-  <link rel="stylesheet" href="css/lore.css?v=2026.08.29-1-d767597be" />
   <link rel="stylesheet" href="css/utilities.css?v=2026.08.29-1-d767597be" />
   <link rel="stylesheet" href="css/collection.css?v=2026.08.29-1-d767597be" />
   <link rel="stylesheet" href="css/reserves.css?v=2026.08.29-1-d767597be" />
@@ -609,9 +606,7 @@
   <script defer src="js/app/wargear-picker.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/events.js?v=2026.08.29-1-d767597be"></script>
 
-  <!-- Feature modules (all extend via App.hooks; safe to reorder within block).
-       Lazy-loaded modules (Tournament Export, Lore) are NOT listed here —
-       they're injected on first user trigger by js/app/lazy-modules.js. -->
+  <!-- Feature modules (all extend via App.hooks; safe to reorder within block). -->
   <!-- FEATURE-MODULES-START -->
   <script defer src="js/app/history.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/url-share.js?v=2026.08.29-1-d767597be"></script>
@@ -621,15 +616,12 @@
   <script defer src="js/app/pwa-install.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/ui/celebrations.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/command-palette.js?v=2026.08.29-1-d767597be"></script>
-  <script defer src="js/app/starter-lists.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/flavor.js?v=2026.08.29-1-d767597be"></script>
-  <script defer src="js/app/ork-math.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/nickname.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/legends-toggle.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/allies.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/sm-chapter-filter.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/favorites.js?v=2026.08.29-1-d767597be"></script>
-  <script defer src="js/app/points-override.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/bug-report.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/data/changelog-data.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/changelog.js?v=2026.08.29-1-d767597be"></script>
@@ -643,22 +635,17 @@
        js/app/reserves.js, and before js/app/index.js bootstraps. -->
   <script defer src="js/app/custom-names.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/data/stratagems-data.js?v=2026.08.29-1-d767597be"></script>
-  <script defer src="js/ui/tournament-export.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/ui/cards-mode.js?v=2026.08.29-1-d767597be"></script>
-  <script defer src="js/data/lore-data.js?v=2026.08.29-1-d767597be"></script>
-  <script defer src="js/app/lore.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/hero-state.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/search-clear.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/details-persist.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/autosave.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/points-filter.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/ui/topbar-export.js?v=2026.08.29-1-d767597be"></script>
-  <script defer src="js/app/first-time-tour.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/ui/scanline.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/ui/save-pulse.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/ui/animated-crest.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/ui/cold-start.js?v=2026.08.29-1-d767597be"></script>
-  <script defer src="js/app/sound-fx.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/faction-fx.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/ui/build-mode.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/ui/collect-mode.js?v=2026.08.29-1-d767597be"></script>
@@ -674,7 +661,6 @@
        defers heavy feature modules until their trigger fires. Must run
        before app/index.js so its placeholders are in App.hooks before
        mountArmyToolbarActions iterates them. -->
-  <script defer src="js/app/lazy-modules.js?v=2026.08.29-1-d767597be"></script>
 
   <script defer src="js/app/index.js?v=2026.08.29-1-d767597be"></script>
   <script defer src="js/app/topbar.js?v=2026.08.29-1-d767597be"></script>

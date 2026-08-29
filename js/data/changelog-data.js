@@ -39,15 +39,18 @@
           'the list coach, the matchup viewer and its opponent paste-in box, ' +
           'voice commands, the stratagem browser, match mode, the deployment ' +
           'planner, the dice roller, the synergy detector, army history and ' +
-          'diffing, the community feed, the activity log, and the Crusade ' +
-          'and Kill Team trackers (including their tabs in Collect). ' +
+          'diffing, the community feed, the activity log, the Crusade ' +
+          'and Kill Team trackers (including their tabs in Collect), ' +
+          'starter lists and Surprise Me, the points-override editor, the ' +
+          'tournament prep PDF, faction lore, the Ork teef counter, sound ' +
+          'effects, the in-app install button and the onboarding tour. ' +
           'The calculators and scoring tools were never a concept we were ' +
           'happy with, and Play mode is being redesigned from scratch rather ' +
           'than patched. What stays: the whole builder, detachments, ' +
           'enhancements, wargear, reserves and requisitions, the army rules ' +
           'and stratagems reference, King of the Coliseum, the painting ' +
-          'tracker in Collect, data cards, tournament export, faction lore, ' +
-          'sharing and your saved armies. Nothing you have saved is affected.',
+          'tracker in Collect, data cards, sharing and your saved armies. ' +
+          'Nothing you have saved is affected.',
       },
       {
         date: '2026-08-23', kind: 'fix',

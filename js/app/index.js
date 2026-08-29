@@ -43,7 +43,8 @@
   //   1. Top app bar icon shelf  (#topbar-icons)             — region:'icon'
   //   2. Bottom-toolbar undo/redo (#toolbar-undo-redo)        — undo/redo only
   //   3. Static Export ▾ dropdown (#export-extras)            — region:'export-menu'
-  //   4. Action Center sheet      (UI.actionCenter sections)  — everything else
+  // Anything else registers a hook action but renders nowhere; the Settings
+  // drawer reaches those through clickToolbarBtn's hook fallback.
   //
   // The old #toolbar-extras / #toolbar-icons / #tools-menu / #more-menu
   // containers still exist (hidden, in .toolbar-compat-shelf) so any
@@ -63,80 +64,6 @@
     'yaab-btn-changelog',
   ]);
 
-  // Map known toolbar action IDs to Action Center sections.
-  // Sections: 'game-day' | 'analyze' | 'export' | 'browse' | 'collection' | 'settings'
-  const ID_TO_SECTION = {
-    // Game Day
-    // Analyze
-    // Print & Export
-    'yaab-btn-tournament':       'export',
-    'yaab-btn-share':            'export',
-    'yaab-btn-qr-share':         'export',
-    // Browse
-    'yaab-btn-lore':             'browse',
-    'yaab-btn-starter-lists':    'browse',
-    'yaab-btn-replay-tour':      'browse',
-    // Collection
-    'yaab-btn-collection':       'collection',
-    // Settings
-    'yaab-btn-points-override':  'settings',
-    'yaab-btn-legends':          'settings',
-    'yaab-btn-allies':           'settings',
-    'yaab-btn-bug-report':       'settings',
-    'yaab-btn-install':          'settings',
-    'yaab-btn-ork-math':         'settings',
-  };
-
-  // Some hook entries don't set an id (e.g. deployment planner). Match
-  // by label as a fallback so they still route correctly.
-  const LABEL_TO_SECTION = {
-    'deploy':           'game-day',
-    'deployment':       'game-day',
-    'stratagems':       'game-day',
-    'tournament':       'export',
-    'replay tour':      'browse',
-    'starter lists':    'browse',
-  };
-
-  // Short, intent-driven descriptions for known actions. Falls back to
-  // the action's `title` (then label) when the id is unknown.
-  const ID_TO_DESC = {
-    'yaab-btn-tournament':       'Generate a tournament prep PDF bundle.',
-    'yaab-btn-share':            'Copy a shareable URL for this army.',
-    'yaab-btn-qr-share':         'Show a QR code so a teammate can grab the list.',
-    'yaab-btn-lore':             'Browse faction lore and background.',
-    'yaab-btn-starter-lists':    'Curated starter armies and a randomizer.',
-    'yaab-btn-replay-tour':      'Restart the first-time walkthrough.',
-    'yaab-btn-collection':       'Track owned models and painting progress.',
-    'yaab-btn-points-override':  'Override unit points for dataslates.',
-    'yaab-btn-legends':          'Show or hide Legends-only units.',
-    'yaab-btn-allies':           'Show or hide allied units from other codexes.',
-    'yaab-btn-bug-report':       'Report an issue or attach diagnostic data.',
-    'yaab-btn-install':          'Install the app to your home screen.',
-    'yaab-btn-ork-math':         'Toggle Ork numerals (TEEF mode).',
-  };
-
-  function resolveSection(a) {
-    if (a.section) return a.section;
-    if (a.id && ID_TO_SECTION[a.id]) return ID_TO_SECTION[a.id];
-    if (a.category) {
-      // Legacy category → section mapping.
-      switch (a.category) {
-        case 'game':     return 'game-day';
-        case 'analysis': return 'analyze';
-        case 'export':   return 'export';
-        case 'data':     return 'collection';
-        default:         return 'settings';
-      }
-    }
-    const lbl = String(a.label || '').toLowerCase();
-    for (const k in LABEL_TO_SECTION) {
-      if (lbl.indexOf(k) !== -1) return LABEL_TO_SECTION[k];
-    }
-    return 'settings';
-  }
-
-  // Build the inline icon button for the top bar / undo-redo shelf.
   function buildIconButton(a) {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -149,11 +76,6 @@
     return btn;
   }
 
-  // Top-bar shelf buttons sit next to Settings / Help / Account in the
-  // topbar — they need the standard `.topbar-action-btn` chrome (border,
-  // hover state, glyph + uppercase label spans) defined in css/topbar.css.
-  // Action shape adds an optional `glyph` (icon character / HTML entity)
-  // alongside the existing `label` (the uppercase text shown beside it).
   function buildTopbarShelfButton(a) {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -191,17 +113,6 @@
     return b;
   }
 
-  function adaptForActionCenter(a) {
-    return {
-      id:          a.id,
-      label:       a.label,
-      title:       a.title,
-      ariaLabel:   a.ariaLabel,
-      description: a.description || ID_TO_DESC[a.id] || a.title || '',
-      onClick:     a.onClick,
-    };
-  }
-
   // Renders hook-registered buttons into the new surfaces.
   // Action shape (unchanged for compatibility):
   //   { region:   'primary' | 'icon' | 'export-menu' | 'tools-menu' | 'more-menu',
@@ -215,7 +126,6 @@
 
     // Reset all targets on each mount so re-mounting (e.g. after lazy
     // module load) doesn't duplicate buttons.
-    if (window.UI && UI.actionCenter) UI.actionCenter.clearActions();
     if (topIcons)  topIcons.replaceChildren();
     if (undoRedo)  undoRedo.replaceChildren();
     if (exportTgt) exportTgt.replaceChildren();
@@ -250,10 +160,8 @@
         return;
       }
 
-      // 'tools-menu' and 'primary' both route to the Action Center now.
-      if (window.UI && UI.actionCenter) {
-        UI.actionCenter.registerAction(adaptForActionCenter(a), resolveSection(a));
-      }
+      // 'tools-menu' and 'primary' have no render surface — the Action
+      // Center was removed with the last of the features it listed.
     });
   };
 })();

@@ -726,14 +726,6 @@
 
   App.hooks.cardClassContributors.push(cardClassContributor);
 
-  App.hooks.armyToolbarActions.push({
-    id: 'yaab-btn-collection',
-    region: 'primary',
-    label: 'Collection',
-    title: 'Your model collection + painting tracker',
-    onClick: openDashboard,
-  });
-
   App.hooks.bootstrap.push(function (/* state */) {
     loadPersisted();
     applyBuildBadgesBodyClass();
