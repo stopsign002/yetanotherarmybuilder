@@ -280,6 +280,16 @@ const browser = await chromium.launch();
   check('desktop: reset clears CP + dead', afterReset.cp === '0 CP' && afterReset.dead === false,
     JSON.stringify(afterReset));
 
+  // Exit button leaves play mode.
+  const exitBtn = await page.$('.play-exit');
+  check('desktop: Exit button present in header', !!exitBtn);
+  if (exitBtn) {
+    await exitBtn.click();
+    await page.waitForTimeout(300);
+    const modeAfterExit = await page.evaluate(() => App.getMode());
+    check('desktop: Exit returns to build', modeAfterExit === 'build', modeAfterExit);
+  }
+
   // Settings drawer go-play row exists on desktop.
   await page.evaluate(() => App.settingsDrawer.open());
   const goPlay = await page.waitForSelector('#set-action-go-play', { timeout: 4000 }).catch(() => null);
@@ -325,15 +335,20 @@ const browser = await chromium.launch();
   });
   check('phone: switcher is a slim horizontal strip', switcherBox.h < 80, JSON.stringify(switcherBox));
 
-  // Sheet not overlapped by the mobile tab bar.
-  const overlap = await page.evaluate(() => {
+  // Play mode is full-screen on phones: the bottom tab bar is hidden and
+  // the sheet panel runs to the bottom of the viewport.
+  const fullscreen = await page.evaluate(() => {
     const tabbar = document.querySelector('.mobile-tabbar');
     const panel = document.querySelector('.play-panel[data-panel="sheets"]');
-    if (!tabbar || !panel) return { tabbar: !!tabbar, panel: !!panel };
-    const tb = tabbar.getBoundingClientRect(), pb = panel.getBoundingClientRect();
-    return { tabbarTop: tb.top, panelBottom: pb.bottom, ok: pb.bottom <= tb.top + 3 };
+    return {
+      tbHidden: !tabbar || getComputedStyle(tabbar).display === 'none',
+      panelBottom: panel ? Math.round(panel.getBoundingClientRect().bottom) : -1,
+      vh: window.innerHeight,
+    };
   });
-  check('phone: sheet panel clears the tab bar', overlap.ok === true, JSON.stringify(overlap));
+  check('phone: tab bar hidden in play mode', fullscreen.tbHidden);
+  check('phone: sheet panel uses the full viewport',
+    Math.abs(fullscreen.panelBottom - fullscreen.vh) <= 3, JSON.stringify(fullscreen));
 
   // Swipe left → next sheet.
   const before = await page.$eval('.play-sheet:not([hidden])', el => el.dataset.entryId);
@@ -371,6 +386,23 @@ const browser = await chromium.launch();
   await page.waitForTimeout(600);
   const modeAfterBack = await page.evaluate(() => window.App && App.getMode && App.getMode()).catch(() => null);
   check('phone: Back button returns to build', modeAfterBack === 'build', String(modeAfterBack));
+  const tabbarBack = await page.evaluate(() => {
+    const t = document.querySelector('.mobile-tabbar');
+    return !!t && getComputedStyle(t).display !== 'none';
+  });
+  check('phone: tab bar returns after leaving play', tabbarBack === true);
+
+  // The Exit button works on the phone too.
+  await page.evaluate(() => App.openPlayMode());
+  await page.waitForTimeout(400);
+  await page.click('.play-exit');
+  await page.waitForTimeout(300);
+  const afterExit = await page.evaluate(() => ({
+    mode: App.getMode(),
+    tabbar: (() => { const t = document.querySelector('.mobile-tabbar'); return !!t && getComputedStyle(t).display !== 'none'; })(),
+  }));
+  check('phone: Exit button returns to build + restores tab bar',
+    afterExit.mode === 'build' && afterExit.tabbar, JSON.stringify(afterExit));
   await ctx.close();
 }
 

@@ -194,6 +194,7 @@
         +     '<button type="button" class="play-cp-btn" data-cp="1" aria-label="Gain a command point">+</button>'
         +   '</div>'
         +   '<button type="button" class="play-reset">Reset game</button>'
+        +   '<button type="button" class="play-exit" title="Leave Play mode and return to the builder">Exit</button>'
         + '</header>'
         + '<nav class="play-tabs" role="tablist" aria-label="Play mode sections">'
         +   TABS.map(([id, label]) =>
@@ -227,7 +228,8 @@
     root.querySelector('.play-header').addEventListener('click', e => {
       const cp = e.target.closest('.play-cp-btn');
       if (cp) { onCp(parseInt(cp.dataset.cp, 10)); return; }
-      if (e.target.closest('.play-reset')) onReset();
+      if (e.target.closest('.play-reset')) { onReset(); return; }
+      if (e.target.closest('.play-exit') && typeof App.setMode === 'function') App.setMode('build');
     });
     root.querySelector('.play-go-build').addEventListener('click', () => {
       if (typeof App.setMode === 'function') App.setMode('build');

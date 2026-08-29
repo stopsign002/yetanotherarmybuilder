@@ -26,8 +26,8 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.29-4',
-    lastUpdated: '2026-08-29T14:00:00Z',
+    version:     '2026.08.29-5',
+    lastUpdated: '2026-08-29T15:00:00Z',
     entries: [
       {
         date: '2026-08-29', kind: 'feature',
@@ -43,10 +43,12 @@
           'looks unfamiliar mid-game. Light in-game tracking on top: a CP ' +
           'counter, and a ' +
           'wounds stepper plus a destroyed toggle on each unit, remembered ' +
-          'per army until you hit Reset game. Find it via the Play button ' +
-          'in the top bar, or under Play in the Settings menu (now on ' +
-          'desktop too). Unlike the old cockpit-style Play mode this one ' +
-          'is reference-first: no phase tracker, no scorepad.',
+          'per army until you hit Reset game. On phones Play mode takes the ' +
+          'whole screen — the bottom tab bar disappears; leave with the ' +
+          'Exit button in the header (or the Back button). Find it via the ' +
+          'Play button in the top bar, or under Play in the Settings menu ' +
+          '(now on desktop too). Unlike the old cockpit-style Play mode ' +
+          'this one is reference-first: no phase tracker, no scorepad.',
       },
       {
         date: '2026-08-29', kind: 'fix',

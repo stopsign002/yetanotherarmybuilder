@@ -104,6 +104,22 @@
   border-color: var(--danger);
   background: rgba(231, 76, 60, 0.08);
 }
+.play-exit {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.play-exit:hover {
+  background: var(--card-hover);
+  border-color: var(--accent);
+}
 
 /* ── Tab strip ──────────────────────────────────────────────────────── */
 .play-tabs {
@@ -460,6 +476,15 @@
 
 /* ── Mobile (single breakpoint, same as the rest of the app) ────────── */
 @media (max-width: 820px) {
+  /* Play mode owns the whole screen: the bottom tab bar disappears (the
+   * header's Exit button is the way out, and the hardware Back button is
+   * still trapped to Build), and #play-mode reclaims the tab-bar height
+   * that mobile.css's sibling rule normally subtracts. The scrolling
+   * panels keep the home-indicator safe area as bottom padding. */
+  body[data-mode="play"] .mobile-tabbar { display: none; }
+  body[data-mode="play"] #play-mode { height: 100%; }
+  .play-panel { padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+
   .play-header {
     gap: 8px;
     padding: 8px 10px;
