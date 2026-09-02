@@ -2221,6 +2221,19 @@
   //
   // Adopted units are marked `_adopted` so the audits can tell a synthesized
   // datasheet apart from one 40kdc authored.
+  //
+  // KNOWN GAP — wargear OPTIONS are not synthesized. An adopted unit gets its
+  // default loadout and its base cost, and `wargearProfile` stays null. GDC
+  // states options as English prose ("This model's Kannon can be replaced with
+  // one of the following", "up to 4 Big Shoota") where wargearProfile needs
+  // budgets, per-size defaults and reachability; guessing that wrong
+  // mis-prices armies silently, which is worse than not offering the choice.
+  // Live consequence today: the Gunwagon's optional Zzap Gun (+10 in the MFM)
+  // cannot be taken, and the daily MFM audit reports exactly that as
+  // "app charges nothing" — a true signal, deliberately left standing.
+  // Note this is NOT a case for a bare `itemCosts`-only profile: with no
+  // reachable options every cost falls into `alwaysCost`, which would charge
+  // EVERY Gunwagon the +10.
   const ADOPT_UNITS = {
     // New Ork codex, 2026-09-02. Warbuggies replaces four separate buggy
     // datasheets 40kdc still carries (now flagged Legends via MFM_DELISTED).
