@@ -1900,6 +1900,9 @@
       if (units.length === 0 && dets.length === 0) return;
       out.push({
         factionName,
+        // The 40kdc faction id ('orks', 'space-marines'). factionName is a
+        // display string; anything keying off the DATA wants this.
+        _factionId: f.id,
         filename: factionName,
         unitCount: units.length,
         units,
@@ -2202,6 +2205,237 @@
   }
 
   // ── drop-in BSData replacement ─────────────────────────────────────────────
+  // ── Units GW ships that 40kdc has not caught up to yet (GDC-adopted) ───────
+  // A codex drop puts new datasheets in the MFM and in GW's own app months
+  // before 40kdc models them. Until then the unit simply does not exist in
+  // yaab — you cannot see it, cost it or field it — which is a worse failure
+  // than a stale statline because there is nothing on screen to be suspicious
+  // of. Synthesize it instead, from the two sources we already trust and
+  // already refresh daily: GW's app dump (GDC) for the datasheet, and the MFM
+  // scrape for points (which carries ordinal bands GDC does not model).
+  //
+  // SELF-HEALING: adoption is skipped the moment a real unit with the same
+  // name appears in the faction, so the entry no-ops when 40kdc ships the
+  // datasheet and can then be deleted along with its mfm-aliases unit_adopt
+  // row. Nothing here overwrites upstream — it only fills an absence.
+  //
+  // Adopted units are marked `_adopted` so the audits can tell a synthesized
+  // datasheet apart from one 40kdc authored.
+  const ADOPT_UNITS = {
+    // New Ork codex, 2026-09-02. Warbuggies replaces four separate buggy
+    // datasheets 40kdc still carries (now flagged Legends via MFM_DELISTED).
+    'orks': ['Gunwagon', 'Nazdreg', 'Runtherd', 'Warbuggies'],
+  };
+
+  // GDC prints weapon keywords as display strings ("RAPID FIRE 2",
+  // "ANTI-INFANTRY 4+", "LETHAL HITS: non-MONSTER/VEHICLE") where 40kdc
+  // parameterizes them. Recover an id so weaponKwText can find the rule prose,
+  // and keep any qualifier after the colon in the printed label.
+  function gdcKwToken(raw) {
+    const s = String(raw == null ? '' : raw).trim();
+    if (!s) return null;
+    const colon = s.indexOf(':');
+    const head = (colon === -1 ? s : s.slice(0, colon)).trim();
+    const qual = colon === -1 ? '' : s.slice(colon + 1).trim();
+    const m = /^(.*?)\s*(\d+\+?)?$/.exec(head);
+    const words = ((m && m[1]) || head).trim();
+    const rating = (m && m[2]) || '';
+    const base = words.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    if (!base) return null;
+    let label = prettyKw(base);
+    if (rating) label += ' ' + rating;
+    if (qual) label += ': ' + qual;
+    return { id: rating ? base + '-' + rating.replace('+', '') : base, label };
+  }
+
+  // GDC weapon shape: [{ profiles: [{ name, range, attacks, skill, strength,
+  // ap, damage, keywords[] }] }] → the same row objects weaponRows() emits, so
+  // the datasheet table, the damage calculator and the list coach all read an
+  // adopted unit exactly like an upstream one.
+  function gdcWeaponRows(groups, melee) {
+    // Bind from window: this file uses a bare `App` elsewhere, which only
+    // resolves in a browser. Node harnesses (wahapedia-audit-dump.mjs, the
+    // bug-fixer smoke test) set window.App with no global, so bare App throws.
+    const App = window.App || {};
+    const T = (v) => (App.GDC && App.GDC._pickText ? App.GDC._pickText(v) : v);
+    const rows = [];
+    (groups || []).forEach((g) => {
+      const profiles = (g && g.profiles) || [];
+      profiles.forEach((p) => {
+        const pn = T(p.name) || '';
+        const isMelee = melee || String(p.range || '').trim().toLowerCase() === 'melee';
+        const row = {
+          name: pn,
+          _typeName: isMelee ? 'Melee' : 'Ranged',
+          Range: isMelee ? 'Melee' : (p.range ? String(p.range) : '—'),
+          A: num(p.attacks), S: num(p.strength),
+          AP: num(p.ap), D: num(p.damage),
+        };
+        if (isMelee) row.WS = num(p.skill); else row.BS = num(p.skill);
+        const toks = (p.keywords || []).map(gdcKwToken).filter(Boolean);
+        if (toks.length) {
+          row.Keywords = toks.map((t) => t.label).join(', ');
+          const defs = {};
+          toks.forEach((t) => {
+            const txt = weaponKwText(t.id);
+            if (!txt) return;
+            defs[t.label] = txt;
+            const stripped = t.label.replace(/\s+\d+\+?$/, '');
+            if (stripped !== t.label) defs[stripped] = txt;
+            const base = prettyKw(t.id);
+            if (!defs[base]) defs[base] = txt;
+          });
+          if (Object.keys(defs).length) row._keywordDefs = defs;
+        }
+        rows.push(row);
+      });
+    });
+    return rows;
+  }
+
+  function buildAdoptedUnit(ds, factionId, id) {
+    const App = window.App || {};
+    const G = App.GDC || {};
+    const T = (v) => (G._pickText ? G._pickText(v) : v);
+    const C = (v) => (G._cleanMarkup ? G._cleanMarkup(T(v)) : T(v));
+    const st = ((ds.stats || [])[0]) || {};
+    const prof = {
+      name: '',
+      M: st.m || '-', T: String(st.t == null ? '' : st.t), SV: st.sv || '',
+      W: String(st.w == null ? '' : st.w), LD: st.ld || '', OC: String(st.oc == null ? '' : st.oc),
+    };
+    const kws = (ds.keywords || []).map(T).filter(Boolean);
+    const lowerKw = kws.map((k) => String(k).toLowerCase());
+    const ab = ds.abilities || {};
+
+    // Core abilities: GDC gives the printed name only; the prose lives in our
+    // ability-text store under a slug, same as upstream core rules.
+    const abilities = [];
+    (ab.core || []).forEach((a) => {
+      const name = T(a && a.name != null ? a.name : a);
+      if (!name) return;
+      const aid = String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      abilities.push({ name, description: weaponKwText(aid) || textFor(aid) || '', isCore: true, id: aid });
+    });
+    (ab.other || []).forEach((a) => {
+      const name = T(a && a.name);
+      if (!name) return;
+      abilities.push({ name, description: C(a.description) || '', isCore: false, id: null });
+    });
+    (ab.special || []).forEach((a) => {
+      const name = T(a && a.name);
+      if (!name) return;
+      // TRANSPORT is rendered by its own datasheet section, not as an ability.
+      if (/^transport$/i.test(name)) return;
+      if (abilities.some((x) => x.name.toLowerCase() === String(name).toLowerCase())) return;
+      abilities.push({ name, description: C(a.description) || '', isCore: CORE_ABILITY_RE.test(name), id: null });
+    });
+    if (ab.damaged && T(ab.damaged.description)) {
+      const range = T(ab.damaged.range);
+      abilities.push({
+        name: range ? 'Damaged: ' + String(range).toLowerCase() : 'Damaged',
+        description: C(ab.damaged.description), isCore: false, id: null,
+      });
+    }
+
+    // Points: the MFM overlay is authoritative and carries ordinal banding GDC
+    // has no field for; GDC's flat cost is the fallback if the scrape is blind.
+    const mfmPts = (DC.mfmPoints && DC.mfmPoints[factionId + '/' + id]) || null;
+    const gdcPts = (ds.points || []).map((p) => ({
+      cost: parseInt(p.cost, 10), models: parseInt(p.models, 10),
+    })).filter((p) => !isNaN(p.cost) && !isNaN(p.models));
+    const { squadOptions, pointsOptions, ordinal } =
+      parsePoints((mfmPts && mfmPts.length ? mfmPts : gdcPts) || []);
+
+    const transportSpecial = (ab.special || []).find((a) => /^transport$/i.test(T(a && a.name) || ''));
+    const isEpic = lowerKw.includes('epic hero');
+    const role = isEpic ? 'epic-hero'
+      : (lowerKw.includes('character') ? 'character'
+        : (lowerKw.includes('battleline') ? 'battleline' : null));
+    const hasLeader = abilities.some((a) => /^leader$/i.test(a.name));
+    const hasSupport = abilities.some((a) => /^support$/i.test(a.name))
+      || (ab.special || []).some((a) => /^support$/i.test(T(a && a.name) || ''));
+
+    return {
+      id, name: T(ds.name), type: 'unit', role,
+      // Rendered as a plain esc()'d string, so strip the **bold** markers
+      // cleanMarkup leaves in (gdc.js plainText() does the same).
+      transportCapacity: transportSpecial
+        ? C(transportSpecial.description).replace(/\*\*/g, '') : null,
+      stats: { M: prof.M, T: prof.T, SV: prof.SV, W: prof.W, LD: prof.LD, OC: prof.OC },
+      modelStats: [prof],
+      invulnSave: (ab.invul && T(ab.invul.value)) || null,
+      invulnNote: (ab.invul && C(ab.invul.note)) || null,
+      weapons: gdcWeaponRows(ds.rangedWeapons, false).concat(gdcWeaponRows(ds.meleeWeapons, true)),
+      abilities,
+      wargearAbilities: [],
+      wargearProfile: null,
+      keywords: kws.concat('Orks'),
+      wargearOptions: [],
+      points: pointsOptions.length ? pointsOptions[0] : 0,
+      pointsOptions, squadOptions, ordinal,
+      description: '',
+      isLegends: false,
+      attachmentRole: hasLeader ? 'leader' : (hasSupport ? 'support' : null),
+      _mfmPoints: !!(mfmPts && mfmPts.length),
+      _provisional: false,
+      // Datasheet synthesized here rather than authored by 40kdc.
+      _adopted: true,
+      // gdcLoadout / gdcWargear / gdcComposition / gdcMelee+RangedWeapons are
+      // NOT set here: adoptGdcUnits re-runs App.GDC.mergeUnitDataIntoFactions
+      // afterwards so adopted units get them from the same code path (and the
+      // same plainText/listLines formatting) as every other unit.
+    };
+  }
+
+  // Add allowlisted GDC datasheets that the faction is missing. Returns a count.
+  function adoptGdcUnits(factions) {
+    const App = window.App;
+    if (!App || !App.GDC || !App.GDC._rawCache) return 0;
+    const nameKey = App.GDC._nameKey || ((s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
+    const T = App.GDC._pickText || ((v) => v);
+    let added = 0;
+    (factions || []).forEach((faction) => {
+      // Match the faction by the 40kdc id its own units carry, so this does not
+      // depend on the display name.
+      const fid = faction._factionId;
+      const want = fid && ADOPT_UNITS[fid];
+      if (!want || !want.length) return;
+      const have = new Set((faction.units || []).map((u) => nameKey(u && u.name)));
+      // Every GDC file this faction reads, same resolution the merges use.
+      const files = [].concat(App.GDC.FACTION_TO_GDC[faction.factionName] || []);
+      const sheets = [];
+      files.forEach((fn) => {
+        const payload = App.GDC._rawCache.get(App.GDC._EDITION + '/' + fn);
+        if (payload && Array.isArray(payload.datasheets)) sheets.push(...payload.datasheets);
+      });
+      want.forEach((wantName) => {
+        if (have.has(nameKey(wantName))) return;          // upstream caught up → no-op
+        const ds = sheets.find((d) => nameKey(T(d && d.name)) === nameKey(wantName));
+        if (!ds) return;                                   // GDC lost it → do nothing
+        const id = nameKey(wantName);
+        try {
+          const unit = buildAdoptedUnit(ds, fid, id);
+          unit._factionId = fid;
+          unit._factionName = faction.factionName;
+          faction.units.push(unit);
+          // attachAlliedUnits recomputes this, but it returns early for a
+          // faction with no allies (Orks has none), so keep it correct here.
+          faction.unitCount = faction.units.length;
+          added++;
+        } catch (e) {
+          console.warn('[DC] adopt failed for ' + wantName + ':', e && e.message ? e.message : e);
+        }
+      });
+    });
+    // Give the new units the same GDC display fields every other unit gets.
+    // Idempotent: it re-sets the same values on units already merged.
+    if (added > 0 && typeof App.GDC.mergeUnitDataIntoFactions === 'function') {
+      try { App.GDC.mergeUnitDataIntoFactions(factions); } catch (_) {}
+    }
+    return added;
+  }
+
   async function loadAllFactions(onProgress, onFactionLoaded /*, signal */) {
     let factions;
     try { factions = buildFactions(); }
@@ -2232,6 +2466,16 @@
         // ability text) from the 11th GDC datasheets.
         if (typeof App.GDC.mergeUnitAbilitiesFromGdc === 'function') {
           App.GDC.mergeUnitAbilitiesFromGdc(App.state.factions);
+        }
+        // Datasheets GW ships that 40kdc has not modelled yet. Runs after the
+        // merges (so it sees the final unit list before deciding what is
+        // missing) and BEFORE the weapon fixes and ally attach, so an adopted
+        // unit is treated exactly like an upstream one from here on.
+        try {
+          const nAdopted = adoptGdcUnits(App.state.factions);
+          if (nAdopted > 0) console.info(`[DC] adopted ${nAdopted} GDC datasheet(s) 40kdc does not carry yet`);
+        } catch (e) {
+          console.warn('[DC] GDC adopt failed (non-fatal):', e && e.message ? e.message : e);
         }
         try { syncOptionalWeaponsFromGdc(App.state.factions); } catch (_) {}
         try { applyWeaponFixes(App.state.factions); } catch (_) {}
@@ -2298,6 +2542,7 @@
     _applyWeaponFixes: applyWeaponFixes,
     _syncOptionalWeaponsFromGdc: syncOptionalWeaponsFromGdc,
     _attachAlliedUnits: attachAlliedUnits,
+    _adoptGdcUnits: adoptGdcUnits,
   };
 
   // attachments.js reaches into WahapediaParser._internal.foldKey. Provide a stub

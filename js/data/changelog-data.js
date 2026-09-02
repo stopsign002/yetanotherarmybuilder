@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.02-1',
-    lastUpdated: '2026-09-02T12:00:00Z',
+    version:     '2026.09.02-2',
+    lastUpdated: '2026-09-02T12:30:00Z',
     entries: [
+      {
+        date: '2026-09-02', kind: 'feature',
+        title: 'The four new Ork datasheets are in',
+        description:
+          'Gunwagon, Nazdreg, Runtherd and Warbuggies can now be searched, '
+          + 'costed and added to a list. Our usual datasheet source has not '
+          + 'shipped the new Ork codex yet, so these four are built from '
+          + "Games Workshop's own app data, with points from the Munitorum "
+          + 'Field Manual — including the Gunwagon costing more from your '
+          + 'third one onward. They swap over to the normal source '
+          + 'automatically once it catches up. Ork statlines elsewhere are '
+          + 'still the pre-codex ones until then.',
+      },
       {
         date: '2026-09-02', kind: 'change',
         title: 'New Ork points, and seven Ork units moved to Legends',
