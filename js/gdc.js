@@ -516,6 +516,25 @@
       .replace(/[^a-z0-9]/g, '');
   }
 
+  // GW sometimes RENAMES a datasheet in a new codex while 40kdc keeps the old
+  // name. The two then stop matching and the unit silently loses every GDC
+  // merge — weapons, prose, abilities — with nothing logged, because a miss is
+  // indistinguishable from "this unit has no GDC sheet". Bridge our name to
+  // GW's here. Keys and values are both nameKey()-normalized.
+  // Delete an entry once 40kdc adopts GW's name (the keys stop matching, so a
+  // stale entry is inert rather than harmful).
+  const GDC_NAME_ALIASES = {
+    // 2026-09-02 Ork codex pluralised both.
+    wartrakk: 'wartrakks',
+    rukkatrukksquigbuggy: 'rukkatrukksquigbuggies',
+  };
+
+  // nameKey for looking a OUR unit up in a GDC index.
+  function dsKey(name) {
+    const k = nameKey(name);
+    return GDC_NAME_ALIASES[k] || k;
+  }
+
   // ── Unit datasheet data (11th) ──────────────────────────────────────────────
   // Build a lookup: nameKey → datasheet, earlier files winning on collisions.
   function buildDatasheetIndex(filenames) {
@@ -558,7 +577,7 @@
       const idx = buildDatasheetIndex(files);
       if (idx.size === 0) return;
       (faction.units || []).forEach(unit => {
-        const ds = idx.get(nameKey(unit && unit.name));
+        const ds = idx.get(dsKey(unit && unit.name));
         const data = projectUnitData(ds);
         if (!data) return;
         if (data.loadout)       unit.gdcLoadout       = data.loadout;
@@ -659,7 +678,7 @@
       const idx = buildAbilityIndex11(files);
       if (idx.size === 0) return;
       (faction.units || []).forEach(unit => {
-        const entry = idx.get(nameKey(unit && unit.name));
+        const entry = idx.get(dsKey(unit && unit.name));
         if (!entry) return;
         const gAbils = entry.abilities || [];
         const gGroups = entry.primarch || [];
@@ -751,6 +770,7 @@
     _cleanMarkup: cleanMarkup,
     _pickText: pickText,
     _nameKey: nameKey,
+    _dsKey: dsKey,
     _EDITION: EDITION,
   };
 })();

@@ -2205,6 +2205,132 @@
   }
 
   // ── drop-in BSData replacement ─────────────────────────────────────────────
+  // ── Factions where GW's app dump outranks 40kdc for statlines ─────────────
+  // Normally 40kdc is the statline source and disagreements go through the
+  // weekly three-source consensus (us / wahapedia / New Recruit). That model
+  // breaks on a codex drop: GW republishes the datasheets, GDC picks them up
+  // within a day, and BOTH community sources stay on the old book for weeks.
+  // Consensus then actively defends the stale values — every drifted Ork row
+  // in the audit is tagged "[BSData backs ours]", which reads as corroboration
+  // but is really two sources that have not updated yet.
+  //
+  // So for a faction listed here, GDC wins on the statline. Scope this to
+  // factions in exactly that situation — a fresh codex GW has published and
+  // the community has not ingested — and remove the entry once 40kdc ships it.
+  //
+  // SELF-HEALING BY CONSTRUCTION: the override only ever writes a value that
+  // DIFFERS from ours, so when 40kdc catches up the two agree and this becomes
+  // a no-op. No `expect` pin to maintain, and it tracks any GW errata for free
+  // because the GDC snapshot refreshes daily.
+  const GDC_STATS_AUTHORITATIVE = {
+    orks: '2026-09-02 Ork codex — 40kdc + BSData both still pre-codex',
+  };
+
+  // Core abilities GW lists that 40kdc does not link. Same reasoning, same
+  // gate; kept separate because adding an ability is a different risk from
+  // correcting a number.
+  function gdcCoreAbilityAdds(ds, unit) {
+    const G = window.App && window.App.GDC;
+    if (!G || !ds || !ds.abilities) return [];
+    const T = G._pickText || ((v) => v);
+    const have = new Set((unit.abilities || []).map((a) => String(a.name || '').toLowerCase()));
+    const out = [];
+    (ds.abilities.core || []).forEach((a) => {
+      const name = T(a && a.name != null ? a.name : a);
+      if (!name || have.has(String(name).toLowerCase())) return;
+      const aid = String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      out.push({ name, description: weaponKwText(aid) || textFor(aid) || '', isCore: true, id: aid });
+    });
+    if (ds.abilities.damaged) {
+      const desc = G._cleanMarkup ? G._cleanMarkup(T(ds.abilities.damaged.description)) : '';
+      const range = T(ds.abilities.damaged.range);
+      const nm = range ? 'Damaged: ' + String(range).toLowerCase() : 'Damaged';
+      if (desc && !have.has(nm.toLowerCase())) out.push({ name: nm, description: desc, isCore: false, id: null });
+    }
+    return out;
+  }
+
+  // Overwrite statlines (and invuln) from GDC for the allowlisted factions.
+  // Returns { units, changes } for logging.
+  function applyGdcStatlines(factions) {
+    const App = window.App;
+    if (!App || !App.GDC || !App.GDC._rawCache) return { units: 0, changes: 0 };
+    const T = App.GDC._pickText || ((v) => v);
+    const dsKey = App.GDC._dsKey || App.GDC._nameKey;
+    const nameKey = App.GDC._nameKey;
+    let nUnits = 0, nChanges = 0;
+    (factions || []).forEach((faction) => {
+      const fid = faction._factionId;
+      if (!fid || !GDC_STATS_AUTHORITATIVE[fid]) return;
+      const files = [].concat(App.GDC.FACTION_TO_GDC[faction.factionName] || []);
+      const sheets = [];
+      files.forEach((fn) => {
+        const p = App.GDC._rawCache.get(App.GDC._EDITION + '/' + fn);
+        if (p && Array.isArray(p.datasheets)) sheets.push(...p.datasheets);
+      });
+      if (!sheets.length) return;                       // snapshot missing → do nothing
+      const idx = new Map();
+      sheets.forEach((d) => { const k = nameKey(T(d && d.name)); if (k && !idx.has(k)) idx.set(k, d); });
+
+      (faction.units || []).forEach((unit) => {
+        if (!unit || unit._adopted) return;             // already built from GDC
+        const ds = idx.get(dsKey(unit.name));
+        if (!ds) return;                                 // GW does not list it (Legends) → leave alone
+        const gs = ds.stats || [];
+        const ms = Array.isArray(unit.modelStats) ? unit.modelStats : [];
+        if (!gs.length || !ms.length) return;
+        const changed = [];
+        const applyTo = (row, g) => {
+          const want = { M: g.m, T: g.t, SV: g.sv, W: g.w, LD: g.ld, OC: g.oc };
+          Object.keys(want).forEach((k) => {
+            const gw = want[k] == null ? '' : String(want[k]).trim();
+            const ours = row[k] == null ? '' : String(row[k]).trim();
+            if (!gw || gw === ours) return;              // absent or already equal → no-op
+            changed.push(`${row.name || '·'} ${k} ${ours}->${gw}`);
+            row[k] = gw;
+          });
+        };
+        if (gs.length === ms.length) {
+          // Same profile count: pair by index. Both sources list a datasheet's
+          // profiles in printed order, and the names differ cosmetically
+          // ("Squighog Boyz" vs "Squighog Boy"), so index beats name matching.
+          ms.forEach((row, i) => applyTo(row, gs[i]));
+        } else if (gs.length === 1 && ms.length > 1) {
+          // GW COLLAPSED the datasheet to one profile — a real 11e pattern, not
+          // a GDC gap: Ghazghkull absorbed Makari (the MFM went 235/2 models to
+          // 300/1) and Gretchin lost its Runtherd line when Runtherd became its
+          // own datasheet. Keeping our extra profile would show a model GW has
+          // deleted, so replace rather than merge.
+          const before = ms.map((r) => r.name || '·').join(' + ');
+          unit.modelStats = [{ name: '', M: String(gs[0].m || ''), T: String(gs[0].t || ''),
+            SV: String(gs[0].sv || ''), W: String(gs[0].w || ''),
+            LD: String(gs[0].ld || ''), OC: String(gs[0].oc || '') }];
+          changed.push(`profiles ${ms.length}->1 (${before})`);
+        } else {
+          return;                                        // a split we will not guess at
+        }
+        // stats mirrors the first profile.
+        ['M', 'T', 'SV', 'W', 'LD', 'OC'].forEach((k) => { unit.stats[k] = unit.modelStats[0][k]; });
+        // Invulnerable save, same rule.
+        const gInv = ds.abilities && ds.abilities.invul ? String(T(ds.abilities.invul.value) || '').trim() : '';
+        if (gInv && String(unit.invulnSave || '').trim() !== gInv) {
+          changed.push(`INV ${unit.invulnSave || 'none'}->${gInv}`);
+          unit.invulnSave = gInv;
+        }
+        const adds = gdcCoreAbilityAdds(ds, unit);
+        if (adds.length) {
+          adds.forEach((a) => { a._injected = true; unit.abilities.push(a); });
+          changed.push(`+${adds.length} core`);
+        }
+        if (changed.length) {
+          nUnits++; nChanges += changed.length;
+          unit._gdcStatOverride = changed;               // visible to the audits
+        }
+      });
+    });
+    return { units: nUnits, changes: nChanges };
+  }
+
   // ── Units GW ships that 40kdc has not caught up to yet (GDC-adopted) ───────
   // A codex drop puts new datasheets in the MFM and in GW's own app months
   // before 40kdc models them. Until then the unit simply does not exist in
@@ -2484,6 +2610,15 @@
         // merges (so it sees the final unit list before deciding what is
         // missing) and BEFORE the weapon fixes and ally attach, so an adopted
         // unit is treated exactly like an upstream one from here on.
+        // Statline authority for freshly-errata'd factions (see
+        // GDC_STATS_AUTHORITATIVE). Before adoption so the log reads in the
+        // order the data actually changes.
+        try {
+          const st = applyGdcStatlines(App.state.factions);
+          if (st.units > 0) console.info(`[DC] GDC statlines: ${st.changes} correction(s) across ${st.units} unit(s)`);
+        } catch (e) {
+          console.warn('[DC] GDC statline overlay failed (non-fatal):', e && e.message ? e.message : e);
+        }
         try {
           const nAdopted = adoptGdcUnits(App.state.factions);
           if (nAdopted > 0) console.info(`[DC] adopted ${nAdopted} GDC datasheet(s) 40kdc does not carry yet`);
@@ -2556,6 +2691,7 @@
     _syncOptionalWeaponsFromGdc: syncOptionalWeaponsFromGdc,
     _attachAlliedUnits: attachAlliedUnits,
     _adoptGdcUnits: adoptGdcUnits,
+    _applyGdcStatlines: applyGdcStatlines,
   };
 
   // attachments.js reaches into WahapediaParser._internal.foldKey. Provide a stub

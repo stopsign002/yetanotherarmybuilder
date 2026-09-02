@@ -26,9 +26,24 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.02-2',
-    lastUpdated: '2026-09-02T12:30:00Z',
+    version:     '2026.09.02-3',
+    lastUpdated: '2026-09-02T13:05:00Z',
     entries: [
+      {
+        date: '2026-09-02', kind: 'fix',
+        title: 'Ork statlines now match the new codex',
+        description:
+          '34 Ork datasheets were still showing pre-codex stats. They now '
+          + "follow Games Workshop's own app data: Ghazghkull is M8\" T10 W16 "
+          + '(and Makari is part of his profile now, not a second line), '
+          + 'Gretchin lost their Runtherd line to the new standalone '
+          + 'Runtherd datasheet, Battlewagon is T11, the Gorkanaut and '
+          + 'Morkanaut are 2+ saves, and Warbosses went up a Toughness. '
+          + 'Missing Damaged, Deadly Demise and Super-heavy Walker rules '
+          + 'have been filled in too. Wartrakks and Rukkatrukk Squigbuggies '
+          + 'were renamed by GW, which had quietly cut them off from their '
+          + 'weapon and rules text — reconnected.',
+      },
       {
         date: '2026-09-02', kind: 'feature',
         title: 'The four new Ork datasheets are in',
