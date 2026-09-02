@@ -327,6 +327,48 @@
     // is a separate upstream bug flagged for the 40kdc PR.
   };
 
+  // ── MFM-delisted units → Legends ───────────────────────────────────────────
+  // GW drops a datasheet from the Munitorum Field Manual when it leaves matched
+  // play, but 40kdc keeps shipping the unit until it catches up. Left alone the
+  // unit sits in the roster at its last-known price, indistinguishable from a
+  // legal choice — and because dc-adapter falls back to upstream points when the
+  // MFM overlay has no entry (see the mfmPts fallback below), the stale cost
+  // renders with no warning anywhere. Flagging it Legends tells the truth: the
+  // "L" toggle hides it by default, the card gets the LEGENDS badge and the
+  // detail panel says "casual play" — without deleting saved armies that
+  // already contain it.
+  //
+  // Self-healing twice over: the entry applies only while the live MFM overlay
+  // STILL lacks the unit, so it no-ops the moment GW re-lists it; and once
+  // 40kdc drops the datasheet the key stops matching and can be deleted.
+  // Value is the MFM drop that delisted it — documentation only.
+  const MFM_DELISTED = {
+    // New Ork codex MFM, 2026-09-02. Boomdakka Snazzwagon, Kustom Boosta-blasta,
+    // Megatrakk Scrapjet and Shokkjump Dragsta were consolidated into a single
+    // WARBUGGIES entry that 40kdc does not carry yet; the other three are gone
+    // outright. Verified absent from the live MFM Orks page and from GW's own
+    // app dump (GDC data_version 946).
+    'orks::boomdakka-snazzwagon': '2026-09-02 Ork MFM',
+    'orks::burna-boyz':           '2026-09-02 Ork MFM',
+    'orks::kustom-boosta-blasta': '2026-09-02 Ork MFM',
+    'orks::lootas':               '2026-09-02 Ork MFM',
+    'orks::megatrakk-scrapjet':   '2026-09-02 Ork MFM',
+    'orks::shokkjump-dragsta':    '2026-09-02 Ork MFM',
+    'orks::wurrboy':              '2026-09-02 Ork MFM',
+  };
+
+  // A scrape that fails reuses a last-known-good overlay, but an ABSENT or
+  // gutted one must never mass-delist a faction. Require a plausibly complete
+  // overlay (~990 units when healthy) before honouring any MFM_DELISTED entry.
+  // Memoised: the overlay is fixed at boot.
+  let _mfmOverlayHealthy = null;
+  function mfmOverlayHealthy() {
+    if (_mfmOverlayHealthy === null) {
+      _mfmOverlayHealthy = Object.keys(DC.mfmPoints || {}).length >= 500;
+    }
+    return _mfmOverlayHealthy;
+  }
+
   // ── 11th-edition AIRCRAFT reconciliation (GW errata-driven) ────────────────
   // 11e reworked flyers, and GW applied it via the faction-pack RULES-UPDATES
   // *text* (authoritative over the datasheet cards, which are often stale).
@@ -1583,7 +1625,11 @@
       squadOptions,
       ordinal,                       // { fromCount, surcharge } or null
       description: '',
-      isLegends: !!u.is_legend,
+      // Legends when upstream says so, OR when GW has delisted it from the MFM
+      // and the live overlay confirms the absence (see MFM_DELISTED).
+      isLegends: !!u.is_legend
+        || (!mfmPts && !!MFM_DELISTED[u.faction_id + '::' + u.id]
+            && mfmOverlayHealthy()),
       attachmentRole: u.attachment_role || null,   // 'leader' | 'support' | null
       // Fallback "Led By" targets from 40kdc's structured leaderAttachments
       // table, used when GDC prose carries none (e.g. all Necrons leaders). The

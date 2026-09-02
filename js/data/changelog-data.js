@@ -26,9 +26,23 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.08.29-9',
-    lastUpdated: '2026-08-29T19:00:00Z',
+    version:     '2026.09.02-1',
+    lastUpdated: '2026-09-02T12:00:00Z',
     entries: [
+      {
+        date: '2026-09-02', kind: 'change',
+        title: 'New Ork points, and seven Ork units moved to Legends',
+        description:
+          'The new Ork Munitorum Field Manual is in: 55 units repriced, and '
+          + 'a lot of them now cost more for your third or fourth copy. Seven '
+          + 'datasheets GW dropped from the MFM — Lootas, Burna Boyz, Wurrboy '
+          + 'and the four buggies it folded into Warbuggies — are now marked '
+          + 'Legends, so they are hidden from the unit list unless you switch '
+          + 'on the "L" toggle. Armies you already saved keep them. Gunwagon, '
+          + 'Nazdreg, Runtherd and Warbuggies are not in yet: they arrive when '
+          + 'our datasheet source ships the new codex, and until then Ork '
+          + 'statlines are still the pre-codex ones.',
+      },
       {
         date: '2026-08-29', kind: 'feature',
         title: 'Play mode is back — a fast-switching game-day reference',
