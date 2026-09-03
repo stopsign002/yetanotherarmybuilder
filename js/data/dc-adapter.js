@@ -1697,12 +1697,37 @@
       const patch = MISSING_DETACHMENT_RULES[d.id];
       if (patch) rules = [{ name: patch.name, description: patch.description }];
     }
-    const enhancements = (d.enhancement_ids || []).map((id) => {
+    // Upstream detachments occasionally list an enhancement that belongs to a
+    // DIFFERENT detachment: Dark Angels' Wrath of the Rock carries both its own
+    // deathwing-assault-wrath-of-the-rock (15pts) and Inner Circle Task Force's
+    // copy (30pts), so the enhancement rendered twice at two prices. Every
+    // enhancement records its own detachment_id, so this is checkable rather
+    // than a guess. Only filter when the row HAS one — never drop on absence.
+    const enhRows = (d.enhancement_ids || []).map((id) => {
       const e = enhById.get(id);
       if (!e) return null;
-      return { name: e.name, pts: e.cost != null ? e.cost : 0,
+      if (e.detachment_id && d.id && e.detachment_id !== d.id) return null;
+      return { id, name: e.name, pts: e.cost != null ? e.cost : 0,
                description: textFor(e.ability_id) || MISSING_ENHANCEMENT_TEXT[id] || '' };
     }).filter(Boolean);
+    // …and upstream sometimes ships the SAME enhancement twice under a base and
+    // an "(Upgrade)" id. Necrons' The Phaeron's Armoury had "Mortality Shroud
+    // (aura)" and "Mortality Shroud (Aura) (Upgrade)", same 10pts, same rule —
+    // GW's own data lists one. Collapse on the name with case, brackets and a
+    // trailing "upgrade" folded away, keeping the row that actually has text.
+    const enhKey = (n) => String(n || '').toLowerCase()
+      .replace(/[()]/g, ' ').replace(/\bupgrade\b/g, ' ')
+      .replace(/[^a-z0-9]+/g, ' ').trim();
+    const enhSeen = new Map();
+    enhRows.forEach((r) => {
+      const k = enhKey(r.name);
+      const prev = enhSeen.get(k);
+      if (!prev) { enhSeen.set(k, r); return; }
+      // Keep whichever carries rule text; on a tie keep the first.
+      if (!prev.description && r.description) enhSeen.set(k, r);
+    });
+    const enhancements = Array.from(enhSeen.values())
+      .map(({ id, ...rest }) => rest);
     return { name: d.name, rules, enhancements,
              // 40kdc detachment id. Allied rules gate on detachment_ids (e.g.
              // world-eaters-khorne-daemons requires khorne-daemonkin), so the
@@ -1797,11 +1822,25 @@
     // preferring 40kdc swapped GDC's full card for that stub. Self-healing in
     // both directions: as upstream fills in `when`, 40kdc takes over on its own.
     const isComplete = (t) => /\bWHEN:/.test(t || '') && /\bEFFECT:/.test(t || '');
+    // Same WORDS ⇒ GW's PUNCTUATION wins. The upstream ability-text store
+    // (wn-mitch/40kdc-abilities) strips hyphens, which is silent for
+    // "battle-shock" → "battleshock" but destroys meaning wherever the hyphen
+    // was a MINUS SIGN: "-1 AP" became "1 AP", "-1 to that battle-shock roll"
+    // became "1 to", and Crawling Horror's "-6\" detection range" became a
+    // +6" BUFF. It also collapses ranges — Fleshy Curse's "On a 2-4" became
+    // "On a 24". 12 stratagems measured against GW's own text.
+    // Comparing alphanumerics-only makes this provably content-preserving: we
+    // only swap in GDC when the two sources already agree word for word, so
+    // nothing but punctuation can change. Self-healing — once upstream keeps
+    // its hyphens the two strings match and the choice stops mattering.
+    const squash = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const out = dcList.map((d) => {
       const k = foldName(d.name);
       const g = gdcByKey.get(k);
       const gText = (g && g.description) ? g.description : '';
-      const useDc = isComplete(d.description) || !gText;
+      const samePunctLoss = !!gText && !!d.description
+        && squash(d.description) === squash(gText) && d.description !== gText;
+      const useDc = !samePunctLoss && (isComplete(d.description) || !gText);
       const description = useDc ? (d.description || gText) : gText;
       if (!d.description && gText) nGdcFallback++;
       return {

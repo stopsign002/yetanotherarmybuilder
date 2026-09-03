@@ -26,9 +26,32 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.02-3',
-    lastUpdated: '2026-09-02T13:05:00Z',
+    version:     '2026.09.03-1',
+    lastUpdated: '2026-09-03T10:00:00Z',
     entries: [
+      {
+        date: '2026-09-03', kind: 'fix',
+        title: 'Nine stratagems were missing a minus sign',
+        description:
+          'Our rules-text source was dropping hyphens, which turned some '
+          + 'stratagems into the opposite of what they do. Subsurface '
+          + 'Quantumweave now correctly reads -1 AP, Crawling Horror -6\" '
+          + 'detection range (it was reading as a bonus), and Eldritch '
+          + 'Suppression, Incorporeal Entities, Stalking Focus, Fire Shocked, '
+          + 'Searing Bursts and Tanglestrike Rounds all have their minus back. '
+          + "Fleshy Curse's dice ranges read 2-4 and 5-6 again instead of 24 "
+          + 'and 56. Stratagem wording now follows GW punctuation wherever the '
+          + 'two sources already agree on the words.',
+      },
+      {
+        date: '2026-09-03', kind: 'fix',
+        title: 'Two detachments listed an enhancement twice',
+        description:
+          "The Phaeron's Armoury showed Mortality Shroud (Aura) twice, and "
+          + 'Wrath of the Rock showed Deathwing Assault twice — once at its '
+          + "own 15pts and once at Inner Circle Task Force's 30pts. Both now "
+          + 'list each enhancement once, at the right cost.',
+      },
       {
         date: '2026-09-02', kind: 'fix',
         title: 'Ork statlines now match the new codex',

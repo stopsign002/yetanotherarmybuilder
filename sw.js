@@ -56,7 +56,7 @@
 // Nothing in SHELL below is a js/css file, and stamp-assets.mjs only stamps
 // those — so no SHELL entry needs a ?v= suffix appended here to match what the
 // page will request.
-const VERSION = 'yaab-shell-2026.09.02-3-d8f82e86d';
+const VERSION = 'yaab-shell-2026.09.03-1-d8f82e86d';
 
 // Precached on install: ONLY what a cold OFFLINE navigation needs before the
 // page can start asking for things itself.
