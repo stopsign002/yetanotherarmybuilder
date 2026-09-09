@@ -26,9 +26,53 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.09-2',
-    lastUpdated: '2026-09-09T14:30:00Z',
+    version:     '2026.09.09-3',
+    lastUpdated: '2026-09-09T21:30:00Z',
     entries: [
+      {
+        date: '2026-09-09', kind: 'fix',
+        title: 'Neo-Brutalist theme — data card designer and icons',
+        description:
+          'On the light Neo-Brutalist theme the data-card designer’s panels '
+          + '(the left rail, tabs, settings and presets, preview area) stayed '
+          + 'dark and clashed against the light page. They now follow the theme. '
+          + 'The printed cards themselves are deliberately unchanged — they are a '
+          + 'physical product and keep their own colours whatever theme you use. '
+          + 'Also on the light theme: two small icons in the Reserves and '
+          + 'Requisitions views are now legible, and the "Switch to All units" '
+          + 'button on the empty Requisitions view now wears the theme’s button '
+          + 'styling instead of keeping its dark-theme look.',
+      },
+      {
+        date: '2026-09-09', kind: 'fix',
+        title: 'Data card points now include wargear cost',
+        description:
+          'A data card’s points chip showed only the unit’s base cost, so '
+          + 'a unit with paid wargear printed a card showing different points than '
+          + 'the army total (a Gunwagon with a Zzap gun printed 150 while the '
+          + 'roster said 160). The chip now includes wargear, so the card and the '
+          + 'roster agree.',
+      },
+      {
+        date: '2026-09-09', kind: 'fix',
+        title: 'Installing on iPhone/iPad — guided add-to-home-screen',
+        description:
+          'Safari has no "install this app" button, so the app gave no hint '
+          + 'that it could be installed at all on an iPhone or iPad. Tapping '
+          + 'Install now shows a short three-step guide: tap the Share button '
+          + 'in Safari, tap Add to Home Screen, tap Add.',
+      },
+      {
+        date: '2026-09-09', kind: 'fix',
+        title: 'Offline indicator chip in the top bar',
+        description:
+          'The app already kept working offline and queued your edits to sync '
+          + 'later, but nothing on screen said so. There is now a small status '
+          + 'chip in the top bar that appears when you’re offline, showing '
+          + 'how many changes are still waiting to sync — so you can tell at '
+          + 'a glance that nothing has been lost. It disappears once you’re '
+          + 'back online and everything has gone up.',
+      },
       {
         date: '2026-09-09', kind: 'change',
         title: 'Orks now come straight from GW\u2019s own data \u2014 and core stratagems are 11th edition',
