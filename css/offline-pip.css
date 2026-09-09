@@ -1,0 +1,39 @@
+/* offline-pip.css — topbar chip for offline state + pending sync queue.
+   See js/ui/offline-pip.js. Tokens only, no fixed colours, so every theme
+   (including any future one) is covered by construction. */
+
+.topbar-offline-pip[hidden] {
+  /* The [hidden] boolean attribute only hides an element via a UA-stylesheet
+     `display:none` — equal-specificity author rules like the one below
+     override it, so this has to be spelled out explicitly or the chip
+     renders as an empty bordered box even while "hidden". */
+  display: none;
+}
+.topbar-offline-pip {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 10px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.topbar-offline-pip .topbar-offline-n {
+  color: var(--accent);
+  font-weight: 700;
+  margin: 0 2px;
+}
+
+@media (max-width: 480px) {
+  .topbar-offline-pip { padding: 0 8px; }
+  /* Collapses "Offline · 3 queued" to "Offline · 3", and "3 queued" to
+     "3" — the count span stays, only the word goes. */
+  .topbar-offline-pip .topbar-offline-word { display: none; }
+}

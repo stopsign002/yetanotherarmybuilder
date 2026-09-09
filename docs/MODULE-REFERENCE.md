@@ -265,12 +265,12 @@ Cross-cutting docs:
 - **Notes:** Vendor lib is `defer`-loaded.
 
 ### `js/app/pwa-install.js`
-- **Purpose:** `beforeinstallprompt` handler + mobile tab-bar wiring.
-- **Exports:** Toolbar action button + tab-bar setup. `App.setMobilePanel(panelName)`.
-- **Depends on:** `window.beforeinstallprompt`, `UI.toast`, `App.hooks`.
-- **Storage:** `localStorage.yaab_pwa_dismissed` (banner dismiss), `localStorage.yaab_mobile_panel` (last-active mobile tab).
-- **DOM:** `yaab-pwa-banner`, `.mobile-tabbar` buttons.
-- **Notes:** Event listener for `beforeinstallprompt` only fires once per session. Mobile tab bar has 4 tabs: Army / Units / Detail / More.
+- **Purpose:** `beforeinstallprompt` handler + iOS manual-install sheet (Safari never fires that event) + mobile tab-bar wiring.
+- **Exports:** `App.pwaInstall` (click handler), `App.pwaInstallAvailable()` (true when the button would actually do something — captured `beforeinstallprompt` OR `isIOS()`, and not standalone/dismissed), `App.setMobilePanel(panelName)`.
+- **Depends on:** `window.beforeinstallprompt`/`appinstalled`, `App.hooks.bootstrap`/`armyChange`.
+- **Storage:** `localStorage.yaab_pwa_dismissed` (install-button dismissal — set by `appinstalled`, a declined Android prompt, or the iOS sheet's "Got it"), `localStorage.yaab_mobile_panel` (last-active mobile tab).
+- **DOM:** Builds and appends to `document.body` itself (never via `index.html` or the `armyToolbarActions` render pipeline): `#yaab-btn-install` (floating install button, `.btn.btn-accent.yaab-install-fab`) and, lazily, `#ios-install-backdrop` > `#ios-install-sheet` (`role="dialog"`, `aria-modal`, three-step `<ol>` with an inline-SVG Share glyph, closed by Escape/backdrop-click/`#ios-install-not-now` or dismissed by `#ios-install-close`). Also `.mobile-tabbar` buttons.
+- **Notes:** `isIOS()` = `/iPad|iPhone|iPod/` UA test or `MacIntel` + `maxTouchPoints > 1` (iPadOS 13+). On iOS, clicking the button with no captured prompt opens the sheet instead of no-op'ing (issue #60). Escape handling is bound only while the sheet is open. Mobile tab bar has 4 tabs: Army / Units / Detail / More.
 
 ### `js/app/auth.js`
 - **Purpose:** User session state + auth API calls.
@@ -746,6 +746,14 @@ Cross-cutting docs:
 - **Storage:** none.
 - **DOM:** unit cards (class added).
 - **Notes:** Slug = last segment of `_factionName` after `" - "`.
+
+### `js/ui/offline-pip.js`
+- **Purpose:** Topbar chip (`#topbar-offline`) giving feedback on offline state + the pending sync queue — the queue itself always drained correctly, nothing told the user anything was queued (GitHub issue #59).
+- **Exports:** none (self-mounting; not a toolbar action).
+- **Depends on:** `App.hooks.bootstrap`, `App.Sync.queueLength()`, `window` `online`/`offline`/`yaab:sync-queue` events.
+- **Storage:** none.
+- **DOM:** inserts `#topbar-offline` (`role="status"`) into `#topbar-icons`, immediately before the auth button's mount point; `<span class="topbar-offline-n">` holds the queued count.
+- **Notes:** Hidden while online with an empty queue. Text: `Offline`, `Offline · N queued`, or `N queued` (online, draining/backing off). Styled by `css/offline-pip.css` via `--panel-bg`/`--border`/`--text-muted`/`--accent` only.
 
 ### `js/ui/flip-animations.js`
 - **Purpose:** FLIP-style add-to-army flight ghost + drag-to-reorder + micro-interactions.

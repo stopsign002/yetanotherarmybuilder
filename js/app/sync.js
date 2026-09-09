@@ -120,7 +120,14 @@
   }
 
   function queue() { return jsonGet(QUEUE_KEY, []); }
-  function setQueue(q) { jsonSet(QUEUE_KEY, q); }
+  function setQueue(q) {
+    jsonSet(QUEUE_KEY, q);
+    // Every write to the queue (enqueue, a drained op popped off, a queue
+    // trim) is a state change the offline pip (js/ui/offline-pip.js) cares
+    // about. Fire-and-forget: no listener is required for this to be safe.
+    try { window.dispatchEvent(new CustomEvent('yaab:sync-queue')); } catch (_) {}
+  }
+  function queueLength() { return queue().length; }
   function known() { return jsonGet(KNOWN_KEY, {}); }
   function setKnown(k) { jsonSet(KNOWN_KEY, k); }
 
@@ -708,7 +715,11 @@
   // ── Cross-tab + connectivity listeners ───────────────────────────────
   function installListeners() {
     window.addEventListener('online',  () => { _backoffMs = 0; drainQueue(); });
-    window.addEventListener('offline', () => { /* UI offline pip if added */ });
+    // No work needed here — drainQueue() already hard-returns while
+    // !navigator.onLine, so ops just sit in the queue. The offline pip
+    // (js/ui/offline-pip.js) listens for this event itself, plus 'online'
+    // and 'yaab:sync-queue' (dispatched from setQueue above), to render.
+    window.addEventListener('offline', () => {});
 
     // pagehide fires on reload, navigation, and tab close (more reliable
     // than beforeunload, especially on mobile bfcache). Flush the
@@ -789,6 +800,7 @@
     notifyKeyChanged,
     pullAll,
     drainQueue,
+    queueLength,
     status() {
       return {
         signedIn: authReady(),
