@@ -26,9 +26,22 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.03-1',
-    lastUpdated: '2026-09-03T10:00:00Z',
+    version:     '2026.09.09-1',
+    lastUpdated: '2026-09-09T13:10:00Z',
     entries: [
+      {
+        date: '2026-09-09', kind: 'fix',
+        title: 'Ork weapon profiles now match the new codex in the calculators',
+        description:
+          'Datasheets already showed the new-codex weapon values; the damage '
+          + 'calculator, list coach and matchup tools were still computing with '
+          + 'the old ones. 153 values across 39 Ork units now agree with GW '
+          + '(Kustom Choppa A4 S5, Knucklebustas A4, the Big Mek\'s traktor '
+          + 'blasta, and so on). Breaka Boyz also gain their two-profile '
+          + 'statline: Breaka Boy W2, Nob W3, instead of W3 for everyone. Two '
+          + 'small non-Ork corrections rode along: Corsair Voidscarred close '
+          + 'combat weapon A3, Aquila Kill Team plasma pistol AP-2/-3.',
+      },
       {
         date: '2026-09-03', kind: 'fix',
         title: 'Nine stratagems were missing a minus sign',

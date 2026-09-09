@@ -987,9 +987,20 @@
         : String(first0[k]) === String(exp[k])));
       if (stillWrong) {
         if (Array.isArray(statFix.set.profiles) && statFix.set.profiles.length) {
-          modelStats = statFix.set.profiles.map((p) => ({
-            name: p.name || '', M: p.M, T: p.T, SV: p.SV, W: p.W, LD: p.LD, OC: p.OC,
-          }));
+          // Each fix profile is a PATCH over the profile at the same index, not
+          // a replacement: dump-audit.py emits sparse rows ({W:'2'}) and a
+          // replacement wiped M/T/SV/LD/OC off Breaka Boyz (2026-09-09). A row
+          // that names every field still overrides every field, and a shorter
+          // list still collapses the datasheet, so full profiles behave as
+          // before.
+          modelStats = statFix.set.profiles.map((p, i) => {
+            const base = modelStats[i] || {};
+            const row = { name: p.name != null ? p.name : (base.name || '') };
+            ['M', 'T', 'SV', 'W', 'LD', 'OC'].forEach((k) => {
+              row[k] = p[k] != null ? p[k] : base[k];
+            });
+            return row;
+          });
         }
         if ('invuln' in statFix.set) invulnOverride = statFix.set.invuln;
         if ('invulnNote' in statFix.set) invulnNoteOverride = statFix.set.invulnNote;
@@ -2345,8 +2356,18 @@
             SV: String(gs[0].sv || ''), W: String(gs[0].w || ''),
             LD: String(gs[0].ld || ''), OC: String(gs[0].oc || '') }];
           changed.push(`profiles ${ms.length}->1 (${before})`);
+        } else if (ms.length === 1 && gs.length > 1) {
+          // GW SPLIT a single profile into several — Breaka Boyz (Breaka Boy
+          // W2 / Nob W3) in the 2026-09 codex, where 40kdc still carries one
+          // row. GW names every profile, so there is nothing to guess: adopt
+          // its list wholesale. Pairs by index again once 40kdc catches up.
+          const before = ms[0].name || '·';
+          unit.modelStats = gs.map((g) => ({ name: String(T(g.name) || ''),
+            M: String(g.m || ''), T: String(g.t || ''), SV: String(g.sv || ''),
+            W: String(g.w || ''), LD: String(g.ld || ''), OC: String(g.oc || '') }));
+          changed.push(`profiles 1->${gs.length} (${before} -> ${unit.modelStats.map((r) => r.name || '·').join(' + ')})`);
         } else {
-          return;                                        // a split we will not guess at
+          return;                                        // N->M with N,M>1: not worth guessing at
         }
         // stats mirrors the first profile.
         ['M', 'T', 'SV', 'W', 'LD', 'OC'].forEach((k) => { unit.stats[k] = unit.modelStats[0][k]; });
