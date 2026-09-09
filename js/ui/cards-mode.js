@@ -830,6 +830,7 @@
       label: (entry.customName || entry.unitName || (entry.unitData && entry.unitData.name) || 'Unit')
            + (entry.count > 1 ? ' ×' + entry.count : ''),
       entry,
+      entryIndex: i,
     }));
   }
   // Every detachment the army has selected (multi-select). selectedDetachments
@@ -1378,7 +1379,7 @@
     </div>`;
   }
 
-  function renderUnitCard(entry) {
+  function renderUnitCard(entry, entryIndex) {
     const unit = entry.unitData || {};
     // Multi-statline units (Beast Snagga Boyz = Boy + Nob, Marneus
     // Calgar + Victrix Honour Guard, Terminator Assault Squad TH/SS vs
@@ -1418,7 +1419,18 @@
       }
     }
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
-    const ptsLabel = entry.selectedPts != null ? entry.selectedPts : (ptsOpts.length ? ptsOpts[0] : null);
+    const basePtsLabel = entry.selectedPts != null ? entry.selectedPts : (ptsOpts.length ? ptsOpts[0] : null);
+    // Add this copy's priced wargear (Issue #83): the chip must match the
+    // army total, which already includes it via Army.getEntryPoints. Only
+    // when we know which army entry this card came from — a card rendered
+    // without one (e.g. a standalone preview) keeps the base figure.
+    let ptsLabel = basePtsLabel;
+    if (basePtsLabel != null && entryIndex != null) {
+      const army = getCurrentArmy();
+      if (army && typeof army.getEntryCopyWargearPts === 'function') {
+        ptsLabel = basePtsLabel + army.getEntryCopyWargearPts(entryIndex);
+      }
+    }
 
     const showEnh = display.enhancements && Array.isArray(entry.enhancements) && entry.enhancements.length > 0;
     const enhancementHtml = showEnh
@@ -1610,7 +1622,7 @@
   function selectedCards() {
     const out = [];
     gatherUnits().forEach(u => {
-      if (include.units && include.units.has(u.id)) out.push({ kind: 'unit', id: u.id, html: renderUnitCard(u.entry), label: u.label });
+      if (include.units && include.units.has(u.id)) out.push({ kind: 'unit', id: u.id, html: renderUnitCard(u.entry, u.entryIndex), label: u.label });
     });
     gatherRules().forEach(r => {
       if (include.rules && include.rules.has(r.id)) out.push({ kind: 'rule', html: renderRuleCard(r), label: r.label });
@@ -3233,7 +3245,7 @@
     if (!u) return null;
     // `entry` is carried so the card-options panel can resolve the army entry
     // by object identity rather than by this positional id.
-    return { kind: 'unit', id: u.id, html: renderUnitCard(u.entry), label: u.label, entry: u.entry };
+    return { kind: 'unit', id: u.id, html: renderUnitCard(u.entry, u.entryIndex), label: u.label, entry: u.entry };
   }
 
   // The EFFECTIVE set of section keys currently on page 2 for a unit card:

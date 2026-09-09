@@ -268,14 +268,20 @@ window.Army = class Army {
     if (!entry) return 0;
     const pts    = (entry.selectedPts !== undefined ? entry.selectedPts : (entry.unitData && entry.unitData.points || 0));
     const enhPts = (entry.enhancements || []).reduce((s, e) => s + (e.pts || 0), 0);
-    // 11e wargear cost, per squad copy: the DEFAULT loadout's priced items
-    // (base, from the MFM overlay via wargearProfile) plus each selection's
-    // NET delta (w.pts from the picker — negative when a swap sheds a priced
-    // default, e.g. thunder hammer → free lightning claws). Floored at 0: a
-    // loadout can't refund more than its priced defaults.
-    const wgSel  = (entry.wargear || []).reduce((s, w) => s + (w.pts || 0) * (w.count || 0), 0);
-    const wgPts  = Math.max(0, this.getEntryWargearBasePts(index) + wgSel);
+    const wgPts  = this.getEntryCopyWargearPts(index);
     return pts * (entry.count || 0) + enhPts + wgPts * (entry.count || 0) + this.getEntryOrdinalSurcharge(index);
+  }
+
+  // 11e wargear cost, per squad copy: the DEFAULT loadout's priced items
+  // (base, from the MFM overlay via wargearProfile) plus each selection's
+  // NET delta (w.pts from the picker — negative when a swap sheds a priced
+  // default, e.g. thunder hammer → free lightning claws). Floored at 0: a
+  // loadout can't refund more than its priced defaults.
+  getEntryCopyWargearPts(index) {
+    const entry = this.entries[index];
+    if (!entry) return 0;
+    const wgSel = (entry.wargear || []).reduce((s, w) => s + (w.pts || 0) * (w.count || 0), 0);
+    return Math.max(0, this.getEntryWargearBasePts(index) + wgSel);
   }
 
   // Points the entry's DEFAULT loadout owes for MFM-priced wargear at its
