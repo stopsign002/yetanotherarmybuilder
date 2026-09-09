@@ -571,6 +571,34 @@
       "well.",
   };
 
+  // Army-rule prose that is PRESENT but STALE. MISSING_ARMY_RULE_TEXT only
+  // fills a gap; this replaces text the store still carries from the previous
+  // edition. Expect-gated on a phrase unique to the OLD rule, so it self-heals
+  // to a no-op the day 40kdc (or GDC) ships the new wording — the same contract
+  // every other overlay here honours.
+  //   waaagh: the 2026-09 Ork codex rewrote Waaagh! around "riled up". GDC
+  //     ships no army-rule prose for Orks at all, so unlike statlines there is
+  //     no live oracle to inherit from and the text is hand-carried here.
+  //     Source: wahapedia 11e Abilities.csv id 000003676 (ORK / "Waaagh!").
+  const ARMY_RULE_TEXT_OVERRIDES = {
+    'waaagh': {
+      expectContains: 'you can call a Waaagh!',
+      description:
+        "Friendly ORKS units with this ability can:\n" +
+        "• Re-roll Advance rolls.\n" +
+        "• Become riled up, as stated in other rules.\n" +
+        "While a unit is riled up:\n" +
+        "• That unit has a 5+ invulnerable save.\n" +
+        "• That unit's ranged attacks have [ASSAULT].\n" +
+        "• When that unit is selected to make an Advance move, that Advance " +
+        "move does not prevent that unit from being eligible to declare a charge.\n" +
+        "\n" +
+        "War Cry (Once per battle, per army): At the start of the Command " +
+        "phase, you can use this ability. If you do, friendly ORKS units with " +
+        "the Waaagh! ability are riled up until the end of the next turn.",
+    },
+  };
+
   // Space Marine chapter army rules. In 40kdc every SM chapter is emitted as its
   // own (unit-less) faction, but their `faction_rule_id` is unreliable: most
   // point at the shared `oath-of-moment`, while a few point at a MIScategorized
@@ -969,6 +997,62 @@
     return _leaderLeadBy;
   }
 
+  // ── overlay ability-text rewrites (window.DC.abilityFixes) ────────────────
+  // Factored out of toUnit because a GDC-AUTHORITATIVE faction rebuilds its
+  // ability + wargear-ability lists from GW's app dump and then has to re-apply
+  // exactly these same expect-gated rewrites (see applyGdcStatlines). Two
+  // copies of this logic would drift; one copy cannot.
+  //
+  // GW's faction packs print the ability name at the head of the rules
+  // paragraph — "Adaptive Instincts (Once per turn, per unit): In the Fight
+  // phase, …" — and the FAQ processor lifts the paragraph verbatim. Every
+  // renderer already shows the name as its own heading, so that prefix
+  // renders the name twice in a row. Strip a leading copy of the name, with
+  // or without a trailing "(qualifier)". Tolerant of the curly apostrophes
+  // and non-breaking spaces GW's PDFs are full of.
+  function stripEchoedName(name, desc) {
+    if (!name || !desc) return desc || '';
+    const esc = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/['’]/g, "['’]").replace(/\s+/g, '[\\s\\u00a0]+');
+    return String(desc)
+      .replace(new RegExp('^' + esc + '(?:[\\s\\u00a0]*\\([^)]*\\))?[\\s\\u00a0]*:[\\s\\u00a0]*', 'i'), '')
+      .trim();
+  }
+  // `updateNamed` rewrites an existing ability's description in place — gated
+  // on `expectContains` so it self-heals once upstream carries the new text.
+  function applyOverlayUpdateNamed(fixOv, abilities) {
+    if (!fixOv || !Array.isArray(fixOv.updateNamed) || !Array.isArray(abilities)) return;
+    fixOv.updateNamed.forEach((u) => {
+      if (!u || !u.name) return;
+      const target = abilities.find((a) => a.name && a.name.toLowerCase() === u.name.toLowerCase());
+      if (!target) return;   // ability not present → no-op
+      if (u.expectContains && !(target.description || '').toLowerCase()
+            .includes(String(u.expectContains).toLowerCase())) return;   // already updated upstream → no-op
+      target.description = stripEchoedName(target.name, u.description || '');
+    });
+  }
+  // The mirror of `updateNamed`, for the wargear list. Needed because a wargear
+  // ability that arrives via the item scan is keyed GLOBALLY by item id:
+  // `resurrection-orb` is one shared entry in the ability-text store, but GW
+  // prints a DIFFERENT rule on the Catacomb Command Barge (select a unit within
+  // 6") than on the Overlord ("this unit resurrects"), because the Barge is a
+  // Vehicle that cannot lead. `addWargear` cannot fix that — the item scan has
+  // already inserted the shared text under the same name, so the add dedupes to
+  // a silent no-op. Gated on `expectContains` so it self-heals the moment
+  // upstream carries the right wording.
+  function applyOverlayUpdateWargear(fixOv, wargearAbilities) {
+    if (!fixOv || !Array.isArray(fixOv.updateWargear) || !Array.isArray(wargearAbilities)) return;
+    fixOv.updateWargear.forEach((p) => {
+      if (!p || !p.name) return;
+      const key = p.name.toLowerCase();
+      const target = wargearAbilities.find((x) => (x.name || '').toLowerCase() === key);
+      if (!target) return;   // not on this datasheet → no-op
+      if (p.expectContains && !(target.description || '').toLowerCase()
+            .includes(String(p.expectContains).toLowerCase())) return;   // already correct → no-op
+      target.description = p.description || '';
+    });
+  }
+
   function toUnit(uv) {
     const u = uv.raw || uv;
     const profiles = u.profiles && u.profiles.length ? u.profiles : [{ name: u.name }];
@@ -1133,29 +1217,7 @@
     // it self-heals once upstream 40kdc-abilities carries the new text.
     if (abilityFixOv) {
       const have = new Set(abilities.map((a) => abilityNameKey(a.name)));
-      // GW's faction packs print the ability name at the head of the rules
-      // paragraph — "Adaptive Instincts (Once per turn, per unit): In the Fight
-      // phase, …" — and the FAQ processor lifts the paragraph verbatim. Every
-      // renderer already shows the name as its own heading, so that prefix
-      // renders the name twice in a row. Strip a leading copy of the name, with
-      // or without a trailing "(qualifier)". Tolerant of the curly apostrophes
-      // and non-breaking spaces GW's PDFs are full of.
-      const stripEchoedName = (name, desc) => {
-        if (!name || !desc) return desc || '';
-        const esc = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-          .replace(/['’]/g, "['’]").replace(/\s+/g, '[\\s\\u00a0]+');
-        return String(desc)
-          .replace(new RegExp('^' + esc + '(?:[\\s\\u00a0]*\\([^)]*\\))?[\\s\\u00a0]*:[\\s\\u00a0]*', 'i'), '')
-          .trim();
-      };
-      (abilityFixOv.updateNamed || []).forEach((u) => {
-        if (!u || !u.name) return;
-        const target = abilities.find((a) => a.name && a.name.toLowerCase() === u.name.toLowerCase());
-        if (!target) return;   // ability not present → no-op
-        if (u.expectContains && !(target.description || '').toLowerCase()
-              .includes(String(u.expectContains).toLowerCase())) return;   // already updated upstream → no-op
-        target.description = stripEchoedName(target.name, u.description || '');
-      });
+      applyOverlayUpdateNamed(abilityFixOv, abilities);
       (abilityFixOv.addCore || []).forEach((aid) => {
         let av = null;
         try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
@@ -1257,27 +1319,8 @@
         }
       });
     }
-    // Overlay wargear-ability REWRITES — the mirror of `updateNamed`, for the
-    // wargear list. Needed because a wargear ability that arrives via the item
-    // scan above is keyed GLOBALLY by item id: `resurrection-orb` is one shared
-    // entry in the ability-text store, but GW prints a DIFFERENT rule on the
-    // Catacomb Command Barge (select a unit within 6") than on the Overlord
-    // ("this unit resurrects"), because the Barge is a Vehicle that cannot
-    // lead. `addWargear` cannot fix that — the item scan has already inserted
-    // the shared text under the same name, so the add dedupes to a silent
-    // no-op. Gated on `expectContains` so it self-heals the moment upstream
-    // carries the right wording.
-    if (abilityFixOv && Array.isArray(abilityFixOv.updateWargear)) {
-      abilityFixOv.updateWargear.forEach((p) => {
-        if (!p || !p.name) return;
-        const key = p.name.toLowerCase();
-        const target = wargearAbilities.find((x) => (x.name || '').toLowerCase() === key);
-        if (!target) return;   // not on this datasheet → no-op
-        if (p.expectContains && !(target.description || '').toLowerCase()
-              .includes(String(p.expectContains).toLowerCase())) return;   // already correct → no-op
-        target.description = p.description || '';
-      });
-    }
+    // Overlay wargear-ability REWRITES (see applyOverlayUpdateWargear).
+    applyOverlayUpdateWargear(abilityFixOv, wargearAbilities);
     // ── Structured wargear profile (drives the wargear picker) ─────────
     // 40kdc authors each datasheet's wargear options as machine-readable
     // swap/add records (replaces + replacement/replacement_choice +
@@ -1687,7 +1730,7 @@
   }
 
   // ── detachment: 40kdc detachment → yaab detachment {name, rules, enhancements}
-  function toDetachment(d, enhById, parentDetRule) {
+  function toDetachment(d, enhById, parentDetRule, factionId) {
     const rule = d.detachment_rule_id;
     const ruleText = rule ? textFor(rule) : '';
     let rules = ruleText ? [{ name: d.name, description: ruleText }] : [];
@@ -1740,6 +1783,10 @@
     const enhancements = Array.from(enhSeen.values())
       .map(({ id, ...rest }) => rest);
     return { name: d.name, rules, enhancements,
+             // Owning 40kdc faction id, so reconcileStrats (which is exported
+             // and called with a detachment alone) can tell whether GDC is the
+             // source of record for this faction's stratagems.
+             _factionId: factionId || null,
              // 40kdc detachment id. Allied rules gate on detachment_ids (e.g.
              // world-eaters-khorne-daemons requires khorne-daemonkin), so the
              // ally pass needs id → name to render "requires <detachment>".
@@ -1823,6 +1870,26 @@
   function reconcileStrats(detachment) {
     const dcList  = dcStratsFor(detachment.stratagemIds);
     const gdcList = Array.isArray(detachment.gdcStratagems) ? detachment.gdcStratagems : [];
+    // GDC-AUTHORITATIVE faction: GW's list IS the list. A codex drop changes
+    // WHICH stratagems a detachment has, not just their wording — Dread Mob and
+    // Blitz Brigade each carry six stale 40kdc entries against GW's three — and
+    // reconciling by name would keep every one of the six. 40kdc's
+    // `stratagemIds` are ignored outright rather than merged.
+    if (GDC_AUTHORITATIVE[detachment._factionId]) {
+      const out = gdcList.map((g) => ({
+        name: g.name,
+        cp: g.cp != null ? g.cp : null,
+        phase: g.phase || '',
+        phases: Array.isArray(g.phases) && g.phases.length ? g.phases : (g.phase ? [g.phase] : []),
+        turn: g.turn || '',
+        timing: '',
+        type: g.type || '',
+        description: g.description || '',
+        source: 'gdc',
+      }));
+      detachment.gdcStratagems = out;
+      return { n40kdc: 0, nGdcFallback: out.length, total: out.length };
+    }
     if (dcList.length === 0) return { n40kdc: 0, nGdcFallback: 0, total: gdcList.length };
     const gdcByKey = new Map();
     gdcList.forEach((g) => { const k = foldName(g.name); if (k && !gdcByKey.has(k)) gdcByKey.set(k, g); });
@@ -1903,7 +1970,14 @@
     // when the store has none (self-heals once upstream/GDC authors the prose).
     // GDC's mergeIntoFactions only fills an EMPTY description, so a non-empty
     // seed here is not clobbered by the runtime overlay.
-    const description = textFor(id) || MISSING_ARMY_RULE_TEXT[id] || '';
+    let description = textFor(id) || MISSING_ARMY_RULE_TEXT[id] || '';
+    // Stale-text replacement (see ARMY_RULE_TEXT_OVERRIDES). Expect-gated, so
+    // it stops firing the moment the store carries the current edition.
+    const ovr = ARMY_RULE_TEXT_OVERRIDES[id];
+    if (ovr && ovr.expectContains
+        && description.toLowerCase().includes(String(ovr.expectContains).toLowerCase())) {
+      description = ovr.description;
+    }
     return [{ name, description }];
   }
 
@@ -1946,7 +2020,7 @@
           return !(Array.isArray(d.game_modes) && d.game_modes.indexOf('combat-patrol') !== -1);
         })
         .map((d) =>
-          toDetachment(d, enhById, SM_CHAPTER_IDS.has(f.id) ? smParentDetRule : null));
+          toDetachment(d, enhById, SM_CHAPTER_IDS.has(f.id) ? smParentDetRule : null, f.id));
       if (units.length === 0 && dets.length === 0) return;
       out.push({
         factionName,
@@ -2045,6 +2119,11 @@
           // per-list once a weapon of that name is present, so it no-ops the
           // day upstream ships the profiles.
           if (fx.add) {
+            // A GDC-AUTHORITATIVE unit's weapon table is GW's own, so an `add`
+            // here could only re-introduce a row GW does not print. The
+            // match/set path stays live (it is expect-gated and therefore a
+            // no-op wherever GDC already agrees).
+            if (u._gdcAuthoritative) return;
             const a = fx.add;
             const nm = String(a.name || '');
             if (!nm) return;
@@ -2272,32 +2351,228 @@
   // DIFFERS from ours, so when 40kdc catches up the two agree and this becomes
   // a no-op. No `expect` pin to maintain, and it tracks any GW errata for free
   // because the GDC snapshot refreshes daily.
-  const GDC_STATS_AUTHORITATIVE = {
+  //
+  // 2026-09-09: widened from statlines to EVERYTHING GDC carries for a listed
+  // faction — keywords, weapons, abilities, wargear abilities, the leader
+  // graph, the detachment rule, its stratagems and its enhancements. A codex
+  // drop moves all of those at once, and an expect-gated overlay cannot chase
+  // 64 phantom abilities / 29 wrong weapon values / 26 index-era enhancements
+  // one string at a time. See docs/GDC-AUTHORITY.md for the per-field table.
+  // Unchanged: the unit LIST (40kdc + the MFM gate), points, size bands and
+  // ordinals (MFM), the wargear options tree, and the detachment id/points.
+  const GDC_AUTHORITATIVE = {
     orks: '2026-09-02 Ork codex — 40kdc + BSData both still pre-codex',
   };
 
-  // Core abilities GW lists that 40kdc does not link. Same reasoning, same
-  // gate; kept separate because adding an ability is a different risk from
-  // correcting a number.
-  function gdcCoreAbilityAdds(ds, unit) {
-    const G = window.App && window.App.GDC;
-    if (!G || !ds || !ds.abilities) return [];
+  // Abilities GW prints that GDC 946 does NOT carry, per unit, for
+  // GDC-authoritative factions only. GDC ships the Throttlerokkit sub-abilities
+  // as an IMAGE, so the extraction has nothing to lift and a straight rebuild
+  // from GDC would silently delete three real rules. Carried over from the
+  // 40kdc build BY NAME, and only when GDC lacks them — so this self-heals to a
+  // no-op the day the dump inlines them as text.
+  const GDC_KEEP_ABILITIES = {
+    'orks::wazdakka-gutsmek': ['Pulse Jet', 'Shokk Attack Engine', 'Turbo Engine'],
+    // GDC 946 has no wargear bucket at all on this datasheet; wahapedia's 11e
+    // export still lists the item, and it is the Painboy's whole point.
+    'orks::painboy': ['Dok’s Toolz'],
+  };
+
+  // OC parses NEGATIVE on GW's four Ork aircraft (a dump artefact — the printed
+  // datasheet shows a dash). Render the dash rather than "-1".
+  function normOC(v) {
+    const s = v == null ? '' : String(v).trim();
+    return (s && !isNaN(parseInt(s, 10)) && parseInt(s, 10) < 0) ? '-' : s;
+  }
+
+  // ── datasheet-level GDC authority ─────────────────────────────────────────
+  // Everything below the statline for a GDC_AUTHORITATIVE faction: keywords,
+  // weapons, abilities, wargear abilities and the leader graph, all rebuilt
+  // from GW's own datasheet rather than corrected field-by-field. Mirrors
+  // buildAdoptedUnit (the adopted-unit synthesizer) so an authoritative unit
+  // and an adopted one are built by the same rules.
+  //
+  // Returns a list of change descriptions for the audits' _gdcStatOverride.
+  function applyGdcDatasheetAuthority(unit, ds, fid) {
+    const G = (window.App && window.App.GDC) || {};
     const T = G._pickText || ((v) => v);
-    const have = new Set((unit.abilities || []).map((a) => String(a.name || '').toLowerCase()));
-    const out = [];
-    (ds.abilities.core || []).forEach((a) => {
-      const name = T(a && a.name != null ? a.name : a);
-      if (!name || have.has(String(name).toLowerCase())) return;
-      const aid = String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-      out.push({ name, description: weaponKwText(aid) || textFor(aid) || '', isCore: true, id: aid });
-    });
-    if (ds.abilities.damaged) {
-      const desc = G._cleanMarkup ? G._cleanMarkup(T(ds.abilities.damaged.description)) : '';
-      const range = T(ds.abilities.damaged.range);
-      const nm = range ? 'Damaged: ' + String(range).toLowerCase() : 'Damaged';
-      if (desc && !have.has(nm.toLowerCase())) out.push({ name: nm, description: desc, isCore: false, id: null });
+    const C = (v) => (G._cleanMarkup ? G._cleanMarkup(T(v)) : T(v));
+    const ab = ds.abilities || {};
+    const changed = [];
+    const abilityFixOv = (DC.abilityFixes || {})[fid + '::' + unit.id] || null;
+
+    // ── keywords ── GW's own list, same shape/casing buildAdoptedUnit emits.
+    // 40kdc's copies are a codex behind on 24 of 55 Ork datasheets (stale
+    // GRENADES, missing SPEED FREEKS / SMOKE, MEK where GW prints BIG MEK),
+    // and keywords are targeting rules, not decoration.
+    const kws = (ds.keywords || []).map(T).filter(Boolean)
+      .concat((ds.factions || []).map(T).filter(Boolean));
+    if (kws.length) {
+      const before = (unit.keywords || []).join('/');
+      unit.keywords = kws;
+      if (before !== kws.join('/')) changed.push('keywords');
     }
-    return out;
+
+    // ── weapons ── per-DATASHEET profiles, so already wielder-correct. Only
+    // when GDC actually carries some: four Ork datasheets have none in 40kdc
+    // and one wrong-but-present list is still better than an empty table.
+    const rows = gdcWeaponRows(ds.rangedWeapons, false)
+      .concat(gdcWeaponRows(ds.meleeWeapons, true));
+    if (rows.length) {
+      const before = (unit.weapons || []).length;
+      unit.weapons = rows;
+      changed.push(`weapons ${before}->${rows.length}`);
+    }
+
+    // ── abilities ── rebuilt from core + other + damaged. Leader is excluded
+    // (it is `attachmentRole`, re-added as a printed core ability below by the
+    // same ATTACH_ROLE_ABILITY map toUnit uses) and the `faction` bucket is
+    // excluded (Waaagh! renders in the army-rules panel, not on the card).
+    const keepNames = GDC_KEEP_ABILITIES[fid + '::' + unit.id] || [];
+    const prev = Array.isArray(unit.abilities) ? unit.abilities : [];
+    const abilities = [];
+    const seen = new Set();
+    const push = (a) => {
+      const k = String(a.name || '').toLowerCase();
+      if (!a.name || seen.has(k)) return;
+      seen.add(k);
+      abilities.push(a);
+    };
+    (ab.core || []).forEach((a) => {
+      const name = T(a && a.name != null ? a.name : a);
+      if (!name || /^leader$/i.test(name)) return;
+      const aid = String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      push({ name, description: weaponKwText(aid) || textFor(aid) || '', isCore: true, id: aid });
+    });
+    (ab.other || []).forEach((a) => {
+      const name = T(a && a.name);
+      if (!name) return;
+      push({ name, description: C(a.description) || '', isCore: false, id: null });
+    });
+    // `special` carries the datasheet-level oddities. TRANSPORT has its own
+    // rendered section, and Support is the attachment ROLE (re-added below), so
+    // both are dropped here — but SUPREME COMMANDER is a real printed rule and
+    // dropping the whole bucket loses it. Same filter buildAdoptedUnit uses.
+    (ab.special || []).forEach((a) => {
+      const name = T(a && a.name);
+      if (!name || /^transport$/i.test(name) || /^support$/i.test(name)) return;
+      push({ name, description: C(a.description) || '', isCore: CORE_ABILITY_RE.test(name), id: null });
+    });
+    // Choose-N sub-abilities (11e psychic disciplines here, primarch powers
+    // elsewhere). GDC groups them under `primarch`, and the parent ability's
+    // text says "see below", so the options ARE the datasheet. `_typeName` =
+    // the group name is what routes them into detail.js's choose-N section.
+    (Array.isArray(ab.primarch) ? ab.primarch : []).forEach((grp) => {
+      const gname = T(grp && grp.name);
+      (Array.isArray(grp && grp.abilities) ? grp.abilities : []).forEach((a) => {
+        const name = T(a && a.name);
+        if (!name) return;
+        push({ name, description: C(a.description) || '', isCore: false, id: null, _typeName: gname });
+      });
+    });
+    // Degrading profile. GW prints ONE block per datasheet, headed with that
+    // datasheet's own threshold ("DAMAGED: 1-5 WOUNDS REMAINING"), and the core
+    // "Damaged N" keyword is the same rule — so fold the two into a single row
+    // rather than showing both.
+    //
+    // GDC's ORK extraction is the only one in the dump that ships the range
+    // WITHOUT the prose (11 of 228 datasheets carrying a damaged block, all of
+    // them Orks), so the text has to come from the core keyword. Our store's
+    // copy of it is scoped to one faction and hardcodes that datasheet's own
+    // numbers ("1-4"), which GW parameterises per datasheet — compare GDC's own
+    // Gargantuan Squiggoth text, same sentence with "1-10". Substituting the
+    // range GDC states for this datasheet therefore reproduces what GW prints,
+    // and is a no-op wherever the two already agree. The span is also what the
+    // heading is built from, so GDC's typos in the Ork ranges ("1-5 WOUND
+    // REMAINING TEST" on the Hunta Rig) never reach the card.
+    if (ab.damaged) {
+      const rawRange = String(T(ab.damaged.range) || '');
+      const span = (/(\d+\s*[-–]\s*\d+)/.exec(rawRange) || [])[1] || '';
+      let desc = C(ab.damaged.description) || '';
+      if (!desc) {
+        const i = abilities.findIndex((a) => /^damaged\b/i.test(a.name || ''));
+        if (i !== -1) { desc = abilities[i].description || ''; abilities.splice(i, 1); }
+      }
+      if (span && desc) {
+        desc = desc.replace(/\b\d+\s*[-–]\s*\d+(?=\s+wounds?\s+remaining\b)/gi, span);
+      }
+      const name = span ? 'Damaged: ' + span + ' wounds remaining'
+        : (rawRange ? 'Damaged: ' + rawRange.toLowerCase() : 'Damaged');
+      if (desc) push({ name, description: desc, isCore: false, id: null });
+    }
+    // Abilities GDC ships as an image (see GDC_KEEP_ABILITIES) — carried over
+    // from the 40kdc build by name, only where GDC has nothing of that name.
+    keepNames.forEach((nm) => {
+      const hit = prev.find((a) => a && String(a.name || '').toLowerCase() === String(nm).toLowerCase());
+      if (hit) push({ name: hit.name, description: hit.description || '',
+                      isCore: !!hit.isCore, id: hit.id || null, _typeName: hit._typeName });
+    });
+    // Re-apply ONLY the expect-gated REWRITES. addCore / addNamed / addWargear
+    // / remove are deliberately NOT re-applied: they exist to patch a list
+    // 40kdc got wrong, and GDC now owns that list. Re-applying them is what put
+    // a stale `feel-no-pain-6` back on hunta-rig / kill-rig.
+    applyOverlayUpdateNamed(abilityFixOv, abilities);
+    // The printed datasheet shows Leader / Support as a core ability; put it
+    // back the same way toUnit does, after the rewrites so it cannot be one.
+    const roleAbility = ATTACH_ROLE_ABILITY[
+      (ab.core || []).some((a) => /^leader$/i.test(T(a && a.name != null ? a.name : a) || '')) ? 'leader'
+        : ((ab.special || []).some((a) => /^support$/i.test(T(a && a.name) || '')) ? 'support' : '')];
+    if (roleAbility) push({ name: roleAbility.name, description: roleAbility.description,
+                            isCore: true, _injected: true });
+    if (prev.length !== abilities.length
+        || prev.some((a, i) => !abilities[i] || abilities[i].name !== a.name)) {
+      changed.push(`abilities ${prev.length}->${abilities.length}`);
+    }
+    unit.abilities = abilities;
+
+    // ── wargear abilities ── GDC's own per-datasheet bucket, then the
+    // expect-gated rewrites (manual-corrections.json pins the three where GDC
+    // 946 still carries 10e prose).
+    const wgPrev = Array.isArray(unit.wargearAbilities) ? unit.wargearAbilities : [];
+    const wargearAbilities = [];
+    const wgSeen = new Set();
+    (ab.wargear || []).forEach((a) => {
+      const name = T(a && a.name);
+      const k = String(name || '').toLowerCase();
+      if (!name || wgSeen.has(k)) return;
+      wgSeen.add(k);
+      wargearAbilities.push({ name, description: C(a.description) || '' });
+    });
+    applyOverlayUpdateWargear(abilityFixOv, wargearAbilities);
+    if (wgPrev.length !== wargearAbilities.length
+        || wgPrev.some((a, i) => !wargearAbilities[i] || wargearAbilities[i].name !== a.name)) {
+      changed.push(`wargearAbilities ${wgPrev.length}->${wargearAbilities.length}`);
+    }
+    unit.wargearAbilities = wargearAbilities;
+
+    // ── leader graph ── GW's core Leader keyword and its attachesTo table.
+    // An EMPTY list means "leads nobody" and must stay empty: 11e stopped
+    // Ghazghkull, Mozrog and the Beastboss on Squigosaur leading anything, and
+    // the 40kdc leader-attachments fallback would put all three back.
+    const role = (ab.core || []).some((a) => /^leader$/i.test(T(a && a.name != null ? a.name : a) || ''))
+      ? 'leader'
+      : ((ab.special || []).some((a) => /^support$/i.test(T(a && a.name) || '')) ? 'support' : null);
+    if ((unit.attachmentRole || null) !== role) {
+      changed.push(`attachmentRole ${unit.attachmentRole || 'none'}->${role || 'none'}`);
+    }
+    unit.attachmentRole = role;
+    // EVERY attachesTo target, whichever way GDC types it. `gdcLeadBy` answers
+    // "which units can this character join"; whether joining makes it the
+    // leader of that unit or merely a Support model attached to it is
+    // `attachmentRole`'s job, and attachments.js already labels the two groups
+    // apart from that field. GDC 946 types the Bannernob, Bigboss, Mek,
+    // Painboss, Painboy, Runtherd and Weirdboy rows 'support', so a
+    // leader-only filter silently unattached every Ork support character.
+    let leadBy = (ds.attachesTo || [])
+      .filter((x) => x && (!x.type || /^(leader|support)$/i.test(String(x.type))))
+      .map((x) => T(x.target)).filter(Boolean);
+    if (!leadBy.length && ds.leader && G._leaderTargets) leadBy = G._leaderTargets(ds.leader) || [];
+    const beforeLead = (unit.gdcLeadBy || []).join('/');
+    unit.gdcLeadBy = leadBy;
+    if (beforeLead !== leadBy.join('/')) changed.push(`gdcLeadBy ${unit.gdcLeadBy.length}`);
+    // attachments.js reads this to know an empty gdcLeadBy is an ANSWER, not a
+    // gap to fill from 40kdc prose.
+    unit._gdcAuthoritative = true;
+    return changed;
   }
 
   // Overwrite statlines (and invuln) from GDC for the allowlisted factions.
@@ -2311,7 +2586,7 @@
     let nUnits = 0, nChanges = 0;
     (factions || []).forEach((faction) => {
       const fid = faction._factionId;
-      if (!fid || !GDC_STATS_AUTHORITATIVE[fid]) return;
+      if (!fid || !GDC_AUTHORITATIVE[fid]) return;
       const files = [].concat(App.GDC.FACTION_TO_GDC[faction.factionName] || []);
       const sheets = [];
       files.forEach((fn) => {
@@ -2326,12 +2601,17 @@
         if (!unit || unit._adopted) return;             // already built from GDC
         const ds = idx.get(dsKey(unit.name));
         if (!ds) return;                                 // GW does not list it (Legends) → leave alone
+        const changed = [];
+        // Statlines first, in its own scope: its early returns ("GDC has no
+        // stats", "N->M profiles, not worth guessing") must skip the STATLINE
+        // only. The authority pass below owns fields that have nothing to do
+        // with the profile table and has to run either way.
+        const applyStatlines = () => {
         const gs = ds.stats || [];
         const ms = Array.isArray(unit.modelStats) ? unit.modelStats : [];
         if (!gs.length || !ms.length) return;
-        const changed = [];
         const applyTo = (row, g) => {
-          const want = { M: g.m, T: g.t, SV: g.sv, W: g.w, LD: g.ld, OC: g.oc };
+          const want = { M: g.m, T: g.t, SV: g.sv, W: g.w, LD: g.ld, OC: normOC(g.oc) };
           Object.keys(want).forEach((k) => {
             const gw = want[k] == null ? '' : String(want[k]).trim();
             const ours = row[k] == null ? '' : String(row[k]).trim();
@@ -2354,7 +2634,7 @@
           const before = ms.map((r) => r.name || '·').join(' + ');
           unit.modelStats = [{ name: '', M: String(gs[0].m || ''), T: String(gs[0].t || ''),
             SV: String(gs[0].sv || ''), W: String(gs[0].w || ''),
-            LD: String(gs[0].ld || ''), OC: String(gs[0].oc || '') }];
+            LD: String(gs[0].ld || ''), OC: normOC(gs[0].oc) }];
           changed.push(`profiles ${ms.length}->1 (${before})`);
         } else if (ms.length === 1 && gs.length > 1) {
           // GW SPLIT a single profile into several — Breaka Boyz (Breaka Boy
@@ -2364,7 +2644,7 @@
           const before = ms[0].name || '·';
           unit.modelStats = gs.map((g) => ({ name: String(T(g.name) || ''),
             M: String(g.m || ''), T: String(g.t || ''), SV: String(g.sv || ''),
-            W: String(g.w || ''), LD: String(g.ld || ''), OC: String(g.oc || '') }));
+            W: String(g.w || ''), LD: String(g.ld || ''), OC: normOC(g.oc) }));
           changed.push(`profiles 1->${gs.length} (${before} -> ${unit.modelStats.map((r) => r.name || '·').join(' + ')})`);
         } else {
           return;                                        // N->M with N,M>1: not worth guessing at
@@ -2377,11 +2657,12 @@
           changed.push(`INV ${unit.invulnSave || 'none'}->${gInv}`);
           unit.invulnSave = gInv;
         }
-        const adds = gdcCoreAbilityAdds(ds, unit);
-        if (adds.length) {
-          adds.forEach((a) => { a._injected = true; unit.abilities.push(a); });
-          changed.push(`+${adds.length} core`);
-        }
+        };
+        applyStatlines();
+        // Everything below the statline (keywords, weapons, abilities, wargear
+        // abilities, the leader graph) — see applyGdcDatasheetAuthority.
+        try { applyGdcDatasheetAuthority(unit, ds, fid).forEach((c) => changed.push(c)); }
+        catch (e) { console.warn('[DC] GDC authority failed for ' + unit.name + ':', e && e.message ? e.message : e); }
         if (changed.length) {
           nUnits++; nChanges += changed.length;
           unit._gdcStatOverride = changed;               // visible to the audits
@@ -2671,7 +2952,7 @@
         // missing) and BEFORE the weapon fixes and ally attach, so an adopted
         // unit is treated exactly like an upstream one from here on.
         // Statline authority for freshly-errata'd factions (see
-        // GDC_STATS_AUTHORITATIVE). Before adoption so the log reads in the
+        // GDC_AUTHORITATIVE). Before adoption so the log reads in the
         // order the data actually changes.
         try {
           const st = applyGdcStatlines(App.state.factions);
@@ -2736,6 +3017,13 @@
       console.warn('[DC] ally attach failed (non-fatal):', e && e.message ? e.message : e);
     }
   }
+
+  // gdc.js needs the allowlist too (mergeIntoFactions replaces rather than
+  // fills detachment rules + enhancements for an authoritative faction). Set at
+  // adapter load, not inside loadAllFactions, so a node harness that calls the
+  // merges directly sees it as well. Keyed by 40kdc faction id — gdc.js reads
+  // `faction._factionId`.
+  try { (window.App = window.App || {}).GDC_AUTHORITATIVE = GDC_AUTHORITATIVE; } catch (_) {}
 
   // Override the data source. Keep the same public surface bsdata.js exposed.
   window.BSData = {

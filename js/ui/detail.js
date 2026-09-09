@@ -678,7 +678,7 @@
       (unit.wargearAbilities || []).forEach(wa => {
         waHtml += `<div class="detail-ability detail-ability-wargear">
           <span class="detail-ability-name">${esc(wa.name)}</span>
-          <span class="detail-ability-desc">${esc(wa.description || '—')}</span>
+          <span class="detail-ability-desc">${UI.mdBold(wa.description || '—')}</span>
         </div>`;
       });
 
@@ -851,16 +851,16 @@
           const checked = selectedNames.has(enh.name) ? ' checked' : '';
           const elig = enhEligibility(enh);
           const ineligClass = elig.eligible ? '' : ' enhancement-ineligible';
-          const upgradeTag = elig.upgrade ? `<span class="enh-cb-upgrade-tag">Upgrade</span>` : '';
+          const upgradeTag = (elig.upgrade && !/\bupgrade\b/i.test(enh.name || '')) ? `<span class="enh-cb-upgrade-tag">Upgrade</span>` : '';
           html += `<label class="enhancement-cb-item${ineligClass}"${!elig.eligible ? ` title="${esc(elig.note)}"` : ''}>
             <input type="checkbox" class="enhancement-cb" value="${esc(enh.name)}"${checked}
-              data-enh-pts="${enh.pts || 0}" data-enh-name="${esc(enh.name)}" data-enh-desc="${esc(enh.description || '')}"/>
+              data-enh-pts="${enh.pts || 0}" data-enh-name="${esc(enh.name)}" data-enh-desc="${UI.mdPlain(enh.description || '')}"/>
             <span class="enh-cb-body">
               <span class="enh-cb-header">
                 <span class="enh-cb-name">${esc(enh.name)}${upgradeTag}</span>
                 <span class="enh-cb-pts">${enh.pts ? enh.pts + ' pts' : ''}</span>
               </span>
-              <span class="enh-cb-desc">${esc(enh.description || '')}</span>
+              <span class="enh-cb-desc">${UI.mdBold(enh.description || '')}</span>
               ${!elig.eligible ? `<span class="enh-cb-ineligible-note">${esc(elig.note)}</span>` : ''}
             </span>
           </label>`;

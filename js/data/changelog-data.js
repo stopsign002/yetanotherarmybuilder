@@ -26,9 +26,30 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.09-1',
-    lastUpdated: '2026-09-09T13:10:00Z',
+    version:     '2026.09.09-2',
+    lastUpdated: '2026-09-09T14:30:00Z',
     entries: [
+      {
+        date: '2026-09-09', kind: 'change',
+        title: 'Orks now come straight from GW\u2019s own data \u2014 and core stratagems are 11th edition',
+        description:
+          'The Ork codex landed but the community dataset we build on has not '
+          + 'been rewritten for it yet, so we now take Orks from GW\u2019s own app '
+          + 'data instead: keywords, weapons, abilities, wargear rules, who can '
+          + 'lead whom, and every detachment\u2019s rule, stratagems and '
+          + 'enhancements. That clears 64 abilities Orks no longer have (the '
+          + 'stray Feel No Pain 6+ on Beast Snagga Boyz, the Battlewagon\u2019s '
+          + '\u2019Ard Case, the Big Mek\u2019s Grot Oiler), gives Wartrakks, '
+          + 'Rukkatrukk Squigbuggies, Nazdreg and the Runtherd the weapons they '
+          + 'were missing entirely, fixes stale keywords on 24 datasheets, and '
+          + 'stops Ghazghkull, Mozrog Skragbad and the Beastboss on Squigosaur '
+          + 'offering to lead units they cannot lead in 11th. Dread Mob and '
+          + 'Blitz Brigade get their real rule and their real three stratagems, '
+          + 'and 26 index-era enhancements (two of them showing as free) are '
+          + 'gone. Waaagh! itself now reads the 11th-edition rule, riled up and '
+          + 'all. Separately, the core stratagem list \u2014 the ten every army '
+          + 'can use \u2014 has been updated to 11th edition.',
+      },
       {
         date: '2026-09-09', kind: 'fix',
         title: 'Ork weapon profiles now match the new codex in the calculators',

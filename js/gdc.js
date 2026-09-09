@@ -94,8 +94,15 @@
   //   <b>x</b>       → **x**    (bold markdown the renderers already handle)
   //   *title*        → title    (italic book titles: drop the markers)
   //   \r / <br>      → newline
+  //
+  // Control characters are dropped FIRST. GW's dump sprinkles \x07 (BEL) into
+  // stratagem secondary effects — invisible in a JSON viewer, but it reaches
+  // the DOM as a stray glyph in some fonts and breaks a plain-text export. \r
+  // is handled below as a line break, \n and \t are kept.
   function cleanMarkup(s) {
     return String(s == null ? '' : s)
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '')
       .replace(/<k>([\s\S]*?)<\/k>/gi, (_m, x) => x.toUpperCase())
       .replace(/<b>([\s\S]*?)<\/b>/gi, '**$1**')
       .replace(/<br\s*\/?>/gi, '\n')
@@ -105,6 +112,12 @@
       .replace(/[ \t]+\n/g, '\n')
       .trim();
   }
+
+  // Lowercase alphanumerics only — the same content-preserving comparison
+  // dc-adapter's reconcileStrats uses. Two strings that squash equal differ
+  // only in punctuation and whitespace, so "A squash-contains B" is a real
+  // superset test rather than a formatting accident.
+  function squashText(t) { return String(t == null ? '' : t).toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
   // Like cleanMarkup but ALSO drops **bold** markers — for datasheet text fields
   // (loadout / wargear / composition) that render as plain esc()'d strings, where
@@ -171,12 +184,26 @@
     const target = cleanMarkup(pickText(s.target));
     const effect = cleanMarkup(pickText(s.effect));
     const restr  = cleanMarkup(pickText(s.restrictions));
+    // 11e stratagems can offer a SECOND, pricier effect on the same card
+    // ("+1 CP — Or: …"). It lives in its own field, so a card rendered from
+    // `effect` alone silently drops half the stratagem. The dump prefixes the
+    // text with a BEL control char and an <u>Or:</u> label; cleanMarkup strips
+    // the control char and the tags, and the leading "Or:" is re-supplied here
+    // so the cost and the alternative read as one sentence.
+    const secondary = cleanMarkup(pickText(s.secondary_effect))
+      .replace(/^or\s*:\s*/i, '').trim();
+    const secCost = (typeof s.secondary_effect_cost === 'number')
+      ? s.secondary_effect_cost : (parseInt(s.secondary_effect_cost, 10) || 0);
     const parts = [];
     if (when)   parts.push('WHEN: ' + when);
     if (target) parts.push('TARGET: ' + target);
     if (effect) parts.push('EFFECT: ' + effect);
     if (restr)  parts.push('RESTRICTIONS: ' + restr);
-    const description = parts.join('\n\n') || cleanMarkup(pickText(s.fluff));
+    let description = parts.join('\n\n') || cleanMarkup(pickText(s.fluff));
+    if (secondary) {
+      description += (description ? '\n\n' : '')
+        + (secCost ? '+' + secCost + ' CP — Or: ' : 'Or: ') + secondary;
+    }
     return {
       name,
       cp,
@@ -313,6 +340,16 @@
     factions.forEach(faction => {
       const files = gdcFilesFor(faction.factionName);
       if (files.length === 0) return;
+      // GDC-authoritative faction (dc-adapter's allowlist, keyed by 40kdc
+      // faction id). For these, GW's app dump is the source of record: the
+      // detachment RULE and the enhancement list are REPLACED, not filled.
+      // 40kdc's copies are a codex behind — whole detachments carry the wrong
+      // rule, and 26 index-era Ork enhancements were still listed, two of them
+      // as free 0-pt duplicates. Fill-only cannot delete a row.
+      const authoritative = !!((App && App.GDC_AUTHORITATIVE) || {})[faction._factionId];
+      // detKeyToTargets also indexes the PARENT Space Marines faction for a
+      // chapter, so a replace must only ever touch this faction's own rows.
+      const ownDetachment = (d) => !d._factionId || d._factionId === faction._factionId;
 
       // Index the detachments prose can land on: this faction's + (for chapters)
       // the parent SM faction's. Relaxed name key folds curly/straight quotes etc.
@@ -419,6 +456,13 @@
         })).filter(r => r.description);
         if (built.length === 0) return;
         targets.forEach(d => {
+          // Authoritative: GW names the RULE ("Unstoppable Momentum"), 40kdc
+          // names the DETACHMENT ("Blitz Brigade") and attaches text from the
+          // previous edition. Replace outright.
+          if (authoritative && ownDetachment(d)) {
+            d.rules = built.map(r => ({ ...r }));
+            return;
+          }
           const cur = Array.isArray(d.rules) ? d.rules : [];
           if (!cur.some(r => r && r.description)) d.rules = built.map(r => ({ ...r }));
         });
@@ -440,17 +484,54 @@
       enhancementEntries.forEach(e => {
         const dName = pickText(e && e.detachment);
         const desc = cleanMarkup(pickText(e.description));
-        const enhKey = nameKey(pickText(e.name));
+        const rawName = pickText(e.name);
+        const enhKey = nameKey(rawName);
         if (!dName || !desc || !enhKey) return;
         const k = nameKey(dName);
         if (!enhByDet.has(k)) enhByDet.set(k, []);
-        enhByDet.get(k).push({ key: enhKey, desc });
+        // `name`/`pts` are read only by the authoritative REPLACE path below.
+        // The fill-only path uses key + desc exactly as before, and this list
+        // is deliberately NOT deduped — nearestUnique's "strictly better than
+        // the runner-up" test is calibrated against the list it has always had.
+        enhByDet.get(k).push({ key: enhKey, desc, name: rawName,
+                               pts: (typeof e.cost === 'number') ? e.cost : (parseInt(e.cost, 10) || 0) });
       });
       enhByDet.forEach((entries, detKey) => {
         const targets = detKeyToTargets.get(detKey);
         if (!targets || targets.length === 0) return;
         const byKey = new Map(entries.map(x => [x.key, x.desc]));
         targets.forEach(d => {
+          if (authoritative && ownDetachment(d)) {
+            // Authoritative: GW's rows ARE the list — same names, same points,
+            // same text. The ONE thing 40kdc can still have that GDC does not
+            // is the full text: three Ork enhancements carry a weapon profile
+            // that GDC ships as an image (Da Gobshot Thunderbuss, Da Krunch,
+            // 'Eadbanger). Keep ours only where it is a strict SUPERSET of
+            // GW's — same words, more of them — which is provably
+            // content-preserving and self-heals once the dump inlines them.
+            const prevByKey = new Map();
+            (d.enhancements || []).forEach(en => {
+              const k = nameKey(en && en.name);
+              if (k && !prevByKey.has(k)) prevByKey.set(k, en);
+            });
+            // One row per enhancement: a faction that reads more than one GDC
+            // file (a Space Marines chapter + the parent) sees each generic
+            // detachment's enhancements once per file.
+            const seenEnh = new Set();
+            d.enhancements = entries.filter(x => {
+              if (seenEnh.has(x.key)) return false;
+              seenEnh.add(x.key);
+              return true;
+            }).map(x => {
+              const prev = prevByKey.get(x.key);
+              const keepPrev = prev && prev.description
+                && squashText(prev.description).includes(squashText(x.desc))
+                && prev.description.length > x.desc.length;
+              return { name: x.name, pts: x.pts,
+                       description: keepPrev ? prev.description : x.desc };
+            });
+            return;
+          }
           (d.enhancements || []).forEach(en => {
             if (en.description) return;
             const k = nameKey(en.name);
@@ -771,6 +852,9 @@
     _pickText: pickText,
     _nameKey: nameKey,
     _dsKey: dsKey,
+    // dc-adapter's GDC-authority pass rebuilds the leader graph and needs the
+    // same prose parser mergeUnitDataIntoFactions uses.
+    _leaderTargets: leaderTargets,
     _EDITION: EDITION,
   };
 })();

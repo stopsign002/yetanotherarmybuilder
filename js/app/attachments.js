@@ -41,6 +41,17 @@
     return (s || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
   }
 
+  // A unit from a GDC-AUTHORITATIVE faction (dc-adapter's allowlist) carries
+  // GW's own attachesTo table in `gdcLeadBy`, and an EMPTY list there is an
+  // ANSWER — "this model leads nobody" — not a gap for the prose index to
+  // fill. 11e stopped Ghazghkull, Mozrog Skragbad and the Beastboss on
+  // Squigosaur leading anything; without this the ability-text fallback (which
+  // still reads a stale "can be attached to" paragraph wherever one survives)
+  // would quietly put all three back.
+  function gdcOwnsLeadBy(unit) {
+    return !!(unit && unit._gdcAuthoritative && Array.isArray(unit.gdcLeadBy));
+  }
+
   // Memoised prose reverse-index, rebuilt when state.factionsVersion
   // advances (new faction loaded). Map<foldedTargetName, Set<leaderUnit>>.
   let _proseCache    = null;
@@ -51,6 +62,7 @@
     if (!Array.isArray(allUnits)) return idx;
     for (let i = 0; i < allUnits.length; i++) {
       const leader = allUnits[i];
+      if (gdcOwnsLeadBy(leader)) continue;   // GDC's list is the whole answer
       const abilities = (leader && leader.abilities) || [];
       for (let j = 0; j < abilities.length; j++) {
         const a = abilities[j];
@@ -116,6 +128,7 @@
     //    target. `sourceUnit` here is identity-compared, which works
     //    because the index stores references to the same loaded unit
     //    objects callers pass in.
+    if (gdcOwnsLeadBy(sourceUnit)) return { ok: false, source: 'unknown' };
     const proseIdx = ensureProseIndex();
     const bucket = proseIdx.get(targetFolded);
     if (bucket && bucket.has(sourceUnit)) return { ok: true, source: 'prose' };
@@ -141,6 +154,7 @@
     }
     // Prose-side enrichment: also look at the source unit's own
     // abilities for "can be attached to" lists.
+    if (gdcOwnsLeadBy(sourceUnit)) return out;
     const abilities = sourceUnit.abilities || [];
     for (let i = 0; i < abilities.length; i++) {
       const desc = abilities[i] && abilities[i].description;
