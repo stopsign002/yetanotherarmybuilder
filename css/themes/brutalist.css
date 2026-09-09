@@ -375,6 +375,33 @@ body { font-weight: 500; }
   box-shadow: var(--nb-sh-press);
 }
 .topbar-action-btn:active { transform: translate(3px, 3px); box-shadow: none; }
+
+/* Offline/sync-queue chip (css/offline-pip.css, .topbar-offline-pip).
+   Reads unthemed if left alone: base styles are a 1px --border box in
+   regular weight, sitting right next to buttons that wear 2px ink,
+   uppercase 900 labels and a hard offset shadow. Match the button
+   border weight + label voice so it reads as topbar chrome, but stay
+   flat (no box-shadow) and keep the plain paper fill — it's a status
+   readout, not a control, and shouldn't compete with the buttons next
+   to it. Colours ride the existing --nb- and --text-muted tokens, so
+   brutalist-dark is covered with no extra rules. Deliberately does NOT
+   set `display` — offline-pip.css's `.topbar-offline-pip[hidden]
+   {display:none}` rule is equal specificity and loads first; a later
+   `display` here (even a matching inline-flex) would win the cascade
+   and un-hide it. */
+.topbar-offline-pip {
+  border: var(--nb-bw) solid var(--nb-ink);
+  background: var(--nb-paper);
+  color: var(--text-muted);
+  box-shadow: none;
+  font-family: var(--font);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 11px;
+}
+.topbar-offline-pip .topbar-offline-n { color: var(--accent); }
+
 .topbar-army-name, .topbar-army-select {
   background: var(--nb-paper);
   border: var(--nb-bw) solid var(--nb-ink);
@@ -931,9 +958,11 @@ input[type="checkbox"]:checked::after {
 
    The selector list was found MECHANICALLY, not by eye: every
    rule under css/ declaring a text colour above 62% luminance,
-   minus the five surfaces that paint their own dark ground and
-   therefore keep their light text — cards-mode, admin, the
-   stratagems modal and cold-start. If you add a
+   minus the surfaces that paint their own dark ground and
+   therefore keep their light text — admin, the stratagems modal,
+   and cold-start. (Cards-mode chrome is themed — see the CARDS
+   MODE block lower in this file. The .dcc-* print templates stay
+   light because they are a physical print product.) If you add a
    pastel literal to a token-backed surface, it belongs here too.
    ============================================================ */
 :root {
@@ -2033,7 +2062,15 @@ body.build-mode-enhanced .army-entry-remove:hover { background: var(--danger); c
   letter-spacing: 0.12em;
 }
 .reserves-empty-body, .requisitions-empty-body { color: var(--text-muted); }
-.reserves-empty-link {
+/* .requisitions-empty-link (js/app/requisitions.js:137, "Switch to All
+   units") is .reserves-empty-link's twin in js/app/reserves.js's own empty
+   note, but css/requisitions.css styles it on its own — transparent
+   background, --requisitions-accent text, var(--border) edge — none of
+   which this theme repoints, so it kept its dark-ground look (pale pink on
+   near-transparent) sitting on the cream empty-note box below. Same button,
+   same rule. */
+.reserves-empty-link,
+.requisitions-empty-link {
   background: var(--nb-hot);
   border: var(--nb-bw) solid var(--nb-ink);
   color: var(--nb-on-hot);
@@ -2043,7 +2080,8 @@ body.build-mode-enhanced .army-entry-remove:hover { background: var(--danger); c
   letter-spacing: 0.06em;
   transition: var(--nb-press);
 }
-.reserves-empty-link:hover {
+.reserves-empty-link:hover,
+.requisitions-empty-link:hover {
   background: var(--nb-hot);
   color: var(--nb-on-hot);
   transform: translate(1px, 1px);
@@ -2136,3 +2174,142 @@ body.build-mode-enhanced .army-entry-remove:hover { background: var(--danger); c
   background: var(--nb-inset);
   border: var(--nb-bw) solid var(--nb-ink);
 }
+
+/* ============================================================
+   GLYPH CONTRAST — the Requisitions pencil + heart
+   ------------------------------------------------------------
+   Both glyphs paint with --requisitions-accent (#d39ec5, dusty
+   pink, css/reserves.css + css/requisitions.css) — a colour
+   chosen against the dark default theme's near-black panels. On
+   this theme's light ground (white toolbar chip / --nb-inset
+   stockpile row) it measures 2.22:1, well under the 3:1 floor for
+   non-text UI. Re-point just these two glyphs at a darkened hold
+   of the same hue rather than the token itself — the token also
+   paints the active-tab fill (dark text on top of it, unaffected)
+   and border tints (never text), which don't need this. The dark
+   variant already clears 7.7:1 on its near-black ground, so it is
+   put back afterward rather than inheriting the light fix. */
+.reserves-view-btn[data-view="requisitions"] .reserves-view-icon,
+.stockpile-row-requisitions .stockpile-row-icon {
+  color: #a8478e;
+}
+:root[data-yaab-theme="brutalist-dark"] .reserves-view-btn[data-view="requisitions"] .reserves-view-icon,
+:root[data-yaab-theme="brutalist-dark"] .stockpile-row-requisitions .stockpile-row-icon {
+  color: var(--requisitions-accent);
+}
+
+/* ============================================================
+   CARDS MODE — designer CHROME only (issue #64)
+   ------------------------------------------------------------
+   css/cards-mode.css paints #cards-mode as its own dark app —
+   #0c0d10 ground, #14171c rail, light-on-dark text throughout —
+   which is why this theme's own docstring lists it among the five
+   surfaces that keep their light text unretouched. That is still
+   right for the card TEMPLATES: `.dcc-*` are the print product
+   (parchment + gold), physical objects that must not change
+   colour with the app theme, and nothing below touches a
+   `[class*="dcc-"]` selector.
+   But the designer CHROME around those templates — the rail, its
+   sub-tabs, the Pick-cards / Layout / Display panels, the preview
+   canvas ground, the presets list and its buttons, the footer —
+   is ordinary app UI, and left dark it seams hard against this
+   theme's white topbar. Re-themed with the same --nb-* tokens and
+   button shape as every other module chassis in this file, for
+   both brutalist variants (the tokens already differ per variant,
+   so one pass covers both). Layout/sizing/gap/padding are left to
+   cards-mode.css — only colour, border and shadow are overridden
+   here, and only on non-dcc selectors. */
+#cards-mode.mode-page { background: var(--nb-ground); }
+.cards-shell { background: var(--nb-ground); color: var(--nb-ink); }
+
+.cards-side {
+  background: var(--nb-paper);
+  border-right: var(--nb-bw) solid var(--nb-ink);
+}
+.cards-side-head { border-bottom: var(--nb-bw) solid var(--nb-ink); }
+.cards-title { color: var(--nb-ink); }
+.cards-summary { color: var(--text-muted); }
+
+.cards-row { color: var(--nb-ink); }
+.cards-row:hover { background: var(--nb-sunken); }
+.cards-row-all { color: var(--nb-ink); }
+.cards-field-label { color: var(--text-muted); }
+.cards-list-head { border-bottom: var(--nb-bw-hair) solid var(--nb-rule); }
+
+.cards-select {
+  background: var(--nb-paper);
+  color: var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
+
+.cards-subtabs { border-bottom: var(--nb-bw) solid var(--nb-ink); }
+.cards-subtab {
+  background: var(--nb-paper);
+  color: var(--text-muted);
+  border: var(--nb-bw) solid var(--nb-ink);
+}
+.cards-subtab:hover { background: var(--nb-sunken); color: var(--nb-ink); }
+.cards-subtab.is-active {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--nb-ink);
+}
+
+/* Inner Units / Rules / Stratagems tabs, inside Pick cards. */
+.cards-cat-tabs { border-bottom: var(--nb-bw-hair) solid var(--nb-rule); }
+.cards-cat-tab { color: var(--text-muted); }
+.cards-cat-tab:hover { color: var(--nb-ink); }
+.cards-cat-tab.is-active { color: var(--nb-ink); }
+.cards-cat-count { color: var(--text-faint); }
+.cards-cat-tab.is-active .cards-cat-count { color: var(--accent); }
+
+/* Display sub-panel section headings/help — shared by every Layout/Display
+   group including the Presets section named in the issue. */
+.cards-disp-heading { color: var(--text-muted); border-bottom-color: var(--nb-rule); }
+.cards-layout-section { border-bottom: var(--nb-bw-hair) solid var(--nb-rule); }
+.cards-help { color: var(--text-muted); }
+
+/* Presets: the named preset select is `.cards-select` above; its row of
+   text buttons (Save current / Update / Rename / Delete) below. */
+.cards-link-btn {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  color: var(--nb-ink);
+  box-shadow: var(--nb-sh-chip);
+}
+.cards-link-btn:hover:not(:disabled) {
+  background: var(--nb-sunken);
+  border-color: var(--nb-ink);
+  color: var(--nb-ink);
+}
+/* Deleting a preset is not the same press as renaming one — keep the
+   warning tint cards-mode.css gives it, re-lit for this ground. */
+#cards-preset-delete { border-color: var(--nb-red); color: var(--nb-red); }
+#cards-preset-delete:hover:not(:disabled) {
+  background: var(--nb-red);
+  color: var(--nb-paper);
+  border-color: var(--nb-red);
+}
+
+.cards-side-foot {
+  background: var(--nb-paper);
+  border-top: var(--nb-bw) solid var(--nb-ink);
+}
+.cards-btn {
+  background: var(--nb-paper);
+  color: var(--nb-ink);
+  border: var(--nb-bw) solid var(--nb-ink);
+  box-shadow: var(--nb-sh-btn);
+}
+.cards-btn:hover { background: var(--nb-sunken); }
+.cards-btn-primary {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--nb-ink);
+}
+.cards-btn-primary:hover { background: var(--accent-hover); }
+
+/* Preview canvas ground — the desk the printable pages sit on. */
+.cards-preview-wrap { background: var(--nb-ground); }
+.cards-empty { color: var(--text-muted); }
+.cards-empty-large { color: var(--text-muted); }
