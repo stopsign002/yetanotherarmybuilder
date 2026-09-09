@@ -6,8 +6,17 @@
   const DISMISS_KEY = 'yaab_pwa_dismissed';
   const PANEL_KEY = 'yaab_mobile_panel';
   const BTN_ID = 'yaab-btn-install';
+  // iOS never fires beforeinstallprompt (issue #60) — the only install route
+  // there is Share → Add to Home Screen, done by hand. These back a small
+  // instruction sheet, built entirely in JS (index.html is off-limits).
+  const SHEET_BACKDROP_ID = 'ios-install-backdrop';
+  const SHEET_ID = 'ios-install-sheet';
+  const CLOSE_BTN_ID = 'ios-install-close';
+  const NOT_NOW_BTN_ID = 'ios-install-not-now';
 
   let deferredPrompt = null;
+  let uiBuilt = false;
+  let escHandler = null;
 
   // ── Install-prompt capture + button visibility ─────────────────────────
   function isStandalone() {
@@ -22,16 +31,169 @@
     catch (_) { return false; }
   }
 
+  // Safari never implements beforeinstallprompt, so it's the only signal
+  // this check can use. MacIntel + multi-touch catches iPadOS 13+, which
+  // masquerades as a Mac in its UA string.
+  function isIOS() {
+    try {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent)
+          || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    } catch (_) { return false; }
+  }
+
+  // Inline SVGs (24x24, currentColor, stroke-based) — same house style as the
+  // tab-bar ICONS below. No emoji: iOS renders the Share glyph in its own
+  // colour, which fights every theme here.
+  const SHARE_GLYPH =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"/><path d="M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></g></svg>';
+  const INSTALL_GLYPH =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M8 11l4 4 4-4"/><path d="M5 19h14"/></g></svg>';
+
+  function buildFabButton() {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = BTN_ID;
+    btn.className = 'btn btn-accent yaab-install-fab';
+    btn.hidden = true;
+    btn.style.display = 'none';
+    btn.setAttribute('aria-label', 'Install app');
+    btn.innerHTML =
+      '<span class="yaab-install-fab-icon" aria-hidden="true">' + INSTALL_GLYPH + '</span>' +
+      '<span class="yaab-install-fab-label">Install</span>';
+    btn.addEventListener('click', onInstallClick);
+    return btn;
+  }
+
+  function buildIosSheet() {
+    const backdrop = document.createElement('div');
+    backdrop.id = SHEET_BACKDROP_ID;
+    backdrop.className = 'modal-backdrop ios-install-backdrop';
+    backdrop.hidden = true;
+    // Click the scrim (never a click that bubbled from the panel) to
+    // dismiss — same convention as ui/auth-modal.js.
+    backdrop.addEventListener('click', function (e) {
+      if (e.target === e.currentTarget) closeIosSheet();
+    });
+
+    const panel = document.createElement('div');
+    panel.id = SHEET_ID;
+    panel.className = 'modal ios-install-sheet';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.setAttribute('aria-labelledby', 'ios-install-title');
+
+    const header = document.createElement('div');
+    header.className = 'modal-header';
+    const title = document.createElement('h3');
+    title.id = 'ios-install-title';
+    title.textContent = 'Install YAAB';
+    header.appendChild(title);
+
+    const bodyEl = document.createElement('div');
+    bodyEl.className = 'modal-body';
+    const ol = document.createElement('ol');
+    ol.className = 'ios-install-steps';
+    [
+      { glyph: SHARE_GLYPH, text: 'Tap the Share button in Safari’s toolbar.' },
+      { glyph: '', text: 'Scroll down and tap “Add to Home Screen.”' },
+      { glyph: '', text: 'Tap “Add” in the top-right corner.' },
+    ].forEach(function (step) {
+      const li = document.createElement('li');
+      if (step.glyph) {
+        const g = document.createElement('span');
+        g.className = 'ios-install-step-glyph';
+        g.innerHTML = step.glyph;
+        li.appendChild(g);
+      }
+      const t = document.createElement('span');
+      t.textContent = step.text;
+      li.appendChild(t);
+      ol.appendChild(li);
+    });
+    bodyEl.appendChild(ol);
+
+    const footer = document.createElement('div');
+    footer.className = 'modal-footer';
+    const notNow = document.createElement('button');
+    notNow.type = 'button';
+    notNow.id = NOT_NOW_BTN_ID;
+    notNow.className = 'btn btn-outline';
+    notNow.textContent = 'Not now';
+    notNow.addEventListener('click', closeIosSheet);
+
+    const gotIt = document.createElement('button');
+    gotIt.type = 'button';
+    gotIt.id = CLOSE_BTN_ID;
+    gotIt.className = 'btn btn-accent';
+    gotIt.textContent = 'Got it';
+    gotIt.addEventListener('click', dismissAndCloseIosSheet);
+
+    footer.appendChild(notNow);
+    footer.appendChild(gotIt);
+
+    panel.appendChild(header);
+    panel.appendChild(bodyEl);
+    panel.appendChild(footer);
+    backdrop.appendChild(panel);
+    return backdrop;
+  }
+
+  // Mounted once, lazily — a non-iOS load never shows either node (both
+  // start `hidden`), so building them eagerly at bootstrap costs nothing
+  // visible but keeps the button's first `updateInstallBtn()` call correct.
+  function ensureInstallUi() {
+    if (uiBuilt || !document.body) return;
+    uiBuilt = true;
+    document.body.appendChild(buildFabButton());
+    document.body.appendChild(buildIosSheet());
+  }
+
+  function closeIosSheet() {
+    const bd = document.getElementById(SHEET_BACKDROP_ID);
+    if (bd) bd.hidden = true;
+    if (escHandler) {
+      document.removeEventListener('keydown', escHandler);
+      escHandler = null;
+    }
+  }
+
+  function dismissAndCloseIosSheet() {
+    try { localStorage.setItem(DISMISS_KEY, '1'); } catch (_) {}
+    closeIosSheet();
+    updateInstallBtn();
+  }
+
+  function openIosSheet() {
+    ensureInstallUi();
+    const bd = document.getElementById(SHEET_BACKDROP_ID);
+    if (!bd) return;
+    bd.hidden = false;
+    // Bound only while the sheet is open, per the house rule for one-off
+    // dialogs — removed again in closeIosSheet().
+    escHandler = function (e) {
+      if (e.key === 'Escape' || e.key === 'Esc') closeIosSheet();
+    };
+    document.addEventListener('keydown', escHandler);
+    const gotIt = document.getElementById(CLOSE_BTN_ID);
+    if (gotIt && typeof gotIt.focus === 'function') gotIt.focus();
+  }
+
   function updateInstallBtn() {
+    ensureInstallUi();
     const btn = document.getElementById(BTN_ID);
     if (!btn) return;
-    const show = !!deferredPrompt && !isStandalone() && !isDismissed();
+    const show = (!!deferredPrompt || isIOS()) && !isStandalone() && !isDismissed();
     btn.hidden = !show;
     btn.style.display = show ? '' : 'none';
   }
 
   async function onInstallClick() {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      // No captured prompt: Safari never fires beforeinstallprompt, so this
+      // is the iOS path — show the manual Share sheet instead of no-op'ing.
+      if (isIOS()) openIosSheet();
+      return;
+    }
     const evt = deferredPrompt;
     deferredPrompt = null;
     try {
@@ -68,7 +230,7 @@
   // needs a captured prompt — not merely "we aren't already installed".
   App.pwaInstall = onInstallClick;
   App.pwaInstallAvailable = function () {
-    return !!deferredPrompt && !isStandalone() && !isDismissed();
+    return (!!deferredPrompt || isIOS()) && !isStandalone() && !isDismissed();
   };
 
   // ── Mobile tab bar injection + wiring ──────────────────────────────────
