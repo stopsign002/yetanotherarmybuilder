@@ -36,8 +36,24 @@ Parse rules, all learned the hard way on the Ork page:
 - **The trap:** those target names are ALL-CAPS too, so a naive header test
   eats them as the next unit. The line immediately after `LEADER`/`SUPPORT`
   is always the target list, never a header.
-- Record the MFM version banner (e.g. `v1.4`) and leave "Show Legends" OFF —
-  yaab hides Legends units too, so the default view is the matching scope.
+- Record the MFM version banner (e.g. `v1.4`) and turn **"Show Legends" ON**.
+
+  **This was specified backwards in the first version of this contract and it
+  invalidated most of a full audit run, so it is worth stating plainly: the
+  toggle does not merely hide Legends price blocks, it also strips Legends unit
+  names out of OTHER units' LEADER/SUPPORT target lists.** Measured on
+  adepta-sororitas, 2026-09-10: with Legends off the Canoness leads six units;
+  with Legends on she leads seven, the extra being CRUSADERS. Auditing against
+  the Legends-off view therefore reports every Legends-eligible bodyguard as an
+  over-permissive bug — ~143 of them on the first run. yaab ships its own
+  Legends toggle and `candidateTargetsFor` is not gated on it, so Legends-ON is
+  the apples-to-apples scope.
+
+  The control is a `<label>` reading "Show Legends", not a bare checkbox:
+  `page.getByText(/show legends/i).first().click()`. **Assert the click took
+  effect on every page** — page text length and unit count both grow — and fail
+  loudly on any page where nothing changed, rather than silently recording a
+  Legends-off page.
 
 Shape: `{ "<slug>": { "<UNIT NAME>": { "role": "LEADER"|"SUPPORT",
 "targets": ["<UNIT NAME>", ...] } } }`
