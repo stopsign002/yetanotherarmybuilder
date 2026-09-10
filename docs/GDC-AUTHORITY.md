@@ -163,3 +163,34 @@ Assert, Orks:
 Assert, everyone else: dump ALL non-Ork factions (units + detachments, JSON)
 before and after — `diff` must be empty except stratagem texts that gained a
 secondary-effect line (list them). `git diff --stat` in the report.
+
+## The MFM is the oracle for POINTS *and* LEADER/SUPPORT attachments
+
+Owner ruling, 2026-09-10, and it is expected to hold for every faction going
+forward. Two separate things live in the MFM and nowhere else:
+
+- **Points** — base costs, size bands, ordinal surcharges, per-item wargear.
+  A codex datasheet does not price wargear at all, so print is not even a
+  competing source. GDC/wahapedia/New Recruit disagreeing about a cost is that
+  source being wrong, not a conflict to research.
+- **Leader / Support attachments** — the MFM states it itself, above the unit
+  list: *"If a unit has the Leader/Support ability, the units it can be
+  attached to are listed after its points values."* Each unit block renders a
+  `LEADER` or `SUPPORT` label followed by the comma-separated unit names.
+
+Verified against the Ork page (MFM v1.4): 17 Ork units carry an attachment
+list, and all 17 match GDC and 40kdc exactly. It settled the one Ork
+attachment conflict no other source could — the Deffkilla Wartrike leads
+**WARBIKERS only** (wahapedia 11e adds WARBUGGIES and is wrong; New Recruit
+adds two units, NOBZ ON WARBIKES and SKORCHAS, that do not exist in 11e or
+even in New Recruit's own catalogue). It also independently confirmed the
+three bogus leaders this document's Ork pass removed — Ghazghkull Thraka,
+Mozrog Skragbad and Beastboss on Squigosaur are absent from the MFM's
+attachment list, and 40kdc still ships all three.
+
+**How to read it:** render the page and take `document.body.innerText` —
+do not regex the HTML. The attachment strings sit behind `$L<id>` lazy
+references in the Next.js RSC payload, so they are simply absent from the
+raw markup that `mfm-scrape-wargear.py` parses today. A worked scrape is in
+`stopsign002/yetanotherarmybuilder#86`, which proposes making this overlay
+automatic and self-healing the way wargear costs already are.
