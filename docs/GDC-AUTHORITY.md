@@ -179,11 +179,27 @@ forward. Two separate things live in the MFM and nowhere else:
   `LEADER` or `SUPPORT` label followed by the comma-separated unit names.
 
 Verified against the Ork page (MFM v1.4): 17 Ork units carry an attachment
-list, and all 17 match GDC and 40kdc exactly. It settled the one Ork
-attachment conflict no other source could — the Deffkilla Wartrike leads
-**WARBIKERS only** (wahapedia 11e adds WARBUGGIES and is wrong; New Recruit
-adds two units, NOBZ ON WARBIKES and SKORCHAS, that do not exist in 11e or
-even in New Recruit's own catalogue). It also independently confirmed the
+list, and all 17 match GDC and 40kdc exactly.
+
+**The attachment list is SCOPE-DEPENDENT, and that was missed on the first
+pass.** With "Show Legends" off the Deffkilla Wartrike leads **WARBIKERS**
+only — matching GDC, 40kdc and what yaab ships. With Legends on the same row
+reads **NOBZ ON WARBIKES, SKORCHAS, WARBIKERS, WARBUGGIES**. So a conclusion
+about an attachment list is only meaningful once the scope is stated:
+
+- For standard play the WARBIKERS-only answer is right and yaab is correct.
+- The Legends-inclusive list is exactly what New Recruit ships, so NR was
+  transcribing the fuller list rather than carrying stale junk — an earlier
+  version of this document said otherwise and was wrong. Wahapedia's
+  WARBIKERS + WARBUGGIES sits between the two.
+- **WARBUGGIES is not itself a Legends unit** (it is priced on the Legends-off
+  page and yaab carries it with `isLegends: false`), yet it appears only in the
+  Legends-on list. NOBZ ON WARBIKES and SKORCHAS are priced in neither scope.
+  Nobody has read the printed Wartrike card yet, so treat the four-unit list as
+  unexplained rather than authoritative, and do not "fix" yaab to match it
+  without the card (yaab#77 item 1).
+
+The MFM also independently confirmed the
 three bogus leaders this document's Ork pass removed — Ghazghkull Thraka,
 Mozrog Skragbad and Beastboss on Squigosaur are absent from the MFM's
 attachment list, and 40kdc still ships all three.
