@@ -17577,7 +17577,7 @@
   },
   "waaagh": {
     "faction": "orks",
-    "raw_text": "If your Army Faction is **ORKS**, once per battle, at the start of your Command phase, you can call a Waaagh!. If you do, until the start of your next Command phase, the Waaagh! is active for your army and:\n\n■ Units from your army with this ability are eligible to declare a charge in a turn in which they Advanced.\n■ Add 1 to the Strength and Attacks characteristics of melee weapons equipped by models from your army with this ability.\n■ Models from your army with this ability have a 5+ invulnerable save.\nThe infamous war cry of the Orks is known and feared throughout the galaxy. When it echoes across the battlefield, bellowed from hundreds or even thousands of toothy maws, even the most stalwart warriors fear the onslaught to come."
+    "raw_text": "The infamous war cry of the Orks is known and feared throughout the galaxy. When it echoes across the battlefield, bellowed from countless toothy maws, it galvanises the Orks and riles them into a raucous state of excited aggression.\n\nFriendly ORKS units with this ability can:\n• Re-roll Advance rolls.\n• Become riled up, as stated in other rules.\n• While a unit is riled up:\n  • That unit has a 5+ invulnerable save.\n  • That unit’s ranged attacks have [ASSAULT].\n  • When that unit is selected to make an Advance move, that Advance move does not prevent that unit from being eligible to declare a charge.\n\nWar Cry (Once per battle, per army): At the start of the Command phase, you can use this ability. If you do, friendly ORKS units with the Waaagh! ability are riled up until the end of the next turn."
   },
   "concealed-krumpin-equatorial-hordes": {
     "faction": "orks",
