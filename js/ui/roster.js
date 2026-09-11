@@ -117,7 +117,9 @@
         <div class="unit-card-name unit-card-name-primary">${esc(unit.name)}</div>
         <div class="unit-card-pts unit-card-pts-badge">${ptsDisplay}</div>
       </div>
-      <div class="unit-card-faction unit-card-faction-tertiary">${esc(unit._factionName || '')}</div>
+      <div class="unit-card-faction unit-card-faction-tertiary">${esc(unit._factionName || '')}${
+        unit.chapterBadge ? ` <span class="keyword-tag unit-card-chapter-badge">${esc(unit.chapterBadge)}</span>` : ''
+      }</div>
       <div class="unit-card-stats unit-card-stat-strip" style="grid-template-columns:repeat(${cardStats.length || 6},1fr)">
         ${cardStats.length > 0 ? cardStats.map(k => UI.renderStatCell(k, resolvedStats[k])).join('') : UI.renderStatCell('—','—')}</div>
       ${keywords.length > 0 ? `<div class="unit-card-keywords unit-card-keywords-muted">${

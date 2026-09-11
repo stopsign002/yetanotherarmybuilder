@@ -26,9 +26,29 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.11-1',
+    version:     '2026.09.11-2',
     lastUpdated: '2026-09-11T00:00:00Z',
     entries: [
+      {
+        date: '2026-09-11', kind: 'fix',
+        title: 'Space Marines parent roster — chapter-locked datasheets',
+        description:
+          'The Space Marines Venerable Dreadnought is really the Space Wolves '
+          + 'datasheet (Space Marines has no separate Space Wolves roster in our '
+          + 'data), and it still carried two Grey Knights abilities left over from '
+          + 'the same upstream mix-up already fixed on the Grey Knights copy. Those '
+          + 'are removed, and the Space Marines Rhino loses a Grey Knights ability '
+          + 'it had no business carrying either. Units on the Space Marines roster '
+          + 'that are really a specific chapter\'s datasheet — the Venerable '
+          + 'Dreadnought, Logan Grimnar, Death Company and others — now show a '
+          + 'small chapter badge (e.g. "· SPACE WOLVES") next to the faction name '
+          + 'on the card and in the details panel, so it is obvious at a glance. '
+          + 'Separately, a couple of units (Cato Sicarius, Marneus Calgar in Armour '
+          + 'of Antilochus) were showing a linked ability with no name-matching '
+          + 'text and no such ability on the real datasheet — those are now dropped, '
+          + 'and Cato Sicarius gains the "Honour or Death" ability his printed '
+          + 'datasheet has and ours was missing.',
+      },
       {
         date: '2026-09-11', kind: 'fix',
         title: 'Grey Knights Venerable Dreadnought — wrong-chapter abilities',

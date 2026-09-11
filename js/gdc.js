@@ -750,11 +750,44 @@
     })).filter(g => g.group && g.abilities.length);
   }
 
+  // Every ability NAME GW prints on a datasheet, across every group — not
+  // just `other` (project11Abilities' source): core, faction and special
+  // carry real ability names too (often with no description of their own,
+  // e.g. "Leader"/"Support"/"Oath of Moment" — a name is enough here, this
+  // is a name-presence check, not a text fill), wargear abilities are full
+  // {name, description} entries like `other`, and primarch sub-abilities /
+  // the damaged block get their own constructed name. Used by
+  // mergeUnitAbilitiesFromGdc's phantom-drop (#91): a 40kdc-linked ability
+  // with NO description whose name matches nothing here, on ANY group, is
+  // not a real ability on this printed datasheet at all — just checking
+  // `other` missed core-shaped names and any group other than `other`.
+  function project11AllNames(ds, abilities, primarchGroups, damaged) {
+    const names = new Set();
+    (abilities || []).forEach(a => a.name && names.add(nameKey(a.name)));
+    (primarchGroups || []).forEach(grp =>
+      (grp.abilities || []).forEach(a => a.name && names.add(nameKey(a.name))));
+    if (damaged && damaged.name) names.add(nameKey(damaged.name));
+    const ab = ds && ds.abilities;
+    if (ab) {
+      ['core', 'faction', 'special', 'wargear'].forEach(key => {
+        (Array.isArray(ab[key]) ? ab[key] : []).forEach(a => {
+          const n = pickText(a && a.name);
+          if (n) names.add(nameKey(n));
+        });
+      });
+    }
+    return names;
+  }
+
   // Build one ability entry for a datasheet, capturing exactly the projected
-  // fields buildAbilityIndex11 has always indexed.
+  // fields buildAbilityIndex11 has always indexed, plus `allNames` (every
+  // ability name GW prints anywhere on the sheet — see project11AllNames).
   function project11AbilityEntry(ds) {
-    return { abilities: project11Abilities(ds), primarch: project11PrimarchGroups(ds),
-             damaged: project11Damaged(ds) };
+    const abilities = project11Abilities(ds);
+    const primarch = project11PrimarchGroups(ds);
+    const damaged = project11Damaged(ds);
+    return { abilities, primarch, damaged,
+             allNames: project11AllNames(ds, abilities, primarch, damaged) };
   }
 
   // Flatten the text buildAbilityIndex11's parent-sweep branch checks for a
@@ -877,8 +910,34 @@
         const gAbils = entry.abilities || [];
         const gGroups = entry.primarch || [];
         const gDamaged = entry.damaged || null;
-        if (gAbils.length === 0 && gGroups.length === 0 && !gDamaged) return;
         const abils = Array.isArray(unit.abilities) ? unit.abilities : (unit.abilities = []);
+
+        // ── Phantom drop (#91) ──────────────────────────────────────────────
+        // 40kdc sometimes links an ability id that has NO authored text
+        // anywhere (abilities-index.json has no entry for it) AND that names
+        // nothing GW actually prints on this datasheet — Cato Sicarius's
+        // `captain-of-the-honour-guard` and Lord Calgar's `lord-calgar` (in
+        // Armour of Antilochus) are both this: textless AND absent from GW's
+        // own datasheet (GDC has "Knight Champion of Macragge" for Sicarius,
+        // not "Captain of the Honour Guard"). Checked against EVERY GDC
+        // ability group via `entry.allNames` (core/faction/other/special/
+        // wargear/primarch sub-abilities/damaged) — not just `other` — so a
+        // name that only lives under core/faction/special/wargear isn't
+        // mistaken for a phantom. Only ever drops a NON-core, NON-injected,
+        // description-less ability: a real (even textless) core rule or
+        // anything this app itself injected is never a candidate, and
+        // anything with prose is by definition not a nameless phantom.
+        // Runs before hasNonCore below so a dropped phantom can also reopen
+        // the fill gate it was wrongly holding shut.
+        for (let i = abils.length - 1; i >= 0; i--) {
+          const a = abils[i];
+          if (a.isCore || a._injected || a.description) continue;
+          if (entry.allNames && entry.allNames.has(nameKey(a.name))) continue;
+          console.info('[gdc] dropped phantom ability "' + a.name + '" on ' + (unit && unit.name));
+          abils.splice(i, 1);
+        }
+
+        if (gAbils.length === 0 && gGroups.length === 0 && !gDamaged) return;
         const byKey = new Map(abils.map(a => [nameKey(a.name), a]));
         // Gate the datasheet fill on whether 40kdc ITSELF linked a non-core
         // ability — not on the merged list. dc-adapter tags everything it
@@ -891,6 +950,21 @@
         // textless `WAAAGH! WAZDAKKA` entry. Ignoring `_injected` can only ever
         // OPEN the gate, never close one that was open before.
         const hasNonCore = abils.some(a => !a.isCore && !a._injected);
+        // ── Subset fill (#91) ────────────────────────────────────────────────
+        // The hasNonCore gate above exists to avoid doubles when our ability
+        // names don't line up with GW's — but a full-subset match is exactly
+        // the case where no double is possible: if EVERY one of our
+        // (post-phantom-drop) non-core abilities already name-matches one of
+        // GW's `other` abilities, there is nothing of ours left unaccounted
+        // for, so filling in the rest of GW's `other` list is safe. This is
+        // what lets Cato Sicarius — left with only "Knight Champion of
+        // Macragge" after the phantom drop above, which IS on GW's sheet —
+        // receive GW's remaining "Honour or Death".
+        const nonCoreOurs = abils.filter(a => !a.isCore && !a._injected);
+        const gOtherKeys = new Set(gAbils.map(g => nameKey(g.name)));
+        const isFullSubset = nonCoreOurs.length > 0
+          && nonCoreOurs.every(a => gOtherKeys.has(nameKey(a.name)));
+        const fillOpen = !hasNonCore || isFullSubset;
         gAbils.forEach(g => {
           const hit = byKey.get(nameKey(g.name));
           if (hit) {
@@ -907,7 +981,7 @@
             if (QUALIFIED_NAME_RE.test(g.name) && !QUALIFIED_NAME_RE.test(hit.name)) {
               hit.name = g.name;
             }
-          } else if (!hasNonCore && g.description) {
+          } else if (fillOpen && g.description) {
             const na = { name: g.name, description: g.description, isCore: false };
             abils.push(na);
             byKey.set(nameKey(g.name), na);

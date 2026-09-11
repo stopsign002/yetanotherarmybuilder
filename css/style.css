@@ -563,6 +563,15 @@ ul { list-style: none; }
   text-overflow: ellipsis;
 }
 
+/* Chapter badge (SM parent roster units whose datasheet is really
+   chapter-locked — Venerable Dreadnought = Space Wolves, Death Company, …).
+   `.keyword-tag` is already accent-token driven, so this just nudges the
+   baseline to sit next to the plain faction text; no new colours. */
+.unit-card-chapter-badge {
+  vertical-align: 1px;
+  margin-left: 2px;
+}
+
 .unit-card-header {
   display: flex;
   flex-direction: column;

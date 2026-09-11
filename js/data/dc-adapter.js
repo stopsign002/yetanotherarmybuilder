@@ -349,6 +349,30 @@
     'grey-knights::venerable-dreadnought': {
       remove: ['blizzard-shield', 'fervour-of-the-ancients-aura'],
     },
+    // #90 resolved: the adeptus-astartes (SM parent) copy of Venerable
+    // Dreadnought IS the Space Wolves sheet — 40kdc ships no standalone
+    // space-wolves unit list, so SW players build off this shared-roster
+    // parent (owner decision, 2026-09-11). Its OWN ability_ids upstream still
+    // carry two GREY KNIGHTS abilities — guidance-of-the-ancients-psychic and
+    // wisdom-of-the-ancients-aura — left over from the same upstream mix-up
+    // 1.4.3 fixed on the Grey Knights copy above; that release did NOT touch
+    // this one. Per GDC (spacewolves.json) the real SW datasheet carries only
+    // Fervour of the Ancients + Blizzard Shield (plus Deadly Demise, core);
+    // wisdom-of-the-ancients-aura's only authored prose in
+    // abilities-index.json is GK's "friendly Grey Knights Infantry" text, so
+    // it can't even be a mistranslated SW rule. Self-heals to a no-op once
+    // upstream drops these ids from adeptus-astartes/units.json.
+    'adeptus-astartes::venerable-dreadnought': {
+      remove: ['guidance-of-the-ancients-psychic', 'wisdom-of-the-ancients-aura'],
+    },
+    // Same upstream mix-up, one ability, on the SM parent's Rhino: its
+    // ability_ids upstream carry truesilver-aegis-aura, a GREY KNIGHTS
+    // ability (Nemesis Dreadknight escort rule) that has no business on a
+    // Rhino of any chapter. GW's SM Rhino datasheet has Firing Deck 2 + Self
+    // Repair only (plus Deadly Demise, core). Self-heals once upstream drops it.
+    'adeptus-astartes::rhino': {
+      remove: ['truesilver-aegis-aura'],
+    },
   };
 
   // Expect-gated STATLINE corrections. `expect` pins the upstream (wrong)
@@ -1683,10 +1707,31 @@
       });
     }
 
+    // Chapter badge for the SM parent roster ("Imperium - Adeptus Astartes -
+    // Space Marines"). That faction mixes true multi-chapter datasheets in
+    // with chapter-locked ones riding the shared roster because 40kdc ships
+    // no standalone per-chapter unit list — the Venerable Dreadnought above
+    // is really the Space Wolves sheet, same as Logan Grimnar or Death
+    // Company. The KEYWORDS chips already say SPACE WOLVES via
+    // faction_keywords, but that's easy to miss; surface it as a badge next
+    // to the faction name instead. Derived from the unit's OWN
+    // `u.faction_keywords` — NOT `finalKeywords`, which also carries generic
+    // unit keywords (Vehicle, Character, …) that must never leak in here —
+    // minus the two keywords every SM parent unit carries. Empty (so no
+    // badge) for genuinely multi-chapter units: Rhino's faction_keywords is
+    // just ['Adeptus Astartes'].
+    let chapterBadge = null;
+    if (u.faction_id === 'adeptus-astartes') {
+      const chapterKws = (u.faction_keywords || [])
+        .filter((k) => !/^(adeptus astartes|imperium)$/i.test(String(k).trim()));
+      if (chapterKws.length) chapterBadge = chapterKws.join(' / ');
+    }
+
     return {
       id: u.id,
       name: u.name,
       type: 'unit',
+      chapterBadge,
       // 40kdc's battlefield role (character / epic-hero / battleline /
       // dedicated-transport / fortification), on 548 units. Deliberately NOT
       // folded into `type`: detail.js suppresses the unit subtitle only when

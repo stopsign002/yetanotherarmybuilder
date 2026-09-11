@@ -192,6 +192,20 @@
     const ptsOpts = unit.pointsOptions || (unit.points ? [unit.points] : []);
     const subtitleParts = [];
     if (unit._factionName) subtitleParts.push(`<span class="detail-faction">${esc(unit._factionName)}</span>`);
+    // Chapter badge (dc-adapter.js `chapterBadge`) — only set for units on the
+    // SM parent roster ("Imperium - Adeptus Astartes - Space Marines") whose
+    // datasheet is really chapter-locked (Venerable Dreadnought = Space
+    // Wolves, Logan Grimnar, Death Company, …). The KEYWORDS chips already
+    // carry the chapter keyword, but this makes it visible at a glance next
+    // to the faction name instead of buried in the keyword row. Same
+    // `.detail-faction` badge styling (accent-token driven) so every theme is
+    // covered for free. No leading separator glyph in the pill itself — the
+    // long SM faction name wraps this to its own line at most widths, which
+    // would leave a stray "· " floating alone inside the badge;
+    // `detail-chapter-badge` just nudges spacing instead.
+    if (unit.chapterBadge) {
+      subtitleParts.push(`<span class="detail-faction detail-chapter-badge">${esc(unit.chapterBadge)}</span>`);
+    }
     // Allied unit (Daemonic Pact, Imperial Agents, …) — see js/app/allies.js.
     // The tooltip carries the rule's points limits, warlord/enhancement
     // restrictions and GW's authored notes.
