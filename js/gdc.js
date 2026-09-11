@@ -294,6 +294,19 @@
     'blacktemplar', 'bloodangels', 'darkangels', 'deathwatch', 'spacewolves',
   ]);
 
+  // Each chapter file's own ALL-CAPS keyword, as GW's prose names it (e.g.
+  // Fervour of the Ancients: "…friendly **SPACE WOLVES** unit…"). Used ONLY by
+  // buildAbilityIndex11's parent-sweep branch below to tell "this datasheet is
+  // legitimately this chapter's own" from "this datasheet belongs to a
+  // DIFFERENT chapter and must not be handed to the Space Marines parent."
+  const CHAPTER_KEYWORDS = {
+    spacewolves: 'SPACE WOLVES',
+    bloodangels: 'BLOOD ANGELS',
+    darkangels: 'DARK ANGELS',
+    blacktemplar: 'BLACK TEMPLARS',
+    deathwatch: 'DEATHWATCH',
+  };
+
   // Ordered list of GDC files for a faction. First wins on name collisions.
   function gdcFilesFor(factionName) {
     const primary = FACTION_TO_GDC[factionName];
@@ -737,18 +750,115 @@
     })).filter(g => g.group && g.abilities.length);
   }
 
-  function buildAbilityIndex11(files) {
+  // Build one ability entry for a datasheet, capturing exactly the projected
+  // fields buildAbilityIndex11 has always indexed.
+  function project11AbilityEntry(ds) {
+    return { abilities: project11Abilities(ds), primarch: project11PrimarchGroups(ds),
+             damaged: project11Damaged(ds) };
+  }
+
+  // Flatten the text buildAbilityIndex11's parent-sweep branch checks for a
+  // foreign chapter keyword: projected ability names + descriptions, plus the
+  // datasheet's own keyword list ({en,...} objects). Upper-cased defensively —
+  // in practice GW already ships the keyword in caps ("**SPACE WOLVES**").
+  function chapterKeywordSweepText(ds) {
+    const abilBits = project11Abilities(ds).map(a => a.name + ' ' + a.description);
+    const kwList = Array.isArray(ds && ds.keywords) ? ds.keywords : [];
+    const kwBits = kwList.map(kw => pickText(kw));
+    return abilBits.concat(kwBits).join(' \n ').toUpperCase();
+  }
+
+  function buildAbilityIndex11(files, opts) {
     const idx = new Map();
+    const parentPrimaryFile = opts && opts.parentPrimaryFile;
+
+    if (!parentPrimaryFile) {
+      // Unchanged for every non-parent caller (a lone faction file, or a
+      // chapter's own [chapter, space_marines] pair): first file wins.
+      files.forEach(fn => {
+        const p = rawCache.get(EDITION + '/' + fn);
+        if (!p) return;
+        (Array.isArray(p.datasheets) ? p.datasheets : []).forEach(ds => {
+          const k = nameKey(pickText(ds && ds.name));   // 11th name is a { en } object
+          if (!k || idx.has(k)) return;
+          idx.set(k, project11AbilityEntry(ds));
+        });
+      });
+      return idx;
+    }
+
+    // Space Marines PARENT sweep. datasheetFilesFor() hands us
+    // [space_marines, blacktemplar, bloodangels, darkangels, deathwatch,
+    // spacewolves] so a plain first-wins index would let whichever chapter
+    // file happens to come first supply any name space_marines.json lacks.
+    // Mirror the rule ~/sites/base/dump-audit.py already uses (~646-682):
+    // the parent's own file wins outright, and a chapter file supplies a
+    // gap-filling name only when EXACTLY ONE chapter file carries it AND it
+    // names no OTHER chapter — two-or-more-siblings or a foreign-chapter
+    // mention is AMBIGUOUS, skip and report, don't guess.
+    //
+    // A datasheet naming its OWN chapter is deliberately let through: 40kdc
+    // gives its chapters zero units of their own, so chapter-unique units
+    // (Emperor's Champion, Death Company, Grey Hunters, Logan Grimnar…) live
+    // under this parent and their real GDC text legitimately names their own
+    // chapter (Death Company's "Black Rage" says "BLOOD ANGELS"). Rejecting
+    // on ANY chapter mention, own included, would regress 13 of those units.
+    //
+    // On the current snapshot this guards against a FUTURE genuine sibling
+    // collision and skips nothing today (Venerable Dreadnought's only chapter
+    // keyword, SPACE WOLVES, is its own file's — not foreign — so it is still
+    // indexed). It is NOT what fixes the Venerable Dreadnought ability/weapon
+    // leak reported in HANDOFF-faction-bleed.md: that text (Fervour of the
+    // Ancients, Helfrost cannon, Fenrisian great axe) rides in via upstream
+    // 40kdc's own adeptus-astartes unit (`ability_ids`/`weapon_ids`), not
+    // through this GDC merge — see items A/C for that path.
+    const ambiguousNames = [];
+
+    // 1) The parent's own file wins outright for every name it carries.
+    const primaryDoc = rawCache.get(EDITION + '/' + parentPrimaryFile);
+    (Array.isArray(primaryDoc && primaryDoc.datasheets) ? primaryDoc.datasheets : []).forEach(ds => {
+      const k = nameKey(pickText(ds && ds.name));
+      if (!k || idx.has(k)) return;
+      idx.set(k, project11AbilityEntry(ds));
+    });
+
+    // 2) Collect chapter-file candidates for names the primary file lacks.
+    const candidates = new Map(); // nameKey -> [{ file, ds }]
     files.forEach(fn => {
+      if (fn === parentPrimaryFile) return;
+      const keyword = CHAPTER_KEYWORDS[fn];
+      if (!keyword) return; // not a recognised SM chapter file — ignore
       const p = rawCache.get(EDITION + '/' + fn);
       if (!p) return;
       (Array.isArray(p.datasheets) ? p.datasheets : []).forEach(ds => {
-        const k = nameKey(pickText(ds && ds.name));   // 11th name is a { en } object
+        const k = nameKey(pickText(ds && ds.name));
         if (!k || idx.has(k)) return;
-        idx.set(k, { abilities: project11Abilities(ds), primarch: project11PrimarchGroups(ds),
-                     damaged: project11Damaged(ds) });
+        if (!candidates.has(k)) candidates.set(k, []);
+        candidates.get(k).push({ file: fn, ds });
       });
     });
+
+    // 3) Resolve each candidate: exactly one sibling file, and no OTHER
+    // chapter's keyword in its ability text/keywords, is required to index it.
+    candidates.forEach((list, k) => {
+      if (list.length !== 1) {
+        ambiguousNames.push(pickText(list[0].ds && list[0].ds.name) || k);
+        return;
+      }
+      const { file, ds } = list[0];
+      const text = chapterKeywordSweepText(ds);
+      const namesForeignChapter = Object.keys(CHAPTER_KEYWORDS).some(otherFile =>
+        otherFile !== file && text.includes(CHAPTER_KEYWORDS[otherFile]));
+      if (namesForeignChapter) {
+        ambiguousNames.push(pickText(ds && ds.name) || k);
+        return;
+      }
+      idx.set(k, project11AbilityEntry(ds));
+    });
+
+    if (ambiguousNames.length) {
+      console.info('[gdc] ambiguous chapter datasheets: ' + ambiguousNames.join(', '));
+    }
     return idx;
   }
 
@@ -756,7 +866,10 @@
     factions.forEach(faction => {
       const files = datasheetFilesFor(faction.factionName);
       if (files.length === 0) return;
-      const idx = buildAbilityIndex11(files);
+      const isSmParent = faction.factionName === 'Imperium - Adeptus Astartes - Space Marines';
+      const idx = buildAbilityIndex11(files, isSmParent
+        ? { parentPrimaryFile: gdcFilesFor(faction.factionName)[0] }
+        : null);
       if (idx.size === 0) return;
       (faction.units || []).forEach(unit => {
         const entry = idx.get(dsKey(unit && unit.name));

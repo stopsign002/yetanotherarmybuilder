@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.09-3',
-    lastUpdated: '2026-09-09T21:30:00Z',
+    version:     '2026.09.11-1',
+    lastUpdated: '2026-09-11T00:00:00Z',
     entries: [
+      {
+        date: '2026-09-11', kind: 'fix',
+        title: 'Grey Knights Venerable Dreadnought — wrong-chapter abilities',
+        description:
+          'The Grey Knights Venerable Dreadnought was showing two Space Wolves '
+          + 'abilities, Blizzard Shield and Fervour of the Ancients, that belong '
+          + 'to a different chapter\'s datasheet. It now shows only its own '
+          + 'abilities. More generally, datasheets shared by several factions now '
+          + 'resolve their abilities and weapons against the faction you are '
+          + 'actually viewing, rather than possibly picking up another faction\'s '
+          + 'version.',
+      },
       {
         date: '2026-09-09', kind: 'fix',
         title: 'Neo-Brutalist theme — data card designer and icons',

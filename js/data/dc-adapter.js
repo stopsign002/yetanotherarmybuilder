@@ -85,6 +85,42 @@
   // resolve an AbilityView/raw ability's name
   const abilityName = (a) => a && (a.name || (a.raw && a.raw.name)) || '';
 
+  // Faction-scoped lookup for the DC.<collection> stores (abilities/weapons/
+  // wargear). 40kdc's collection stores know some ids exist under MULTIPLE
+  // factions with divergent fields (a shared datasheet's ability_id, a
+  // globally-reused weapon id, …) and record them in `store.ambiguousIds`.
+  // The store's own `get(id)` THROWS on those ids outside production;
+  // `getInFaction(id, factionId)` is the correct, faction-scoped read;
+  // `getAny(id)` is the documented opt-out — it returns whichever copy
+  // registered FIRST, which may be the WRONG faction's divergent text. This
+  // helper always tries the faction-scoped read first (when the store
+  // supports it and a factionId is known) and falls back to getAny/get only
+  // when that lookup is unavailable or comes back empty — never throws, so
+  // every existing call site's own try/catch stays a harmless belt-and-braces.
+  const warnedAmbiguousIds = new Set();
+  function lookupIn(store, id, factionId) {
+    if (!store) return null;
+    let v;
+    if (factionId && store.getInFaction) {
+      try { v = store.getInFaction(id, factionId); } catch (_) { v = undefined; }
+    }
+    if (v !== undefined && v !== null) return v;
+    try {
+      v = store.getAny ? store.getAny(id) : store.get(id);
+    } catch (_) { v = undefined; }
+    // Tripwire: the fallback resolved an id we KNOW is ambiguous — i.e. we
+    // couldn't confirm it belongs to `factionId`, so this may be showing the
+    // wrong faction's copy. Warn once per id rather than once per render.
+    if (v !== undefined && v !== null && store.ambiguousIds
+        && store.ambiguousIds.has(id) && !warnedAmbiguousIds.has(id)) {
+      warnedAmbiguousIds.add(id);
+      console.warn('[DC] ambiguous id "' + id + '" resolved via getAny/get with no '
+        + 'confirmed match in faction "' + factionId + '" — the returned copy may '
+        + 'belong to a different faction.');
+    }
+    return v;
+  }
+
   // The set of ARMY-RULE ability ids — every faction's faction_rule_id(s). 40kdc
   // links the army rule (Oath of Moment, Reanimation Protocols, Waaagh!, For the
   // Greater Good, Mission Tactics, Voice of Command, …) onto individual
@@ -281,12 +317,39 @@
 
   // Per-faction datasheet ability corrections for upstream data errors that
   // can't be fixed by the generic scans (e.g. sibling-legion abilities leaking
-  // onto a shared datasheet). Keyed `${faction_id}::${unit_id}` →
-  // { remove: [ability ids], add: [ids] }. Self-healing: removes only strip
-  // ids actually present; adds dedupe by name.
+  // onto a shared datasheet). Keyed `${faction_id}::${unit_id}` → an object
+  // with either or both of:
+  //   remove: [abilityId, …]   — strip these ability ids from the unit's
+  //                              rendered abilities if present (no-op if not,
+  //                              so the entry self-heals once upstream drops
+  //                              the id).
+  //   add:    [abilityId, …]   — inject these ability ids (name + prose
+  //                              resolved via the same faction-scoped
+  //                              lookupIn() used elsewhere in this file),
+  //                              deduped by name against what's already there.
   // (The CSM/DG/TS Defiler union-leak entries retired 2026-07-09 — fixed
   // upstream in 40kdc-data PR #76.)
-  const UNIT_ABILITY_FIXES = {};
+  const UNIT_ABILITY_FIXES = {
+    // Grey Knights' Venerable Dreadnought carried two SPACE WOLVES abilities
+    // (Blizzard Shield, Fervour of the Ancients) directly in upstream 40kdc's
+    // own grey-knights/units.json ability_ids through 40kdc-data 1.4.2
+    // (8ff79a59); release 1.4.3 (02ae2248, deployed 2026-09-11) dropped them,
+    // so today this entry is the self-healed no-op it was designed to become.
+    // It stays as a guard against the ids coming back. This was NOT the
+    // getAny/getInFaction faction-bleed bug lookupIn() above fixes:
+    // these ids are filed onto the Grey Knights unit's OWN ability_ids
+    // upstream, so no faction-scoped lookup changes which copy gets picked —
+    // the ids themselves are wrong for this datasheet. Keyed by faction so
+    // only the Grey Knights copy is touched; the adeptus-astartes (Space
+    // Marines) parent copy of Venerable Dreadnought is a SEPARATE open
+    // question (it's really the Space Wolves loadout riding the shared-roster
+    // parent — whether to hide/relabel it is reserved for the planner) and
+    // must NOT be touched here. Self-heals to a no-op the moment upstream
+    // drops these ids from the Grey Knights datasheet's ability_ids.
+    'grey-knights::venerable-dreadnought': {
+      remove: ['blizzard-shield', 'fervour-of-the-ancients-aura'],
+    },
+  };
 
   // Expect-gated STATLINE corrections. `expect` pins the upstream (wrong)
   // values on the FIRST profile; the fix applies only while upstream still
@@ -1166,7 +1229,7 @@
       const have = new Set(abilities.map((x) => x.name.toLowerCase()));
       abilityFix.add.forEach((aid) => {
         let av = null;
-        try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
+        try { av = lookupIn(DC.abilities, aid, u.faction_id); } catch (_) {}
         const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
         if (have.has(name.toLowerCase())) return;   // self-heal no-op
         have.add(name.toLowerCase());
@@ -1180,7 +1243,7 @@
       const have = new Set(abilities.map((a) => abilityNameKey(a.name)));
       patchIds.forEach((aid) => {
         let av = null;
-        try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
+        try { av = lookupIn(DC.abilities, aid, u.faction_id); } catch (_) {}
         const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
         if (have.has(abilityNameKey(name))) return;   // already present → no-op (self-heals post-upstream-fix)
         have.add(abilityNameKey(name));
@@ -1201,7 +1264,7 @@
         } else {
           const aid = patch;
           let av = null;
-          try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
+          try { av = lookupIn(DC.abilities, aid, u.faction_id); } catch (_) {}
           name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
           description = textFor(aid);
         }
@@ -1220,7 +1283,7 @@
       applyOverlayUpdateNamed(abilityFixOv, abilities);
       (abilityFixOv.addCore || []).forEach((aid) => {
         let av = null;
-        try { av = DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid); } catch (_) {}
+        try { av = lookupIn(DC.abilities, aid, u.faction_id); } catch (_) {}
         const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
         if (have.has(abilityNameKey(name))) return;   // self-heal no-op
         have.add(abilityNameKey(name));
@@ -1371,11 +1434,7 @@
       const views = [];
       ids.forEach((id) => {
         let w = null;
-        try {
-          w = (DC.weapons.getInFaction && DC.weapons.getInFaction(id, u.faction_id))
-            || (DC.weapons.getAny && DC.weapons.getAny(id))
-            || (DC.weapons.get && DC.weapons.get(id));
-        } catch (_) { w = null; }
+        try { w = lookupIn(DC.weapons, id, u.faction_id); } catch (_) { w = null; }
         const raw = (w && (w.raw || w)) || null;
         if (raw && Array.isArray(raw.profiles)) views.push({ raw: raw });
       });
@@ -1393,12 +1452,11 @@
       const costOf = (id) => (itemCosts && itemCosts[id]) || 0;
       const itemName = (id) => {
         let it = null;
-        try { it = DC.weapons.getInFaction ? DC.weapons.getInFaction(id, u.faction_id) : null; } catch (_) {}
-        if (!it) { try { it = DC.weapons.getAny ? DC.weapons.getAny(id) : DC.weapons.get(id); } catch (_) {} }
-        if (!it) { try { it = DC.wargear.getAny ? DC.wargear.getAny(id) : DC.wargear.get(id); } catch (_) {} }
+        try { it = lookupIn(DC.weapons, id, u.faction_id); } catch (_) {}
+        if (!it) { try { it = lookupIn(DC.wargear, id, u.faction_id); } catch (_) {} }
         // Ability-modelled wargear (death totem, icons, …) has its display
         // name on the abilities collection rather than the item collections.
-        if (!it) { try { it = DC.abilities.getAny ? DC.abilities.getAny(id) : DC.abilities.get(id); } catch (_) {} }
+        if (!it) { try { it = lookupIn(DC.abilities, id, u.faction_id); } catch (_) {} }
         const nm = it && (it.name || (it.raw && it.raw.name));
         return nm || String(id).replace(/-/g, ' ');
       };
@@ -1566,7 +1624,7 @@
       const desc = textFor(aid);
       if (!desc) return;                          // no prose upstream → skip
       let src = null;
-      try { src = (DC.abilities.getAny ? DC.abilities.getAny(aid) : DC.abilities.get(aid)) || (DC.wargear && DC.wargear.get(aid)); } catch (_) {}
+      try { src = lookupIn(DC.abilities, aid, u.faction_id) || (DC.wargear && DC.wargear.get(aid)); } catch (_) {}
       const rawName = (src && (src.name || (src.raw && src.raw.name))) || String(aid).replace(/-/g, ' ');
       const name = titleCase(rawName);
       const key = name.toLowerCase();
@@ -1962,7 +2020,9 @@
     if (!id) return [];
     let name = '';
     try {
-      const av = DC.abilities.getAny ? DC.abilities.getAny(id) : DC.abilities.get(id);
+      // f.id is the faction this rule belongs to (e.g. 'orks') — genuine
+      // faction context, so this is not a "no faction in scope" getAny site.
+      const av = lookupIn(DC.abilities, id, f && f.id);
       name = (av && (av.name || (av.raw && av.raw.name))) || '';
     } catch (_) { /* ambiguous/missing — fall back to the id */ }
     if (!name) name = titleCase(String(id).replace(/-/g, ' '));
