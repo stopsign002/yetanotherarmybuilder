@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.11-2',
-    lastUpdated: '2026-09-11T00:00:00Z',
+    version:     '2026.09.12-1',
+    lastUpdated: '2026-09-12T05:00:00Z',
     entries: [
+      {
+        date: '2026-09-12',
+        kind: 'fix',
+        title: 'Sync: a device with a fast clock can no longer lock your other devices out of an army',
+        description: 'The server now clamps a save\'s timestamp to its own clock and says outright whether the save landed, instead of leaving the app to guess from an echoed timestamp. A phone or PC running ahead used to write future-dated saves that every correctly-set device then silently lost to.',
+      },
       {
         date: '2026-09-11', kind: 'fix',
         title: 'Space Marines parent roster — chapter-locked datasheets',

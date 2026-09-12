@@ -299,7 +299,9 @@
         name: army.name || '',
         payload,
         updated_at: army.updatedAt || nowIso(),
-        mutation_id: op.mutationId,
+        // mutation_id used to be sent here; the API never read it and has
+        // no dedup, so it was replay protection that did not exist
+        // (yetanotherarmybuilder-api#1). Add it back only with server support.
       };
       const resp = await apiFetch(`${API_ARMIES}/${encodeURIComponent(op.id)}`, {
         method: 'PUT', body,
@@ -307,10 +309,24 @@
       const newTs = (resp && resp.updated_at) || body.updated_at;
       // Server does last-write-wins on updated_at: if our incoming ts was
       // older than the row's, the row is unchanged and the response echoes
-      // the *cloud's* ts (newer than ours). Detect that mismatch and pull
-      // cloud's actual content, otherwise the diff loop will keep re-PUT-ing
-      // our stale local until the heat death of the universe.
-      if (newTs !== body.updated_at) {
+      // the *cloud's* ts (newer than ours). The API says explicitly whether
+      // our write landed (`applied`); older API builds only echoed the ts,
+      // so fall back to comparing it. On a lost write pull the cloud's
+      // actual content, otherwise the diff loop will keep re-PUT-ing our
+      // stale local until the heat death of the universe.
+      const applied = (resp && typeof resp.applied === 'boolean')
+        ? resp.applied
+        : newTs === body.updated_at;
+      if (applied && newTs !== body.updated_at) {
+        // Our write won, but the server clamped our timestamp to its own
+        // clock — this device's clock is ahead. Pin the army's updatedAt to
+        // the row's ts so pullAll's local > cloud comparison doesn't re-push
+        // (and get re-clamped) forever. Not a conflict, so no toast.
+        army.updatedAt = newTs;
+        const mgr = App.state && App.state.armyManager;
+        if (mgr && typeof mgr.save === 'function') mgr.save();
+      }
+      if (!applied) {
         try {
           const full = await apiFetch(`${API_ARMIES}/${encodeURIComponent(op.id)}`);
           const newArmy = full && full.payload ? decodeArmy(full.payload) : null;
