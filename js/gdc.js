@@ -254,35 +254,55 @@
   }
 
   // ── fetching ────────────────────────────────────────────────────────────────
+  // Cached GDC payloads are revalidated against the server on every load
+  // instead of being served unconditionally forever (stopsign002/
+  // yetanotherarmybuilder#58: the `?v=` deploy stamp does NOT move on a
+  // GDC-only snapshot refresh — refresh-40kdc.sh commits `data/gdc` on its own
+  // without re-stamping when the bundle md5 is unchanged, which is the common
+  // case since the snapshot moves on GW's schedule, not 40kdc's — so a stamp
+  // comparison alone would miss exactly the staleness this bug is about).
+  // Instead we store the response's ETag / Last-Modified alongside the cached
+  // payload and send it back as a conditional GET: a 304 costs one small
+  // round-trip with no body (the "one cheap check" the fix must stay within),
+  // and a real change comes back 200 with fresh bytes.
   async function fetchOne(edition, filename) {
     const cacheKey = edition + '/' + filename;
     const url = RAW_ROOT + edition + '/gdc/' + filename + '.json';
+    let cached = null;
     if (window.YaabDB && window.YaabDB.getGdc) {
-      try {
-        const cached = await window.YaabDB.getGdc(cacheKey);
-        if (cached) return cached;
-      } catch (e) { /* fall through to network */ }
+      try { cached = await window.YaabDB.getGdc(cacheKey); } catch (e) { cached = null; }
     }
+    const condHeaders = {};
+    if (cached && cached.etag) condHeaders['If-None-Match'] = cached.etag;
+    else if (cached && cached.lastModified) condHeaders['If-Modified-Since'] = cached.lastModified;
+
     let resp;
     try {
-      resp = await fetch(url, { cache: 'no-cache' });
+      // no-store: this is our own conditional revalidation, so the browser's
+      // HTTP cache must not short-circuit the round-trip.
+      resp = await fetch(url, { cache: 'no-store', headers: condHeaders });
     } catch (e) {
       console.warn('[GDC] fetch failed for', cacheKey, e);
-      return null;
+      return cached ? cached.payload : null;
+    }
+    if (resp.status === 304 && cached) {
+      return cached.payload;
     }
     if (!resp.ok) {
       console.warn('[GDC] HTTP', resp.status, 'for', cacheKey);
-      return null;
+      return cached ? cached.payload : null;
     }
     let payload;
     try {
       payload = await resp.json();
     } catch (e) {
       console.warn('[GDC] JSON parse failed for', cacheKey, e);
-      return null;
+      return cached ? cached.payload : null;
     }
     if (window.YaabDB && window.YaabDB.putGdc) {
-      try { await window.YaabDB.putGdc(cacheKey, payload); } catch (e) { /* noop */ }
+      const etag = resp.headers.get('ETag') || null;
+      const lastModified = resp.headers.get('Last-Modified') || null;
+      try { await window.YaabDB.putGdc(cacheKey, payload, { etag, lastModified }); } catch (e) { /* noop */ }
     }
     return payload;
   }

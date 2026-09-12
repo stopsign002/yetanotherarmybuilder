@@ -304,20 +304,30 @@ window.YaabDB = (() => {
   }
 
   // ── GDC (game-datacards-eu) cached JSON payloads ────────────────────────
+  // Records carry `etag` / `lastModified` off the HTTP response that produced
+  // `payload` (see js/gdc.js fetchOne) so a warm cache can be revalidated with
+  // a conditional GET instead of being served unconditionally forever — see
+  // stopsign002/yetanotherarmybuilder#58. Older records written before this
+  // fix have neither field; that just means the first read after upgrading
+  // does an unconditional fetch (self-heals in one load), no DB_VERSION bump
+  // needed.
 
   async function getGdc(name) {
     const db = await _open();
     if (!db) return null;
     try {
       const rec = await _wrap(_tx(db, STORE_GDC, 'readonly').get(name));
-      return rec && rec.payload ? rec.payload : null;
+      if (!rec || !rec.payload) return null;
+      return { payload: rec.payload, etag: rec.etag || null, lastModified: rec.lastModified || null };
     } catch (_) { return null; }
   }
 
-  async function putGdc(name, payload) {
+  async function putGdc(name, payload, version) {
     const db = await _open();
     if (!db || !name || !payload) return;
-    try { await _wrap(_tx(db, STORE_GDC, 'readwrite').put({ name, payload })); } catch (_) {}
+    const etag = (version && version.etag) || null;
+    const lastModified = (version && version.lastModified) || null;
+    try { await _wrap(_tx(db, STORE_GDC, 'readwrite').put({ name, payload, etag, lastModified })); } catch (_) {}
   }
 
   async function clearGdc() {

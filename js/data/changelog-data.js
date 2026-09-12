@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.12-1',
-    lastUpdated: '2026-09-12T05:00:00Z',
+    version:     '2026.09.12-2',
+    lastUpdated: '2026-09-12T12:00:00Z',
     entries: [
+      {
+        date: '2026-09-12',
+        kind: 'fix',
+        title: 'Faction rules text now checks for updates instead of caching forever',
+        description: 'Stratagem, enhancement and detachment-rule text is fetched once and kept offline so the app boots fast — but a device that had loaded a faction before a rules correction shipped could go on showing the old wording indefinitely. The app now revalidates that cached text against the server on each load (a cheap check, not a re-download) so a correction reaches you on the next ordinary reload.',
+      },
       {
         date: '2026-09-12',
         kind: 'fix',
