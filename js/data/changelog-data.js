@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.14-1',
-    lastUpdated: '2026-09-14T13:00:00Z',
+    version:     '2026.09.14-2',
+    lastUpdated: '2026-09-14T14:00:00Z',
     entries: [
+      {
+        date: '2026-09-14',
+        kind: 'fix',
+        title: 'Install button no longer floats over the desktop layout',
+        description: 'The floating Install button only appears in the phone/tablet layout now (and on iPad). On desktop, install from Settings → Install app.',
+      },
       {
         date: '2026-09-14',
         kind: 'fix',

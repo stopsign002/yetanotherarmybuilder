@@ -813,11 +813,14 @@
    The install button and the iOS-only instruction sheet are built
    entirely in js/app/pwa-install.js (index.html is off-limits) and both
    start `hidden`, so a non-iOS / non-installable load never paints this
-   block — it's safe to leave un-gated by the file's usual ≤820px cutoff
-   rather than risk hiding it from an iPad in landscape (>820px wide,
-   still `isIOS()`). The button reuses .btn/.btn-accent and the sheet
-   reuses .modal/.modal-header/.modal-body/.modal-footer/.btn-outline —
-   all four theme-derived already, nothing new to re-theme here. */
+   block. The FAB's visibility (desktop vs. phone/tablet) is now gated in
+   JS — mobileLayout() in pwa-install.js, the same ≤820px cutoff this file
+   uses elsewhere — with an iOS exemption, since an iPad in landscape is
+   >820px wide and never fires beforeinstallprompt. This CSS block stays
+   un-gated by the file's usual ≤820px cutoff for that same iPad reason.
+   The button reuses .btn/.btn-accent and the sheet reuses
+   .modal/.modal-header/.modal-body/.modal-footer/.btn-outline — all four
+   theme-derived already, nothing new to re-theme here. */
 .yaab-install-fab {
   position: fixed;
   right: 12px;

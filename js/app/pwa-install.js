@@ -41,6 +41,18 @@
     } catch (_) { return false; }
   }
 
+  // The FAB was showing on every desktop Chrome/Edge load (deferredPrompt
+  // fires there too) and the owner asked for it gone on desktop
+  // (2026-09-14). Gated on the same ≤820px cutoff mobile.css uses for its
+  // other mobile-only chrome. iOS stays exempt below — an iPad in
+  // landscape is wider than 820px and never fires beforeinstallprompt, so
+  // it needs the FAB regardless. Desktop still gets the Settings drawer's
+  // "Install app" row (App.pwaInstallAvailable, unchanged).
+  function mobileLayout() {
+    try { return window.matchMedia && window.matchMedia('(max-width: 820px)').matches; }
+    catch (_) { return false; }
+  }
+
   // Inline SVGs (24x24, currentColor, stroke-based) — same house style as the
   // tab-bar ICONS below. No emoji: iOS renders the Share glyph in its own
   // colour, which fights every theme here.
@@ -182,7 +194,8 @@
     ensureInstallUi();
     const btn = document.getElementById(BTN_ID);
     if (!btn) return;
-    const show = (!!deferredPrompt || isIOS()) && !isStandalone() && !isDismissed();
+    const show = !isStandalone() && !isDismissed()
+        && (isIOS() || (!!deferredPrompt && mobileLayout()));
     btn.hidden = !show;
     btn.style.display = show ? '' : 'none';
   }
@@ -221,6 +234,11 @@
   if (window.matchMedia) {
     try {
       window.matchMedia('(display-mode: standalone)').addEventListener('change', updateInstallBtn);
+    } catch (_) { /* older Safari */ }
+    try {
+      // Resizing (or rotating) across the 820px cutoff should update the
+      // FAB immediately, not just on next load.
+      window.matchMedia('(max-width: 820px)').addEventListener('change', updateInstallBtn);
     } catch (_) { /* older Safari */ }
   }
 
