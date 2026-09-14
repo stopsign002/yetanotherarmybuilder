@@ -88,3 +88,71 @@ gh api repos/wn-mitch/40kdc-abilities/contents/index.json \
   -H "Accept: application/vnd.github.raw" > build/abilities-index.json
 # then rebuild
 ```
+
+## Faction-scoped ability text (contract, 2026-09-14)
+
+**The bug.** `wn-mitch/40kdc-abilities` publishes a flat `index.json`
+(`ability_id → { faction, raw_text }`) and a full `<faction>.json` per faction.
+Ability ids are bare slugs, and **203 ids exist under more than one faction**.
+Where the text differs the flat index keeps whichever faction wrote last:
+`spiritual-leader` is the Space Marine Chaplain's ability AND the Genestealer
+Cults Magus's, and the index held the GSC text, so the Chaplain's card read
+"select one friendly GENESTEALER CULTS unit…". The per-faction files are correct.
+
+**The fix.** `abilities-index.json` is now built by `refresh-40kdc.sh` from the
+per-faction files, not fetched, and the adapter looks text up faction-first.
+
+### Index shape (`build/abilities-index.json`, embedded in the bundle as `DC.abilityText`)
+
+```
+{
+  "<ability_id>":               { faction, raw_text?, when?, target?, effect?, restrictions? },   // flat, as before
+  "<faction_id>/<ability_id>":  { faction, raw_text?, when?, target?, effect?, restrictions? }    // scoped, ONLY for ids present in >1 faction
+}
+```
+
+- Source of truth: every `<faction>.json` in the store's repo root (42 files;
+  `README.md` and `index.json` are not factions). Each is a JSON array of
+  records with `ability_id`, `faction_id`, and any of `raw_text`, `when`,
+  `target`, `effect`, `restrictions`. Copy exactly those text fields (only the
+  ones present) plus `faction` = `faction_id`. Nothing else — the flat entries
+  must keep the shape the adapter already reads.
+- **Flat winner for a shared id:** the `core` faction's record if there is
+  one, else the alphabetically-first `faction_id`. Deterministic, so the index
+  only changes when upstream does (md5 change-detection stays meaningful).
+- **Scoped entries** are emitted for every faction's record of every id that
+  appears in more than one faction — including the winner's — and for nothing
+  else. Expected: ~203 ids, a few hundred scoped keys, well under 100 KB extra.
+- A faction file that fails to download or parse **fails the run** (`fail`),
+  same as the old single fetch did. No partial index.
+- Store the fetched faction files under `$WORK/abilities/` for the run only.
+
+### Adapter lookup (`js/data/dc-adapter.js`)
+
+`textFor(id, factionId)` and `stratTextFor(id, factionId)` take an optional
+faction and try, in order:
+
+1. `DC.abilityText[factionId + '/' + id]`
+2. if `factionId` is a chapter (`App.CHAPTER_PARENTS[factionId]` is set, or the
+   faction is one of the SM chapter ids in the adapter's own faction-name map),
+   `DC.abilityText['adeptus-astartes/' + id]`
+3. `DC.abilityText[id]` — the flat entry, exactly today's behaviour
+
+Every call site that has a unit/enhancement/stratagem/detachment with a
+`faction_id` in scope passes it. Call sites with no faction in scope (weapon
+keyword text, hand-injected core abilities by bare id) pass nothing and get the
+flat entry. No call site changes its output unless the scoped key exists.
+
+### Done means
+
+- `python3`/`node` check in the scratch dir: the built index has
+  `adeptus-astartes/spiritual-leader` containing "ADEPTUS ASTARTES",
+  `genestealer-cults/spiritual-leader` containing "GENESTEALER CULTS", flat
+  `spiritual-leader` = the alphabetically-first faction (adeptus-astartes),
+  flat `deep-strike`.faction = `core`, and every flat key from the old
+  `index.json` is still present.
+- Live site after the refresh deploys: Space Marines → Chaplain card shows the
+  ADEPTUS ASTARTES text; GSC → Magus still shows the GENESTEALER CULTS text;
+  a non-colliding ability (Chaplain's "Leader"/core text) unchanged.
+- `refresh-40kdc.sh` mirrored to `~/server-cron/scripts/base/` and pushed.
+- Changelog entry in `js/data/changelog-data.js`; assets re-stamped.
