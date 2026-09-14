@@ -66,7 +66,10 @@
   // before the flat id. See build/README.md "Faction-scoped ability text".
   function isChapterFaction(fid) {
     if (!fid) return false;
-    if (window.App && App.CHAPTER_PARENTS && App.CHAPTER_PARENTS[fid]) return true;
+    // Via window.App, not the bare App identifier: the refresh validator runs this
+    // file under Node with a stub window, where only the property form resolves.
+    const A = window.App;
+    if (A && A.CHAPTER_PARENTS && A.CHAPTER_PARENTS[fid]) return true;
     // SM_CHAPTER_IDS is declared further down (same module scope); this is only
     // ever invoked from renderer calls after the whole IIFE has finished
     // running once, by which point it's initialized.
