@@ -122,7 +122,18 @@ per-faction files, not fetched, and the adapter looks text up faction-first.
   only changes when upstream does (md5 change-detection stays meaningful).
 - **Scoped entries** are emitted for every faction's record of every id that
   appears in more than one faction — including the winner's — and for nothing
-  else. Expected: ~203 ids, a few hundred scoped keys, well under 100 KB extra.
+  else. Expected: ~240 ids, a few hundred scoped keys, well under 200 KB extra.
+- **EXCEPT ids present in `core.json`** (17 of them: deep-strike, the
+  deadly-demise-* and feel-no-pain-* family, stealth, scouts-6, infiltrators,
+  lone-operative, fights-first, hover, firing-deck-*, super-heavy-walker):
+  those get NO scoped entries at all. The core text IS the rule; the faction
+  copies are restatements at best and stubs at worst — death-guard's
+  `deep-strike` is literally the string `CORE: Deep Strike`. Faction-first
+  lookup on those would be a regression, so the flat (core) entry stays the
+  only one.
+- Chapter files (`black-templars.json` …) carry `**bold**`-marked copies of the
+  Space Marine stratagems. That is fine: `ui/helpers.js` renders `**` as
+  `<strong>`. Do not strip it.
 - A faction file that fails to download or parse **fails the run** (`fail`),
   same as the old single fetch did. No partial index.
 - Store the fetched faction files under `$WORK/abilities/` for the run only.
