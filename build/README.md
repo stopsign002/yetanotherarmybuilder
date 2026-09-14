@@ -131,9 +131,19 @@ per-faction files, not fetched, and the adapter looks text up faction-first.
   `deep-strike` is literally the string `CORE: Deep Strike`. Faction-first
   lookup on those would be a regression, so the flat (core) entry stays the
   only one.
-- Chapter files (`black-templars.json` …) carry `**bold**`-marked copies of the
-  Space Marine stratagems. That is fine: `ui/helpers.js` renders `**` as
-  `<strong>`. Do not strip it.
+- **Two dedupes, measured 2026-09-14** (1820 scoped keys / +680 KB without
+  them; 126 keys / +36 KB with them):
+  - a scoped entry whose text fields are identical to the flat winner's is
+    NOT emitted — the lookup falls through to the flat entry and gets the same
+    text, so the copy is dead weight;
+  - the 12 SM chapter factions (`black-templars`, `blood-angels`, `dark-angels`,
+    `deathwatch`, `imperial-fists`, `iron-hands`, `raven-guard`, `salamanders`,
+    `space-wolves`, `ultramarines`, `white-scars`, `crimson-fists`) get NO
+    scoped entries. Their files are `**bold**`-marked copies of the Space
+    Marine stratagems; the adapter's chapter step resolves them through
+    `adeptus-astartes/<id>` (or the flat entry), which is what the live site
+    served them before this change. `ui/helpers.js` renders `**` fine, so
+    this is purely a size decision.
 - A faction file that fails to download or parse **fails the run** (`fail`),
   same as the old single fetch did. No partial index.
 - Store the fetched faction files under `$WORK/abilities/` for the run only.
