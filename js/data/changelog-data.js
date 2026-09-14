@@ -38,6 +38,12 @@
       {
         date: '2026-09-12',
         kind: 'fix',
+        title: 'Neo-Brutalist theme: readable inputs and rows across the whole app',
+        description: 'A batch of surface colours (panel backgrounds, input fields, hover states, subtle borders and corner radii) were never actually wired up to the app\'s design tokens, so about 50 rules were quietly using hardcoded dark colours no matter which theme was active. Under the default look this was invisible; under Neo-Brutalist it showed up as unreadable dark-on-dark boxes in a few corners of the app. Those tokens now have real definitions, so every theme paints them correctly.',
+      },
+      {
+        date: '2026-09-12',
+        kind: 'fix',
         title: 'Faction rules text now checks for updates instead of caching forever',
         description: 'Stratagem, enhancement and detachment-rule text is fetched once and kept offline so the app boots fast — but a device that had loaded a faction before a rules correction shipped could go on showing the old wording indefinitely. The app now revalidates that cached text against the server on each load (a cheap check, not a re-download) so a correction reaches you on the next ordinary reload.',
       },

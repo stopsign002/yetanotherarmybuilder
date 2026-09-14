@@ -1269,49 +1269,42 @@ body.build-mode-enhanced .army-entry-name,
 /* ============================================================
    GHOST TOKENS
    ------------------------------------------------------------
-   35 CSS variables are referenced across css/ and defined
-   NOWHERE — `var(--panel-bg-2, #1a1a1a)`, `var(--input-bg,
-   #1a1a1a)`, `var(--surface, …)` and friends. Every one of those
-   silently takes its hardcoded near-black fallback.
+   NOT redundant now that css/style.css defines these (#65 fixed
+   the underlying bug there) — this is the same base+override
+   pattern already used above for --accent/--text/--border/etc.
+   style.css's new definitions alias straight to this theme's own
+   dark-default tokens (--panel-bg, --bg, --card-hover, …), which
+   this theme never touches directly; without an override here
+   these would fall back to THOSE dark values instead of this
+   theme's cream/white paper, which is the exact "black box on a
+   white page" bug #65 was filed over. So the override stays.
 
-   In the default theme that is invisible: the fallbacks were
-   picked to match the dark palette, so the app looks right by
-   accident. Under any other theme it is ~50 rules painting black
-   boxes on a white page, and it is why the damage calculator's
-   inputs, the community search, the activity rows, the army-diff
-   panels and the tournament fields all came out unreadable.
-
-   Defining them here fixes that whole class at once. Filed
-   against the app as a real bug — the right long-term fix is for
-   css/style.css to define them, not for each theme to patch
-   around it. (--dcc-*, --dx and --dy are excluded on purpose:
-   those are set inline by cards-mode.js and particle-fx.js and
-   are supposed to be absent until then.)
+   Originally 22 entries (some counted twice under near-duplicate
+   names like --surface-2 / --surface2), documented in #65 as "35
+   CSS variables referenced and defined nowhere" including uses in
+   army-diff / community-feed / starter-lists / tournament-export /
+   lore, all deleted in ccabb13 ("the invisible 11"). What's left
+   below is only the subset still actually read by a live rule
+   somewhere in css/ — the rest (--muted, --panel-bg-3,
+   --panel-bg-alt, --input-bg, --border-faint, --mono,
+   --lore-accent(+-rgb,-dark), --community-accent, --starter-accent)
+   had zero remaining consumers and were dropped rather than kept
+   as dead weight. (--dcc-*, --dx and --dy are excluded on purpose:
+   those are set inline by cards-mode.js and particle-fx.js and are
+   supposed to be absent until then.)
    ============================================================ */
 :root {
   --panel-bg-2:    var(--nb-ground);
-  --panel-bg-3:    var(--nb-inset);
-  --panel-bg-alt:  var(--nb-ground);
   --surface:       var(--nb-paper);
   --surface-2:     var(--nb-ground);
   --surface2:      var(--nb-ground);
-  --input-bg:      var(--nb-sunken);
   --bg-input:      var(--nb-sunken);
   --bg-alt:        var(--nb-ground);
   --hover-bg:      var(--nb-sunken);
-  --muted:         var(--text-muted);
   --border-subtle: var(--nb-ink);
-  --border-faint:  var(--nb-ink);
   --radius-sm:     0px;
   --radius-md:     0px;
-  --mono:          var(--font-mono);
   --ui-font:       var(--font);
-  /* Per-module accents that all mean "the current faction colour". */
-  --lore-accent:      var(--accent);
-  --lore-accent-dark: var(--nb-ink);
-  --lore-accent-rgb:  var(--accent-rgb);
-  --community-accent: var(--accent);
-  --starter-accent:   var(--accent);
 }
 
 /* ============================================================

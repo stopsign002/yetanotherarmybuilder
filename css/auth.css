@@ -30,7 +30,7 @@
   top: calc(100% + 6px);
   right: 0;
   min-width: 180px;
-  background: var(--surface, #1c1812);
+  background: var(--surface);
   border: 1px solid var(--border, #3a2f20);
   border-radius: 6px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.45);

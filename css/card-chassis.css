@@ -269,7 +269,7 @@
   flex-wrap: wrap;
   gap: 6px;
   margin: 1px 0 4px 0;
-  font-family: var(--ui-font, system-ui, sans-serif);
+  font-family: var(--ui-font);
   font-size: 11px;
   color: var(--text-muted, #888);
   font-weight: 400;

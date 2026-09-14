@@ -34,6 +34,30 @@
   --scale-h3:     15px;
   --scale-body:   15px;
   --scale-small:  12px;
+
+  /* Tokens below were REFERENCED by ~50 rules across css/ but never defined
+     here — every call site silently took its own hardcoded fallback instead
+     (stopsign002/yetanotherarmybuilder#65). Harmless under this theme only
+     because the fallbacks happened to match this palette; under any other
+     theme (e.g. Neo-Brutalist before it patched around this with its own
+     "GHOST TOKENS" block) those same rules painted black boxes on a white
+     page. Mapped to the real token each one clearly meant; a couple with no
+     existing analogue (a translucent surface veil, a smaller radius) get a
+     literal value equal to what every call site's fallback already agreed on.
+     `css/themes/brutalist.css` still overrides the live subset of these with
+     its own nb-* values — same base+override pattern as --accent/--text/
+     --border above, not made redundant by this block existing. */
+  --surface:       var(--panel-bg);
+  --surface-2:     rgba(255, 255, 255, 0.05);
+  --surface2:      var(--surface-2); /* same concept as --surface-2, different name — alias rather than a second value */
+  --panel-bg-2:    var(--bg);
+  --bg-alt:        var(--bg);
+  --bg-input:      rgba(0, 0, 0, 0.25);
+  --hover-bg:      var(--card-hover);
+  --border-subtle: rgba(255, 255, 255, 0.14);
+  --radius-sm:     4px;
+  --radius-md:     var(--radius);
+  --ui-font:       var(--font);
 }
 
 /* ── Reset / Base ─────────────────────────────────────────── */
@@ -1373,7 +1397,7 @@ ul { list-style: none; }
   color: var(--accent);
   margin-bottom: 10px;
   padding: 4px 8px;
-  background: var(--surface2, rgba(255,255,255,0.04));
+  background: var(--surface2);
   border-radius: 4px;
   display: inline-block;
 }
@@ -1381,7 +1405,7 @@ ul { list-style: none; }
   margin-bottom: 12px;
   padding: 8px 10px;
   border-left: 2px solid var(--accent);
-  background: var(--surface2, rgba(255,255,255,0.03));
+  background: var(--surface2);
   border-radius: 0 4px 4px 0;
 }
 .wl-model-header {
@@ -2184,7 +2208,7 @@ ul { list-style: none; }
   bottom: calc(100% + 6px);
   left: 0;
   min-width: 180px;
-  background: var(--surface, #1a1a1a);
+  background: var(--surface);
   border: 1px solid var(--border-light, rgba(255,255,255,0.12));
   border-radius: var(--radius, 4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);

@@ -276,7 +276,7 @@ body[data-mode="build"] #collection-backlog-note {
   color: var(--text-muted, #9a9a9a);
 }
 .collection-dash-filter select {
-  background: var(--bg-alt, #1a1a1a);
+  background: var(--bg-alt);
   color: var(--text, #ddd);
   border: 1px solid var(--border, rgba(255,255,255,0.18));
   border-radius: 4px;
