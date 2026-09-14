@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.12-2',
-    lastUpdated: '2026-09-12T12:00:00Z',
+    version:     '2026.09.14-1',
+    lastUpdated: '2026-09-14T13:00:00Z',
     entries: [
+      {
+        date: '2026-09-14',
+        kind: 'fix',
+        title: 'Abilities shared by name across factions now show the right rules text',
+        description: 'Fixed: abilities whose name is shared across factions (e.g. the Chaplain\'s Spiritual Leader) showed another faction\'s rules text.',
+      },
       {
         date: '2026-09-12',
         kind: 'fix',

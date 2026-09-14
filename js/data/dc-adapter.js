@@ -54,8 +54,38 @@
   };
 
   // ability_id → display text from the separate 40kdc-abilities store.
-  function textFor(id) {
-    const e = id && DC.abilityText[id];
+  //
+  // wn-mitch/40kdc-abilities' ids are bare slugs shared across factions — 258
+  // of them collide with DIFFERENT text per faction (e.g. "spiritual-leader"
+  // is both the Space Marine Chaplain's ability and the Genestealer Cults
+  // Magus's). refresh-40kdc.sh now builds abilities-index.json with scoped
+  // "<faction_id>/<id>" entries for every such collision, so when a faction is
+  // known we look there FIRST and only fall back to the flat (last-writer-wins)
+  // id. A chapter (black-templars, ultramarines, …) has no abilities of its
+  // own in the store, so it falls back through the Adeptus Astartes parent
+  // before the flat id. See build/README.md "Faction-scoped ability text".
+  function isChapterFaction(fid) {
+    if (!fid) return false;
+    if (window.App && App.CHAPTER_PARENTS && App.CHAPTER_PARENTS[fid]) return true;
+    // SM_CHAPTER_IDS is declared further down (same module scope); this is only
+    // ever invoked from renderer calls after the whole IIFE has finished
+    // running once, by which point it's initialized.
+    return SM_CHAPTER_IDS.has(fid);
+  }
+  function abilityEntry(id, factionId) {
+    if (!id) return null;
+    if (factionId) {
+      const scoped = DC.abilityText[factionId + '/' + id];
+      if (scoped) return scoped;
+      if (isChapterFaction(factionId)) {
+        const chapterScoped = DC.abilityText['adeptus-astartes/' + id];
+        if (chapterScoped) return chapterScoped;
+      }
+    }
+    return DC.abilityText[id] || null;
+  }
+  function textFor(id, factionId) {
+    const e = abilityEntry(id, factionId);
     if (!e) return '';
     return e.raw_text || e.effect || '';
   }
@@ -71,8 +101,8 @@
   // splitter. Kept separate from textFor() rather than folded into it: unit
   // abilities and detachment rules read from the same store, and a stray
   // "WHEN:" on a unit card would be a regression.
-  function stratTextFor(id) {
-    const e = id && DC.abilityText[id];
+  function stratTextFor(id, factionId) {
+    const e = abilityEntry(id, factionId);
     if (!e) return '';
     if (e.raw_text) return e.raw_text;
     const parts = [];
@@ -1244,7 +1274,7 @@
         // that; without the tag a single overlay-injected ability made a unit
         // 40kdc links NOTHING for look covered, and its real abilities were
         // silently dropped. Renderers ignore the flag.
-        return { name, description: textFor(a.id), isCore, id: a.id };
+        return { name, description: textFor(a.id, u.faction_id), isCore, id: a.id };
       })
       .filter((a) => a.name);
     // Corrections' adds (e.g. the Defiler's Deadly Demise D6 replacing the
@@ -1257,7 +1287,7 @@
         const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
         if (have.has(name.toLowerCase())) return;   // self-heal no-op
         have.add(name.toLowerCase());
-        abilities.push({ name, description: textFor(aid), isCore: CORE_ABILITY_RE.test(name),
+        abilities.push({ name, description: textFor(aid, u.faction_id), isCore: CORE_ABILITY_RE.test(name),
                          _injected: true });
       });
     }
@@ -1271,7 +1301,7 @@
         const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
         if (have.has(abilityNameKey(name))) return;   // already present → no-op (self-heals post-upstream-fix)
         have.add(abilityNameKey(name));
-        abilities.push({ name, description: textFor(aid), isCore: true });
+        abilities.push({ name, description: textFor(aid, u.faction_id), isCore: true });
       });
     }
     // Inject any hand-patched NON-core unit abilities the dataset omits here.
@@ -1290,7 +1320,7 @@
           let av = null;
           try { av = lookupIn(DC.abilities, aid, u.faction_id); } catch (_) {}
           name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
-          description = textFor(aid);
+          description = textFor(aid, u.faction_id);
         }
         if (!name || have.has(abilityNameKey(name))) return;   // already present → no-op (self-heals post-upstream-fix)
         have.add(abilityNameKey(name));
@@ -1311,7 +1341,7 @@
         const name = (av && (av.name || (av.raw && av.raw.name))) || titleCase(String(aid).replace(/-/g, ' '));
         if (have.has(abilityNameKey(name))) return;   // self-heal no-op
         have.add(abilityNameKey(name));
-        abilities.push({ name, description: textFor(aid), isCore: true, _injected: true });
+        abilities.push({ name, description: textFor(aid, u.faction_id), isCore: true, _injected: true });
       });
       (abilityFixOv.addNamed || []).forEach((p) => {
         const name = p && p.name;
@@ -1377,7 +1407,7 @@
       const seen = new Set();
       const out = [];
       itemIds.forEach((id) => {
-        const desc = textFor(id);
+        const desc = textFor(id, u.faction_id);
         if (!desc) return;                          // ordinary weapon / no wargear ability
         let item = null;
         try { item = (DC.wargear && DC.wargear.get(id)) || (DC.weapons && DC.weapons.get && DC.weapons.get(id)); } catch (_) {}
@@ -1645,7 +1675,7 @@
 
     // Apply hand-patched default-wargear links the dataset omits entirely.
     (MISSING_WARGEAR_ABILITIES[u.id] || []).forEach((aid) => {
-      const desc = textFor(aid);
+      const desc = textFor(aid, u.faction_id);
       if (!desc) return;                          // no prose upstream → skip
       let src = null;
       try { src = lookupIn(DC.abilities, aid, u.faction_id) || (DC.wargear && DC.wargear.get(aid)); } catch (_) {}
@@ -1835,7 +1865,7 @@
   // ── detachment: 40kdc detachment → yaab detachment {name, rules, enhancements}
   function toDetachment(d, enhById, parentDetRule, factionId) {
     const rule = d.detachment_rule_id;
-    const ruleText = rule ? textFor(rule) : '';
+    const ruleText = rule ? textFor(rule, factionId) : '';
     let rules = ruleText ? [{ name: d.name, description: ruleText }] : [];
     // SM chapter borrow: a chapter's copy of a generic codex detachment (Gladius,
     // Anvil Siege, …) has a NULL detachment_rule_id, but the Space Marines parent
@@ -1845,7 +1875,7 @@
     // those (js/gdc.js). Fill-only; leaves non-chapter detachments untouched.
     if (parentDetRule && rules.length === 0) {
       const rid = parentDetRule.get(foldName(d.name));
-      const borrowed = rid ? textFor(rid) : '';
+      const borrowed = rid ? textFor(rid, factionId) : '';
       if (borrowed) rules = [{ name: d.name, description: borrowed }];
     }
     // Hand-authored fallback for detachments 40kdc structured but hasn't written
@@ -1865,7 +1895,7 @@
       if (!e) return null;
       if (e.detachment_id && d.id && e.detachment_id !== d.id) return null;
       return { id, name: e.name, pts: e.cost != null ? e.cost : 0,
-               description: textFor(e.ability_id) || MISSING_ENHANCEMENT_TEXT[id] || '' };
+               description: textFor(e.ability_id, factionId) || MISSING_ENHANCEMENT_TEXT[id] || '' };
     }).filter(Boolean);
     // …and upstream sometimes ships the SAME enhancement twice under a base and
     // an "(Upgrade)" id. Necrons' The Phaeron's Armoury had "Mortality Shroud
@@ -1926,13 +1956,13 @@
 
   // Build this detachment's stratagems from 40kdc (authoritative 11e structure +
   // CP/phase), with text from the 40kdc-abilities store where it's authored.
-  function dcStratsFor(stratagemIds) {
+  function dcStratsFor(stratagemIds, factionId) {
     return (stratagemIds || []).map((id) => {
       const s = DC.stratagems.get(id);
       if (!s) return null;
       // Hand-authored fallback for strats 40kdc structured but hasn't written up
       // yet (fill-only → self-heals once upstream authors the ability_id text).
-      const description = stratTextFor(s.ability_id) || MISSING_STRATAGEM_TEXT[id] || '';
+      const description = stratTextFor(s.ability_id, factionId) || MISSING_STRATAGEM_TEXT[id] || '';
       // 484 of 2246 stratagems fire in MORE THAN ONE phase (340 are
       // shooting+fight, 107 span all five). Keeping only phases[0] hid them
       // from the browser's phase chips. `phase` stays a single string — it's
@@ -1971,7 +2001,7 @@
   // result back to `detachment.gdcStratagems` (the field faction-rules.js renders)
   // and returns coverage counts.
   function reconcileStrats(detachment) {
-    const dcList  = dcStratsFor(detachment.stratagemIds);
+    const dcList  = dcStratsFor(detachment.stratagemIds, detachment._factionId);
     const gdcList = Array.isArray(detachment.gdcStratagems) ? detachment.gdcStratagems : [];
     // GDC-AUTHORITATIVE faction: GW's list IS the list. A codex drop changes
     // WHICH stratagems a detachment has, not just their wording — Dread Mob and
@@ -2056,7 +2086,7 @@
       const override = CHAPTER_ARMY_RULES[f.id];
       if (override && override.mode === 'replace') return override.rules.map((r) => ({ ...r }));
       const oath = { name: 'Oath of Moment',
-        description: textFor('oath-of-moment') || MISSING_ARMY_RULE_TEXT['oath-of-moment'] || '' };
+        description: textFor('oath-of-moment', f.id) || MISSING_ARMY_RULE_TEXT['oath-of-moment'] || '' };
       const rules = [oath];
       if (override && override.mode === 'add') override.rules.forEach((r) => rules.push({ ...r }));
       return rules;
@@ -2075,7 +2105,7 @@
     // when the store has none (self-heals once upstream/GDC authors the prose).
     // GDC's mergeIntoFactions only fills an EMPTY description, so a non-empty
     // seed here is not clobbered by the runtime overlay.
-    let description = textFor(id) || MISSING_ARMY_RULE_TEXT[id] || '';
+    let description = textFor(id, f.id) || MISSING_ARMY_RULE_TEXT[id] || '';
     // Stale-text replacement (see ARMY_RULE_TEXT_OVERRIDES). Expect-gated, so
     // it stops firing the moment the store carries the current edition.
     const ovr = ARMY_RULE_TEXT_OVERRIDES[id];
@@ -2096,7 +2126,7 @@
     const smParentDetRule = new Map();
     (DC.detachments.byFaction ? DC.detachments.byFaction('adeptus-astartes') : []).forEach((dv) => {
       const d = dv.raw || dv;
-      if (d && d.detachment_rule_id && textFor(d.detachment_rule_id)) {
+      if (d && d.detachment_rule_id && textFor(d.detachment_rule_id, 'adeptus-astartes')) {
         smParentDetRule.set(foldName(d.name), d.detachment_rule_id);
       }
     });
@@ -2546,7 +2576,7 @@
       const name = T(a && a.name != null ? a.name : a);
       if (!name || /^leader$/i.test(name)) return;
       const aid = String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-      push({ name, description: weaponKwText(aid) || textFor(aid) || '', isCore: true, id: aid });
+      push({ name, description: weaponKwText(aid) || textFor(aid, fid) || '', isCore: true, id: aid });
     });
     (ab.other || []).forEach((a) => {
       const name = T(a && a.name);
@@ -2900,7 +2930,7 @@
       const name = T(a && a.name != null ? a.name : a);
       if (!name) return;
       const aid = String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-      abilities.push({ name, description: weaponKwText(aid) || textFor(aid) || '', isCore: true, id: aid });
+      abilities.push({ name, description: weaponKwText(aid) || textFor(aid, factionId) || '', isCore: true, id: aid });
     });
     (ab.other || []).forEach((a) => {
       const name = T(a && a.name);
