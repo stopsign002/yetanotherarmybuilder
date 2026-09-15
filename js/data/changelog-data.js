@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.15-1',
-    lastUpdated: '2026-09-15T07:00:00Z',
+    version:     '2026.09.15-2',
+    lastUpdated: '2026-09-15T07:30:00Z',
     entries: [
+      {
+        date: '2026-09-15',
+        kind: 'fix',
+        title: 'Detachment rules are headed with the rule\'s name, not the detachment\'s',
+        description: 'Gladius Task Force now shows "Combat Doctrines", War Horde "Get Stuck In", and so on across every faction, so a rule can be found by its printed name. Detachments GW prints as two named rules (Questoris Companions, Solar Spearhead, Kroot Hunting Pack…) now show both.',
+      },
+      {
+        date: '2026-09-15',
+        kind: 'fix',
+        title: 'Wargear abilities GW prints on the datasheet no longer go missing',
+        description: 'Wargear rules such as the Space Marine Storm Shield or the Solitaire\'s Flip Belt now carry their text from GW\'s own data when the community dataset leaves them blank (41 blank rows → 3).',
+      },
       {
         date: '2026-09-15',
         kind: 'fix',

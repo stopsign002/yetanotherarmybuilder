@@ -1867,9 +1867,32 @@
 
   // ── detachment: 40kdc detachment → yaab detachment {name, rules, enhancements}
   function toDetachment(d, enhById, parentDetRule, factionId) {
-    const rule = d.detachment_rule_id;
-    const ruleText = rule ? textFor(rule, factionId) : '';
-    let rules = ruleText ? [{ name: d.name, description: ruleText }] : [];
+    // 40kdc ships the rule id two ways: the singular `detachment_rule_id` and
+    // the newer `detachment_rule_ids` array. Only the array can express a
+    // detachment GW prints as TWO named rules — Questoris Companions ("Heroes of
+    // Legend" + "Valour's Reward"), Solar Spearhead, Kroot Hunting Pack, Madcap
+    // Meks… — and on 10 of those the singular is NULL, so reading it alone shows
+    // none of the rule (stopsign002/yetanotherarmybuilder#79). Read both, the
+    // singular first so nothing reorders for the ~450 detachments that have one.
+    //
+    // The rule's NAME is in neither field — the bundle has only the id — so each
+    // row is headed with the DETACHMENT's name as a placeholder and js/gdc.js
+    // (applyGdcRuleHeadings) replaces it with GW's own rule name, matching on
+    // `ruleId`. That is why the id is carried through onto the rule object.
+    const ruleIds = [];
+    if (d.detachment_rule_id) ruleIds.push(d.detachment_rule_id);
+    (Array.isArray(d.detachment_rule_ids) ? d.detachment_rule_ids : []).forEach((id) => {
+      if (id && ruleIds.indexOf(id) === -1) ruleIds.push(id);
+    });
+    let rules = ruleIds
+      .map((id) => ({ name: d.name, description: textFor(id, factionId), ruleId: id }))
+      .filter((r) => r.description);
+    // Half a two-part rule is worse than none of it: emitting one row would also
+    // shut the gdc.js fill-only path, which today supplies GW's complete pair.
+    // So when the singular id is absent — i.e. the array is all we have — take
+    // the array only if EVERY id in it resolved to text, otherwise leave the
+    // detachment empty and let the GDC fallback own it.
+    if (!d.detachment_rule_id && rules.length !== ruleIds.length) rules = [];
     // SM chapter borrow: a chapter's copy of a generic codex detachment (Gladius,
     // Anvil Siege, …) has a NULL detachment_rule_id, but the Space Marines parent
     // authored the text. Borrow it by folded name so the chapter shows the same
@@ -2839,11 +2862,17 @@
   // Note this is NOT a case for a bare `itemCosts`-only profile: with no
   // reachable options every cost falls into `alwaysCost`, which would charge
   // EVERY Gunwagon the +10.
-  const ADOPT_UNITS = {
-    // New Ork codex, 2026-09-02. Warbuggies replaces four separate buggy
-    // datasheets 40kdc still carries (now flagged Legends via MFM_DELISTED).
-    'orks': ['Gunwagon', 'Nazdreg', 'Runtherd', 'Warbuggies'],
-  };
+  // EMPTY on purpose, and the map and adoptGdcUnits() below stay: this is the
+  // mechanism for the WINDOW between a codex landing and 40kdc authoring its
+  // datasheets, and that window reopens with every codex. It held
+  // 'orks': ['Gunwagon', 'Nazdreg', 'Runtherd', 'Warbuggies'] from the
+  // 2026-09-02 Ork codex until 40kdc 1.4.2 shipped all four natively — at which
+  // point every entry was a no-op (`have.has(nameKey(wantName))` short-circuits)
+  // and nothing in the app was synthesizing a datasheet any more. Removed so the
+  // adopt path is not mistaken for live behaviour
+  // (stopsign002/yetanotherarmybuilder#80). The matching `unit_adopt` rows in
+  // ~/sites/base/mfm-aliases.json went at the same time; add both together.
+  const ADOPT_UNITS = {};
 
   // GDC prints weapon keywords as display strings ("RAPID FIRE 2",
   // "ANTI-INFANTRY 4+", "LETHAL HITS: non-MONSTER/VEHICLE") where 40kdc

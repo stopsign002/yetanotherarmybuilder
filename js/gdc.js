@@ -353,6 +353,42 @@
     await Promise.all(fetches);
   }
 
+  // Does this 40kdc rule id name that GDC rule? 40kdc slugs the rule name and
+  // usually suffixes the detachment slug — "get-stuck-in-war-horde" for "Get
+  // Stuck In" in War Horde — but ships it bare elsewhere
+  // ("the-blood-of-martyrs"). Accept both. Matching on the id rather than on
+  // array order is what lets a two-rule detachment pair each row with the right
+  // heading, and what makes a one-row-vs-two-rules mismatch resolvable at all.
+  function ruleIdNamesRule(ruleId, ruleName, detName) {
+    const idk = nameKey(ruleId);
+    const nk = nameKey(ruleName);
+    if (!idk || !nk) return false;
+    return idk === nk || idk === nk + nameKey(detName);
+  }
+
+  // Replace the PLACEHOLDER heading on 40kdc-authored detachment rules with
+  // GW's own rule name. Only ever touches `name`, only on a row whose name is
+  // still the detachment's own name, and only when GDC offers a name that is
+  // something other than that (GDC's `built` falls back to the detachment name
+  // when a sub-rule is unnamed — renaming A to A is not worth doing).
+  function applyGdcRuleHeadings(d, cur, built) {
+    const detK = nameKey(d.name);
+    const named = built.filter(r => nameKey(r.name) && nameKey(r.name) !== detK);
+    if (named.length === 0) return;
+    cur.forEach((r, i) => {
+      if (!r || nameKey(r.name) !== detK) return;   // already a real rule name
+      let pick = r.ruleId ? named.find(g => ruleIdNamesRule(r.ruleId, g.name, d.name)) : null;
+      // No id match: pair by position when the two lists are the same length,
+      // and accept a lone GDC rule for a lone row of ours. Anything else
+      // (2 GDC rules against 1 row of unknown provenance) is ambiguous — leave
+      // the placeholder rather than head the text with the wrong rule's name.
+      if (!pick && cur.length === built.length
+          && nameKey(built[i] && built[i].name) !== detK) pick = built[i];
+      if (!pick && cur.length === 1 && named.length === 1) pick = named[0];
+      if (pick && pick.name) r.name = pick.name;
+    });
+  }
+
   // Merge GDC PROSE (11th) into the parsed faction objects:
   //   detachment.gdcStratagems  — per-detachment strat text (by detachment name)
   //   detachment.enhancements[].description — filled where 40kdc left it empty
@@ -476,7 +512,8 @@
       }
 
       // Detachment rule prose — one { name, description } per named sub-rule,
-      // filled only where the detachment has no rule text yet.
+      // filled only where the detachment has no rule text yet; where 40kdc DID
+      // supply the text, its heading is still corrected (applyGdcRuleHeadings).
       detRuleEntries.forEach(entry => {
         const dName = pickText(entry && entry.detachment);
         if (!dName) return;
@@ -497,7 +534,18 @@
             return;
           }
           const cur = Array.isArray(d.rules) ? d.rules : [];
-          if (!cur.some(r => r && r.description)) d.rules = built.map(r => ({ ...r }));
+          if (!cur.some(r => r && r.description)) {
+            d.rules = built.map(r => ({ ...r }));
+            return;
+          }
+          // Heading-only pass (#79). 40kdc supplied the TEXT, so we keep it —
+          // but the bundle carries only the rule's ID, never its name, so
+          // dc-adapter's toDetachment heads every row with the DETACHMENT's
+          // name as a placeholder: "War Horde" where GW prints "Get Stuck In".
+          // The text was right and the heading was wrong on 374 of 461
+          // detachments, and a player searching a rule by name found nothing.
+          // Take GDC's heading, never its description, and never `source`.
+          applyGdcRuleHeadings(d, cur, built);
         });
       });
 
@@ -723,6 +771,23 @@
       .filter(a => a.name);
   }
 
+  // GDC's per-datasheet WARGEAR ability bucket — the same {name, description}
+  // shape as `abilities.other`, but a different block on GW's card and a
+  // different field on our unit: `unit.wargearAbilities`, which detail.js and
+  // cards-mode.js render as "Wargear Abilities". dc-adapter builds that list per
+  // unit out of the 40kdc wargear ITEMS the unit can field (an item that carries
+  // ability text), so anything GW prints there that 40kdc models as neither a
+  // linked ability nor a text-carrying item was silently dropped — GDC's bucket
+  // was read by nothing at all (stopsign002/yetanotherarmybuilder#80). A
+  // description is required: a bare name in this block tells the player nothing.
+  function project11WargearAbilities(ds) {
+    if (!ds || !ds.abilities) return [];
+    const wg = Array.isArray(ds.abilities.wargear) ? ds.abilities.wargear : [];
+    return wg
+      .map(a => ({ name: pickText(a && a.name), description: cleanMarkup(pickText(a && a.description)) }))
+      .filter(a => a.name && a.description);
+  }
+
   // 11e degrading statlines. GW carries them per datasheet as
   // abilities.damaged = { range: {en}, description: {en} } — e.g. range
   // "1-8 WOUNDS REMAINING". 40kdc links none of them (the bundle defines 5
@@ -799,14 +864,16 @@
     return names;
   }
 
-  // Build one ability entry for a datasheet, capturing exactly the projected
-  // fields buildAbilityIndex11 has always indexed, plus `allNames` (every
-  // ability name GW prints anywhere on the sheet — see project11AllNames).
+  // Build one ability entry for a datasheet: the projected fields
+  // buildAbilityIndex11 indexes, `allNames` (every ability name GW prints
+  // anywhere on the sheet — see project11AllNames) and `wargear` (GW's wargear
+  // block, which fills unit.wargearAbilities rather than unit.abilities).
   function project11AbilityEntry(ds) {
     const abilities = project11Abilities(ds);
     const primarch = project11PrimarchGroups(ds);
     const damaged = project11Damaged(ds);
     return { abilities, primarch, damaged,
+             wargear: project11WargearAbilities(ds),
              allNames: project11AllNames(ds, abilities, primarch, damaged) };
   }
 
@@ -930,6 +997,7 @@
         const gAbils = entry.abilities || [];
         const gGroups = entry.primarch || [];
         const gDamaged = entry.damaged || null;
+        const gWargear = entry.wargear || [];
         const abils = Array.isArray(unit.abilities) ? unit.abilities : (unit.abilities = []);
 
         // ── Phantom drop (#91) ──────────────────────────────────────────────
@@ -955,6 +1023,31 @@
           if (entry.allNames && entry.allNames.has(nameKey(a.name))) continue;
           console.info('[gdc] dropped phantom ability "' + a.name + '" on ' + (unit && unit.name));
           abils.splice(i, 1);
+        }
+
+        // ── Wargear abilities (#80) ─────────────────────────────────────────
+        // Fill-only and 40kdc-first like everything else here: an existing row
+        // keeps its text and only an empty description is filled. A name that is
+        // already one of the unit's ORDINARY abilities is skipped, because
+        // detail.js renders the two lists in separate blocks and 40kdc
+        // occasionally models a wargear ability as a plain datasheet ability —
+        // adding it here too would print the same rule twice. The rows GDC owns
+        // outright for an authoritative faction are rebuilt later by
+        // dc-adapter's applyGdcStatlines, which replaces this list wholesale.
+        if (gWargear.length > 0) {
+          const wgs = Array.isArray(unit.wargearAbilities)
+            ? unit.wargearAbilities : (unit.wargearAbilities = []);
+          const wgByKey = new Map(wgs.map(w => [nameKey(w && w.name), w]));
+          const abilKeys = new Set(abils.map(a => nameKey(a.name)));
+          gWargear.forEach(g => {
+            const k = nameKey(g.name);
+            const hit = wgByKey.get(k);
+            if (hit) { if (!hit.description) hit.description = g.description; return; }
+            if (abilKeys.has(k)) return;
+            const na = { name: g.name, description: g.description };
+            wgs.push(na);
+            wgByKey.set(k, na);
+          });
         }
 
         if (gAbils.length === 0 && gGroups.length === 0 && !gDamaged) return;
