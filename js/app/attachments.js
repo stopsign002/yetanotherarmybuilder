@@ -41,6 +41,27 @@
     return (s || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
   }
 
+  // Extracts the bodyguard-name list out of a "can be attached to <list>:"
+  // ability description. Shared by buildProseIndex and candidateTargetsFor
+  // so the two copies can't drift (#87).
+  //
+  // `dc-adapter.js`'s injected ATTACH_ROLE_ABILITY text ("This model is a
+  // Leader and can be attached to a Bodyguard unit.") also matches the
+  // /can be attached to/i test but carries no list and, critically, no
+  // colon — a real 40kdc "can be attached to X, Y, Z:" ability always has
+  // one. Without this guard the unmatched replace() returns the sentence
+  // UNCHANGED and split() yields the whole sentence as a single bogus
+  // "unit name", which is exactly the injected role text becoming a phantom
+  // attachment target. `attachmentRole` already records that fact
+  // structurally, so a colonless match here is a sentence, not a list, and
+  // is skipped rather than parsed.
+  function namesFromAttachText(desc) {
+    if (!desc || !/can be attached to/i.test(desc)) return null;
+    if (!/can be attached to[^:]*:/i.test(desc)) return null;
+    const attachText = desc.replace(/^.*?can be attached to[^:]*:/i, '').trim();
+    return attachText.split(/[,■\n●•]+/);
+  }
+
   // A unit from a GDC-AUTHORITATIVE faction (dc-adapter's allowlist) carries
   // GW's own attachesTo table in `gdcLeadBy`, and an EMPTY list there is an
   // ANSWER — "this model leads nobody" — not a gap for the prose index to
@@ -67,9 +88,8 @@
       for (let j = 0; j < abilities.length; j++) {
         const a = abilities[j];
         const desc = a && a.description;
-        if (!desc || !/can be attached to/i.test(desc)) continue;
-        const attachText = desc.replace(/^.*?can be attached to[^:]*:/i, '').trim();
-        const names = attachText.split(/[,■\n●•]+/);
+        const names = namesFromAttachText(desc);
+        if (!names) continue;
         for (let k = 0; k < names.length; k++) {
           const folded = foldName(names[k]);
           if (!folded) continue;
@@ -158,9 +178,8 @@
     const abilities = sourceUnit.abilities || [];
     for (let i = 0; i < abilities.length; i++) {
       const desc = abilities[i] && abilities[i].description;
-      if (!desc || !/can be attached to/i.test(desc)) continue;
-      const attachText = desc.replace(/^.*?can be attached to[^:]*:/i, '').trim();
-      const names = attachText.split(/[,■\n●•]+/);
+      const names = namesFromAttachText(desc);
+      if (!names) continue;
       for (let k = 0; k < names.length; k++) {
         const nm = names[k].trim();
         const key = foldName(nm);

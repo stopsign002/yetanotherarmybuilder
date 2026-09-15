@@ -31,10 +31,23 @@
   // enhancement checkboxes edit existing entries via selectedArmyEntryIndex.
   let entryIndex = null;
 
+  // `entryIndex` is only refreshed inside mount() (see above), so it can go
+  // stale: removing an EARLIER army entry shifts every later one down (#71),
+  // and events.js's removal path reconciles state.selectedArmyEntryIndex but
+  // has no way to reach into this module's private copy. Since a re-render
+  // of THIS pane isn't guaranteed on removal (the remove button only
+  // re-renders the army list, not the detail pane), resolve the live index
+  // from state at read/write time rather than trusting the mount-time copy —
+  // entryIndex itself still gates whether we're in entry-bound mode at all.
+  function liveEntryIndex() {
+    return (entryIndex != null) ? (App.state || {}).selectedArmyEntryIndex : null;
+  }
+
   function currentEntry() {
     const s = App.state || {};
-    if (entryIndex == null || !s.currentArmy) return null;
-    return s.currentArmy.entries[entryIndex] || null;
+    const idx = liveEntryIndex();
+    if (idx == null || !s.currentArmy) return null;
+    return s.currentArmy.entries[idx] || null;
   }
 
   // Live write-back for entry-bound panes: same flow as the enhancement
@@ -42,7 +55,7 @@
   function syncEntry(unit) {
     const s = App.state || {};
     if (!currentEntry()) return;
-    s.currentArmy.setWargear(entryIndex, App.WargearPicker.takeSelections(unit));
+    s.currentArmy.setWargear(liveEntryIndex(), App.WargearPicker.takeSelections(unit));
     if (s.armyManager) s.armyManager.saveArmy(s.currentArmy);
     if (window.UI && UI.renderArmyList) UI.renderArmyList(s.currentArmy);
   }

@@ -201,6 +201,10 @@
         if (state.selectedArmyEntryIndex === index) {
           state.selectedArmyEntryIndex = null;
           UI.clearUnitDetail();
+        } else if (state.selectedArmyEntryIndex != null && state.selectedArmyEntryIndex > index) {
+          // The splice shifted every later entry down by one — keep the
+          // selection pointed at the SAME entry, not the same index (#71).
+          state.selectedArmyEntryIndex--;
         }
         UI.renderArmyList(state.currentArmy);
         UI.toast(`Removed ${entryName}`, 'info');

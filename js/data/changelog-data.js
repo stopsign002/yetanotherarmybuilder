@@ -26,9 +26,33 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.14-2',
-    lastUpdated: '2026-09-14T14:00:00Z',
+    version:     '2026.09.15-1',
+    lastUpdated: '2026-09-15T07:00:00Z',
     entries: [
+      {
+        date: '2026-09-15',
+        kind: 'fix',
+        title: 'Removing a unit above the selected one no longer moves the selection',
+        description: 'Fixed: removing an army entry that sat above the selected unit left the selection pointing one row down, so enhancement checkboxes and the wargear picker could quietly edit the wrong unit.',
+      },
+      {
+        date: '2026-09-15',
+        kind: 'fix',
+        title: 'Phone: Back returns to Build after switching modes from Settings',
+        description: 'Fixed: on a phone, switching to Collect or Play from the Settings drawer and then pressing Back left the site instead of returning to Build.',
+      },
+      {
+        date: '2026-09-15',
+        kind: 'fix',
+        title: 'Led By: the Leader/Support badge text no longer counts as a bodyguard',
+        description: 'Fixed: the \'This model is a Leader and can be attached to a Bodyguard unit\' sentence was being read as a unit name, which polluted the Led By index for almost every leader outside Orks.',
+      },
+      {
+        date: '2026-09-15',
+        kind: 'fix',
+        title: 'Cards: the ×N wargear chip now matches plural item names',
+        description: 'Fixed: weapons whose wargear item is named in the plural (Ork Choppas vs the Choppa profile) lost their ×N taken chip on the card.',
+      },
       {
         date: '2026-09-14',
         kind: 'fix',

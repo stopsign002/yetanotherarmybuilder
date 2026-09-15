@@ -1118,6 +1118,16 @@
         const base = wgKey.split(/\s+[–—-]\s+/)[0].trim();
         if (base && base !== wgKey) wgN = wgCounts.get(base);
       }
+      // Trailing-s/z plural tolerance (#82): the row name comes from the
+      // rendered weapon (sometimes GW's own datasheet wording, e.g. Ork
+      // "Choppa"), wgCounts is keyed by the 40kdc WARGEAR ITEM name (e.g.
+      // "Choppas") — try both directions, singular<->plural, nothing fuzzier.
+      if (wgN == null && wgCounts) {
+        const base = wgKey.split(/\s+[–—-]\s+/)[0].trim();
+        const tryKey = base || wgKey;
+        if (/[sz]$/.test(tryKey)) wgN = wgCounts.get(tryKey.slice(0, -1));
+        if (wgN == null) wgN = wgCounts.get(tryKey + 's');
+      }
       const statRow = `<tr class="dcc-w-row${kw ? ' has-kw' : ''}">
         <td class="dcc-w-name">${esc(w.name)}${wgN != null ? `<span class="dcc-wg-count${wgN === 0 ? ' dcc-wg-zero' : ''}">×${wgN}</span>` : ''}</td>
         ${cells}

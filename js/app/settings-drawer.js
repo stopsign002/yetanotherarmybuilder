@@ -165,8 +165,31 @@
   }
 
   function goToMode(mode) {
+    // #73: on mobile, close() below consumes this sheet's back-trap entry via
+    // mobile-history's closed('settings-drawer') -> history.go(-1) — which is
+    // ASYNC (the actual traversal runs on a later task, not synchronously).
+    // Calling App.setMode() right after close() used to race it: setMode's
+    // own backTrap.opened('mode:'+mode) does a SYNCHRONOUS history.pushState,
+    // which lands before the queued go(-1) is processed. The traversal then
+    // rewinds relative to the now-advanced position, overshooting past the
+    // freshly-pushed mode entry — measured in headless Chrome at 390px, one
+    // further Back press left the site entirely instead of returning to
+    // Build. Deferring the mode switch to the popstate the close() causes
+    // serializes the two history writes instead of racing them. Only defer
+    // when the drawer was actually trapped (mobile) — on desktop close()
+    // never touches history, so there is no popstate to wait for and
+    // deferring would just leave the mode switch stuck if Back is never
+    // pressed.
+    const wasTrapped = !!(App.backTrap && App.backTrap.isTrapped('settings-drawer'));
     close();
-    if (typeof App.setMode === 'function') App.setMode(mode);
+    if (!wasTrapped) {
+      if (typeof App.setMode === 'function') App.setMode(mode);
+      return;
+    }
+    window.addEventListener('popstate', function onPop() {
+      window.removeEventListener('popstate', onPop);
+      if (typeof App.setMode === 'function') App.setMode(mode);
+    }, { once: true });
   }
 
   function buildActions() {
