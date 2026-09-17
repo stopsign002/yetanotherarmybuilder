@@ -192,6 +192,84 @@ Edit `App.FACTION_COLORS` in `js/app/state.js`. Key is the full faction name OR 
 
 The build mode is the historical 3-pane app; collect and play modes are alternative top-level surfaces that reuse the same data (current army, factions, collection, etc.) but render their own DOM trees. To add a fourth mode: add the panel id to `VALID` in `mode-shell.js`, create the module, and listen on `modeChange` to lazy-build content on first activation.
 
+## Roster filter chips — and the Ally chip (contract, 2026-09-17)
+
+`#roster-filter-chips` is created once by `js/ui/roster.js` (`ensureChipBar`),
+which owns the six keyword chips (Battleline … Psyker) and the trailing `×`
+clear button. **Feature modules add their own chips by injecting into that bar**
+rather than by extending `ROLE_CHIPS` — `favorites.js` (★ Favorites, ⟲ Recents)
+and `collection.js` (Owned / Needs paint / Painted) are the two precedents:
+
+- wait for the bar with a `MutationObserver` on `#panel-center`, disconnect once
+  injected, and re-check on `modeChange` (roster.js builds the bar on first
+  render, so it does not exist at bootstrap);
+- insert **before** `.filter-chips-clear` so `×` stays last;
+- class `filter-chip <your-own-class>`, so the base styling is inherited;
+- register ONE predicate on `App.hooks.rosterFilters`, tagged with a marker
+  property and deduped (`filter(fn => !fn._isYours)`) before pushing;
+- call `App.renderUnitRosterWithContext()` after any state change.
+
+### The Ally chip
+
+Owned by **`js/app/allies.js`**, not roster.js — it filters on `unit._allyOf`
+(stamped per host-faction clone by `attachAlliedUnits()` in `dc-adapter.js`),
+not on `unit.keywords`, and it has to co-operate with that module's existing
+`yaab_show_allies` toolbar toggle.
+
+**Three states, cycling on click, exactly like the keyword chips:**
+
+| state | class | meaning |
+|---|---|---|
+| off (**default**) | — | no ally filtering; the toolbar toggle decides, as today |
+| include | `.active` | show **only** allied units |
+| exclude | `.excluded` | hide allied units |
+
+**It starts off on every load and is deliberately NOT persisted** (no
+localStorage key) — the owner asked for a filter that defaults to off, and the
+persistent "is this hidden?" control is already the toolbar toggle.
+
+**One predicate, so the two controls cannot contradict each other.** Replace
+allies.js's existing `rosterFilters` push with a single function:
+
+```
+isAlly = !!(unit && unit._allyOf)
+chip === 'include'  ->  return isAlly          // chip wins over the toggle
+chip === 'exclude'  ->  return !isAlly
+otherwise           ->  return showAllies || !isAlly     // today's behaviour
+```
+
+The include branch **must** override `showAllies`: asking to see only allies
+while the toolbar toggle hides them would otherwise render an empty roster,
+which reads as a bug. Toggling the toolbar button while the chip is active must
+not change the result, and the button's own title text stays as it is.
+
+**Label/title:** chip text `Ally`; `title` follows the keyword chips' wording —
+`'Click to show only allied units; click again to hide them'`. Give it its own
+class (`ally-chip`) and an `aria-pressed` that is `'true'` only in the include
+state, matching `ensureChipBar`'s handling.
+
+**Styling:** `.filter-chip` base covers it; add a rule only if the chip needs a
+glyph, and derive any colour from existing tokens so every theme is covered by
+construction (see `css/themes/` and the `--accent` family). Never hard-code a
+hex.
+
+### Done means
+
+- Chip is present in the bar after the roster first renders, in **Build** mode,
+  and it is the state's default (off) on a fresh load with cleared storage.
+- With a faction selected that actually has allies — Genestealer Cults has
+  **64 allied units of 88**, Chaos Space Marines 77 of 131, Astra Militarum
+  50 of 122, Space Marines 48 of 222 (measured live 2026-09-17) — include shows
+  only cards carrying `.unit-card-ally`, exclude shows none of them, off shows
+  both.
+- Ally units are attached **lazily, on faction select**: at "All Factions" on a
+  cold load `App.state.allUnits` contains **zero** `_allyOf` units, so any test
+  must select a faction first.
+- The `×` clear button resets the ally chip along with the others.
+- The toolbar toggle still works when the chip is off, and cannot empty the
+  roster when the chip is on include.
+- No new page errors; both themes, both widths.
+
 ## Testing checklist
 
 1. `python3 -m http.server 8000` from repo root. NOT `file://`.
