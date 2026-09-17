@@ -265,7 +265,17 @@ hex.
 - Ally units are attached **lazily, on faction select**: at "All Factions" on a
   cold load `App.state.allUnits` contains **zero** `_allyOf` units, so any test
   must select a faction first.
-- The `×` clear button resets the ally chip along with the others.
+- The `×` clear button resets the ally chip along with the others. **Note the
+  trap:** roster.js's clear handler strips `.active` / `.excluded` off *every*
+  `.filter-chip` in the bar but only clears its OWN `chipState`, so a feature
+  module's chip is visually reset while its filter stays on — Favorites,
+  Recents and the Collection chips all have this desync today. allies.js
+  therefore binds its own listener to `.filter-chips-clear` and resets its
+  state there. Do NOT edit roster.js to fix the general case in this change;
+  the shared-clear-button bug is filed separately.
+  `syncClearVisibility()` also only counts roster.js's own chips, so `×` may be
+  hidden when the Ally chip alone is active — acceptable here (the chip itself
+  is the way out), and covered by the same issue.
 - The toolbar toggle still works when the chip is off, and cannot empty the
   roster when the chip is on include.
 - No new page errors; both themes, both widths.
