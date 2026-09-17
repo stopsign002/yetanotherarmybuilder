@@ -369,12 +369,12 @@ Cross-cutting docs:
 - **Notes:** Detail panel gets a "LEGENDS — casual play" tag via MutationObserver on render.
 
 ### `js/app/allies.js`
-- **Purpose:** Surface 11e allied units (Daemonic Pact, Imperial Agents, Brood Brothers…) on their HOST faction's roster: ALLY badge, visibility toggle, detail-panel tag.
-- **Exports:** `App.allyTagText(unit)`, `App.allyTagTitle(unit)`; toolbar button + `rosterFilters` predicate + `cardClassContributors` (`.unit-card-ally`).
-- **Depends on:** `App.hooks`, `App.state.factions` (reads `faction.alliedRules`), `App.renderUnitRosterWithContext`.
-- **Storage:** `localStorage.yaab_show_allies` (`'1'` / `'0'`, **defaults on**).
-- **DOM:** `#yaab-btn-allies`, `.unit-card-ally`, `.detail-ally-tag`.
-- **Notes:** Presentation only — the units themselves are attached by `attachAlliedUnits()` in `js/data/dc-adapter.js`, which stamps `_allyOf` / `_allyLabel` / `_allySourceFaction` / `_allyRuleIds` / `_allyDetachments` on a per-host **clone**. Unlike the Legends toggle this one defaults ON (allies are legal units; the toggle is for decluttering). The detail tag is emitted inline by `js/ui/detail.js`, not via MutationObserver.
+- **Purpose:** Surface 11e allied units (Daemonic Pact, Imperial Agents, Brood Brothers…) on their HOST faction's roster: ALLY badge, visibility toggle, detail-panel tag, and an "Ally" roster-filter chip.
+- **Exports:** `App.allyTagText(unit)`, `App.allyTagTitle(unit)`; toolbar button + a single combined `rosterFilters` predicate + `cardClassContributors` (`.unit-card-ally`).
+- **Depends on:** `App.hooks`, `App.state.factions` (reads `faction.alliedRules`), `App.renderUnitRosterWithContext`, `#roster-filter-chips` (injected by `js/ui/roster.js`'s `ensureChipBar`).
+- **Storage:** `localStorage.yaab_show_allies` (`'1'` / `'0'`, **defaults on**). The chip's own state is **not** persisted — it always starts off (`null`) on load; see `docs/UI.md` "Roster filter chips — and the Ally chip".
+- **DOM:** `#yaab-btn-allies`, `.unit-card-ally`, `.detail-ally-tag`, `.ally-chip` (in `#roster-filter-chips`, before `.filter-chips-clear`).
+- **Notes:** Presentation only — the units themselves are attached by `attachAlliedUnits()` in `js/data/dc-adapter.js`, which stamps `_allyOf` / `_allyLabel` / `_allySourceFaction` / `_allyRuleIds` / `_allyDetachments` on a per-host **clone**. Unlike the Legends toggle this one defaults ON (allies are legal units; the toggle is for decluttering). The detail tag is emitted inline by `js/ui/detail.js`, not via MutationObserver. The "Ally" chip mirrors `favorites.js`'s injection pattern (MutationObserver on `#panel-center`, inject once, disconnect) but cycles through 3 states like roster.js's own keyword chips (off → include `.active` → exclude `.excluded` → off) rather than a plain boolean; it also listens on the bar's `.filter-chips-clear` button to reset its own state, since that button only resets DOM classes and has no idea the chip's JS state variable exists. The one `rosterFilters` predicate combines the chip and the toolbar toggle so they can't contradict each other — chip `include` always wins over the toggle.
 
 ### `js/app/wargear-picker.js`
 - **Purpose:** Wargear picker in the unit details pane (configure-then-add).

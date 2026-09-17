@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.15-2',
-    lastUpdated: '2026-09-15T07:30:00Z',
+    version:     '2026.09.17-1',
+    lastUpdated: '2026-09-17T00:00:00Z',
     entries: [
+      {
+        date: '2026-09-17',
+        kind: 'feature',
+        title: 'Filter allied units out of the unit list',
+        description: 'New "Ally" chip in the unit search filter bar. Click once to show only allied units, click again to hide them, and a third click turns the filter off — it starts off on every load, so allies show or hide exactly as the existing Allied units toggle already decides.',
+      },
       {
         date: '2026-09-15',
         kind: 'fix',

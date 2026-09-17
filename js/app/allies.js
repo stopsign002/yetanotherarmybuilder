@@ -22,9 +22,25 @@
     showAllies = (v === null) ? true : (v === '1');
   } catch (_) { showAllies = true; }
 
-  // Roster filter: hide allied units when the toggle is off.
-  App.hooks.rosterFilters.push(function (unit) {
-    return showAllies || !unit || !unit._allyOf;
+  // Ally roster-filter chip state — 3-state cycle, exactly like the keyword
+  // chips in roster.js, but owned here (not roster.js: see docs/UI.md
+  // "Roster filter chips — and the Ally chip"). Deliberately NOT persisted —
+  // it starts off on every load; the toolbar toggle above is the persistent
+  // control.
+  //   null      → off:      no ally filtering; the toggle above decides
+  //   'include' → .active:  show ONLY allied units (overrides the toggle)
+  //   'exclude' → .excluded: hide allied units
+  let allyChipState = null;
+
+  // Single combined predicate: the chip and the toolbar toggle must never
+  // contradict each other. The chip's include state wins over the toggle —
+  // asking to see only allies while the toggle hides them would otherwise
+  // render an empty roster.
+  App.hooks.rosterFilters.push(function alliesChipPredicate(unit) {
+    const isAlly = !!(unit && unit._allyOf);
+    if (allyChipState === 'include') return isAlly;
+    if (allyChipState === 'exclude') return !isAlly;
+    return showAllies || !isAlly;
   });
 
   // Card-class contributor: adds the ALLY corner badge via CSS ::after.
@@ -92,5 +108,82 @@
     onClick: toggle,
   });
 
+  // ----- roster filter chip bar integration ---------------------------
+  //
+  // Mirrors js/app/favorites.js: wait for #roster-filter-chips (built lazily
+  // by roster.js's ensureChipBar on first render — it doesn't exist at
+  // bootstrap) via a MutationObserver on #panel-center, inject once, then
+  // disconnect. Insert before the trailing × so it stays last.
+
+  let _chipObserver = null;
+
+  function syncChipClasses(btn) {
+    btn = btn || document.querySelector('#roster-filter-chips .ally-chip');
+    if (!btn) return;
+    btn.classList.toggle('active',   allyChipState === 'include');
+    btn.classList.toggle('excluded', allyChipState === 'exclude');
+    btn.setAttribute('aria-pressed', allyChipState === 'include' ? 'true' : 'false');
+  }
+
+  // Co-operates with roster.js's own × clear button. That handler does
+  // `bar.querySelectorAll('.filter-chip')` and strips `.active`/`.excluded`
+  // off EVERY chip in the bar (ours included, since we share the class), but
+  // it only clears its own `R.chipState` — it has no idea our internal
+  // `allyChipState` variable exists. Without this, the chip would go back to
+  // looking off while still silently filtering the roster. Bound directly to
+  // the clear button (favorites.js/collection.js only use it as an insertion
+  // anchor) so the visual reset and the actual filter state can't drift.
+  function resetChipState() {
+    if (allyChipState === null) return;
+    allyChipState = null;
+    syncChipClasses();
+    if (typeof App.renderUnitRosterWithContext === 'function') {
+      App.renderUnitRosterWithContext();
+    }
+  }
+
+  function injectChip(bar) {
+    if (!bar) return;
+    if (bar.querySelector('.ally-chip')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'filter-chip ally-chip';
+    btn.textContent = 'Ally';
+    btn.title = 'Click to show only allied units; click again to hide them';
+    btn.setAttribute('aria-pressed', 'false');
+    btn.addEventListener('click', () => {
+      allyChipState = allyChipState === null      ? 'include'
+                    : allyChipState === 'include'  ? 'exclude'
+                    : null;
+      syncChipClasses(btn);
+      if (typeof App.renderUnitRosterWithContext === 'function') {
+        App.renderUnitRosterWithContext();
+      }
+    });
+    const clearBtn = bar.querySelector('.filter-chips-clear');
+    if (clearBtn) {
+      bar.insertBefore(btn, clearBtn);
+      clearBtn.addEventListener('click', resetChipState);
+    } else {
+      bar.appendChild(btn);
+    }
+  }
+
+  function installChipObserver() {
+    if (_chipObserver) { _chipObserver.disconnect(); _chipObserver = null; }
+    const existing = document.getElementById('roster-filter-chips');
+    if (existing) { injectChip(existing); return; }
+    const center = document.getElementById('panel-center') || document.body;
+    _chipObserver = new MutationObserver(() => {
+      const bar = document.getElementById('roster-filter-chips');
+      if (bar) {
+        injectChip(bar);
+        if (_chipObserver) { _chipObserver.disconnect(); _chipObserver = null; }
+      }
+    });
+    _chipObserver.observe(center, { childList: true, subtree: true });
+  }
+
   App.hooks.bootstrap.push(updateButton);
+  App.hooks.bootstrap.push(installChipObserver);
 })();
