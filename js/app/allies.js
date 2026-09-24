@@ -5,10 +5,15 @@
 // which stamps each clone with _allyOf / _allyLabel / _allySourceFaction /
 // _allyDetachments. This module is presentation only: badge, toggle, detail tag.
 //
-// Deliberately mirrors js/app/legends-toggle.js, with one difference: this
-// toggle DEFAULTS ON. Legends are non-matched-play, so hiding them by default is
-// right; allies are fully legal units, and the whole point of the feature is
-// that they were invisible. The toggle exists to declutter, not to opt in.
+// Deliberately mirrors js/app/legends-toggle.js: this toggle DEFAULTS OFF.
+// It shipped defaulting ON (allies are legal units and had been invisible), but
+// on every faction's roster the allied clones outnumber the interesting picks
+// and the owner asked for them hidden until wanted (2026-09-24). A stored
+// yaab_show_allies='1' still wins, so anyone who had turned them on keeps them.
+// The user-facing switch is the Settings drawer's "Show allied units" row
+// (settings-drawer.js), whose defaultOn/isOn MUST agree with this default —
+// the toolbar button below is registered but never mounted (index.js
+// whitelists the top-bar icon shelf); the drawer invokes its onClick directly.
 (function () {
   const App = window.App = window.App || {};
   if (!App.hooks) return;
@@ -16,11 +21,10 @@
   const LS_KEY = 'yaab_show_allies';
   const BTN_ID = 'yaab-btn-allies';
 
-  let showAllies = true;
+  let showAllies = false;
   try {
-    const v = localStorage.getItem(LS_KEY);
-    showAllies = (v === null) ? true : (v === '1');
-  } catch (_) { showAllies = true; }
+    showAllies = localStorage.getItem(LS_KEY) === '1';
+  } catch (_) { showAllies = false; }
 
   // Ally roster-filter chip state — 3-state cycle, exactly like the keyword
   // chips in roster.js, but owned here (not roster.js: see docs/UI.md

@@ -79,8 +79,11 @@
     {
       key:   'yaab_show_allies',
       label: 'Show allied units',
-      help:  'Include units borrowed from another codex (Imperial Agents, Daemonic Pact, Questoris Allies, …). Turn off to see only your own faction.',
-      defaultOn: true,
+      help:  'Include units borrowed from another codex (Imperial Agents, Daemonic Pact, Questoris Allies, …). Off by default — turn on to see them alongside your own faction.',
+      // Must match allies.js's default (OFF since 2026-09-24): this row is
+      // the toggle's only surface, and a mismatched default would show the
+      // switch ON while the roster hides allies, so the first click inverts.
+      defaultOn: false,
       onChange(checked) {
         // The toolbar hook action owns the side effects (persist + re-render).
         // js/app/allies.js registers it with region:'icon', and the top-bar
@@ -95,7 +98,7 @@
           App.renderUnitRosterWithContext();
         }
       },
-      isOn() { return lsBool('yaab_show_allies', true); },
+      isOn() { return lsBool('yaab_show_allies', false); },
     },
     {
       key:   'yaab_show_collection_badges',

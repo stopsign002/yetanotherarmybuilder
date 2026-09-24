@@ -220,7 +220,7 @@ not on `unit.keywords`, and it has to co-operate with that module's existing
 
 | state | class | meaning |
 |---|---|---|
-| off (**default**) | — | no ally filtering; the toolbar toggle decides, as today |
+| off (**default**) | — | no ally filtering; the toolbar toggle decides (and that toggle itself defaults OFF since 2026-09-24, so a fresh load shows no allies) |
 | include | `.active` | show **only** allied units |
 | exclude | `.excluded` | hide allied units |
 

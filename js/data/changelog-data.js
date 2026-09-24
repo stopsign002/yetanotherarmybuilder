@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.17-1',
-    lastUpdated: '2026-09-17T00:00:00Z',
+    version:     '2026.09.24-1',
+    lastUpdated: '2026-09-24T19:00:00Z',
     entries: [
+      {
+        date: '2026-09-24',
+        kind: 'change',
+        title: 'Allied units are now hidden by default',
+        description: 'The unit list no longer shows allied units (Daemonic Pact, Agents of the Imperium, Brood Brothers and friends) until you ask for them. Turn on "Show allied units" in Settings to bring them back, or click the "Ally" chip in the search filter bar to see only allies. If you had already switched the setting on, it stays on.',
+      },
       {
         date: '2026-09-17',
         kind: 'feature',
