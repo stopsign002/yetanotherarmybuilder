@@ -592,10 +592,8 @@
   function renderRules(root, cr, faction) {
     const panel = root.querySelector('.play-panel[data-panel="rules"]');
     const groups = [];
-    const armyRules = (faction && Array.isArray(faction.armyRules)) ? faction.armyRules.filter(r => r && r.name) : [];
-    if (armyRules.length) {
-      groups.push({ label: 'Army rules', items: armyRules.map(r => ({ rule: r, kindLabel: 'Army Rule' })) });
-    }
+    // Detachment rules first: they are the ones that change list to list
+    // (and get forgotten); the army rule is the same every game.
     const seen = new Set();
     cr.getSelectedDetachments().forEach(det => {
       if (!det || !Array.isArray(det.rules)) return;
@@ -607,6 +605,10 @@
         items: rules.map(r => ({ rule: r, kindLabel: 'Detachment Rule' })),
       });
     });
+    const armyRules = (faction && Array.isArray(faction.armyRules)) ? faction.armyRules.filter(r => r && r.name) : [];
+    if (armyRules.length) {
+      groups.push({ label: 'Army rules', items: armyRules.map(r => ({ rule: r, kindLabel: 'Army Rule' })) });
+    }
     if (!groups.length) {
       panel.innerHTML = '<div class="play-panel-empty"><p class="muted">No rules to show &mdash; pick a faction and detachment first.</p></div>';
       return;

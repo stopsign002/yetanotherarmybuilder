@@ -26,14 +26,14 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.24-2',
-    lastUpdated: '2026-09-24T22:00:00Z',
+    version:     '2026.09.24-3',
+    lastUpdated: '2026-09-24T23:00:00Z',
     entries: [
       {
         date: '2026-09-24',
         kind: 'feature',
         title: 'Play mode: enhancements first, sheets in a row, no wounds counter',
-        description: 'A character\'s enhancements now sit at the very top of its Play sheet so they are impossible to forget. On desktop, a One / All toggle next to the CP counter lines every datasheet up in one sideways-scrolling row. The wounds stepper is gone (track wounds on the table) and the headers are slimmer, so more of the sheet fits on screen.',
+        description: 'A character\'s enhancements now sit at the very top of its Play sheet so they are impossible to forget. On desktop, a One / All toggle next to the CP counter lines every datasheet up in one sideways-scrolling row. The wounds stepper is gone (track wounds on the table) and the headers are slimmer, so more of the sheet fits on screen. The Rules tab now lists your detachment rule above the army rules.',
       },
       {
         date: '2026-09-24',
