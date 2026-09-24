@@ -309,6 +309,20 @@
       </div>
     `;
 
+    // Game-day: chosen enhancements go at the very top, before the stat
+    // strip even loads — they're the thing people forget at the table, so
+    // they need to be unmissable rather than buried after abilities.
+    if (gameView && (selectedEnhancements || []).length > 0) {
+      html += `<div class="detail-section detail-enhancements-game">
+        <div class="detail-section-title">Enhancements</div>`;
+      selectedEnhancements.forEach(e => {
+        html += `<div class="detail-ability">
+          <span class="detail-ability-name">${esc(e.name)}</span>
+          <span class="detail-ability-desc">${UI.mdBold(e.description || '—')}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
 
     const STAT_ORDER = ['M', 'T', 'SV', 'W', 'LD', 'OC'];
 
@@ -837,20 +851,7 @@
     // where the feature lives, with a contextual hint when they haven't
     // selected a detachment yet. Epic Heroes with no detachment loaded
     // get nothing (the "pick a detachment" hint would be misleading).
-    if (gameView) {
-      // Game-day view: the enhancements this entry actually took, read-only.
-      if ((selectedEnhancements || []).length > 0) {
-        html += `<div class="detail-section">
-          <div class="detail-section-title">Enhancements</div>`;
-        selectedEnhancements.forEach(e => {
-          html += `<div class="detail-ability">
-            <span class="detail-ability-name">${esc(e.name)}</span>
-            <span class="detail-ability-desc">${UI.mdBold(e.description || '—')}</span>
-          </div>`;
-        });
-        html += `</div>`;
-      }
-    } else if (anyEligible || (detachmentEnhancements && detachmentEnhancements.length > 0)) {
+    if (!gameView && (anyEligible || (detachmentEnhancements && detachmentEnhancements.length > 0))) {
       const selectedNames = new Set((selectedEnhancements || []).map(e => e.name));
       html += `<div class="detail-section" id="detail-enhancements-section">
         <div class="detail-section-title">Enhancements</div>`;

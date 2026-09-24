@@ -3,11 +3,17 @@
 // The whole design serves one goal: switching between datasheets, stratagems,
 // rules and enhancements must be instant. Everything is rendered into the DOM
 // ONCE per activation (armies are 10-25 entries — milliseconds); switching
-// sheets or tabs only toggles `hidden`/class state, never re-renders.
+// sheets, tabs or the sheet layout only toggles `hidden`/class state, never
+// re-renders.
 //
-// Light tracking on top: a CP counter in the header and a per-entry dead
-// toggle + wounds stepper on each sheet. Deliberately NOT a cockpit — no
-// phase tracker, no scorepad (the old play mode was that, and was removed).
+// Light tracking on top: a CP counter in the header and a per-entry destroyed
+// toggle on each sheet. Deliberately NOT a cockpit — no phase tracker, no
+// wound stepper (wounds are tracked on the board, not in the app), no
+// scorepad (the old play mode was that, and was removed).
+//
+// Desktop Sheets tab also has a layout toggle: "One" (single sheet, switcher
+// rail) or "All" (every datasheet lined up in one horizontal, sideways-
+// scrolling row). Phones always get the single layout.
 //
 // Datasheet/stratagem/rule markup comes from App.CardRenderers, the shared
 // facade cards-mode.js exposes over its print-card renderers, so Play mode
@@ -16,8 +22,8 @@
   const App = window.App = window.App || {};
   if (!App.hooks) return;
 
-  const LS_VIEW = 'yaab_play_view';   // { tab, entryByArmy: {armyId: entryId} }
-  const LS_GAME = 'yaab_play_game';   // { [armyId]: {cp, startedAt, touchedAt, units:{[entryId]:{w,dead}}} }
+  const LS_VIEW = 'yaab_play_view';   // { tab, layout: 'single'|'row', entryByArmy: {armyId: entryId} }
+  const LS_GAME = 'yaab_play_game';   // { [armyId]: {cp, startedAt, touchedAt, units:{[entryId]:{dead}}} }
   const TABS = [
     ['sheets',  'Sheets'],
     ['strats',  'Stratagems'],
@@ -36,6 +42,7 @@
   let _entryOrder = [];      // virtual ids in switcher order (for swipe prev/next)
   let _virtual = [];         // [{vid, entry, isLeader, copy}] from the last render
   let _saveTimer  = 0;
+  let _mql        = null;    // matchMedia('(min-width: 821px)'), bound once
 
   // ── helpers ───────────────────────────────────────────────────────────
   function esc(s) {
@@ -69,8 +76,9 @@
   }
   let _view = null;
   function view() {
-    if (!_view) _view = lsRead(LS_VIEW, { tab: 'sheets', entryByArmy: {} });
+    if (!_view) _view = lsRead(LS_VIEW, { tab: 'sheets', layout: 'single', entryByArmy: {} });
     if (!_view.entryByArmy || typeof _view.entryByArmy !== 'object') _view.entryByArmy = {};
+    if (_view.layout !== 'row') _view.layout = 'single';
     return _view;
   }
   function persistView() {
@@ -132,14 +140,13 @@
     if (e && e.key === LS_GAME) _gameAll = null;
   });
 
-  // ── army entry ordering + wound math ──────────────────────────────────
+  // ── army entry ordering ─────────────────────────────────────────────────
   // A stacked entry (count > 1) is N identical squads on the table, so play
   // mode ALWAYS splits it: one virtual sheet per copy, each with its own
-  // wound/dead tracking. Virtual ids are `entryId` for copy 1 and
+  // destroyed tracking. Virtual ids are `entryId` for copy 1 and
   // `entryId::i` for the rest, so single-copy entries keep their stored
   // game state unchanged.
   function virtualId(entry, i) { return i === 0 ? entry.entryId : entry.entryId + '::' + i; }
-  function baseId(vid) { return String(vid).split('::')[0]; }
   // Every live virtual id for the current army (for game-state GC).
   function liveVids(army) {
     const out = new Set();
@@ -186,24 +193,11 @@
     });
     return out;
   }
-  // {models, perModelW, maxW} for the wounds stepper. Per-entry, not
-  // per-model, on purpose: max = models × first-profile W. Non-numeric W
-  // (e.g. "—") → maxW 0, which hides the stepper but keeps the dead toggle.
-  function unitMeta(entry) {
-    const unit = entry.unitData || {};
-    let models = null;
-    (unit.squadOptions || []).forEach(o => {
-      if (models == null && o && o.pts === entry.selectedPts) models = o.models;
-    });
-    if (models == null) {
-      const n = parseInt(String(entry.squadLabel || '').replace(/[^\d]/g, ''), 10);
-      if (n > 0) models = n;
-    }
-    if (models == null) models = 1;
-    const stats = (Array.isArray(unit.modelStats) && unit.modelStats[0]) || unit.stats || {};
-    const perModelW = parseInt(String(stats.W != null ? stats.W : ''), 10);
-    const maxW = (perModelW > 0) ? perModelW * models : 0;
-    return { models, perModelW: perModelW > 0 ? perModelW : 0, maxW };
+  // The switcher chip label for a virtual entry — the sheet head reuses the
+  // exact same string so a player sees one name for a unit, not two.
+  function sheetLabel(entry, copy) {
+    const name = entry.customName || entry.unitName || (entry.unitData && entry.unitData.name) || 'Unit';
+    return name + (copy ? ' #' + copy.i : '');
   }
 
   // ── mount (skeleton, once) ────────────────────────────────────────────
@@ -223,6 +217,10 @@
         +     '<button type="button" class="play-cp-btn" data-cp="-1" aria-label="Spend a command point">&minus;</button>'
         +     '<span class="play-cp-val" aria-live="polite">0 CP</span>'
         +     '<button type="button" class="play-cp-btn" data-cp="1" aria-label="Gain a command point">+</button>'
+        +   '</div>'
+        +   '<div class="play-layout-toggle" role="group" aria-label="Sheet layout">'
+        +     '<button type="button" class="play-layout-btn" data-layout="single" aria-pressed="true" title="One sheet at a time">One</button>'
+        +     '<button type="button" class="play-layout-btn" data-layout="row" aria-pressed="false" title="All sheets in a row">All</button>'
         +   '</div>'
         +   '<button type="button" class="play-reset">Reset game</button>'
         +   '<button type="button" class="play-exit" title="Leave Play mode and return to the builder">Exit</button>'
@@ -255,10 +253,12 @@
   }
 
   function bindHandlers(root) {
-    // Header: CP, reset, empty-state CTA.
+    // Header: CP, layout toggle, reset, empty-state CTA.
     root.querySelector('.play-header').addEventListener('click', e => {
       const cp = e.target.closest('.play-cp-btn');
       if (cp) { onCp(parseInt(cp.dataset.cp, 10)); return; }
+      const layoutBtn = e.target.closest('.play-layout-btn');
+      if (layoutBtn) { onLayout(layoutBtn.dataset.layout); return; }
       if (e.target.closest('.play-reset')) { onReset(); return; }
       if (e.target.closest('.play-exit') && typeof App.setMode === 'function') App.setMode('build');
     });
@@ -275,10 +275,8 @@
       const chip = e.target.closest('.play-unit-chip');
       if (chip) setActiveEntry(chip.dataset.entryId);
     });
-    // Body: per-sheet trackers + enhancement carrier jump-links.
+    // Body: per-sheet destroyed toggle + enhancement carrier jump-links.
     root.querySelector('.play-body').addEventListener('click', e => {
-      const w = e.target.closest('.play-w-btn');
-      if (w) { onWounds(w.closest('[data-entry-id]').dataset.entryId, parseInt(w.dataset.w, 10)); return; }
       const d = e.target.closest('.play-dead');
       if (d) { onDead(d.closest('[data-entry-id]').dataset.entryId); return; }
       const carrier = e.target.closest('.play-enh-carrier');
@@ -294,7 +292,7 @@
     body.addEventListener('touchstart', e => {
       touch = null;
       if (_activeTab !== 'sheets') return;
-      if (e.target.closest('.dcc-weapons, .detail-weapons-section, .play-tracker')) return;
+      if (e.target.closest('.dcc-weapons, .detail-weapons-section, .play-sheet-head')) return;
       const t = e.changedTouches && e.changedTouches[0];
       if (t) touch = { x: t.clientX, y: t.clientY };
     }, { passive: true });
@@ -306,13 +304,21 @@
       touch = null;
       if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) stepEntry(dx < 0 ? 1 : -1);
     }, { passive: true });
-    // Arrow keys page sheets on desktop.
+    // Arrow keys page sheets on desktop (and walk the row in row layout).
     document.addEventListener('keydown', e => {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
       if (isHidden() || _activeTab !== 'sheets') return;
       if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;
       stepEntry(e.key === 'ArrowRight' ? 1 : -1);
     });
+    // Desktop <-> phone crossing 820px re-applies the effective layout
+    // without a re-render (row is desktop-only; phones always get single).
+    if (typeof window.matchMedia === 'function') {
+      _mql = window.matchMedia('(min-width: 821px)');
+      const onMqChange = () => applyLayout();
+      if (typeof _mql.addEventListener === 'function') _mql.addEventListener('change', onMqChange);
+      else if (typeof _mql.addListener === 'function') _mql.addListener(onMqChange);
+    }
   }
 
   function stepEntry(delta) {
@@ -341,17 +347,51 @@
     if (!entryId || _entryOrder.indexOf(entryId) === -1) return;
     _activeEntry = entryId;
     if (_root) {
-      _root.querySelectorAll('.play-sheet').forEach(s => { s.hidden = s.dataset.entryId !== entryId; });
+      const row = _root.dataset.layout === 'row';
+      _root.querySelectorAll('.play-sheet').forEach(s => {
+        const on = s.dataset.entryId === entryId;
+        s.classList.toggle('is-on', on);
+        // Single: hidden toggle exactly as before. Row: every sheet stays
+        // visible — the active one is marked and scrolled into the row.
+        s.hidden = row ? false : !on;
+        if (row && on) { try { s.scrollIntoView({ inline: 'nearest', block: 'nearest' }); } catch (_) {} }
+      });
       _root.querySelectorAll('.play-unit-chip').forEach(c => {
         const on = c.dataset.entryId === entryId;
         c.classList.toggle('is-on', on);
         c.setAttribute('aria-selected', on ? 'true' : 'false');
         if (on) { try { c.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (_) {} }
       });
-      const panel = _root.querySelector('.play-panel[data-panel="sheets"]');
-      if (panel) panel.scrollTop = 0;
+      if (!row) {
+        const panel = _root.querySelector('.play-panel[data-panel="sheets"]');
+        if (panel) panel.scrollTop = 0;
+      }
     }
     persistView();
+  }
+
+  // Sheets-tab layout: 'single' (switcher rail, one sheet visible) or 'row'
+  // (every sheet in one horizontal, sideways-scrolling strip — desktop only).
+  // The stored preference and the EFFECTIVE layout can differ: phones always
+  // render single regardless of what's stored. One function sets the
+  // data-attribute, the toggle's pressed state, and re-runs setActiveEntry so
+  // the active sheet's hidden/is-on state matches the layout that just
+  // applied — called on toggle click, first render, and the media-query flip.
+  function applyLayout() {
+    if (!_root) return;
+    const pref = view().layout;
+    const wide = _mql ? _mql.matches : false;
+    _root.dataset.layout = (pref === 'row' && wide) ? 'row' : 'single';
+    _root.querySelectorAll('.play-layout-btn').forEach(btn => {
+      btn.setAttribute('aria-pressed', btn.dataset.layout === pref ? 'true' : 'false');
+    });
+    if (_activeEntry) setActiveEntry(_activeEntry);
+  }
+  function onLayout(pref) {
+    if (pref !== 'single' && pref !== 'row') return;
+    view().layout = pref;
+    persistView();
+    applyLayout();
   }
 
   // ── tracking ──────────────────────────────────────────────────────────
@@ -360,29 +400,10 @@
     writeGame(army.id, g => { g.cp = Math.max(0, (g.cp || 0) + delta); });
     applyGameState();
   }
-  function onWounds(vid, delta) {
-    const army = getArmy(); if (!army || !army.id) return;
-    const entry = (army.entries || []).find(e => e && e.entryId === baseId(vid));
-    if (!entry) return;
-    const meta = unitMeta(entry);
-    if (!meta.maxW) return;
-    writeGame(army.id, g => {
-      const u = g.units[vid] || (g.units[vid] = { w: meta.maxW, dead: false });
-      if (typeof u.w !== 'number') u.w = meta.maxW;
-      u.w = Math.min(meta.maxW, Math.max(0, u.w + delta));
-      // Single models: 0 wounds IS dead (and healing back revives). Squads
-      // lose models, not the unit, so the skull stays manual there.
-      if (meta.models === 1) u.dead = u.w === 0;
-    });
-    applyGameState();
-  }
   function onDead(vid) {
     const army = getArmy(); if (!army || !army.id) return;
-    const entry = (army.entries || []).find(e => e && e.entryId === baseId(vid));
-    if (!entry) return;
-    const meta = unitMeta(entry);
     writeGame(army.id, g => {
-      const u = g.units[vid] || (g.units[vid] = { w: meta.maxW, dead: false });
+      const u = g.units[vid] || (g.units[vid] = { dead: false });
       u.dead = !u.dead;
     });
     applyGameState();
@@ -390,14 +411,14 @@
   function onReset() {
     const army = getArmy(); if (!army || !army.id) return;
     let ok = true;
-    try { ok = window.confirm('Reset this game? CP and all wound/dead tracking will be cleared.'); } catch (_) {}
+    try { ok = window.confirm('Reset this game? CP and destroyed markers will be cleared.'); } catch (_) {}
     if (!ok) return;
     clearGame(army.id);
     applyGameState();
   }
 
-  // Paint CP + per-sheet trackers + chip dim/badges from stored game state.
-  // DOM-patch only — never rebuilds innerHTML, so it's safe to call on every
+  // Paint CP + per-sheet/chip dead state from stored game state. DOM-patch
+  // only — never rebuilds innerHTML, so it's safe to call on every
   // tracker interaction.
   function applyGameState() {
     if (!_root) return;
@@ -405,17 +426,13 @@
     const g = (army && army.id) ? gameFor(army.id) : { cp: 0, units: {} };
     const cpEl = _root.querySelector('.play-cp-val');
     if (cpEl) cpEl.textContent = g.cp + ' CP';
-    _virtual.forEach(({ vid, entry }) => {
-      if (!entry || !vid) return;
-      const meta = unitMeta(entry);
+    _virtual.forEach(({ vid }) => {
+      if (!vid) return;
       const u = g.units[vid] || {};
-      const w = (typeof u.w === 'number') ? Math.min(meta.maxW, Math.max(0, u.w)) : meta.maxW;
       const dead = !!u.dead;
       const sheet = _root.querySelector('.play-sheet[data-entry-id="' + vid + '"]');
       if (sheet) {
         sheet.classList.toggle('is-dead', dead);
-        const wVal = sheet.querySelector('.play-w-val');
-        if (wVal) wVal.textContent = String(w);
         const deadBtn = sheet.querySelector('.play-dead');
         if (deadBtn) {
           deadBtn.classList.toggle('is-on', dead);
@@ -424,15 +441,7 @@
         }
       }
       const chip = _root.querySelector('.play-unit-chip[data-entry-id="' + vid + '"]');
-      if (chip) {
-        chip.classList.toggle('is-dead', dead);
-        const badge = chip.querySelector('.play-chip-w');
-        if (badge) {
-          const show = meta.maxW > 0 && w < meta.maxW && !dead;
-          badge.hidden = !show;
-          if (show) badge.textContent = w + '/' + meta.maxW;
-        }
-      }
+      if (chip) chip.classList.toggle('is-dead', dead);
     });
   }
 
@@ -471,6 +480,7 @@
     _activeEntry = (_entryOrder.indexOf(remembered) !== -1) ? remembered : (_entryOrder[0] || null);
     if (_activeEntry) setActiveEntry(_activeEntry);
     setActiveTab(_activeTab);
+    applyLayout();
     applyGameState();
     _rendered = true; _dirty = false;
   }
@@ -512,28 +522,19 @@
       return;
     }
     switcher.innerHTML = ordered.map(({ entry, isLeader, vid, copy }) => {
-      const name = entry.customName || entry.unitName || (entry.unitData && entry.unitData.name) || 'Unit';
-      const label = name + (copy ? ' #' + copy.i : '');
+      const label = sheetLabel(entry, copy);
       return '<button type="button" class="play-unit-chip' + (isLeader ? ' is-leader' : '')
         + '" role="tab" aria-selected="false" data-entry-id="' + esc(vid) + '">'
         + (isLeader ? '<span class="play-chip-lead" aria-hidden="true">⤷</span>' : '')
         + '<span class="play-chip-name">' + esc(label) + '</span>'
-        + '<span class="play-chip-w" hidden></span>'
         + '</button>';
     }).join('');
-    panel.innerHTML = ordered.map(({ entry, vid }) => {
-      const meta = unitMeta(entry);
-      const wounds = meta.maxW
-        ? '<div class="play-wounds" role="group" aria-label="Wounds remaining">'
-          + '<button type="button" class="play-w-btn" data-w="-1" aria-label="Lose a wound">&minus;</button>'
-          + '<span class="play-w-num"><span class="play-w-val">' + meta.maxW + '</span>/' + meta.maxW + ' W</span>'
-          + '<button type="button" class="play-w-btn" data-w="1" aria-label="Heal a wound">+</button>'
-          + '</div>'
-        : '';
+    panel.innerHTML = ordered.map(({ entry, vid, copy }) => {
+      const label = sheetLabel(entry, copy);
       return '<div class="play-sheet" data-entry-id="' + esc(vid) + '" hidden>'
-        + '<div class="play-tracker" data-entry-id="' + esc(vid) + '">'
+        + '<div class="play-sheet-head" data-entry-id="' + esc(vid) + '">'
+        +   '<span class="play-sheet-name">' + esc(label) + '</span>'
         +   '<button type="button" class="play-dead" aria-pressed="false">☠ Mark destroyed</button>'
-        +   wounds
         + '</div>'
         + '<div class="play-detail-host"></div>'
         + '</div>';
