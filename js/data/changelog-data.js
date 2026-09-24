@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.24-1',
-    lastUpdated: '2026-09-24T19:00:00Z',
+    version:     '2026.09.24-2',
+    lastUpdated: '2026-09-24T22:00:00Z',
     entries: [
+      {
+        date: '2026-09-24',
+        kind: 'feature',
+        title: 'Play mode: enhancements first, sheets in a row, no wounds counter',
+        description: 'A character\'s enhancements now sit at the very top of its Play sheet so they are impossible to forget. On desktop, a One / All toggle next to the CP counter lines every datasheet up in one sideways-scrolling row. The wounds stepper is gone (track wounds on the table) and the headers are slimmer, so more of the sheet fits on screen.',
+      },
       {
         date: '2026-09-24',
         kind: 'change',
