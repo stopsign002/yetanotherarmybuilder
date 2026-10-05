@@ -178,8 +178,8 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_play_game` | localStorage | `play-mode.js` | Per-army game tracking (CP, per-entry wounds/dead); capped at the 10 most-recently-touched armies, cleared per army by "Reset game"; device-local, deliberately NOT cloud-synced | User data |
 | `yaab_changelog_seen` | localStorage | `changelog.js` | Last `App.CHANGELOG.version` the user has opened — drives the "unseen" red dot on the Updates icon | User pref |
 | `yaab_cards_presets` | localStorage | `cards-mode.js` | Named snapshots of every card-render setting (colours, typography, layout, back-image id, …); cloud-synced | User data |
-| `yaab_cards_selection` | localStorage | `cards-mode.js` | Card-exporter deselections (excluded card ids per category: units/rules/strats); device-local, NOT cloud-synced | User selection |
-| `yaab_cards_spill` | localStorage | `cards-mode.js` | Per-unit-card manual page-split overrides (`{cardId: [sectionKey,…]}` of whole sections sent to the continuation card); device-local, NOT cloud-synced. Absent card → automatic whole-section split | User selection |
+| `yaab_cards_selection` | localStorage | `cards-mode.js` | Card-exporter deselections (excluded card ids per category: units/rules/strats). Unit-card ids are `'u:' + entry.entryId` (stable across reorder/remove/split — see #72; was positional `'u'+i` before, one-time migrated on load); rule/strat ids are unrelated `'r:'`/`'d:'`/`type::name` forms. Device-local, NOT cloud-synced | User selection |
+| `yaab_cards_spill` | localStorage | `cards-mode.js` | Per-unit-card manual page-split overrides (`{cardId: [sectionKey,…]}` of whole sections sent to the continuation card); `cardId` is the same `'u:' + entry.entryId` form as `yaab_cards_selection` (see #72). Device-local, NOT cloud-synced. Absent card → automatic whole-section split | User selection |
 
 The app-shell service worker maintains exactly one Cache API entry, `yaab-shell-<version-token>` — see the section below.
 

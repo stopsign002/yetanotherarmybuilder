@@ -499,14 +499,44 @@
   // { units: Set<id>, rules: Set<id>, strats: Set<id> } of excluded ids.
   let excluded = { units: new Set(), rules: new Set(), strats: new Set() };
 
+  // ── #72 one-time id migration ───────────────────────────────────────────
+  // Unit-card ids used to be positional ('u0', 'u1', …); they're now
+  // 'u:' + entry.entryId (stable across reorder/remove/split — see
+  // gatherUnits()). A legacy id in either persisted store is remapped by
+  // reading its array position against whichever army is CURRENT when the
+  // store is loaded — that's the only army the old id could plausibly mean,
+  // since the old format never recorded which army it came from. If the
+  // entry at that position is gone (army since changed, entry removed, etc.)
+  // the id is dropped rather than guessed at. Best-effort by nature: run
+  // once per store (the caller re-saves immediately so a legacy id is never
+  // seen twice), not a guarantee every old override survives.
+  function migrateLegacyUnitId(id) {
+    const m = /^u(\d+)$/.exec(id);
+    if (!m) return id;   // already migrated, or not a unit-card id at all
+    const army = getCurrentArmy();
+    const entry = (army && Array.isArray(army.entries)) ? army.entries[Number(m[1])] : null;
+    return (entry && entry.entryId) ? ('u:' + entry.entryId) : null;   // null ⇒ drop
+  }
+
   function loadExclusions() {
     try {
       const raw = localStorage.getItem(SELECTION_KEY);
       if (!raw) return;
       const p = JSON.parse(raw) || {};
+      let migrated = false;
       ['units', 'rules', 'strats'].forEach(k => {
-        excluded[k] = new Set(Array.isArray(p[k]) ? p[k].map(String) : []);
+        const ids = Array.isArray(p[k]) ? p[k].map(String) : [];
+        if (k !== 'units') { excluded[k] = new Set(ids); return; }
+        const out = new Set();
+        ids.forEach(id => {
+          const newId = migrateLegacyUnitId(id);
+          if (newId == null) { migrated = true; return; }
+          if (newId !== id) migrated = true;
+          out.add(newId);
+        });
+        excluded[k] = out;
       });
+      if (migrated) saveExclusions();   // persist the remap so it runs once
     } catch (_) { /* malformed / private mode — keep empty defaults */ }
   }
   function saveExclusions() {
@@ -535,7 +565,17 @@
     try {
       const raw = localStorage.getItem(SPILL_KEY);
       const p = raw ? JSON.parse(raw) : null;
-      spillOverrides = (p && typeof p === 'object') ? p : {};
+      const src = (p && typeof p === 'object') ? p : {};
+      let migrated = false;
+      const out = {};
+      Object.keys(src).forEach(id => {
+        const newId = migrateLegacyUnitId(id);
+        if (newId == null) { migrated = true; return; }
+        if (newId !== id) migrated = true;
+        out[newId] = src[id];
+      });
+      spillOverrides = out;
+      if (migrated) saveSpillOverrides();   // persist the remap so it runs once
     } catch (_) { spillOverrides = {}; }
   }
   function saveSpillOverrides() {
@@ -825,8 +865,13 @@
   function gatherUnits() {
     const army = getCurrentArmy();
     if (!army || !Array.isArray(army.entries)) return [];
+    // id is keyed off the entry's stable entryId (minted once in army.js's
+    // constructor, never reassigned), NOT array position — positional ids
+    // ('u0', 'u1', …) put the persisted spill/exclusion stores (below) on
+    // the wrong unit the moment an entry is reordered, removed or split.
+    // See #72. entryIndex is still carried for renderUnitCard's points math.
     return army.entries.map((entry, i) => ({
-      id: 'u' + i,
+      id: 'u:' + entry.entryId,
       label: (entry.customName || entry.unitName || (entry.unitData && entry.unitData.name) || 'Unit')
            + (entry.count > 1 ? ' ×' + entry.count : ''),
       entry,
@@ -3372,9 +3417,11 @@
       if (helpEl) helpEl.textContent = 'Tick a section to move the whole block to a continuation card. You’ve customised this card.';
     });
     // Card name → entry.customName. Resolved by OBJECT IDENTITY against
-    // army.entries, never by this panel's card id: card ids are positional
-    // ('u0', 'u1', …) and shift whenever the army is reordered, which is
-    // exactly how the spill overrides above end up on the wrong unit.
+    // army.entries, never by this panel's card id. This was originally a
+    // workaround for positional ids ('u0', 'u1', …) shifting on reorder; the
+    // id is now 'u:' + entry.entryId (see #72), which is itself stable, so
+    // this indirection is redundant but harmless — left as-is rather than
+    // touched for no functional reason.
     if (cardEntry) {
       const nameInput = panel.querySelector('.cards-spill-name');
       let nameTimer = null;

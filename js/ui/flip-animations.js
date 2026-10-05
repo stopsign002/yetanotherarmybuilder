@@ -743,17 +743,45 @@
           // splice to the target position as before.
           if (dragEntry.attachedToEntryId) dragEntry.attachedToEntryId = null;
           let toIdx = parseInt(target.dataset.index, 10);
+          // Pin the selection to the entry OBJECT across the splice (mirrors
+          // split-entry.js): resolving by identity afterwards is immune to
+          // where the entry lands, whereas an arithmetic adjustment ("if
+          // selected > fromIdx, shift by one") silently rots the day the
+          // insert-position math below changes.
+          const App = window.App || {};
+          const state = App.state || {};
+          const selected = (state.selectedArmyEntryIndex != null)
+            ? army.entries[state.selectedArmyEntryIndex] : null;
           if (!Number.isNaN(toIdx) && toIdx !== fromIdx) {
             if (pos === 'after') toIdx += 1;
             // Adjust for the removal shift.
             if (toIdx > fromIdx) toIdx -= 1;
             if (toIdx !== fromIdx && toIdx >= 0 && toIdx <= army.entries.length) {
-              const [moved] = army.entries.splice(fromIdx, 1);
-              army.entries.splice(toIdx, 0, moved);
+              const [entryMoved] = army.entries.splice(fromIdx, 1);
+              army.entries.splice(toIdx, 0, entryMoved);
               try { army.updatedAt = new Date().toISOString(); } catch (_) {}
             }
           }
+          state.selectedArmyEntryIndex = selected ? army.entries.indexOf(selected) : null;
+          if (state.selectedArmyEntryIndex === -1) state.selectedArmyEntryIndex = null;
+
           if (window.UI && typeof UI.renderArmyList === 'function') UI.renderArmyList(army);
+
+          // The wargear picker caches the entry's ARRAY INDEX in a
+          // module-local that ONLY mount() refreshes (wargear-picker.js) —
+          // a re-render does not reconcile it. After a splice that index
+          // can address a different entry, and the next stepper nudge
+          // would write the open pane's loadout onto the wrong unit, then
+          // save and sync it. Re-rendering the detail pane re-mounts the
+          // picker against the correct index. See issue #71 for the same
+          // latent bug on the remove path.
+          const sel = state.selectedArmyEntryIndex;
+          if (sel != null && army.entries[sel] && window.UI && UI.renderUnitDetail) {
+            const selEntry = army.entries[sel];
+            const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
+            try { UI.renderUnitDetail(selEntry.unitData, detEnhs, selEntry.enhancements || []); }
+            catch (err) { console.warn('[flip-animations] detail re-render', err); }
+          }
         }
       }
 
