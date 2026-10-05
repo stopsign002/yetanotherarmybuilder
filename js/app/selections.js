@@ -48,6 +48,16 @@
     if (forbidden.length === 0) return detachments;
 
     return detachments.filter(d => {
+      // A detachment carrying `_gdcFactionTag` has already been vetted against
+      // GW's own per-detachment chapter tag by the GDC-authority pass
+      // (dc-adapter's adoptGdcDetachments) — it is in this faction's list
+      // BECAUSE GW says the faction may take it. The token blocklist is a
+      // hand-maintained substring heuristic from the BSData era and it gets
+      // this wrong in both directions now: GW tags "Deathwatch Support" as
+      // generic Adeptus Astartes, so every chapter — vanilla Space Marines
+      // included — may take it, yet the 'deathwatch' token would hide it from
+      // all of them. Data beats heuristic; untagged lists keep the old rule.
+      if (d && d._gdcFactionTag) return true;
       const name = (d && d.name ? d.name : '').toLowerCase();
       return !forbidden.some(tok => name.includes(tok));
     });

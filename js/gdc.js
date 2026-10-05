@@ -406,6 +406,28 @@
     const factionByName = new Map();
     factions.forEach(f => factionByName.set(f.factionName, f));
 
+    // Detachment ADOPTION, for EVERY faction, before any of the per-faction
+    // passes below index `faction.detachments`. This function can only decorate
+    // a detachment that already exists, so a faction whose codex replaced its
+    // detachment list wholesale (Space Marines: 17 index-era rows against GW's
+    // 22, only 4 shared) would otherwise keep every dead row and never see the
+    // new ones. dc-adapter owns the logic and registers it here (and calls it
+    // itself) so every caller of this function — the browser, refresh-40kdc's
+    // validate-deploy gate, the daily audits — gets the same shape without each
+    // having to know to run an extra phase in the right order.
+    //
+    // A WHOLE pass rather than one call at the top of the loop below, because a
+    // chapter's pass indexes the PARENT Space Marines faction's detachments too
+    // (detKeyToTargets) — so the parent's list has to be final before the first
+    // chapter is reached, whatever order `factions` arrives in. The hook is
+    // idempotent per faction.
+    try {
+      const adopt = App && App.GDC_ADOPT_DETACHMENTS;
+      if (typeof adopt === 'function') factions.forEach(f => adopt(f));
+    } catch (e) {
+      console.warn('[gdc] detachment adoption failed:', e && e.message ? e.message : e);
+    }
+
     factions.forEach(faction => {
       const files = gdcFilesFor(faction.factionName);
       if (files.length === 0) return;
@@ -891,6 +913,12 @@
   function buildAbilityIndex11(files, opts) {
     const idx = new Map();
     const parentPrimaryFile = opts && opts.parentPrimaryFile;
+    // What to store per resolved datasheet. The FILE-RESOLUTION rules below
+    // (chapter-first for a chapter, the parent sweep for vanilla Space Marines)
+    // are the valuable part and are identical whatever the caller wants out of
+    // them, so dc-adapter's GDC-authority pass borrows them with project = the
+    // raw datasheet rather than re-deriving which file owns which name.
+    const project = (opts && opts.project) || project11AbilityEntry;
 
     if (!parentPrimaryFile) {
       // Unchanged for every non-parent caller (a lone faction file, or a
@@ -901,7 +929,7 @@
         (Array.isArray(p.datasheets) ? p.datasheets : []).forEach(ds => {
           const k = nameKey(pickText(ds && ds.name));   // 11th name is a { en } object
           if (!k || idx.has(k)) return;
-          idx.set(k, project11AbilityEntry(ds));
+          idx.set(k, project(ds));
         });
       });
       return idx;
@@ -939,7 +967,7 @@
     (Array.isArray(primaryDoc && primaryDoc.datasheets) ? primaryDoc.datasheets : []).forEach(ds => {
       const k = nameKey(pickText(ds && ds.name));
       if (!k || idx.has(k)) return;
-      idx.set(k, project11AbilityEntry(ds));
+      idx.set(k, project(ds));
     });
 
     // 2) Collect chapter-file candidates for names the primary file lacks.
@@ -973,13 +1001,32 @@
         ambiguousNames.push(pickText(ds && ds.name) || k);
         return;
       }
-      idx.set(k, project11AbilityEntry(ds));
+      idx.set(k, project(ds));
     });
 
     if (ambiguousNames.length) {
       console.info('[gdc] ambiguous chapter datasheets: ' + ambiguousNames.join(', '));
     }
     return idx;
+  }
+
+  // nameKey → the RAW GDC datasheet a faction's unit of that name should read,
+  // resolved by exactly the rules buildAbilityIndex11 uses: a chapter's own
+  // file wins over space_marines.json, and for the Space Marines PARENT (whose
+  // roster carries every chapter's unique units, since 40kdc gives the chapters
+  // zero units) a chapter file only fills a gap when it is unambiguously the
+  // owner. dc-adapter's GDC-authority pass needs this, not FACTION_TO_GDC's
+  // primary file alone: Mephiston, Helbrecht, Grey Hunters and ~90 other sheets
+  // live only in a chapter file, and a primary-only lookup leaves every one of
+  // them on stale 40kdc data with nothing logged.
+  function rawDatasheetIndexFor(factionName) {
+    const files = datasheetFilesFor(factionName);
+    if (!files.length) return new Map();
+    const isSmParent = factionName === 'Imperium - Adeptus Astartes - Space Marines';
+    return buildAbilityIndex11(files, {
+      parentPrimaryFile: isSmParent ? gdcFilesFor(factionName)[0] : null,
+      project: (ds) => ds,
+    });
   }
 
   function mergeUnitAbilitiesFromGdc(factions) {
@@ -1155,6 +1202,12 @@
     // dc-adapter's GDC-authority pass rebuilds the leader graph and needs the
     // same prose parser mergeUnitDataIntoFactions uses.
     _leaderTargets: leaderTargets,
+    // dc-adapter's GDC-authority pass resolves a faction's datasheets through
+    // these rather than FACTION_TO_GDC[name] (the PRIMARY file only) — see
+    // rawDatasheetIndexFor.
+    gdcFilesFor,
+    datasheetFilesFor,
+    rawDatasheetIndexFor,
     _EDITION: EDITION,
   };
 })();

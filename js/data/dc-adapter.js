@@ -2549,9 +2549,56 @@
   // one string at a time. See docs/GDC-AUTHORITY.md for the per-field table.
   // Unchanged: the unit LIST (40kdc + the MFM gate), points, size bands and
   // ordinals (MFM), the wargear options tree, and the detachment id/points.
+  //
+  // 2026-10-05: every Adeptus Astartes faction, after the 2026-10-02 Space
+  // Marines codex + all-faction dataslate. 40kdc ingested the STAT profiles
+  // (and the MFM overlay has the points), so what is left wrong is exactly the
+  // set this mechanism owns: GRENADES still printed where GW now prints
+  // EXPLOSIVES on ~150 datasheets, Damaged profiles and Firing Deck ratings,
+  // ~60 missing named abilities, 5 wrong Leader/Support roles — and 17
+  // index-era detachments against GW's 22 codex ones, only 4 of them shared.
+  // Keyed by 40kdc faction id, which is why `crimson-fists` is listed
+  // separately: 40kdc ships it as its own faction that renders under the
+  // Imperial Fists display name.
   const GDC_AUTHORITATIVE = {
     orks: '2026-09-02 Ork codex — 40kdc + BSData both still pre-codex',
+    'adeptus-astartes': '2026-10-02 Space Marines codex — 40kdc still index-era below the statline',
+    'black-templars':   '2026-10-02 Space Marines codex (chapter)',
+    'blood-angels':     '2026-10-02 Space Marines codex (chapter)',
+    'crimson-fists':    '2026-10-02 Space Marines codex (chapter)',
+    'dark-angels':      '2026-10-02 Space Marines codex (chapter)',
+    'deathwatch':       '2026-10-02 Space Marines codex (chapter)',
+    'imperial-fists':   '2026-10-02 Space Marines codex (chapter)',
+    'iron-hands':       '2026-10-02 Space Marines codex (chapter)',
+    'raven-guard':      '2026-10-02 Space Marines codex (chapter)',
+    'salamanders':      '2026-10-02 Space Marines codex (chapter)',
+    'space-wolves':     '2026-10-02 Space Marines codex (chapter)',
+    'ultramarines':     '2026-10-02 Space Marines codex (chapter)',
+    'white-scars':      '2026-10-02 Space Marines codex (chapter)',
   };
+
+  // 40kdc faction id → the chapter name GW's own dump tags a datasheet and a
+  // detachment with (`faction` on a detachment, `factions[]` on a datasheet).
+  // This is what decides which of space_marines.json's 22 codex detachments a
+  // chapter may take: its own, plus everything tagged generic. Vanilla Space
+  // Marines (`adeptus-astartes`) is absent on purpose — a vanilla list can be
+  // any chapter, so it takes all 22.
+  const GDC_CHAPTER_TAG = {
+    'black-templars': 'Black Templars',
+    'blood-angels':   'Blood Angels',
+    'crimson-fists':  'Imperial Fists',
+    'dark-angels':    'Dark Angels',
+    'deathwatch':     'Deathwatch',
+    'imperial-fists': 'Imperial Fists',
+    'iron-hands':     'Iron Hands',
+    'raven-guard':    'Raven Guard',
+    'salamanders':    'Salamanders',
+    'space-wolves':   'Space Wolves',
+    'ultramarines':   'Ultramarines',
+    'white-scars':    'White Scars',
+  };
+  // The tag GW uses for "any chapter may take this".
+  const GDC_GENERIC_TAG = 'Adeptus Astartes';
 
   // Abilities GW prints that GDC 946 does NOT carry, per unit, for
   // GDC-authoritative factions only. GDC ships the Throttlerokkit sub-abilities
@@ -2675,11 +2722,29 @@
     // REMAINING TEST" on the Hunta Rig) never reach the card.
     if (ab.damaged) {
       const rawRange = String(T(ab.damaged.range) || '');
-      const span = (/(\d+\s*[-–]\s*\d+)/.exec(rawRange) || [])[1] || '';
+      let span = (/(\d+\s*[-–]\s*\d+)/.exec(rawRange) || [])[1] || '';
       let desc = C(ab.damaged.description) || '';
       if (!desc) {
         const i = abilities.findIndex((a) => /^damaged\b/i.test(a.name || ''));
-        if (i !== -1) { desc = abilities[i].description || ''; abilities.splice(i, 1); }
+        if (i !== -1) {
+          desc = abilities[i].description || '';
+          // …and the THRESHOLD, when the damaged block itself has no range.
+          // GDC 972 ships `damaged: { range: { en: "" } }` on all 228
+          // datasheets that have one — Orks included, where 946 still carried
+          // the span — so the substitution below had nothing to substitute and
+          // every degrading datasheet in the app rendered the ability-store's
+          // text verbatim: "1-4 wounds remaining" on the Stompa (GW prints
+          // 1-10) and on the Kill Rig (1-6). The core keyword GW ships
+          // alongside it, "Damaged 10" / "Damaged 6", states the top of the
+          // range, and 1 is always the bottom — so the span is recoverable from
+          // the name we are about to discard. Self-heals the moment the dump
+          // starts carrying `range` again, since that branch is preferred.
+          if (!span) {
+            const n = (/(\d+)\s*$/.exec(abilities[i].name || '') || [])[1];
+            if (n) span = '1-' + n;
+          }
+          abilities.splice(i, 1);
+        }
       }
       if (span && desc) {
         desc = desc.replace(/\b\d+\s*[-–]\s*\d+(?=\s+wounds?\s+remaining\b)/gi, span);
@@ -2751,9 +2816,15 @@
     // apart from that field. GDC 946 types the Bannernob, Bigboss, Mek,
     // Painboss, Painboy, Runtherd and Weirdboy rows 'support', so a
     // leader-only filter silently unattached every Ork support character.
+    // Deduped: GDC lists a target once per TYPE, so a unit a character can
+    // either lead or be attached to as Support appears twice (Cato Sicarius'
+    // Victrix Honour Guard). `gdcLeadBy` answers "which units can this join",
+    // which is one answer per unit, and attachments.js renders it as a list.
+    const leadSeen = new Set();
     let leadBy = (ds.attachesTo || [])
       .filter((x) => x && (!x.type || /^(leader|support)$/i.test(String(x.type))))
-      .map((x) => T(x.target)).filter(Boolean);
+      .map((x) => T(x.target)).filter(Boolean)
+      .filter((n) => { const k = String(n).toLowerCase(); if (leadSeen.has(k)) return false; leadSeen.add(k); return true; });
     if (!leadBy.length && ds.leader && G._leaderTargets) leadBy = G._leaderTargets(ds.leader) || [];
     const beforeLead = (unit.gdcLeadBy || []).join('/');
     unit.gdcLeadBy = leadBy;
@@ -2771,20 +2842,24 @@
     if (!App || !App.GDC || !App.GDC._rawCache) return { units: 0, changes: 0 };
     const T = App.GDC._pickText || ((v) => v);
     const dsKey = App.GDC._dsKey || App.GDC._nameKey;
-    const nameKey = App.GDC._nameKey;
     let nUnits = 0, nChanges = 0;
     (factions || []).forEach((faction) => {
       const fid = faction._factionId;
       if (!fid || !GDC_AUTHORITATIVE[fid]) return;
-      const files = [].concat(App.GDC.FACTION_TO_GDC[faction.factionName] || []);
-      const sheets = [];
-      files.forEach((fn) => {
-        const p = App.GDC._rawCache.get(App.GDC._EDITION + '/' + fn);
-        if (p && Array.isArray(p.datasheets)) sheets.push(...p.datasheets);
-      });
-      if (!sheets.length) return;                       // snapshot missing → do nothing
-      const idx = new Map();
-      sheets.forEach((d) => { const k = nameKey(T(d && d.name)); if (k && !idx.has(k)) idx.set(k, d); });
+      // Resolve datasheets the way gdc.js's own unit merges do, NOT through
+      // FACTION_TO_GDC[name] (the PRIMARY file only). A chapter has to read its
+      // own file FIRST and space_marines.json second, so a chapter's override
+      // of a shared name wins; and the Space Marines PARENT has to read every
+      // chapter file, because 40kdc gives the chapters zero units and so parks
+      // Mephiston, Helbrecht, Grey Hunters and ~90 other chapter-unique sheets
+      // on the parent — a primary-only lookup left every one of them on stale
+      // data with nothing logged. rawDatasheetIndexFor also carries gdc.js's
+      // ambiguity rule (two chapter files claiming one name is skipped, not
+      // guessed at), which a flat first-wins concat does not.
+      const idx = (typeof App.GDC.rawDatasheetIndexFor === 'function')
+        ? App.GDC.rawDatasheetIndexFor(faction.factionName)
+        : new Map();
+      if (!idx.size) return;                            // snapshot missing → do nothing
 
       (faction.units || []).forEach((unit) => {
         if (!unit || unit._adopted) return;             // already built from GDC
@@ -2859,6 +2934,230 @@
       });
     });
     return { units: nUnits, changes: nChanges };
+  }
+
+  // ── Detachments GW ships that 40kdc does not carry (GDC-adopted) ───────────
+  // The 2026-10-02 Space Marines codex did not amend the detachment list, it
+  // REPLACED it: 40kdc still ships the 17 index-era rows (1st Company Task
+  // Force, Librarius Conclave, Vanguard Spearhead, Anvil Siege Force…) against
+  // GW's 22 codex ones, and only Gladius, Stormlance, Ironstorm and Ceramite
+  // Sentinels appear in both. gdc.js's mergeIntoFactions can only DECORATE a
+  // detachment that already exists (its detKeyToTargets is built from
+  // `faction.detachments`), so flipping the faction authoritative on its own
+  // would have left the 18 missing detachments missing and the 13 dead ones
+  // listed — on the app's most-played faction.
+  //
+  // So, for an authoritative faction: synthesize what GW lists and we lack,
+  // keep the 40kdc object wherever the two agree by name (its `id` is what
+  // allied-rule gates and saved armies reference), and RETIRE what GW no longer
+  // lists. mergeIntoFactions then fills rules / enhancements / stratagems onto
+  // the adopted rows by name exactly as it does onto upstream ones — which is
+  // why this must run before it, and why it is registered as the
+  // App.GDC_ADOPT_DETACHMENTS hook rather than only called from
+  // loadAllFactions: refresh-40kdc's validate-deploy gate and the daily audits
+  // call mergeIntoFactions directly and would otherwise see the old shape.
+  //
+  // SELF-HEALING in the usual direction: once 40kdc authors a detachment, the
+  // nameKey match finds it and the row is kept rather than synthesized. It does
+  // NOT self-heal into inertness — retirement is the point, and the day GW
+  // reinstates a detachment the dump says so.
+
+  // Which GDC detachments may this faction take? GW tags every detachment in
+  // space_marines.json with the chapter it belongs to, so this is read from the
+  // data rather than hand-listed: everything in the faction's OWN chapter file,
+  // plus anything in space_marines.json tagged generic or tagged with this
+  // faction's own chapter. Vanilla Space Marines has no chapter tag and takes
+  // all 22 — a vanilla list can be any chapter.
+  //
+  // OPEN RULES QUESTION (docs/GDC-AUTHORITY.md §3): whether a Blood Angels /
+  // Dark Angels / Space Wolves / Black Templars / Deathwatch army may take the
+  // GENERIC codex detachments at all now those chapters have their own books.
+  // Current behaviour is kept — chapters borrow the generic ones, exactly as
+  // 40kdc has always had it — and only WHICH generic ones changes.
+  // "This faction's detachment list has already been reconciled against GW's."
+  // A WeakSet rather than a flag on the faction object: mergeIntoFactions fires
+  // the hook for every faction and loadAllFactions calls the pass as well, so
+  // SOMETHING has to make the second call a no-op — but a new field on every
+  // faction would change the rendered shape of factions this pass does not
+  // otherwise touch, which is the regression test (docs/GDC-AUTHORITY.md §5).
+  const gdcDetachmentsDone = new WeakSet();
+
+  function eligibleGdcDetachments(faction) {
+    const App = window.App;
+    const G = (App && App.GDC) || {};
+    const T = G._pickText || ((v) => v);
+    const fid = faction._factionId;
+    const chapterTag = GDC_CHAPTER_TAG[fid] || null;
+    const files = (typeof G.gdcFilesFor === 'function')
+      ? G.gdcFilesFor(faction.factionName)
+      : [].concat((G.FACTION_TO_GDC || {})[faction.factionName] || []);
+    // The faction's OWN BOOK, if it has one. gdcFilesFor returns
+    // [chapterFile, 'space_marines'] for the five chapters with their own
+    // codex and just ['space_marines'] for the seven that share the Space
+    // Marines book — so "files[0]" alone would make space_marines.json
+    // Ultramarines' own book and hand it all 22 detachments, Blade of Ultramar
+    // AND Medusa's Wrath included. Only a file that is NOT the shared one is a
+    // faction's own.
+    const sharedFile = (G.FACTION_TO_GDC || {})['Imperium - Adeptus Astartes - Space Marines'];
+    const ownFile = (files[0] && files[0] !== sharedFile) ? files[0] : null;
+    const out = [];
+    const seen = new Set();
+    files.forEach((fn) => {
+      const payload = G._rawCache && G._rawCache.get(G._EDITION + '/' + fn);
+      (Array.isArray(payload && payload.detachments) ? payload.detachments : []).forEach((gd) => {
+        const name = T(gd && gd.name);
+        if (!name) return;
+        const tag = String((gd && gd.faction) || '').trim();
+        // The faction's own file is entirely its own — a chapter book lists
+        // only that chapter's detachments, so no tag check is needed or wanted
+        // (Deathwatch's single detachment is tagged 'Deathwatch', not generic).
+        const ok = (fn === ownFile)
+          || !chapterTag                                   // vanilla SM: all 22
+          || tag === GDC_GENERIC_TAG
+          || tag === chapterTag;
+        if (!ok) return;
+        const k = name.toLowerCase();
+        if (seen.has(k)) return;                           // same name in two files
+        seen.add(k);
+        out.push({ gd, name, tag: tag || GDC_GENERIC_TAG });
+      });
+    });
+    return out;
+  }
+
+  // GDC's forceDispositions carry a GW uuid and a NAME; 40kdc's are slugs with
+  // our own text. Resolve by name so an adopted detachment's dispositions are
+  // the same shape (and the same objects' worth of text) toDispositions emits.
+  // An unresolvable name still renders — `{ id: null, name, text: '' }` — rather
+  // than being dropped, because a matched-play list must declare a disposition
+  // and silently showing none reads as "this detachment has no disposition".
+  function gdcDispositions(gd) {
+    const App = window.App;
+    const T = (App && App.GDC && App.GDC._pickText) || ((v) => v);
+    const byName = new Map();
+    const add = (id, o) => {
+      const nm = String((o && o.name) || '').trim().toLowerCase();
+      if (nm && !byName.has(nm)) byName.set(nm, { id, name: o.name, text: o.text || '' });
+    };
+    Object.keys(FORCE_DISPOSITIONS).forEach((id) => add(id, FORCE_DISPOSITIONS[id]));
+    // Prefer the bundle's own dictionary where it ships one (same precedence
+    // toDispositions uses: upstream names/text win over the fallback copy).
+    try {
+      const coll = DC.forceDispositions;
+      const all = coll && (coll.all || (coll.get ? null : coll));
+      (Array.isArray(all) ? all : []).forEach((d) => {
+        const r = (d && d.raw) || d;
+        if (r && r.id) byName.set(String(r.name || '').trim().toLowerCase(),
+          { id: r.id, name: r.name, text: r.text || '' });
+      });
+    } catch (_) { /* dictionary absent on older bundles — fallback copy stands */ }
+    const list = Array.isArray(gd && gd.forceDispositions) ? gd.forceDispositions
+      : (gd && gd.forceDisposition ? [gd.forceDisposition] : []);
+    const out = [];
+    const seen = new Set();
+    list.forEach((fd) => {
+      const name = T(fd && fd.name);
+      if (!name) return;
+      const key = String(name).trim().toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      const hit = byName.get(key);
+      out.push(hit ? { id: hit.id, name: hit.name, text: hit.text }
+                   : { id: null, name, text: '' });
+    });
+    return out;
+  }
+
+  // Reconcile one authoritative faction's detachment list against GW's.
+  // Idempotent — `_gdcDetachmentsAdopted` makes a second call a no-op, which is
+  // what lets both loadAllFactions and the mergeIntoFactions hook call it.
+  function adoptGdcDetachmentsFor(faction) {
+    const App = window.App;
+    const G = (App && App.GDC) || {};
+    if (!faction || gdcDetachmentsDone.has(faction)) return 0;
+    const fid = faction._factionId;
+    if (!fid || !GDC_AUTHORITATIVE[fid]) return 0;
+    if (!G._rawCache || typeof G._nameKey !== 'function') return 0;
+    const nameKey = G._nameKey;
+    const want = eligibleGdcDetachments(faction);
+    // Snapshot missing or a faction with no GDC detachment list at all: leave
+    // the 40kdc list exactly as it is. Retiring every row on a bad read would
+    // empty the picker, which is far worse than a stale one.
+    if (!want.length) return 0;
+
+    const have = new Map();
+    (faction.detachments || []).forEach((d) => {
+      const k = nameKey(d && d.name);
+      if (k && !have.has(k)) have.set(k, d);
+    });
+
+    // `_gdcFactionTag` tells the picker and the chapter detachment blocklist
+    // which rows are chapter-exclusive and which any chapter may take. It only
+    // MEANS anything where a faction's eligible set mixes tags — i.e. the
+    // Adeptus Astartes family, where generic codex detachments and
+    // chapter-exclusive ones sit in one list. For a faction whose every
+    // detachment carries the same tag (Orks: all 15 tagged "Orks") there is
+    // nothing to distinguish, so the field is left off rather than stamped onto
+    // every row of a faction this change is not meant to alter.
+    const tagged = new Set(want.map((w) => w.tag)).size > 1;
+
+    const kept = [];
+    const retired = [];
+    const matched = new Set();
+    want.forEach(({ gd, name, tag }) => {
+      const k = nameKey(name);
+      const hit = k && have.get(k);
+      if (hit) {
+        matched.add(k);
+        // Keep the 40kdc object: its `id` is what saved armies and the allied
+        // -rule gates (js/app/allies.js, on 40kdc detachment_ids) reference, and
+        // its points/dispositions are upstream's per docs/GDC-AUTHORITY.md.
+        if (tagged) hit._gdcFactionTag = tag;
+        kept.push(hit);
+        return;
+      }
+      kept.push({
+        name,
+        rules: [],
+        enhancements: [],
+        _factionId: fid,
+        // Namespaced so it can never collide with a 40kdc detachment id, and
+        // so an allied-rule gate on a 40kdc id simply never matches it.
+        id: 'gdc:' + String((gd && gd.id) || nameKey(name)),
+        points: (gd && gd.detachmentPoints != null) ? gd.detachmentPoints : null,
+        dispositions: gdcDispositions(gd),
+        // GW's list IS the stratagem list for an authoritative faction
+        // (reconcileStrats short-circuits to gdcStratagems), so there is
+        // nothing for 40kdc's ids to contribute here.
+        stratagemIds: [],
+        _gdcFactionTag: tagged ? tag : null,
+        _adopted: true,
+      });
+    });
+    (faction.detachments || []).forEach((d) => {
+      const k = nameKey(d && d.name);
+      if (!k || matched.has(k)) return;
+      retired.push(d.name);
+    });
+    faction.detachments = kept;
+    // The army loader can say WHY a saved army's detachment is gone rather than
+    // just dropping it silently (setSelectedDetachments keeps only names in the
+    // available list, so the degradation itself is already "no detachment
+    // selected" rather than a crash).
+    if (retired.length) faction._retiredDetachments = retired;
+    gdcDetachmentsDone.add(faction);
+    return kept.length;
+  }
+
+  function adoptGdcDetachments(factions) {
+    let nAdopted = 0, nRetired = 0, nFactions = 0;
+    (factions || []).forEach((faction) => {
+      if (!adoptGdcDetachmentsFor(faction)) return;
+      nFactions++;
+      nAdopted += (faction.detachments || []).filter((d) => d._adopted).length;
+      nRetired += (faction._retiredDetachments || []).length;
+    });
+    return { factions: nFactions, adopted: nAdopted, retired: nRetired };
   }
 
   // ── Units GW ships that 40kdc has not caught up to yet (GDC-adopted) ───────
@@ -3133,6 +3432,21 @@
       if (window.App && App.GDC && App.state && Array.isArray(App.state.factions)) {
         const names = App.state.factions.map((f) => f.factionName);
         await App.GDC.loadAll(names);
+        // Detachment adoption for the GDC-authoritative factions. Must precede
+        // mergeIntoFactions, which can only decorate a detachment that already
+        // exists — see adoptGdcDetachments. mergeIntoFactions also fires this
+        // as a hook, so this call is the one that logs; the hook is the one
+        // that guarantees the order for every OTHER caller (the refresh's
+        // validate-deploy gate, the daily audits). Idempotent either way.
+        try {
+          const dets = adoptGdcDetachments(App.state.factions);
+          if (dets.factions > 0) {
+            console.info(`[DC] GDC detachments: ${dets.adopted} adopted, ` +
+              `${dets.retired} retired across ${dets.factions} faction(s)`);
+          }
+        } catch (e) {
+          console.warn('[DC] GDC detachment adoption failed (non-fatal):', e && e.message ? e.message : e);
+        }
         App.GDC.mergeIntoFactions(App.state.factions);
         if (typeof App.GDC.mergeUnitDataIntoFactions === 'function') {
           App.GDC.mergeUnitDataIntoFactions(App.state.factions);
@@ -3219,6 +3533,12 @@
   // merges directly sees it as well. Keyed by 40kdc faction id — gdc.js reads
   // `faction._factionId`.
   try { (window.App = window.App || {}).GDC_AUTHORITATIVE = GDC_AUTHORITATIVE; } catch (_) {}
+  // …and the detachment-adoption pass, which mergeIntoFactions runs for every
+  // faction before it indexes `faction.detachments`. Registered here rather
+  // than called only from loadAllFactions so the node harnesses that drive the
+  // merges directly (refresh-40kdc's validate-deploy.mjs, the daily audits) see
+  // the same detachment list the browser does. Idempotent per faction.
+  try { (window.App = window.App || {}).GDC_ADOPT_DETACHMENTS = adoptGdcDetachmentsFor; } catch (_) {}
 
   // Override the data source. Keep the same public surface bsdata.js exposed.
   window.BSData = {
@@ -3234,6 +3554,7 @@
     _syncOptionalWeaponsFromGdc: syncOptionalWeaponsFromGdc,
     _attachAlliedUnits: attachAlliedUnits,
     _adoptGdcUnits: adoptGdcUnits,
+    _adoptGdcDetachments: adoptGdcDetachments,
     _applyGdcStatlines: applyGdcStatlines,
   };
 

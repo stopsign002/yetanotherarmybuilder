@@ -36,8 +36,20 @@
     const parentNames = new Set((parentFac && parentFac.detachments || [])
       .map(d => String(d && d.name || '').toLowerCase()));
     const specific = [], generic = [];
+    // `_gdcFactionTag` is GW's own per-detachment chapter tag, set by
+    // dc-adapter's GDC-authority pass: 'Adeptus Astartes' means any chapter may
+    // take it, anything else names the chapter it belongs to. Prefer it over
+    // the "does the parent list this name too?" heuristic, which stopped
+    // working the moment the parent adopted GW's full 22: vanilla Space Marines
+    // now carries Blade of Ultramar, so Ultramarines' own copy of it read as
+    // "Space Marines (generic)".
+    const GENERIC_TAG = 'adeptus astartes';
     dets.forEach(d => {
-      (parentNames.has(String(d && d.name || '').toLowerCase()) ? generic : specific).push(d);
+      const tag = d && d._gdcFactionTag;
+      const isGeneric = tag
+        ? String(tag).toLowerCase() === GENERIC_TAG
+        : parentNames.has(String(d && d.name || '').toLowerCase());
+      (isGeneric ? generic : specific).push(d);
     });
     const shortChapter = curName.includes(' - ') ? curName.split(' - ').pop().trim() : curName;
     return [
