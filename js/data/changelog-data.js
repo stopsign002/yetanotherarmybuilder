@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.09.24-3',
-    lastUpdated: '2026-09-24T23:00:00Z',
+    version:     '2026.10.05-1',
+    lastUpdated: '2026-10-05T12:00:00Z',
     entries: [
+      {
+        date: '2026-10-05',
+        kind: 'fix',
+        title: 'Codex: Space Marines + the 30 September dataslate are in',
+        description: 'Every Adeptus Astartes faction now reads datasheets, keywords, abilities, Leader/Support roles, enhancements and stratagems from GW\'s own app data: the 22 codex detachments (Blade of Ultramar, Tactical Brethren, Gravis Siege Force, Terminator Storm Force, Phobos Shock Force…) replace the index-era ones, GRENADES is EXPLOSIVES, Damaged profiles and Firing Deck ratings match the book. The all-faction dataslate sweep — Marine infantry T5, Terminators T6, bolt weapons S5, bolt pistols AP-1 — is applied across Space Marines, Chaos Space Marines, Death Guard, Thousand Sons, World Eaters, Emperor\'s Children, Grey Knights and Custodes. Points follow the 2 October Munitorum Field Manual; Tactical Squads, Devastators, Centurions, Predators, Razorbacks, Vindicators, Whirlwinds, Stormravens and ten more sheets GW moved to Legends are now flagged as such (show them with the L toggle). Degrading units everywhere show the right Damaged threshold again (Stompa 1-10, not 1-4).',
+      },
       {
         date: '2026-09-24',
         kind: 'feature',
