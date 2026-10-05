@@ -6,8 +6,8 @@
     "banner": "#0a2118",
     "header": "#324935"
   },
-  "compatibleDataVersion": 946,
-  "updated": "2026-09-02T09:15:28.534Z",
+  "compatibleDataVersion": 972,
+  "updated": "2026-10-02T09:52:39.704Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -461,7 +461,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "3062acc0-d72e-471a-bbd1-26598bc30ec4",
@@ -482,7 +498,30 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "30a9528f-1692-4a82-9559-b9ef448d845d",
+          "name": {
+            "en": "Recon"
+          }
+        }
+      ]
     },
     {
       "id": "4fa424ac-a7aa-4830-b497-45c89aae7fbb",
@@ -503,7 +542,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "660a5970-862e-4ea0-8365-1901adb404be",
@@ -524,7 +579,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "6ae8f235-c8b0-4485-8e18-505b6926f1b2",
@@ -545,7 +616,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "7b0fe28b-5a8e-48cd-bbe7-699babfbd463",
@@ -573,7 +660,30 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "ce2903db-6d37-4e2c-8a81-9cb5d086807e",
+          "name": {
+            "en": "Abhuman"
+          }
+        }
+      ]
     },
     {
       "id": "7c12acc3-f2ae-4fa7-b80b-03dae96b72da",
@@ -601,7 +711,30 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "30a9528f-1692-4a82-9559-b9ef448d845d",
+          "name": {
+            "en": "Recon"
+          }
+        }
+      ]
     },
     {
       "id": "8f29b4e9-92c8-450f-8d35-5561c49e8803",
@@ -622,7 +755,43 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        },
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "ce2903db-6d37-4e2c-8a81-9cb5d086807e",
+          "name": {
+            "en": "Abhuman"
+          }
+        }
+      ]
     },
     {
       "id": "aae77907-0898-4c11-8a9e-a866a3e67456",
@@ -650,7 +819,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "c3170734-b810-4e24-8244-0371f715ff9c",
@@ -671,7 +856,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "f284cddb-5060-44ff-abbb-a2876dedcf18",
@@ -692,7 +893,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     }
   ],
   "stratagems": [
@@ -3912,7 +4129,14 @@
           "zh": "步兵"
         },
         {
-          "en": "Artillery"
+          "en": "Artillery",
+          "de": "Artillerie",
+          "es": "Artillería",
+          "fr": "Artillerie",
+          "it": "Artiglieria",
+          "ja": "アーティラリー",
+          "ko": "포병",
+          "zh": "炮兵"
         },
         {
           "en": "Grenades"
@@ -5717,7 +5941,14 @@
           "zh": "载具"
         },
         {
-          "en": "Artillery"
+          "en": "Artillery",
+          "de": "Artillerie",
+          "es": "Artillería",
+          "fr": "Artillerie",
+          "it": "Artiglieria",
+          "ja": "アーティラリー",
+          "ko": "포병",
+          "zh": "炮兵"
         },
         {
           "en": "Smoke",
@@ -5966,8 +6197,8 @@
         }
       ],
       "additionalCost": {
-        "cost": "20",
-        "afterSelections": 1
+        "cost": "30",
+        "afterSelections": 2
       }
     },
     {
@@ -6258,8 +6489,8 @@
         }
       ],
       "additionalCost": {
-        "cost": "15",
-        "afterSelections": 1
+        "cost": "30",
+        "afterSelections": 2
       }
     },
     {
@@ -9868,6 +10099,16 @@
         },
         {
           "en": "Centaur RSV"
+        },
+        {
+          "en": "Frame",
+          "de": "Umriss",
+          "es": "Figura",
+          "fr": "Châssis",
+          "it": "Sagoma",
+          "ja": "フレーム",
+          "ko": "동체",
+          "zh": "外壳"
         }
       ],
       "stats": [
@@ -10751,6 +10992,16 @@
         },
         {
           "en": "Commissar Graves"
+        },
+        {
+          "en": "Frame",
+          "de": "Umriss",
+          "es": "Figura",
+          "fr": "Châssis",
+          "it": "Sagoma",
+          "ja": "フレーム",
+          "ko": "동체",
+          "zh": "外壳"
         }
       ],
       "stats": [
@@ -11032,6 +11283,9 @@
         },
         {
           "en": "Commissar Graves on Foot"
+        },
+        {
+          "en": "Officer"
         }
       ],
       "stats": [
@@ -11484,7 +11738,7 @@
       },
       "points": [
         {
-          "cost": "120",
+          "cost": "110",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -12536,7 +12790,14 @@
           "zh": "载具"
         },
         {
-          "en": "Artillery"
+          "en": "Artillery",
+          "de": "Artillerie",
+          "es": "Artillería",
+          "fr": "Artillerie",
+          "it": "Artiglieria",
+          "ja": "アーティラリー",
+          "ko": "포병",
+          "zh": "炮兵"
         },
         {
           "en": "Smoke",
@@ -12795,8 +13056,8 @@
         }
       ],
       "additionalCost": {
-        "cost": "10",
-        "afterSelections": 1
+        "cost": "20",
+        "afterSelections": 2
       }
     },
     {
@@ -13138,7 +13399,14 @@
           "zh": "步兵"
         },
         {
-          "en": "Artillery"
+          "en": "Artillery",
+          "de": "Artillerie",
+          "es": "Artillería",
+          "fr": "Artillerie",
+          "it": "Artiglieria",
+          "ja": "アーティラリー",
+          "ko": "포병",
+          "zh": "炮兵"
         },
         {
           "en": "Grenades"
@@ -14442,7 +14710,7 @@
       },
       "points": [
         {
-          "cost": "125",
+          "cost": "115",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -14576,6 +14844,16 @@
         },
         {
           "en": "Hippogriff AFV"
+        },
+        {
+          "en": "Frame",
+          "de": "Umriss",
+          "es": "Figura",
+          "fr": "Châssis",
+          "it": "Sagoma",
+          "ja": "フレーム",
+          "ko": "동체",
+          "zh": "外壳"
         }
       ],
       "stats": [
@@ -20945,7 +21223,7 @@
       },
       "points": [
         {
-          "cost": "75",
+          "cost": "70",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -21194,7 +21472,7 @@
       },
       "points": [
         {
-          "cost": "130",
+          "cost": "120",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -21296,7 +21574,14 @@
           "zh": "载具"
         },
         {
-          "en": "Artillery"
+          "en": "Artillery",
+          "de": "Artillerie",
+          "es": "Artillería",
+          "fr": "Artillerie",
+          "it": "Artiglieria",
+          "ja": "アーティラリー",
+          "ko": "포병",
+          "zh": "炮兵"
         },
         {
           "en": "Frame",
@@ -21545,8 +21830,8 @@
         }
       ],
       "additionalCost": {
-        "cost": "20",
-        "afterSelections": 1
+        "cost": "30",
+        "afterSelections": 2
       }
     },
     {
@@ -28419,7 +28704,14 @@
           "zh": "载具"
         },
         {
-          "en": "Artillery"
+          "en": "Artillery",
+          "de": "Artillerie",
+          "es": "Artillería",
+          "fr": "Artillerie",
+          "it": "Artiglieria",
+          "ja": "アーティラリー",
+          "ko": "포병",
+          "zh": "炮兵"
         },
         {
           "en": "Smoke",
@@ -28668,8 +28960,8 @@
         }
       ],
       "additionalCost": {
-        "cost": "20",
-        "afterSelections": 1
+        "cost": "30",
+        "afterSelections": 2
       }
     }
   ]

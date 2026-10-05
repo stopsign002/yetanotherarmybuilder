@@ -6,8 +6,8 @@
     "banner": "#6a0e19",
     "header": "#6d5035"
   },
-  "compatibleDataVersion": 946,
-  "updated": "2026-09-02T09:15:29.453Z",
+  "compatibleDataVersion": 972,
+  "updated": "2026-10-02T09:52:40.686Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -345,7 +345,43 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        },
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "ffcee1e6-c335-4721-b6b9-a7ab7f84bab7",
+          "name": {
+            "en": "Lions"
+          }
+        }
+      ]
     },
     {
       "id": "2ed9481a-9f80-4e78-8931-b8070fef82e3",
@@ -366,7 +402,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "3cb02267-28e0-4dab-9ff3-976caa1b7a31",
@@ -387,7 +439,30 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "ffe925f4-147f-4844-afa3-8add3e811460",
+          "name": {
+            "en": "Armoury"
+          }
+        }
+      ]
     },
     {
       "id": "4edac749-d510-4161-b3c3-1fd31e91cfcf",
@@ -415,7 +490,30 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "ffe925f4-147f-4844-afa3-8add3e811460",
+          "name": {
+            "en": "Armoury"
+          }
+        }
+      ]
     },
     {
       "id": "58dd1c38-27e6-4ccf-a7f5-53068e61b838",
@@ -443,7 +541,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "71a22085-3750-4339-bd18-7b7511e831ee",
@@ -464,7 +578,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "92ae3afb-c5d5-41a9-80da-8db33c91ed41",
@@ -492,7 +622,30 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "ffcee1e6-c335-4721-b6b9-a7ab7f84bab7",
+          "name": {
+            "en": "Lions"
+          }
+        }
+      ]
     },
     {
       "id": "b70a6b14-333a-4f04-a3c3-b3341e48c08c",
@@ -513,7 +666,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "f0e490e7-c6e3-4c51-9162-93dca988eee5",
@@ -534,7 +703,36 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        },
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     }
   ],
   "stratagems": [
@@ -1901,9 +2099,9 @@
       "source": "40k-11e"
     },
     {
-      "id": "a274a0ef-2e4a-5d6a-9f0d-966265008ba0",
+      "id": "94574e64-f61d-515d-b7f5-5f100203afc7",
       "name": {
-        "en": "unleash the lions",
+        "en": "Unleash the Lions",
         "de": "Die Löwen entfesseln",
         "es": "Soltad a los leones",
         "fr": "Lâchez les Lions",
@@ -3268,7 +3466,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Assault"]
@@ -3300,7 +3498,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Assault"]
@@ -3429,28 +3627,28 @@
       },
       "points": [
         {
-          "cost": "340",
+          "cost": "360",
           "models": "6",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "280",
+          "cost": "300",
           "models": "5",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "165",
+          "cost": "180",
           "models": "3",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "110",
+          "cost": "120",
           "models": "2",
           "keyword": null,
           "faction": null,
@@ -3511,7 +3709,7 @@
         }
       ],
       "additionalCost": {
-        "cost": "30",
+        "cost": "40",
         "afterSelections": 2
       }
     },
@@ -3609,22 +3807,6 @@
           "profiles": [
             {
               "name": {
-                "en": "Storm bolter"
-              },
-              "range": "24\"",
-              "attacks": "2",
-              "skill": "3+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": ["Rapid Fire 2"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
                 "en": "Hunter-killer missile"
               },
               "range": "48\"",
@@ -3634,6 +3816,22 @@
               "ap": "-3",
               "damage": "D6",
               "keywords": ["One Shot"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Storm Bolter"
+              },
+              "range": "24\"",
+              "attacks": "2",
+              "skill": "3+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Rapid Fire 2"]
             }
           ]
         }
@@ -3724,7 +3922,7 @@
           "options": [
             {
               "name": {
-                "en": "Storm bolter"
+                "en": "Storm Bolter"
               },
               "cost": "0"
             },
@@ -5444,7 +5642,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Assault"]
@@ -5460,7 +5658,7 @@
               "range": "12\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Pistol", "Assault"]
@@ -5597,14 +5795,14 @@
       },
       "points": [
         {
-          "cost": "215",
+          "cost": "225",
           "models": "5",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "170",
+          "cost": "180",
           "models": "4",
           "keyword": null,
           "faction": null,
@@ -5954,7 +6152,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Assault"]
@@ -5970,7 +6168,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Assault"]
@@ -6083,14 +6281,14 @@
       },
       "points": [
         {
-          "cost": "250",
+          "cost": "260",
           "models": "5",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "200",
+          "cost": "210",
           "models": "4",
           "keyword": null,
           "faction": null,
@@ -6212,8 +6410,8 @@
               "range": "24\"",
               "attacks": "1",
               "skill": "2+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "2",
               "keywords": ["Rapid Fire 1"]
             }
@@ -6898,10 +7096,10 @@
               "range": "24\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 1"]
+              "keywords": ["RAPID FIRE 1"]
             }
           ]
         }
@@ -6968,28 +7166,28 @@
       },
       "points": [
         {
-          "cost": "85",
+          "cost": "90",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "75",
+          "cost": "80",
           "models": "9",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "50",
+          "cost": "55",
           "models": "5",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "45",
+          "cost": "50",
           "models": "4",
           "keyword": null,
           "faction": null,
@@ -7283,7 +7481,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Assault"]
@@ -7299,7 +7497,7 @@
               "range": "12\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Pistol", "Assault"]
@@ -7331,7 +7529,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Assault"]
@@ -7640,7 +7838,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Assault"]
@@ -7672,7 +7870,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Assault"]
@@ -7920,7 +8118,7 @@
               "range": "18\"",
               "attacks": "3",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Twin-linked", "Rapid Fire 3"]
@@ -8020,7 +8218,7 @@
       },
       "points": [
         {
-          "cost": "140",
+          "cost": "150",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -8698,7 +8896,7 @@
               "range": "24\"",
               "attacks": "3",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Assault"]
@@ -8792,7 +8990,7 @@
       },
       "points": [
         {
-          "cost": "110",
+          "cost": "120",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -8815,14 +9013,14 @@
         }
       ],
       "leader": {
-        "en": "This model can be attached to the following units:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD SODALITY WITH ADRASITE SPEARS** ■ **CUSTODIAN GUARD SODALITY WITH PYRITHITE SPEARS** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS** ■ **SAGITTARUM CUSTODIANS SODALITY**",
-        "de": "Dieses Modell kann sich den folgenden Einheiten anschließen:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD SODALITY WITH ADRASITE SPEARS** ■ **CUSTODIAN GUARD SODALITY WITH PYRITHITE SPEARS** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS** ■ **SAGITTARUM CUSTODIANS SODALITY**",
-        "es": "Esta miniatura puede adjuntarse a las siguientes unidades:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD SODALITY WITH ADRASITE SPEARS** ■ **CUSTODIAN GUARD SODALITY WITH PYRITHITE SPEARS** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS** ■ **SAGITTARUM CUSTODIANS SODALITY**",
-        "fr": "Cette figurine peut être attachée aux unités suivantes:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD SODALITY WITH ADRASITE SPEARS** ■ **CUSTODIAN GUARD SODALITY WITH PYRITHITE SPEARS** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS** ■ **SAGITTARUM CUSTODIANS SODALITY**",
-        "it": "Questo modello può essere aggregato alle seguenti unità:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD SODALITY WITH ADRASITE SPEARS** ■ **CUSTODIAN GUARD SODALITY WITH PYRITHITE SPEARS** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS** ■ **SAGITTARUM CUSTODIANS SODALITY**",
-        "ja": "この兵は以下のユニットに合流できる：  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD SODALITY WITH ADRASITE SPEARS** ■ **CUSTODIAN GUARD SODALITY WITH PYRITHITE SPEARS** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS** ■ **SAGITTARUM CUSTODIANS SODALITY**",
-        "ko": "이 모델이 합류할 수 있는 유닛:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD SODALITY WITH ADRASITE SPEARS** ■ **CUSTODIAN GUARD SODALITY WITH PYRITHITE SPEARS** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS** ■ **SAGITTARUM CUSTODIANS SODALITY**",
-        "zh": "该模型可以与以下单位组成联合单位:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD SODALITY WITH ADRASITE SPEARS** ■ **CUSTODIAN GUARD SODALITY WITH PYRITHITE SPEARS** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS** ■ **SAGITTARUM CUSTODIANS SODALITY**"
+        "en": "This model can be attached to the following units:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS**",
+        "de": "Dieses Modell kann sich den folgenden Einheiten anschließen:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS**",
+        "es": "Esta miniatura puede adjuntarse a las siguientes unidades:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS**",
+        "fr": "Cette figurine peut être attachée aux unités suivantes:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS**",
+        "it": "Questo modello può essere aggregato alle seguenti unità:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS**",
+        "ja": "この兵は以下のユニットに合流できる：  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS**",
+        "ko": "이 모델이 합류할 수 있는 유닛:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS**",
+        "zh": "该模型可以与以下单位组成联合单位:  ■ **CUSTODIAN GUARD** ■ **CUSTODIAN GUARD WITH ADRASITE AND PYRITHITE SPEARS** ■ **CUSTODIAN WARDENS** ■ **SAGITTARUM CUSTODIANS**"
       },
       "attachesTo": [
         {
@@ -9179,8 +9377,8 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
             }
@@ -9405,22 +9603,6 @@
           "profiles": [
             {
               "name": {
-                "en": "Storm bolter"
-              },
-              "range": "24\"",
-              "attacks": "2",
-              "skill": "2+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": ["Rapid Fire 2"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
                 "en": "Hunter-killer missile"
               },
               "range": "48\"",
@@ -9430,6 +9612,22 @@
               "ap": "-3",
               "damage": "D6",
               "keywords": ["One Shot"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Storm Bolter"
+              },
+              "range": "24\"",
+              "attacks": "2",
+              "skill": "2+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Rapid Fire 2"]
             }
           ]
         },
@@ -9595,7 +9793,7 @@
           "options": [
             {
               "name": {
-                "en": "Storm bolter"
+                "en": "Storm Bolter"
               },
               "cost": "0"
             }
@@ -9676,7 +9874,7 @@
               "range": "18\"",
               "attacks": "3",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "2",
               "keywords": ["Twin-linked", "Rapid Fire 3"]
@@ -9769,14 +9967,14 @@
       },
       "points": [
         {
-          "cost": "215",
+          "cost": "230",
           "models": "3",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "145",
+          "cost": "155",
           "models": "2",
           "keyword": null,
           "faction": null,

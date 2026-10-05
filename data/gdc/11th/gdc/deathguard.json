@@ -6,8 +6,8 @@
     "banner": "#2c290c",
     "header": "#4d560e"
   },
-  "compatibleDataVersion": 946,
-  "updated": "2026-09-02T09:15:25.640Z",
+  "compatibleDataVersion": 972,
+  "updated": "2026-10-02T09:52:36.316Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -424,7 +424,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "51470653-e741-468c-a4c5-efc6110e46d0",
@@ -445,7 +461,36 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        },
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "73927182-408b-4119-a045-e3b21d35cc36",
@@ -466,7 +511,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "80f1f5cf-8331-4b71-87fa-fe4caaa92633",
@@ -494,7 +555,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "9a41d668-c9ee-41c8-81e7-58585d6d8efb",
@@ -522,7 +599,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "ac958d83-3ee2-4279-8115-2b164658da08",
@@ -543,7 +636,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "b3a2a4b5-40a0-4875-8017-bc455d657040",
@@ -564,7 +673,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "bd9bf924-b054-47bf-9df6-a301a62b41c5",
@@ -585,7 +710,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "db1b2621-c7fc-4c1f-91ba-3f75779123b8",
@@ -606,7 +747,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     }
   ],
   "stratagems": [
@@ -2911,8 +3068,8 @@
               "range": "Melee",
               "attacks": "4",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Lethal Hits"]
             }
@@ -3014,7 +3171,7 @@
         }
       ],
       "leader": {
-        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES**  *You can attach this model to a* **PLAGUE MARINES** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit). If you do, and that Bodyguard unit is destroyed, the Leader units attached to it become separate units, with their original Starting Strengths.*",
+        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES**  *You can attach this model to a* **PLAGUE MARINES** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit).*",
         "de": "Dieses Modell kann sich den folgenden Einheiten anschließen:  ■ **PLAGUE MARINES**",
         "es": "Esta miniatura puede adjuntarse a las siguientes unidades:  ■ **PLAGUE MARINES**",
         "fr": "Cette figurine peut être attachée aux unités suivantes:  ■ **PLAGUE MARINES**",
@@ -3108,8 +3265,8 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Rapid Fire 2", "Lethal Hits"]
             }
@@ -3135,6 +3292,26 @@
           "profiles": [
             {
               "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
                 "en": "Reaper autocannon"
               },
               "range": "36\"",
@@ -3144,26 +3321,6 @@
               "ap": "-1",
               "damage": "1",
               "keywords": ["Sustained Hits 1", "Devastating Wounds"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         },
@@ -3189,12 +3346,12 @@
           "profiles": [
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "range": "Melee",
               "attacks": "3",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -3302,14 +3459,14 @@
       },
       "points": [
         {
-          "cost": "360",
+          "cost": "370",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "180",
+          "cost": "185",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -3453,13 +3610,17 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }
           ]
         }
-      ]
+      ],
+      "additionalCost": {
+        "cost": "30",
+        "afterSelections": 2
+      }
     },
     {
       "id": "5f021401-11a5-573d-b8e4-43e911156975",
@@ -3558,10 +3719,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Rapid Fire 2", "Lethal Hits"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -3594,26 +3775,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         },
@@ -3887,10 +4048,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Rapid Fire 2", "Lethal Hits"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -3907,26 +4088,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         },
@@ -4042,7 +4203,7 @@
       },
       "points": [
         {
-          "cost": "135",
+          "cost": "130",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -4213,10 +4374,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Rapid Fire 2", "Lethal Hits"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -4249,26 +4430,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         },
@@ -4384,7 +4545,7 @@
       },
       "points": [
         {
-          "cost": "145",
+          "cost": "140",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -4574,10 +4735,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Rapid Fire 2", "Lethal Hits"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -4594,26 +4775,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         }
@@ -5105,7 +5266,7 @@
       },
       "points": [
         {
-          "cost": "195",
+          "cost": "185",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -5331,7 +5492,7 @@
       },
       "points": [
         {
-          "cost": "170",
+          "cost": "160",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -5561,7 +5722,7 @@
           "detachment": null
         },
         {
-          "cost": "160",
+          "cost": "150",
           "models": "3",
           "keyword": null,
           "faction": null,
@@ -6626,7 +6787,7 @@
               "range": "Melee",
               "attacks": "4",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -6718,7 +6879,7 @@
         }
       ],
       "leader": {
-        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES**  *You can attach this model to a* **PLAGUE MARINES** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit). If you do, and that Bodyguard unit is destroyed, the Leader units attached to it become separate units, with their original Starting Strengths.*",
+        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES**  *You can attach this model to a* **PLAGUE MARINES** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit).*",
         "de": "Dieses Modell kann sich den folgenden Einheiten anschließen:  ■ **PLAGUE MARINES**",
         "es": "Esta miniatura puede adjuntarse a las siguientes unidades:  ■ **PLAGUE MARINES**",
         "fr": "Cette figurine peut être attachée aux unités suivantes:  ■ **PLAGUE MARINES**",
@@ -6839,8 +7000,8 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Rapid Fire 2", "Lethal Hits"]
             }
@@ -7073,7 +7234,7 @@
       },
       "points": [
         {
-          "cost": "110",
+          "cost": "105",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -7275,8 +7436,8 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Lethal Hits"]
             }
@@ -7293,8 +7454,8 @@
               "range": "Melee",
               "attacks": "4",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Lethal Hits"]
             }
@@ -7385,7 +7546,7 @@
         }
       ],
       "leader": {
-        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES**  *You can attach this model to a* **PLAGUE MARINES** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit). If you do, and that Bodyguard unit is destroyed, the Leader units attached to it become separate units, with their original Starting Strengths.*",
+        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES**  *You can attach this model to a* **PLAGUE MARINES** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit).*",
         "de": "Dieses Modell kann sich den folgenden Einheiten anschließen:  ■ **PLAGUE MARINES**",
         "es": "Esta miniatura puede adjuntarse a las siguientes unidades:  ■ **PLAGUE MARINES**",
         "fr": "Cette figurine peut être attachée aux unités suivantes:  ■ **PLAGUE MARINES**",
@@ -7575,7 +7736,7 @@
       },
       "points": [
         {
-          "cost": "120",
+          "cost": "110",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -8028,7 +8189,7 @@
       },
       "points": [
         {
-          "cost": "100",
+          "cost": "90",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -8165,8 +8326,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol", "Lethal Hits"]
             }
@@ -8524,7 +8685,14 @@
           "zh": "凶兽"
         },
         {
-          "en": "Primarch"
+          "en": "Primarch",
+          "de": "Primarch",
+          "es": "Primarca",
+          "fr": "Primarque",
+          "it": "Primarca",
+          "ja": "総主長",
+          "ko": "프라이마크",
+          "zh": "基因原体"
         },
         {
           "en": "Mortarion"
@@ -9293,7 +9461,7 @@
         }
       ],
       "leader": {
-        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES** ■ **POXWALKERS**  *You con attach this model to a* **PLAGUE MARINES** *or* **POXWALKERS** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit). If you do, and that Bodyguard unit is destroyed, the Leader units attached to it become separate units, with their original Starting Strengths.*",
+        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES** ■ **POXWALKERS**  *You con attach this model to a* **PLAGUE MARINES** *or* **POXWALKERS** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit).*",
         "de": "Dieses Modell kann sich den folgenden Einheiten anschließen:  ■ **PLAGUE MARINES** ■ **POXWALKERS**",
         "es": "Esta miniatura puede adjuntarse a las siguientes unidades:  ■ **PLAGUE MARINES** ■ **POXWALKERS**",
         "fr": "Cette figurine peut être attachée aux unités suivantes:  ■ **PLAGUE MARINES** ■ **POXWALKERS**",
@@ -9423,8 +9591,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol", "Lethal Hits"]
             }
@@ -9515,8 +9683,8 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Lethal Hits"]
             }
@@ -9581,8 +9749,8 @@
               "range": "Melee",
               "attacks": "3",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Lethal Hits"]
             }
@@ -9679,7 +9847,7 @@
       },
       "points": [
         {
-          "cost": "180",
+          "cost": "175",
           "models": "10",
           "keyword": null,
           "faction": null,
@@ -9951,8 +10119,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol", "Lethal Hits"]
             }
@@ -10061,7 +10229,7 @@
         }
       ],
       "leader": {
-        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES**  *You can attach this model to a* **PLAGUE MARINES** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit). If you do, and that Bodyguard unit is destroyed, the Leader units attached to it become separate units, with their original Starting Strengths.*",
+        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES**  *You can attach this model to a* **PLAGUE MARINES** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit).*",
         "de": "Dieses Modell kann sich den folgenden Einheiten anschließen:  ■ **PLAGUE MARINES**",
         "es": "Esta miniatura puede adjuntarse a las siguientes unidades:  ■ **PLAGUE MARINES**",
         "fr": "Cette figurine peut être attachée aux unités suivantes:  ■ **PLAGUE MARINES**",
@@ -10384,7 +10552,7 @@
       ],
       "additionalCost": {
         "cost": "30",
-        "afterSelections": 1
+        "afterSelections": 2
       }
     },
     {
@@ -10657,7 +10825,7 @@
               "range": "Melee",
               "attacks": "4",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -10749,7 +10917,7 @@
         }
       ],
       "leader": {
-        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES**  *You can attach this model to a* **PLAGUE MARINES** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit). If you do, and that Bodyguard unit is destroyed, the Leader units attached to it become separate units, with their original Starting Strengths.*",
+        "en": "This model can be attached to the following units:  ■ **PLAGUE MARINES**  *You can attach this model to a* **PLAGUE MARINES** *unit, even if one other Leader unit has already been attached to it (you cannot attach more than one of the same Leader to the same unit).*",
         "de": "Dieses Modell kann sich den folgenden Einheiten anschließen:  ■ **PLAGUE MARINES**",
         "es": "Esta miniatura puede adjuntarse a las siguientes unidades:  ■ **PLAGUE MARINES**",
         "fr": "Cette figurine peut être attachée aux unités suivantes:  ■ **PLAGUE MARINES**",
@@ -10957,7 +11125,7 @@
       },
       "points": [
         {
-          "cost": "100",
+          "cost": "90",
           "models": "1",
           "keyword": null,
           "faction": null,

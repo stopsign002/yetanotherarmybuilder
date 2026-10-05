@@ -6,8 +6,8 @@
     "banner": "#320b0d",
     "header": "#222a2f"
   },
-  "compatibleDataVersion": 946,
-  "updated": "2026-09-02T09:15:27.717Z",
+  "compatibleDataVersion": 972,
+  "updated": "2026-10-02T09:52:38.801Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -595,18 +595,47 @@
       "faction": "Heretic Astartes",
       "detachmentPoints": 3,
       "forceDisposition": {
-        "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+        "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
         "name": {
-          "en": "Purge the Foe",
-          "de": "Lösche den Feind aus",
-          "es": "Purgar al enemigo",
-          "fr": "Éliminez l’Adversaire",
-          "it": "Annienta il nemico",
-          "ja": "敵を浄化せよ",
-          "ko": "적군 격멸",
-          "zh": "肃清敌人"
+          "en": "Disruption",
+          "de": "Störangriff",
+          "es": "Disrupción",
+          "fr": "Perturbation",
+          "it": "Intralcio",
+          "ja": "撹乱",
+          "ko": "방해 작전",
+          "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        },
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "1a658734-6ba0-4fe7-8f05-ddf084cc694d",
@@ -616,18 +645,47 @@
       "faction": "Heretic Astartes",
       "detachmentPoints": 3,
       "forceDisposition": {
-        "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+        "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
         "name": {
-          "en": "Reconnaissance",
-          "de": "Auskundschaften",
-          "es": "Reconocimiento",
-          "fr": "Reconnaissance",
-          "it": "Ricognizione",
-          "ja": "偵察",
-          "ko": "수색과 소탕",
-          "zh": "侦察"
+          "en": "Priority Assets",
+          "de": "Prioritätsziele",
+          "es": "Activos prioritarios",
+          "fr": "Atouts Prioritaires",
+          "it": "Risorse prioritarie",
+          "ja": "優先資産",
+          "ko": "최우선 자산",
+          "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        },
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "3fe68451-1e4f-41e0-85a9-ecaf0d20e60c",
@@ -648,7 +706,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "41e763bc-5f5c-4e65-be45-9c168c962033",
@@ -669,7 +743,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "64363c88-2015-4700-9f88-ac03407213db",
@@ -697,7 +787,30 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "dfbcd435-7c37-4e3c-8a0b-48f7443060af",
+          "name": {
+            "en": "Nightmare"
+          }
+        }
+      ]
     },
     {
       "id": "802cf206-9418-4fa8-9b4a-3ac3d2b9d01d",
@@ -725,7 +838,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "807aa974-ca16-4d8a-8958-68c1a32f9c86",
@@ -746,7 +875,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "8f4e4263-86bf-426d-b235-6d760ffe8584",
@@ -767,7 +912,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "92401979-2a38-4cbd-9781-d3d53d6ad2e0",
@@ -788,7 +949,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "93ea6b6a-690f-4a73-bb76-638cc4da5641",
@@ -809,7 +986,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "a0d2bc8f-ba0c-4ea6-8ee1-42dccb8fbc4d",
@@ -830,7 +1023,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "b7654c2c-0922-444c-a98a-f49438d4f22c",
@@ -851,7 +1060,30 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "dfbcd435-7c37-4e3c-8a0b-48f7443060af",
+          "name": {
+            "en": "Nightmare"
+          }
+        }
+      ]
     },
     {
       "id": "b7baa3d5-a100-40d8-9e84-44ec95a8dcfc",
@@ -872,7 +1104,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "b7c5bcb7-eecb-4ae5-a18b-b96143c34fa8",
@@ -882,18 +1130,47 @@
       "faction": "Heretic Astartes",
       "detachmentPoints": 3,
       "forceDisposition": {
-        "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+        "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
         "name": {
-          "en": "Priority Assets",
-          "de": "Prioritätsziele",
-          "es": "Activos prioritarios",
-          "fr": "Atouts Prioritaires",
-          "it": "Risorse prioritarie",
-          "ja": "優先資産",
-          "ko": "최우선 자산",
-          "zh": "重要资产"
+          "en": "Disruption",
+          "de": "Störangriff",
+          "es": "Disrupción",
+          "fr": "Perturbation",
+          "it": "Intralcio",
+          "ja": "撹乱",
+          "ko": "방해 작전",
+          "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        },
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "c61a7add-d879-4bb6-a61e-dfa1c621e203",
@@ -914,7 +1191,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "cbb28bd5-40ae-4d3e-8dbd-3b3e1591a89a",
@@ -942,7 +1235,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "d730df46-12ec-4dff-80cf-60aeea5eefcd",
@@ -952,18 +1261,47 @@
       "faction": "Heretic Astartes",
       "detachmentPoints": 3,
       "forceDisposition": {
-        "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+        "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
         "name": {
-          "en": "Purge the Foe",
-          "de": "Lösche den Feind aus",
-          "es": "Purgar al enemigo",
-          "fr": "Éliminez l’Adversaire",
-          "it": "Annienta il nemico",
-          "ja": "敵を浄化せよ",
-          "ko": "적군 격멸",
-          "zh": "肃清敌人"
+          "en": "Take and Hold",
+          "de": "Einnehmen und halten",
+          "es": "Ocupar y mantener",
+          "fr": "Prendre et Tenir",
+          "it": "Conquista e Difendi",
+          "ja": "奪取と確保",
+          "ko": "점령과 유지",
+          "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        },
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     }
   ],
   "stratagems": [
@@ -5137,7 +5475,7 @@
             "en": "Abaddon the Despoiler"
           },
           "m": "5\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "9",
           "ld": "5+",
@@ -5302,7 +5640,7 @@
       },
       "points": [
         {
-          "cost": "295",
+          "cost": "300",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -5584,7 +5922,7 @@
       },
       "points": [
         {
-          "cost": "195",
+          "cost": "185",
           "models": "16",
           "keyword": null,
           "faction": null,
@@ -5673,7 +6011,7 @@
             "en": "Chaos Biker"
           },
           "m": "12\"",
-          "t": "5",
+          "t": "6",
           "sv": "3+",
           "w": "3",
           "ld": "6+",
@@ -5682,22 +6020,6 @@
         }
       ],
       "rangedWeapons": [
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Bolt pistol"
-              },
-              "range": "12\"",
-              "attacks": "1",
-              "skill": "3+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": ["Pistol"]
-            }
-          ]
-        },
         {
           "profiles": [
             {
@@ -5723,6 +6045,22 @@
               "ap": "-3",
               "damage": "2",
               "keywords": ["Rapid Fire 1", "Hazardous"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Bolt pistol"
+              },
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Pistol"]
             }
           ]
         },
@@ -5763,10 +6101,10 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
             }
           ]
         },
@@ -5828,12 +6166,12 @@
           "profiles": [
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "range": "Melee",
               "attacks": "3",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -5881,7 +6219,7 @@
               "range": "Melee",
               "attacks": "4",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": []
@@ -5951,14 +6289,14 @@
       },
       "points": [
         {
-          "cost": "130",
+          "cost": "150",
           "models": "6",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "70",
+          "cost": "80",
           "models": "3",
           "keyword": null,
           "faction": null,
@@ -5985,7 +6323,7 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }
@@ -6054,7 +6392,7 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }
@@ -6206,10 +6544,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -6242,26 +6600,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         },
@@ -6484,7 +6822,7 @@
             "en": "Chaos Lord"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "5",
           "ld": "6+",
@@ -6547,7 +6885,7 @@
               "range": "Melee",
               "attacks": "7",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": []
@@ -6648,7 +6986,7 @@
       },
       "points": [
         {
-          "cost": "90",
+          "cost": "95",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -6947,7 +7285,7 @@
             "en": "Chaos Lord in Terminator Armour"
           },
           "m": "5\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "6",
           "ld": "6+",
@@ -6964,8 +7302,8 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
             }
@@ -6980,8 +7318,8 @@
               "range": "24\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": [
                 "Rapid Fire 1",
@@ -7127,7 +7465,7 @@
       },
       "points": [
         {
-          "cost": "85",
+          "cost": "90",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -7326,7 +7664,7 @@
             "en": "Chaos Lord with Jump Pack"
           },
           "m": "12\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "5",
           "ld": "6+",
@@ -7334,22 +7672,6 @@
         }
       ],
       "rangedWeapons": [
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Bolt Pistol"
-              },
-              "range": "12\"",
-              "attacks": "1",
-              "skill": "2+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": ["Pistol"]
-            }
-          ]
-        },
         {
           "profiles": [
             {
@@ -7375,6 +7697,22 @@
               "ap": "-3",
               "damage": "2",
               "keywords": ["Pistol", "Hazardous"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Bolt Pistol"
+              },
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "2+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Pistol"]
             }
           ]
         }
@@ -7498,7 +7836,7 @@
       },
       "points": [
         {
-          "cost": "80",
+          "cost": "85",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -7728,10 +8066,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -7748,26 +8106,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         },
@@ -7867,7 +8205,7 @@
       },
       "points": [
         {
-          "cost": "145",
+          "cost": "140",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -8044,10 +8382,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -8064,26 +8422,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         },
@@ -8199,7 +8537,7 @@
       },
       "points": [
         {
-          "cost": "150",
+          "cost": "145",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -8379,10 +8717,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -8399,26 +8757,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         }
@@ -8742,7 +9080,7 @@
             "en": "Chaos Terminator"
           },
           "m": "5\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "3",
           "ld": "6+",
@@ -8776,10 +9114,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -8796,26 +9154,6 @@
               "ap": "-1",
               "damage": "1",
               "keywords": ["Sustained Hits 1", "Devastating Wounds"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         }
@@ -8951,14 +9289,14 @@
       },
       "points": [
         {
-          "cost": "350",
+          "cost": "370",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "175",
+          "cost": "185",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -9127,7 +9465,11 @@
             }
           ]
         }
-      ]
+      ],
+      "additionalCost": {
+        "cost": "30",
+        "afterSelections": 2
+      }
     },
     {
       "id": "690c3a5a-148a-53a2-a43a-194068045ddb",
@@ -9206,10 +9548,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -9226,26 +9588,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         },
@@ -9342,7 +9684,7 @@
       },
       "points": [
         {
-          "cost": "185",
+          "cost": "180",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -9449,7 +9791,7 @@
             "en": "Chosen"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "3",
           "ld": "6+",
@@ -9462,13 +9804,29 @@
           "profiles": [
             {
               "name": {
+                "en": "Boltgun"
+              },
+              "range": "24\"",
+              "attacks": "2",
+              "skill": "3+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": []
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
                 "en": "Bolt pistol"
               },
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -9506,34 +9864,18 @@
           "profiles": [
             {
               "name": {
-                "en": "Boltgun"
-              },
-              "range": "24\"",
-              "attacks": "2",
-              "skill": "3+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": []
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
                 "en": "Combi-weapon"
               },
               "range": "24\"",
               "attacks": "1",
               "skill": "4+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "1",
               "damage": "1",
               "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
               ]
             }
           ]
@@ -9654,14 +9996,14 @@
       },
       "points": [
         {
-          "cost": "270",
+          "cost": "280",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "135",
+          "cost": "140",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -10437,7 +10779,7 @@
             "en": "Cypher"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "5",
           "ld": "6+",
@@ -10470,7 +10812,7 @@
               "range": "12\"",
               "attacks": "6",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": ["Sustained Hits 1", "Pistol", "Assault"]
@@ -10504,7 +10846,7 @@
               "range": "Melee",
               "attacks": "6",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": ["Sustained Hits 1"]
@@ -10571,7 +10913,7 @@
       },
       "points": [
         {
-          "cost": "90",
+          "cost": "95",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -10652,7 +10994,7 @@
             "en": "Dark Apostle"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "4",
           "ld": "5+",
@@ -10664,7 +11006,7 @@
             "en": "Dark Disciple"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "6+",
           "w": "1",
           "ld": "7+",
@@ -10682,8 +11024,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -10793,7 +11135,7 @@
       },
       "points": [
         {
-          "cost": "65",
+          "cost": "70",
           "models": "3",
           "keyword": null,
           "faction": null,
@@ -12051,7 +12393,7 @@
             "en": "Fabius Bile"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "5",
           "ld": "6+",
@@ -12063,7 +12405,7 @@
             "en": "Surgeon Acolyte"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "6+",
           "w": "1",
           "ld": "7+",
@@ -12210,7 +12552,7 @@
       },
       "points": [
         {
-          "cost": "100",
+          "cost": "110",
           "models": "2",
           "keyword": null,
           "faction": null,
@@ -13011,7 +13353,7 @@
       },
       "points": [
         {
-          "cost": "160",
+          "cost": "155",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -13158,7 +13500,7 @@
             "en": "Haarken Worldclaimer"
           },
           "m": "12\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "5",
           "ld": "6+",
@@ -13281,7 +13623,7 @@
       },
       "points": [
         {
-          "cost": "90",
+          "cost": "95",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -13404,13 +13746,29 @@
           "m": "5\"",
           "t": "5",
           "sv": "3+",
-          "w": "2",
+          "w": "3",
           "ld": "6+",
           "oc": "1",
           "showName": true
         }
       ],
       "rangedWeapons": [
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Boltgun"
+              },
+              "range": "24\"",
+              "attacks": "2",
+              "skill": "3+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": []
+            }
+          ]
+        },
         {
           "profiles": [
             {
@@ -13493,22 +13851,6 @@
               "attacks": "8",
               "skill": "3+",
               "strength": "5",
-              "ap": "0",
-              "damage": "1",
-              "keywords": []
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Boltgun"
-              },
-              "range": "24\"",
-              "attacks": "2",
-              "skill": "3+",
-              "strength": "4",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -13613,12 +13955,12 @@
           "profiles": [
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "range": "Melee",
               "attacks": "3",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -13666,7 +14008,7 @@
               "range": "Melee",
               "attacks": "5",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": []
@@ -13723,7 +14065,7 @@
       },
       "points": [
         {
-          "cost": "125",
+          "cost": "135",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -13831,7 +14173,7 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }
@@ -13985,6 +14327,22 @@
           "profiles": [
             {
               "name": {
+                "en": "Combi-bolter"
+              },
+              "range": "24\"",
+              "attacks": "2",
+              "skill": "3+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
                 "en": "Twin lascannon"
               },
               "range": "48\"",
@@ -14010,22 +14368,6 @@
               "ap": "-1",
               "damage": "3",
               "keywords": ["Twin-linked"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-bolter"
-              },
-              "range": "24\"",
-              "attacks": "2",
-              "skill": "3+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": ["Rapid Fire 2"]
             }
           ]
         },
@@ -14206,7 +14548,7 @@
       },
       "points": [
         {
-          "cost": "130",
+          "cost": "125",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -14744,7 +15086,7 @@
       },
       "points": [
         {
-          "cost": "165",
+          "cost": "155",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -14970,7 +15312,7 @@
       },
       "points": [
         {
-          "cost": "180",
+          "cost": "170",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -15061,7 +15403,7 @@
             "en": "Huron Blackheart"
           },
           "m": "6\"",
-          "t": "5",
+          "t": "6",
           "sv": "3+",
           "w": "5",
           "ld": "6+",
@@ -15174,7 +15516,7 @@
       },
       "points": [
         {
-          "cost": "130",
+          "cost": "135",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -15792,7 +16134,7 @@
             "en": "Kravek Morne"
           },
           "m": "5\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "6",
           "ld": "6+",
@@ -15825,8 +16167,8 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "2+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
             }
@@ -15930,7 +16272,7 @@
       },
       "points": [
         {
-          "cost": "120",
+          "cost": "130",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -16158,7 +16500,7 @@
             "en": "Legionary"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "2",
           "ld": "6+",
@@ -16187,15 +16529,15 @@
           "profiles": [
             {
               "name": {
-                "en": "Bolt pistol"
+                "en": "Boltgun"
               },
-              "range": "12\"",
-              "attacks": "1",
+              "range": "24\"",
+              "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Pistol"]
+              "keywords": []
             }
           ]
         },
@@ -16224,6 +16566,22 @@
               "ap": "-3",
               "damage": "2",
               "keywords": ["Rapid Fire 1", "Hazardous"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Bolt pistol"
+              },
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Pistol"]
             }
           ]
         },
@@ -16283,22 +16641,6 @@
               "strength": "9",
               "ap": "-1",
               "damage": "3",
-              "keywords": []
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Boltgun"
-              },
-              "range": "24\"",
-              "attacks": "2",
-              "skill": "3+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
               "keywords": []
             }
           ]
@@ -16401,12 +16743,12 @@
           "profiles": [
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "range": "Melee",
               "attacks": "3",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -16438,7 +16780,7 @@
               "range": "Melee",
               "attacks": "4",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": []
@@ -16533,14 +16875,14 @@
       },
       "points": [
         {
-          "cost": "170",
+          "cost": "180",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "90",
+          "cost": "95",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -16567,7 +16909,7 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }
@@ -16667,7 +17009,7 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }
@@ -16881,22 +17223,6 @@
           "profiles": [
             {
               "name": {
-                "en": "Bolt Pistol"
-              },
-              "range": "12\"",
-              "attacks": "1",
-              "skill": "2+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": ["Pistol"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
                 "en": "Magma cutter"
               },
               "range": "6\"",
@@ -16922,6 +17248,22 @@
               "ap": "-1",
               "damage": "3",
               "keywords": []
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Bolt Pistol"
+              },
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "2+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Pistol"]
             }
           ]
         }
@@ -17030,7 +17372,7 @@
       },
       "points": [
         {
-          "cost": "160",
+          "cost": "155",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -17155,7 +17497,7 @@
             "en": "Master of Executions"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "4",
           "ld": "6+",
@@ -17172,8 +17514,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -17210,7 +17552,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -17284,7 +17626,7 @@
       },
       "points": [
         {
-          "cost": "70",
+          "cost": "75",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -17545,7 +17887,7 @@
             "en": "Master of Possession"
           },
           "m": "8\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "4",
           "ld": "6+",
@@ -17553,22 +17895,6 @@
         }
       ],
       "rangedWeapons": [
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Bolt pistol"
-              },
-              "range": "12\"",
-              "attacks": "1",
-              "skill": "3+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": ["Pistol"]
-            }
-          ]
-        },
         {
           "profiles": [
             {
@@ -17600,6 +17926,22 @@
                 "Hazardous",
                 "Anti-psyker 2+"
               ]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Bolt pistol"
+              },
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Pistol"]
             }
           ]
         }
@@ -17681,7 +18023,7 @@
       },
       "points": [
         {
-          "cost": "60",
+          "cost": "65",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -17988,7 +18330,7 @@
             "en": "Katar Garrix"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "4",
           "ld": "6+",
@@ -18018,7 +18360,7 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol"]
@@ -18184,7 +18526,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -18278,7 +18620,7 @@
       },
       "points": [
         {
-          "cost": "145",
+          "cost": "150",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -18685,7 +19027,7 @@
       },
       "points": [
         {
-          "cost": "130",
+          "cost": "125",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -18899,7 +19241,7 @@
         }
       ],
       "additionalCost": {
-        "cost": "10",
+        "cost": "20",
         "afterSelections": 2
       }
     },
@@ -18955,7 +19297,7 @@
             "en": "Legionary"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "2",
           "ld": "6+",
@@ -18968,15 +19310,15 @@
           "profiles": [
             {
               "name": {
-                "en": "Bolt pistol"
+                "en": "Boltgun"
               },
-              "range": "12\"",
-              "attacks": "1",
+              "range": "24\"",
+              "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Pistol"]
+              "keywords": []
             }
           ]
         },
@@ -19005,6 +19347,22 @@
               "ap": "-3",
               "damage": "2",
               "keywords": ["Rapid Fire 1", "Hazardous"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Bolt pistol"
+              },
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Pistol"]
             }
           ]
         },
@@ -19049,22 +19407,6 @@
               "ap": "-1",
               "damage": "2",
               "keywords": ["Sustained Hits 1", "Heavy"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Boltgun"
-              },
-              "range": "24\"",
-              "attacks": "2",
-              "skill": "3+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": []
             }
           ]
         },
@@ -19219,7 +19561,7 @@
               "range": "Melee",
               "attacks": "4",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": []
@@ -19235,7 +19577,7 @@
               "range": "Melee",
               "attacks": "5",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": ["Sustained Hits 1"]
@@ -19329,14 +19671,14 @@
       },
       "points": [
         {
-          "cost": "180",
+          "cost": "190",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "100",
+          "cost": "105",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -19945,7 +20287,7 @@
               "range": "Melee",
               "attacks": "4",
               "skill": "3+",
-              "strength": "5",
+              "strength": "6",
               "ap": "-1",
               "damage": "2",
               "keywords": []
@@ -20009,14 +20351,14 @@
       },
       "points": [
         {
-          "cost": "250",
+          "cost": "260",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "120",
+          "cost": "130",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -20078,7 +20420,7 @@
         }
       ],
       "additionalCost": {
-        "cost": "10",
+        "cost": "20",
         "afterSelections": 2
       }
     },
@@ -20144,7 +20486,7 @@
             "en": "Raptor"
           },
           "m": "12\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "2",
           "ld": "6+",
@@ -20153,22 +20495,6 @@
         }
       ],
       "rangedWeapons": [
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Bolt pistol"
-              },
-              "range": "12\"",
-              "attacks": "1",
-              "skill": "3+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": ["Pistol"]
-            }
-          ]
-        },
         {
           "profiles": [
             {
@@ -20194,6 +20520,22 @@
               "ap": "-3",
               "damage": "2",
               "keywords": ["Rapid Fire 1", "Hazardous"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Bolt pistol"
+              },
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "3+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Pistol"]
             }
           ]
         },
@@ -20263,12 +20605,12 @@
           "profiles": [
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "range": "Melee",
               "attacks": "3",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -20300,7 +20642,7 @@
               "range": "Melee",
               "attacks": "4",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": []
@@ -20417,14 +20759,14 @@
       },
       "points": [
         {
-          "cost": "210",
+          "cost": "225",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "110",
+          "cost": "115",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -20566,7 +20908,7 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }
@@ -20597,7 +20939,7 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }
@@ -20651,7 +20993,7 @@
             "en": "Red Corsairs Raider"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "3",
           "ld": "6+",
@@ -20664,15 +21006,15 @@
           "profiles": [
             {
               "name": {
-                "en": "Bolt pistol"
+                "en": "Boltgun"
               },
-              "range": "12\"",
-              "attacks": "1",
+              "range": "24\"",
+              "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Pistol"]
+              "keywords": []
             }
           ]
         },
@@ -20680,15 +21022,15 @@
           "profiles": [
             {
               "name": {
-                "en": "Boltgun"
+                "en": "Bolt pistol"
               },
-              "range": "24\"",
-              "attacks": "2",
+              "range": "12\"",
+              "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": []
+              "keywords": ["Pistol"]
             }
           ]
         },
@@ -20822,14 +21164,14 @@
       },
       "points": [
         {
-          "cost": "210",
+          "cost": "220",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "110",
+          "cost": "120",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -20974,7 +21316,7 @@
             "en": "Red Corsairs Reave-Captain"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "5",
           "ld": "6+",
@@ -20982,22 +21324,6 @@
         }
       ],
       "rangedWeapons": [
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Bolt Pistol"
-              },
-              "range": "12\"",
-              "attacks": "1",
-              "skill": "2+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": ["Pistol"]
-            }
-          ]
-        },
         {
           "profiles": [
             {
@@ -21023,6 +21349,22 @@
               "ap": "-3",
               "damage": "2",
               "keywords": ["Pistol", "Hazardous"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Bolt Pistol"
+              },
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "2+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Pistol"]
             }
           ]
         }
@@ -21127,7 +21469,7 @@
       },
       "points": [
         {
-          "cost": "60",
+          "cost": "65",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -21420,7 +21762,7 @@
             "en": "Sorcerer"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "4",
           "ld": "6+",
@@ -21437,8 +21779,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -21548,7 +21890,7 @@
       },
       "points": [
         {
-          "cost": "60",
+          "cost": "65",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -21828,7 +22170,7 @@
             "en": "Sorcerer in Terminator Armour"
           },
           "m": "5\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "5",
           "ld": "6+",
@@ -21845,10 +22187,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -21877,26 +22239,6 @@
               "ap": "-2",
               "damage": "D3",
               "keywords": ["Psychic", "Hazardous", "Devastating Wounds"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         }
@@ -21997,7 +22339,7 @@
       },
       "points": [
         {
-          "cost": "80",
+          "cost": "85",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -22717,7 +23059,7 @@
       },
       "points": [
         {
-          "cost": "70",
+          "cost": "65",
           "models": "10",
           "keyword": null,
           "faction": null,
@@ -23335,7 +23677,7 @@
             "en": "Warp Talon"
           },
           "m": "12\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "2",
           "ld": "6+",
@@ -23415,14 +23757,14 @@
       },
       "points": [
         {
-          "cost": "280",
+          "cost": "290",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "125",
+          "cost": "130",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -23514,7 +23856,7 @@
             "en": "Warpsmith"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "2+",
           "w": "4",
           "ld": "6+",
@@ -23664,7 +24006,7 @@
       },
       "points": [
         {
-          "cost": "60",
+          "cost": "65",
           "models": "1",
           "keyword": null,
           "faction": null,

@@ -6,8 +6,8 @@
     "banner": "#2E0B03",
     "header": "#1A3037"
   },
-  "compatibleDataVersion": 946,
-  "updated": "2026-09-02T09:15:31.495Z",
+  "compatibleDataVersion": 972,
+  "updated": "2026-10-02T09:52:42.901Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -90,7 +90,7 @@
                 "order": 1,
                 "type": "text",
                 "text": {
-                  "en": "When a friendly <k>Emperor’s Children Battleline</k> unit is selected to make an <b>advance/fall‑back move</b>, that unit’s attacks have +1 <b>S</b> until the end of the turn.\rThis <b>detachment</b> has the <k>host</k> tag and cannot be taken with another <k>host</k> <b>detachment</b>.",
+                  "en": "When a friendly <k>Emperor’s Children Battleline</k> unit is selected to make an <b>advance/fall‑back move</b>, that unit’s <k>BATTLELINE</k> models' attacks have <b>[SUSTAINED HITS 1]</b> until the end of the turn.",
                   "de": "Wenn eine befreundete <k>Emperor’s</k>-<k>Children</k>-<k>Linientruppen</k>-Einheit für das Ausführen einer <b>Vorrücken-/Rückzugsbewegung</b> gewählt wird, haben Attacken jener Einheit bis zum Ende des Zugs +1 <b>S</b>.\rDieses <b>Kontingent</b> hat die Kennzeichnung <k>Heerschar</k> und kann nicht zusammen mit einem anderen <b>Kontingent</b> mit der Kennzeichnung <k>Heerschar</k> gewählt werden.",
                   "es": "Cuando una unidad <k>Línea de batalla Hijos del Emperador</k> amiga se elija para hacer un <b>movimiento de avanzar/de retroceder</b>, los ataques de esa unidad tienen +1 a <b>F</b> hasta el final del turno.",
                   "fr": "Quand une unité de <k>Ligne</k> d’<k>Emperor’s Children</k> amie est choisie pour faire un <b>mouvement d’avance/de retraite</b>, ses attaques ont +1 en <b>F</b> jusqu'à la fin du tour.",
@@ -350,7 +350,7 @@
         "en": "Slaanesh’s Chosen"
       },
       "faction": "Emperor’s Children",
-      "detachmentPoints": 2,
+      "detachmentPoints": 1,
       "forceDisposition": {
         "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
         "name": {
@@ -363,7 +363,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "235629e4-405f-40db-b393-9f71e1c6e3ea",
@@ -391,7 +407,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "29bc9dbe-2bac-48f6-a496-955ee9c377df",
@@ -419,7 +451,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "31349652-6a08-46a0-a5ec-5d4533f0a8ae",
@@ -427,7 +475,7 @@
         "en": "Carnival of Excess"
       },
       "faction": "Emperor’s Children",
-      "detachmentPoints": 2,
+      "detachmentPoints": 3,
       "forceDisposition": {
         "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
         "name": {
@@ -440,7 +488,36 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        },
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "3b9f3326-5025-4194-9a40-dec121410c32",
@@ -468,7 +545,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "af3fd326-fe1e-4023-a354-ed0f546ae6ff",
@@ -489,7 +582,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "b89874ea-c08b-40c4-891d-dcdd2277595d",
@@ -510,7 +619,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "bea6576c-a423-4a9d-b9c9-6b3a10703a99",
@@ -531,7 +656,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "e3a3d467-28af-4e25-938b-42f48c64e8f5",
@@ -552,7 +693,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "f4f83a5e-36a7-49fd-950b-0ceb188b5c94",
@@ -573,7 +730,36 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        },
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     }
   ],
   "stratagems": [
@@ -1214,13 +1400,13 @@
       "type": "Strategic Ploy",
       "phase": ["shooting"],
       "target": {
-        "en": "One **EMPEROR’S CHILDREN CHARACTER** unit from your army that was selected as the target of one or more of the attacking unit’s attacks."
+        "en": "That **EMPEROR’S CHILDREN CHARACTER** unit."
       },
       "when": {
-        "en": "Your opponent’s Shooting phase, just after an enemy unit has selected its targets."
+        "en": "Your opponent’s Shooting phase, when an enemy unit that targeted a friendly **unengaged EMPEROR’S CHILDREN CHARACTER** unit this phase has shot."
       },
       "effect": {
-        "en": "Your unit can make a **surge move** of up to D6\". If your unit is not your army's Favoured Champions, you can re-roll the dice to determine the distance of that **surge move**."
+        "en": "Your unit can make a **surge move** of up to D6\". If your unit is not your army’s Favoured Champions, you can re-roll the dice to determine the distance of that **surge move**."
       },
       "fluff": {
         "en": "Consumed by their obsessive desire for revenge, the Emperor’s Children surge into oncoming fusillades."
@@ -3106,10 +3292,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -3142,26 +3348,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         },
@@ -3258,7 +3444,7 @@
       },
       "points": [
         {
-          "cost": "220",
+          "cost": "210",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -3438,10 +3624,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -3458,26 +3664,6 @@
               "ap": "0",
               "damage": "1",
               "keywords": ["Blast"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         }
@@ -3820,7 +4006,7 @@
             "en": "Chaos Terminator"
           },
           "m": "6\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "3",
           "ld": "6+",
@@ -3854,10 +4040,30 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
-              "keywords": ["Rapid Fire 2"]
+              "keywords": ["RAPID FIRE 2"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Combi-weapon"
+              },
+              "range": "24\"",
+              "attacks": "1",
+              "skill": "4+",
+              "strength": "5",
+              "ap": "1",
+              "damage": "1",
+              "keywords": [
+                "RAPID FIRE 1",
+                "DEVASTATING WOUNDS",
+                "ANTI-INFANTRY 4+"
+              ]
             }
           ]
         },
@@ -3874,26 +4080,6 @@
               "ap": "-1",
               "damage": "1",
               "keywords": ["Sustained Hits 1", "Devastating Wounds"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Combi-weapon"
-              },
-              "range": "24\"",
-              "attacks": "1",
-              "skill": "4+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": [
-                "Rapid Fire 1",
-                "Devastating Wounds",
-                "Anti-infantry 4+"
-              ]
             }
           ]
         }
@@ -4029,7 +4215,7 @@
       },
       "points": [
         {
-          "cost": "145",
+          "cost": "155",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -4398,7 +4584,7 @@
       },
       "points": [
         {
-          "cost": "170",
+          "cost": "165",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -4657,7 +4843,7 @@
         }
       ],
       "additionalCost": {
-        "cost": "30",
+        "cost": "20",
         "afterSelections": 1
       }
     },
@@ -5197,8 +5383,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -5392,7 +5578,14 @@
           "zh": "色孽"
         },
         {
-          "en": "Primarch"
+          "en": "Primarch",
+          "de": "Primarch",
+          "es": "Primarca",
+          "fr": "Primarque",
+          "it": "Primarca",
+          "ja": "総主長",
+          "ko": "프라이마크",
+          "zh": "基因原体"
         },
         {
           "en": "Fulgrim"
@@ -5921,7 +6114,7 @@
             "en": "Infractor"
           },
           "m": "7\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "2",
           "ld": "6+",
@@ -5939,8 +6132,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -5985,7 +6178,7 @@
               "range": "Melee",
               "attacks": "4",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-1",
               "damage": "1",
               "keywords": ["Precision"]
@@ -6091,14 +6284,14 @@
       },
       "points": [
         {
-          "cost": "160",
+          "cost": "175",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "85",
+          "cost": "95",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -6266,22 +6459,6 @@
           "profiles": [
             {
               "name": {
-                "en": "Bolt Pistol"
-              },
-              "range": "12\"",
-              "attacks": "1",
-              "skill": "2+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": ["Pistol"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
                 "en": "Plasma pistol – Standard"
               },
               "range": "12\"",
@@ -6319,6 +6496,22 @@
               "ap": "-1",
               "damage": "2",
               "keywords": ["Pistol", "Ignores Cover"]
+            }
+          ]
+        },
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Bolt Pistol"
+              },
+              "range": "12\"",
+              "attacks": "1",
+              "skill": "2+",
+              "strength": "5",
+              "ap": "-1",
+              "damage": "1",
+              "keywords": ["Pistol"]
             }
           ]
         }
@@ -6365,7 +6558,7 @@
               "range": "Melee",
               "attacks": "6",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -6476,7 +6669,7 @@
       },
       "points": [
         {
-          "cost": "90",
+          "cost": "95",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -6643,7 +6836,7 @@
             "en": "Lord Kakophonist"
           },
           "m": "6\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "6",
           "ld": "6+",
@@ -6678,7 +6871,7 @@
               "range": "Melee",
               "attacks": "6",
               "skill": "2+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -6899,7 +7092,7 @@
             "en": "Lucius the Eternal"
           },
           "m": "8\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "6",
           "ld": "6+",
@@ -7009,7 +7202,7 @@
       },
       "points": [
         {
-          "cost": "120",
+          "cost": "130",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -7339,7 +7532,7 @@
           "m": "6\"",
           "t": "5",
           "sv": "3+",
-          "w": "2",
+          "w": "3",
           "ld": "6+",
           "oc": "1",
           "showName": true
@@ -7412,12 +7605,12 @@
           "profiles": [
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "range": "Melee",
               "attacks": "3",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -7487,7 +7680,7 @@
       },
       "points": [
         {
-          "cost": "145",
+          "cost": "160",
           "models": "6",
           "keyword": null,
           "faction": null,
@@ -7508,7 +7701,7 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }
@@ -7527,7 +7720,7 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }
@@ -7660,8 +7853,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -7895,7 +8088,7 @@
             "en": "Tormentor"
           },
           "m": "7\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "2",
           "ld": "6+",
@@ -7929,8 +8122,8 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Precision"]
             }
@@ -7973,8 +8166,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "0",
+              "strength": "5",
+              "ap": "-1",
               "damage": "1",
               "keywords": ["Precision", "Pistol"]
             }
@@ -8014,12 +8207,12 @@
           "profiles": [
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "range": "Melee",
               "attacks": "3",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "0",
               "damage": "1",
               "keywords": []
@@ -8131,14 +8324,14 @@
       },
       "points": [
         {
-          "cost": "160",
+          "cost": "170",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "80",
+          "cost": "85",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -8178,7 +8371,7 @@
             },
             {
               "name": {
-                "en": "Close combat weapon"
+                "en": "Close Combat Weapon"
               },
               "cost": "0"
             }

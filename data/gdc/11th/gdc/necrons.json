@@ -6,8 +6,8 @@
     "banner": "#032b16",
     "header": "#04532a"
   },
-  "compatibleDataVersion": 946,
-  "updated": "2026-09-02T09:15:30.668Z",
+  "compatibleDataVersion": 972,
+  "updated": "2026-10-02T09:52:42.016Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -436,7 +436,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "225b9e9c-7ebe-413f-a079-087bc98f380a",
@@ -457,7 +473,36 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        },
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "3818a5e4-5d1a-410b-a63f-9a850b923635",
@@ -485,7 +530,30 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "dd520139-31e3-458b-ba21-20572c01f18b",
+          "name": {
+            "en": "Hypercrypt"
+          }
+        }
+      ]
     },
     {
       "id": "412b33ad-7e6f-45a3-8638-ae880be94b9f",
@@ -506,7 +574,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "4694ac41-4340-4e85-8824-5c47555f8c12",
@@ -527,7 +611,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "489fc222-d9a1-4220-9ef2-9747c2fea283",
@@ -548,7 +648,30 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "dd520139-31e3-458b-ba21-20572c01f18b",
+          "name": {
+            "en": "Hypercrypt"
+          }
+        }
+      ]
     },
     {
       "id": "8e281a27-1d5a-415b-8b92-34cd0ed53b63",
@@ -576,7 +699,30 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "ab40e159-b741-4636-90cb-94df401d2f6f",
+          "name": {
+            "en": "Dynasty"
+          }
+        }
+      ]
     },
     {
       "id": "a7ec286c-a305-435b-b402-91140c67d809",
@@ -597,7 +743,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "cd5f7a63-6d73-4094-9977-e8b7530d1a8f",
@@ -625,7 +787,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "df0e5858-2c4a-486b-b693-8971f837388d",
@@ -646,7 +824,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "e40617a8-ec95-44e2-bc46-956a6fac4538",
@@ -654,7 +848,7 @@
         "en": "Canoptek Court"
       },
       "faction": "Necrons",
-      "detachmentPoints": 3,
+      "detachmentPoints": 2,
       "forceDisposition": {
         "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
         "name": {
@@ -667,7 +861,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "ef55259d-3884-4b3b-b215-08ab337d4a24",
@@ -688,7 +898,43 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        },
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "ab40e159-b741-4636-90cb-94df401d2f6f",
+          "name": {
+            "en": "Dynasty"
+          }
+        }
+      ]
     }
   ],
   "stratagems": [
@@ -3783,7 +4029,7 @@
       },
       "points": [
         {
-          "cost": "95",
+          "cost": "100",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -4723,7 +4969,7 @@
       },
       "points": [
         {
-          "cost": "140",
+          "cost": "130",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -4768,7 +5014,14 @@
       "faction_id": "47670bc3-64b8-4c2d-9154-7391f132688b",
       "keywords": [
         {
-          "en": "Beasts"
+          "en": "Beasts",
+          "de": "Bestien",
+          "es": "Bestias",
+          "fr": "Bêtes",
+          "it": "Bestie",
+          "ja": "ビースト",
+          "ko": "야수",
+          "zh": "野兽"
         },
         {
           "en": "Fly",
@@ -5585,7 +5838,14 @@
       "faction_id": "47670bc3-64b8-4c2d-9154-7391f132688b",
       "keywords": [
         {
-          "en": "Beasts"
+          "en": "Beasts",
+          "de": "Bestien",
+          "es": "Bestias",
+          "fr": "Bêtes",
+          "it": "Bestie",
+          "ja": "ビースト",
+          "ko": "야수",
+          "zh": "野兽"
         },
         {
           "en": "Canoptek",
@@ -5716,7 +5976,7 @@
       },
       "points": [
         {
-          "cost": "50",
+          "cost": "60",
           "models": "2",
           "keyword": null,
           "faction": null,
@@ -5768,7 +6028,14 @@
       "faction_id": "47670bc3-64b8-4c2d-9154-7391f132688b",
       "keywords": [
         {
-          "en": "Beasts"
+          "en": "Beasts",
+          "de": "Bestien",
+          "es": "Bestias",
+          "fr": "Bêtes",
+          "it": "Bestie",
+          "ja": "ビースト",
+          "ko": "야수",
+          "zh": "野兽"
         },
         {
           "en": "Fly",
@@ -6387,7 +6654,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -7366,7 +7633,7 @@
       },
       "points": [
         {
-          "cost": "210",
+          "cost": "200",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -7401,7 +7668,7 @@
         }
       ],
       "additionalCost": {
-        "cost": "20",
+        "cost": "30",
         "afterSelections": 2
       }
     },
@@ -7651,7 +7918,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -8493,14 +8760,14 @@
       },
       "points": [
         {
-          "cost": "140",
+          "cost": "130",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "70",
+          "cost": "65",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -8906,7 +9173,7 @@
       },
       "points": [
         {
-          "cost": "175",
+          "cost": "190",
           "models": "6",
           "keyword": null,
           "faction": null,
@@ -10256,7 +10523,7 @@
       },
       "points": [
         {
-          "cost": "185",
+          "cost": "195",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -10963,7 +11230,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -11687,7 +11954,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -11893,7 +12160,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -11968,7 +12235,7 @@
       },
       "points": [
         {
-          "cost": "55",
+          "cost": "65",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -12962,7 +13229,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -13305,7 +13572,7 @@
         }
       ],
       "additionalCost": {
-        "cost": "20",
+        "cost": "40",
         "afterSelections": 1
       }
     },
@@ -14291,7 +14558,7 @@
       },
       "points": [
         {
-          "cost": "65",
+          "cost": "60",
           "models": "1",
           "keyword": null,
           "faction": null,

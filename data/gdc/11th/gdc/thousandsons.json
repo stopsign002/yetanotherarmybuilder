@@ -6,8 +6,8 @@
     "banner": "#0b3645",
     "header": "#185862"
   },
-  "compatibleDataVersion": 946,
-  "updated": "2026-09-02T09:15:27.216Z",
+  "compatibleDataVersion": 972,
+  "updated": "2026-10-02T09:52:38.254Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -460,7 +460,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "6bfd15ec-5723-410f-853c-092d82919512",
@@ -488,7 +504,37 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "4b126730-7134-4d10-822b-4d5aa2cef172",
+          "name": {
+            "en": "Mutant",
+            "de": "Mutant",
+            "es": "Mutante",
+            "fr": "Mutant",
+            "it": "Mutante",
+            "ja": "ミュータント",
+            "ko": "이형체",
+            "zh": "变异生物"
+          }
+        }
+      ]
     },
     {
       "id": "8703803f-2be2-4862-8622-c729c12babca",
@@ -516,7 +562,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "9b8af121-ddff-4e4e-9928-37050a67b0a8",
@@ -544,7 +606,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "baf498d8-40c2-4536-869c-0432cf6ec054",
@@ -565,7 +643,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "c4040e42-40b2-4df2-ba73-83a17dfe3e72",
@@ -586,7 +680,36 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        },
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "d7f54185-ca1d-4300-981d-84a28641ce14",
@@ -596,18 +719,47 @@
       "faction": "Thousand Sons",
       "detachmentPoints": 3,
       "forceDisposition": {
-        "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+        "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
         "name": {
-          "en": "Priority Assets",
-          "de": "Prioritätsziele",
-          "es": "Activos prioritarios",
-          "fr": "Atouts Prioritaires",
-          "it": "Risorse prioritarie",
-          "ja": "優先資産",
-          "ko": "최우선 자산",
-          "zh": "重要资产"
+          "en": "Disruption",
+          "de": "Störangriff",
+          "es": "Disrupción",
+          "fr": "Perturbation",
+          "it": "Intralcio",
+          "ja": "撹乱",
+          "ko": "방해 작전",
+          "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        },
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "d8a383c5-a6a0-445a-b1ad-5a4858bc6265",
@@ -628,7 +780,37 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "4b126730-7134-4d10-822b-4d5aa2cef172",
+          "name": {
+            "en": "Mutant",
+            "de": "Mutant",
+            "es": "Mutante",
+            "fr": "Mutant",
+            "it": "Mutante",
+            "ja": "ミュータント",
+            "ko": "이형체",
+            "zh": "变异生物"
+          }
+        }
+      ]
     },
     {
       "id": "da4b1448-5954-4083-a820-bc98d08b6672",
@@ -649,7 +831,36 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        },
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     }
   ],
   "stratagems": [
@@ -750,7 +961,7 @@
         "en": "Your opponent’s Charge phase, just after an enemy unit ends a Charge move."
       },
       "effect": {
-        "en": "Until the end of the turn, each time an attack targets your unit, subtract 1 from the Wound roll."
+        "en": "Until the end of the turn, attacks that target your unit with a **S** greater than your unit’s **T** have -1 to **wound rolls**."
       },
       "fluff": {
         "en": "Massed in an unyielding wall of sorcerous ceramite, the sheer unnatural resilience of the Thousand Sons can withstand the most vicious assault."
@@ -1609,7 +1820,7 @@
       "name": {
         "en": "Infernal Fusillade"
       },
-      "cost": 2,
+      "cost": 1,
       "turn": "your",
       "type": "Wargear",
       "phase": ["shooting"],
@@ -1620,7 +1831,7 @@
         "en": "Your Shooting phase."
       },
       "effect": {
-        "en": "Until the end of the phase, all inferno bolt pistols, inferno boltguns, inferno combi‑bolters and inferno combi‑weapons equipped by models in your unit have the **[PSYCHIC]** ability and a Strength characteristic of 5."
+        "en": "Until the end of the phase, all inferno bolt pistols, inferno boltguns, inferno combi‑bolters and inferno combi‑weapons equipped by models in your unit have the **[PSYCHIC]** ability."
       },
       "fluff": {
         "en": "Arcane invocations imbue the Thousand Sons’ weapons with sorcerous power, rendering them still more lethal to the foe."
@@ -1942,9 +2153,9 @@
       "source": "40k-11e"
     },
     {
-      "id": "df1edaea-2c21-5424-8cca-37465e16fa8c",
+      "id": "57b996ea-adb8-5b89-9802-f83f0c891e75",
       "name": {
-        "en": "mutagenic magicks",
+        "en": "Mutagenic Magicks",
         "de": "Mutierendes Hexenwerk",
         "es": "Magias mutágenas",
         "fr": "Magie Mutagène",
@@ -2946,7 +3157,7 @@
             "en": "Ahriman"
           },
           "m": "10\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "6",
           "ld": "6+",
@@ -2963,8 +3174,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "2+",
-              "strength": "4",
-              "ap": "-1",
+              "strength": "5",
+              "ap": "-2",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -3065,7 +3276,7 @@
       },
       "points": [
         {
-          "cost": "100",
+          "cost": "105",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -3224,7 +3435,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
@@ -3240,7 +3451,7 @@
               "range": "24\"",
               "attacks": "1",
               "skill": "4+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": [
@@ -3562,7 +3773,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
@@ -3578,7 +3789,7 @@
               "range": "24\"",
               "attacks": "1",
               "skill": "4+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": [
@@ -3881,7 +4092,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
@@ -3897,7 +4108,7 @@
               "range": "24\"",
               "attacks": "1",
               "skill": "4+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": [
@@ -4219,7 +4430,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
@@ -4235,7 +4446,7 @@
               "range": "24\"",
               "attacks": "1",
               "skill": "4+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": [
@@ -4628,7 +4839,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
@@ -4644,7 +4855,7 @@
               "range": "24\"",
               "attacks": "1",
               "skill": "4+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": [
@@ -5884,7 +6095,7 @@
             "en": "Exalted Sorcerer"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "5",
           "ld": "6+",
@@ -5901,8 +6112,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "2+",
-              "strength": "4",
-              "ap": "-1",
+              "strength": "5",
+              "ap": "-2",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -6019,7 +6230,7 @@
       },
       "points": [
         {
-          "cost": "95",
+          "cost": "100",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -6176,7 +6387,7 @@
             "en": "Exalted Sorcerer on Disc of Tzeentch"
           },
           "m": "10\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "6",
           "ld": "6+",
@@ -6193,8 +6404,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "2+",
-              "strength": "4",
-              "ap": "-1",
+              "strength": "5",
+              "ap": "-2",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -6311,7 +6522,7 @@
       },
       "points": [
         {
-          "cost": "90",
+          "cost": "95",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -6786,7 +6997,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
@@ -7391,7 +7602,7 @@
             "en": "Infernal Master"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "4",
           "ld": "6+",
@@ -7408,8 +7619,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "2+",
-              "strength": "4",
-              "ap": "-1",
+              "strength": "5",
+              "ap": "-2",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -7522,7 +7733,7 @@
       },
       "points": [
         {
-          "cost": "100",
+          "cost": "105",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -7637,7 +7848,14 @@
           "zh": "恶魔"
         },
         {
-          "en": "Primarch"
+          "en": "Primarch",
+          "de": "Primarch",
+          "es": "Primarca",
+          "fr": "Primarque",
+          "it": "Primarca",
+          "ja": "総主長",
+          "ko": "프라이마크",
+          "zh": "基因原体"
         },
         {
           "en": "Psyker",
@@ -8451,7 +8669,7 @@
             "en": "Aspiring Sorcerer"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "3",
           "ld": "6+",
@@ -8463,7 +8681,7 @@
             "en": "Rubric Marine"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "2",
           "ld": "7+",
@@ -8513,8 +8731,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "-1",
+              "strength": "5",
+              "ap": "-2",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -8561,7 +8779,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": []
@@ -8570,6 +8788,22 @@
         }
       ],
       "meleeWeapons": [
+        {
+          "profiles": [
+            {
+              "name": {
+                "en": "Close combat weapon"
+              },
+              "range": "Melee",
+              "attacks": "2",
+              "skill": "3+",
+              "strength": "5",
+              "ap": "0",
+              "damage": "1",
+              "keywords": []
+            }
+          ]
+        },
         {
           "profiles": [
             {
@@ -8583,22 +8817,6 @@
               "ap": "-1",
               "damage": "D3",
               "keywords": ["Psychic"]
-            }
-          ]
-        },
-        {
-          "profiles": [
-            {
-              "name": {
-                "en": "Close combat weapon"
-              },
-              "range": "Melee",
-              "attacks": "2",
-              "skill": "3+",
-              "strength": "4",
-              "ap": "0",
-              "damage": "1",
-              "keywords": []
             }
           ]
         }
@@ -8671,14 +8889,14 @@
       },
       "points": [
         {
-          "cost": "190",
+          "cost": "210",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "100",
+          "cost": "115",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -8867,7 +9085,7 @@
             "en": "Scarab Occult Sorcerer"
           },
           "m": "5\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "4",
           "ld": "6+",
@@ -8879,7 +9097,7 @@
             "en": "Scarab Occult Terminator"
           },
           "m": "5\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "3",
           "ld": "7+",
@@ -8897,7 +9115,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
@@ -9065,14 +9283,14 @@
       },
       "points": [
         {
-          "cost": "385",
+          "cost": "425",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "180",
+          "cost": "200",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -9171,7 +9389,7 @@
         }
       ],
       "additionalCost": {
-        "cost": "15",
+        "cost": "40",
         "afterSelections": 2
       }
     },
@@ -9532,7 +9750,7 @@
             "en": "Sorcerer"
           },
           "m": "6\"",
-          "t": "4",
+          "t": "5",
           "sv": "3+",
           "w": "4",
           "ld": "6+",
@@ -9565,8 +9783,8 @@
               "range": "12\"",
               "attacks": "1",
               "skill": "3+",
-              "strength": "4",
-              "ap": "-1",
+              "strength": "5",
+              "ap": "-2",
               "damage": "1",
               "keywords": ["Pistol"]
             }
@@ -9667,7 +9885,7 @@
       },
       "points": [
         {
-          "cost": "95",
+          "cost": "100",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -9815,7 +10033,7 @@
             "en": "Sorcerer in Terminator Armour"
           },
           "m": "5\"",
-          "t": "5",
+          "t": "6",
           "sv": "2+",
           "w": "5",
           "ld": "6+",
@@ -9832,7 +10050,7 @@
               "range": "24\"",
               "attacks": "2",
               "skill": "3+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": ["Rapid Fire 2"]
@@ -9848,7 +10066,7 @@
               "range": "24\"",
               "attacks": "1",
               "skill": "4+",
-              "strength": "4",
+              "strength": "5",
               "ap": "-2",
               "damage": "1",
               "keywords": [
@@ -9964,7 +10182,7 @@
       },
       "points": [
         {
-          "cost": "100",
+          "cost": "110",
           "models": "1",
           "keyword": null,
           "faction": null,

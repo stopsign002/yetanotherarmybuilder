@@ -6,8 +6,8 @@
     "banner": "#291221",
     "header": "#391625"
   },
-  "compatibleDataVersion": 946,
-  "updated": "2026-09-02T09:15:31.373Z",
+  "compatibleDataVersion": 972,
+  "updated": "2026-10-02T09:52:42.768Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -373,7 +373,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "23ea0315-37ef-410f-a0a2-a6cf622e609f",
@@ -401,7 +417,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "37b534f4-135f-4d14-bfcb-3fa7ccf9469d",
@@ -422,7 +454,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "4448633e-99cf-4ada-8651-76dbf12b61c6",
@@ -443,7 +491,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "68478a72-0983-4fef-8cdb-e4536134d56e",
@@ -464,7 +528,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "71b5d36d-cfd6-48ee-b883-fbc73eac91cc",
@@ -485,7 +565,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "e0e6a94f-b219-43ec-95d0-f694f701df09",
@@ -513,7 +609,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "ef54b4ca-adca-4e8f-9427-ea1cd0e42ed5",
@@ -541,7 +653,30 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "98f12e77-ede9-4f12-8c67-c76fc77796a5",
+          "name": {
+            "en": "Hosts"
+          }
+        }
+      ]
     },
     {
       "id": "f8ab87bf-ffeb-4dae-8708-5e04ed4d45c6",
@@ -562,7 +697,43 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        },
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "98f12e77-ede9-4f12-8c67-c76fc77796a5",
+          "name": {
+            "en": "Hosts"
+          }
+        }
+      ]
     }
   ],
   "stratagems": [
@@ -3608,14 +3779,14 @@
       },
       "points": [
         {
-          "cost": "130",
+          "cost": "120",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "70",
+          "cost": "65",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -4937,7 +5108,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -5191,7 +5362,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -5536,7 +5707,7 @@
       },
       "points": [
         {
-          "cost": "120",
+          "cost": "110",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -6636,7 +6807,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -7580,7 +7751,7 @@
           {
             "name": {
               "en": "Support",
-              "de": "Unterstützung",
+              "de": "Support",
               "es": "Apoyo",
               "fr": "Appui",
               "it": "Supporto",
@@ -7654,7 +7825,7 @@
       },
       "points": [
         {
-          "cost": "60",
+          "cost": "50",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -8074,7 +8245,7 @@
       },
       "points": [
         {
-          "cost": "70",
+          "cost": "60",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -8715,7 +8886,7 @@
       },
       "points": [
         {
-          "cost": "65",
+          "cost": "60",
           "models": "1",
           "keyword": null,
           "faction": null,

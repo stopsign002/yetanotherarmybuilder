@@ -6,8 +6,8 @@
     "banner": "#572d0a",
     "header": "#3c4b3f"
   },
-  "compatibleDataVersion": 946,
-  "updated": "2026-09-02T09:15:30.209Z",
+  "compatibleDataVersion": 972,
+  "updated": "2026-10-02T09:52:41.521Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -383,7 +383,23 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "2fd1ea69-ba73-4a60-b09b-672cefd4d6f2",
@@ -404,7 +420,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "36ff5ede-1c67-4cdd-9a51-f81eb47e4626",
@@ -425,7 +457,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "38b6d9b5-8bee-4832-ac4b-79eb7f43e4a7",
@@ -446,7 +494,23 @@
           "ko": "적군 격멸",
           "zh": "肃清敌人"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "c9572fd5-d8cd-41b6-b613-13265ac1c04f",
+          "name": {
+            "en": "Purge the Foe",
+            "de": "Lösche den Feind aus",
+            "es": "Purgar al enemigo",
+            "fr": "Éliminez l’Adversaire",
+            "it": "Annienta il nemico",
+            "ja": "敵を浄化せよ",
+            "ko": "적군 격멸",
+            "zh": "肃清敌人"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "513877e1-893c-41ab-b19b-7f84927ea8ed",
@@ -474,7 +538,23 @@
           "ko": "수색과 소탕",
           "zh": "侦察"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "8698abd9-3176-4792-85f4-abdd6ad5b311",
@@ -495,7 +575,43 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        },
+        {
+          "id": "cc033412-45dd-4f17-9ef6-700f5b96c213",
+          "name": {
+            "en": "Reconnaissance",
+            "de": "Auskundschaften",
+            "es": "Reconocimiento",
+            "fr": "Reconnaissance",
+            "it": "Ricognizione",
+            "ja": "偵察",
+            "ko": "수색과 소탕",
+            "zh": "侦察"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "4124b41a-cabc-4af7-a4fc-0becef20246b",
+          "name": {
+            "en": "Hearthband"
+          }
+        }
+      ]
     },
     {
       "id": "9e7516ff-e16f-4ad9-8e43-861ca9a6d955",
@@ -523,7 +639,30 @@
           "ko": "최우선 자산",
           "zh": "重要资产"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "8989bd9e-4bd5-49f8-b4d9-7acb47fccf41",
+          "name": {
+            "en": "Priority Assets",
+            "de": "Prioritätsziele",
+            "es": "Activos prioritarios",
+            "fr": "Atouts Prioritaires",
+            "it": "Risorse prioritarie",
+            "ja": "優先資産",
+            "ko": "최우선 자산",
+            "zh": "重要资产"
+          }
+        }
+      ],
+      "uniqueTags": [
+        {
+          "id": "4124b41a-cabc-4af7-a4fc-0becef20246b",
+          "name": {
+            "en": "Hearthband"
+          }
+        }
+      ]
     },
     {
       "id": "a752a222-2540-4e3b-9d70-423595d238e7",
@@ -551,7 +690,23 @@
           "ko": "방해 작전",
           "zh": "干扰"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "6a24433b-0910-4386-8169-ac2b2ef9e377",
+          "name": {
+            "en": "Disruption",
+            "de": "Störangriff",
+            "es": "Disrupción",
+            "fr": "Perturbation",
+            "it": "Intralcio",
+            "ja": "撹乱",
+            "ko": "방해 작전",
+            "zh": "干扰"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "bd5bc3a7-76dd-4a49-a1ec-a9a8f25dfdd9",
@@ -572,7 +727,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     },
     {
       "id": "f36a7d83-dd08-461a-b4a1-58179deb7d96",
@@ -593,7 +764,23 @@
           "ko": "점령과 유지",
           "zh": "占领与坚守"
         }
-      }
+      },
+      "forceDispositions": [
+        {
+          "id": "27b26ab3-d5e3-450c-af69-829ca3229f7f",
+          "name": {
+            "en": "Take and Hold",
+            "de": "Einnehmen und halten",
+            "es": "Ocupar y mantener",
+            "fr": "Prendre et Tenir",
+            "it": "Conquista e Difendi",
+            "ja": "奪取と確保",
+            "ko": "점령과 유지",
+            "zh": "占领与坚守"
+          }
+        }
+      ],
+      "uniqueTags": []
     }
   ],
   "stratagems": [
@@ -4424,14 +4611,14 @@
       },
       "points": [
         {
-          "cost": "190",
+          "cost": "180",
           "models": "10",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "95",
+          "cost": "90",
           "models": "5",
           "keyword": null,
           "faction": null,
@@ -4513,7 +4700,14 @@
           "zh": "步兵"
         },
         {
-          "en": "Artillery"
+          "en": "Artillery",
+          "de": "Artillerie",
+          "es": "Artillería",
+          "fr": "Artillerie",
+          "it": "Artiglieria",
+          "ja": "アーティラリー",
+          "ko": "포병",
+          "zh": "炮兵"
         },
         {
           "en": "Cthonian"
@@ -6486,7 +6680,7 @@
         }
       ],
       "additionalCost": {
-        "cost": "15",
+        "cost": "20",
         "afterSelections": 1
       },
       "transport": {
@@ -6727,14 +6921,14 @@
       },
       "points": [
         {
-          "cost": "160",
+          "cost": "170",
           "models": "6",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "80",
+          "cost": "85",
           "models": "3",
           "keyword": null,
           "faction": null,
@@ -8338,14 +8532,14 @@
       },
       "points": [
         {
-          "cost": "140",
+          "cost": "150",
           "models": "2",
           "keyword": null,
           "faction": null,
           "detachment": null
         },
         {
-          "cost": "70",
+          "cost": "75",
           "models": "1",
           "keyword": null,
           "faction": null,
@@ -8406,7 +8600,7 @@
         }
       ],
       "additionalCost": {
-        "cost": "10",
+        "cost": "20",
         "afterSelections": 2
       }
     },
@@ -9053,7 +9247,7 @@
       },
       "points": [
         {
-          "cost": "90",
+          "cost": "100",
           "models": "1",
           "keyword": null,
           "faction": null,
