@@ -475,6 +475,34 @@
     'orks::megatrakk-scrapjet':   '2026-09-02 Ork MFM',
     'orks::shokkjump-dragsta':    '2026-09-02 Ork MFM',
     'orks::wurrboy':              '2026-09-02 Ork MFM',
+    // Space Marines 11e codex MFM, 2026-10-02. GW's MFM site gained a "Show
+    // Legends" toggle with this drop and these 19 sheets sit behind it — gone
+    // from the default (matched-play) list. GDC 972 confirms seven of them are
+    // out of GW's app entirely (Tactical, Devastator, Suppressor, Kantor,
+    // Ventris, Lt in Reiver Armour, DC w/ bolt rifles); the rest remain as
+    // Legends datasheets. Grey Knights keep their OWN Razorback / Stormraven /
+    // Stormhawk / Stormtalon (still priced on the GK page) — not listed here.
+    // Eradicator Squad, Invader ATV and Marneus Calgar were RENAMED, not cut;
+    // those are bridged in ~/sites/base/mfm-aliases.json instead.
+    'adeptus-astartes::centurion-assault-squad':                 '2026-10-02 SM codex MFM',
+    'adeptus-astartes::centurion-devastator-squad':              '2026-10-02 SM codex MFM',
+    'adeptus-astartes::death-company-marines-with-bolt-rifles':  '2026-10-02 SM codex MFM',
+    'adeptus-astartes::devastator-squad':                        '2026-10-02 SM codex MFM',
+    'adeptus-astartes::dreadnought':                             '2026-10-02 SM codex MFM',
+    'adeptus-astartes::hammerfall-bunker':                       '2026-10-02 SM codex MFM',
+    'adeptus-astartes::lieutenant-in-reiver-armour':             '2026-10-02 SM codex MFM',
+    'adeptus-astartes::pedro-kantor':                            '2026-10-02 SM codex MFM',
+    'adeptus-astartes::predator-annihilator':                    '2026-10-02 SM codex MFM',
+    'adeptus-astartes::predator-destructor':                     '2026-10-02 SM codex MFM',
+    'adeptus-astartes::razorback':                               '2026-10-02 SM codex MFM',
+    'adeptus-astartes::stormhawk-interceptor':                   '2026-10-02 SM codex MFM',
+    'adeptus-astartes::stormraven-gunship':                      '2026-10-02 SM codex MFM',
+    'adeptus-astartes::stormtalon-gunship':                      '2026-10-02 SM codex MFM',
+    'adeptus-astartes::suppressor-squad':                        '2026-10-02 SM codex MFM',
+    'adeptus-astartes::tactical-squad':                          '2026-10-02 SM codex MFM',
+    'adeptus-astartes::uriel-ventris':                           '2026-10-02 SM codex MFM',
+    'adeptus-astartes::vindicator':                              '2026-10-02 SM codex MFM',
+    'adeptus-astartes::whirlwind':                               '2026-10-02 SM codex MFM',
   };
 
   // A scrape that fails reuses a last-known-good overlay, but an ABSENT or
