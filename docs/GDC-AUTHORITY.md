@@ -210,3 +210,165 @@ references in the Next.js RSC payload, so they are simply absent from the
 raw markup that `mfm-scrape-wargear.py` parses today. A worked scrape is in
 `stopsign002/yetanotherarmybuilder#86`, which proposes making this overlay
 automatic and self-healing the way wargear costs already are.
+
+---
+
+## Space Marines + chapters (contract, 2026-10-05)
+
+Written after the 2026-10-02 Space Marines 11e codex / MFM / all-faction
+dataslate. State on 2026-10-05 after the bundle refresh (40kdc@709ecd9f,
+GDC data_version 972, dump-corrections promoted):
+
+* 40kdc ingested the codex **stat profiles** (and kept its old unit ids), the
+  MFM overlay has the codex points, and dump-corrections.json carries the
+  dataslate statline/weapon sweep. **Statlines, points and weapon numbers are
+  right.** Do not touch those paths.
+* Still wrong, and not expressible as an expect-gated overlay:
+  * **Detachments**: 40kdc ships the 17 index-era SM detachments (1st Company
+    Task Force, Librarius Conclave, Vanguard Spearhead, Anvil Siege Force…).
+    GDC `space_marines.json` ships the **22 codex detachments** (Blade of
+    Ultramar, Tactical Brethren, Gravis Siege Force, Terminator Storm Force,
+    Phobos Shock Force, Deathwatch Support…). Only Gladius, Stormlance,
+    Ironstorm and Ceramite Sentinels overlap. The live picker is wrong for the
+    most-played faction in the app.
+  * **Keywords**: GRENADES → EXPLOSIVES on ~150 Astartes datasheets (GDC has
+    it; CSM keeps GRENADES — this is SM-only). Several sheets also carry a
+    stale self-name keyword 40kdc added ("high marshal helbrecht").
+  * **Core abilities**: Damaged profiles (Gladiators, Repulsors, Land Raider
+    Crusader…), Firing Deck 6 → 7 on the Impulsor, Deep Strike on the
+    Darkshroud / Land Speeder Vengeance, Mephiston FNP 4+ → 5+.
+  * **Named abilities**: ~60 missing (Rapid Disembarkation, Combat
+    Embarkation, Veteran Marksmen, Fury of the Machine Spirit, Death Visions of
+    Sanguinius, Chief Librarian (Psyker level 3), Icon of Old Caliban…).
+  * **Leader roles**: 5 mismatches (Judiciar is SUPPORT, Cato Sicarius is a
+    LEADER, Captain on Bike is a LEADER, Kaius Konorius is SUPPORT, Death
+    Company Captain with Jump Pack attaches to nobody).
+
+The fix is the Ork mechanism above, widened to every Astartes faction, plus
+ONE new capability: **adopting detachments 40kdc does not carry**. The
+existing `mergeIntoFactions` can only decorate a detachment that already
+exists (`detKeyToTargets`), so a flip alone would leave the 18 missing
+detachments missing.
+
+### 1. Allowlist
+
+Add to `GDC_AUTHORITATIVE` in `js/data/dc-adapter.js`, each with a note
+string: `adeptus-astartes`, `black-templars`, `blood-angels`, `dark-angels`,
+`deathwatch`, `space-wolves`, and every other 40kdc faction id that maps to an
+`Imperium - Adeptus Astartes - *` faction name (Imperial Fists, Iron Hands,
+Raven Guard, Salamanders, Ultramarines, White Scars — read the ids from
+`window.DC.factions`, do not guess them).
+
+### 2. GDC file resolution for authoritative chapters
+
+`applyGdcStatlines` resolves datasheets through `FACTION_TO_GDC[name]` — the
+PRIMARY file only. For a chapter (Blood Angels → `bloodangels`) that misses
+every generic sheet in the chapter's roster (Intercessors, Impulsor…), which
+would stay stale. Resolve through `App.GDC.gdcFilesFor(name)` (chapter file
+first, then `space_marines`) and index the chapter file's sheets FIRST so a
+chapter override of a shared name (Blood Angels Captain vs Captain) wins.
+Expose `gdcFilesFor` on `App.GDC` if it is not already.
+
+### 3. Detachment adoption (new)
+
+For an authoritative faction, after `toDetachment` has built the 40kdc list
+and BEFORE `mergeIntoFactions` runs:
+
+* Collect the GDC detachment entries for the faction from the same files as
+  §2 (`payload.detachments[]`: `{id, name{en}, faction, detachmentPoints,
+  forceDispositions[{id,name{en}}]}`).
+* **Eligibility by `faction` field.** `space_marines.json` tags each
+  detachment with the chapter it belongs to: `Adeptus Astartes` (generic),
+  `Ultramarines`, `Imperial Fists`, `Raven Guard`, `Salamanders`, `White
+  Scars`, `Iron Hands`. A faction may adopt: everything from its OWN chapter
+  file; from `space_marines.json`, entries tagged `Adeptus Astartes` plus
+  entries tagged with its own chapter name (so `Imperium - Adeptus Astartes -
+  Ultramarines` gets Blade of Ultramar, Black Templars does not). Vanilla
+  `Space Marines` adopts ALL 22 — a vanilla-SM list can be any chapter.
+  **Open rules question for the owner** (ask, do not decide): whether a
+  Blood Angels / Dark Angels / Space Wolves / Black Templars / Deathwatch army
+  may take the generic codex detachments at all now that those chapters have
+  their own books. Until answered, keep the current behaviour (chapters borrow
+  the generic ones) — the mechanism just swaps WHICH generic ones.
+* **Match by `nameKey`** against the existing 40kdc detachments (the same
+  relaxed key `gdc.js` uses). Existing match → keep the 40kdc object (its
+  id is what allied-rule gates and saved armies reference). No match →
+  synthesise `{ name, rules: [], enhancements: [], _factionId, id:
+  'gdc:' + <GDC detachment id>, points: detachmentPoints, dispositions,
+  stratagemIds: [], _adopted: true }`. `dispositions` must be the same shape
+  `toDispositions` emits — resolve each GDC disposition NAME against
+  `window.DC.forceDispositions` / `FORCE_DISPOSITIONS` by name, and if a
+  name does not resolve emit `{id: null, name, text: ''}` rather than
+  dropping it.
+* **Retire what GW no longer lists.** A 40kdc detachment of an authoritative
+  faction that matches NO eligible GDC detachment is removed from
+  `faction.detachments`. Keep a `faction._retiredDetachments = [names]`
+  list so the army loader can tell a user why a saved army's detachment is
+  gone (check `js/app/selections.js` / `detachment-picker.js` for how a
+  missing detachment is handled today and make sure it degrades to "no
+  detachment selected", never a crash).
+* `mergeIntoFactions` already REPLACES rules / enhancements / stratagems for
+  authoritative factions by `nameKey` — the adopted objects pick those up
+  with no further change, but VERIFY it: every adopted detachment must end
+  with ≥1 rule, its GDC enhancement rows (with `pts`), and its GDC stratagems
+  (3 or 6 — see the per-detachment counts in `space_marines.json`).
+* Enhancement `cost` in GDC is a STRING ("15") — `parseInt` it.
+
+### 4. Datasheet authority — nothing new, but confirm each
+
+Keywords, weapons, abilities, wargearAbilities, attachmentRole/gdcLeadBy all
+flow from the existing authority pass once the faction is allowlisted. Confirm
+on these specific sheets (they are the audit's own examples):
+
+| Sheet | Expect |
+|---|---|
+| Intercessor Squad (SM and under Blood Angels) | keywords contain EXPLOSIVES, not GRENADES |
+| Impulsor | core `Firing Deck 7`, named `Rapid Disembarkation` |
+| Gladiator Lancer | core `Damaged: 1-4 wounds remaining` |
+| Chief Librarian Mephiston (Blood Angels) | core FNP 5+, named `Chief Librarian (Psyker level 3)` |
+| Judiciar | `attachmentRole === 'support'` |
+| Cato Sicarius | `attachmentRole === 'leader'`, `gdcLeadBy` non-empty |
+| Death Company Captain with Jump Pack | `gdcLeadBy` is `[]` and attachments.js offers no targets |
+| Tactical Squad | still present, `isLegends === true`, untouched by the authority pass (GDC does not list it; that path already returns early) |
+
+`GDC_KEEP_ABILITIES` entries may be needed where GDC ships an ability as an
+image — look for Astartes sheets whose GDC `abilities.other` is shorter than
+the printed card (the dump audit's `namedAbilityInfo` rows are the hint) and
+list what you find in the report rather than guessing.
+
+### 5. Regression contract
+
+* **Every non-Astartes faction must be byte-identical before and after.**
+  Dump `JSON.stringify(faction)` per faction from the node harness on `main`
+  and on the branch and diff. Orks included.
+* The node harness is the validator the refresh uses:
+  ```
+  docker run --rm -v ~/sites/base/40kdc-build:/work -v <APP>:/app -w /work/bundle \
+    -u "$(id -u):$(id -g)" -e HOME=/work/bundle \
+    -e ADAPTER_PATH=/app/js/data/dc-adapter.js -e BUNDLE_PATH=/app/js/vendor/dc-bundle.js \
+    -e PROSE_PATH=/app/js/vendor/dc-prose.js node:22-alpine node validate-deploy.mjs
+  ```
+  `<APP>` may be a git worktree; copy the untracked server-only
+  `js/vendor/dc-prose.js` from the live tree into it first (or pass
+  `PROSE_PATH=""`). It must print `"ok":true` with 35 factions and ~998 units.
+  `validate-deploy.mjs` exposes nothing per-faction; write a sibling
+  `inspect-sm.mjs` next to it (same boot sequence — read the top of
+  validate-deploy.mjs) that prints the table in §4 plus every Astartes
+  faction's detachment list with rule/enhancement/stratagem counts.
+* Consumers to re-read for the new shape: `js/app/detachment-picker.js`,
+  `js/app/selections.js`, `js/ui/faction-rules.js`, `js/app/allies.js`
+  (gates on 40kdc detachment ids — adopted ids are `gdc:*` and must simply
+  never match), `js/app/sm-chapter-filter.js`, `js/ui/play-mode.js`,
+  `js/ui/cards-mode.js` (prints detachment rules/strats).
+* Nothing in this contract touches `js/vendor/dc-bundle.js`,
+  `build/abilities-index.json`, `data/gdc/`, or anything under
+  `~/sites/base/`.
+
+### Done means
+
+The §4 table passes, every Astartes faction lists exactly its eligible GDC
+detachments (vanilla SM: 22) each with rule + enhancements + stratagems, the
+retired index-era ones are gone, non-Astartes factions are byte-identical,
+`validate-deploy.mjs` is ok, and `dump-audit.py` (report mode, run by the
+session after merge) shows the SM keyword/coreAbility/namedAbility/
+attachmentRole rows gone.
