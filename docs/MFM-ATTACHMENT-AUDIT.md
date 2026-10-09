@@ -87,6 +87,23 @@ Classify every difference:
 4. **Not carried** — the MFM prices a unit yaab has no datasheet for (Legends,
    or a fresh codex). Report as context, not a defect.
 
+## Fixed findings
+
+**Ministorum Priest (#88), fixed in `dc-adapter.js`.** The 18-vs-7 over-permissive
+target list on the Agents of the Imperium copy was not a name-folding bug in
+`attachments.js` — the root cause was upstream: `leader_id` in 40kdc's
+`leaderAttachments` table is a bare unit slug with no faction field, and 7
+leader ids (including `ministorum-priest`) are reused across more than one
+40kdc faction, each with its own eligible-bodyguard row. The old fallback map
+in `dc-adapter.js` keyed by `leader_id` alone and unioned every row sharing an
+id, so the Agents copy inherited the Sororitas and Astra Militarum rows too.
+The fix keeps the rows (not a merged name list) and, per consuming unit, picks
+only the rows whose bodyguard ids all resolve to a unit in that unit's own
+40kdc faction — falling back to the old union (with a one-time `console.warn`)
+if no row matches. `attachments.js`'s name-keyed resolution and reverse index
+are unchanged and were never the problem; see #87 for the separate prose-as-target
+bug in that file.
+
 ## Done means
 
 - All 28 pages scraped and the sanity gate passed.

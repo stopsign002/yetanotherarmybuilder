@@ -38,7 +38,7 @@ statlines + invulns. This change widens it into `GDC_AUTHORITATIVE`.
 | **attachmentRole / gdcLeadBy** | **GDC** core `Leader` + `attachesTo` | `gdcLeadBy` = EVERY `attachesTo` target (GDC types them `leader` AND `support`); the role lives in `attachmentRole`. Empty means "attaches to nobody" — NO fallback to 40kdc `leader-attachments` |
 | wargear options tree + costs | 40kdc + MFM (unchanged) | option items must still resolve to a row in `u.weapons` by name |
 | composition, loadout prose, transport | GDC via gdc.js (unchanged) | |
-| army rules | 40kdc names + GDC/store text (unchanged) + `ARMY_RULE_TEXT_OVERRIDES` | GDC ships no Waaagh! text; 10e store text is overridden expect-gated |
+| army rules | 40kdc names + GDC/store text (unchanged) + `ARMY_RULE_TEXT_OVERRIDES` | GDC ships no Waaagh! text; 10e store text is overridden expect-gated; minus `DATASHEET_SCOPED_ARMY_RULES`, rendered on the carrying datasheets instead (#81) |
 | **detachment rule** | **GDC** `rules.detachment` (name = the RULE's name, e.g. "Unstoppable Momentum") | replace, not fill |
 | **stratagems** (list, CP, phases, text) | **GDC** | `reconcileStrats` short-circuits to the GDC list; `projectStratagem` gains secondary effects |
 | **enhancements** (list, pts, text) | **GDC** | text: keep 40kdc's when it is a strict superset of GDC's (weapon-profile cards GDC ships as images) |
@@ -350,7 +350,8 @@ list what you find in the report rather than guessing.
   ```
   `<APP>` may be a git worktree; copy the untracked server-only
   `js/vendor/dc-prose.js` from the live tree into it first (or pass
-  `PROSE_PATH=""`). It must print `"ok":true` with 35 factions and ~998 units.
+  `PROSE_PATH=""`). It must print `"ok":true` with 34 factions (35 before #97
+  dropped the duplicate `crimson-fists` faction) and ~998 units.
   `validate-deploy.mjs` exposes nothing per-faction; write a sibling
   `inspect-sm.mjs` next to it (same boot sequence — read the top of
   validate-deploy.mjs) that prints the table in §4 plus every Astartes

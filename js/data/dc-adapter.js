@@ -50,7 +50,6 @@
     'space-wolves':    'Imperium - Adeptus Astartes - Space Wolves',
     'ultramarines':    'Imperium - Adeptus Astartes - Ultramarines',
     'white-scars':     'Imperium - Adeptus Astartes - White Scars',
-    'crimson-fists':   'Imperium - Adeptus Astartes - Imperial Fists',
   };
 
   // ability_id → display text from the separate 40kdc-abilities store.
@@ -754,8 +753,8 @@
   // that carries no army-rule text and must NOT render as an army rule. So we
   // normalize per chapter instead of trusting faction_rule_id:
   //   - Default (Blood Angels, Dark Angels, Deathwatch, Imperial Fists, Iron
-  //     Hands, Raven Guard, Salamanders, Ultramarines, White Scars, Crimson
-  //     Fists): no distinct army rule — they share Oath of Moment.
+  //     Hands, Raven Guard, Salamanders, Ultramarines, White Scars): no
+  //     distinct army rule — they share Oath of Moment.
   //   - black-templars: Templar Vows REPLACES Oath of Moment (Heirs of Sigismund).
   //   - space-wolves: Curse of the Wulfen IN ADDITION to Oath of Moment.
   // SELF-HEALING: remove an override once 40kdc authors a real faction rule +
@@ -1120,10 +1119,18 @@
   // if 40kdc drops the table or GDC starts carrying the prose, the other source
   // takes over with no code change. Memoised — the same global list is copied
   // into every faction's ds, so it's read once.
-  let _leaderLeadBy = null;
-  function leaderLeadByMap() {
-    if (_leaderLeadBy) return _leaderLeadBy;
-    _leaderLeadBy = new Map();               // leader_id -> string[] of names
+  //
+  // `leader_id` is NOT faction-scoped in 40kdc's table, and unit ids are slugs
+  // reused across factions (yaab#88) — 7 leaders (incl. Ministorum Priest) have
+  // more than one row, one per originating faction, and a flat per-leader union
+  // pooled all of them onto every copy of that id (the Agents of the Imperium
+  // Ministorum Priest got 18 targets where GW's MFM lists 7). So this keeps the
+  // ROWS, not a merged name list, and the per-unit lookup below picks only the
+  // rows whose bodyguard ids actually belong to the consuming unit's faction.
+  let _leaderLeadByRows = null;
+  function leaderLeadByRows() {
+    if (_leaderLeadByRows) return _leaderLeadByRows;
+    _leaderLeadByRows = new Map();           // leader_id -> [{ ids, names }, ...]
     try {
       const nameById = new Map();
       DC.units.all.forEach((uu) => { if (uu && uu.id) nameById.set(uu.id, uu.name); });
@@ -1135,14 +1142,62 @@
         const names = la.eligible_bodyguard_ids
           .map((bid) => nameById.get(bid)).filter(Boolean);
         if (!names.length) return;
-        const prev = _leaderLeadBy.get(la.leader_id) || [];
-        // dedupe by name (a leader can appear under multiple faction copies)
-        const seen = new Set(prev);
-        names.forEach((n) => { if (!seen.has(n)) { seen.add(n); prev.push(n); } });
-        _leaderLeadBy.set(la.leader_id, prev);
+        const rows = _leaderLeadByRows.get(la.leader_id) || [];
+        rows.push({ ids: la.eligible_bodyguard_ids.slice(), names });
+        _leaderLeadByRows.set(la.leader_id, rows);
       });
     } catch (_) { /* leave the map empty; GDC prose still drives Led By */ }
-    return _leaderLeadBy;
+    return _leaderLeadByRows;
+  }
+
+  // id -> Set(faction_id) for every 40kdc unit, so a row's bodyguard ids can be
+  // tested against the faction they actually live in (same id reuse problem as
+  // above — a bodyguard id can exist in more than one faction's roster).
+  let _unitIdFactions = null;
+  function unitIdFactionsMap() {
+    if (_unitIdFactions) return _unitIdFactions;
+    _unitIdFactions = new Map();
+    try {
+      DC.units.all.forEach((uu) => {
+        const r = (uu && uu.raw) || uu;
+        if (!r || !r.id || !r.faction_id) return;
+        const set = _unitIdFactions.get(r.id) || new Set();
+        set.add(r.faction_id);
+        _unitIdFactions.set(r.id, set);
+      });
+    } catch (_) { /* leave empty; callers already tolerate no match */ }
+    return _unitIdFactions;
+  }
+
+  const _warnedLeaderAttachmentFactions = new Set();
+  // Fallback gdcLeadBy for unit `u` (already `uv.raw || uv`, so `u.faction_id`
+  // is set): union of the leaderAttachments rows that belong to u's faction —
+  // a row belongs when EVERY one of its bodyguard ids resolves to at least one
+  // unit in that faction. No matching row (data drift) → union of ALL rows for
+  // that leader id, same as the old un-scoped behaviour, with a one-time warn.
+  function gdcLeadByFallback(u) {
+    const rows = leaderLeadByRows().get(u.id);
+    if (!rows || !rows.length) return undefined;
+    const idFactions = unitIdFactionsMap();
+    const matching = rows.filter((row) => row.ids.every((id) => {
+      const facs = idFactions.get(id);
+      return !!(facs && facs.has(u.faction_id));
+    }));
+    let chosen = matching;
+    if (!matching.length) {
+      chosen = rows;
+      const warnKey = u.faction_id + '::' + u.id;
+      if (!_warnedLeaderAttachmentFactions.has(warnKey)) {
+        _warnedLeaderAttachmentFactions.add(warnKey);
+        console.warn('[DC] leader-attachments: no faction-scoped row for', u.id, u.faction_id);
+      }
+    }
+    const seen = new Set();
+    const names = [];
+    chosen.forEach((row) => row.names.forEach((n) => {
+      if (!seen.has(n)) { seen.add(n); names.push(n); }
+    }));
+    return names.length ? names : undefined;
   }
 
   // ── overlay ability-text rewrites (window.DC.abilityFixes) ────────────────
@@ -1852,7 +1907,7 @@
       // Fallback "Led By" targets from 40kdc's structured leaderAttachments
       // table, used when GDC prose carries none (e.g. all Necrons leaders). The
       // GDC overlay overwrites this per-unit only when it has its own list.
-      gdcLeadBy: leaderLeadByMap().get(u.id) || undefined,
+      gdcLeadBy: gdcLeadByFallback(u),
       // Points sourced from the live MFM overlay (also clears provisional —
       // the MFM is the confirmed source upstream's flag is provisional FOR).
       _mfmPoints: !!(mfmPts && mfmPts.length),
@@ -2394,7 +2449,7 @@
   //
   // The rules and their resolvers already ship inside dc-bundle.js; they're just
   // not on `window.DC`. `fv.ds` is the live Dataset back-reference (same escape
-  // hatch leaderLeadByMap uses above), so this needs no bundle rebuild. We still
+  // hatch leaderLeadByRows uses above), so this needs no bundle rebuild. We still
   // prefer `DC.alliedRules` when present — build/dc-entry.mjs exports it as of
   // this change, so it appears after the next nightly refresh.
   //
@@ -2557,15 +2612,16 @@
   // EXPLOSIVES on ~150 datasheets, Damaged profiles and Firing Deck ratings,
   // ~60 missing named abilities, 5 wrong Leader/Support roles — and 17
   // index-era detachments against GW's 22 codex ones, only 4 of them shared.
-  // Keyed by 40kdc faction id, which is why `crimson-fists` is listed
-  // separately: 40kdc ships it as its own faction that renders under the
-  // Imperial Fists display name.
+  // Keyed by 40kdc faction id. `crimson-fists` is NOT listed — 40kdc shipped
+  // it as a second faction id rendering under the same Imperial Fists display
+  // name as `imperial-fists` (two factions, one name, see #97); it was dropped
+  // from FACTION_NAME entirely rather than kept here with no datasheets of its
+  // own to be authoritative over.
   const GDC_AUTHORITATIVE = {
     orks: '2026-09-02 Ork codex — 40kdc + BSData both still pre-codex',
     'adeptus-astartes': '2026-10-02 Space Marines codex — 40kdc still index-era below the statline',
     'black-templars':   '2026-10-02 Space Marines codex (chapter)',
     'blood-angels':     '2026-10-02 Space Marines codex (chapter)',
-    'crimson-fists':    '2026-10-02 Space Marines codex (chapter)',
     'dark-angels':      '2026-10-02 Space Marines codex (chapter)',
     'deathwatch':       '2026-10-02 Space Marines codex (chapter)',
     'imperial-fists':   '2026-10-02 Space Marines codex (chapter)',
@@ -2577,6 +2633,22 @@
     'white-scars':      '2026-10-02 Space Marines codex (chapter)',
   };
 
+  // GDC `rules.army` entries that are GW-printed on individual DATASHEETS
+  // (`abilities.faction`), not army-wide (#81). On Orks, GDC files "Da Boss"
+  // (Warboss-types) and "Unstable Energies" (Weirdboy, Kill Rig) under
+  // `rules.army` alongside the real army rule Waaagh!, so a straight merge put
+  // all three on the Army Rules panel of every Ork list, including ones with
+  // neither a Warboss nor a psyker. Keyed by 40kdc faction id, matched
+  // case-insensitively on the English rule name. gdc.js's `mergeIntoFactions`
+  // excludes a matching entry from `faction.armyRules` (keeping its text
+  // reachable by name for the authoritative ability rebuild below); the
+  // rebuild then renders it as a non-core ability on each datasheet whose
+  // `abilities.faction` names it. Waaagh! is not in this list and still
+  // renders on the panel as before.
+  const DATASHEET_SCOPED_ARMY_RULES = {
+    orks: ['Da Boss', 'Unstable Energies'],
+  };
+
   // 40kdc faction id → the chapter name GW's own dump tags a datasheet and a
   // detachment with (`faction` on a detachment, `factions[]` on a datasheet).
   // This is what decides which of space_marines.json's 22 codex detachments a
@@ -2586,7 +2658,6 @@
   const GDC_CHAPTER_TAG = {
     'black-templars': 'Black Templars',
     'blood-angels':   'Blood Angels',
-    'crimson-fists':  'Imperial Fists',
     'dark-angels':    'Dark Angels',
     'deathwatch':     'Deathwatch',
     'imperial-fists': 'Imperial Fists',
@@ -2628,7 +2699,7 @@
   // and an adopted one are built by the same rules.
   //
   // Returns a list of change descriptions for the audits' _gdcStatOverride.
-  function applyGdcDatasheetAuthority(unit, ds, fid) {
+  function applyGdcDatasheetAuthority(unit, ds, fid, faction) {
     const G = (window.App && window.App.GDC) || {};
     const T = G._pickText || ((v) => v);
     const C = (v) => (G._cleanMarkup ? G._cleanMarkup(T(v)) : T(v));
@@ -2752,6 +2823,28 @@
       const name = span ? 'Damaged: ' + span + ' wounds remaining'
         : (rawRange ? 'Damaged: ' + rawRange.toLowerCase() : 'Damaged');
       if (desc) push({ name, description: desc, isCore: false, id: null });
+    }
+    // Datasheet-scoped army rules (#81): GDC files some `rules.army` entries
+    // (Orks' Da Boss, Unstable Energies) that GW actually prints on the
+    // individual datasheets carrying them, not army-wide — see
+    // DATASHEET_SCOPED_ARMY_RULES above. gdc.js's mergeIntoFactions excludes
+    // a matching entry from `faction.armyRules` and stashes its composed text
+    // keyed off the faction object (not a `faction` property — kept out of
+    // the serialized faction shape on purpose, see gdc.js); render it here as
+    // a non-core ability instead. `ab.faction` entries are name-only
+    // ({name:{en:…}}, no description), so the text has to come from that
+    // stash. Waaagh! is not in the allowlist and stays off the card.
+    const scopedRuleNames = DATASHEET_SCOPED_ARMY_RULES[fid] || [];
+    if (scopedRuleNames.length) {
+      const scopedSet = new Set(scopedRuleNames.map((n) => String(n).toLowerCase()));
+      const scopedText = (G._datasheetScopedArmyRuleTextFor
+        ? G._datasheetScopedArmyRuleTextFor(faction) : {}) || {};
+      (ab.faction || []).forEach((a) => {
+        const name = T(a && a.name != null ? a.name : a);
+        if (!name || !scopedSet.has(name.toLowerCase())) return;
+        const desc = scopedText[name.toLowerCase()] || '';
+        if (desc) push({ name, description: desc, isCore: false, id: null });
+      });
     }
     // Abilities GDC ships as an image (see GDC_KEEP_ABILITIES) — carried over
     // from the 40kdc build by name, only where GDC has nothing of that name.
@@ -2925,7 +3018,7 @@
         applyStatlines();
         // Everything below the statline (keywords, weapons, abilities, wargear
         // abilities, the leader graph) — see applyGdcDatasheetAuthority.
-        try { applyGdcDatasheetAuthority(unit, ds, fid).forEach((c) => changed.push(c)); }
+        try { applyGdcDatasheetAuthority(unit, ds, fid, faction).forEach((c) => changed.push(c)); }
         catch (e) { console.warn('[DC] GDC authority failed for ' + unit.name + ':', e && e.message ? e.message : e); }
         if (changed.length) {
           nUnits++; nChanges += changed.length;
@@ -3533,6 +3626,9 @@
   // merges directly sees it as well. Keyed by 40kdc faction id — gdc.js reads
   // `faction._factionId`.
   try { (window.App = window.App || {}).GDC_AUTHORITATIVE = GDC_AUTHORITATIVE; } catch (_) {}
+  // Same bridge, for the army-rule-vs-datasheet-rule split (#81). gdc.js reads
+  // `faction._factionId` the same way it does for GDC_AUTHORITATIVE above.
+  try { (window.App = window.App || {}).DATASHEET_SCOPED_ARMY_RULES = DATASHEET_SCOPED_ARMY_RULES; } catch (_) {}
   // …and the detachment-adoption pass, which mergeIntoFactions runs for every
   // faction before it indexes `faction.detachments`. Registered here rather
   // than called only from loadAllFactions so the node harnesses that drive the

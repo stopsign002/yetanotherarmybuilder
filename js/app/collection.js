@@ -255,6 +255,31 @@
     _predicateRegistered = true;
   }
 
+  // Resets the three chip flags the way onToggle does (flag off + re-sync
+  // the active classes from the flags) — the DOM class/aria reset for the
+  // chip elements themselves is already handled by roster.js's shared
+  // clear-button loop. Registered on App.hooks.chipClearers (#95).
+  function clearCollectionChips() {
+    _chipOwnedActive = _chipNeedsActive = _chipPaintedActive = false;
+    syncChipActiveClasses();
+  }
+
+  let _chipHooksRegistered = false;
+  function registerChipHooks() {
+    if (_chipHooksRegistered) return;
+    if (!App.hooks) return;
+    // chipClearers/chipActive aren't pre-created anywhere (unlike
+    // rosterFilters) — lazily create them so whichever module loads first
+    // wins, mirroring this file's own modeChange array below.
+    if (!Array.isArray(App.hooks.chipClearers)) App.hooks.chipClearers = [];
+    if (!Array.isArray(App.hooks.chipActive))   App.hooks.chipActive   = [];
+    App.hooks.chipClearers.push(clearCollectionChips);
+    App.hooks.chipActive.push(function collectionChipActive() {
+      return _chipOwnedActive || _chipNeedsActive || _chipPaintedActive;
+    });
+    _chipHooksRegistered = true;
+  }
+
   function injectChips(bar) {
     if (!bar) return;
     // Suppress collection chips in BUILD mode — they belong in the COLLECT
@@ -290,6 +315,7 @@
         if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
           App.renderUnitRosterWithContext();
         }
+        if (window.UI && typeof UI.syncChipClearVisibility === 'function') UI.syncChipClearVisibility();
       });
       if (clearBtn) bar.insertBefore(btn, clearBtn); else bar.appendChild(btn);
     });
@@ -730,6 +756,7 @@
     loadPersisted();
     applyBuildBadgesBodyClass();
     ensurePredicate();
+    registerChipHooks();
     installChipObserver();
     installDetailObserver();
     installArmyPanelObserver();

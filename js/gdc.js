@@ -78,6 +78,15 @@
   // In-memory cache of raw GDC payloads keyed by `<edition>/<filename>`.
   const rawCache = new Map();
 
+  // Composed text for `rules.army` entries that DATASHEET_SCOPED_ARMY_RULES
+  // (#81) excludes from `faction.armyRules`, keyed by faction object -> { lower-
+  // cased rule name -> composed text }. A WeakMap rather than a property on
+  // `faction` itself so it never shows up in `JSON.stringify(faction)` — the
+  // node-harness byte-identity test dumps the faction object verbatim, and
+  // this map is pure plumbing between this merge pass and dc-adapter's
+  // authoritative ability rebuild, not data any renderer reads.
+  const datasheetScopedArmyRuleText = new WeakMap();
+
   // ── 11th-schema helpers ────────────────────────────────────────────────────
   const cap = (s) => s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : '';
 
@@ -515,13 +524,32 @@
       }
 
       // Army rule prose — fill a 40kdc-seeded rule's empty description, or add.
+      // Entries whose name is on this faction's DATASHEET_SCOPED_ARMY_RULES
+      // allowlist (dc-adapter.js, #81 — Orks' Da Boss / Unstable Energies) are
+      // GW-printed on individual datasheets, not army-wide: keep the composed
+      // text reachable by lower-cased name on `datasheetScopedArmyRuleText`
+      // (dc-adapter's authoritative ability rebuild renders it per datasheet
+      // via `App.GDC._datasheetScopedArmyRuleTextFor(faction)`), but do NOT
+      // add or fill them into `faction.armyRules`. Waaagh! is not on that
+      // allowlist and is never in `rules.army` to begin with, so it is
+      // unaffected either way.
       if (armyRuleEntries.length > 0) {
+        const scopedNames = new Set(
+          (((App && App.DATASHEET_SCOPED_ARMY_RULES) || {})[faction._factionId] || [])
+            .map(n => String(n).toLowerCase())
+        );
         const existing = Array.isArray(faction.armyRules) ? faction.armyRules : (faction.armyRules = []);
         const byKey = new Map(existing.map(r => [nameKey(r.name), r]));
         armyRuleEntries.forEach(ar => {
           const nm = pickText(ar && ar.name);
           if (!nm) return;
           const desc = patchRuleText(nm, composeRuleText(ar.rules));
+          if (scopedNames.has(nm.toLowerCase())) {
+            let stash = datasheetScopedArmyRuleText.get(faction);
+            if (!stash) { stash = {}; datasheetScopedArmyRuleText.set(faction, stash); }
+            stash[nm.toLowerCase()] = desc;
+            return;
+          }
           const hit = byKey.get(nameKey(nm));
           if (hit) {
             if (!hit.description && desc) hit.description = desc;
@@ -1208,6 +1236,9 @@
     gdcFilesFor,
     datasheetFilesFor,
     rawDatasheetIndexFor,
+    // dc-adapter's authoritative ability rebuild reads the datasheet-scoped
+    // army-rule text mergeIntoFactions stashed for this faction (#81).
+    _datasheetScopedArmyRuleTextFor: (faction) => datasheetScopedArmyRuleText.get(faction) || {},
     _EDITION: EDITION,
   };
 })();

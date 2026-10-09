@@ -212,6 +212,32 @@
     _predicateRegistered = true;
   }
 
+  // Resets this module's own chip state the way its own toggle does (flag
+  // off; DOM class reset is handled by roster.js's shared clear-button loop,
+  // which strips `.active` off every `.filter-chip`). Registered on
+  // App.hooks.chipClearers so roster.js's `×` can clear us without knowing
+  // we exist (#95).
+  function clearFavRecentChip() {
+    _favChipActive = false;
+    _recentChipActive = false;
+  }
+
+  let _chipHooksRegistered = false;
+  function registerChipHooks() {
+    if (_chipHooksRegistered) return;
+    if (!App.hooks) return;
+    // chipClearers/chipActive aren't pre-created anywhere (unlike
+    // rosterFilters) — lazily create them so whichever module loads first
+    // wins, mirroring collection.js's modeChange array.
+    if (!Array.isArray(App.hooks.chipClearers)) App.hooks.chipClearers = [];
+    if (!Array.isArray(App.hooks.chipActive))   App.hooks.chipActive   = [];
+    App.hooks.chipClearers.push(clearFavRecentChip);
+    App.hooks.chipActive.push(function favRecentChipActive() {
+      return _favChipActive || _recentChipActive;
+    });
+    _chipHooksRegistered = true;
+  }
+
   function injectChips(bar) {
     if (!bar) return;
     if (bar.querySelector('.fav-chip') && bar.querySelector('.recent-chip')) {
@@ -235,6 +261,7 @@
         if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
           App.renderUnitRosterWithContext();
         }
+        if (window.UI && typeof UI.syncChipClearVisibility === 'function') UI.syncChipClearVisibility();
       });
       if (clearBtn) bar.insertBefore(favBtn, clearBtn); else bar.appendChild(favBtn);
     }
@@ -251,6 +278,7 @@
         if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
           App.renderUnitRosterWithContext();
         }
+        if (window.UI && typeof UI.syncChipClearVisibility === 'function') UI.syncChipClearVisibility();
       });
       if (clearBtn) bar.insertBefore(recBtn, clearBtn); else bar.appendChild(recBtn);
     }
@@ -294,6 +322,7 @@
   App.hooks.bootstrap.push(function (state) {
     loadPersisted();
     ensurePredicate();
+    registerChipHooks();
     installChipObserver();
     // Seed the baseline with whatever army is loaded at boot so we don't
     // flag its existing entries as recent additions on the first hook call.

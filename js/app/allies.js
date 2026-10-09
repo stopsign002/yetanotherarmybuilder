@@ -132,19 +132,33 @@
   // Co-operates with roster.js's own × clear button. That handler does
   // `bar.querySelectorAll('.filter-chip')` and strips `.active`/`.excluded`
   // off EVERY chip in the bar (ours included, since we share the class), but
-  // it only clears its own `R.chipState` — it has no idea our internal
-  // `allyChipState` variable exists. Without this, the chip would go back to
-  // looking off while still silently filtering the roster. Bound directly to
-  // the clear button (favorites.js/collection.js only use it as an insertion
-  // anchor) so the visual reset and the actual filter state can't drift.
-  function resetChipState() {
+  // on its own has no idea our internal `allyChipState` variable exists.
+  // Without this, the chip would go back to looking off while still
+  // silently filtering the roster. Registered on App.hooks.chipClearers
+  // (#95) — roster.js calls every entry, then re-renders once itself, so
+  // this does not render on its own.
+  function clearAllyChip() {
     if (allyChipState === null) return;
     allyChipState = null;
     syncChipClasses();
-    if (typeof App.renderUnitRosterWithContext === 'function') {
-      App.renderUnitRosterWithContext();
-    }
   }
+
+  let _chipHooksRegistered = false;
+  function registerChipHooks() {
+    if (_chipHooksRegistered) return;
+    if (!App.hooks) return;
+    // chipClearers/chipActive aren't pre-created anywhere (unlike
+    // rosterFilters) — lazily create them so whichever module loads first
+    // wins, mirroring collection.js's modeChange array.
+    if (!Array.isArray(App.hooks.chipClearers)) App.hooks.chipClearers = [];
+    if (!Array.isArray(App.hooks.chipActive))   App.hooks.chipActive   = [];
+    App.hooks.chipClearers.push(clearAllyChip);
+    App.hooks.chipActive.push(function allyChipActive() {
+      return allyChipState !== null;
+    });
+    _chipHooksRegistered = true;
+  }
+  registerChipHooks();
 
   function injectChip(bar) {
     if (!bar) return;
@@ -163,11 +177,14 @@
       if (typeof App.renderUnitRosterWithContext === 'function') {
         App.renderUnitRosterWithContext();
       }
+      if (window.UI && typeof UI.syncChipClearVisibility === 'function') UI.syncChipClearVisibility();
     });
     const clearBtn = bar.querySelector('.filter-chips-clear');
+    // No longer bound directly to clearBtn (#95) — clearAllyChip is
+    // registered on App.hooks.chipClearers instead, so the bar has one
+    // clear mechanism, shared with Favorites/Recents/Collection.
     if (clearBtn) {
       bar.insertBefore(btn, clearBtn);
-      clearBtn.addEventListener('click', resetChipState);
     } else {
       bar.appendChild(btn);
     }

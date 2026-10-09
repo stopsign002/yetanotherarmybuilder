@@ -209,6 +209,42 @@ and `collection.js` (Owned / Needs paint / Painted) are the two precedents:
   property and deduped (`filter(fn => !fn._isYours)`) before pushing;
 - call `App.renderUnitRosterWithContext()` after any state change.
 
+**The shared `×` clear button via `chipClearers` / `chipActive` (#95).**
+roster.js's clear handler does `bar.querySelectorAll('.filter-chip')` and
+strips `.active` / `.excluded` off *every* chip in the bar (every feature
+chip included, since they all share that class), but on its own it only
+knows about its own `R.chipState` — a feature module's chip used to go back
+to looking off while its filter stayed on. Two hooks fix that, created lazily
+(not pre-created in `js/app/hooks.js`, so whichever module loads first wins —
+mirror collection.js's `modeChange` array):
+
+```js
+if (!Array.isArray(App.hooks.chipClearers)) App.hooks.chipClearers = [];
+if (!Array.isArray(App.hooks.chipActive))   App.hooks.chipActive   = [];
+```
+
+- `App.hooks.chipClearers` — `Array<() => void>`. roster.js's `×` handler
+  clears `R.chipState` + its own DOM classes, calls every entry here
+  (try/catch each, like the other hook loops in `js/app/hooks.js`), then
+  re-renders the roster **once**, then calls `syncClearVisibility()`. A
+  clearer resets its module's own flag(s) the way its own toggle does —
+  it should NOT call `App.renderUnitRosterWithContext()` itself (roster.js's
+  single re-render after the loop covers it).
+- `App.hooks.chipActive` — `Array<() => boolean>`. `syncClearVisibility()`
+  shows `×` when `R.chipState` is non-empty **or** any predicate here returns
+  true, so `×` stays visible when a feature chip is the only active filter.
+- Export is `UI.syncChipClearVisibility()` (roster.js has no `UI.Roster`
+  sub-namespace — flat `UI.*`, same idiom as `UI.renderUnitRoster` etc.).
+  **Your own chip's click handler must call it** right after toggling, so
+  `×` appears/disappears immediately rather than waiting for the next
+  roster.js-driven chip change.
+
+A future chip: push a clearer that zeroes your flag(s), push a predicate that
+reports whether your chip is active, and call `UI.syncChipClearVisibility()`
+at the end of your chip's own click handler. See `favorites.js`
+(`clearFavRecentChip` / `registerChipHooks`), `collection.js`
+(`clearCollectionChips`), or `allies.js` (`clearAllyChip`) for the pattern.
+
 ### The Ally chip
 
 Owned by **`js/app/allies.js`**, not roster.js — it filters on `unit._allyOf`
@@ -265,17 +301,8 @@ hex.
 - Ally units are attached **lazily, on faction select**: at "All Factions" on a
   cold load `App.state.allUnits` contains **zero** `_allyOf` units, so any test
   must select a faction first.
-- The `×` clear button resets the ally chip along with the others. **Note the
-  trap:** roster.js's clear handler strips `.active` / `.excluded` off *every*
-  `.filter-chip` in the bar but only clears its OWN `chipState`, so a feature
-  module's chip is visually reset while its filter stays on — Favorites,
-  Recents and the Collection chips all have this desync today. allies.js
-  therefore binds its own listener to `.filter-chips-clear` and resets its
-  state there. Do NOT edit roster.js to fix the general case in this change;
-  the shared-clear-button bug is filed separately.
-  `syncClearVisibility()` also only counts roster.js's own chips, so `×` may be
-  hidden when the Ally chip alone is active — acceptable here (the chip itself
-  is the way out), and covered by the same issue.
+- The `×` clear button resets the ally chip along with the others, through the
+  two hooks below rather than a direct binding (#95, fixed).
 - The toolbar toggle still works when the chip is off, and cannot empty the
   roster when the chip is on include.
 - No new page errors; both themes, both widths.

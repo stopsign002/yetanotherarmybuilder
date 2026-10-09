@@ -136,9 +136,9 @@ per-faction files, not fetched, and the adapter looks text up faction-first.
   - a scoped entry whose text fields are identical to the flat winner's is
     NOT emitted — the lookup falls through to the flat entry and gets the same
     text, so the copy is dead weight;
-  - the 12 SM chapter factions (`black-templars`, `blood-angels`, `dark-angels`,
+  - the 11 SM chapter factions (`black-templars`, `blood-angels`, `dark-angels`,
     `deathwatch`, `imperial-fists`, `iron-hands`, `raven-guard`, `salamanders`,
-    `space-wolves`, `ultramarines`, `white-scars`, `crimson-fists`) get NO
+    `space-wolves`, `ultramarines`, `white-scars`) get NO
     scoped entries. Their files are `**bold**`-marked copies of the Space
     Marine stratagems; the adapter's chapter step resolves them through
     `adeptus-astartes/<id>` (or the flat entry), which is what the live site

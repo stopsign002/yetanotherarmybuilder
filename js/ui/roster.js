@@ -224,10 +224,18 @@
         el.classList.remove('excluded');
         el.setAttribute('aria-pressed', 'false');
       });
-      syncClearVisibility();
+      // Feature modules (favorites.js, collection.js, allies.js) keep their
+      // own chip state privately — the querySelectorAll above only resets
+      // DOM classes. Give every registered module a chance to clear its own
+      // state, like other hook loops (#95).
+      const clearers = (window.App && App.hooks && App.hooks.chipClearers) || [];
+      clearers.forEach(fn => {
+        try { fn(); } catch (e) { console.warn('[hooks.chipClearers]', e); }
+      });
       if (window.App && typeof App.renderUnitRosterWithContext === 'function') {
         App.renderUnitRosterWithContext();
       }
+      syncClearVisibility();
     });
     bar.appendChild(clear);
     // Insert chip bar after the search input (still within .panel-controls).
@@ -241,8 +249,19 @@
     if (!bar) return;
     const clear = bar.querySelector('.filter-chips-clear');
     if (!clear) return;
-    clear.style.display = Object.keys(R.chipState).length > 0 ? '' : 'none';
+    // Shown when roster.js's own chips are active OR any feature module
+    // (favorites.js, collection.js, allies.js) reports its chip active via
+    // App.hooks.chipActive (#95).
+    const activePreds = (window.App && App.hooks && App.hooks.chipActive) || [];
+    const hookActive = activePreds.some(fn => {
+      try { return !!fn(); } catch (_) { return false; }
+    });
+    clear.style.display = (Object.keys(R.chipState).length > 0 || hookActive) ? '' : 'none';
   }
+
+  // Exported so feature modules can re-sync the × visibility right after
+  // toggling their own chip (docs/UI.md "Roster filter chips").
+  UI.syncChipClearVisibility = syncClearVisibility;
 
   // Register a single chip predicate on App.hooks.rosterFilters (dedupe-safe).
   function ensureChipPredicate() {
