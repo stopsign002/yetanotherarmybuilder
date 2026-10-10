@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.10-1',
-    lastUpdated: '2026-10-10T06:15:00Z',
+    version:     '2026.10.10-2',
+    lastUpdated: '2026-10-10T12:30:00Z',
     entries: [
+      {
+        date: '2026-10-10',
+        kind: 'fix',
+        title: 'Waaagh!, Oath of Moment and Strands of Fate are back on the Army Rules panel',
+        description: 'Since the 5 October data refresh the Orks Army Rules panel had lost Waaagh!, vanilla Space Marines had lost Oath of Moment and Aeldari had lost Strands of Fate — the dataset renamed the field that names each faction\'s army rule and the app read the old name. Every faction\'s army rule is read again, so the Orks panel shows Waaagh! alone with the current codex wording.',
+      },
       {
         date: '2026-10-10',
         kind: 'fix',

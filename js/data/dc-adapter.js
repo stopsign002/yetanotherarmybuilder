@@ -2200,29 +2200,38 @@
       if (override && override.mode === 'add') override.rules.forEach((r) => rules.push({ ...r }));
       return rules;
     }
-    const id = f && f.faction_rule_id;
-    if (!id) return [];
-    let name = '';
-    try {
-      // f.id is the faction this rule belongs to (e.g. 'orks') — genuine
-      // faction context, so this is not a "no faction in scope" getAny site.
-      const av = lookupIn(DC.abilities, id, f && f.id);
-      name = (av && (av.name || (av.raw && av.raw.name))) || '';
-    } catch (_) { /* ambiguous/missing — fall back to the id */ }
-    if (!name) name = titleCase(String(id).replace(/-/g, ' '));
-    // Prefer the authored ability-text; fall back to a hand-patched string only
-    // when the store has none (self-heals once upstream/GDC authors the prose).
-    // GDC's mergeIntoFactions only fills an EMPTY description, so a non-empty
-    // seed here is not clobbered by the runtime overlay.
-    let description = textFor(id, f.id) || MISSING_ARMY_RULE_TEXT[id] || '';
-    // Stale-text replacement (see ARMY_RULE_TEXT_OVERRIDES). Expect-gated, so
-    // it stops firing the moment the store carries the current edition.
-    const ovr = ARMY_RULE_TEXT_OVERRIDES[id];
-    if (ovr && ovr.expectContains
-        && description.toLowerCase().includes(String(ovr.expectContains).toLowerCase())) {
-      description = ovr.description;
-    }
-    return [{ name, description }];
+    // 40kdc-data@709ecd9f (bundled 2026-10-05) renamed the scalar
+    // `faction_rule_id` to an array `faction_rule_ids` (Tyranids carry two:
+    // shadow-in-the-warp + synapse). Read both shapes, like the army-rule id
+    // set above does. Reading only the old one returned [] for EVERY faction,
+    // which GDC's rules.army merge masked for 33 of 34 — Orks was the visible
+    // casualty, because GDC ships no Waaagh! prose (#81).
+    const ids = (f && Array.isArray(f.faction_rule_ids) && f.faction_rule_ids.length)
+      ? f.faction_rule_ids.filter(Boolean)
+      : ((f && f.faction_rule_id) ? [f.faction_rule_id] : []);
+    return ids.map((id) => {
+      let name = '';
+      try {
+        // f.id is the faction this rule belongs to (e.g. 'orks') — genuine
+        // faction context, so this is not a "no faction in scope" getAny site.
+        const av = lookupIn(DC.abilities, id, f && f.id);
+        name = (av && (av.name || (av.raw && av.raw.name))) || '';
+      } catch (_) { /* ambiguous/missing — fall back to the id */ }
+      if (!name) name = titleCase(String(id).replace(/-/g, ' '));
+      // Prefer the authored ability-text; fall back to a hand-patched string only
+      // when the store has none (self-heals once upstream/GDC authors the prose).
+      // GDC's mergeIntoFactions only fills an EMPTY description, so a non-empty
+      // seed here is not clobbered by the runtime overlay.
+      let description = textFor(id, f.id) || MISSING_ARMY_RULE_TEXT[id] || '';
+      // Stale-text replacement (see ARMY_RULE_TEXT_OVERRIDES). Expect-gated, so
+      // it stops firing the moment the store carries the current edition.
+      const ovr = ARMY_RULE_TEXT_OVERRIDES[id];
+      if (ovr && ovr.expectContains
+          && description.toLowerCase().includes(String(ovr.expectContains).toLowerCase())) {
+        description = ovr.description;
+      }
+      return { name, description };
+    });
   }
 
   // ── build all yaab faction objects from 40kdc ──────────────────────────────
