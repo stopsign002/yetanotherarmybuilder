@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.05-1',
-    lastUpdated: '2026-10-05T12:00:00Z',
+    version:     '2026.10.10-1',
+    lastUpdated: '2026-10-10T06:15:00Z',
     entries: [
+      {
+        date: '2026-10-10',
+        kind: 'fix',
+        title: 'Orks army rules, the Ministorum Priest, a doubled Imperial Fists, and the filter-bar ×',
+        description: 'Da Boss and Unstable Energies no longer show as army-wide rules on every Ork list — they sit on the datasheets that carry them (Warboss-type characters; Weirdboy and Kill Rig) and the Army Rules panel shows Waaagh! alone. The Agents of the Imperium Ministorum Priest now leads the seven units the Munitorum Field Manual lists for it, not the eighteen pooled from the same-named Adepta Sororitas and Astra Militarum priests. Imperial Fists appears once in the faction picker instead of twice. The × in the unit filter bar now really clears the Favorites, Recents, Collection and Ally chips instead of only un-highlighting them while the filter stayed on.',
+      },
       {
         date: '2026-10-05',
         kind: 'fix',
