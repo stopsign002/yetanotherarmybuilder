@@ -35,6 +35,15 @@ against the previous run:
 - `validation ok: {"ok":true,...,"shapeProblems":0}` — must be present. If
   absent, the script aborted before deploying and the previous bundle is still
   live.
+- `armyRuleFactions` equal to `factions`, with `armyRuleNo40kdc` and
+  `armyRuleNoText` both `[]`. The first lists factions whose 40kdc-sourced
+  army rule came out empty BEFORE the GDC merge; the second lists factions that
+  would render an empty Army Rules panel after it. Either non-empty fails the
+  gate (homewebhost#40) — on 2026-10-05 upstream renamed `faction_rule_id` to
+  `faction_rule_ids`, every faction's rule became `[]`, GDC back-filled all but
+  Orks, and the old validator let it deploy. A faction named here means an
+  upstream field rename or shape change — fix `buildArmyRules()` in
+  `js/data/dc-adapter.js`, not the data.
 - `deployed new bundle md5=...` followed by `pushed` — bundle changed and
   went live. `no change` means MFM produced the same data as last run.
 
