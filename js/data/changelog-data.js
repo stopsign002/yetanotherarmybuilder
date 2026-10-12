@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.10-2',
-    lastUpdated: '2026-10-10T12:30:00Z',
+    version:     '2026.10.12-1',
+    lastUpdated: '2026-10-12T12:00:00Z',
     entries: [
+      {
+        date: '2026-10-12',
+        kind: 'fix',
+        title: 'Space Marine and Ork detachment points and dispositions now match GW',
+        description: 'Detachments carried over from the older dataset kept their old detachment points and force dispositions, while the new codex detachments beside them used GW\'s. They all use GW\'s values now. Stormlance Task Force and Ironstorm Spearhead cost 1 point, Gladius Task Force offers Take and Hold as well as Priority Assets, and a handful of chapter detachments (Ceramite Sentinels, Wrath of the Rock, Inner Circle Task Force, Saga of the Beastslayer, Spearpoint Task Force and others) change cost or disposition. The Orks War Horde gains Purge the Foe.',
+      },
       {
         date: '2026-10-10',
         kind: 'fix',

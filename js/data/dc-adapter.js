@@ -3212,8 +3212,14 @@
       if (hit) {
         matched.add(k);
         // Keep the 40kdc object: its `id` is what saved armies and the allied
-        // -rule gates (js/app/allies.js, on 40kdc detachment_ids) reference, and
-        // its points/dispositions are upstream's per docs/GDC-AUTHORITY.md.
+        // -rule gates (js/app/allies.js, on 40kdc detachment_ids) reference.
+        // Points and dispositions are GW's (owner ruling 2026-10-12, yaab#98):
+        // a kept row must not disagree with the adopted rows beside it
+        // (Stormlance 3 vs GW 1, Gladius missing Take and Hold). 40kdc's value
+        // stands only where GW's row is blank.
+        if (gd && gd.detachmentPoints != null) hit.points = gd.detachmentPoints;
+        const disp = gdcDispositions(gd);
+        if (disp.length) hit.dispositions = disp;
         if (tagged) hit._gdcFactionTag = tag;
         kept.push(hit);
         return;

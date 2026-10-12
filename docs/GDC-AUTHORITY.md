@@ -42,7 +42,8 @@ statlines + invulns. This change widens it into `GDC_AUTHORITATIVE`.
 | **detachment rule** | **GDC** `rules.detachment` (name = the RULE's name, e.g. "Unstoppable Momentum") | replace, not fill |
 | **stratagems** (list, CP, phases, text) | **GDC** | `reconcileStrats` short-circuits to the GDC list; `projectStratagem` gains secondary effects |
 | **enhancements** (list, pts, text) | **GDC** | text: keep 40kdc's when it is a strict superset of GDC's (weapon-profile cards GDC ships as images) |
-| detachment id / points / dispositions | 40kdc (unchanged) | |
+| detachment id | 40kdc (unchanged) | saved armies and allied-rule gates reference it |
+| **detachment points / dispositions** | **GDC** `detachmentPoints` / `forceDispositions` | owner ruling 2026-10-12 (#98): kept 40kdc rows take GW's values too, so one list never mixes sources; 40kdc's value stands only where GW's is blank |
 
 Everything not in the table is untouched. **Non-allowlisted factions must be
 byte-identical before and after** — that is the regression test.
