@@ -502,6 +502,26 @@
     'adeptus-astartes::uriel-ventris':                           '2026-10-02 SM codex MFM',
     'adeptus-astartes::vindicator':                              '2026-10-02 SM codex MFM',
     'adeptus-astartes::whirlwind':                               '2026-10-02 SM codex MFM',
+    // Adeptus Custodes 11e codex MFM, 2026-10-14 (GDC 981). GW rebuilt the
+    // infantry and bikes as fixed-loadout "Sodality" squads: Custodian Guard
+    // split into Custodian Guard Sodality (spears) + Sentinel Guard Sodality
+    // (blades + shields), Venatari and Aquilon each split in two by weapon,
+    // Agamatus became the Gyrfalcon Jetbike Sodality. Those new sheets are
+    // adopted from GW's data (ADOPT_UNITS); the index-era originals below are
+    // no longer priced and go Legends. Aleya, Valerian, Venerable Contemptor
+    // and Venerable Land Raider are gone from the default MFM list outright.
+    // The Sisters of Silence squads were RENAMED (Prosecutor/Vigilator/
+    // Witchseeker Squad) and are bridged in mfm-aliases.json, not delisted.
+    'adeptus-custodes::agamatus-custodians':                                '2026-10-14 Custodes codex MFM',
+    'adeptus-custodes::aleya':                                              '2026-10-14 Custodes codex MFM',
+    'adeptus-custodes::aquilon-custodians':                                 '2026-10-14 Custodes codex MFM',
+    'adeptus-custodes::custodian-guard':                                    '2026-10-14 Custodes codex MFM',
+    'adeptus-custodes::custodian-guard-with-adrasite-and-pyrithite-spears': '2026-10-14 Custodes codex MFM',
+    'adeptus-custodes::sagittarum-custodians':                              '2026-10-14 Custodes codex MFM',
+    'adeptus-custodes::valerian':                                           '2026-10-14 Custodes codex MFM',
+    'adeptus-custodes::venatari-custodians':                                '2026-10-14 Custodes codex MFM',
+    'adeptus-custodes::venerable-contemptor-dreadnought':                   '2026-10-14 Custodes codex MFM',
+    'adeptus-custodes::venerable-land-raider':                              '2026-10-14 Custodes codex MFM',
   };
 
   // A scrape that fails reuses a last-known-good overlay, but an ABSENT or
@@ -2640,6 +2660,7 @@
     'space-wolves':     '2026-10-02 Space Marines codex (chapter)',
     'ultramarines':     '2026-10-02 Space Marines codex (chapter)',
     'white-scars':      '2026-10-02 Space Marines codex (chapter)',
+    'adeptus-custodes': '2026-10-14 Adeptus Custodes codex (GDC 981) — 40kdc still index-era',
   };
 
   // GDC `rules.army` entries that are GW-printed on individual DATASHEETS
@@ -2922,11 +2943,7 @@
     // either lead or be attached to as Support appears twice (Cato Sicarius'
     // Victrix Honour Guard). `gdcLeadBy` answers "which units can this join",
     // which is one answer per unit, and attachments.js renders it as a list.
-    const leadSeen = new Set();
-    let leadBy = (ds.attachesTo || [])
-      .filter((x) => x && (!x.type || /^(leader|support)$/i.test(String(x.type))))
-      .map((x) => T(x.target)).filter(Boolean)
-      .filter((n) => { const k = String(n).toLowerCase(); if (leadSeen.has(k)) return false; leadSeen.add(k); return true; });
+    let leadBy = gdcAttachTargets(ds, T);
     if (!leadBy.length && ds.leader && G._leaderTargets) leadBy = G._leaderTargets(ds.leader) || [];
     const beforeLead = (unit.gdcLeadBy || []).join('/');
     unit.gdcLeadBy = leadBy;
@@ -2939,6 +2956,18 @@
 
   // Overwrite statlines (and invuln) from GDC for the allowlisted factions.
   // Returns { units, changes } for logging.
+  // GW's structured attachment table → the target NAMES gdcLeadBy carries, in
+  // GW's casing, deduped (GDC lists a target once per TYPE). Shared by the
+  // authority pass and adoptGdcUnits so an adopted unit's list is built the
+  // same way as every other authoritative unit's.
+  function gdcAttachTargets(ds, T) {
+    const seen = new Set();
+    return (ds && ds.attachesTo || [])
+      .filter((x) => x && (!x.type || /^(leader|support)$/i.test(String(x.type))))
+      .map((x) => T(x.target)).filter(Boolean)
+      .filter((n) => { const k = String(n).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+  }
+
   function applyGdcStatlines(factions) {
     const App = window.App;
     if (!App || !App.GDC || !App.GDC._rawCache) return { units: 0, changes: 0 };
@@ -3307,7 +3336,26 @@
   // adopt path is not mistaken for live behaviour
   // (stopsign002/yetanotherarmybuilder#80). The matching `unit_adopt` rows in
   // ~/sites/base/mfm-aliases.json went at the same time; add both together.
-  const ADOPT_UNITS = {};
+  const ADOPT_UNITS = {
+    // Adeptus Custodes codex, 2026-10-14 (GDC 981). Every one is a FIXED
+    // loadout ("Default Wargear" only in GDC), so the no-wargear-options gap
+    // above costs nothing here. Points come from the MFM via the matching
+    // unit_adopt rows in ~/sites/base/mfm-aliases.json. Deliberately NOT
+    // adopted: Sagittarum Custodians Sodality and the two Custodian Guard
+    // Sodality spear variants — GW's app carries them but the MFM prices none
+    // of them (they appear only as Leader targets), and the MFM is the points
+    // oracle.
+    'adeptus-custodes': [
+      'Aquilon Terminators with Solarite Power Gauntlets',
+      'Aquilon Terminators with Solarite Power Talons',
+      'Caladius Annihilator Grav‑Tank',
+      'Custodian Guard Sodality',
+      'Gyrfalcon Jetbike Sodality',
+      'Sentinel Guard Sodality',
+      'Venatari with Kinetic Destroyers',
+      'Venatari with Verutum Lances',
+    ],
+  };
 
   // GDC prints weapon keywords as display strings ("RAPID FIRE 2",
   // "ANTI-INFANTRY 4+", "LETHAL HITS: non-MONSTER/VEHICLE") where 40kdc
@@ -3477,6 +3525,7 @@
     const nameKey = App.GDC._nameKey || ((s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
     const T = App.GDC._pickText || ((v) => v);
     let added = 0;
+    const adoptedHere = [];
     (factions || []).forEach((faction) => {
       // Match the faction by the 40kdc id its own units carry, so this does not
       // depend on the display name.
@@ -3501,6 +3550,7 @@
           unit._factionId = fid;
           unit._factionName = faction.factionName;
           faction.units.push(unit);
+          adoptedHere.push({ unit, ds });
           // attachAlliedUnits recomputes this, but it returns early for a
           // faction with no allies (Orks has none), so keep it correct here.
           faction.unitCount = faction.units.length;
@@ -3510,10 +3560,24 @@
         }
       });
     });
-    // Give the new units the same GDC display fields every other unit gets.
-    // Idempotent: it re-sets the same values on units already merged.
+    // Give the new units the same GDC display fields every other unit gets —
+    // and ONLY the new units. This runs after the authority pass, and
+    // re-merging whole factions re-wrote every authoritative unit's gdcLeadBy
+    // from GDC's prose list (upper-cased, and refilling lists the authority
+    // pass had deliberately emptied) across Orks and every Astartes faction.
+    // Latent from 2026-09-15 (ADOPT_UNITS empty) until the Custodes codex.
     if (added > 0 && typeof App.GDC.mergeUnitDataIntoFactions === 'function') {
-      try { App.GDC.mergeUnitDataIntoFactions(factions); } catch (_) {}
+      const byFaction = new Map();
+      adoptedHere.forEach(({ unit }) => {
+        if (!byFaction.has(unit._factionName)) byFaction.set(unit._factionName, []);
+        byFaction.get(unit._factionName).push(unit);
+      });
+      try {
+        App.GDC.mergeUnitDataIntoFactions([...byFaction].map(([factionName, units]) => ({ factionName, units })));
+      } catch (_) {}
+      // Then the leader graph from GW's structured table, as the authority
+      // pass does for every other unit (an empty table is an answer).
+      adoptedHere.forEach(({ unit, ds }) => { unit.gdcLeadBy = gdcAttachTargets(ds, T); });
     }
     return added;
   }

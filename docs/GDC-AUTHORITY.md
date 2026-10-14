@@ -374,3 +374,34 @@ retired index-era ones are gone, non-Astartes factions are byte-identical,
 `validate-deploy.mjs` is ok, and `dump-audit.py` (report mode, run by the
 session after merge) shows the SM keyword/coreAbility/namedAbility/
 attachmentRole rows gone.
+
+## Adeptus Custodes (2026-10-14, GDC 981)
+
+The Custodes codex landed in GW's app (GDC data_version 981) and the MFM on
+2026-10-14; 40kdc was still index-era (last upstream commit 2026-09-22).
+`adeptus-custodes` joins `GDC_AUTHORITATIVE`, so everything in the field
+table above applies, including detachment adoption: GW's 13 detachments
+(9 adopted, 4 kept by name) replace the index list, and Solar Spearhead,
+Shield Host, Talons of the Emperor, Silent Hunters and Tharanatoi Hammerblow
+retire.
+
+Unit list, by the MFM (the oracle):
+
+| What | Units | Mechanism |
+|---|---|---|
+| New fixed-loadout sheets, MFM-priced | Aquilon Terminators with Solarite Power Gauntlets / Talons, Caladius Annihilator Grav‑Tank, Custodian Guard Sodality, Gyrfalcon Jetbike Sodality, Sentinel Guard Sodality, Venatari with Kinetic Destroyers / Verutum Lances | `ADOPT_UNITS` + `unit_adopt` in `~/sites/base/mfm-aliases.json` (value = adapter `nameKey`) |
+| Index units GW replaced or stopped pricing | Agamatus, Aquilon Custodians, Custodian Guard, Custodian Guard with Adrasite and Pyrithite Spears, Sagittarum Custodians, Venatari Custodians, Aleya, Valerian, Venerable Contemptor Dreadnought, Venerable Land Raider | `MFM_DELISTED` → Legends; saved armies still load |
+| Renamed on the MFM only | Prosecutors, Vigilators, Witchseekers (now "… Squad") | `unit_aliases`; GDC 981 carries no Sisters of Silence sheets, so they keep 40kdc's data |
+| In GW's app, NOT priced by the MFM | Sagittarum Custodians Sodality, Custodian Guard Sodality with Adrasite / Pyrithite Spears | deliberately not adopted — they appear on the MFM only as Leader targets |
+
+Every adopted sheet is "Default Wargear" only, so the adopted-unit gap (no
+wargear options) costs nothing for this faction.
+
+**Bug fixed with this change:** `adoptGdcUnits` re-ran
+`mergeUnitDataIntoFactions` over EVERY faction after the authority pass, so
+the moment `ADOPT_UNITS` was non-empty, every authoritative unit's
+`gdcLeadBy` was rewritten from GDC's prose list (upper-cased, and empty
+answers refilled). It now merges only the adopted units and gives them the
+same structured `attachesTo` list (`gdcAttachTargets`) the authority pass
+uses. Regression proof: the non-Astartes dump differs only in Custodes and
+the `inspect-sm.mjs` report is byte-identical before/after.

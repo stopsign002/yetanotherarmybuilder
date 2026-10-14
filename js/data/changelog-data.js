@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.12-1',
-    lastUpdated: '2026-10-12T12:00:00Z',
+    version:     '2026.10.14-1',
+    lastUpdated: '2026-10-14T20:00:00Z',
     entries: [
+      {
+        date: '2026-10-14',
+        kind: 'change',
+        title: 'Codex: Adeptus Custodes',
+        description: 'Custodes now follow the new codex. All 13 codex detachments with their rules, enhancements and stratagems; the new points; and the new squads — Custodian Guard Sodality, Sentinel Guard Sodality, Gyrfalcon Jetbike Sodality, both Aquilon Terminator and Venatari squads, and the Caladius Annihilator Grav-Tank. Units the codex replaced or no longer prices (the old Custodian Guard, Venatari, Aquilon and Agamatus Custodians, Sagittarum Custodians, Aleya, Valerian and the Venerable Contemptor and Land Raider) are now marked Legends, so existing lists still open. Armies that used one of the five retired index detachments will need a new one picked.',
+      },
       {
         date: '2026-10-12',
         kind: 'fix',
