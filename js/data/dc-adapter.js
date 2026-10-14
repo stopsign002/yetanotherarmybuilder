@@ -3500,7 +3500,10 @@
       abilities,
       wargearAbilities: [],
       wargearProfile: null,
-      keywords: kws.concat('Orks'),
+      // GW's own faction keywords (ds.factions), as the authority pass builds
+      // them. This was a hard-coded 'Orks' from the Ork-only first use, which
+      // stamped ORKS on the first Custodes squads adopted (2026-10-14).
+      keywords: kws.concat((ds.factions || []).map(T).filter(Boolean)),
       wargearOptions: [],
       points: pointsOptions.length ? pointsOptions[0] : 0,
       pointsOptions, squadOptions, ordinal,
