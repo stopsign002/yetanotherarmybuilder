@@ -774,6 +774,10 @@
     // 2026-09-02 Ork codex pluralised both.
     wartrakk: 'wartrakks',
     rukkatrukksquigbuggy: 'rukkatrukksquigbuggies',
+    // 2026-10-18 GDC 995 Sisters of Silence: GW says "<Name> Squad".
+    prosecutors: 'prosecutorsquad',
+    vigilators: 'vigilatorsquad',
+    witchseekers: 'witchseekersquad',
   };
 
   // nameKey for looking a OUR unit up in a GDC index.

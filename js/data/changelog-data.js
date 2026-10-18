@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.18-2',
-    lastUpdated: '2026-10-18T18:00:00Z',
+    version:     '2026.10.18-3',
+    lastUpdated: '2026-10-18T19:30:00Z',
     entries: [
+      {
+        date: '2026-10-18',
+        kind: 'fix',
+        title: 'Custodes: Aegis of the Emperor, Aquila Commander and Daughters of the Abyss are back on the cards',
+        description: 'GW\'s app data names these three army rules on the datasheets that carry them but never gives their text, so since the 14 October codex update they appeared nowhere in yaab. Each now shows on its datasheets with the wording from the printed codex: Aegis of the Emperor on every Custodian, Aquila Commander on the Shield-Captains, Daughters of the Abyss on the Sisters of Silence. GW\'s 16 October data update also added the five Sisters of Silence datasheets; they are matched to yaab\'s unit names, so a Knight-Centura can attach to Prosecutors, Vigilators and Witchseekers again.',
+      },
       {
         date: '2026-10-18',
         kind: 'fix',

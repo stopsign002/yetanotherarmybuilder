@@ -2713,6 +2713,33 @@
     orks: ['Da Boss', 'Unstable Energies'],
   };
 
+  // Faction abilities GW NAMES under `abilities.faction` on a datasheet but
+  // never texts (its `rules.army` carries only Martial Ka'tah). Keyed by 40kdc
+  // faction id, then lower-cased ability name; text verbatim from the printed
+  // Custodes codex p91. A name with no entry here stays dropped, as before.
+  const FACTION_ABILITY_TEXT = {
+    'adeptus-custodes': {
+      'aegis of the emperor': { name: 'Aegis of the Emperor', text: 'Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.' },
+      'aquila commander': { name: 'Aquila Commander', text: 'At the start of the battle round, if a model with this ability is your WARLORD, gain 1CP.' },
+      'daughters of the abyss': { name: 'Daughters of the Abyss', text: 'Friendly ANATHEMA PSYKANA units with this ability have Feel No Pain 3+ against psychic attacks.\n'
+        + 'Friendly ANATHEMA PSYKANA units with this ability have the following ability:\n'
+        + 'Psychic Null (Aura): Friendly ADEPTUS CUSTODES units within 6" of this unit have Feel No Pain 5+ against psychic attacks.' },
+    },
+  };
+  // Name-only faction abilities on a datasheet → [{name, description}] using
+  // FACTION_ABILITY_TEXT (GW lower-cases some names; the map owns the display).
+  function factionAbilitiesFor(fid, ab, T) {
+    const texts = FACTION_ABILITY_TEXT[fid];
+    if (!texts) return [];
+    const out = [];
+    (ab.faction || []).forEach((a) => {
+      const name = T(a && a.name != null ? a.name : a);
+      const hit = name && texts[String(name).toLowerCase()];
+      if (hit) out.push({ name: hit.name, description: hit.text });
+    });
+    return out;
+  }
+
   // 40kdc faction id → the chapter name GW's own dump tags a datasheet and a
   // detachment with (`faction` on a detachment, `factions[]` on a datasheet).
   // This is what decides which of space_marines.json's 22 codex detachments a
@@ -2775,8 +2802,10 @@
     // 40kdc's copies are a codex behind on 24 of 55 Ork datasheets (stale
     // GRENADES, missing SPEED FREEKS / SMOKE, MEK where GW prints BIG MEK),
     // and keywords are targeting rules, not decoration.
+    const kwSeen = new Set();
     const kws = (ds.keywords || []).map(T).filter(Boolean)
-      .concat((ds.factions || []).map(T).filter(Boolean));
+      .concat((ds.factions || []).map(T).filter(Boolean))
+      .filter((k) => { const l = String(k).toLowerCase(); if (kwSeen.has(l)) return false; kwSeen.add(l); return true; });
     if (kws.length) {
       const before = (unit.keywords || []).join('/');
       unit.keywords = kws;
@@ -2910,6 +2939,8 @@
         if (desc) push({ name, description: desc, isCore: false, id: null });
       });
     }
+    // Faction abilities GW names but never texts: FACTION_ABILITY_TEXT.
+    factionAbilitiesFor(fid, ab, T).forEach((a) => push({ name: a.name, description: a.description, isCore: false, id: null }));
     // Abilities GDC ships as an image (see GDC_KEEP_ABILITIES) — carried over
     // from the 40kdc build by name, only where GDC has nothing of that name.
     keepNames.forEach((nm) => {
@@ -2978,6 +3009,17 @@
     // Victrix Honour Guard). `gdcLeadBy` answers "which units can this join",
     // which is one answer per unit, and attachments.js renders it as a list.
     let leadBy = gdcAttachTargets(ds, T);
+    // Targets in OUR names: attachments.js matches gdcLeadBy against unit.name
+    // (foldName), and GW's "Prosecutor Squad" is our "Prosecutors". Keep GW's
+    // string only when no local unit matches.
+    if (leadBy.length && G._nameKey) {
+      const dk = G._dsKey || G._nameKey;
+      const local = new Map();
+      ((faction && faction.units) || []).forEach((u) => {
+        if (u && u.name && !local.has(dk(u.name))) local.set(dk(u.name), u.name);
+      });
+      leadBy = leadBy.map((n) => local.get(G._nameKey(n)) || n);
+    }
     if (!leadBy.length && ds.leader && G._leaderTargets) leadBy = G._leaderTargets(ds.leader) || [];
     const beforeLead = (unit.gdcLeadBy || []).join('/');
     unit.gdcLeadBy = leadBy;
@@ -3501,6 +3543,7 @@
         description: C(ab.damaged.description), isCore: false, id: null,
       });
     }
+    factionAbilitiesFor(factionId, ab, T).forEach((a) => abilities.push({ name: a.name, description: a.description, isCore: false, id: null }));
 
     // Points: the MFM overlay is authoritative and carries ordinal banding GDC
     // has no field for; GDC's flat cost is the fallback if the scrape is blind.
