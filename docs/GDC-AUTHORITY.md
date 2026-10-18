@@ -479,3 +479,53 @@ Transport: 12 ANATHEMA PSYKANA INFANTRY models. Keywords: VEHICLE, ANATHEMA PSYK
 
 ### Done means
 `validate-deploy.mjs` ok; a harness dump of the five units shows every bold value above; Knight-Centura `attachmentRole === 'support'` with the three targets; none of the five carries `Adeptus Custodes` in `keywords`; every other faction's dump is byte-identical before/after (MODE=dump diff, `scripts/inspect-sm.mjs` report identical); Emperor's Light description ends with the profile line; Martial Ka'tah reads Conservai.
+
+### Postscript, same day: GDC 995 now carries the Sisters of Silence
+
+The refresh that shipped the rows above also moved GW's app data 981 → 995
+(updated 2026-10-16), and `adeptuscustodes.json` now has all five Anathema
+Psykana datasheets. GW's values agree with the printed transcription above
+in every field except one: GW prints the Knight-Centura's **Master-crafted
+Flamer at S4** where the photo was read as S5 (owner to confirm from p118).
+GDC is authoritative, so GW's data owns these five from now on and the
+overlay rows above are the fallback that self-heals (expect-gated on 40kdc's
+old values, which the authority pass replaces). Three follow-ups make the
+GDC path actually work:
+
+1. **Names.** GW calls the squads `Prosecutor Squad` / `Vigilator Squad` /
+   `Witchseeker Squad`; 40kdc names them `Prosecutors` / `Vigilators` /
+   `Witchseekers`. Add the three to `GDC_NAME_ALIASES` in `js/gdc.js`
+   (ours → GW's, nameKey-normalised) so the three squads become
+   GDC-authoritative like the Knight-Centura and Rhino already are.
+2. **Attach targets in OUR names.** The authority pass copies `attachesTo`
+   target names verbatim into `gdcLeadBy` (`gdcAttachTargets`), and
+   `js/app/attachments.js` matches them against `unit.name` with `foldName`.
+   `Prosecutor Squad` ≠ `Prosecutors`, so the Knight-Centura can attach to
+   nothing. Map each target to the LOCAL unit's name when some unit in the
+   faction has `dsKey(unit.name) === nameKey(target)`; keep GW's string
+   only when no local unit matches. Do this inside the authority pass (it
+   has `faction.units`), not in attachments.js.
+3. **Faction abilities GW names but never texts.** GDC lists
+   `Aegis of the Emperor`, `Aquila Commander` and `Daughters of the Abyss`
+   under `abilities.faction` on the datasheets that carry them, but its
+   `rules.army` has only Martial Ka'tah, so those three appear NOWHERE in
+   yaab (the authority pass drops name-only faction entries). Render each as
+   a non-core ability on every datasheet whose `abilities.faction` names
+   it, text verbatim from codex p91:
+   - **Aegis of the Emperor**: *Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.*
+   - **Aquila Commander**: *At the start of the battle round, if a model with this ability is your WARLORD, gain 1CP.*
+   - **Daughters of the Abyss**: *Friendly ANATHEMA PSYKANA units with this ability have Feel No Pain 3+ against psychic attacks.* ⏎ *Friendly ANATHEMA PSYKANA units with this ability have the following ability:* ⏎ *Psychic Null (Aura): Friendly ADEPTUS CUSTODES units within 6" of this unit have Feel No Pain 5+ against psychic attacks.*
+   Put the text in a `FACTION_ABILITY_TEXT` map keyed by 40kdc faction id
+   then ability name; a name without a text entry stays dropped as today.
+   Martial Ka'tah stays on the Army Rules panel only (it IS in rules.army).
+4. **Keyword dedupe.** The authority pass concatenates `ds.keywords` with
+   `ds.factions`, and for Anathema Psykana units both contain
+   `Anathema Psykana`, so the Knight-Centura shows the keyword twice.
+   Dedupe case-insensitively, first occurrence wins.
+
+Done means: harness shows all five Sisters `_gdcAuthoritative`; Knight-Centura
+`gdcLeadBy === ['Prosecutors','Vigilators','Witchseekers']`; Custodian Guard
+Sodality and Shield-Captain carry Aegis of the Emperor with the text above,
+Shield-Captain also Aquila Commander, all five Sisters carry Daughters of the
+Abyss; no duplicated keywords; validate-deploy ok; every non-Custodes
+faction's dump byte-identical and the inspect-sm report identical.
