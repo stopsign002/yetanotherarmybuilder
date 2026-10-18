@@ -6,8 +6,8 @@
     "banner": "#092135",
     "header": "#4b6262"
   },
-  "compatibleDataVersion": 981,
-  "updated": "2026-10-14T09:53:56.131Z",
+  "compatibleDataVersion": 995,
+  "updated": "2026-10-16T18:38:12.764Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -9482,6 +9482,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -9899,6 +9900,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -10226,6 +10228,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -10685,6 +10688,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -11183,6 +11187,7 @@
           "zh": "终结者"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -11539,6 +11544,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -11944,6 +11950,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -12268,6 +12275,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -12829,6 +12837,7 @@
           "zh": "跳跃背包"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -13389,6 +13398,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -14021,6 +14031,7 @@
           "zh": "机甲"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -14424,6 +14435,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -14743,6 +14755,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -15159,6 +15172,7 @@
           "zh": "机甲"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -15664,6 +15678,7 @@
           "zh": "终结者"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -16030,6 +16045,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -16711,6 +16727,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -17256,6 +17273,7 @@
           "zh": "恐惧型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -17697,6 +17715,7 @@
           "zh": "终结者"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -18216,6 +18235,7 @@
           "zh": "骑乘"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -18740,6 +18760,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -19197,6 +19218,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -19879,6 +19901,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -20251,6 +20274,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -20782,6 +20806,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -21371,6 +21396,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -21914,6 +21940,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -22294,6 +22321,7 @@
           "zh": "终结者"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -22704,6 +22732,7 @@
           "zh": "骑乘"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -23090,6 +23119,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -23442,6 +23472,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -23896,6 +23927,42 @@
           "ja": "帝国",
           "ko": "제국",
           "zh": "帝国"
+        },
+        {
+          "en": "Character",
+          "de": "Charaktermodell",
+          "es": "Personaje",
+          "fr": "Personnage",
+          "it": "Personaggio",
+          "ja": "キャラクター",
+          "ko": "캐릭터",
+          "zh": "角色"
+        }
+      ],
+      "modelKeywords": [
+        {
+          "name": {
+            "en": "Ancient",
+            "de": "Standartenträger",
+            "es": "Anciano",
+            "fr": "Doyen",
+            "it": "Antico",
+            "ja": "エインシェント",
+            "ko": "에인션트",
+            "zh": "旗手"
+          },
+          "keywords": [
+            {
+              "en": "Character",
+              "de": "Charaktermodell",
+              "es": "Personaje",
+              "fr": "Personnage",
+              "it": "Personaggio",
+              "ja": "キャラクター",
+              "ko": "캐릭터",
+              "zh": "角色"
+            }
+          ]
         }
       ],
       "stats": [
@@ -24446,6 +24513,7 @@
           "zh": "终结者"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -24753,6 +24821,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -25326,6 +25395,7 @@
           "zh": "机甲"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -25957,6 +26027,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -26202,6 +26273,7 @@
           "zh": "烟幕"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -26723,6 +26795,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -27073,6 +27146,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -27528,6 +27602,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -28170,6 +28245,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -28483,6 +28559,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -28811,6 +28888,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -29143,6 +29221,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -29507,6 +29586,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -29934,6 +30014,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -30337,6 +30418,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -30792,6 +30874,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -31145,7 +31228,34 @@
       },
       "wargear": [
         {
-          "en": "None"
+          "en": "This model can be equipped with one of the following: ▫ 1 Bellicatus Missile Array ▫ 1 Orbital Comms Array ▫ 1 Ironhail Skytalon Array ▫ 1 Shield Dome",
+          "de": "Dieses Modell kann mit einer der folgenden Optionen ausgerüstet sein: ▫ 1 Bellicatus-Raketenmagazin ▫ 1 Orbitale Voxanlage ▫ 1 Eisenhagel-Himmelsschlaglafette ▫ 1 Schildkuppel",
+          "es": "Esta miniatura puede equiparse con 1 de las siguientes opciones: ▫ 1 batería de misiles Bellicatus ▫ 1 comunicador orbital ▫ 1 sistema antiaéreo graniferro ▫ 1 domoescudo",
+          "fr": "Cette figurine peut être équipée d’un des choix suivants : ▫ 1 Bordée de missiles Bellicatus ▫ 1 Dispositif de Communications Orbitales ▫ 1 Bordée Grêle d’Acier Céleste ▫ 1 Dôme-bouclier",
+          "it": "Questo modello può essere equipaggiato con una delle seguenti: ▫ 1 sistema di missili Bellicatus ▫ 1 sistema di comunicazione orbitale ▫ 1 sistema Artiglio Celeste Salva di Ferro ▫ 1 cupola scudo",
+          "ja": "この兵は、以下のオプションのうちいずれか1つを装備できる： ▫ ベリカトゥス・ミサイルアレイ1個 ▫ 衛星軌道通信装置1個 ▫ アイアンヘイル・スカイタロン・アレイ1個 ▫ シールドドーム1個",
+          "ko": "이 모델은 다음 중에서 하나를 선택하여 장비할 수 있습니다. ▫ 1 벨리카투스 미사일 배열 ▫ 1 궤도 통신장비 배열 ▫ 1 아이언헤일 스카이탈론 배열 ▫ 1 반구체 보호막 생성기",
+          "zh": "该模型可以装备以下一种选项： ▫ 1 个贝利卡图斯导弹阵列 ▫ 1 个轨道通讯阵列 ▫ 1 个铁雨天爪阵列 ▫ 1 个穹顶护盾"
+        },
+        {
+          "en": "This model can be equipped with 1 Ironhail Heavy Stubber.",
+          "de": "Dieses Modell kann mit 1 Eisenhagel-Maschinengewehr ausgerüstet sein.",
+          "es": "Esta miniatura puede equiparse con 1 ametralladora pesada graniferro",
+          "fr": "Cette figurine peut être équipée de 1 Mitrailleuse Grêle d’Acier.",
+          "it": "Questo modello può essere equipaggiato con 1 mitragliatore pesante Salva di Ferro.",
+          "ja": "この兵はアイアンヘイル・ヘヴィスタバー1個を装備できる。",
+          "ko": "이 모델은 1 아이언헤일 중형 스터버를 장비할 수 있습니다.",
+          "zh": "该模型可以装备 1 把铁雨重机枪"
+        },
+        {
+          "en": "This model’s Storm Bolters can be replaced with 1 Fragstorm Grenade Launchers.",
+          "de": "Die Sturmbolter dieses Modells können durch 1 Fragmentsturm-Granatwerfer ersetzt werden.",
+          "es": "Los bólteres tormenta de esta miniatura pueden reemplazarse por 1 lanzagranadas fragtormenta.",
+          "fr": "Cette figurine peut remplacer ses Bolters Tempête par 1 Multi-lance-grenades Tempête à Fragmentation.",
+          "it": "Questo modello può sostituire i requiem Tempesta con 1 lanciagranate Tempesta di Schegge.",
+          "ja": "この兵は、ストームボルターをフラグストーム・グレネードランチャー1個に交換できる。",
+          "ko": "이 모델의 스톰 볼터는 1 프랙스톰 유탄발사기로 교체할 수 있습니다.",
+          "zh": "该模型的风暴爆矢枪可以替换为 1 组破片风暴榴弹发射器。"
         }
       ],
       "baseSize": {
@@ -31401,6 +31511,7 @@
           "zh": "跳跃背包"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -31861,6 +31972,7 @@
           "zh": "烟幕"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -32247,6 +32359,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -32607,6 +32720,7 @@
           "zh": "烟幕"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -33062,6 +33176,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -33834,6 +33949,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -34223,6 +34339,7 @@
           "zh": "机甲"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -34702,6 +34819,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -35147,6 +35265,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -35524,6 +35643,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -35847,6 +35967,16 @@
           "zh": "连长"
         },
         {
+          "en": "Epic Hero",
+          "de": "Epischer Held",
+          "es": "Héroe Épico",
+          "fr": "Héros Épique",
+          "it": "Eroe Epico",
+          "ja": "伝説的英雄",
+          "ko": "서사적 영웅",
+          "zh": "史诗英雄"
+        },
+        {
           "en": "Character",
           "de": "Charaktermodell",
           "es": "Personaje",
@@ -35927,6 +36057,7 @@
           "zh": "烟幕"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -36313,6 +36444,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -36709,6 +36841,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -37708,6 +37841,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -38279,6 +38413,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -38840,6 +38975,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -39479,6 +39615,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -40040,6 +40177,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -40452,6 +40590,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -40952,6 +41091,7 @@
           "zh": "灵能者"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -41470,6 +41610,7 @@
           "zh": "终结者"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -41950,6 +42091,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -42784,6 +42926,7 @@
           "zh": "烟幕"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -43224,6 +43367,7 @@
           "zh": "烟幕"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -43584,6 +43728,7 @@
           "zh": "终结者"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -44026,6 +44171,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -44598,6 +44744,7 @@
           "zh": "骑乘"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -45143,6 +45290,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -45664,6 +45812,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -46185,6 +46334,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -46643,6 +46793,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -47109,6 +47260,7 @@
           "zh": "机甲"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -47742,6 +47894,7 @@
           "zh": "烟幕"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -48261,6 +48414,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -48800,6 +48954,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -49337,6 +49492,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -49853,6 +50009,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -50223,6 +50380,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -50621,6 +50779,7 @@
           "zh": "基因原体"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -51012,6 +51171,7 @@
           "zh": "烟幕"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -52029,6 +52189,7 @@
           "zh": "烟幕"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -52730,6 +52891,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -53431,6 +53593,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -54041,6 +54204,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -54405,6 +54569,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -54766,6 +54931,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -55149,6 +55315,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -55662,6 +55829,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -56344,6 +56512,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -56814,6 +56983,7 @@
           "zh": "骑乘"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -57192,6 +57362,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -57462,6 +57633,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -57799,6 +57971,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -58157,6 +58330,7 @@
           "zh": "终结者"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -58571,6 +58745,7 @@
           "zh": "终结者"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -59234,6 +59409,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -59727,6 +59903,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -60262,6 +60439,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -60604,6 +60782,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -61127,6 +61306,7 @@
           "zh": "步兵"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -61817,6 +61997,7 @@
           "zh": "跳跃背包"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -62443,6 +62624,7 @@
           "zh": "机甲"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -63227,6 +63409,66 @@
           "ja": "タクティカス",
           "ko": "택티쿠스",
           "zh": "战术型"
+        },
+        {
+          "en": "Epic Hero",
+          "de": "Epischer Held",
+          "es": "Héroe Épico",
+          "fr": "Héros Épique",
+          "it": "Eroe Epico",
+          "ja": "伝説的英雄",
+          "ko": "서사적 영웅",
+          "zh": "史诗英雄"
+        }
+      ],
+      "modelKeywords": [
+        {
+          "name": {
+            "en": "Chapter Champion",
+            "de": "Ordenschampion",
+            "es": "Campeón del Capítulo",
+            "fr": "Champion de Chapitre",
+            "it": "Campione Capitolare",
+            "ja": "チャプター・チャンピオン",
+            "ko": "챕터 챔피언",
+            "zh": "战团勇士"
+          },
+          "keywords": [
+            {
+              "en": "Epic Hero",
+              "de": "Epischer Held",
+              "es": "Héroe Épico",
+              "fr": "Héros Épique",
+              "it": "Eroe Epico",
+              "ja": "伝説的英雄",
+              "ko": "서사적 영웅",
+              "zh": "史诗英雄"
+            }
+          ]
+        },
+        {
+          "name": {
+            "en": "Chapter Ancient",
+            "de": "Ordensstandartenträger",
+            "es": "Anciano del Capítulo",
+            "fr": "Doyen de Chapitre",
+            "it": "Antico del Capitolo",
+            "ja": "チャプター・エインシェント",
+            "ko": "챕터 에인션트",
+            "zh": "战团旗手"
+          },
+          "keywords": [
+            {
+              "en": "Epic Hero",
+              "de": "Epischer Held",
+              "es": "Héroe Épico",
+              "fr": "Héros Épique",
+              "it": "Eroe Epico",
+              "ja": "伝説的英雄",
+              "ko": "서사적 영웅",
+              "zh": "史诗英雄"
+            }
+          ]
         }
       ],
       "stats": [
@@ -63639,6 +63881,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -64081,6 +64324,7 @@
           "zh": "战术型"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -64489,6 +64733,42 @@
           "ja": "伝説的英雄",
           "ko": "서사적 영웅",
           "zh": "史诗英雄"
+        },
+        {
+          "en": "Psyker",
+          "de": "Psioniker",
+          "es": "Psíquico",
+          "fr": "Psyker",
+          "it": "Psionico",
+          "ja": "サイカー",
+          "ko": "사이커",
+          "zh": "灵能者"
+        }
+      ],
+      "modelKeywords": [
+        {
+          "name": {
+            "en": "Dainal Komelius",
+            "de": "Dainal Kornelius",
+            "es": "Dainal Komelius",
+            "fr": "Dainal Komelius",
+            "it": "Dainal Kornelius",
+            "ja": "ダイナル・コーネリウス",
+            "ko": "다이날 코넬리우스",
+            "zh": "丹尼尔·科内留斯"
+          },
+          "keywords": [
+            {
+              "en": "Psyker",
+              "de": "Psioniker",
+              "es": "Psíquico",
+              "fr": "Psyker",
+              "it": "Psionico",
+              "ja": "サイカー",
+              "ko": "사이커",
+              "zh": "灵能者"
+            }
+          ]
         }
       ],
       "stats": [
@@ -65268,6 +65548,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {

@@ -6,8 +6,8 @@
     "banner": "#1a3445",
     "header": "#244b6a"
   },
-  "compatibleDataVersion": 981,
-  "updated": "2026-10-14T09:53:59.902Z",
+  "compatibleDataVersion": 995,
+  "updated": "2026-10-16T18:38:16.587Z",
   "parent_id": null,
   "parent_name": null,
   "rules": {
@@ -1751,6 +1751,16 @@
           "zh": "扈从"
         },
         {
+          "en": "Gravis",
+          "de": "Gravis",
+          "es": "Gravis",
+          "fr": "Gravis",
+          "it": "Gravis",
+          "ja": "グラヴィス",
+          "ko": "그라비스",
+          "zh": "重装型"
+        },
+        {
           "en": "Battleline",
           "de": "Linientruppen",
           "es": "Línea de batalla",
@@ -1769,6 +1779,162 @@
           "ja": "爆発物",
           "ko": "폭발물",
           "zh": "炸药"
+        },
+        {
+          "en": "Tacticus",
+          "de": "Tacticus",
+          "es": "Tacticus",
+          "fr": "Tacticus",
+          "it": "Tacticus",
+          "ja": "タクティカス",
+          "ko": "택티쿠스",
+          "zh": "战术型"
+        }
+      ],
+      "modelKeywords": [
+        {
+          "name": {
+            "en": "Kill Team Sergeant",
+            "de": "Kill-Team-Sergeant",
+            "es": "Sargento de Comando",
+            "fr": "Sergent de Kill team",
+            "it": "Sergente del Kill Team",
+            "ja": "キルチーム・サージェント",
+            "ko": "킬 팀 서전트",
+            "zh": "杀戮小队军士"
+          },
+          "keywords": [
+            {
+              "en": "Tacticus",
+              "de": "Tacticus",
+              "es": "Tacticus",
+              "fr": "Tacticus",
+              "it": "Tacticus",
+              "ja": "タクティカス",
+              "ko": "택티쿠스",
+              "zh": "战术型"
+            }
+          ]
+        },
+        {
+          "name": {
+            "en": "Gravis Veteran",
+            "de": "Gravis-Veteran",
+            "es": "Veterano Gravis",
+            "fr": "Vétéran Gravis",
+            "it": "Veterano Gravis",
+            "ja": "グラヴィス・ベテラン",
+            "ko": "그라비스 베테랑",
+            "zh": "重装型老兵"
+          },
+          "keywords": [
+            {
+              "en": "Gravis",
+              "de": "Gravis",
+              "es": "Gravis",
+              "fr": "Gravis",
+              "it": "Gravis",
+              "ja": "グラヴィス",
+              "ko": "그라비스",
+              "zh": "重装型"
+            }
+          ]
+        },
+        {
+          "name": {
+            "en": "Deathwatch Veteran with Heavy Thunder Hammer and Bolt Pistol",
+            "de": "Deathwatch-Veteran mit Schwerem Energiehammer und Boltpistole",
+            "es": "Veterano Vigía con martillo de trueno pesado y pistola bólter",
+            "fr": "Vétéran de la Deathwatch avec Marteau Tonnerre Lourd et Pistolet Bolter",
+            "it": "Veterani della Deathwatch con martello Tuono pesante e pistola requiem",
+            "ja": "デスウォッチ・ベテラン（ヘヴィサンダーハンマー、ボルトピストル装備）",
+            "ko": "데스워치 베테랑·중형 선더 해머, 볼트 권총",
+            "zh": "装备重型雷霆锤和爆矢手枪的死亡守望老兵"
+          },
+          "keywords": [
+            {
+              "en": "Tacticus",
+              "de": "Tacticus",
+              "es": "Tacticus",
+              "fr": "Tacticus",
+              "it": "Tacticus",
+              "ja": "タクティカス",
+              "ko": "택티쿠스",
+              "zh": "战术型"
+            }
+          ]
+        },
+        {
+          "name": {
+            "en": "Deathwatch Veteran with Deathwatch Marksman Bolt Carbine, Special-issue Bolt Pistol and Knives and Fists",
+            "de": "Deathwatch-Veteran mit Schützen-Boltkarabiner, Spezialboltpistole und Messern und Fäusten",
+            "es": "Veterano Vigía con carabina bólter de tirador Vigía, pistola bólter especial y cuchillos y puños",
+            "fr": "Vétéran de la Deathwatch avec Carabine Bolter d'Élite Deathwatch, Pistolet Bolter Spécialisé et Couteaux et Poings",
+            "it": "Veterano della Deathwatch con carabina requiem Marksman della Deathwatch, pistola requiem specialistica e coltelli e pugni",
+            "ja": "デスウォッチ・ベテラン（デスウォッチ・ベテラン・マークスマン・ボルトカービン、特殊仕様ボルトピストル、ナイフ＆拳装備）",
+            "ko": "데스워치 베테랑·데스워치 막스맨 볼트 카빈, 특수 볼트 권총, 나이프와 주먹",
+            "zh": "装备死亡守望神射手爆矢卡宾枪，特制爆矢手枪，战斗刀和拳头的死亡守望老兵"
+          },
+          "keywords": [
+            {
+              "en": "Tacticus",
+              "de": "Tacticus",
+              "es": "Tacticus",
+              "fr": "Tacticus",
+              "it": "Tacticus",
+              "ja": "タクティカス",
+              "ko": "택티쿠스",
+              "zh": "战术型"
+            }
+          ]
+        },
+        {
+          "name": {
+            "en": "Deathwatch Veteran with Stalker Bolt Rifle, Bolt Pistol and Knives and Fists",
+            "de": "Deathwatch-Veteran mit Stalker-Boltgewehr, Boltpistole und Messern und Fäusten",
+            "es": "Veterano Vigía con rifle bólter silencio, pistola bólter y cuchillos y puños",
+            "fr": "Vétéran de la Deathwatch avec Fusil Bolter Traqueur, Pistolet Bolter et Couteaux et Poings",
+            "it": "Veterano della Deathwatch con fucile requiem a lunga gittata Venator, pistola requiem e coltelli e pugni",
+            "ja": "デスウォッチ・ベテラン（ストーカー・ボルトライフル、ボルトピストル、ナイフ＆拳装備）",
+            "ko": "데스워치 베테랑·스토커 볼트 소총, 볼트 권총, 나이프와 주먹",
+            "zh": "装备潜行者爆矢步枪，爆矢手枪，战斗刀和拳头的死亡守望老兵"
+          },
+          "keywords": [
+            {
+              "en": "Tacticus",
+              "de": "Tacticus",
+              "es": "Tacticus",
+              "fr": "Tacticus",
+              "it": "Tacticus",
+              "ja": "タクティカス",
+              "ko": "택티쿠스",
+              "zh": "战术型"
+            }
+          ]
+        },
+        {
+          "name": {
+            "en": "Deathwatch Veteran with Xenophase Blade and Special-issue Bolt Pistol",
+            "de": "Deathwatch-Veteran mit Xenos-Phasenklinge und Spezialboltpistole",
+            "es": "Veterano Vigía con espada xenofase y pistola bólter especial",
+            "fr": "Vétéran de la Deathwatch avec Lame de Xénophase et Pistolet Bolter Spécialisé",
+            "it": "Veterano della Deathwatch con lama xenofasica e pistola requiem specialistica",
+            "ja": "デスウォッチ・ベテラン（ゼノフェイズ・ブレイドブレイド、特殊仕様ボルトピストル装備）",
+            "ko": "데스워치 베테랑·제노페이즈 도검, 특수 볼트 권총",
+            "zh": "装备异形相位剑和特制爆矢手枪的死亡守望老兵"
+          },
+          "keywords": [
+            {
+              "en": "Tacticus",
+              "de": "Tacticus",
+              "es": "Tacticus",
+              "fr": "Tacticus",
+              "it": "Tacticus",
+              "ja": "タクティカス",
+              "ko": "택티쿠스",
+              "zh": "战术型"
+            }
+          ]
         }
       ],
       "stats": [
@@ -2929,6 +3095,7 @@
           "en": "Callidus Assassin"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -3211,6 +3378,7 @@
           "zh": "载具"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -3811,6 +3979,7 @@
           "en": "Culexus Assassin"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -4112,6 +4281,7 @@
           "zh": "杀戮小队"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -5193,6 +5363,7 @@
           "zh": "艾弗森刺客"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -5444,6 +5615,7 @@
           "en": "Exaction Squad"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -5948,6 +6120,7 @@
           "en": "Grey Knights Terminator Squad"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -6330,6 +6503,7 @@
           "en": "Imperial Navy Breachers"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -6924,6 +7098,7 @@
           "zh": "外壳"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -7161,6 +7336,7 @@
           "en": "Inquisitor"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -7590,6 +7766,7 @@
           "en": "Coteaz"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -7939,6 +8116,7 @@
           "en": "Draxus"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -8267,6 +8445,7 @@
           "en": "Greyfax"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -8599,6 +8778,7 @@
           "en": "Kroyle"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -8855,6 +9035,7 @@
           "en": "Inquisitorial Agents"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -9384,6 +9565,7 @@
           "zh": "外壳"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -9787,6 +9969,7 @@
           "zh": "国教牧师"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -10110,6 +10293,7 @@
           "en": "Navigator"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -10342,6 +10526,25 @@
           "ja": "キャラクター",
           "ko": "캐릭터",
           "zh": "角色"
+        }
+      ],
+      "modelKeywords": [
+        {
+          "name": {
+            "en": "Rogue Trader"
+          },
+          "keywords": [
+            {
+              "en": "Character",
+              "de": "Charaktermodell",
+              "es": "Personaje",
+              "fr": "Personnage",
+              "it": "Personaggio",
+              "ja": "キャラクター",
+              "ko": "캐릭터",
+              "zh": "角色"
+            }
+          ]
         }
       ],
       "stats": [
@@ -10748,6 +10951,7 @@
           "en": "Sanctifiers"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -11351,6 +11555,7 @@
           "zh": "外壳"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -11665,6 +11870,7 @@
           "en": "Sisters of Battle Squad"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -12320,6 +12526,7 @@
           "en": "Subductor Squad"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -12613,6 +12820,7 @@
           "en": "Vigilant Squad"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -13045,6 +13253,7 @@
           "en": "Vindicare Assassin"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -13316,6 +13525,7 @@
           "en": "Voidsmen-At-Arms"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -13696,6 +13906,7 @@
           "zh": "异形审判庭"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
@@ -14051,6 +14262,7 @@
           "zh": "异形审判庭"
         }
       ],
+      "modelKeywords": [],
       "stats": [
         {
           "name": {
