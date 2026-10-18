@@ -405,3 +405,77 @@ answers refilled). It now merges only the adopted units and gives them the
 same structured `attachesTo` list (`gdcAttachTargets`) the authority pass
 uses. Regression proof: the non-Astartes dump differs only in Custodes and
 the `inspect-sm.mjs` report is byte-identical before/after.
+
+## Sisters of Silence from the printed Custodes codex (contract, 2026-10-18)
+
+GW's app (GDC 981) carries NO Anathema Psykana datasheets, so the five Sisters
+of Silence units below are the only Custodes sheets still on 40kdc's
+index-era data. The owner photographed codex pages 118-120 on 2026-10-18;
+this section is the transcription and is the source of truth for the job.
+Every value below was read from print. Points stay the MFM's (unchanged).
+
+**Mechanisms.** Stats, weapons and abilities go in
+`~/sites/base/manual-corrections.json` (the hand-verified overlay, merged last
+by `overlay_merge.py`, every row expect-gated on the CURRENT wrong value so it
+self-heals when 40kdc catches up — see its `meta.purpose`). Things the overlay
+cannot express go in `js/data/dc-adapter.js` as small expect-gated maps,
+mirroring `UNIT_KEYWORD_FIXES` / `ARMY_RULE_TEXT_OVERRIDES`:
+
+| Need | Where |
+|---|---|
+| M 6" → 7" on the four infantry sheets | `fixes` (`expect: {M:'6"'}`, `set.profiles` with the full 11e line; invuln untouched) |
+| weapon numbers | `weaponFixes` match/set (expect-gated) |
+| weapon KEYWORDS | `weaponFixes` set does NOT support `Keywords` today — extend `applyWeaponFixes` so `set.Keywords` rewrites `row.Keywords` AND the gdc profile's `keywords` list exactly as the `add` path does |
+| core ability swap Scouts 6" → 7" | `abilityFixes`: `remove: ['scouts-6']`, `addCore: ['scouts-7']` (both are real ids in build/abilities-index.json) |
+| named ability text | `abilityFixes.updateNamed` with `expectContains` = a substring of the CURRENT (10e) text that does not occur in the new text |
+| Rhino Self Repair → Assault Vehicle | `abilityFixes`: `remove: ['self-repair']`, `addNamed: [{name:'Assault Vehicle', description}]` |
+| Knight-Centura Leader → Support | new adapter map `ATTACHMENT_ROLE_FIXES = {'adeptus-custodes::knight-centura': {expect:'leader', set:'support'}}`, applied where `attachmentRole` is set from `u.attachment_role` (~line 1926) AND where `ATTACH_ROLE_ABILITY[u.attachment_role]` picks the core ability (~line 1466), so the card shows **Support**, not Leader. `gdcLeadBy` must stay `['Prosecutors','Vigilators','Witchseekers']` (the MFM lists exactly those three under SUPPORT). |
+| drop the ADEPTUS CUSTODES faction keyword on all five | `UNIT_KEYWORD_FIXES` `{remove: ['Adeptus Custodes']}` — the codex (p91 Anathema Psykana box) says these units do NOT have the ADEPTUS CUSTODES faction keyword, which is what gates every "ADEPTUS CUSTODES model only" enhancement |
+| Emperor's Light enhancement lacks its weapon profile (GDC ships it as an image) | append, expect-gated on `has the following weapon:`, the line `Emperor’s Light [EXTRA ATTACKS]: Melee, A3, WS2+, S5, AP-2, D2` — find where an authoritative faction's enhancement description is finalised (gdc.js `mergeIntoFactions` / dc-adapter) and add a small `ENHANCEMENT_TEXT_APPEND` map keyed by enhancement name |
+| Martial Ka'tah typo | GDC prints the first ka'tah **Conversai**; the codex prints **CONSERVAI**. Patch `**Conversai**` → `**Conservai**` and `is** selected to fight**` → `is **selected to fight**` wherever the army-rule text is finalised for an authoritative faction (expect-gated string replace) |
+
+Do NOT rename weapons: 40kdc's item ids (`close-combat-weapon`,
+`witchseeker-flamer`, …) are what the wargear-option tree resolves against.
+Fix their numbers and keywords; the name difference ("Gun Stock" in print) is
+cosmetic and self-heals when 40kdc renames.
+
+### Printed cards
+
+**Knight-Centura** (p118) — M **7"** T3 SV3+ W4 LD6+ OC1, InSv 5+.
+Ranged: Master-crafted Boltgun [ANTI-PSYKER 4+, ASSAULT, RAPID FIRE 1] 24" A**2** BS2+ S5 AP-1 D2 ·
+Master-crafted Flamer (ours: `witchseeker-flamer` on this unit) [ANTI-PSYKER 4+, ASSAULT, BLAST 2, TORRENT] 12" A**4** BS- S**5** AP**-1** D1.
+Melee: Executioner Greatblade [ANTI-PSYKER 5+, CLEAVE 1, DEVASTATING WOUNDS: PSYKER] A**4** WS2+ S5 AP-2 D2 · Gun Stock (ours `close-combat-weapon-knight-centura`) A3 WS2+ S3 AP0 D1 (already right).
+Core: **Scouts 7"**, **Support**. Army rule: Daughters of the Abyss.
+Seeker's Instincts: *This unit has +2" M. This unit can re-roll advance rolls and charge rolls.*
+Corner the Quarry: *When an enemy unit (excluding MONSTER/VEHICLE units) engaged with this unit makes a fall-back move, that enemy unit must use the desperate escape mode. If that enemy unit is battle-shocked, -1 from those hazard rolls.*
+Wargear option (already right): greatblade → boltgun + gun stock, or flamer + gun stock.
+Keywords: INFANTRY, ANATHEMA PSYKANA, CHARACTER, IMPERIUM. Faction: ANATHEMA PSYKANA.
+
+**Prosecutor Squad** (p118, ours `prosecutors`) — M **7"** T3 SV3+ W1 LD6+ OC2.
+Boltgun [ANTI-PSYKER 4+, ASSAULT, RAPID FIRE 1] 24" A1 BS3+ S5 AP-1 D1 (numbers right, keywords missing). Gun Stock A2 WS3+ S3 AP0 D1 (right).
+Purity of Execution: **text pending a closer photo** (reads as a "detected"/detection-range rule, not the 10e PRECISION one) — leave the ability alone until the text is confirmed.
+Keywords: INFANTRY, ANATHEMA PSYKANA, IMPERIUM.
+
+**Vigilator Squad** (p119, ours `vigilators`) — M **7"** T3 SV3+ W1 LD6+ OC1.
+Executioner Greatblade [ANTI-PSYKER 5+, DEVASTATING WOUNDS: PSYKER] A**3** WS3+ S5 AP-2 D2.
+Deft Parry: *Melee attacks that target this unit have -1 to hit rolls.* (ours is equivalent; leave).
+Keywords: INFANTRY, ANATHEMA PSYKANA, IMPERIUM.
+
+**Witchseeker Squad** (p120, ours `witchseekers`) — M **7"** T3 SV3+ W1 LD6+ OC1.
+Flamer (ours `witchseeker-flamer`) [ANTI-PSYKER 4+, ASSAULT, BLAST 1, TORRENT] 12" A**3** BS- S4 AP**-1** D1. Gun Stock A2 WS3+ S3 AP0 D1 (right).
+Core: **Scouts 7"**.
+Sanctified Flames: *In your Shooting phase, when this unit has shot, you can select one enemy unit hit by those attacks. That enemy unit makes a battle-shock roll, with -1 to that battle-shock roll if that enemy unit is a PSYKER unit.*
+Keywords: INFANTRY, ANATHEMA PSYKANA, IMPERIUM.
+
+**Anathema Psykana Rhino** (p120) — M12" T9 SV3+ W10 LD6+ OC2 (right).
+Hunter-killer Missile [ONE SHOT] 48" A1 BS2+ S14 AP-3 D **D3+3**. Storm Bolter [RAPID FIRE 2] 24" A2 BS3+ S5 AP-1 D1 (right). Armoured Tracks A3 WS4+ S6 AP0 D1 (right).
+Core: Deadly Demise D3, Firing Deck 2 (right). Army rule: Daughters of the Abyss.
+Assault Vehicle (replaces 10e Self Repair): *In your Movement phase, when this unit ends an advance move, units embarked within this unit can make a shock disembark move.*
+Transport: 12 ANATHEMA PSYKANA INFANTRY models. Keywords: VEHICLE, ANATHEMA PSYKANA, DEDICATED TRANSPORT, FRAME, IMPERIUM, SMOKE, TRANSPORT.
+
+**Daughters of the Abyss** (army rule, p91): text pending a photo of p91; the per-unit "Daughter(s) of the Abyss" ability keeps its current text until then.
+
+**Note on the `witchseeker-flamer` item**: it is ONE shared item on Knight-Centura and Witchseekers but prints with different profiles (Master-crafted: A4 S5; squad: A3 S4). `weaponFixes` are keyed per unit, so fix each unit's row separately and confirm in the harness that the two units end with different numbers.
+
+### Done means
+`validate-deploy.mjs` ok; a harness dump of the five units shows every bold value above; Knight-Centura `attachmentRole === 'support'` with the three targets; none of the five carries `Adeptus Custodes` in `keywords`; every other faction's dump is byte-identical before/after (MODE=dump diff, `scripts/inspect-sm.mjs` report identical); Emperor's Light description ends with the profile line; Martial Ka'tah reads Conservai.
