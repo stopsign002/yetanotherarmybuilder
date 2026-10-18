@@ -206,6 +206,23 @@
                description: 'This model has Support and can be attached to a unit.' },
   };
 
+  // Attachment-role corrections, keyed per FACTION COPY like UNIT_KEYWORD_FIXES.
+  // `expect` is the role 40kdc ships today; the fix applies only while it still
+  // does, so it no-ops once upstream agrees. The same resolved role drives
+  // `attachmentRole` AND the printed Leader/Support core ability, so the card
+  // never says one thing and the detail pane another. `gdcLeadBy` is untouched.
+  //   Knight-Centura: the Custodes codex (p118) prints Support, not Leader; the
+  //   MFM lists its three targets (Prosecutors, Vigilators, Witchseekers) under
+  //   SUPPORT.
+  const ATTACHMENT_ROLE_FIXES = {
+    'adeptus-custodes::knight-centura': { expect: 'leader', set: 'support' },
+  };
+  function resolveAttachmentRole(u) {
+    const role = u.attachment_role || null;
+    const fx = ATTACHMENT_ROLE_FIXES[u.faction_id + '::' + u.id];
+    return (fx && fx.expect === role) ? fx.set : role;
+  }
+
   // Hand-patches for core abilities the upstream 40kdc dataset is missing on a
   // unit's datasheet. Keyed by unit id → core ability ids to inject. This is
   // SELF-HEALING: the inject is skipped if the unit already lists the ability,
@@ -657,6 +674,15 @@
     // GW's World Eaters copy is SPAWN where CSM's is CHAOS SPAWN — GW's own
     // inconsistency between two copies of one model, followed as-is.
     'world-eaters::chaos-spawn':               { remove: ['Chaos Spawn', 'Mutant'] },
+    // The Sisters of Silence do NOT carry the ADEPTUS CUSTODES faction keyword
+    // (Custodes codex p91, Anathema Psykana box): they are ANATHEMA PSYKANA.
+    // That keyword is what gates every "ADEPTUS CUSTODES model only"
+    // enhancement, so leaving it on made them legal bearers.
+    'adeptus-custodes::knight-centura':        { remove: ['Adeptus Custodes'] },
+    'adeptus-custodes::prosecutors':           { remove: ['Adeptus Custodes'] },
+    'adeptus-custodes::vigilators':            { remove: ['Adeptus Custodes'] },
+    'adeptus-custodes::witchseekers':          { remove: ['Adeptus Custodes'] },
+    'adeptus-custodes::anathema-psykana-rhino': { remove: ['Adeptus Custodes'] },
   };
 
   const FRAME_UNITS = new Set([
@@ -1463,7 +1489,7 @@
     // puts the keyword itself on the card, in print, and in every export.
     // No-ops if an ability of that name is already present, so it self-heals if
     // 40kdc ever starts linking a real per-faction leader/support ability id.
-    const roleAbility = ATTACH_ROLE_ABILITY[u.attachment_role];
+    const roleAbility = ATTACH_ROLE_ABILITY[resolveAttachmentRole(u)];
     if (roleAbility
         && !abilities.some((a) => a.name.toLowerCase() === roleAbility.name.toLowerCase())) {
       abilities.push({ name: roleAbility.name, description: roleAbility.description, isCore: true,
@@ -1923,7 +1949,7 @@
       isLegends: !!u.is_legend
         || (!mfmPts && !!MFM_DELISTED[u.faction_id + '::' + u.id]
             && mfmOverlayHealthy()),
-      attachmentRole: u.attachment_role || null,   // 'leader' | 'support' | null
+      attachmentRole: resolveAttachmentRole(u),   // 'leader' | 'support' | null
       // Fallback "Led By" targets from 40kdc's structured leaderAttachments
       // table, used when GDC prose carries none (e.g. all Necrons leaders). The
       // GDC overlay overwrites this per-unit only when it has its own list.
@@ -2432,18 +2458,25 @@
           const exp = fx.expect || {};
           const set = fx.set || {};
           const expMatch = (cur) => Object.keys(exp).every((k) => wfNorm(cur[k]) === wfNorm(exp[k]));
+          // `Keywords` is comma-separated text on our rows and a list on the
+          // gdc profile; compare/write it as the text form, case-insensitive.
+          const kwText = (v) => (Array.isArray(v) ? v.join(', ') : String(v == null ? '' : v));
+          const kwList = (v) => String(v).split(',').map((x) => x.trim()).filter(Boolean);
           (u.weapons || []).forEach((w) => {
             if (String(w.name || '').toLowerCase() !== wantName) return;
             const mode = wfNorm(w.Range) === 'melee' ? 'melee' : 'ranged';
             if (mode !== wantMode) return;
             if (!expMatch({ Range: w.Range, A: w.A, BSWS: w.BS != null ? w.BS : w.WS,
-                            S: w.S, AP: w.AP, D: w.D })) return;
+                            S: w.S, AP: w.AP, D: w.D, Keywords: kwText(w.Keywords) })) return;
             if ('Range' in set) w.Range = set.Range;
             if ('A' in set) w.A = set.A;
             if ('BSWS' in set) { if (mode === 'melee') w.WS = set.BSWS; else w.BS = set.BSWS; }
             if ('S' in set) w.S = set.S;
             if ('AP' in set) w.AP = set.AP;
             if ('D' in set) w.D = set.D;
+            if ('Keywords' in set) {
+              if (set.Keywords) w.Keywords = set.Keywords; else delete w.Keywords;
+            }
           });
           const lst = wantMode === 'melee' ? u.gdcMeleeWeapons : u.gdcRangedWeapons;
           (lst || []).forEach((w) => ((w && w.profiles) || []).forEach((p) => {
@@ -2454,13 +2487,14 @@
             const curRange = (p.range != null && p.range !== '') ? p.range
               : (wantMode === 'melee' ? 'Melee' : '');
             if (!expMatch({ Range: curRange, A: p.attacks, BSWS: p.skill,
-                            S: p.strength, AP: p.ap, D: p.damage })) return;
+                            S: p.strength, AP: p.ap, D: p.damage, Keywords: kwText(p.keywords) })) return;
             if ('Range' in set && wantMode !== 'melee') p.range = set.Range;
             if ('A' in set) p.attacks = set.A;
             if ('BSWS' in set) p.skill = set.BSWS;
             if ('S' in set) p.strength = set.S;
             if ('AP' in set) p.ap = set.AP;
             if ('D' in set) p.damage = set.D;
+            if ('Keywords' in set) p.keywords = set.Keywords ? kwList(set.Keywords) : [];
           }));
         });
       });

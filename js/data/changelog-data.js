@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.18-1',
-    lastUpdated: '2026-10-18T12:00:00Z',
+    version:     '2026.10.18-2',
+    lastUpdated: '2026-10-18T18:00:00Z',
     entries: [
+      {
+        date: '2026-10-18',
+        kind: 'fix',
+        title: 'Custodes: Sisters of Silence updated from the printed codex',
+        description: 'The Knight-Centura, Prosecutors, Vigilators, Witchseekers and Anathema Psykana Rhino now match Codex: Adeptus Custodes (pages 118-120). All four infantry units move 7"; the boltguns, flamers and executioner greatblades carry their codex profiles and keywords (Anti-Psyker, Assault, Blast, Cleave); the Knight-Centura is a Support character with Scouts 7" and the new Seeker\'s Instincts and Corner the Quarry; Witchseekers get Scouts 7" and the new Sanctified Flames; the Rhino\'s hunter-killer missile does D3+3 and Self Repair is replaced by Assault Vehicle. None of the five carries the ADEPTUS CUSTODES keyword any more, so Custodes-only enhancements no longer offer themselves to them. Also from the book: the Emperor\'s Light enhancement shows its weapon profile, and the first ka\'tah is spelled Conservai.',
+      },
       {
         date: '2026-10-18',
         kind: 'fix',

@@ -241,7 +241,23 @@
       insert: '\n• First battle round: 3"\n• Second battle round: 6"\n• Third battle round onwards: 9"',
     },
   };
+  // Literal corrections to GDC's army-rule prose where the printed codex
+  // differs (docs/GDC-AUTHORITY.md, "Sisters of Silence" section). Each pair is
+  // a plain string replace, so it no-ops the moment GDC carries the right
+  // wording (the `from` text no longer occurs).
+  //   Martial Ka'tah: GDC prints the first ka'tah "Conversai"; the codex
+  //   prints CONSERVAI. GDC also split the bold span in the Rendax WHEN line.
+  const RULE_TEXT_REPLACEMENTS = {
+    'martialkatah': [
+      { from: '**Conversai**', to: '**Conservai**' },
+      { from: 'is** selected to fight**', to: 'is **selected to fight**' },
+    ],
+  };
   function patchRuleText(name, text) {
+    if (text) {
+      const reps = RULE_TEXT_REPLACEMENTS[nameKey(name)];
+      if (reps) reps.forEach((r) => { if (text.indexOf(r.from) !== -1) text = text.split(r.from).join(r.to); });
+    }
     const p = RULE_TEXT_PATCHES[nameKey(name)];
     if (!p || !text) return text;
     if (text.indexOf(p.already) !== -1) return text;       // datasource fixed → no-op
@@ -249,6 +265,25 @@
     if (i === -1) return text;
     const at = i + p.anchor.length;
     return text.slice(0, at) + p.insert + text.slice(at);
+  }
+
+  // Weapon profiles GDC ships as an IMAGE inside an enhancement, appended from
+  // the printed codex. Keyed by nameKey(enhancement name); expect-gated on the
+  // truncated text (`expectContains`) and on the line not being there yet, so it
+  // no-ops once the dump inlines the profile.
+  //   Emperor's Light (Guardians of the Throne): profile read from the printed codex, 2026-10-18.
+  const ENHANCEMENT_TEXT_APPEND = {
+    'emperorslight': {
+      expectContains: 'has the following weapon:',
+      absent: 'Emperor’s Light [EXTRA ATTACKS]',
+      append: '\nEmperor’s Light [EXTRA ATTACKS]: Melee, A3, WS2+, S5, AP-2, D2',
+    },
+  };
+  function patchEnhancementText(name, text) {
+    const p = ENHANCEMENT_TEXT_APPEND[nameKey(name)];
+    if (!p || !text) return text;
+    if (text.indexOf(p.expectContains) === -1 || text.indexOf(p.absent) !== -1) return text;
+    return text.replace(/\s+$/, '') + p.append;
   }
 
   function composeRuleText(chunks) {
@@ -614,8 +649,8 @@
       const enhByDet = new Map();
       enhancementEntries.forEach(e => {
         const dName = pickText(e && e.detachment);
-        const desc = cleanMarkup(pickText(e.description));
         const rawName = pickText(e.name);
+        const desc = patchEnhancementText(rawName, cleanMarkup(pickText(e.description)));
         const enhKey = nameKey(rawName);
         if (!dName || !desc || !enhKey) return;
         const k = nameKey(dName);
