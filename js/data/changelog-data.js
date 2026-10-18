@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.14-1',
-    lastUpdated: '2026-10-14T20:00:00Z',
+    version:     '2026.10.18-1',
+    lastUpdated: '2026-10-18T12:00:00Z',
     entries: [
+      {
+        date: '2026-10-18',
+        kind: 'fix',
+        title: 'Army list: the drag grip no longer grabs a unit mid-scroll on phones',
+        description: 'The six-dot grip on each army row started a drag the instant a finger touched it, so a scroll that began over it picked the unit up instead. It now needs the same short hold as the rest of the row. Press and hold any part of a row to move or attach it; a swipe just scrolls.',
+      },
       {
         date: '2026-10-14',
         kind: 'change',

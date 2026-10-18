@@ -591,13 +591,13 @@
       // still long enough (touch). This preserves normal click-to-select
       // behavior on the existing handler in events.js.
       if (isTouchLike(pointerKind)) {
-        // The grip is an unambiguous "I mean to drag this" target, so it arms
-        // straight away — no wait. Everything else has to earn it with a long
-        // press, otherwise the finger's vertical axis is the scroller's.
-        // (The grip is hidden on attached child rows, so those always take
-        // the long-press path.)
-        if (t.closest('.army-entry-handle')) activateDrag();
-        else pressTimer = setTimeout(() => { pressTimer = null; activateDrag(); }, LONG_PRESS_MS);
+        // The grip takes the SAME long press as the rest of the row. It used
+        // to arm the instant a finger landed on it, and because it sits on
+        // the left edge where a scrolling thumb lands, a scroll that began
+        // over it grabbed the row — and a drop on another row's middle then
+        // attached the unit (owner, 2026-10-18). The grip stays as the visual
+        // hint; the hold + slop below is what tells a drag from a scroll.
+        pressTimer = setTimeout(() => { pressTimer = null; activateDrag(); }, LONG_PRESS_MS);
       }
     }
 
