@@ -246,6 +246,86 @@
       UI.toast(`Saved "${state.currentArmy.name}"`, 'success');
     });
 
+    // ── Save As: duplicate the current army under a new name ─────────────
+    // Autosave keeps the original persisted on every mutation, so "save as"
+    // only has to mint a copy (new id, fresh timestamps so sync uploads it as
+    // a new row), save it, and make it the current army.
+    const saveAsModal = document.getElementById('modal-save-as');
+    const saveAsInput = document.getElementById('save-as-name-input');
+    const saveAsError = document.getElementById('save-as-error');
+
+    function saveAsShowError(msg) {
+      saveAsError.textContent = msg;
+      saveAsError.hidden = false;
+      saveAsInput.setAttribute('aria-invalid', 'true');
+      saveAsInput.focus();
+      saveAsInput.select();
+    }
+    function openSaveAs() {
+      const cur = state.currentArmy;
+      if (!cur || !cur.entries.length) {
+        UI.toast('Add some units before saving a copy', 'info');
+        return;
+      }
+      const nameInput = document.getElementById('army-name-input');
+      const base = ((nameInput && nameInput.value) || cur.name || '').trim();
+      saveAsInput.value = ArmyManager.isNamed({ name: base }) ? `${base} (copy)` : '';
+      saveAsError.hidden = true;
+      saveAsInput.removeAttribute('aria-invalid');
+      saveAsModal.hidden = false;
+      saveAsInput.focus();
+      saveAsInput.select();
+    }
+    function closeSaveAs() { saveAsModal.hidden = true; }
+
+    document.getElementById('btn-save-as-army').addEventListener('click', openSaveAs);
+    document.getElementById('modal-save-as-close').addEventListener('click', closeSaveAs);
+    document.getElementById('btn-save-as-cancel').addEventListener('click', closeSaveAs);
+    saveAsModal.addEventListener('click', e => { if (e.target === e.currentTarget) closeSaveAs(); });
+    saveAsModal.addEventListener('keydown', e => { if (e.key === 'Escape') closeSaveAs(); });
+    saveAsInput.addEventListener('input', () => {
+      saveAsError.hidden = true;
+      saveAsInput.removeAttribute('aria-invalid');
+    });
+
+    document.getElementById('save-as-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const name = saveAsInput.value.trim();
+      if (!ArmyManager.isNamed({ name })) {
+        saveAsShowError('Give the copy a name.');
+        return;
+      }
+      const lower = name.toLowerCase();
+      if (state.armyManager.armies.some(a => (a.name || '').trim().toLowerCase() === lower)) {
+        saveAsShowError(`You already have an army called "${name}".`);
+        return;
+      }
+      const src = state.currentArmy;
+      // Persist the original first (picks up a name typed but not yet
+      // committed, and is a no-op for a scratch "New Army").
+      const nameInput = document.getElementById('army-name-input');
+      if (nameInput && nameInput.value.trim()) src.name = nameInput.value;
+      state.armyManager.saveArmy(src);
+
+      const data = JSON.parse(JSON.stringify(src.toJSON()));
+      const now = new Date().toISOString();
+      delete data.id;               // constructor mints a fresh one
+      data.name = name;
+      data.createdAt = now;
+      data.updatedAt = now;
+      const copy = Army.fromJSON(data);
+      if (!state.armyManager.saveArmy(copy)) {
+        saveAsShowError('That name can\'t be used — try another.');
+        return;
+      }
+      state.currentArmy = copy;
+      state.armyManager.currentArmy = copy;
+      closeSaveAs();
+      UI.renderArmyList(state.currentArmy);
+      App.applyImportedSelections(copy.factionName, copy.chapter, copy.detachmentNames);
+      UI.toast(`Saved a copy as "${copy.name}"`, 'success');
+    });
+
     document.getElementById('btn-load-army').addEventListener('click', async () => {
       const btn = document.getElementById('btn-load-army');
       // If signed in, pull cloud state before opening the modal so the

@@ -85,6 +85,7 @@
     // ── Army actions (always available, signed-in or not) ────────────
     menu.appendChild(mkItem('New army',  () => clickHidden('btn-new-army')));
     menu.appendChild(mkItem('Save army', () => clickHidden('btn-save-army')));
+    menu.appendChild(mkItem('Save as…',  () => clickHidden('btn-save-as-army')));
     menu.appendChild(mkItem('Load army', () => clickHidden('btn-load-army')));
     menu.appendChild(mkItem('Import…',   () => clickHidden('btn-import-string')));
     menu.appendChild(mkDivider());

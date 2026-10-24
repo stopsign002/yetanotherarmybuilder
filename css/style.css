@@ -2282,3 +2282,11 @@ ul { list-style: none; }
   max-width: calc(var(--col-left, 330px) - 20px);
   min-width: min(180px, calc(var(--col-left, 330px) - 20px));
 }
+
+/* Save As modal — duplicate the current army under a new name. */
+.modal-save-as { width: min(420px, 100%); }
+.modal-save-as .modal-body { display: flex; flex-direction: column; gap: 6px; }
+.modal-save-as .save-as-hint { margin: 0 0 8px; }
+.modal-save-as .form-input { width: 100%; }
+.save-as-error { margin: 2px 0 0; color: var(--danger); font-size: 0.85em; }
+.save-as-error[hidden] { display: none; }

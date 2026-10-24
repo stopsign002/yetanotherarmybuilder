@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.18-3',
-    lastUpdated: '2026-10-18T19:30:00Z',
+    version:     '2026.10.24-1',
+    lastUpdated: '2026-10-24T03:00:00Z',
     entries: [
+      {
+        date: '2026-10-24',
+        kind: 'feature',
+        title: 'Save as: duplicate an army under a new name',
+        description: 'A new "Save as…" button next to Save (also in the account menu, the More menu on phones, and the command palette) saves a copy of the army you have open under a new name and switches you to it. The original stays in your saved armies exactly as it was, so you can try out a variant of a list without losing the one you have.',
+      },
       {
         date: '2026-10-18',
         kind: 'fix',

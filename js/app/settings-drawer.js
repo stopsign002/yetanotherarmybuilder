@@ -255,6 +255,12 @@
         run() { close(); clickToolbarBtn('btn-save-army'); },
       },
       {
+        id: 'army-save-as',
+        label: 'Save as…',
+        section: 'army',
+        run() { close(); clickToolbarBtn('btn-save-as-army'); },
+      },
+      {
         id: 'army-load',
         label: 'Load army',
         section: 'army',

@@ -44,6 +44,7 @@
   const ACTIONS = [
     { label: 'New army',           shortcut: null,         btn: 'btn-new-army' },
     { label: 'Save army',          shortcut: null,         btn: 'btn-save-army' },
+    { label: 'Save as… (duplicate army)', shortcut: null, btn: 'btn-save-as-army' },
     { label: 'Load army',          shortcut: null,         btn: 'btn-load-army' },
     { label: 'Export (copy code)', shortcut: null,         btn: 'btn-export-string' },
     { label: 'Copy as text',       shortcut: null,         btn: 'btn-export-text' },
