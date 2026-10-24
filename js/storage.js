@@ -97,6 +97,9 @@ window.Storage = (() => {
         : (detachmentName ? [detachmentName] : []);
     if (dNames.length === 1)      data.d = dNames[0];
     else if (dNames.length > 1)   data.d = dNames.slice();
+    // `fd`: the declared Force Disposition id. Omitted when unset so codes for
+    // armies without one stay byte-identical; old clients ignore the key.
+    if (army.disposition)         data.fd = army.disposition;
     // Detect whether ANY entry carries an attachment. Armies without
     // attachments encode identically to pre-feature v2 — no 5th tuple
     // slot, no bloat. Armies with attachments emit `[entryId, parentId
@@ -231,6 +234,7 @@ window.Storage = (() => {
       name: data.n || 'Imported Army',
       factionName,
       detachmentNames,
+      disposition: (typeof data.fd === 'string' && data.fd) ? data.fd.slice(0, 60) : null,
       pointsLimit: data.p || 2000,
       entries,
     });
@@ -277,7 +281,7 @@ window.Storage = (() => {
     throw new Error('Unknown army code format');
   }
 
-  function exportArmyToText(army, { detachmentName, detachmentNames } = {}) {
+  function exportArmyToText(army, { detachmentName, detachmentNames, dispositionName } = {}) {
     const lines = [];
     lines.push(`=== ${army.name} ===`);
     if (army.factionName) lines.push(`Faction: ${army.factionName}`);
@@ -288,6 +292,7 @@ window.Storage = (() => {
         : (detachmentName ? [detachmentName] : []);
     if (dNames.length === 1)    lines.push(`Detachment: ${dNames[0]}`);
     else if (dNames.length > 1) lines.push(`Detachments: ${dNames.join(', ')}`);
+    if (dispositionName)        lines.push(`Force Disposition: ${dispositionName}`);
     lines.push(`Points Limit: ${army.pointsLimit}`);
     lines.push('');
 

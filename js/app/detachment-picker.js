@@ -75,6 +75,82 @@
     return out;
   };
 
+  // ── Force Disposition ────────────────────────────────────────────────────
+  // 11e: every detachment carries one or more Force Dispositions, and the
+  // player declares ONE of the dispositions marked on the detachments they
+  // have taken. So the choices are the union across the selected detachments
+  // (deduped by id, in selection order). The army stores only the declared id;
+  // the effective disposition is that id when it is still on offer, otherwise
+  // the only one on offer, otherwise none (the player has to choose).
+  App.getAvailableDispositions = function () {
+    const dets = (App.state && App.state.selectedDetachments) || [];
+    const seen = new Set(), out = [];
+    dets.forEach(d => (d && d.dispositions || []).forEach(x => {
+      if (!x || !x.id || seen.has(x.id)) return;
+      seen.add(x.id);
+      out.push(x);
+    }));
+    return out;
+  };
+
+  App.getArmyDisposition = function () {
+    const avail = App.getAvailableDispositions();
+    const army = App.state && App.state.currentArmy;
+    const chosen = army && army.disposition;
+    if (chosen) {
+      const hit = avail.find(x => x.id === chosen);
+      if (hit) return hit;
+    }
+    return avail.length === 1 ? avail[0] : null;
+  };
+
+  App.setArmyDisposition = function (id) {
+    const state = App.state;
+    const army = state && state.currentArmy;
+    if (!army || typeof army.setDisposition !== 'function') return;
+    if (!App.getAvailableDispositions().some(x => x.id === id)) return;
+    if (army.disposition === id) return;
+    army.setDisposition(id);
+    App.renderDetachmentPicker();
+    if (state.armyManager && window.ArmyManager && ArmyManager.isNamed && ArmyManager.isNamed(army)) {
+      state.armyManager.saveArmy(army);
+    }
+    if (typeof App.fireSelectionChange === 'function') App.fireSelectionChange();
+  };
+
+  function renderDispositionBlock(esc) {
+    const selected = (App.state.selectedDetachments || []);
+    if (!selected.length) return '';
+    const avail = App.getAvailableDispositions();
+    const eff = App.getArmyDisposition();
+    let html = '<div class="disposition-block" id="disposition-block">' +
+      '<div class="disposition-head">' +
+        '<span class="disposition-label" id="disposition-label">Force Disposition</span>' +
+        (avail.length > 1 && !eff ? '<span class="disposition-needed">Choose one</span>' : '') +
+      '</div>';
+    if (!avail.length) {
+      html += '<div class="disposition-note">Your detachments don&rsquo;t list a disposition.</div>';
+    } else if (avail.length === 1) {
+      const d = avail[0];
+      html += `<div class="disposition-fixed" data-id="${esc(d.id)}">` +
+          `<span class="disposition-fixed-name">${esc(d.name)}</span>` +
+          '<span class="disposition-fixed-tag">only option</span>' +
+        '</div>' +
+        (d.text ? `<div class="disposition-note">${esc(d.text)}</div>` : '');
+    } else {
+      html += '<div class="disposition-choices" role="radiogroup" aria-labelledby="disposition-label">';
+      avail.forEach(d => {
+        const on = !!(eff && eff.id === d.id);
+        html += `<button type="button" class="disposition-choice${on ? ' selected' : ''}" role="radio" ` +
+          `aria-checked="${on}" data-id="${esc(d.id)}"${d.text ? ` title="${esc(d.text)}"` : ''}>${esc(d.name)}</button>`;
+      });
+      html += '</div>' +
+        (eff && eff.text ? `<div class="disposition-note">${esc(eff.text)}</div>`
+          : '<div class="disposition-note">Your detachments offer more than one. Pick the one you are playing.</div>');
+    }
+    return html + '</div>';
+  }
+
   // Re-render whichever unit detail is open so its Enhancements section tracks
   // the current union. Mirrors the logic the old detachment-select handler had.
   function refreshOpenDetail() {
@@ -195,7 +271,11 @@
           `role="button" tabindex="0" title="Click to read its rules; tick the box to add it to your army">` +
             `<input type="checkbox" class="detachment-row-cb" data-name="${esc(d.name)}" ${sel ? 'checked' : ''} ` +
             `aria-label="Add ${esc(d.name)} to your army" />` +
-            `<span class="detachment-row-name">${esc(d.name)}</span>` +
+            `<span class="detachment-row-name">${esc(d.name)}` +
+              ((d.dispositions || []).length
+                ? `<span class="detachment-row-dispo">${(d.dispositions || []).map(x => esc(x.name)).join(' · ')}</span>`
+                : '') +
+            `</span>` +
             (pts != null ? `<span class="detachment-row-pts">${esc(ptLabel(pts))}</span>` : '') +
           '</div>';
       });
@@ -211,6 +291,7 @@
         `<span class="detachments-footer-count">${count} selected</span>` +
         `<span class="detachments-footer-pts">${totalPts} pt${totalPts === 1 ? '' : 's'}</span>` +
       `</div>`;
+    html += renderDispositionBlock(esc);
 
     body.innerHTML = html;
     if (total) total.textContent = count ? `${totalPts} pt${totalPts === 1 ? '' : 's'}` : '';
@@ -242,6 +323,11 @@
     const cb = e.target.closest && e.target.closest('.detachment-row-cb');
     if (!cb || !inBody(cb)) return;
     if (cb.dataset.name) App.toggleDetachment(cb.dataset.name);
+  });
+  // Disposition choice buttons (delegated — survive re-renders).
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.disposition-choice');
+    if (b && inBody(b) && b.dataset.id) App.setArmyDisposition(b.dataset.id);
   });
   // Clicking the row anywhere BUT the checkbox opens its details.
   document.addEventListener('click', e => {

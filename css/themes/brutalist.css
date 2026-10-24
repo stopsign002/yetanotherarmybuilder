@@ -2306,3 +2306,34 @@ body.build-mode-enhanced .army-entry-remove:hover { background: var(--danger); c
 .cards-preview-wrap { background: var(--nb-ground); }
 .cards-empty { color: var(--text-muted); }
 .cards-empty-large { color: var(--text-muted); }
+
+/* Force Disposition (css/detachments.css): the choices are a radio set of
+   stamped blocks — ink edge, paper fill, accent fill when chosen — matching
+   the detachment rows above them rather than the base theme's hairlines. */
+.disposition-block { border-top: var(--nb-bw) dashed var(--nb-ink); }
+.disposition-label { color: var(--text); font-weight: 900; letter-spacing: 0.12em; }
+.disposition-choice {
+  background: var(--nb-paper);
+  border: var(--nb-bw) solid var(--nb-ink);
+  border-radius: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.78rem;
+  transition: none;
+}
+.disposition-choice:hover { border-color: var(--nb-ink); background: var(--nb-sunken); }
+.disposition-choice.selected,
+.disposition-choice.selected:hover {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--nb-ink);
+  font-weight: 900;
+}
+.disposition-fixed {
+  background: var(--nb-sunken);
+  border: var(--nb-bw) solid var(--nb-ink);
+  border-left: 6px solid var(--accent);
+  border-radius: 0;
+}
+.disposition-fixed-name { color: var(--text); font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; }

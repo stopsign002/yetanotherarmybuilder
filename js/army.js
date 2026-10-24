@@ -13,7 +13,7 @@ function _mintEntryId() {
 }
 
 window.Army = class Army {
-  constructor({ id, name, factionName, chapter, detachmentName, detachmentNames, pointsLimit, entries, createdAt, updatedAt } = {}) {
+  constructor({ id, name, factionName, chapter, detachmentName, detachmentNames, disposition, pointsLimit, entries, createdAt, updatedAt } = {}) {
     this.id = id || Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     this.name = name || 'New Army';
     this.factionName = factionName || '';
@@ -28,6 +28,12 @@ window.Army = class Army {
       : (detachmentName ? [detachmentName] : []);
     this.detachmentNames = names;
     this.detachmentName = names[0] || null;
+    // 11e Force Disposition the player has declared for this army — a
+    // disposition id ('take-and-hold', …). Only meaningful when it is one of
+    // the dispositions carried by the selected detachments; App.getArmyDisposition
+    // (detachment-picker.js) resolves the effective one and auto-picks when the
+    // detachments only offer a single disposition. null = not chosen.
+    this.disposition = (typeof disposition === 'string' && disposition) ? disposition : null;
     this.pointsLimit = pointsLimit || 2000;
     this.entries = entries || []; // [{unitId, unitName, unitData, count, entryId, attachedToEntryId?}]
     // Every entry must carry a stable entryId — minted on add, preserved
@@ -122,6 +128,11 @@ window.Army = class Army {
     const list = Array.isArray(names) ? names.filter(n => typeof n === 'string' && n) : [];
     this.detachmentNames = list;
     this.detachmentName = list[0] || null;
+    if (!opts || opts.touch !== false) this.updatedAt = new Date().toISOString();
+  }
+
+  setDisposition(id, opts) {
+    this.disposition = (typeof id === 'string' && id) ? id : null;
     if (!opts || opts.touch !== false) this.updatedAt = new Date().toISOString();
   }
 
@@ -340,6 +351,7 @@ window.Army = class Army {
       chapter: this.chapter,
       detachmentNames: this.detachmentNames,
       detachmentName: this.detachmentName,   // mirror of detachmentNames[0] for old readers
+      disposition: this.disposition,
       pointsLimit: this.pointsLimit,
       entries: this.entries,
       createdAt: this.createdAt,
@@ -414,6 +426,7 @@ window.Army = class Army {
       detachmentNames: Array.isArray(data.detachmentNames)
         ? data.detachmentNames.filter(n => typeof n === 'string' && n)
         : undefined,   // undefined → constructor migrates from detachmentName
+      disposition:    typeof data.disposition === 'string' ? data.disposition.slice(0, 60) : null,
       pointsLimit:    Number.isFinite(data.pointsLimit) ? data.pointsLimit : 2000,
       entries:        safeEntries,
       createdAt:      typeof data.createdAt === 'string' ? data.createdAt : undefined,

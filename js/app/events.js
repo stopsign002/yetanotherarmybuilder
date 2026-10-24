@@ -414,8 +414,10 @@
     });
 
     document.getElementById('btn-export-text').addEventListener('click', async () => {
+      const disp = typeof App.getArmyDisposition === 'function' ? App.getArmyDisposition() : null;
       const text = Storage.exportArmyToText(state.currentArmy, {
         detachmentNames: (state.selectedDetachments || []).map(d => d.name),
+        dispositionName: disp ? disp.name : null,
       });
       try {
         await navigator.clipboard.writeText(text);

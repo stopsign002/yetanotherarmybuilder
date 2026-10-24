@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.24-1',
-    lastUpdated: '2026-10-24T03:00:00Z',
+    version:     '2026.10.24-2',
+    lastUpdated: '2026-10-24T04:00:00Z',
     entries: [
+      {
+        date: '2026-10-24',
+        kind: 'feature',
+        title: 'Force Dispositions: see them on every detachment and declare yours',
+        description: 'Each detachment in the Detachments box now lists its Force Disposition(s) under its name. Below your selection, a new Force Disposition area shows the ones your detachments give you. If there is only one, it is set for you. If your detachments offer more than one, pick the one you are playing; it is marked "Choose one" until you do. Your choice is saved with the army, travels in army codes and share links, and is included when you copy the list as text.',
+      },
       {
         date: '2026-10-24',
         kind: 'feature',
