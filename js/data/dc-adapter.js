@@ -2050,7 +2050,11 @@
       if (!e) return null;
       if (e.detachment_id && d.id && e.detachment_id !== d.id) return null;
       return { id, name: e.name, pts: e.cost != null ? e.cost : 0,
-               description: textFor(e.ability_id, factionId) || MISSING_ENHANCEMENT_TEXT[id] || '' };
+               description: textFor(e.ability_id, factionId) || MISSING_ENHANCEMENT_TEXT[id] || '',
+               // "<KEYWORD> model only" as data — ui/detail.js gates eligibility
+               // on it (#102). null, not [], when upstream has none.
+               keywords: (Array.isArray(e.keyword_restrictions) && e.keyword_restrictions.length)
+                 ? e.keyword_restrictions.map(String) : null };
     }).filter(Boolean);
     // …and upstream sometimes ships the SAME enhancement twice under a base and
     // an "(Upgrade)" id. Necrons' The Phaeron's Armoury had "Mortality Shroud

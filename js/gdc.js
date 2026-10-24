@@ -659,7 +659,11 @@
         // The fill-only path uses key + desc exactly as before, and this list
         // is deliberately NOT deduped — nearestUnique's "strictly better than
         // the runner-up" test is calibrated against the list it has always had.
+        // GW's own "<KEYWORD> model only" list (#102) — strings in the dump, but
+        // tolerate the {en:…} shape the unit keywords use.
+        const kws = (Array.isArray(e.keywords) ? e.keywords : []).map(pickText).filter(Boolean);
         enhByDet.get(k).push({ key: enhKey, desc, name: rawName,
+                               keywords: kws.length ? kws : null,
                                pts: (typeof e.cost === 'number') ? e.cost : (parseInt(e.cost, 10) || 0) });
       });
       enhByDet.forEach((entries, detKey) => {
@@ -694,14 +698,21 @@
                 && squashText(prev.description).includes(squashText(x.desc))
                 && prev.description.length > x.desc.length;
               return { name: x.name, pts: x.pts,
-                       description: keepPrev ? prev.description : x.desc };
+                       description: keepPrev ? prev.description : x.desc,
+                       // GW's restriction list, else whatever 40kdc carried.
+                       keywords: x.keywords || (prev && prev.keywords) || null };
             });
             return;
           }
           (d.enhancements || []).forEach(en => {
-            if (en.description) return;
             const k = nameKey(en.name);
             if (!k) return;
+            // Fill-only, like the text: a restriction list 40kdc did not ship.
+            if (!en.keywords) {
+              const hit = entries.find(x => x.key === k && x.keywords);
+              if (hit) en.keywords = hit.keywords.slice();
+            }
+            if (en.description) return;
             const desc = byKey.get(k) || nearestUnique(k, entries);
             if (desc) en.description = desc;
           });

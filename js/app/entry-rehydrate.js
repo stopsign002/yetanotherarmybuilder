@@ -70,15 +70,58 @@
     return true;
   }
 
+  // An entry whose unitId matches NO current unit is stuck: findUnit misses,
+  // nothing above runs, and the add-time snapshot (and its price) lives on
+  // forever. That is every entry added before the 40kdc cutover — they carry
+  // BattleScribe GUIDs ("81bd-ce4e-229f-a88") where the dataset now keys
+  // "azrael" (#101: 106 such entries across 13 saved armies, still on
+  // pre-codex points and T4 marines). id-migration.js already holds the
+  // GUID→slug map but only ever applied it to Reserves / Requisitions.
+  //
+  // Resolution order: the GUID→slug map, then the datasheet NAME within the
+  // snapshot's own faction, then the name anywhere — but only if every unit of
+  // that name shares one id (a generic Space Marines unit appears under each
+  // chapter with the same slug; two different datasheets that merely share a
+  // name do not resolve). Returns the current unit or null; never guesses.
+  const foldName = (s) => String(s || '').toLowerCase()
+    .replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
+  function resolveStaleId(entry, facName) {
+    if (typeof App.migrateUnitId === 'function') {
+      const slug = App.migrateUnitId(entry.unitId);
+      if (slug) {
+        const byMap = App.findUnit(slug, facName);
+        if (byMap) return byMap;
+      }
+    }
+    const want = foldName(entry.unitName || (entry.unitData && entry.unitData.name));
+    if (!want) return null;
+    const all = (App.state && App.state.allUnits) || [];
+    const sameName = all.filter((u) => u && foldName(u.name) === want);
+    if (!sameName.length) return null;
+    const inFaction = sameName.find((u) => u._factionName === facName);
+    if (inFaction) return inFaction;
+    const ids = new Set(sameName.map((u) => u.id));
+    return ids.size === 1 ? sameName[0] : null;
+  }
+
   function rehydrateArmy(army) {
-    if (!army || !Array.isArray(army.entries)) return { swapped: 0, repriced: 0 };
-    if (typeof App.findUnit !== 'function') return { swapped: 0, repriced: 0 };
-    let swapped = 0, repriced = 0;
+    if (!army || !Array.isArray(army.entries)) return { swapped: 0, repriced: 0, remapped: 0 };
+    if (typeof App.findUnit !== 'function') return { swapped: 0, repriced: 0, remapped: 0 };
+    let swapped = 0, repriced = 0, remapped = 0;
     army.entries.forEach((e) => {
       if (!e || !e.unitId) return;
       const facName = (e.unitData && e.unitData._factionName) || '';
-      const fresh = App.findUnit(e.unitId, facName);
-      if (!fresh) return;
+      let fresh = App.findUnit(e.unitId, facName);
+      if (!fresh) {
+        fresh = resolveStaleId(e, facName);
+        if (!fresh) return;
+        // Rewrite the id so every id-keyed consumer (ordinal pricing groups by
+        // entry.unitId, Play mode, the cards exporter) sees the current unit,
+        // and the datasheet name alongside it — Rule of Three groups on it.
+        e.unitId = fresh.id;
+        if (fresh.name) e.unitName = fresh.name;
+        remapped++;
+      }
       const prevUnit = e.unitData;
       if (fresh !== prevUnit) {
         e.unitData = fresh;
@@ -86,7 +129,7 @@
       }
       if (repairSelectedPts(e, prevUnit, fresh)) repriced++;
     });
-    return { swapped, repriced };
+    return { swapped, repriced, remapped };
   }
 
   // Returns the number of entries whose price was corrected, so callers can
@@ -95,7 +138,8 @@
     const s = App.state;
     if (!s || !s.currentArmy) return 0;
     if (!Array.isArray(s.allUnits) || s.allUnits.length === 0) return 0; // factions not ready
-    const { swapped, repriced } = rehydrateArmy(s.currentArmy);
+    const { swapped, repriced, remapped } = rehydrateArmy(s.currentArmy);
+    if (remapped > 0) console.info('[rehydrate] re-pointed', remapped, 'army entries from retired unit ids');
     if (swapped > 0) console.info('[rehydrate] refreshed unitData on', swapped, 'army entries');
     if (repriced > 0) console.info('[rehydrate] re-read current points on', repriced, 'army entries');
     return repriced;

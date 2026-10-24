@@ -157,6 +157,11 @@ window.Storage = (() => {
       const u = (f.units || []).find(u => u.id === unitId);
       if (u) return u;
     }
+    // A share code minted before the 40kdc cutover carries BattleScribe GUIDs
+    // (#101). Same map entry-rehydrate.js uses for saved armies.
+    const A = window.App;
+    const slug = (A && typeof A.migrateUnitId === 'function') ? A.migrateUnitId(unitId) : null;
+    if (slug && slug !== unitId) return _findUnit(factions, preferredNames, slug);
     return null;
   }
 

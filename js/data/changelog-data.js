@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.24-4',
-    lastUpdated: '2026-10-24T06:00:00Z',
+    version:     '2026.10.24-5',
+    lastUpdated: '2026-10-24T07:00:00Z',
     entries: [
+      {
+        date: '2026-10-24',
+        kind: 'fix',
+        title: 'Old saved armies catch up with current points and datasheets',
+        description: 'Units added before the 40kdc data switch kept their add-time points and stats forever (T4 marines, Azrael at 125, Inceptors at 120), because their stored unit ids no longer matched anything. Those entries are now re-pointed at the current datasheet on load and re-priced where the stored cost no longer exists, so removing and re-adding is no longer needed. Share codes from that era import again too.',
+      },
+      {
+        date: '2026-10-24',
+        kind: 'fix',
+        title: 'Enhancements respect "<KEYWORD> model only"',
+        description: 'A plain Captain in a Dark Angels list could take Lord of the Ravenwing. Enhancements restricted to a keyword (RAVENWING, DEATHWING, PHOBOS, TERMINATOR, …) are now greyed out on characters without it, with the restriction shown as the reason. The army\'s chapter counts as one of the unit\'s keywords.',
+      },
       {
         date: '2026-10-24',
         kind: 'fix',

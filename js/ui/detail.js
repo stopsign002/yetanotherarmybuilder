@@ -170,6 +170,25 @@
   //              squad-size stepper, wargear picker, enhancement checkboxes,
   //              hook action buttons) and render selectedEnhancements as a
   //              read-only section instead.
+  // Every keyword (and datasheet name) any loaded unit carries, upper-cased.
+  // Lets the enhancement gate tell "this unit lacks RAVENWING" from "nothing
+  // anywhere is called DNU". Rebuilt only when the unit set changes.
+  let _kwVersion = -1, _kwSet = null;
+  UI._knownUnitKeywords = function () {
+    const st = App.state;
+    if (!st || !Array.isArray(st.allUnits) || !st.allUnits.length) return null;
+    const ver = st.factionsVersion || 0;
+    if (_kwSet && _kwVersion === ver) return _kwSet;
+    const set = new Set();
+    st.allUnits.forEach((u) => {
+      if (!u) return;
+      if (u.name) set.add(String(u.name).toUpperCase());
+      (u.keywords || []).forEach(k => set.add(String(k).toUpperCase()));
+    });
+    _kwSet = set; _kwVersion = ver;
+    return set;
+  };
+
   UI.renderUnitDetail = function (unit, detachmentEnhancements = [], selectedEnhancements = [], opts = {}) {
     const esc = UI.escapeHtml;
     const panel = opts.host || document.getElementById('unit-detail-panel');
@@ -833,10 +852,55 @@
       return ok(0);
     };
     const targetMatches = (target) => target.split(/\s+OR\s+/).some(t => segments(t.trim()));
+    // "<KEYWORD> model only" (#102): a character enhancement that only some
+    // characters may take — Lord of the Ravenwing is RAVENWING model only, so a
+    // plain Captain in a Dark Angels list must not be offered it. The list
+    // comes as DATA first (`enh.keywords`: 40kdc keyword_restrictions, or GW's
+    // own list via the GDC overlay), falling back to the prose clause. Every
+    // listed keyword must be on the unit. The army's chapter counts as one of
+    // the unit's keywords: a generic Adeptus Astartes unit in a Space Wolves
+    // list IS a SPACE WOLVES model, and that chapter tag is on the army, not
+    // the datasheet. A keyword no unit in the whole dataset carries ("DNU",
+    // a detachment name) is ignored rather than allowed to block everyone.
+    const st0 = App.state || {};
+    [st0.selectedChapter, st0.factionFilter].forEach((f) => {
+      if (f && f !== 'all') unitHay.add(String(f).split(' - ').pop().toUpperCase());
+    });
+    const knownKeywords = UI._knownUnitKeywords ? UI._knownUnitKeywords() : null;
+    const restrictionKeywords = (enh) => {
+      if (Array.isArray(enh && enh.keywords) && enh.keywords.length) {
+        return enh.keywords.map(k => String(k).toUpperCase().trim()).filter(Boolean);
+      }
+      // Prose fallback. Upstream prints the keyword either upper-case
+      // ("DEATHWING model only.") or title-case ("Ravenwing model only."), at
+      // the start or after a sentence; a qualifier may sit between "model"
+      // and "only" ("…model with the Deep Strike ability only").
+      const text = String(enh && enh.description || '').replace(/\*\*/g, '').trim();
+      const m = /(?:^|[.!?][)"'’]?\s+)((?:[A-Z][\w'’\-]*\s+)*?[A-Z][\w'’\-]*)\s+models?\b(?:\s*(?:\([^)]*\)|with|equipped|that)[^.]*?)?\s+only\b/
+        .exec(text);
+      return m ? [m[1].toUpperCase().trim()] : [];
+    };
+    const keywordNote = (kws) => kws.join(' ') + ' model only';
+    const keywordsMissing = (enh) => {
+      const kws = restrictionKeywords(enh);
+      const missing = kws.filter((k) => {
+        if (unitHay.has(k) || segments(k)) return false;
+        // Unknown to every unit → not a real keyword gate; don't block.
+        if (knownKeywords && !knownKeywords.has(k) && !k.split(/\s+/).every(w => knownKeywords.has(w))) return false;
+        return true;
+      });
+      return missing.length ? kws : null;
+    };
     const enhEligibility = (enh) => {
       const target = upgradeTarget(enh);
       if (target) {
+        const miss = keywordsMissing(enh);
+        if (miss) return { eligible: false, note: keywordNote(miss), upgrade: true };
         return { eligible: targetMatches(target), note: target + ' unit only', upgrade: true };
+      }
+      if (canTakeEnhancement) {
+        const miss = keywordsMissing(enh);
+        if (miss) return { eligible: false, note: keywordNote(miss), upgrade: false };
       }
       return {
         eligible: canTakeEnhancement,
