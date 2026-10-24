@@ -54,6 +54,26 @@
       }
     });
 
+    // Enhancement limits: one per unit; each non-upgrade one once per army.
+    const enhUse = new Map();
+    entries.forEach(e => {
+      const enhs = (e.enhancements || []).filter(x => x && x.name);
+      const who = e.customName || e.unitName || 'A unit';
+      if (enhs.length > 1) {
+        warnings.push('"' + who + '" has ' + enhs.length + ' enhancements (max 1 per unit).');
+      }
+      enhs.forEach(x => {
+        if (typeof App.isUpgradeEnhancement === 'function' && App.isUpgradeEnhancement(x)) return;
+        const k = x.name.toLowerCase();
+        const cur = enhUse.get(k) || { name: x.name, n: 0 };
+        cur.n += Number.isFinite(e.count) && e.count > 0 ? e.count : 1;
+        enhUse.set(k, cur);
+      });
+    });
+    enhUse.forEach(v => {
+      if (v.n > 1) warnings.push('Enhancement "' + v.name + '" is taken ' + v.n + ' times (once per army).');
+    });
+
     const hasCharacter = entries.some(e => hasKeyword(e, 'Character'));
     if (!hasCharacter) {
       warnings.push('No Character in army (a warlord is required).');

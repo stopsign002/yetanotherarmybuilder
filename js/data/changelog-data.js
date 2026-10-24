@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.24-2',
-    lastUpdated: '2026-10-24T04:00:00Z',
+    version:     '2026.10.24-3',
+    lastUpdated: '2026-10-24T05:00:00Z',
     entries: [
+      {
+        date: '2026-10-24',
+        kind: 'fix',
+        title: 'Enhancement limits: one per unit, each once per army',
+        description: 'A unit can now carry only one enhancement. Ticking a second one swaps it for the first. An enhancement already on another unit is greyed out with "Already taken by …", except Upgrade enhancements (the "… unit only" ones), which more than one unit can take. Lists saved before this that break either rule show a warning above the army toolbar, so you can fix them.',
+      },
       {
         date: '2026-10-24',
         kind: 'feature',

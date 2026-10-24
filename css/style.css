@@ -2290,3 +2290,11 @@ ul { list-style: none; }
 .modal-save-as .form-input { width: 100%; }
 .save-as-error { margin: 2px 0 0; color: var(--danger); font-size: 0.85em; }
 .save-as-error[hidden] { display: none; }
+
+/* Enhancement limits hint above the list (js/ui/detail.js). */
+.detail-enhancements-rule {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}

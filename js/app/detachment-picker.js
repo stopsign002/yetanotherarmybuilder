@@ -151,6 +151,26 @@
     return html + '</div>';
   }
 
+  // ── Enhancement limits ───────────────────────────────────────────────────
+  // A unit takes at most ONE enhancement, and each enhancement can be taken
+  // only once per army — except UPGRADE enhancements ("<UNIT> unit only.",
+  // usually named "… (Upgrade)"), which several units may take.
+  const UPGRADE_CLAUSE = /(?:^|[.!?][)"'’]?\s+)([A-Z][A-Z0-9'’\- ]+?)\s+unit only\b/;
+  App.isUpgradeEnhancement = function (enh) {
+    if (!enh) return false;
+    if (/\(upgrade\)/i.test(String(enh.name || ''))) return true;
+    return UPGRADE_CLAUSE.test(String(enh.description || '').trim());
+  };
+  // The army entry (other than `exceptIndex`) already carrying this
+  // non-upgrade enhancement, or null. Upgrades are never "taken".
+  App.enhancementTakenBy = function (enh, exceptIndex) {
+    const army = App.state && App.state.currentArmy;
+    if (!army || !enh || App.isUpgradeEnhancement(enh)) return null;
+    const key = String(enh.name || '').toLowerCase();
+    return (army.entries || []).find((e, i) => i !== exceptIndex &&
+      (e.enhancements || []).some(x => String(x && x.name || '').toLowerCase() === key)) || null;
+  };
+
   // Re-render whichever unit detail is open so its Enhancements section tracks
   // the current union. Mirrors the logic the old detachment-select handler had.
   function refreshOpenDetail() {

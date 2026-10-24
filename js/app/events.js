@@ -109,9 +109,20 @@
       const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
       const enh = detEnhs.find(e => e.name === cb.value);
       if (!enh) return;
-      const enhs = [...(entry.enhancements || [])];
+      let enhs = [...(entry.enhancements || [])];
       if (cb.checked) {
-        if (!enhs.some(e => e.name === enh.name)) enhs.push(enh);
+        // Once per army (upgrades excepted) — the UI greys these out, this is
+        // the backstop.
+        const taken = App.enhancementTakenBy && App.enhancementTakenBy(enh, state.selectedArmyEntryIndex);
+        if (taken) {
+          cb.checked = false;
+          UI.toast(`${enh.name} is already taken by ${taken.customName || taken.unitName}`, 'error');
+          return;
+        }
+        // One enhancement per unit: picking another replaces the current one.
+        const replaced = enhs.filter(e => e.name !== enh.name);
+        enhs = [enh];
+        if (replaced.length) UI.toast(`Swapped ${replaced.map(e => e.name).join(', ')} for ${enh.name}`, 'info');
       } else {
         const i = enhs.findIndex(e => e.name === enh.name);
         if (i >= 0) enhs.splice(i, 1);
@@ -122,6 +133,9 @@
       // saveArmy path also writes localStorage and notifies sync.
       state.armyManager.saveArmy(state.currentArmy);
       UI.renderArmyList(state.currentArmy);
+      // Re-render the open detail so the other checkboxes reflect the swap.
+      const fresh = state.currentArmy.entries[state.selectedArmyEntryIndex];
+      if (fresh) UI.renderUnitDetail(fresh.unitData, detEnhs, fresh.enhancements || []);
     });
 
     document.getElementById('unit-detail-panel').addEventListener('click', e => {

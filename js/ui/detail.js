@@ -861,10 +861,25 @@
           Pick a detachment with enhancements (top-left) to apply one to this character.
         </div></div>`;
       } else {
+        // Army limits: one enhancement per unit (picking another swaps it), and
+        // a non-upgrade enhancement only once per army. Only meaningful when an
+        // army entry is open — the roster view has nothing to apply it to.
+        const st = App.state || {};
+        const entryIdx = (st.selectedArmyEntryIndex != null && st.currentArmy &&
+          st.currentArmy.entries[st.selectedArmyEntryIndex] &&
+          st.currentArmy.entries[st.selectedArmyEntryIndex].unitData === unit) ? st.selectedArmyEntryIndex : null;
+        html += `<div class="detail-enhancements-rule">One enhancement per unit. Each can be taken once per army, except Upgrades.</div>`;
         html += `<div class="detail-enhancements-list">`;
         detachmentEnhancements.forEach(enh => {
-          const checked = selectedNames.has(enh.name) ? ' checked' : '';
-          const elig = enhEligibility(enh);
+          const isChecked = selectedNames.has(enh.name);
+          const checked = isChecked ? ' checked' : '';
+          let elig = enhEligibility(enh);
+          const takenBy = (!isChecked && typeof App.enhancementTakenBy === 'function')
+            ? App.enhancementTakenBy(enh, entryIdx) : null;
+          if (elig.eligible && takenBy) {
+            elig = Object.assign({}, elig, { eligible: false,
+              note: 'Already taken by ' + (takenBy.customName || takenBy.unitName || 'another unit') });
+          }
           const ineligClass = elig.eligible ? '' : ' enhancement-ineligible';
           const upgradeTag = (elig.upgrade && !/\bupgrade\b/i.test(enh.name || '')) ? `<span class="enh-cb-upgrade-tag">Upgrade</span>` : '';
           html += `<label class="enhancement-cb-item${ineligClass}"${!elig.eligible ? ` title="${esc(elig.note)}"` : ''}>
