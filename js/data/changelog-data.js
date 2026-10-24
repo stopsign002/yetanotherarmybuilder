@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.24-3',
-    lastUpdated: '2026-10-24T05:00:00Z',
+    version:     '2026.10.24-4',
+    lastUpdated: '2026-10-24T06:00:00Z',
     entries: [
+      {
+        date: '2026-10-24',
+        kind: 'fix',
+        title: 'Bug reports with a screenshot or recording send again',
+        description: 'Attaching an image or video to a bug report or feature request failed with "Unsupported Media Type", so the whole report was lost. Reports with an attachment now go through, up to 50 MB, and the screenshot reaches us with your report.',
+      },
       {
         date: '2026-10-24',
         kind: 'fix',

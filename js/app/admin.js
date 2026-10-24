@@ -189,6 +189,24 @@
     return '<div class="admin-img-grid">' + cards + '</div>';
   }
 
+  // Screenshot / recording the reporter attached (served admin-only by
+  // GET /api/admin/bugs/:id/attachment). Images and video preview inline;
+  // the link opens the original full size.
+  function renderBugAttachment(b) {
+    if (!b.attachment_url) return '';
+    const url = esc(b.attachment_url);
+    const mime = String(b.attachment_mime || '');
+    const size = b.attachment_size ? ' · ' + (b.attachment_size >= 1048576
+      ? (b.attachment_size / 1048576).toFixed(1) + ' MB'
+      : Math.max(1, Math.round(b.attachment_size / 1024)) + ' KB') : '';
+    const media = mime.startsWith('video/')
+      ? '<video class="admin-bug-attach-media" src="' + url + '" controls preload="metadata"></video>'
+      : '<a href="' + url + '" target="_blank" rel="noopener"><img class="admin-bug-attach-media" src="' + url + '" alt="Attached screenshot" loading="lazy"></a>';
+    return '<div class="admin-bug-attach">' + media
+      + '<a class="admin-bug-attach-link" href="' + url + '" target="_blank" rel="noopener">Open attachment</a>'
+      + '<span class="admin-bug-attach-meta">' + esc(mime) + esc(size) + '</span></div>';
+  }
+
   function renderBugs() {
     const filter = bugFilter;
     const list = bugs.filter(b => filter === 'all' ? true : filter === 'fixed' ? !!b.fixed : !b.fixed);
@@ -225,8 +243,10 @@
         + '<div class="admin-bug-meta">'
         +   '<span><strong>' + esc(b.username || '?') + '</strong></span>'
         +   '<span>' + esc(fmtDate(b.created_at)) + '</span>'
+        +   (b.kind === 'feature' ? '<span class="admin-pill is-feature">Feature request</span>' : '')
         + '</div>'
         + '<p class="admin-bug-desc">' + esc(b.description || '') + '</p>'
+        + renderBugAttachment(b)
         + (b.diagnostics
           ? '<details class="admin-bug-diag-wrap"><summary>Diagnostics</summary>'
             + '<pre class="admin-bug-diag">' + esc(b.diagnostics) + '</pre></details>'
