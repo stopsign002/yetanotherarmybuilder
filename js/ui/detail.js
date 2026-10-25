@@ -451,7 +451,8 @@
                 const classes = 'weapon-kw-tag'
                   + (d ? ' has-tooltip' : '')
                   + (colorClass ? ' ' + colorClass : '');
-                return `<span class="${classes}"${d ? ` data-tooltip="${esc(d)}"` : ''}>${esc(k)}</span>`;
+                const gl = UI.glossary && UI.glossary.lookup(k);
+                return `<button type="button" class="${classes}"${d ? ` data-tooltip="${esc(d)}"` : ''}${gl ? ` data-glossary="${gl.id}"` : ''}>${esc(k)}</button>`;
               }).join('')}</div>`
             : '';
           return `<div class="wg-weapon${i % 2 === 1 ? ' wg-weapon-alt' : ''}">
@@ -528,7 +529,7 @@
       html += `<div class="detail-section">
         <div class="detail-section-title">Core Abilities</div>
         <div class="core-abilities-list">
-          ${coreAbilities.map(a => `<span class="core-ability-tag"${a.description ? ` data-tooltip="${UI.mdPlain(a.description)}"` : ''}>${esc(a.name)}</span>`).join('')}
+          ${coreAbilities.map(a => { const gl = UI.glossary && UI.glossary.lookup(a.name); return `<button type="button" class="core-ability-tag"${a.description ? ` data-tooltip="${UI.mdPlain(a.description)}"` : ''}${gl ? ` data-glossary="${gl.id}"` : ''}>${esc(a.name)}</button>`; }).join('')}
         </div>
       </div>`;
     }

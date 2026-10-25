@@ -763,6 +763,14 @@ Cross-cutting docs:
 - **DOM:** unit cards (class added).
 - **Notes:** Slug = last segment of `_factionName` after `" - "`.
 
+### `js/ui/glossary.js`
+- **Purpose:** Click any core ability / weapon keyword (chips, and bolded or "Title Case" mentions in rules prose) to read what it does. Contract: `docs/GLOSSARY.md`.
+- **Exports:** `UI.glossary.{lookup,size,terms,close}`, `UI.linkGlossary(html)`; wraps `UI.mdBold` at load so every prose renderer links terms.
+- **Depends on:** `window.DC.abilityText` / `DC.abilities` (lazy index of `faction:'core'` ids), `UI.mdBold`, `App.backTrap` (phone bottom sheet).
+- **Storage:** none.
+- **DOM:** singleton `#glossary-pop` (`role="dialog"`); links are `<button class="glossary-term" data-glossary>`; document-level capture click delegate on `.weapon-kw-tag, .core-ability-tag, .glossary-term`. Styled by `css/glossary.css` (tokens only; neutralised inside `#cards-mode`).
+- **Notes:** Ambiguous single words (Leader, Heavy, Assault, …) only link outside `<strong>` with "the/has/gains" or "ability" context. Needs no hook; loaded right after `helpers.js`.
+
 ### `js/ui/offline-pip.js`
 - **Purpose:** Topbar chip (`#topbar-offline`) giving feedback on offline state + the pending sync queue — the queue itself always drained correctly, nothing told the user anything was queued (GitHub issue #59).
 - **Exports:** none (self-mounting; not a toolbar action).

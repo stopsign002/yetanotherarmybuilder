@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.25-3',
-    lastUpdated: '2026-10-25T23:30:00Z',
+    version:     '2026.10.26-1',
+    lastUpdated: '2026-10-26T02:00:00Z',
     entries: [
+      {
+        date: '2026-10-26',
+        kind: 'feature',
+        title: 'Tap any core ability or weapon ability to read what it does',
+        description: 'Stealth, Deep Strike, Lone Operative, Feel No Pain, Lethal Hits, Sustained Hits, Rapid Fire, Anti-X and every other core or weapon ability is now a link wherever it appears \u2014 in a datasheet\u2019s abilities and weapon chips, in an enhancement or stratagem, in a detachment rule, in Play and in Waha. Tap one and the rule text opens right there (a small card on desktop, a sheet from the bottom on a phone), so you no longer have to go elsewhere to check what Stealth means.',
+      },
       {
         date: '2026-10-25',
         kind: 'fix',

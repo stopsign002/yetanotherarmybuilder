@@ -100,6 +100,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Collection | Requisition Requests: wishlist of units w/ quantity | `js/app/requisitions.js` |
 | Collection | Custom character/unit names (Reserves instances + per-army-entry names) | `js/app/custom-names.js` |
 | Polish | Confetti / save pulse / scanline / animated crest | `js/ui/celebrations.js`, `js/ui/save-pulse.js`, `js/ui/scanline.js`, `js/ui/animated-crest.js` |
+| Polish | Glossary — click any core ability / weapon keyword (chips and rules prose) for its rule text; popover on desktop, bottom sheet on phone | `js/ui/glossary.js`, `css/glossary.css` |
 | Polish | Faction flavor quotes on empty army | `js/app/flavor.js` |
 | Polish | Hero CTA + Cmd+K hint + recent factions chip | `js/app/hero-state.js` |
 | Polish | Legends-units toggle | `js/app/legends-toggle.js` |

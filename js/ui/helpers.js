@@ -44,6 +44,9 @@
   // `*`); losing the emphasis on those beats showing raw asterisks.
   const BOLD_RE = /\*\*([\s\S]+?)\*\*(?!\*)/g;
 
+  // NOTE: js/ui/glossary.js (loaded right after this file) wraps UI.mdBold so the
+  // returned HTML also links core-rule terms (stealth, lethal hits, …) to the
+  // glossary popover. mdPlain is NOT wrapped — it feeds attributes.
   UI.mdBold = function (str) {
     return UI.escapeHtml(str).replace(BOLD_RE, '<strong>$1</strong>').replace(/\*\*/g, '');
   };
