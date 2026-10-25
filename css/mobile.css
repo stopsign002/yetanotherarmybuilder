@@ -104,7 +104,8 @@
      would lose. `min-height: 0` is restated for self-documentation. */
   #collect-mode,
   #cards-mode,
-  #play-mode {
+  #play-mode,
+  #waha-mode {
     height: calc(100% - var(--m-tabbar-h) - var(--m-safe-bottom));
     min-height: 0;
   }

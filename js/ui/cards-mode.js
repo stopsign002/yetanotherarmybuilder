@@ -1655,7 +1655,7 @@
       : 'FACTION';
     const cpHtml = display.cp ? `<span class="dcc-cp"><span class="dcc-cp-num">${esc(String(cp))}</span><span class="dcc-cp-lbl">CP</span></span>` : '';
     const typeHtml = display.type ? `<span class="dcc-role">${esc(typeLabel)} STRATAGEM</span>` : '';
-    const phaseHtml = (display.phase && s.phase) ? `<span class="dcc-strat-phase">PHASE: ${esc(String(s.phase).toUpperCase())}</span>` : '';
+    const phaseHtml = (display.phase && UI.stratPhaseLabel(s)) ? `<span class="dcc-strat-phase">PHASE: ${esc(UI.stratPhaseLabel(s).toUpperCase())}</span>` : '';
     const subLine = (typeHtml || phaseHtml) ? `<div class="dcc-sub-line">${typeHtml}${phaseHtml}</div>` : '';
     const kickerHtml = (isStencil() && currentFactionShort())
       ? `<div class="dcc-kicker">${esc(currentFactionShort())}</div>` : '';

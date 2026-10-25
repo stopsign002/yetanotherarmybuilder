@@ -410,6 +410,48 @@
   margin-bottom: 8px;
 }
 
+/* ── Stratagems tab: compact expandable rows ───────────────────────────
+ * Rows reuse the builder's .army-rule-item.stratagem-item (style.css, themed
+ * per theme) — this block only adapts a <button> to that look and animates
+ * the body. grid-template-rows 0fr -> 1fr animates to natural height with no
+ * magic max-height. */
+.play-panel[data-panel="strats"] .play-card-list { grid-template-columns: 1fr; gap: 6px; }
+.play-panel[data-panel="strats"] .play-strat { max-width: 820px; }
+.play-strat-row {
+  width: 100%;
+  gap: 10px;
+  padding: 9px 10px;
+  text-align: left;
+  font-family: inherit;
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+.play-strat-name { flex: 1 1 auto; min-width: 0; }
+.play-strat-row .rule-item-right { flex-wrap: wrap; justify-content: flex-end; }
+.play-strat-row .rule-arrow {
+  display: inline-block;
+  transition: transform 180ms ease-out;
+}
+.play-strat.is-open .play-strat-row .rule-arrow { transform: rotate(90deg); }
+.play-strat-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 180ms ease-out;
+}
+.play-strat.is-open .play-strat-body { grid-template-rows: 1fr; }
+.play-strat-inner { min-height: 0; overflow: hidden; }
+.play-strat-inner > .play-rule-host { margin-top: 4px; }
+@media (max-width: 820px) {
+  .play-strat-row { align-items: flex-start; }
+  .play-strat-row .rule-item-right { max-width: 55%; }
+}
+body.reduce-motion .play-strat-body,
+body.reduce-motion .play-strat-row .rule-arrow { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .play-strat-body,
+  .play-strat-row .rule-arrow { transition: none; }
+}
+
 /* ── Enhancements tab extras (decorations appended by play-mode.js) ─── */
 .play-enh-taken-badge {
   margin-left: 8px;

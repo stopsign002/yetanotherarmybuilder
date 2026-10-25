@@ -188,7 +188,7 @@ const browser = await chromium.launch();
 
   // Tabs.
   for (const [tab, expectSel] of [
-    ['strats', '.play-panel[data-panel="strats"] .unit-detail-rule'],
+    ['strats', '.play-panel[data-panel="strats"] .play-strat-row'],
     ['rules', '.play-panel[data-panel="rules"] .unit-detail-rule'],
     ['enhance', '.play-panel[data-panel="enhance"] .unit-detail-rule'],
   ]) {
@@ -210,18 +210,62 @@ const browser = await chromium.launch();
       // mdBold must never leak literal ** into rendered text.
       noLiteralMarkers: !panel.textContent.includes('**')
         && !document.querySelector('.play-panel[data-panel="rules"]').textContent.includes('**'),
-      cards: panel.querySelectorAll('.unit-detail-rule').length,
-      cpStacks: [...panel.querySelectorAll('.detail-pts-caption')].filter(c => /cp/i.test(c.textContent)).length,
-      stanzas: !!panel.querySelector('.strat-sections .strat-section-label'),
+      rows: panel.querySelectorAll('.play-strat-row').length,
+      closed: [...panel.querySelectorAll('.play-strat-row')].every(r => r.getAttribute('aria-expanded') === 'false'),
+      renderedEarly: panel.querySelectorAll('.unit-detail-rule').length,
+      cpBadges: panel.querySelectorAll('.play-strat-row .cp-badge').length,
+      phased: [...panel.querySelectorAll('.play-strat-row')].filter(r => r.querySelector('.strat-phase-badge')).length,
+      emptyBadges: [...panel.querySelectorAll('.strat-phase-badge')].filter(b => !b.textContent.trim()).length,
     };
   });
-  check('desktop: stratagem cards rendered as Details-pane rules', strat.cards > 5, strat.cards + ' cards');
-  check('desktop: stratagems keep their CP stack', strat.cpStacks > 5, strat.cpStacks + ' CP stacks');
-  check('desktop: WHEN/TARGET/EFFECT stanza layout present', strat.stanzas);
+  check('desktop: stratagems render as compact rows', strat.rows > 5, strat.rows + ' rows');
+  check('desktop: every row is aria-expanded=false until clicked', strat.closed);
+  check('desktop: rule text is lazy (nothing rendered before a click)', strat.renderedEarly === 0, strat.renderedEarly + ' cards');
+  check('desktop: rows show CP badges', strat.cpBadges > 5, strat.cpBadges + ' CP badges');
+  check('desktop: rows show phase badges, none empty', strat.phased > 0 && strat.emptyBadges === 0, strat.phased + ' with phase, ' + strat.emptyBadges + ' empty');
   check('desktop: detachment stratagem group header present',
     strat.heads.some(h => h.includes(seed.dets[0])), JSON.stringify(strat.heads));
   check('desktop: core stratagems present', !!strat.hasCore);
   check('desktop: no literal ** markers leak into rendered text', strat.noLiteralMarkers);
+
+  // Multi-phase stratagems: one badge per phase (Item E).
+  {
+    const pb = await page.$$eval('.play-panel[data-panel="strats"] .play-strat-row',
+      rows => rows.map(r => [...r.querySelectorAll('.strat-phase-badge')].map(x => x.textContent)));
+    check('desktop: a multi-phase stratagem shows one badge per phase', pb.some(b => b.length === 2), JSON.stringify(pb.find(b => b.length === 2)));
+    check('desktop: single-phase and Any rows show one badge', pb.some(b => b.length === 1) && pb.some(b => b.length === 1 && b[0] === 'Any'));
+  }
+
+  // Expand/collapse: click opens + renders text, click again closes, two open together.
+  {
+    await page.click('.play-tab[data-tab="strats"]');
+    const rows = await page.$$('.play-panel[data-panel="strats"] .play-strat-row');
+    const r0 = rows[0], r1 = rows[1];
+    const st = async r => r.getAttribute('aria-expanded');
+    const bodyHas = async r => r.evaluate(el => {
+      const b = el.closest('.play-strat').querySelector('.play-strat-body');
+      return { cards: b.querySelectorAll('.unit-detail-rule').length, text: b.textContent.trim().length, inert: b.hasAttribute('inert') };
+    });
+    await r0.click();
+    await page.waitForSelector('.play-panel[data-panel="strats"] .play-strat.is-open .unit-detail-rule', { timeout: 3000 }).catch(() => null);
+    const o0 = await bodyHas(r0);
+    check('desktop: clicking a strat row opens it (aria-expanded=true)', (await st(r0)) === 'true');
+    check('desktop: opened row renders its rule text into the body', o0.cards === 1 && o0.text > 20 && !o0.inert, JSON.stringify(o0));
+    await r1.click();
+    check('desktop: a second row can be open together with the first',
+      (await st(r0)) === 'true' && (await st(r1)) === 'true');
+    await page.waitForTimeout(300);
+    const h = await r0.evaluate(el => el.closest('.play-strat').querySelector('.play-strat-body').getBoundingClientRect().height);
+    check('desktop: expanded body has natural height after the transition', h > 20, Math.round(h) + 'px');
+    await r0.click();
+    check('desktop: clicking again closes the row', (await st(r0)) === 'false' && (await st(r1)) === 'true');
+    const c0 = await bodyHas(r0);
+    check('desktop: closed body is inert', c0.inert);
+    await r0.focus();
+    await page.keyboard.press('Enter');
+    check('desktop: Enter on the focused row toggles it', (await st(r0)) === 'true');
+    await r0.click(); await r1.click();
+  }
 
   // Rules tab: army rules group + faction army rule name.
   const rules = await page.evaluate(() => {
@@ -467,7 +511,7 @@ const browser = await chromium.launch();
 
   // Tabs reachable + strats render on phone.
   await page.click('.play-tab[data-tab="strats"]');
-  const stratCard = await page.waitForSelector('.play-panel[data-panel="strats"] .unit-detail-rule', { timeout: 5000 }).catch(() => null);
+  const stratCard = await page.waitForSelector('.play-panel[data-panel="strats"] .play-strat-row', { timeout: 5000 }).catch(() => null);
   check('phone: stratagems tab renders', !!stratCard);
 
   await page.screenshot({ path: `${OUT}/phone-final.png`, fullPage: false });

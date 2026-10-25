@@ -84,6 +84,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Modes | Build / Collect / Play container switcher (top-level mode shell) | `js/app/mode-shell.js` |
 | Modes | Build mode page (hero + rules pinboard tab + roster polish) | `js/ui/build-mode.js` |
 | Modes | Collect mode page (Painting) | `js/ui/collect-mode.js` |
+| Modes | Waha mode — look anything up (any datasheet, detachment, stratagem, rule or enhancement, any faction) with no army and no builder writes; one search box, kind tabs, reader | `js/ui/waha-mode.js`, `css/waha-mode.css` |
 | Modes | Play mode — fast-switching game-day reference (unit switcher, stratagems/rules/enhancements tabs, CP + wound tracking) | `js/ui/play-mode.js`, `css/play-mode.css` |
 | Account & sync | Username/password auth | `js/app/auth.js`, `js/ui/auth-modal.js` |
 | Account & sync | Top-bar account button | `js/ui/auth-button.js` |
@@ -169,12 +170,13 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_sync_queue` | localStorage | `sync.js` | FIFO of pending `{op, id?, ts, mutationId}` sync operations; coalesced on enqueue | Drained as ops succeed |
 | `yaab_sync_known` | localStorage | `sync.js` | `{ armyId -> updated_at }` last seen on the server; drives LWW push/pull decisions | Cleared on sign-out |
 | `yaab_sync_state_at` | localStorage | `sync.js` | Last successful state-bag (KV) push timestamp | Cleared on sign-out |
-| `yaab_mode` | localStorage | `mode-shell.js` | Active top-level mode (`'build'` / `'collect'`) | User pref |
+| `yaab_mode` | localStorage | `mode-shell.js` | Active top-level mode (`'build'` / `'collect'` / `'waha'`) | User pref |
 | `yaab_details_state` | localStorage | `details-persist.js` | Open/closed state of `<details>` boxes (army setup, detachments, KOTC, army rules) | User pref |
 | `yaab_theme` | localStorage | `theme-boot.js`, `themes.js` | Chosen visual theme id (`grimdark` \| `brutalist` \| `brutalist-dark`); cloud-synced, so the choice follows the account | User pref |
 | `yaab_reduced_motion` | localStorage | `settings-drawer.js` | App-level reduced-motion override (in addition to OS pref) | User pref |
 | `yaab_show_collection_badges` | localStorage | `collection.js`, `settings-drawer.js` | Toggle for the painted-status badges on unit cards | User pref |
 | `yaab_collect_debug` | localStorage | `collect-mode.js` | Dev flag for verbose Collect-mode logging | Dev flag |
+| `yaab_waha_recent` | localStorage | `waha-mode.js` | Last 10 things opened in Waha (`[{kind,key,factionId,detName?}]`, newest first); device-local, NOT cloud-synced | User pref |
 | `yaab_play_view` | localStorage | `play-mode.js` | Play mode's active tab + last-viewed sheet per army; device-local | User pref |
 | `yaab_play_game` | localStorage | `play-mode.js` | Per-army game tracking (CP, per-entry `{dead, deadAt?}`; `deadAt` orders destroyed units to the end of the Play list, first killed first); capped at the 10 most-recently-touched armies, cleared per army by "Reset game"; device-local, deliberately NOT cloud-synced | User data |
 | `yaab_changelog_seen` | localStorage | `changelog.js` | Last `App.CHANGELOG.version` the user has opened — drives the "unseen" red dot on the Updates icon | User pref |
@@ -313,12 +315,12 @@ Common questions and where to look first.
 | "Where is feature X?" | This file's "Major features" table — every feature row has the module path. If still unclear, `docs/MODULE-REFERENCE.md` has per-module exports + dependencies. |
 | "What hook should my new feature use?" | `docs/ARCHITECTURE.md` "Hook system" table. Cheat: `armyToolbarActions` for buttons, `armyChange` for "react when army mutates", `bootstrap` for late init, `rosterFilters` for "hide some units", `cardClassContributors` for "tag units with a CSS class". |
 | "What localStorage / IDB key does X own?" | The Storage table further down in this file (every key is listed). |
-| "Where do I add a top-bar icon?" | `docs/UI.md` "How to add X" → "Add a new toolbar action (inline)" or `App.hooks.armyToolbarActions.push({ region: 'icon', ... })`. The whitelist for which icons stay inline (vs. fall into More ▾) is `ICON_VISIBLE_IDS` in `js/app/index.js`. |
+| "Where do I add a top-bar icon?" | `docs/UI.md` "How to add X" → "Add a new toolbar action (inline)" or `App.hooks.armyToolbarActions.push({ region: 'icon', ... })`. The whitelist for which icons stay inline (vs. fall into More ▾) is `TOPBAR_SHELF_IDS` in `js/app/index.js`. |
 | "How do I expose a new API route?" | `../api/CLAUDE.md` (sibling repo). Endpoints under `/api/*` are contract — paths and shapes are versioned. |
 | "Why isn't my new feature showing up?" | (1) Did you add the `<script>` tag to `index.html`? (2) Did the IIFE bail early (look for early returns guarding `App.hooks` or DOM nodes)? (3) Hard-refresh: Ctrl+Shift+R / ⌘⇧R — static-site caches stick. |
 | "Why does X re-render twice?" | `armyChange` fires on every mutation. If your renderer is also called by a button handler, the hook will refire it. Either gate the renderer with a "kind" check or use `selectionChange` instead. |
 | "Why is my data/field change not visible?" | The BattleScribe parser (`js/parser/`) is DORMANT — live data comes from `js/vendor/dc-bundle.js` (`window.DC`) via `js/data/dc-adapter.js`, which rebuilds factions on every load (no IndexedDB faction cache, no `DB_VERSION` bump needed). If a unit/field is wrong, fix `dc-adapter.js`. The bundle itself is generated — do NOT hand-edit it; the cron rebuilds it from 40kdc git `main`. |
-| "How do I make my module aware of mode (Build / Collect / Play)?" | `App.hooks.modeChange.push((newMode, prevMode) => { ... })`. Mode is also reflected as `body[data-mode]` for CSS. |
+| "How do I make my module aware of mode (Build / Collect / Play / Waha)?" | `App.hooks.modeChange.push(mode => { ... })`. Mode is also reflected as `body[data-mode]` for CSS. |
 | "Where do I add a changelog entry?" | `js/data/changelog-data.js`. Bump `version` + `lastUpdated`. EVERY user-visible change must add one (see editing guidance #6 below). |
 
 ## Editing guidance

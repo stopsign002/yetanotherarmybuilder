@@ -186,8 +186,8 @@
   function projectStratagem(s) {
     const name = pickText(s && s.name);
     if (!name) return null;
-    const phaseRaw = Array.isArray(s.phase) && s.phase.length > 0 ? s.phase[0] : '';
-    const phase = phaseRaw ? cap(phaseRaw) : '';
+    const phases = Array.isArray(s.phase) ? s.phase.filter(Boolean).map(cap) : [];
+    const phase = phases.length >= 5 ? 'Any' : (phases[0] || '');
     const cp = (typeof s.cost === 'number') ? s.cost : (parseInt(s.cost, 10) || 0);
     const when   = cleanMarkup(pickText(s.when));
     const target = cleanMarkup(pickText(s.target));
@@ -217,6 +217,7 @@
       name,
       cp,
       phase,
+      phases,
       type: pickText(s.type) || '',
       turn: pickText(s.turn) || '',
       detachment: pickText(s.detachment) || '',

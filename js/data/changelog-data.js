@@ -26,9 +26,27 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.25-1',
-    lastUpdated: '2026-10-25T16:30:00Z',
+    version:     '2026.10.25-2',
+    lastUpdated: '2026-10-25T21:00:00Z',
     entries: [
+      {
+        date: '2026-10-25',
+        kind: 'feature',
+        title: 'Waha mode \u2014 look anything up',
+        description: 'A new mode for when you just want to read something: any datasheet, detachment, stratagem, army rule or enhancement, from any faction, with no army involved. One search box finds all of them at once (try \u201cgladius\u201d, \u201cfire overwatch\u201d or \u201coath of moment\u201d), results group by kind, and a detachment opens as one sheet with its rule, enhancements and stratagems together. It opens on everything every time and remembers the last ten things you looked at. Open it from the \u2315 Waha button next to Play, from the Settings drawer on a phone, or from the \u201cJust looking something up?\u201d button in the Details pane. It never touches the army you are building \u2014 Back to Build returns you exactly where you were.',
+      },
+      {
+        date: '2026-10-25',
+        kind: 'change',
+        title: 'Play mode: stratagems as a browsable list',
+        description: 'The Stratagems tab now lists every stratagem available to your army as a compact row with its phase and CP, grouped by detachment, faction and core, the same shape as the builder\u2019s Army rules & stratagems panel. Click a row to expand the full text; several can be open at once. That makes it quick to scan what you have before committing CP.',
+      },
+      {
+        date: '2026-10-25',
+        kind: 'fix',
+        title: 'Stratagems usable in more than one phase now say so',
+        description: 'About a fifth of all stratagems can be used in two or more phases (most often Shooting and Fight), but only the first phase was ever shown. Every list and card now carries one badge per phase \u2014 the builder\u2019s stratagem panel, Play mode, Waha, the rule detail and the printable cards \u2014 and \u201cAny\u201d still means every phase.',
+      },
       {
         date: '2026-10-25',
         kind: 'change',

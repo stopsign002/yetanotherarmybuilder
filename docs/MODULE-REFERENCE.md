@@ -667,6 +667,14 @@ Cross-cutting docs:
 - **DOM:** `#play-mode` host. All content renders `.unit-detail-content` markup into `.play-detail-host` divs (per sheet, and per stratagem/rule/enhancement grid item), compacted by `#play-mode`-scoped rules in `css/play-mode.css`.
 - **Notes:** Lazy-built on first activate; re-renders on army/selection change (dirty-flagged while hidden). Stacked entries (`count > 1`) always split into one virtual sheet per copy — tracking keys are `entryId` for copy 1 and `entryId::i` for the rest, so single-copy entries keep their stored state. Game state is keyed by those ids so it survives re-renders and army edits. Entry points: the top-bar shelf "Play" button (`btn-play-mode`, whitelisted in `TOPBAR_SHELF_IDS`) and the `go-play` Settings-drawer row (both widths).
 
+### `js/ui/waha-mode.js`
+- **Purpose:** Waha mode — look anything up with no army involved (owns `#waha-mode`): one always-visible search box over every datasheet, detachment, stratagem (faction + core), army/detachment rule and enhancement, optional faction filter, kind tabs with live counts, results left / reader right (phone: results screen then reader screen). Contract: `docs/WAHA-MODE.md`.
+- **Exports:** `App.wahaMode.activate`; shelf button `btn-waha-mode`; Build Details-pane hint button (`.waha-hint-btn`).
+- **Depends on:** `App.state.factions` (read-only; polls until >= 30 loaded and rebuilds the index when `factionsVersion`, the Legends pref or the loaded stratagem count changes), `App.CORE_STRATAGEMS`, `UI.createUnitCard`, `UI.renderUnitDetail` (`opts.browseView`), `UI.renderDetachmentDetail` / `UI.renderRuleDetail` (`opts.host`), `UI.stratPhaseLabel`, `App.factionGlyph`, `App.backTrap` (`waha:reader`), `App.hooks.{modeChange, bootstrap, armyToolbarActions}`.
+- **Storage:** `localStorage.yaab_waha_recent` (last 10 opened: `[{kind,key,factionId,detName?}]`, device-local, never synced). Nothing else; never writes `App.state`.
+- **DOM:** `#waha-mode` host; `.waha-root` > `.waha-header` (`#waha-q`, `#waha-faction`, `#waha-exit`), `.waha-tabs` (`.waha-tab[data-tab]`), `.waha-results`, `.waha-reader`. Rows are `[data-waha-kind][data-waha-key]`. Styles in `css/waha-mode.css`.
+- **Notes:** Opens on everything every time (filter All, query empty, search focused). Keys: `/` focus, arrows highlight, Enter opens, Esc clears. Faction select values are `factionName` (`all` = All factions). Core stratagems stay visible under a faction filter.
+
 ### `js/ui/topbar-export.js`
 - **Purpose:** Top-bar Export ▾ button mirror.
 - **Exports:** none (hook-registered).

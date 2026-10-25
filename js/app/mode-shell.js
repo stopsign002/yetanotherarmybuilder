@@ -3,7 +3,7 @@
   const App = window.App = window.App || {};
 
   const LS_KEY = 'yaab_mode';
-  const VALID = ['build', 'collect', 'cards', 'play'];
+  const VALID = ['build', 'collect', 'cards', 'play', 'waha'];
   const DEFAULT_MODE = 'build';
 
   // Hook bus for cross-module mode-change notifications.
@@ -28,7 +28,7 @@
   // hides the whole builder while active, so restoring into it meant a user who
   // closed the tab from Cards mode reopened the app with no visible builder and
   // (before the Back fix) no way out.
-  const RESUMABLE = ['build', 'collect'];
+  const RESUMABLE = ['build', 'collect', 'waha'];
 
   function readPersisted() {
     try {

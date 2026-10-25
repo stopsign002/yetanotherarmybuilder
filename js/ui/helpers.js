@@ -9,6 +9,18 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   };
 
+  // Phases a stratagem can be used in, for display. Sources carry `phases`
+  // (array, 40kdc order) beside the single-string `phase`; five or more
+  // collapses to 'Any'. Falls back to the lone `phase` string.
+  UI.stratPhases = function (s) {
+    if (!s) return [];
+    if (Array.isArray(s.phases) && s.phases.length) {
+      return s.phases.length >= 5 ? ['Any'] : s.phases.slice();
+    }
+    return s.phase ? [s.phase] : [];
+  };
+  UI.stratPhaseLabel = function (s) { return UI.stratPhases(s).join(' \u00b7 '); };
+
   // ── GW prose markup ─────────────────────────────────────────────────────
   // GDC's rules text carries `**bold**` — 6.5k strings across stratagems,
   // enhancements, abilities, detachment rules, composition and loadout lines.

@@ -194,6 +194,11 @@
     const panel = opts.host || document.getElementById('unit-detail-panel');
     if (!panel) return;
     const gameView = !!opts.gameView;
+    // browseView (Waha mode): a read-only datasheet with the banner and every
+    // price, but none of the list-building chrome — no Add to Army / squad
+    // stepper, no detailActions buttons, no wargear picker, no enhancement
+    // eligibility / taken-by logic (the only code here that reads the army).
+    const browseView = !!opts.browseView;
     const empty = opts.host ? null : document.getElementById('unit-detail-empty');
     if (empty) empty.style.display = 'none';
 
@@ -281,7 +286,7 @@
         </div>
         <div class="detail-header-actions detail-banner-actions">
           ${ptsStackHtml}
-          ${(gameView ? [] : (window.App && App.hooks && App.hooks.detailActions || [])).map(a =>
+          ${((gameView || browseView) ? [] : (window.App && App.hooks && App.hooks.detailActions || [])).map(a =>
             `<button class="detail-action-btn" data-action-id="${esc(a.id)}" title="${esc(a.title || '')}">${a.html || esc(a.label || '')}</button>`
           ).join('')}
           <button class="btn-google-search"${opts.host ? '' : ' id="btn-google-images"'} data-unit="${esc(unit.name)}" title="Search Google Images">
@@ -312,7 +317,7 @@
     const sizeLabel = (opt) => opt
       ? (opt.models ? `${opt.models} models — ${opt.pts} pts` : `${opt.pts} pts`)
       : '—';
-    if (!gameView) html += `
+    if (!gameView && !browseView) html += `
       <div class="detail-add-section">
         <div class="detail-add-row">
           ${hasSquadChoice ? `
@@ -737,7 +742,7 @@
       let out = `<div class="detail-section detail-wargear-abilities-section">
         <div class="detail-section-title detail-section-title-wargear">Wargear</div>`;
       out += wg;
-      if (unit.wargearProfile && !gameView) out += `<div id="detail-wargear-picker"></div>`;
+      if (unit.wargearProfile && !gameView && !browseView) out += `<div id="detail-wargear-picker"></div>`;
       out += waHtml;
       out += `</div>`;
       return out;
@@ -763,7 +768,7 @@
         html += `<div class="detail-leader-units">
           <span class="detail-ability-name">${isSupport ? 'Can be attached to:' : 'Can lead:'}</span>
           <div class="detail-leader-list">
-            ${canLead.map(u => `<span class="leader-unit-tag">${esc(u)}</span>`).join('')}
+            ${canLead.map(u => `<span class="leader-unit-tag"${browseView ? ` data-waha-unit="${esc(u)}"` : ''}>${esc(u)}</span>`).join('')}
           </div>
         </div>`;
       } else {
@@ -788,7 +793,7 @@
       html += `<div class="detail-section detail-ledby-section">
         <div class="detail-section-title detail-section-title-ledbby">Led By</div>
         <div class="detail-ledby-list">
-          ${ledBy.map(l => `<span class="ledby-tag">${esc(l.name)}</span>`).join('')}
+          ${ledBy.map(l => `<span class="ledby-tag"${browseView ? ` data-waha-unit="${esc(l.name)}"` : ''}>${esc(l.name)}</span>`).join('')}
         </div>
       </div>`;
     }
@@ -796,7 +801,7 @@
       html += `<div class="detail-section detail-ledby-section">
         <div class="detail-section-title detail-section-title-ledbby">Support Attached</div>
         <div class="detail-ledby-list">
-          ${support.map(l => `<span class="ledby-tag">${esc(l.name)}</span>`).join('')}
+          ${support.map(l => `<span class="ledby-tag"${browseView ? ` data-waha-unit="${esc(l.name)}"` : ''}>${esc(l.name)}</span>`).join('')}
         </div>
       </div>`;
     }
@@ -915,7 +920,7 @@
     // where the feature lives, with a contextual hint when they haven't
     // selected a detachment yet. Epic Heroes with no detachment loaded
     // get nothing (the "pick a detachment" hint would be misleading).
-    if (!gameView && (anyEligible || (detachmentEnhancements && detachmentEnhancements.length > 0))) {
+    if (!gameView && !browseView && (anyEligible || (detachmentEnhancements && detachmentEnhancements.length > 0))) {
       const selectedNames = new Set((selectedEnhancements || []).map(e => e.name));
       html += `<div class="detail-section" id="detail-enhancements-section">
         <div class="detail-section-title">Enhancements</div>`;
@@ -963,6 +968,20 @@
       }
     }
 
+    // Waha: the chosen detachment's enhancements as a plain read-only list —
+    // name, points, text. No checkboxes, no eligibility, no taken-by state.
+    if (browseView && detachmentEnhancements && detachmentEnhancements.length > 0) {
+      html += `<div class="detail-section detail-enhancements-browse">
+        <div class="detail-section-title">Enhancements</div>`;
+      detachmentEnhancements.forEach(enh => {
+        html += `<div class="detail-ability detail-enhancement-browse-item">
+          <span class="detail-ability-name">${esc(enh.name)}${enh.pts ? ` <span class="enh-cb-pts">${esc(String(enh.pts))} pts</span>` : ''}</span>
+          <span class="detail-ability-desc">${UI.mdBold(enh.description || '—')}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
     html += `</div>`;
 
     const existing = panel.querySelector('.unit-detail-content');
@@ -993,7 +1012,7 @@
 
     // Fill the wargear picker (points-only mode; no-op when the unit has no
     // priced options).
-    if (unit.wargearProfile && !gameView && window.App && App.WargearPicker) {
+    if (unit.wargearProfile && !gameView && !browseView && window.App && App.WargearPicker) {
       try { App.WargearPicker.mount(unit, panel); } catch (_) {}
     }
 
@@ -1121,8 +1140,9 @@
     // so it carried a leading middot. The kind label is now an eyebrow above the
     // name and the phase owns its own row, so the separator would dangle.
     let subtitleExtra = '';
-    if (isStratagem && data.phase) {
-      subtitleExtra = `<span class="detail-rule-phase">${esc(data.phase)}</span>`;
+    const phaseText = isStratagem ? UI.stratPhaseLabel(data) : '';
+    if (phaseText) {
+      subtitleExtra = `<span class="detail-rule-phase">${esc(phaseText)}</span>`;
     }
     // Gold underline for the detachment/stratagem family; neutral for army rules.
     const underlineClass = (isStratagem || isEnhancement) ? ' detail-name-underline-gold' : '';
@@ -1153,11 +1173,13 @@
   // Render a whole detachment (rules + enhancements + stratagems) into the
   // Details pane so a player can read through their options before committing.
   // Driven by clicking a row in the Detachments picker (js/app/detachment-picker.js).
-  UI.renderDetachmentDetail = function (det) {
+  // opts.host (Waha mode) renders into a supplied element instead of the
+  // Details pane and leaves #unit-detail-empty alone — same as renderRuleDetail.
+  UI.renderDetachmentDetail = function (det, opts = {}) {
     const esc = UI.escapeHtml;
-    const panel = document.getElementById('unit-detail-panel');
+    const panel = (opts && opts.host) || document.getElementById('unit-detail-panel');
     if (!panel || !det) return;
-    const empty = document.getElementById('unit-detail-empty');
+    const empty = (opts && opts.host) ? null : document.getElementById('unit-detail-empty');
     if (empty) empty.style.display = 'none';
     const existing = panel.querySelector('.unit-detail-content');
     if (existing) existing.remove();
@@ -1245,7 +1267,7 @@
       html += `<div class="detail-section"><div class="detail-section-title detail-section-title-strat">Stratagems</div>`;
       strats.forEach(s => {
         const badges = [];
-        if (s.phase)     badges.push(`<span class="strat-phase-badge">${esc(s.phase)}</span>`);
+        UI.stratPhases(s).forEach(p => badges.push(`<span class="strat-phase-badge">${esc(p)}</span>`));
         if (s.cp != null) badges.push(`<span class="cp-badge strat-cp-badge">${esc(String(s.cp))} CP</span>`);
         html += `<div class="detail-detachment-card strat-card">
           <div class="strat-card-head">

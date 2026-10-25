@@ -218,6 +218,14 @@
         visible: isMobileWidth,
         run() { goToMode('collect'); },
       },
+      // Waha (look anything up, builds nothing) — not mobile-gated either, for
+      // the same reason as Play: phones have no topbar.
+      {
+        id: 'go-waha',
+        label: mode === 'waha' ? 'Waha ✓' : 'Waha',
+        section: 'go',
+        run() { goToMode('waha'); },
+      },
       // Play is deliberately NOT mobile-gated: with .topbar-modes hidden at
       // every width, this row (plus the Tools-menu action) is its entry point
       // on desktop too.

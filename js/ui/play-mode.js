@@ -630,16 +630,66 @@
         : 'Core stratagems';
       group(label).items.push(item);
     });
-    renderRuleHosts(panel, groups, (item, host) => {
-      const s = item.strat || {};
-      UI.renderRuleDetail({
-        type: 'stratagem',
-        name: s.name,
-        description: s.description,
-        cp: s.cp != null ? s.cp : null,
-        phase: s.phase || null,
-      }, { host, gameView: true });
+    // Compact, expandable rows (the builder's .army-rule-item.stratagem-item
+    // shape, faction-rules.js renderStratItem). The full rule text is rendered
+    // lazily into the body on first open.
+    const flat = [];
+    panel.innerHTML = groups.map(g =>
+      '<h2 class="play-group-head">' + esc(g.label) + '</h2>'
+      + '<div class="play-card-list play-strat-list">'
+      + g.items.map(item => {
+          const idx = flat.push(item.strat || {}) - 1;
+          return stratRowHtml(item.strat || {}, idx);
+        }).join('')
+      + '</div>'
+    ).join('');
+    panel.querySelectorAll('.play-strat-row').forEach(btn => {
+      btn.addEventListener('click', () => toggleStrat(btn, flat[+btn.dataset.idx]));
     });
+  }
+
+  function stratRowHtml(s, idx) {
+    const cp = s.cp;
+    const cpBadge = (cp != null && cp !== '') ? '<span class="cp-badge">' + esc(String(cp)) + ' CP</span>' : '';
+    const phaseBadge = UI.stratPhases(s).map(p => '<span class="strat-phase-badge">' + esc(p) + '</span>').join('');
+    const bodyId = 'play-strat-body-' + idx;
+    return '<div class="play-strat">'
+      + '<button type="button" class="army-rule-item stratagem-item play-strat-row" aria-expanded="false"'
+      +   ' aria-controls="' + bodyId + '" data-idx="' + idx + '">'
+      +   '<span class="play-strat-name">' + esc(s.name || '') + '</span>'
+      +   '<span class="rule-item-right">' + phaseBadge + cpBadge + '<span class="rule-arrow" aria-hidden="true">&#9656;</span></span>'
+      + '</button>'
+      + '<div class="play-strat-body" id="' + bodyId + '" inert>'
+      +   '<div class="play-strat-inner"><div class="play-detail-host play-rule-host"></div></div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  function toggleStrat(btn, s) {
+    const wrap = btn.closest('.play-strat');
+    const body = wrap && wrap.querySelector('.play-strat-body');
+    if (!body) return;
+    const open = btn.getAttribute('aria-expanded') !== 'true';
+    if (open && !body.dataset.rendered) {
+      const host = body.querySelector('.play-rule-host');
+      try {
+        UI.renderRuleDetail({
+          type: 'stratagem',
+          name: s.name,
+          description: s.description,
+          cp: s.cp != null ? s.cp : null,
+          phase: s.phase || null,
+          phases: s.phases || null,
+        }, { host, gameView: true });
+      } catch (e) {
+        host.innerHTML = '<p class="muted">Could not render this entry.</p>';
+        try { console.warn('[play-mode] rule render failed:', e && e.message); } catch (_) {}
+      }
+      body.dataset.rendered = '1';
+    }
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    wrap.classList.toggle('is-open', open);
+    if (open) body.removeAttribute('inert'); else body.setAttribute('inert', '');
   }
 
   function renderRules(root, cr, faction) {

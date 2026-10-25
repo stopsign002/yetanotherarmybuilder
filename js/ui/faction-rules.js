@@ -187,10 +187,11 @@
       item.dataset.ruleDesc  = strat.description || '';
       item.dataset.ruleType  = 'stratagem';
       if (strat.cp != null)    item.dataset.ruleCp    = strat.cp;
-      if (strat.phase)         item.dataset.rulePhase = strat.phase;
+      const phaseList = UI.stratPhases(strat);
+      if (phaseList.length)    item.dataset.rulePhase = UI.stratPhaseLabel(strat);
       const cp = strat.cp != null ? strat.cp : '';
       const cpBadge = (cp !== '' && cp !== null) ? `<span class="cp-badge">${esc(String(cp))} CP</span>` : '';
-      const phaseBadge = strat.phase ? `<span class="strat-phase-badge">${esc(strat.phase)}</span>` : '';
+      const phaseBadge = phaseList.map(p => `<span class="strat-phase-badge">${esc(p)}</span>`).join('');
       item.innerHTML = `<span>${esc(strat.name)}</span><span class="rule-item-right">${phaseBadge}${cpBadge}<span class="rule-arrow">&#9656;</span></span>`;
       return item;
     }
