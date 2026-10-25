@@ -231,6 +231,11 @@
   opacity: 0.45;
 }
 .play-unit-chip.is-dead .play-chip-name { text-decoration: line-through; }
+/* Separator before the first destroyed chip (set by play-mode.js). */
+.play-unit-chip[data-first-dead] {
+  margin-top: 8px;
+  border-top: 1px dashed var(--border);
+}
 
 /* ── Content panels ─────────────────────────────────────────────────── */
 .play-body {
@@ -496,6 +501,13 @@
     border-bottom-color: var(--accent);
   }
   .play-unit-chip.is-leader { margin-left: 0; width: auto; }
+  /* Horizontal strip: the separator sits on the leading edge instead. */
+  .play-unit-chip[data-first-dead] {
+    margin-top: 0;
+    margin-left: 8px;
+    border-top: 1px solid var(--border);
+    border-left-style: dashed;
+  }
 
   .play-panel { padding: 10px; }
   .play-card-list { grid-template-columns: 1fr; gap: 10px; }

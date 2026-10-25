@@ -310,6 +310,44 @@ const browser = await chromium.launch();
   check('desktop: reset clears CP + dead', afterReset.cp === '0 CP' && afterReset.dead === false,
     JSON.stringify(afterReset));
 
+  // Destroyed units sink to the end of the chip rail and the sheet panel,
+  // first-killed first; un-marking restores the original position.
+  {
+    const order = () => page.evaluate(() => ({
+      chips: [...document.querySelectorAll('.play-switcher .play-unit-chip')].map(c => c.dataset.entryId),
+      sheets: [...document.querySelectorAll('.play-panel[data-panel="sheets"] .play-sheet')].map(c => c.dataset.entryId),
+      first: [...document.querySelectorAll('.play-unit-chip[data-first-dead]')].map(c => c.dataset.entryId),
+    }));
+    const kill = async id => {
+      await page.click(`.play-unit-chip[data-entry-id="${id}"]`);
+      await page.click(`.play-sheet[data-entry-id="${id}"] .play-dead`);
+      await page.waitForTimeout(120);
+    };
+    const o0 = await order();
+    const [a0, b0] = o0.chips;
+    await kill(a0);
+    const o1 = await order();
+    check('desktop: destroyed chip + sheet go last',
+      o1.chips[o1.chips.length - 1] === a0 && o1.sheets[o1.sheets.length - 1] === a0, JSON.stringify(o1.chips));
+    check('desktop: first-dead separator on that chip', o1.first.length === 1 && o1.first[0] === a0);
+    const act = await page.$eval('.play-sheet:not([hidden])', el => el.dataset.entryId);
+    check('desktop: active sheet stays put after reorder', act === a0, act);
+    await kill(b0);
+    const o2 = await order();
+    const n = o2.chips.length;
+    check('desktop: first-killed sits before second-killed',
+      o2.chips[n - 2] === a0 && o2.chips[n - 1] === b0 && o2.sheets[n - 2] === a0 && o2.sheets[n - 1] === b0,
+      JSON.stringify(o2.chips));
+    await kill(a0);   // un-mark
+    const o3 = await order();
+    check('desktop: un-marking returns unit to its place among the living',
+      o3.chips[0] === a0 && o3.sheets[0] === a0 && o3.chips[n - 1] === b0, JSON.stringify(o3.chips));
+    await kill(b0);   // un-mark
+    const o4 = await order();
+    check('desktop: order fully restored', JSON.stringify(o4.chips) === JSON.stringify(o0.chips)
+      && JSON.stringify(o4.sheets) === JSON.stringify(o0.sheets) && o4.first.length === 0, JSON.stringify(o4.chips));
+  }
+
   // Stacked squads (count > 1) always split into one sheet per copy, with
   // independent tracking.
   await page.evaluate(() => { App.state.currentArmy.entries[2].count = 2; App.playMode.refresh(); });

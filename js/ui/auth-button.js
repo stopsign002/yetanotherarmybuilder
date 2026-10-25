@@ -29,14 +29,14 @@
     btn.id = BTN_ID;
     btn.className = 'topbar-action-btn auth-btn ' +
       (signedIn ? 'auth-btn-signed-in' : 'auth-btn-signed-out');
-    btn.title = signedIn ? `Signed in as ${user.username}` : 'Account menu';
-    btn.setAttribute('aria-label', signedIn ? `Account menu for ${user.username}` : 'Account menu');
+    btn.title = signedIn ? `Signed in as ${user.username}` : 'Sign in to sync your armies';
+    btn.setAttribute('aria-label', signedIn ? `Account menu for ${user.username}` : 'Sign in to sync your armies');
     btn.setAttribute('aria-haspopup', 'menu');
     btn.setAttribute('aria-expanded', 'false');
 
     const label = document.createElement('span');
     label.className = 'topbar-action-label' + (signedIn ? ' auth-btn-username' : '');
-    label.textContent = signedIn ? user.username : 'Account';
+    label.textContent = signedIn ? user.username : 'Sign in';
     btn.appendChild(label);
 
     const caret = document.createElement('span');

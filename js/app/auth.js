@@ -17,7 +17,7 @@
   const API = '/api/auth';
 
   let _user = null;             // { username } when signed in, null otherwise
-  const _listeners = [];        // [(user) => void]
+  const _listeners = [];        // [(user, meta) => void]
 
   function readHint() {
     try {
@@ -42,22 +42,26 @@
     } catch (_) {}
   }
 
-  function notify() {
+  // `meta` is optional context about WHY the user changed, passed as the
+  // listener's second argument. Today only sign-out paths set it:
+  // { reason: 'expired' } (the server dropped our session — 401) or
+  // { reason: 'logout' } (the user asked). Listeners that don't care ignore it.
+  function notify(meta) {
     for (let i = 0; i < _listeners.length; i++) {
-      try { _listeners[i](_user); } catch (e) { console.warn('[Auth.onChange]', e); }
+      try { _listeners[i](_user, meta); } catch (e) { console.warn('[Auth.onChange]', e); }
     }
   }
 
-  function setUser(user) {
+  function setUser(user, meta) {
     const wasSignedIn = !!_user;
     const isSignedIn = !!user;
     _user = user || null;
     writeHint(_user);
     if (wasSignedIn !== isSignedIn || (user && (!_user || user.username !== _user.username))) {
-      notify();
+      notify(meta);
     } else if (isSignedIn) {
       // Username unchanged — still notify in case listeners care.
-      notify();
+      notify(meta);
     }
   }
 
@@ -129,7 +133,7 @@
     },
 
     async init() {
-      Auth.primeFromHint();
+      const primed = Auth.primeFromHint();
       try {
         const me = await jsonFetch('/me');
         if (me && me.username) {
@@ -142,7 +146,10 @@
         }
       } catch (err) {
         if (err.status === 401) {
-          setUser(null);
+          // Only a device that THOUGHT it was signed in (a hint was present)
+          // has an expired session to report; an anonymous visitor gets no
+          // notification, as before.
+          setUser(null, primed ? { reason: 'expired' } : undefined);
         } else {
           // Network error / server down — keep the hint so the UI doesn't
           // flap. Sync will treat us as offline.
@@ -186,7 +193,7 @@
     async logout() {
       try { await jsonFetch('/logout', { method: 'POST' }); }
       catch (_) {}
-      setUser(null);
+      setUser(null, { reason: 'logout' });
     },
 
     // The ONE sign-out flow. Two entry points call it: the topbar auth-button
@@ -231,7 +238,7 @@
     // Flips us to logged-out without an explicit logout call.
     handleSessionExpired() {
       if (_user) {
-        setUser(null);
+        setUser(null, { reason: 'expired' });
         if (window.UI && typeof UI.toast === 'function') {
           UI.toast('Your session expired — sign in again to keep syncing.', 'warning', 5000);
         }

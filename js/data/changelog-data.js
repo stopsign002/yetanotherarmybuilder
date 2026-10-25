@@ -26,9 +26,27 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.24-5',
-    lastUpdated: '2026-10-24T07:00:00Z',
+    version:     '2026.10.25-1',
+    lastUpdated: '2026-10-25T16:30:00Z',
     entries: [
+      {
+        date: '2026-10-25',
+        kind: 'change',
+        title: 'You stay signed in',
+        description: 'Sessions used to end a flat 30 days after you signed in, whether or not you were using the app \u2014 that is why every device kept asking again. A session now lasts a year and is quietly renewed every time you use it, so as long as you open YAAB at least once a year you never sign in again on that browser. Existing sessions pick this up on their next visit. Signing out, changing your password or a recovery still end sessions exactly as before.',
+      },
+      {
+        date: '2026-10-25',
+        kind: 'feature',
+        title: 'A clear signed-out notice',
+        description: 'Before, a browser whose session had ended simply looked signed out with nothing telling you \u2014 on a phone there was no cue at all, and edits quietly stayed on that device. Now the top-bar button reads \u201cSign in\u201d when you are not signed in, and a strip appears under the top bar (at the top of the screen on phones, with a dot on the More tab) saying you are signed out in this browser, with a Sign in button. Hide it with \u00d7; it stays hidden for that tab.',
+      },
+      {
+        date: '2026-10-25',
+        kind: 'change',
+        title: 'Play mode: destroyed units drop to the end of the list',
+        description: 'Marking a unit destroyed now moves it to the bottom of the unit rail and the sheet order (first killed first), behind a dashed separator, so the living units stay at the top where you are looking. Un-marking puts it back where it was; Reset game restores the original order.',
+      },
       {
         date: '2026-10-24',
         kind: 'fix',

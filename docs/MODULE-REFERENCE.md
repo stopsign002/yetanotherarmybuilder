@@ -304,6 +304,14 @@ Cross-cutting docs:
 - **DOM:** `yaab-pending-approval-banner`.
 - **Notes:** Recovery code only shown once per session — back-up nag.
 
+### `js/app/signed-out-banner.js`
+- **Purpose:** Strip shown when a session that the device thought was live turns out to be expired, so a browser can't silently run signed out.
+- **Exports:** none (side-effect — registers `App.hooks.bootstrap`).
+- **Depends on:** `App.Auth.onChange((user, meta) => …)` (`meta.reason === 'expired'`), `UI.showAuthModal`, `App.hooks`; styles in `css/auth.css`.
+- **Storage:** `sessionStorage.yaab_signed_out_banner` (`'1'` once dismissed; per tab).
+- **DOM:** `#signed-out-banner` (fixed; publishes `--sob-h`, adds `body.has-signed-out-banner`); sets a dot on `.mobile-tabbar [data-badge="more"]`.
+- **Notes:** Not shown for a deliberate sign-out or for anonymous visitors. Removed as soon as a user signs in.
+
 ### `js/app/autosave.js`
 - **Purpose:** Auto-persist current army on any mutation.
 - **Exports:** none (side-effect — registers `armyChange`).

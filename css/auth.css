@@ -188,3 +188,98 @@
   margin-top: 3px;
   flex-shrink: 0;
 }
+
+/* ── Signed-out call to action (topbar) ───────────────────────────────
+   Tokens only, so every theme is covered: the 1px accent border + faint
+   accent wash make "Sign in" read as an action next to the plain topbar
+   buttons. brutalist.css overrides .topbar-action-btn's border/background at
+   (0,1,0); the extra class here lifts this to (0,2,0) so it wins without
+   !important. Signed-in is untouched. */
+.topbar-action-btn.auth-btn-signed-out {
+  border: 1px solid var(--accent);
+  background: rgba(var(--accent-rgb), 0.10);
+}
+.topbar-action-btn.auth-btn-signed-out:hover,
+.topbar-action-btn.auth-btn-signed-out:focus-visible {
+  background: rgba(var(--accent-rgb), 0.22);
+}
+
+/* ── Signed-out banner (js/app/signed-out-banner.js) ──────────────────
+   Fixed, not in flow: the app's panes are sized from 100vh / 100% of the
+   body, so an in-flow strip would push the bottom of every pane off-screen.
+   Instead the module sets --sob-h to the strip's measured height and the
+   body class below makes room for it (padding on phones, mode-page height on
+   desktop). Sits under the topbar (z 400) on desktop, at the very top on
+   phones (the topbar is display:none there), and below the tab bar
+   (z 950/1200) and modals. */
+:root { --sob-h: 0px; }
+
+.signed-out-banner {
+  position: fixed;
+  top: var(--topbar-h, 56px);
+  left: 0;
+  right: 0;
+  z-index: 390;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: var(--panel-bg);
+  color: var(--text);
+  border-top: 2px solid var(--accent);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.signed-out-banner[hidden] { display: none; }
+.signed-out-banner-text { flex: 1; min-width: 0; }
+.signed-out-banner-btn,
+.signed-out-banner-close {
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(var(--accent-rgb), 0.10);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 5px 12px;
+  min-height: 30px;
+  cursor: pointer;
+}
+.signed-out-banner-close {
+  border-color: var(--border);
+  background: transparent;
+  padding: 5px 10px;
+  font-size: 16px;
+  line-height: 1;
+}
+.signed-out-banner-btn:hover,
+.signed-out-banner-btn:focus-visible,
+.signed-out-banner-close:hover,
+.signed-out-banner-close:focus-visible {
+  background: rgba(var(--accent-rgb), 0.22);
+  border-color: var(--accent);
+}
+
+/* Room for it. Desktop: the mode pages are `100vh - topbar`; take the banner
+   off too. Phones: pane heights are percentages of the body content box, so
+   body padding alone shrinks them. */
+@media (min-width: 821px) {
+  body.has-signed-out-banner .mode-page {
+    height: calc(100vh - var(--topbar-h, 56px) - var(--sob-h));
+  }
+  body.has-signed-out-banner .cards-shell {
+    height: calc(100vh - 64px - var(--sob-h));
+  }
+  body.has-signed-out-banner { padding-top: calc(var(--topbar-h, 56px) + var(--sob-h)); }
+}
+@media (max-width: 820px) {
+  .signed-out-banner {
+    top: var(--m-safe-top, 0px);
+    padding-left: calc(14px + var(--m-safe-left, 0px));
+    padding-right: calc(14px + var(--m-safe-right, 0px));
+  }
+  /* !important: topbar.css:492 pins body padding-top with !important. */
+  body.has-signed-out-banner { padding-top: calc(var(--m-safe-top, 0px) + var(--sob-h)) !important; }
+}

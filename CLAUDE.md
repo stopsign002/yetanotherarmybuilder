@@ -165,6 +165,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_tour_seen` | localStorage | `first-time-tour.js` | First-run tour completed | One-shot |
 | `yaab_parse_debug` | localStorage | `parser/report.js` | Parse-coverage console logging | Dev flag |
 | `yaab_auth_session_hint` | localStorage | `auth.js` | Cosmetic `{username}` hint so the topbar can render "signed in" instantly on reload (cookie is source of truth) | Cleared on sign-out |
+| `yaab_signed_out_banner` | sessionStorage | `signed-out-banner.js` | `'1'` once the "You're signed out in this browser" strip was dismissed with ×; per-tab on purpose, so a new tab or app launch shows it again | Cleared when the tab closes |
 | `yaab_sync_queue` | localStorage | `sync.js` | FIFO of pending `{op, id?, ts, mutationId}` sync operations; coalesced on enqueue | Drained as ops succeed |
 | `yaab_sync_known` | localStorage | `sync.js` | `{ armyId -> updated_at }` last seen on the server; drives LWW push/pull decisions | Cleared on sign-out |
 | `yaab_sync_state_at` | localStorage | `sync.js` | Last successful state-bag (KV) push timestamp | Cleared on sign-out |
@@ -175,7 +176,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_show_collection_badges` | localStorage | `collection.js`, `settings-drawer.js` | Toggle for the painted-status badges on unit cards | User pref |
 | `yaab_collect_debug` | localStorage | `collect-mode.js` | Dev flag for verbose Collect-mode logging | Dev flag |
 | `yaab_play_view` | localStorage | `play-mode.js` | Play mode's active tab + last-viewed sheet per army; device-local | User pref |
-| `yaab_play_game` | localStorage | `play-mode.js` | Per-army game tracking (CP, per-entry wounds/dead); capped at the 10 most-recently-touched armies, cleared per army by "Reset game"; device-local, deliberately NOT cloud-synced | User data |
+| `yaab_play_game` | localStorage | `play-mode.js` | Per-army game tracking (CP, per-entry `{dead, deadAt?}`; `deadAt` orders destroyed units to the end of the Play list, first killed first); capped at the 10 most-recently-touched armies, cleared per army by "Reset game"; device-local, deliberately NOT cloud-synced | User data |
 | `yaab_changelog_seen` | localStorage | `changelog.js` | Last `App.CHANGELOG.version` the user has opened — drives the "unseen" red dot on the Updates icon | User pref |
 | `yaab_cards_presets` | localStorage | `cards-mode.js` | Named snapshots of every card-render setting (colours, typography, layout, back-image id, …); cloud-synced | User data |
 | `yaab_cards_selection` | localStorage | `cards-mode.js` | Card-exporter deselections (excluded card ids per category: units/rules/strats). Unit-card ids are `'u:' + entry.entryId` (stable across reorder/remove/split — see #72; was positional `'u'+i` before, one-time migrated on load); rule/strat ids are unrelated `'r:'`/`'d:'`/`type::name` forms. Device-local, NOT cloud-synced | User selection |

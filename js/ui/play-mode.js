@@ -23,7 +23,7 @@
   if (!App.hooks) return;
 
   const LS_VIEW = 'yaab_play_view';   // { tab, layout: 'single'|'row', entryByArmy: {armyId: entryId} }
-  const LS_GAME = 'yaab_play_game';   // { [armyId]: {cp, startedAt, touchedAt, units:{[entryId]:{dead}}} }
+  const LS_GAME = 'yaab_play_game';   // { [armyId]: {cp, startedAt, touchedAt, units:{[entryId]:{dead, deadAt?}}} }  (deadAt = ms epoch when marked destroyed; absent when alive)
   const TABS = [
     ['sheets',  'Sheets'],
     ['strats',  'Stratagems'],
@@ -161,7 +161,12 @@
   // switcher reads like the army list does ("who is this squad, who leads
   // it"); leaders follow the FIRST copy of a split squad, further copies
   // come after them.
-  function orderedEntries(army) {
+  //
+  // With a `game` (gameFor(armyId)) the list is then stable-partitioned:
+  // destroyed units move after all living ones, dead ones ordered by deadAt
+  // ascending (first killed first). A leader is judged by its OWN flag — it is
+  // still on the table when its bodyguard dies.
+  function orderedEntries(army, game) {
     const entries = (army && Array.isArray(army.entries)) ? army.entries : [];
     const byParent = new Map();   // parent entryId -> [leader entries]
     const roots = [];
@@ -191,7 +196,16 @@
         out.push({ entry: e, isLeader: false, vid: virtualId(e, i), copy: { i: i + 1, n } });
       }
     });
-    return out;
+    return game ? partitionDead(out, game) : out;
+  }
+  function partitionDead(list, game) {
+    const units = (game && game.units) || {};
+    const isDead = o => !!(units[o.vid] && units[o.vid].dead);
+    const living = list.filter(o => !isDead(o));
+    const dead = list.map((o, i) => ({ o, i })).filter(x => isDead(x.o))
+      .sort((a, b) => ((units[a.o.vid].deadAt || 0) - (units[b.o.vid].deadAt || 0)) || (a.i - b.i))
+      .map(x => x.o);
+    return living.concat(dead);
   }
   // The switcher chip label for a virtual entry — the sheet head reuses the
   // exact same string so a player sees one name for a unit, not two.
@@ -405,8 +419,45 @@
     writeGame(army.id, g => {
       const u = g.units[vid] || (g.units[vid] = { dead: false });
       u.dead = !u.dead;
+      if (u.dead) u.deadAt = Date.now(); else delete u.deadAt;
     });
     applyGameState();
+    reorderForDead();
+  }
+  // Move the EXISTING chip + sheet nodes into the new order (destroyed units
+  // last). No innerHTML rebuild, so rendered datasheets and the active sheet
+  // survive; _activeEntry is left alone.
+  function reorderForDead() {
+    if (!_root) return;
+    const army = getArmy(); if (!army || !army.id) return;
+    const switcher = _root.querySelector('.play-switcher');
+    const panel = _root.querySelector('.play-panel[data-panel="sheets"]');
+    if (!switcher || !panel) return;
+    const known = new Set(_virtual.map(o => o.vid));
+    const ordered = orderedEntries(army, gameFor(army.id)).filter(o => known.has(o.vid));
+    if (ordered.length !== _virtual.length) return;   // army changed under us; next render fixes it
+    _virtual = ordered;
+    _entryOrder = ordered.map(o => o.vid).filter(Boolean);
+    ordered.forEach(({ vid }) => {
+      const chip = switcher.querySelector('.play-unit-chip[data-entry-id="' + vid + '"]');
+      const sheet = panel.querySelector('.play-sheet[data-entry-id="' + vid + '"]');
+      if (chip) switcher.appendChild(chip);
+      if (sheet) panel.appendChild(sheet);
+    });
+    markFirstDead();
+  }
+  // data-first-dead on the first destroyed chip draws the separator.
+  function markFirstDead() {
+    if (!_root) return;
+    const army = getArmy();
+    const g = (army && army.id) ? gameFor(army.id) : { units: {} };
+    let first = null;
+    _root.querySelectorAll('.play-switcher .play-unit-chip').forEach(chip => {
+      chip.removeAttribute('data-first-dead');
+      const u = g.units[chip.dataset.entryId];
+      if (!first && u && u.dead) first = chip;
+    });
+    if (first) first.setAttribute('data-first-dead', '');
   }
   function onReset() {
     const army = getArmy(); if (!army || !army.id) return;
@@ -415,6 +466,7 @@
     if (!ok) return;
     clearGame(army.id);
     applyGameState();
+    reorderForDead();
   }
 
   // Paint CP + per-sheet/chip dead state from stored game state. DOM-patch
@@ -482,6 +534,7 @@
     setActiveTab(_activeTab);
     applyLayout();
     applyGameState();
+    markFirstDead();
     _rendered = true; _dirty = false;
   }
 
@@ -510,7 +563,7 @@
   function renderSheets(root, cr, army) {
     const switcher = root.querySelector('.play-switcher');
     const panel = root.querySelector('.play-panel[data-panel="sheets"]');
-    const ordered = orderedEntries(army);
+    const ordered = orderedEntries(army, army && army.id ? gameFor(army.id) : null);
     _virtual = ordered;
     _entryOrder = ordered.map(o => o.vid).filter(Boolean);
     if (!ordered.length) {
