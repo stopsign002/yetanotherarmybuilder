@@ -270,7 +270,7 @@ Cross-cutting docs:
 - **Depends on:** `window.beforeinstallprompt`/`appinstalled`, `App.hooks.bootstrap`/`armyChange`.
 - **Storage:** `localStorage.yaab_pwa_dismissed` (install-button dismissal — set by `appinstalled`, a declined Android prompt, or the iOS sheet's "Got it"), `localStorage.yaab_mobile_panel` (last-active mobile tab).
 - **DOM:** Builds and appends to `document.body` itself (never via `index.html` or the `armyToolbarActions` render pipeline): `#yaab-btn-install` (floating install button, `.btn.btn-accent.yaab-install-fab`) and, lazily, `#ios-install-backdrop` > `#ios-install-sheet` (`role="dialog"`, `aria-modal`, three-step `<ol>` with an inline-SVG Share glyph, closed by Escape/backdrop-click/`#ios-install-not-now` or dismissed by `#ios-install-close`). Also `.mobile-tabbar` buttons.
-- **Notes:** `isIOS()` = `/iPad|iPhone|iPod/` UA test or `MacIntel` + `maxTouchPoints > 1` (iPadOS 13+). On iOS, clicking the button with no captured prompt opens the sheet instead of no-op'ing (issue #60). Escape handling is bound only while the sheet is open. Mobile tab bar has 4 tabs: Army / Units / Detail / More.
+- **Notes:** `isIOS()` = `/iPad|iPhone|iPod/` UA test or `MacIntel` + `maxTouchPoints > 1` (iPadOS 13+). On iOS, clicking the button with no captured prompt opens the sheet instead of no-op'ing (issue #60). Escape handling is bound only while the sheet is open. Mobile tab bar has 5 tabs: Army / Units / Details / Waha / More. The Waha tab (`data-mode="waha"`) calls `App.setMode('waha')`; panel tabs tapped from Waha switch to Build first; `syncActiveTab` also runs from `App.hooks.modeChange`.
 
 ### `js/app/auth.js`
 - **Purpose:** User session state + auth API calls.
@@ -670,10 +670,10 @@ Cross-cutting docs:
 ### `js/ui/waha-mode.js`
 - **Purpose:** Waha mode — look anything up with no army involved (owns `#waha-mode`): one always-visible search box over every datasheet, detachment, stratagem (faction + core), army/detachment rule and enhancement, optional faction filter, kind tabs with live counts, results left / reader right (phone: results screen then reader screen). Contract: `docs/WAHA-MODE.md`.
 - **Exports:** `App.wahaMode.activate`; shelf button `btn-waha-mode`; Build Details-pane hint button (`.waha-hint-btn`).
-- **Depends on:** `App.state.factions` (read-only; polls until >= 30 loaded and rebuilds the index when `factionsVersion`, the Legends pref or the loaded stratagem count changes), `App.CORE_STRATAGEMS`, `UI.createUnitCard`, `UI.renderUnitDetail` (`opts.browseView`), `UI.renderDetachmentDetail` / `UI.renderRuleDetail` (`opts.host`), `UI.stratPhaseLabel`, `App.factionGlyph`, `App.backTrap` (`waha:reader`), `App.hooks.{modeChange, bootstrap, armyToolbarActions}`.
+- **Depends on:** `App.state.factions` (read-only; polls until >= 30 loaded and rebuilds the index when `factionsVersion`, the Legends pref or the loaded stratagem count changes), `App.CORE_STRATAGEMS`, `UI.createUnitCard`, `UI.renderUnitDetail` (`opts.browseView`), `UI.renderDetachmentDetail` / `UI.renderRuleDetail` (`opts.host`), `UI.stratPhaseLabel`, `App.factionGlyph`, `App.backTrap` (`waha:reader`, `waha:listing`), `App.hooks.{modeChange, bootstrap, armyToolbarActions}`.
 - **Storage:** `localStorage.yaab_waha_recent` (last 10 opened: `[{kind,key,factionId,detName?}]`, device-local, never synced). Nothing else; never writes `App.state`.
 - **DOM:** `#waha-mode` host; `.waha-root` > `.waha-header` (`#waha-q`, `#waha-faction`, `#waha-exit`), `.waha-tabs` (`.waha-tab[data-tab]`), `.waha-results`, `.waha-reader`. Rows are `[data-waha-kind][data-waha-key]`. Styles in `css/waha-mode.css`.
-- **Notes:** Opens on everything every time (filter All, query empty, search focused). Keys: `/` focus, arrows highlight, Enter opens, Esc clears. Faction select values are `factionName` (`all` = All factions). Core stratagems stay visible under a faction filter.
+- **Notes:** Opens on everything every time (filter All, query empty, search focused). Keys: `/` focus, arrows highlight, Enter opens, Esc clears. Phone Back: reader → listing → directory → Build. Faction select values are `factionName` (`all` = All factions). Core stratagems stay visible under a faction filter.
 
 ### `js/ui/topbar-export.js`
 - **Purpose:** Top-bar Export ▾ button mirror.

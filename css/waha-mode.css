@@ -325,8 +325,6 @@
 
 /* ── Phone: single column, results screen <-> reader screen ─────────── */
 @media (max-width: 820px) {
-  body[data-mode="waha"] .mobile-tabbar { display: none; }
-  body[data-mode="waha"] #waha-mode { height: 100%; }
 
   .waha-header { flex-wrap: wrap; gap: 8px; padding: 8px 10px; }
   .waha-wordmark { order: 1; flex: 1 1 auto; }

@@ -182,11 +182,11 @@ for the current query + faction. "Army rules" includes detachment rules.
 **Phone (≤820px): single column.** Header sticky; kind tabs scroll
 horizontally; results fill the screen; opening an item slides to a reader
 screen with `‹ Back` and the breadcrumb (`Space Marines › Gladius Task
-Force`). `body[data-mode="waha"] .mobile-tabbar { display:none }` and
-`body[data-mode="waha"] #waha-mode { height:100% }` in `css/waha-mode.css`
-(mirror `play-mode.css:456-457`). The reader screen registers with
-`App.backTrap.opened('waha:reader', fn)` / `closed(...)` so hardware Back
-goes reader → results → Build rather than leaving the site (see how
+Force`). The phone tab bar stays visible in Waha (a Waha tab sits between
+Details and More; the old hide rules were removed 2026-10-25). The reader
+screen registers `waha:reader` and a listing (query or faction set) registers
+`waha:listing` via `App.backTrap.opened(id, fn)` / `closed(...)` so hardware
+Back goes reader → listing → directory → Build rather than leaving the site (see how
 `mode-shell.js:105-112` uses `App.backTrap`).
 
 ### Search index and ranking
@@ -246,3 +246,71 @@ results → `history.back()` → Build. Reload while in Waha → lands in Waha.
 
 ≤150 words each: files changed, function names, what the self-check printed,
 anything in this contract that turned out wrong. No narration.
+
+## Addendum 2026-10-25 (evening) — phone Back steps through views; Waha tab in the phone bar
+
+Owner: "When pressing back on your phone in waha mode it takes you out of
+waha mode instead of going back a view. Also, make waha mode a tab at the
+bottom of the mobile view."
+
+Measured in headless Chrome at 390px: reader → Back → results works (the
+`waha:reader` trap). But a faction tile tap or a typed query pushes no history
+entry, so from a listing one Back leaves the mode. Views, innermost last:
+**directory** (empty query, All factions) → **listing** (a query, a faction,
+or both) → **reader**.
+
+Files owned by the worker: `js/ui/waha-mode.js`, `css/waha-mode.css`,
+`js/app/pwa-install.js`, `css/mobile.css` (tab-bar rules only), this file's
+Page/Phone paragraph and `docs/MODULE-REFERENCE.md` (pwa-install + waha
+entries). Nothing else; no changelog; no commit.
+
+### Back steps through views
+
+- One extra trap, `waha:listing`, via `App.backTrap.opened('waha:listing',
+  closeFn)` the moment the page leaves the directory state (query becomes
+  non-empty OR faction select leaves `all`, whichever first; a tile tap sets
+  the select so it is covered). `closeFn` returns to the directory: clears the
+  query, sets the select to All, re-renders, keeps the kind tab. The trap is
+  `closed('waha:listing')` when the user returns to the directory by their own
+  means (Esc/× clearing the last filter, choosing All factions) — so Back then
+  leaves the mode, as today. Never stack it twice (`isTrapped` guard); the
+  reader trap nests above it as now. Order after a tile tap then a result
+  open: `[mode:waha, waha:listing, waha:reader]` — Back, Back, Back = results,
+  directory, Build.
+- The Exit button and `deactivate()` must leave no stale `waha:listing` /
+  `waha:reader` traps: mode-shell's `closed('mode:waha')` splices everything
+  above it, so just drop Waha's own flags (as `deactivate` does today).
+- `activate()` already resets to the directory; nothing to trap on entry.
+
+### Waha tab in the phone bar
+
+- `js/app/pwa-install.js`: a fifth tab between Details and More —
+  `makeTab`-style button with `data-mode="waha"`, label `Waha`, icon a 24×24
+  stroke magnifier (circle + handle, matching the other glyphs' 1.8 stroke).
+  Click → `App.setMode('waha')`. The three panel tabs, when clicked while
+  `App.getMode() === 'waha'`, call `App.setMode('build')` first and then
+  `setPanel(name)` as today. `syncActiveTab` marks the Waha tab
+  `aria-current="page"` when the mode is `waha` and clears the panel tabs
+  then; register `App.hooks.modeChange.push(mode => syncActiveTab(...))` so a
+  switch from any entry point repaints the bar.
+- `css/waha-mode.css`: delete the two rules that hide the bar and stretch the
+  page in Waha (`body[data-mode="waha"] .mobile-tabbar { display:none }` and
+  `body[data-mode="waha"] #waha-mode { height:100% }`); `css/mobile.css`
+  already sizes `#waha-mode` under the bar. Play keeps hiding the bar — not
+  this item.
+- `css/mobile.css`: whatever the bar needs for five buttons (it is a flex row;
+  check labels still fit at 320px — shorten nothing, let the font be the
+  existing size, verify by screenshot at 390 and 360).
+- Waha's own `‹ Back` header button and Exit stay.
+
+### Self-check (worker)
+
+`node --check` (docker) on both JS files. A `browse.sh run` at 390px: enter
+Waha by tapping the new tab → `body[data-mode=waha]`, Waha tab
+`aria-current`; tap a faction tile → `history.back()` → directory shown
+(query empty, select All, still in Waha); type `intercessor`, open the unit
+→ `history.back()` → results with the query still set → `history.back()` →
+directory → `history.back()` → Build with the bar showing Army/Units/Details
+again and the Waha tab not current; tap Units from Waha → Build + units
+panel. Also `scripts/play-e2e.mjs` still 71/72 (#103). No screenshots for the
+record.

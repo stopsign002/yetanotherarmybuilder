@@ -316,13 +316,19 @@
     if (!nav) return;
     const moreOpen = !!(App.settingsDrawer && typeof App.settingsDrawer.isOpen === 'function'
                         && App.settingsDrawer.isOpen());
+    const inWaha = !!(App.getMode && App.getMode() === 'waha');
     nav.querySelectorAll('button[data-panel]').forEach(b => {
-      if (!moreOpen && b.getAttribute('data-panel') === panel) {
+      if (!moreOpen && !inWaha && b.getAttribute('data-panel') === panel) {
         b.setAttribute('aria-current', 'page');
       } else {
         b.removeAttribute('aria-current');
       }
     });
+    const wahaBtn = nav.querySelector('button[data-mode="waha"]');
+    if (wahaBtn) {
+      if (!moreOpen && inWaha) wahaBtn.setAttribute('aria-current', 'page');
+      else wahaBtn.removeAttribute('aria-current');
+    }
     const moreBtn = nav.querySelector('button[data-action="more"]');
     if (moreBtn) {
       if (moreOpen) moreBtn.setAttribute('aria-current', 'page');
@@ -341,6 +347,7 @@
     army: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/></svg>',
     units: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></g></svg>',
     detail: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.4"/><path d="M5 20c1-3.4 3.8-5.2 7-5.2S18 16.6 19 20"/></g></svg>',
+    waha: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/></g></svg>',
     more: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></g></svg>',
   };
 
@@ -349,6 +356,12 @@
     // needs the expanded/controls pair. Without it a screen-reader user gets a
     // button called "More" with no indication it opens anything or that it is
     // currently open — and on mobile this tab bar is the only chrome there is.
+    if (panel === 'waha') {
+      return '<button type="button" data-mode="waha" aria-label="' + label + '">' +
+             '<span class="mtab-icon">' + ICONS[iconKey] + '</span>' +
+             '<span class="mtab-label">' + label + '</span>' +
+             '</button>';
+    }
     const disclosure = panel
       ? ''
       : ' aria-haspopup="dialog" aria-expanded="false" aria-controls="settings-drawer-root"';
@@ -371,13 +384,27 @@
       makeTab('army',   'Army',    'army') +
       makeTab('units',  'Units',   'units') +
       makeTab('detail', 'Details', 'detail') +
+      makeTab('waha',   'Waha',    'waha') +
       makeTab(null,     'More',    'more');
 
     nav.addEventListener('click', function (e) {
-      const btn = e.target.closest('button[data-panel], button[data-action="more"]');
+      const btn = e.target.closest('button[data-panel], button[data-mode], button[data-action="more"]');
       if (!btn) return;
+      if (btn.getAttribute('data-mode') === 'waha') {
+        if (App.settingsDrawer && typeof App.settingsDrawer.isOpen === 'function'
+            && App.settingsDrawer.isOpen() && typeof App.settingsDrawer.close === 'function') {
+          App.settingsDrawer.close();
+        }
+        if (typeof App.setMode === 'function' && App.getMode && App.getMode() !== 'waha') App.setMode('waha');
+        return;
+      }
       const panel = btn.getAttribute('data-panel');
       if (panel) {
+        if (App.getMode && App.getMode() === 'waha' && typeof App.setMode === 'function') {
+          App.setMode('build');
+          setPanel(panel);
+          return;
+        }
         // Tapping the tab you're already on scrolls that pane to the top —
         // the standard bottom-nav gesture, and previously a dead tap.
         const drawerShut = !(App.settingsDrawer && typeof App.settingsDrawer.isOpen === 'function'
@@ -414,6 +441,10 @@
       }
     });
     document.body.appendChild(nav);
+    App.hooks = App.hooks || {};
+    (App.hooks.modeChange = App.hooks.modeChange || []).push(function () {
+      syncActiveTab(document.body.dataset.mobilePanel);
+    });
   }
 
   // ── Badge updates from armyChange hook ─────────────────────────────────

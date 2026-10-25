@@ -702,6 +702,34 @@
     leaveReaderScreen();
   }
 
+  // ── listing trap: one Back from a listing returns to the directory ────
+  function inListing() { return !!S.q || S.faction !== 'all'; }
+  function syncListingTrap() {
+    if (!App.backTrap) return;
+    const trapped = App.backTrap.isTrapped('waha:listing');
+    if (inListing()) {
+      if (!trapped) App.backTrap.opened('waha:listing', leaveListing);
+    } else if (trapped) {
+      App.backTrap.closed('waha:listing');
+    }
+  }
+  // Idempotent — also what hardware Back calls once the trap is popped.
+  function leaveListing() {
+    if (!_root || !inListing()) return;
+    S.q = '';
+    S.faction = 'all';
+    S.limits = {};
+    _results = null;
+    const box = q('#waha-q');
+    if (box) box.value = '';
+    const sel = q('#waha-faction');
+    if (sel) sel.value = 'all';
+    clearTimeout(_timer);
+    renderResults();
+    const res = q('.waha-results');
+    if (res) res.scrollTop = 0;
+  }
+
   // ── query / filter / tab / paging handlers ────────────────────────────
   function applyQuery() {
     clearTimeout(_timer);
@@ -710,6 +738,7 @@
     S.limits = {};
     _results = null;
     renderResults();
+    syncListingTrap();
   }
   function setTab(tab) {
     if (!TABS.some(t => t[0] === tab)) return;
@@ -726,6 +755,7 @@
     renderResults();
     const box = q('.waha-results');
     if (box) box.scrollTop = 0;
+    syncListingTrap();
   }
   function visibleRows() {
     const box = q('.waha-results');
@@ -893,6 +923,7 @@
     _mounted = true;
     resetState();
     backFromReader();
+    if (App.backTrap && App.backTrap.isTrapped('waha:listing')) App.backTrap.closed('waha:listing');
     root.dataset.screen = 'results';
     const box = q('#waha-q');
     if (box) box.value = '';

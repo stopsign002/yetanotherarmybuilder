@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.25-2',
-    lastUpdated: '2026-10-25T21:00:00Z',
+    version:     '2026.10.25-3',
+    lastUpdated: '2026-10-25T23:30:00Z',
     entries: [
+      {
+        date: '2026-10-25',
+        kind: 'fix',
+        title: 'Waha on a phone: a tab of its own, and Back steps through views',
+        description: 'Waha now has its own tab in the bottom bar next to Details, and the bar stays visible while you are in it, so switching between looking something up and your army is one tap each way. The phone\u2019s Back button also steps back one view at a time \u2014 from a datasheet to the results, from the results to the faction directory, and only then out of Waha \u2014 instead of leaving the mode the moment you pressed it from a search.',
+      },
       {
         date: '2026-10-25',
         kind: 'feature',
