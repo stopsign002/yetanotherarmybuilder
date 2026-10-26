@@ -41,6 +41,20 @@
 // entries pushed at phone width must still unwind correctly if the user rotates
 // or resizes past the breakpoint, which the old media-query-free reconciler got
 // wrong in the other direction.
+//
+// ── closed() then opened() in the same tick (#73, #106) ───────────────────
+// history.go() is ASYNC: the traversal runs on a later task and only then
+// fires popstate. history.pushState() is SYNC. So a surface that closes one
+// trap and opens another in the same call — the Settings drawer handing off
+// to a mode, or mode-shell switching Collect → Play — used to push the new
+// entry BEFORE the queued go(-1) ran. The traversal then rewound relative to
+// the advanced position, leaving the document behind an orphaned forward
+// entry, and the NEXT closed() went one entry past the yaab document: on a
+// phone, Collect → Play → Build reloaded the page (#106). #73 fixed one
+// caller by waiting for the popstate; this fixes it for every caller.
+// opened() during an in-flight traversal records the trap at once (so
+// isTrapped() and nested closed() see it) but defers its pushState until the
+// popstate that traversal causes, which serialises the two history writes.
 (function () {
   const App = window.App = window.App || {};
 
@@ -67,11 +81,28 @@
     if (!isMobile()) return;
     if (indexOf(id) !== -1) return;   // already trapped — never stack duplicates
     const key = 'yaab:' + (++seq);
-    traps.push({ id: id, key: key, close: closeFn });
+    const trap = { id: id, key: key, close: closeFn, pushed: false };
+    traps.push(trap);
+    // A go() from a closed() earlier in this task has not been processed yet
+    // — pushing now would land ahead of it (see the header). Defer the push
+    // to the popstate that traversal fires; flushPending() does it.
+    if (swallow > 0) return;
+    push(trap);
+  }
+
+  function push(trap) {
     try {
-      history.pushState({ yaab: key }, '');
+      history.pushState({ yaab: trap.key }, '');
+      trap.pushed = true;
     } catch (_) {
-      traps.pop();                    // history unavailable — stay consistent
+      const i = traps.indexOf(trap);  // history unavailable — stay consistent
+      if (i !== -1) traps.splice(i, 1);
+    }
+  }
+
+  function flushPending() {
+    for (let i = 0; i < traps.length; i++) {
+      if (!traps[i].pushed) push(traps[i]);
     }
   }
 
@@ -81,8 +112,12 @@
     // Drop this trap and anything nested above it, then rewind the same number
     // of entries. Splice FIRST so the popstate we're about to cause — and any
     // re-entrant closed() from a nested surface — sees the updated stack.
-    const count = traps.length - i;
+    // Only traps that actually reached history count towards the rewind — a
+    // trap still waiting on a traversal (see the header) has no entry yet.
+    let count = 0;
+    for (let j = i; j < traps.length; j++) if (traps[j].pushed) count++;
     traps.length = i;
+    if (!count) return;
     swallow++;
     try {
       history.go(-count);
@@ -100,7 +135,13 @@
   // closes one surface; a press with nothing trapped falls through to the
   // browser and leaves the site, which is the correct exit.
   window.addEventListener('popstate', function (e) {
-    if (swallow > 0) { swallow--; return; }
+    if (swallow > 0) {
+      swallow--;
+      // The traversal we were waiting on has landed; anything opened while it
+      // was in flight can take its history entry now, in order.
+      if (swallow === 0) flushPending();
+      return;
+    }
     if (!traps.length) return;        // nothing of ours is live — not our event
 
     const key = e && e.state && e.state.yaab;

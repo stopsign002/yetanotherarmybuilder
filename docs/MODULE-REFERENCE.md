@@ -483,12 +483,12 @@ Cross-cutting docs:
 - **Notes:** Re-evaluates on resize. Desktop is untouched.
 
 ### `js/app/mobile-history.js`
-- **Purpose:** Wires the mobile panel + More drawer into the browser history stack.
-- **Exports:** `App.setMobilePanel` (mobile-aware panel switch). Registers `App.hooks.bootstrap`.
-- **Depends on:** `window.matchMedia` (≤820px), `App.hooks`, browser history / `popstate`.
+- **Purpose:** Makes the hardware/browser Back button close exactly one thing on phones — the Details panel, the More drawer, a non-Build mode — instead of leaving the site.
+- **Exports:** `App.backTrap.{opened(id, closeFn), closed(id), isTrapped(id)}`. Surfaces announce themselves; nothing is monkey-patched.
+- **Depends on:** `window.matchMedia` (≤820px), browser history / `popstate`, the `yaab:mobile-panel-change` event from `pwa-install.js`.
 - **Storage:** none.
-- **DOM:** none directly (drives panel + drawer state).
-- **Notes:** Active only on mobile — the back button moves Detail → Units and closes the More drawer instead of leaving the site. On desktop the wraps are no-ops and `popstate` is ignored. `App.setMobilePanel` is also defined by `mobile-shell.js` / `pwa-install.js`; `index.html` load order decides the final binding.
+- **DOM:** none directly (calls each trap's `closeFn`).
+- **Notes:** One `history.pushState` per live trap, pushed only at phone width; `popstate` is never gated so entries unwind after a rotate. `closed()` rewinds with an ASYNC `history.go(-n)`, so an `opened()` arriving while that traversal is in flight (drawer → mode, Collect → Play) is recorded at once but has its push deferred to the traversal's `popstate` (#73, #106) — otherwise the push landed first and the next rewind went past the document and reloaded the page.
 
 ### `js/app/mode-shell.js`
 - **Purpose:** Build / Collect / Play / Cards mode container switching.

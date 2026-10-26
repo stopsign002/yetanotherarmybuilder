@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.26-2',
-    lastUpdated: '2026-10-26T06:30:00Z',
+    version:     '2026.10.26-3',
+    lastUpdated: '2026-10-26T12:00:00Z',
     entries: [
+      {
+        date: '2026-10-26',
+        kind: 'fix',
+        title: 'Phone: switching between Collect, Play and Waha no longer reloads the page',
+        description: 'Going from one of those modes straight to another and then back to Build used to reload the whole app on a phone. The Back button also behaves after such a switch: one press returns you to Build instead of leaving the site.',
+      },
       {
         date: '2026-10-26',
         kind: 'feature',
