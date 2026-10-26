@@ -191,10 +191,16 @@ try {
 } catch (e) { offlineOk = false; offlineErr = e.message.split('\n')[0]; }
 check('app shell paints with the network off', offlineOk, offlineErr);
 
-const feedOffline = await page.evaluate(async () => {
-  try { const r = await fetch('js/data/community-feed.json'); return r.ok; } catch (_) { return false; }
+// A stamped asset the shell actually loads (the community feed this used to
+// fetch was removed and nothing requested it, so it was never cached — #104).
+// The worker matches cache keys EXACTLY, query included, so ask for the same
+// URL the <script> tag did.
+const changelogOffline = await page.evaluate(async () => {
+  const s = document.querySelector('script[src*="js/data/changelog-data.js"]');
+  if (!s) return 'no script tag';
+  try { const r = await fetch(s.getAttribute('src')); return r.ok ? true : 'status ' + r.status; } catch (e) { return 'threw: ' + e.message; }
 });
-check('community feed is served from cache offline', feedOffline);
+check('changelog data is served from cache offline', changelogOffline === true, String(changelogOffline));
 
 await page.screenshot({ path: `${OUT}/pwa-offline-desktop.png`, fullPage: false });
 await ctx.setOffline(false);

@@ -50,7 +50,7 @@ not tests). The app itself needs no `npm install` — vendored deps are committe
 | `js/app/admin.js` | Site-operator admin panel (admins only). Approve/revoke users, browse+resolve bug reports, moderate card-back images. Client for `/api/admin/*`; contract in `docs/ADMIN_API.md`. |
 | `js/app/id-migration.js` | One-time per-device shim: migrates stale reserve/requisition unit-ids from dormant BSData GUIDs to 40kdc slug ids. |
 | `js/app/entry-rehydrate.js` | Refreshes army entries' embedded `unitData` snapshots against current `window.DC` (add-time copies go stale across data refreshes). |
-| `js/data/` | Static JSON-ish data: lore, stratagems, community feed. |
+| `js/data/` | Static data modules: the 40kdc adapter, stratagem data, the changelog. |
 | `js/ui/` | DOM-rendering modules. Each attaches to `window.UI`. See `docs/UI.md`. |
 | `js/app/` | Bootstrap, state, events, and feature modules. Each attaches to `window.App`. See `docs/UI.md` and `docs/MODULE-REFERENCE.md`. |
 | `fonts/` | Faces a THEME needs, as opposed to the app's own. Today just `Archivo-100-900.woff2` (variable 100-900, latin subset, 34KB), loaded by an `@font-face` inside `css/themes/brutalist.css` and therefore fetched only by users on a brutalist theme. Same file ledger and Tandem use for the same look. `font-src` is `'self'`, so it is served from here rather than Google. |
@@ -85,7 +85,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Modes | Build mode page (hero + rules pinboard tab + roster polish) | `js/ui/build-mode.js` |
 | Modes | Collect mode page (Painting) | `js/ui/collect-mode.js` |
 | Modes | Waha mode — look anything up (any datasheet, detachment, stratagem, rule or enhancement, any faction) with no army and no builder writes; one search box, kind tabs, reader | `js/ui/waha-mode.js`, `css/waha-mode.css` |
-| Modes | Play mode — fast-switching game-day reference (unit switcher, stratagems/rules/enhancements tabs, CP + wound tracking) | `js/ui/play-mode.js`, `css/play-mode.css` |
+| Modes | Play mode — fast-switching game-day reference (unit switcher, stratagems/rules/enhancements tabs, CP counter + destroyed toggle; wounds are tracked on the board, not in the app) | `js/ui/play-mode.js`, `css/play-mode.css` |
 | Account & sync | Username/password auth | `js/app/auth.js`, `js/ui/auth-modal.js` |
 | Account & sync | Top-bar account button | `js/ui/auth-button.js` |
 | Account & sync | Cloud sync of armies + KV bag | `js/app/sync.js` |
@@ -129,7 +129,7 @@ Grouped by user intent. One module per row; module path is the search target.
 ## Module conventions
 
 - No build step for APP code. No `import`/`export`. Plain `<script src>` in `index.html`. Each file is an IIFE that attaches to `window.WahapediaParser`, `window.UI`, `window.App`, `window.YaabDB`, or one of the legacy globals (`Storage`, `Army`, `ArmyManager`, `BSData`). The ONE exception is the offline data-bundle build under `build/` (esbuild → `js/vendor/dc-bundle.js`); its output is a static `.js` loaded like any other asset. Don't introduce a bundler/framework/TypeScript for the app itself.
-- **Hook-first architecture**. Feature modules MUST register via `App.hooks` — do NOT edit shared files (`events.js`, `detail.js`, `index.html` toolbar, etc.) to add a new feature. Push onto `App.hooks.armyToolbarActions`, `App.hooks.detailActions`, `App.hooks.bootstrap`, `App.hooks.armyChange`, `App.hooks.selectionChange`, `App.hooks.rosterFilters`, `App.hooks.cardClassContributors`, `App.hooks.armyEntryActions` (icon buttons on an army-list row), or `App.hooks.modeChange` from your new module's IIFE. See `js/app/hooks.js`.
+- **Hook-first architecture**. Feature modules MUST register via `App.hooks` — do NOT edit shared files (`events.js`, `detail.js`, `index.html` toolbar, etc.) to add a new feature. Push onto `App.hooks.armyToolbarActions`, `App.hooks.detailActions`, `App.hooks.bootstrap`, `App.hooks.armyChange`, `App.hooks.selectionChange`, `App.hooks.rosterFilters`, `App.hooks.cardClassContributors`, `App.hooks.armyEntryActions` (icon buttons on an army-list row), `App.hooks.paletteCommands` (a Cmd/Ctrl+K command), or `App.hooks.modeChange` from your new module's IIFE. See `js/app/hooks.js`.
 - **Toolbar regions**: `primary` (Tools menu by default), `icon` (top-bar icon shelf or More menu), `tools-menu`, `more-menu`, `export-menu`. See `js/app/index.js` for the routing rules.
 - **Lazy loading**: heavy feature modules can be deferred via `js/app/lazy-modules.js` placeholders. The placeholder registers a stub action; on first click it injects the real script(s) and rewires the in-DOM button. Currently ALL feature modules are also eager-loaded from `index.html`, so lazy-modules.js is an opt-in path that is not yet wired into the page.
 - Script load order in `index.html` — see `docs/ARCHITECTURE.md`. Within a folder, hooks resolve lazily by name so leaf order is mostly defensive.
@@ -278,7 +278,7 @@ It is back because Chrome will not offer "Install app" without a registered work
 1. **`sw.js` is never cached by itself** — Caddy `no-cache` on `*.js`, `updateViaCache:'none'` on the registration, and `ours()` refuses to intercept `/sw.js`. A cached worker can't be replaced by a fixed one, and this is what keeps `sw-kill.js` reachable.
 2. **Navigations are network-first** with a 1500 ms timeout, falling back to the cached shell. A deploy can never be invisible.
 3. **Static assets are stale-while-revalidate, never cache-first.** The cache self-heals within one extra load even if `VERSION` never moves. This is the precise line the old one got wrong.
-4. **`/api/` and `/data/` are never touched.** `/api` is user data behind an auth cookie. `/data` is 48 MB — 11 MB of GDC prose that `js/gdc.js` already read-throughs into IndexedDB (so those requests never recur), plus 37 MB of dormant BSData XML. Mind the near-collision: `js/data/community-feed.json` is under `/js/`, so it IS cached.
+4. **`/api/` and `/data/` are never touched.** `/api` is user data behind an auth cookie. `/data` is 48 MB — 11 MB of GDC prose that `js/gdc.js` already read-throughs into IndexedDB (so those requests never recur), plus 37 MB of dormant BSData XML. Mind the near-collision: `js/data/*` is under `/js/`, not `/data/`, so it IS cached (that is the adapter, the stratagem data and the changelog).
 
 **`SHELL` is deliberately tiny** — `/`, `/index.html`, `/manifest.json` and the icons. It is the *offline navigation fallback*, not a precache list. All 192 files index.html references are requested on every load anyway, so rule 3 caches them on load #1 for free; precaching them would download ~14 MB twice on the install visit for no extra coverage. **Do not add files to `SHELL` when you add a module.**
 

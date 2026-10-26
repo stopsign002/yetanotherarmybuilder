@@ -89,7 +89,8 @@ Defined in `js/app/hooks.js`. Every hook is an array of callbacks; failure in on
 | `rosterFilters` | called per-unit during `UI.renderUnitRoster` filtering | `(unit) => boolean` | Returning `false` hides the unit. Used by legends-toggle, kill-team, favorites (filtered view), collection (status filter). |
 | `cardClassContributors` | called per-unit during card render | `(unit) => string \| null` | Adds extra class names to the `.unit-card`. Used by legends-toggle (`.unit-legends`), collection (status badges), role-icons, unit-card-themes (`faction-<slug>`). |
 | `armyEntryActions` | read by `ui/army-list.js` for every army-entry card it renders | n/a (data) | Action shape: `{ id, className?, title, ariaLabel(entry)?, svg, visible(entry, index, army)?, onClick(entry, index, army, ev) }`. Icon buttons on an army-list row, left of the remove ×. The dispatcher resolves the entry by `entryId`, **not** by array index, so an action may splice `army.entries` safely. Used by `split-entry`. |
-| `modeChange` | after `mode-shell.js` switches the visible top-level container | `(newMode, prevMode) => void` | Modes are `'build'` / `'collect'`. Used by `build-mode` and `collect-mode` to lazy-build their panels on first activation. |
+| `modeChange` | after `mode-shell.js` switches the visible top-level container | `(newMode, prevMode) => void` | Modes are `'build'` / `'collect'` / `'cards'` / `'play'` / `'waha'`. Used by `build-mode` and `collect-mode` to lazy-build their panels on first activation. |
+| `paletteCommands` | read by `command-palette.js` each time Cmd/Ctrl+K opens | n/a (data, or `() => command[]`) | Command shape: `{ id, label, hint?, run() }`. Push an object, or a function for state-dependent items. `id` dedupes (first wins). Commands join the Actions group. Used by `mode-shell` (Build/Collect), `waha-mode`, `play-mode`. |
 
 ## Toolbar region routing
 

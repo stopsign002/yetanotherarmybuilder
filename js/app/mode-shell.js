@@ -118,6 +118,18 @@
   App.setMode = function (mode) { applyMode(mode); };
   App.getMode = function () { return currentMode; };
 
+  // Cmd/Ctrl+K: switch between the two workspace modes this file owns.
+  // Waha and Play register their own, better-worded commands in their modules.
+  // Dynamic so the mode you are already in is not offered.
+  if (!Array.isArray(App.hooks.paletteCommands)) App.hooks.paletteCommands = [];
+  App.hooks.paletteCommands.push(function () {
+    return [
+      { id: 'mode-build',   label: 'Build mode',   hint: 'Go to the army builder' },
+      { id: 'mode-collect', label: 'Collect mode', hint: 'Go to your collection' },
+    ].filter(c => c.id.slice(5) !== currentMode)
+     .map(c => ({ id: c.id, label: c.label, hint: c.hint, run: () => applyMode(c.id.slice(5)) }));
+  });
+
   // ── Tab click + keyboard wiring ────────────────────────────────────────
   function bindTabs() {
     const list = document.querySelector('.topbar-modes');

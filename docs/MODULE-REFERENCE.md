@@ -222,7 +222,7 @@ Cross-cutting docs:
 - **Depends on:** `App.state`, `App.hooks`, `UI.toast`, `CSS.escape`.
 - **Storage:** none.
 - **DOM:** `cmdp-*` classes (backdrop, input, list, footer, help modal).
-- **Notes:** Results capped to 40, grouped (Actions, Factions, Detachments, Units). Tab cycles groups. Empty query suppresses the units flood. Help overlay stacks on top of palette (palette closes first on Escape).
+- **Notes:** Results capped to 40, grouped (Actions, Factions, Detachments, Units). Tab cycles groups. Empty query suppresses the units flood. Help overlay stacks on top of palette (palette closes first on Escape). Feature modules add commands via `App.hooks.paletteCommands` (`{ id, label, hint?, run() }` or a function returning them), resolved at open time — never by editing this file. Picking a unit switches to Build mode first, since the Details pane lives there.
 
 ### `js/app/validation.js`
 - **Purpose:** Advisory 10e composition checks (Rule of Three, no warlord).

@@ -991,5 +991,14 @@
     onClick: function () { App.setMode('waha'); },
   });
 
+  // Cmd/Ctrl+K entry (App.hooks.paletteCommands, yaab#105).
+  if (!Array.isArray(App.hooks.paletteCommands)) App.hooks.paletteCommands = [];
+  App.hooks.paletteCommands.push({
+    id: 'mode-waha',
+    label: 'Waha: look anything up',
+    hint: 'Any datasheet, detachment, stratagem or rule, any faction',
+    run: function () { App.setMode('waha'); },
+  });
+
   App.wahaMode = { activate: activate };
 })();

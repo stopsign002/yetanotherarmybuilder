@@ -304,23 +304,17 @@ const browser = await chromium.launch();
       jumped.tab === 'sheets' && jumped.sheet === enh.carrier, JSON.stringify(jumped));
   }
 
-  // Tracking: CP, wounds, dead.
+  // Tracking: CP and dead. Wounds are tracked on the board, not in the app
+  // (play-mode.js header) — the per-entry stepper was removed, so assert it
+  // stays gone rather than carrying a check that could only fail (#103).
   await page.click('.play-cp-btn[data-cp="1"]');
   await page.click('.play-cp-btn[data-cp="1"]');
   const cpText = await page.$eval('.play-cp-val', el => el.textContent);
   check('desktop: CP counter increments', cpText.trim() === '2 CP', cpText);
 
   const visSheet = await page.$eval('.play-sheet:not([hidden])', el => el.dataset.entryId);
-  const hasWounds = await page.$(`.play-sheet[data-entry-id="${visSheet}"] .play-w-btn[data-w="-1"]`);
-  if (hasWounds) {
-    await hasWounds.click();
-    await page.waitForTimeout(250);
-    const badge = await page.$eval(`.play-unit-chip[data-entry-id="${visSheet}"] .play-chip-w`,
-      el => ({ hidden: el.hidden, text: el.textContent }));
-    check('desktop: wound loss shows chip badge', !badge.hidden && /\d+\/\d+/.test(badge.text), badge.text);
-  } else {
-    check('desktop: wound stepper present on sheet', false, 'no stepper for ' + visSheet);
-  }
+  const woundUi = await page.$$eval('#play-mode .play-w-btn, #play-mode .play-chip-w', els => els.length);
+  check('desktop: no wound stepper or wound badge in Play (wounds live on the board)', woundUi === 0, woundUi + ' wound controls');
   await page.click(`.play-sheet[data-entry-id="${visSheet}"] .play-dead`);
   await page.waitForTimeout(150);
   const deadState = await page.evaluate(id => ({

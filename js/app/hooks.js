@@ -45,6 +45,16 @@
     // The dispatcher resolves the entry by `entryId` (stable) rather than by
     // array index, so an action that splices entries cannot mis-target.
     armyEntryActions: [],
+
+    // Commands contributed to the Cmd/Ctrl+K palette (js/app/command-palette.js).
+    // Read at OPEN time, so a module may push at any point and may push a
+    // function for dynamic items. Entry: a command, or `() => command[]`.
+    //   command = { id, label, hint?, run() }
+    // `id` dedupes (first registration wins); `hint` is the small grey
+    // subtitle; `run` is called after the palette has closed. Commands land
+    // in the Actions group next to the built-ins. Let a mode or feature
+    // appear in the palette without editing command-palette.js (guidance #2).
+    paletteCommands: [],
   };
 
   App.fireBootstrap = function (state) {

@@ -75,13 +75,36 @@
     }));
   }
 
+  // Commands registered by feature modules via App.hooks.paletteCommands.
+  // Resolved at open time (a provider may be a function returning items, so a
+  // mode can offer different commands depending on state). One broken
+  // provider is logged and skipped, same contract as the other hooks.
+  function buildHookCandidates() {
+    const providers = (App.hooks && App.hooks.paletteCommands) || [];
+    const seen = new Set();
+    const out = [];
+    providers.forEach(p => {
+      let items;
+      try { items = (typeof p === 'function') ? p() : p; }
+      catch (e) { console.warn('[hooks.paletteCommands]', e); return; }
+      (Array.isArray(items) ? items : [items]).forEach(cmd => {
+        if (!cmd || typeof cmd.run !== 'function' || !cmd.label) return;
+        const id = cmd.id || cmd.label;
+        if (seen.has(id)) return;
+        seen.add(id);
+        out.push({ type: 'Actions', label: String(cmd.label), subtitle: cmd.hint || '', run: cmd.run });
+      });
+    });
+    return out;
+  }
+
   function buildFactionCandidates(state) {
     const select = document.getElementById('army-faction-select');
     const options = select ? Array.from(select.options).map(o => o.value) : [];
     const seen = new Set();
     const out = [];
     (state.factions || []).forEach(f => {
-      const name = f.name;
+      const name = f.factionName; // dc-adapter sets factionName, never name
       if (!name || seen.has(name)) return;
       if (state.chapterFactions && state.chapterFactions.has(name)) return; // hidden
       if (options.length && options.indexOf(name) === -1) return;
@@ -160,6 +183,11 @@
 
   function openUnit(unit) {
     if (!unit || !window.App || !App.state) return;
+    // The Details pane lives in Build mode; rendering into it from Play, Waha
+    // or Collect would paint a hidden panel. Go where the unit will be seen.
+    if (typeof App.getMode === 'function' && typeof App.setMode === 'function' && App.getMode() !== 'build') {
+      App.setMode('build');
+    }
     const state = App.state;
     state.selectedUnit = unit;
     state.selectedArmyEntryIndex = null;
@@ -167,6 +195,9 @@
     if (window.UI && typeof UI.renderUnitDetail === 'function') {
       UI.renderUnitDetail(unit, detEnhs, []);
     }
+    // Phones show one pane at a time; bring the Details tab forward, as a
+    // roster-card tap does (events.js), or the pick looks like it did nothing.
+    if (typeof App.setMobilePanel === 'function') App.setMobilePanel('detail');
     // Highlight + scroll-into-view if present in current roster.
     const grid = document.getElementById('unit-grid');
     if (!grid) return;
@@ -182,6 +213,7 @@
     const state = App.state || {};
     return [].concat(
       buildActionCandidates(),
+      buildHookCandidates(),
       buildFactionCandidates(state),
       buildDetachmentCandidates(state),
       buildUnitCandidates(state),

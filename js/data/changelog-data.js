@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.26-1',
-    lastUpdated: '2026-10-26T02:00:00Z',
+    version:     '2026.10.26-2',
+    lastUpdated: '2026-10-26T06:30:00Z',
     entries: [
+      {
+        date: '2026-10-26',
+        kind: 'feature',
+        title: 'Switch modes from the command palette',
+        description: 'Cmd/Ctrl+K now lists Play, Waha, Build and Collect alongside the other actions, so you can jump between modes without reaching for the top bar. Picking a unit from the palette while in another mode brings you back to Build, where its datasheet opens.',
+      },
       {
         date: '2026-10-26',
         kind: 'feature',

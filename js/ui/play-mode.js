@@ -830,6 +830,15 @@
     onClick: function () { App.openPlayMode(); },
   });
 
+  // Cmd/Ctrl+K entry (App.hooks.paletteCommands, yaab#105).
+  if (!Array.isArray(App.hooks.paletteCommands)) App.hooks.paletteCommands = [];
+  App.hooks.paletteCommands.push({
+    id: 'mode-play',
+    label: 'Play this army',
+    hint: 'Game-day reference: sheets, stratagems, rules, CP',
+    run: function () { App.openPlayMode(); },
+  });
+
   // ── public surface ────────────────────────────────────────────────────
   App.openPlayMode = function () {
     if (typeof App.setMode === 'function') App.setMode('play');
