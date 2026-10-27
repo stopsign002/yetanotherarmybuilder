@@ -451,17 +451,17 @@ const browser = await chromium.launch();
   page.on('dialog', d => d.accept());
   const seed = await bootAndSeed(page);
 
-  // The drawer row must exist (the real mobile path) — but ENTER directly:
-  // clicking the row hits the pre-existing drawer/backTrap history race
-  // (issue #73) which poisons every later history assertion in this context.
+  // Enter Play the way a phone user does: tap the settings-drawer row. This
+  // used to call App.openPlayMode() directly to dodge the drawer-close
+  // history.go(-1) vs mode-trap pushState race (#73, fixed for every caller
+  // by #106 in mobile-history.js). The drawer path is the one that regressed,
+  // so it is the one this suite drives (#107).
   await page.evaluate(() => App.settingsDrawer.open());
   const row = await page.waitForSelector('#set-action-go-play', { timeout: 5000 }).catch(() => null);
   check('phone: drawer Play row exists', !!row);
-  await page.evaluate(() => App.settingsDrawer.close());
-  await page.waitForTimeout(300);
-  await page.evaluate(() => App.openPlayMode());
+  if (row) await row.click(); else await page.evaluate(() => App.openPlayMode());
   await page.waitForSelector('#play-mode:not([hidden]) .play-unit-chip', { timeout: 10000 });
-  check('phone: play mode opens', true);
+  check('phone: play mode opens from the drawer row', true);
   await page.waitForTimeout(500); // let the mode-enter slide animation settle
 
   // Switcher is a horizontal strip.
@@ -510,18 +510,27 @@ const browser = await chromium.launch();
 
   await page.screenshot({ path: `${OUT}/phone-final.png`, fullPage: false });
 
-  // Hardware Back returns to Build (mobile back-trap). Enter play DIRECTLY —
-  // entering via the settings drawer hits a pre-existing history race
-  // (drawer close's history.go(-1) vs the mode trap's pushState) that also
-  // breaks Back after drawer->Collect; filed separately.
+  // Hardware Back returns to Build (mobile back-trap), entering through the
+  // drawer row so the drawer-close rewind and the mode trap's push are both
+  // in the history this Back press walks. A marker on window proves Back
+  // stayed in the same document: #106's symptom was the rewind overshooting
+  // the yaab entry and reloading the whole app.
   await page.evaluate(() => App.setMode('build'));
   await page.waitForTimeout(400);
-  await page.evaluate(() => App.openPlayMode());
+  await page.evaluate(() => { window.__e2eDoc = 'same-document'; App.settingsDrawer.open(); });
+  await page.click('#set-action-go-play');
+  // The Strats tab is still active from above, which hides the chip
+  // switcher — wait on the header's Exit button, present on every tab.
+  await page.waitForSelector('#play-mode:not([hidden]) .play-exit', { timeout: 10000 });
   await page.waitForTimeout(400);
   await page.goBack().catch(() => {});
   await page.waitForTimeout(600);
-  const modeAfterBack = await page.evaluate(() => window.App && App.getMode && App.getMode()).catch(() => null);
-  check('phone: Back button returns to build', modeAfterBack === 'build', String(modeAfterBack));
+  const afterBack = await page.evaluate(() => ({
+    mode: window.App && App.getMode && App.getMode(),
+    doc: window.__e2eDoc,
+  })).catch(() => ({}));
+  check('phone: Back from drawer-entered Play returns to build', afterBack.mode === 'build', JSON.stringify(afterBack));
+  check('phone: Back stayed in the same document (no reload)', afterBack.doc === 'same-document', JSON.stringify(afterBack));
   const tabbarBack = await page.evaluate(() => {
     const t = document.querySelector('.mobile-tabbar');
     return !!t && getComputedStyle(t).display !== 'none';
