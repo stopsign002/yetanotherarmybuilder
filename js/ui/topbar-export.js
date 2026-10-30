@@ -66,16 +66,32 @@
     function openMenu() {
       menu.hidden = false;
       btn.setAttribute('aria-expanded', 'true');
-      setTimeout(() => document.addEventListener('click', onDocClick, true), 0);
+      setTimeout(() => {
+        // Only attach if still open: a quick open+close would otherwise leave
+        // the outside-click listener behind.
+        if (!menu.hidden) document.addEventListener('click', onDocClick, true);
+      }, 0);
+      document.addEventListener('keydown', onKey, true);
     }
-    function closeMenu() {
+    function closeMenu(opts) {
+      const wasOpen = !menu.hidden;
       menu.hidden = true;
       btn.setAttribute('aria-expanded', 'false');
       document.removeEventListener('click', onDocClick, true);
+      document.removeEventListener('keydown', onKey, true);
+      if (wasOpen && opts && opts.refocus) { try { btn.focus(); } catch (_) {} }
     }
     function onDocClick(e) {
       if (!wrap.contains(e.target)) closeMenu();
     }
+    function onKey(e) {
+      if (e.key === 'Escape') { e.stopPropagation(); closeMenu({ refocus: true }); }
+    }
+    // Leaving Build (palette -> Collect, Waha, Play...) must not leave the menu
+    // open behind the mode: it came back still visible and the next click on
+    // the button then closed it (needed two clicks).
+    App.hooks.modeChange = App.hooks.modeChange || [];
+    App.hooks.modeChange.push(function () { closeMenu(); });
     btn.addEventListener('click', () => { menu.hidden ? openMenu() : closeMenu(); });
 
     menu.appendChild(mkItem('Copy army code',  'btn-export-string'));

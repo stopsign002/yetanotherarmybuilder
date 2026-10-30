@@ -67,6 +67,13 @@
   // Live traps, innermost last. Exactly one pushed history entry each.
   const traps = [];
   let seq = 0;
+  // Per-load nonce in every trap key. `seq` restarts at 0 on each page load but
+  // history entries from earlier loads survive a reload carrying their old
+  // keys ('yaab:1'...), so without this a stale entry matched a fresh trap with
+  // the same number and Back presses were swallowed (N+1 dead presses after N
+  // reloads). A key that matches no live trap now correctly reads as "below
+  // everything this load opened".
+  const NONCE = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   // popstate events we caused ourselves via history.go() and must not act on.
   // A multi-step traversal fires popstate once, so this counts go() calls.
   let swallow = 0;
@@ -80,7 +87,7 @@
     if (!id || typeof closeFn !== 'function') return;
     if (!isMobile()) return;
     if (indexOf(id) !== -1) return;   // already trapped — never stack duplicates
-    const key = 'yaab:' + (++seq);
+    const key = 'yaab:' + NONCE + ':' + (++seq);
     const trap = { id: id, key: key, close: closeFn, pushed: false };
     traps.push(trap);
     // A go() from a closed() earlier in this task has not been processed yet

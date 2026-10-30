@@ -5,6 +5,15 @@
   App.wireEvents = function () {
     const state = App.state;
 
+    // Whenever the current army is swapped wholesale (New / Load / Import /
+    // Save-as / deleting the open army), an index into the OLD army must not
+    // survive: the enhancement handler and the wargear picker write to
+    // entries[selectedArmyEntryIndex] of whatever army is current (#71 class).
+    function resetEntrySelection() {
+      state.selectedArmyEntryIndex = null;
+      try { if (window.UI && typeof UI.clearUnitDetail === 'function') UI.clearUnitDetail(); } catch (_) {}
+    }
+
     document.getElementById('army-faction-select').addEventListener('change', e => {
       state.factionFilter = e.target.value;
       state.selectedChapter = null;
@@ -175,7 +184,11 @@
     });
 
     document.getElementById('army-name-input').addEventListener('input', e => {
-      state.currentArmy.name = e.target.value || 'My Army';
+      // An empty field keeps the previous name (it used to rename the army
+      // "My Army", which autosave then persisted and synced). The field is
+      // restored to the real name on blur.
+      if (!String(e.target.value || '').trim()) return;
+      state.currentArmy.name = e.target.value;
       // touch() + an armyChange are BOTH required. Without the stamp, sync's
       // `known[id] !== updatedAt` diff never enqueues the rename, so it stays
       // on this device forever; without the hook, nothing schedules the
@@ -184,6 +197,10 @@
       // edit that a pull from another browser would silently undo.
       state.currentArmy.touch();
       App.fireArmyChange('rename');
+    });
+
+    document.getElementById('army-name-input').addEventListener('blur', e => {
+      if (!String(e.target.value || '').trim() && state.currentArmy) e.target.value = state.currentArmy.name || '';
     });
 
     document.getElementById('points-limit-input').addEventListener('input', e => {
@@ -241,13 +258,15 @@
       if (state.currentArmy.entries.length > 0 &&
           !confirm('Start a new army? Unsaved changes will be lost.')) return;
       state.currentArmy = state.armyManager.newArmy();
+      resetEntrySelection();
       UI.renderArmyList(state.currentArmy);
       UI.toast('New army created', 'info');
     });
 
     document.getElementById('btn-save-army').addEventListener('click', () => {
       const nameInput = document.getElementById('army-name-input');
-      state.currentArmy.name = nameInput.value;
+      // Blank field: keep the existing name rather than blanking the army.
+      if (nameInput.value.trim()) state.currentArmy.name = nameInput.value;
       if (!state.armyManager.saveArmy(state.currentArmy)) {
         // ArmyManager rejected the save because the army is still using
         // the default placeholder name. Tell the user explicitly and
@@ -334,6 +353,7 @@
       }
       state.currentArmy = copy;
       state.armyManager.currentArmy = copy;
+      resetEntrySelection();
       closeSaveAs();
       UI.renderArmyList(state.currentArmy);
       App.applyImportedSelections(copy.factionName, copy.chapter, copy.detachmentNames);
@@ -376,6 +396,7 @@
         if (army) {
           state.currentArmy = army;
           state.armyManager.currentArmy = army;
+          resetEntrySelection();
           UI.hideLoadModal();
           UI.renderArmyList(state.currentArmy);
           App.applyImportedSelections(army.factionName, army.chapter, army.detachmentNames);
@@ -389,6 +410,7 @@
         state.armyManager.deleteArmy(army.id);
         if (state.currentArmy && state.currentArmy.id === army.id) {
           state.currentArmy = state.armyManager.newArmy();
+          resetEntrySelection();
           UI.renderArmyList(state.currentArmy);
         }
         UI.showLoadModal(state.armyManager.armies);
@@ -467,6 +489,7 @@
         state.armyManager.saveArmy(army);
         state.currentArmy = army;
         state.armyManager.currentArmy = army;
+        resetEntrySelection();
         App.applyImportedSelections(army.factionName, chapter, detachment);
         UI.hideImportModal();
         UI.renderArmyList(state.currentArmy);

@@ -59,26 +59,57 @@
     return el;
   }
 
-  function render() {
-    if (!_el) return;
-    const offline = !navigator.onLine;
-    const queued = queueLength();
-    _el.textContent = '';
+  // Phone copy of the chip. #topbar is display:none at <=820px (#85), so the
+  // chip above is invisible there and nothing else said "you are offline".
+  // The bottom tab bar is the only chrome on phone: a second chip rides on its
+  // top edge (the bar is position:fixed, so it is the containing block). It
+  // reuses the .topbar-offline-pip class, so it wears the same tokens in every
+  // theme; only the placement is inline because it exists nowhere in CSS.
+  let _phoneEl = null;
+
+  function phoneMount() {
+    if (_phoneEl && _phoneEl.isConnected) return _phoneEl;
+    const nav = document.querySelector('.mobile-tabbar');
+    if (!nav) return null;
+    const el = _phoneEl || buildPip();
+    el.id = PIP_ID + '-phone';
+    el.className = 'topbar-offline-pip mobile-offline-pip';
+    el.style.position = 'absolute';
+    el.style.right = '10px';
+    el.style.bottom = '100%';
+    el.style.marginBottom = '8px';
+    el.style.height = '28px';
+    el.style.pointerEvents = 'none';
+    nav.appendChild(el);
+    _phoneEl = el;
+    return el;
+  }
+
+  function fill(el, offline, queued) {
+    el.textContent = '';
     if (offline) {
-      _el.appendChild(document.createTextNode('Offline'));
+      el.appendChild(document.createTextNode('Offline'));
     }
     if (queued > 0) {
-      if (offline) _el.appendChild(document.createTextNode(' · '));
+      if (offline) el.appendChild(document.createTextNode(' · '));
       const n = document.createElement('span');
       n.className = 'topbar-offline-n';
       n.textContent = String(queued);
-      _el.appendChild(n);
+      el.appendChild(n);
       const word = document.createElement('span');
       word.className = 'topbar-offline-word';
       word.textContent = ' queued';
-      _el.appendChild(word);
+      el.appendChild(word);
     }
-    _el.hidden = !(offline || queued > 0);
+    el.hidden = !(offline || queued > 0);
+  }
+
+  function render() {
+    const offline = !navigator.onLine;
+    const queued = queueLength();
+    if (_el) fill(_el, offline, queued);
+    const ph = phoneMount();
+    if (ph) fill(ph, offline, queued);
   }
 
   function update() {
@@ -91,5 +122,9 @@
     window.addEventListener('online', update);
     window.addEventListener('offline', update);
     window.addEventListener('yaab:sync-queue', update);
+    // The tab bar is injected by pwa-install's own bootstrap hook, which may
+    // run after this one; its first setPanel() announces itself here, and the
+    // chip appears if we were already offline at load.
+    document.addEventListener('yaab:mobile-panel-change', render);
   });
 })();

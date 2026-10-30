@@ -106,7 +106,9 @@
       : '<span class="fav-star">☆</span>';
     btn.classList.toggle('is-starred', on);
     if (opts && opts.animate) {
-      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduce = (window.App && typeof App.prefersReducedMotion === 'function')
+        ? App.prefersReducedMotion()
+        : !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
       if (!reduce) {
         const inner = btn.querySelector('.fav-star');
         if (inner) {

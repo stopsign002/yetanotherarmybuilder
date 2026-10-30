@@ -3,18 +3,22 @@
   const App = window.App = window.App || {};
   if (!App.hooks) return;
 
-  // Mutation-kind allowlist. armyChange currently fires with 'render' for
-  // any mutation-driven rerender and 'load' when a saved army is loaded.
-  // 'load' is NOT a user mutation, so we clear-not-set on it. We treat
-  // any other kind that signals an actual change as dirty — including
-  // 'add' / 'qty' / 'remove' if/when those get added later.
-  const CLEAN_KINDS = { load: true };
+  // armyChange kinds that actually fire (hooks.js / army.js / army-list.js):
+  //   'render'  every mutation-driven rerender (also fires on load/new, which
+  //             is handled by the army-id check below)  -> dirty if sig moved
+  //   'rename'  name typed                              -> dirty if sig moved
+  //   'save'    ArmyManager.saveArmy succeeded (explicit Save AND autosave)
+  //             -> clean. A REJECTED save never fires it, so it stays dirty.
+  //   'delete'  the saved list changed                  -> resync only
+  // There is no 'load' kind; a different army id means a load / New / import.
+  const CLEAN_KINDS = { save: true };
 
   let dirty = false;
   // Snapshot used to suppress the very first armyChange (the initial
   // render at boot, before the user has touched anything).
   let lastSig = null;
   let booted  = false;
+  let lastArmyId = null;
 
   function entriesSig(army) {
     if (!army || !army.entries) return '|';
@@ -42,13 +46,28 @@
     if (!booted) {
       booted  = true;
       lastSig = sig;
+      lastArmyId = army ? army.id : null;
       return;
     }
     if (CLEAN_KINDS[kind]) {
+      // A save of some OTHER army (e.g. Save-as persisting the original first)
+      // says nothing about the one on screen.
+      const cur = App.state && App.state.currentArmy;
+      if (army && cur && army.id !== cur.id) return;
+      lastSig = sig;
+      lastArmyId = army ? army.id : lastArmyId;
+      setDirty(false);
+      return;
+    }
+    // Swapping to another army (load / new / import / save-as copy) is not an
+    // unsaved edit of that army.
+    if (army && army.id !== lastArmyId) {
+      lastArmyId = army.id;
       lastSig = sig;
       setDirty(false);
       return;
     }
+    if (kind === 'delete') { lastSig = sig; return; }
     if (sig !== lastSig) {
       lastSig = sig;
       setDirty(true);
@@ -57,13 +76,9 @@
 
   App.hooks.bootstrap.push(function (state) {
     lastSig = entriesSig(state && state.currentArmy);
+    lastArmyId = state && state.currentArmy ? state.currentArmy.id : null;
     booted  = true;
-    const btn = document.getElementById('btn-save-army');
-    if (!btn) return;
-    btn.addEventListener('click', function () {
-      // Save handler runs synchronously elsewhere; clear immediately.
-      setDirty(false);
-      lastSig = entriesSig(App.state && App.state.currentArmy);
-    });
+    // No click handler: the Save button's own handler may reject the save
+    // (unnamed army), and only armyChange('save') proves it was persisted.
   });
 })();

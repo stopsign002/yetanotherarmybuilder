@@ -4,13 +4,24 @@
   const UI  = window.UI  = window.UI  || {};
   if (!App.hooks) return;
 
-  const REDUCED = () =>
-    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // OS query OR the in-app "Reduced animations" toggle (mode-shell.js).
+  const REDUCED = () => {
+    if (typeof App.prefersReducedMotion === 'function') return App.prefersReducedMotion();
+    try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+    catch (_) { return false; }
+  };
 
   // ── State ──────────────────────────────────────────────────────────
   let prevTotal        = null;   // last observed total
   let prevLimit        = null;   // last observed limit
   let prevOver         = false;  // was prev state over-limit?
+  let prevArmyId       = null;   // which army prev* belong to (a different army = a load/new, not a mutation)
+  let lastGestureAt    = 0;      // last user input (click/key/change) — celebrations need a human cause
+  const GESTURE_WINDOW = 1500;
+
+  ['pointerdown', 'click', 'keydown', 'change', 'touchstart'].forEach(function (t) {
+    document.addEventListener(t, function () { lastGestureAt = Date.now(); }, true);
+  });
   let lastAnimatedTo   = null;   // last value the tween has landed on
   let tweenRaf         = 0;
   let shimmerObserved  = new WeakSet();
@@ -154,7 +165,7 @@
   }
 
   // ── Points-bar celebration trigger ─────────────────────────────────
-  function handleArmyChange(army /*, kind */) {
+  function handleArmyChange(army, kind) {
     if (!army) return;
     const total = army.getTotalPoints ? army.getTotalPoints() : 0;
     const limit = army.pointsLimit || 0;
@@ -162,18 +173,29 @@
 
     tweenPoints(total);
 
-    if (prevTotal === null) {
-      prevTotal = total; prevLimit = limit; prevOver = over;
+    // Loading / creating / importing / sync-replacing an army is not the user
+    // crossing the limit: re-seed silently when the army identity changes.
+    if (prevTotal === null || army.id !== prevArmyId) {
+      prevTotal = total; prevLimit = limit; prevOver = over; prevArmyId = army.id;
       lastAnimatedTo = total;
       return;
     }
+    // Only a rerender that follows a real user gesture is a mutation; 'save',
+    // 'rename' and 'delete' never change the total, and a background sync
+    // apply has no gesture behind it.
+    if (kind !== 'render' || (Date.now() - lastGestureAt) > GESTURE_WINDOW) {
+      prevTotal = total; prevLimit = limit; prevOver = over;
+      return;
+    }
 
+    // Typing a new points limit (digit by digit) must not celebrate: the total
+    // has to be what moved.
     const crossedToExact = (
       limit > 0 &&
       total === limit &&
-      (prevTotal !== limit || prevLimit !== limit)
+      total !== prevTotal
     );
-    const crossedOver = over && !prevOver;
+    const crossedOver = over && !prevOver && total !== prevTotal;
 
     if (crossedToExact) {
       triggerLanding(limit);

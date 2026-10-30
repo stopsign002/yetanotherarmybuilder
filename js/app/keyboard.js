@@ -10,6 +10,25 @@
     return false;
   }
 
+  // Shortcuts belong to the Build page only: in Collect / Cards / Play / Waha
+  // #build-mode is hidden but its cards keep a non-'none' display, so without
+  // this `a` silently added units and arrows moved a selection nobody can see.
+  function buildModeActive() {
+    const mode = document.body && document.body.getAttribute('data-mode');
+    if (mode && mode !== 'build') return false;
+    const bm = document.getElementById('build-mode');
+    if (!bm || bm.hidden) return false;
+    const cs = window.getComputedStyle(bm);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+    return true;
+  }
+
+  // An open dropdown / listbox / menu owns the arrow keys and Enter.
+  function inInteractiveWidget(el) {
+    if (!el || !el.closest) return false;
+    return !!el.closest('[role="listbox"], [role="menu"], [role="menuitem"], [role="option"], [role="combobox"], [role="tablist"], [role="dialog"], dialog, .dropdown-menu, .custom-dropdown, .modal');
+  }
+
   function visibleCards() {
     const grid = document.getElementById('unit-grid');
     if (!grid) return [];
@@ -53,10 +72,16 @@
   }
 
   document.addEventListener('keydown', function (e) {
+    // Never claim a chord: Ctrl/Cmd+A is select-all, Ctrl+K belongs to the
+    // palette, Alt+Arrow is browser history.
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.defaultPrevented) return;
+    if (!buildModeActive()) return;
+
     const target = e.target;
     const typing = isTypingTarget(target);
 
-    if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (e.key === '/' && !typing) {
       const search = document.getElementById('search-input');
       if (search && document.activeElement !== search) {
         e.preventDefault();
@@ -74,18 +99,26 @@
       return;
     }
 
+    // Arrow keys inside an open dropdown / menu / dialog move THAT widget.
+    const widget = inInteractiveWidget(target);
+
     if (e.key === 'ArrowDown') {
+      if (widget) return;
       e.preventDefault();
       moveSelection(1);
       return;
     }
     if (e.key === 'ArrowUp') {
+      if (widget) return;
       e.preventDefault();
       moveSelection(-1);
       return;
     }
 
     if (e.key === 'Enter') {
+      // Enter on a button, link or role'd control activates THAT control; it
+      // must not be hijacked into re-clicking the selected unit card.
+      if (target && target.closest && (target.closest('button, a, summary') || target.matches('[role]'))) return;
       const sel = document.querySelector('.unit-card.selected');
       if (sel) {
         e.preventDefault();
@@ -95,6 +128,7 @@
     }
 
     if (e.key === 'a' || e.key === 'A') {
+      if (widget) return;
       const sel = document.querySelector('.unit-card.selected');
       const addBtn = document.getElementById('btn-detail-add');
       if (sel && addBtn) {

@@ -62,7 +62,7 @@
     {
       key:   'yaab_show_legends',
       label: 'Show Legends units',
-      help:  'Include units flagged as Legends in BSData.',
+      help:  'Include units flagged as Legends in the game data.',
       defaultOn: false,
       onChange(checked) {
         // The toolbar button toggles itself + persists + re-renders.
@@ -413,27 +413,32 @@
       },
       {
         id: 'clear-bsdata',
-        label: 'Clear cached factions and refetch BSData',
+        label: 'Clear cached game data and reload',
         section: 'data',
         danger: false,
         run() {
-          if (!confirm('Clear cached BSData? Faction data will be refetched on next reload.')) return;
+          if (!confirm('Clear the cached game data (the local datasheet store and the offline app cache)? The app reloads and fetches fresh data; your armies are not touched. You need a connection for the reload.')) return;
           (async function () {
+            // The live data path is the Game Datacards layer: its IndexedDB
+            // store plus the service worker's Cache Storage. (BSData / the old
+            // faction + GST stores are dormant, so clearing only them did
+            // nothing visible.) The worker itself stays registered.
             try {
-              if (window.BSData && typeof BSData.clearCache === 'function') {
-                await BSData.clearCache();
-              }
+              if (window.YaabDB && typeof YaabDB.clearGdc === 'function') await YaabDB.clearGdc();
+              if (window.YaabDB && typeof YaabDB.clearFactions === 'function') await YaabDB.clearFactions();
+              if (window.YaabDB && typeof YaabDB.clearGst === 'function') await YaabDB.clearGst();
             } catch (_) {}
             try {
-              if (window.YaabDB && typeof YaabDB.clearFactions === 'function') {
-                await YaabDB.clearFactions();
-              }
-              if (window.YaabDB && typeof YaabDB.clearGst === 'function') {
-                await YaabDB.clearGst();
+              if (window.BSData && typeof BSData.clearCache === 'function') await BSData.clearCache();
+            } catch (_) {}
+            try {
+              if (window.caches && typeof caches.keys === 'function') {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(k => caches.delete(k)));
               }
             } catch (_) {}
             if (window.UI && typeof UI.toast === 'function') {
-              UI.toast('Faction cache cleared. Reloading…', 'info');
+              UI.toast('Game data cache cleared. Reloading…', 'info');
             }
             setTimeout(() => location.reload(), 600);
           }());
@@ -507,9 +512,9 @@
     card.className = 'settings-about-card';
     card.innerHTML =
       '<h3>About YAAB</h3>' +
-      '<p>Yet Another Army Builder — a client-only Warhammer 40,000 (10e) army builder.</p>' +
-      '<p class="muted">Faction data: BSData/wh40k-10e.</p>' +
-      '<p><a href="https://github.com/BSData/wh40k-10e" target="_blank" rel="noopener">BSData repo</a></p>' +
+      '<p>Yet Another Army Builder — a client-only Warhammer 40,000 (11th edition) army builder.</p>' +
+      '<p class="muted">Game data: Game Datacards (GW app data), 40kdc and the official Munitorum Field Manual points.</p>' +
+      '<p><a href="https://github.com/game-datacards/datasources" target="_blank" rel="noopener">Game Datacards data</a></p>' +
       '<p class="muted">No affiliation with Games Workshop.</p>';
     b.appendChild(card);
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });

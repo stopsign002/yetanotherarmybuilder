@@ -15,6 +15,8 @@
 
   function $(id) { return document.getElementById(id); }
 
+  // Shared by every JS animation (confetti, flip scrolls, scanline, faction
+  // FX): OS preference OR the in-app "Reduced animations" toggle.
   function reduceMotion() {
     if (document.body && document.body.classList.contains('reduce-motion')) return true;
     try {
@@ -22,6 +24,7 @@
         window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     } catch (_) { return false; }
   }
+  App.prefersReducedMotion = reduceMotion;
 
   // Modes that are a place to work, and so are worth restoring on next launch.
   // 'cards' is deliberately excluded: it's a transient print/export tool that

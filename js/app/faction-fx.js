@@ -11,7 +11,11 @@
   let ctx = null;
 
   const mqReduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
-  function reducedMotion() { return !!(mqReduce && mqReduce.matches); }
+  // OS query OR the in-app toggle (App.prefersReducedMotion, mode-shell.js).
+  function reducedMotion() {
+    if (typeof App.prefersReducedMotion === 'function') return App.prefersReducedMotion();
+    return !!(mqReduce && mqReduce.matches);
+  }
 
   function ensureCtx() {
     if (!AC) return null;

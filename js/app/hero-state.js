@@ -72,7 +72,7 @@
       wrap.innerHTML =
         '<div class="yaab-hero-mini-headline">No units in this army yet</div>' +
         '<div class="yaab-hero-mini-sub">Pick from the ' + esc(short) +
-        ' roster on your right →</div>';
+        ' roster in the Units panel →</div>';
       return wrap;
     }
 
@@ -138,6 +138,9 @@
     const input = document.getElementById('search-input');
     if (!input || !input.parentNode) return;
     if (document.getElementById('yaab-kbd-hint')) return;
+    // A "Ctrl K" hint is meaningless on touch devices (and overlaps the search
+    // placeholder on phones): skip it where there is no hover-capable pointer.
+    try { if (window.matchMedia && window.matchMedia('(hover: none)').matches) return; } catch (_) {}
 
     // Wrap input + badge so the badge can be absolutely-positioned over the
     // input's right edge without disturbing surrounding layout.

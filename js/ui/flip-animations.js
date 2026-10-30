@@ -6,7 +6,11 @@
   // Reduced-motion gate
   // ---------------------------------------------------------------------------
   const mqReduce = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)')) || null;
-  function reducedMotion() { return !!(mqReduce && mqReduce.matches); }
+  // OS query OR the in-app toggle (App.prefersReducedMotion, mode-shell.js).
+  function reducedMotion() {
+    if (window.App && typeof App.prefersReducedMotion === 'function') return App.prefersReducedMotion();
+    return !!(mqReduce && mqReduce.matches);
+  }
 
   // ---------------------------------------------------------------------------
   // Tunables
@@ -734,7 +738,7 @@
             if (verdict.ok) {
               UI.toast(`Attached ${dragEntry.unitName} to ${targetEntry.unitName}.`, 'success', 2200);
             } else {
-              UI.toast(`Attached ${dragEntry.unitName} to ${targetEntry.unitName} — BSData doesn't list this as a valid pairing.`, 'warning', 3500);
+              UI.toast(`Attached ${dragEntry.unitName} to ${targetEntry.unitName} — the game data doesn't list this as a valid pairing.`, 'warning', 3500);
             }
           }
         } else if ((pos === 'before' || pos === 'after') && dragEntry) {

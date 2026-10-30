@@ -3,12 +3,15 @@
   const App = window.App = window.App || {};
   if (!App.hooks) return;
 
-  const REDUCED = (function () {
+  // Evaluated per call (OS query OR the in-app Reduced animations toggle),
+  // via the shared App.prefersReducedMotion() from mode-shell.js.
+  function REDUCED() {
+    if (typeof App.prefersReducedMotion === 'function') return App.prefersReducedMotion();
     try {
       const m = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-      return m && m.matches;
+      return !!(m && m.matches);
     } catch (e) { return false; }
-  })();
+  }
 
   let lastFaction = null;   // tracks the last-seen faction filter for diff
   let lastDetach  = null;
@@ -22,7 +25,7 @@
   }
 
   function spawnScanline() {
-    if (REDUCED) return;
+    if (REDUCED()) return;
     if (activeNode) {
       // Cancel the previous sweep — drop it immediately.
       try { activeNode.remove(); } catch (e) { /* noop */ }
