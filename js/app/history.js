@@ -1,4 +1,19 @@
 // app/history.js — undo/redo snapshot stack driven by armyChange hook.
+//
+// ONE ARMY AT A TIME. The stack belongs to the army that is open
+// (`stackArmyId`) and is reset whenever App.state.currentArmy becomes a
+// different object that history did not put there itself — loading another
+// army, New army, a URL import, Save as…, a sync adoption, a deletion. It
+// used to be one global stack: loading B pushed B on top of A's snapshots,
+// so Ctrl+Z jumped back into A (stamped "now", so it overwrote newer cloud
+// edits), and after deleting the open army Ctrl+Z brought the deleted army
+// back and autosave re-saved and re-synced it — under a dialog that said
+// "This cannot be undone". state.js fires `yaab:current-army` on every
+// object change; that is what drives the reset.
+//
+// Deleted-army guard: once the stack's army has been seen in the saved
+// list, an undo/redo while it is no longer there is refused (covers a
+// delete that did not change currentArmy, e.g. "wipe all saved armies").
 (function () {
   const App = window.App = window.App || {};
   if (!App.hooks) return;
@@ -6,11 +21,53 @@
   const MAX = 50;
   const DEBOUNCE_MS = 500;
 
-  const undoStack = [];
-  const redoStack = [];
+  let undoStack = [];
+  let redoStack = [];
+  let stackArmyId = null;
+  let seenPersisted = false;
   let lastUpdatedAt = null;
   let lastPushAt = 0;
   let suppress = false;
+
+  function stackArmyPersisted() {
+    const mgr = App.state && App.state.armyManager;
+    return !!(stackArmyId && mgr && Array.isArray(mgr.armies) &&
+      mgr.armies.some(a => a && a.id === stackArmyId));
+  }
+
+  // Start a fresh stack whose only entry is `army` as it is now.
+  function resetFor(army) {
+    undoStack = [];
+    redoStack = [];
+    stackArmyId = army ? army.id : null;
+    lastUpdatedAt = army ? army.updatedAt : null;
+    // 0, not now: the first edit after a reset must push a new entry, never
+    // coalesce into (and overwrite) the baseline snapshot.
+    lastPushAt = 0;
+    seenPersisted = false;
+    if (army) {
+      const snap = snapshot(army);
+      if (snap) undoStack.push(snap);
+      if (stackArmyPersisted()) seenPersisted = true;
+    }
+    updateButtons();
+  }
+
+  // True when the stack may be replayed onto the current army.
+  function stackUsable() {
+    const cur = App.state && App.state.currentArmy;
+    if (!cur || cur.id !== stackArmyId) {
+      resetFor(cur || null);
+      return false;
+    }
+    if (seenPersisted && !stackArmyPersisted()) {
+      // The army was deleted; undo would re-create it via autosave + sync.
+      resetFor(cur);
+      if (window.UI && typeof UI.toast === 'function') UI.toast('That army was deleted — nothing to undo.', 'info');
+      return false;
+    }
+    return true;
+  }
 
   function snapshot(army) {
     try { return JSON.stringify(army.toJSON()); }
@@ -61,6 +118,7 @@
 
   function doUndo() {
     if (undoStack.length <= 1) return;
+    if (!stackUsable()) return;
     const current = undoStack.pop();
     redoStack.push(current);
     const prev = undoStack[undoStack.length - 1];
@@ -71,6 +129,7 @@
 
   function doRedo() {
     if (redoStack.length === 0) return;
+    if (!stackUsable()) return;
     const next = redoStack.pop();
     undoStack.push(next);
     restore(next);
@@ -104,20 +163,28 @@
   });
 
   App.hooks.bootstrap.push(function (state) {
-    if (!state || !state.currentArmy) { updateButtons(); return; }
-    const snap = snapshot(state.currentArmy);
-    if (snap) {
-      undoStack.push(snap);
-      lastUpdatedAt = state.currentArmy.updatedAt;
-      lastPushAt = Date.now();
-    }
-    updateButtons();
+    resetFor((state && state.currentArmy) || null);
+  });
+
+  // A different army object became current without going through restore()
+  // below: start a new stack for it.
+  window.addEventListener('yaab:current-army', function (e) {
+    if (suppress) return;
+    const army = (e && e.detail && e.detail.army) || null;
+    resetFor(army);
   });
 
   App.hooks.armyChange.push(function (army, kind) {
     if (suppress) { updateButtons(); return; }
     if (!App.state || !App.state.currentArmy) return;
     if (!army) return;
+    // Only the open army's own mutations belong on its stack.
+    if (army.id !== stackArmyId) {
+      if (army === App.state.currentArmy) resetFor(army);
+      else updateButtons();
+      return;
+    }
+    if (!seenPersisted && stackArmyPersisted()) seenPersisted = true;
     const ua = army.updatedAt;
     if (ua === lastUpdatedAt) { updateButtons(); return; }
 

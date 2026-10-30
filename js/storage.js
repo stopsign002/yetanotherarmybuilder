@@ -252,6 +252,22 @@ window.Storage = (() => {
     return EXPORT_PREFIX + _bytesToBase64Url(bytes);
   }
 
+  // A full serialized Army (legacy JSON paste, pre-v2 YAAB1 code) carries
+  // the SOURCE army's id and timestamps. Kept as-is, importing one silently
+  // replaced any local army with that id, a signed-in sync then reverted the
+  // import (its old updatedAt loses last-write-wins), and an id owned by
+  // another account answered 403 and blocked the sync queue. An import is a
+  // new army: drop the id (the Army constructor mints one) and stamp now.
+  // v2 codes never carried an id, so they need nothing.
+  function _asNewArmy(data) {
+    const copy = Object.assign({}, data);
+    const now = new Date().toISOString();
+    delete copy.id;
+    copy.createdAt = now;
+    copy.updatedAt = now;
+    return copy;
+  }
+
   async function importArmyFromString(input, opts = {}) {
     const raw = (input || '').trim();
     if (!raw) throw new Error('Empty input');
@@ -262,7 +278,7 @@ window.Storage = (() => {
       if (!data.name || !Array.isArray(data.entries)) {
         throw new Error('Invalid army data');
       }
-      const a = Army.fromJSON(data);
+      const a = Army.fromJSON(_asNewArmy(data));
       return { army: a, chapter: a.chapter || null, detachment: a.detachmentNames || [] };
     }
 
@@ -280,7 +296,7 @@ window.Storage = (() => {
 
     // Pre-v2 YAAB1 codes contained the full serialized Army.
     if (data && data.name && Array.isArray(data.entries)) {
-      const a = Army.fromJSON(data);
+      const a = Army.fromJSON(_asNewArmy(data));
       return { army: a, chapter: a.chapter || null, detachment: a.detachmentNames || [] };
     }
     throw new Error('Unknown army code format');

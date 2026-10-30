@@ -80,6 +80,50 @@
   // persistence
   // ────────────────────────────────────────────────────────────────────
 
+  // Replace STATE with what `raw` (a yaab_collection JSON string, or null)
+  // says. Used at boot and whenever the key changes under us.
+  function hydrateFrom(raw) {
+    Object.keys(STATE).forEach(k => { delete STATE[k]; });
+    try {
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return;
+      Object.keys(parsed).forEach(k => {
+        const v = parsed[k];
+        if (typeof v === 'string' && STATUSES.indexOf(v) !== -1 && v !== 'none') {
+          STATE[k] = v;
+        }
+      });
+    } catch (_) { /* ignore */ }
+  }
+
+  // The key changed outside setStatus(): a cloud pull (sync fires a
+  // synthetic `storage` event per key plus `yaab-bag-pulled`) or another
+  // tab. Re-read it and repaint every surface. Without this STATE was read
+  // once at boot, so the next setStatus() persisted the stale in-memory copy
+  // and erased every status set on another device, everywhere.
+  function rehydrate() {
+    let raw = null;
+    try { raw = localStorage.getItem(LS_KEY); } catch (_) {}
+    hydrateFrom(raw);
+    document.querySelectorAll('.unit-card[data-unit-id]').forEach(card => {
+      const next = 'collection-' + getStatus(card.getAttribute('data-unit-id'));
+      STATUSES.forEach(st => card.classList.remove('collection-' + st));
+      card.classList.add(next);
+    });
+    refreshDetailWidget();
+    refreshArmyProgress();
+    refreshDashboardIfOpen();
+    refreshSelectionBacklog();
+    if (window.App && App.collectMode && typeof App.collectMode.refresh === 'function') {
+      try { App.collectMode.refresh(); } catch (_) {}
+    }
+    if ((_chipOwnedActive || _chipNeedsActive || _chipPaintedActive) &&
+        window.App && typeof App.renderUnitRosterWithContext === 'function') {
+      App.renderUnitRosterWithContext();
+    }
+  }
+
   function loadPersisted() {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -787,6 +831,15 @@
   // change without a page reload.
   window.addEventListener('storage', function (e) {
     if (e && e.key === LS_SHOW_BADGES_IN_BUILD) applyBuildBadgesBodyClass();
+    // Same pattern as reserves.js: another tab, or sync's synthetic event
+    // after a cloud pull, rewrote the collection.
+    if (e && e.key === LS_KEY) rehydrate();
+  });
+  // Sync also announces a pull as one event; harmless if the storage event
+  // above already re-read the key (rehydrate is idempotent).
+  window.addEventListener('yaab-bag-pulled', function (e) {
+    const keys = e && e.detail && Array.isArray(e.detail.keys) ? e.detail.keys : null;
+    if (!keys || keys.indexOf(LS_KEY) !== -1) rehydrate();
   });
 
   // Same-tab updates: the Settings drawer writes its own body class

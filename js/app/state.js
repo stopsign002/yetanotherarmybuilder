@@ -49,7 +49,19 @@
     enumerable: true,
     get() { return _currentArmy; },
     set(army) {
+      const prev = _currentArmy;
       _currentArmy = army || null;
+      // Tell listeners when the OBJECT changes (a different army, or a new
+      // copy of the same one — sync adoption, undo, cross-tab reload).
+      // history.js keys its undo stack on this, so Ctrl+Z can never step
+      // back into a different army or resurrect a deleted one.
+      if (prev !== _currentArmy) {
+        try {
+          window.dispatchEvent(new CustomEvent('yaab:current-army', {
+            detail: { army: _currentArmy, prev: prev },
+          }));
+        } catch (_) { /* no CustomEvent: listeners just miss it */ }
+      }
       try {
         if (_currentArmy && _currentArmy.id) {
           localStorage.setItem(CURRENT_ARMY_KEY, _currentArmy.id);

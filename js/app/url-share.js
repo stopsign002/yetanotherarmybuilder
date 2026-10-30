@@ -23,7 +23,9 @@
       const { army, chapter, detachment } = await Storage.importArmyFromString(raw, {
         factions: App.state.factions,
       });
-      App.state.armyManager.saveArmy(army);
+      // allowUnnamed: a shared list still on the "New Army" placeholder is
+      // kept too (it has entries) — same rule as autosave (#113).
+      App.state.armyManager.saveArmy(army, { allowUnnamed: true });
       App.state.currentArmy = army;
       App.state.armyManager.currentArmy = army;
       if (typeof App.applyImportedSelections === 'function') {

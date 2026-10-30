@@ -439,6 +439,8 @@ window.ArmyManager = class ArmyManager {
   constructor() {
     this.armies = this._load();
     this.currentArmy = null;
+    // false while save() is failing (see save()); sync reads it.
+    this.lastSaveOk = true;
   }
 
   _load() {
@@ -452,7 +454,9 @@ window.ArmyManager = class ArmyManager {
       // hides them from the UI and — once mgr.save() runs and notifies
       // sync — kicks off a diff that enqueues deleteArmy for each id, so
       // the cloud copies get cleaned up too.
-      const named = all.filter(a => ArmyManager.isNamed(a));
+      // #113 widened the guard: an unnamed army that has units is kept
+      // (autosave persists it), only an empty placeholder is dropped.
+      const named = all.filter(a => ArmyManager.isPersistable(a));
       if (named.length !== all.length) {
         try {
           localStorage.setItem('yaab_armies', JSON.stringify(named.map(a => a.toJSON())));
@@ -474,18 +478,69 @@ window.ArmyManager = class ArmyManager {
     return n.length > 0 && n !== 'New Army';
   }
 
+  // True iff `army` is worth keeping on disk: it has a real name OR at least
+  // one entry. A list built under the placeholder name used to exist only in
+  // memory until it was renamed, so a reload or a crash lost it (#113). Only
+  // an EMPTY unnamed placeholder is still refused.
+  static isPersistable(army) {
+    if (!army) return false;
+    if (ArmyManager.isNamed(army)) return true;
+    return Array.isArray(army.entries) && army.entries.length > 0;
+  }
+
+  // Writes every army to localStorage and tells sync. Returns true on
+  // success, false when the write failed (quota exceeded — each entry embeds
+  // a ~5 KB unitData snapshot, so 30–40 armies can fill the ~5M-char origin
+  // quota — or storage blocked). It never throws for that: it used to, so the
+  // Save button died with an uncaught error and autosave only console.warn'd,
+  // and nobody was told their list was not being kept.
+  //
+  // On failure sync is NOT notified and `lastSaveOk` is false. Sync reads
+  // that flag before writing its known-set: recording an army as "on the
+  // server and on this device" while it exists only in memory is what turned
+  // a quota error into a cloud delete after the next reload.
   save() {
-    localStorage.setItem('yaab_armies', JSON.stringify(this.armies.map(a => a.toJSON())));
+    try {
+      localStorage.setItem('yaab_armies', JSON.stringify(this.armies.map(a => a.toJSON())));
+    } catch (e) {
+      this.lastSaveOk = false;
+      ArmyManager._reportSaveFailure(e);
+      return false;
+    }
+    this.lastSaveOk = true;
+    ArmyManager._saveFailureShown = false;
     if (window.App && window.App.Sync && typeof window.App.Sync.notifyArmiesChanged === 'function') {
       window.App.Sync.notifyArmiesChanged();
     }
+    return true;
   }
 
-  // Returns true if the army was persisted, false if the name guard rejected
-  // it. Callers that need to surface an error to the user (e.g. the explicit
-  // Save button) should check the return value; auto-save callers can ignore.
-  saveArmy(army) {
-    if (!ArmyManager.isNamed(army)) return false;
+  // One visible toast per failure streak (reset by the next successful
+  // save), not one per keystroke of autosave.
+  static _reportSaveFailure(e) {
+    try { console.warn('[ArmyManager] save failed:', e && (e.name || e.message) ? (e.name || e.message) : e); } catch (_) {}
+    if (ArmyManager._saveFailureShown) return;
+    ArmyManager._saveFailureShown = true;
+    const quota = !!e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014 ||
+      e.name === 'NS_ERROR_DOM_QUOTA_REACHED');
+    const msg = quota
+      ? "Couldn't save your armies: this browser's storage is full. Delete or export old armies to free space — recent changes are not saved yet."
+      : "Couldn't save your armies: this browser is blocking storage. Recent changes are not saved yet.";
+    if (window.UI && typeof window.UI.toast === 'function') window.UI.toast(msg, 'error', 9000);
+  }
+
+  // Returns true if the army was handed to save(), false if the name guard
+  // rejected it. Callers that need to surface an error to the user (e.g. the
+  // explicit Save button) should check the return value; auto-save callers
+  // can ignore. A storage failure is reported by save() itself (toast) and
+  // shows up as `lastSaveOk === false`, not as a false return — false keeps
+  // meaning "give it a name first".
+  //
+  // `opts.allowUnnamed` (autosave, URL import) accepts an army still on the
+  // placeholder name as long as it has entries (ArmyManager.isPersistable).
+  saveArmy(army, opts) {
+    const allowUnnamed = !!(opts && opts.allowUnnamed);
+    if (!(allowUnnamed ? ArmyManager.isPersistable(army) : ArmyManager.isNamed(army))) return false;
     const idx = this.armies.findIndex(a => a.id === army.id);
     if (idx >= 0) {
       this.armies[idx] = army;

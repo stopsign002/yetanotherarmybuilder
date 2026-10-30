@@ -12,7 +12,13 @@
 //   - Hidden for non-admins.
 //   - Hidden when count === 0.
 //   - Re-checks on Auth.onChange (sign in / out) and every 60 s while
-//     the page is open.
+//     the page is open AND visible (a hidden tab does not poll; it
+//     re-checks when it becomes visible again).
+//   - A 401/403 stops the poll until the next auth change (a 401 also flips
+//     the app to signed out, like every other session-bearing call). It used
+//     to keep polling a dead session every minute, forever.
+//   - Re-checks shortly after an admin approves / revokes / reinstates
+//     someone in the admin panel, so the banner does not lag a minute.
 (function () {
   const App = window.App = window.App || {};
   const UI  = window.UI  = window.UI  || {};
@@ -21,6 +27,8 @@
   let pollTimer = null;
   let bannerEl  = null;
   let lastCount = 0;
+  // Set by a 401/403; cleared by the next Auth.onChange.
+  let denied = false;
 
   function esc(s) {
     if (UI && UI.escapeHtml) return UI.escapeHtml(s == null ? '' : String(s));
@@ -68,13 +76,24 @@
     bannerEl.hidden = false;
   }
 
+  // 401 = the session is gone: tell Auth (it flips to signed out and
+  // toasts). 403 = not an admin (any more). Either way stop polling.
+  function onDenied(status) {
+    denied = true;
+    stopPolling();
+    hide();
+    if (status === 401 && App.Auth && typeof App.Auth.handleSessionExpired === 'function') {
+      App.Auth.handleSessionExpired();
+    }
+  }
+
   async function fetchPendingCount() {
     // Try the lightweight endpoint first.
     try {
       const resp = await fetch('/api/admin/users/pending-count', {
         credentials: 'same-origin', headers: { 'Accept': 'application/json' },
       });
-      if (resp.status === 401 || resp.status === 403) return null; // not admin / signed out
+      if (resp.status === 401 || resp.status === 403) { onDenied(resp.status); return null; }
       if (resp.ok) {
         const data = await resp.json();
         if (data && typeof data.count === 'number') return data.count;
@@ -85,7 +104,7 @@
       const resp = await fetch('/api/admin/users', {
         credentials: 'same-origin', headers: { 'Accept': 'application/json' },
       });
-      if (resp.status === 401 || resp.status === 403) return null;
+      if (resp.status === 401 || resp.status === 403) { onDenied(resp.status); return null; }
       if (!resp.ok) return null;
       const list = await resp.json();
       if (!Array.isArray(list)) return null;
@@ -99,6 +118,8 @@
 
   async function check() {
     if (!isAdmin()) { hide(); return; }
+    if (denied) return;
+    if (document.hidden) return;   // the visibilitychange handler re-checks
     const count = await fetchPendingCount();
     if (count == null) return; // network blip — leave previous state
     lastCount = count;
@@ -108,6 +129,7 @@
 
   function startPolling() {
     stopPolling();
+    if (denied) return;
     pollTimer = setInterval(() => { check(); }, POLL_MS);
   }
   function stopPolling() {
@@ -117,13 +139,31 @@
   function init() {
     // Re-evaluate whenever auth state changes — sign-in flips visibility.
     if (App.Auth && typeof App.Auth.onChange === 'function') {
-      App.Auth.onChange(() => { check(); });
+      App.Auth.onChange(() => {
+        // A new auth state gets a fresh chance: re-arm after a 401/403.
+        denied = false;
+        if (isAdmin()) { startPolling(); check(); }
+        else { stopPolling(); hide(); }
+      });
     }
     // First check after the initial Auth.init() resolves; bootstrap runs
     // after auth-button.js queues the Auth.init() promise so we just
     // wait one tick and then poll.
     setTimeout(check, 1500);
     startPolling();
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) check();
+    });
+    // The admin panel (js/app/admin.js) changes the pending count; re-check
+    // once its request has had time to land. Delegated so admin.js needs no
+    // hook for it.
+    document.addEventListener('click', (e) => {
+      const t = e.target && e.target.closest
+        ? e.target.closest('#yaab-admin-modal [data-act="approve"], #yaab-admin-modal [data-act="revoke"]')
+        : null;
+      if (!t) return;
+      setTimeout(check, 1500);
+    }, true);
   }
 
   if (App.hooks && Array.isArray(App.hooks.bootstrap)) {

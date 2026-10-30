@@ -1,6 +1,13 @@
 // ui/auth-modal.js — UI.showAuthModal(mode) for login / register / recover /
-// recovery-code / change-password. Single backdrop element (#modal-auth) in
-// index.html; this module renders the body for the active view.
+// recovery-code / change-password, and UI.showAuthChoice(opts) for the
+// account dialogs (sign out: keep / remove / cancel; account switch: keep /
+// remove / sign out). Single backdrop element (#modal-auth) in index.html;
+// this module renders the body for the active view.
+//
+// LOCKED MODE: the recovery-code view cannot be dismissed — no ×, Escape and
+// backdrop taps are ignored, and other views wait — until "I have saved
+// this" is ticked and Done pressed. The code is shown exactly once; a stray
+// tap used to lose it for good.
 //
 // SECURITY: every dynamic value (username, recovery code, error text) goes
 // through textContent. The password field is cleared (input.value = '')
@@ -40,6 +47,29 @@
   // focus to <body> strands a keyboard / switch-control user.
   let lastFocused = null;
   let wired = false;
+  // Locked: the recovery-code view is up (or about to be). See header.
+  let locked = false;
+  const unlockWaiters = [];
+  // The open choice dialog: { resolve, cancelId, dismissible } or null.
+  let choice = null;
+
+  function lock() { locked = true; }
+  function unlock() {
+    locked = false;
+    const waiting = unlockWaiters.splice(0);
+    for (const fn of waiting) setTimeout(fn, 0);
+  }
+  function settleChoice(id) {
+    const c = choice;
+    choice = null;
+    if (c) { try { c.resolve(id); } catch (_) {} }
+  }
+  // May the user dismiss whatever is showing (×, Escape, backdrop)?
+  function dismissible() {
+    if (locked) return false;
+    if (choice && !choice.dismissible) return false;
+    return true;
+  }
 
   function isOpen() {
     const m = $modal();
@@ -61,7 +91,7 @@
 
   function onKeydown(e) {
     if (!isOpen()) return;
-    if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+    if (e.key === 'Escape') { e.preventDefault(); if (dismissible()) close(); return; }
     if (e.key !== 'Tab') return;
     // Focus trap: the background is inert while the dialog is up, so Tab has
     // to cycle between the first and last focusable elements.
@@ -83,7 +113,7 @@
   // Tap/click the scrim to dismiss — but only the scrim itself, never a click
   // that bubbled out of the dialog.
   function onBackdropClick(e) {
-    if (e.target === e.currentTarget) close();
+    if (e.target === e.currentTarget && dismissible()) close();
   }
 
   function wire() {
@@ -95,7 +125,12 @@
     m.addEventListener('click', onBackdropClick);
   }
 
-  function close() {
+  // `force` is for the code paths that are themselves the way out of a
+  // locked / non-dismissible view (Done, a choice button).
+  function close(force) {
+    if (force !== true && !dismissible()) return;
+    // Closing an open choice without picking = its cancel answer.
+    if (choice) settleChoice(choice.cancelId);
     const m = $modal();
     if (m) m.setAttribute('hidden', '');
     const back = lastFocused;
@@ -137,7 +172,13 @@
     return el('div', { class: 'auth-error', role: 'alert', text: String(msg || '') });
   }
 
+  // opts.noClose: omit the × (locked / non-dismissible views).
   function header(title, opts) {
+    if (opts && opts.noClose) {
+      return el('div', { class: 'modal-header' }, [
+        el('h3', { id: 'modal-auth-title', text: title }),
+      ]);
+    }
     const closeBtn = el('button', {
       class: 'modal-close', type: 'button', 'aria-label': 'Close',
       onClick: () => close(),
@@ -340,7 +381,13 @@
   }
 
   // ── Recovery code (one-time view, post-register) ──────────────────────
-  function renderRecoveryCode(code, username, pending) {
+  // opts.recovered: shown after /auth/recover (the old code is now dead).
+  function renderRecoveryCode(code, username, pending, opts) {
+    const recovered = !!(opts && opts.recovered);
+    // If a choice dialog was open (it cannot be, normally), it yields: the
+    // code is shown once and wins. Its caller gets the cancel answer.
+    if (choice) settleChoice(choice.cancelId);
+    lock();
     const codeEl = el('pre', { class: 'auth-recovery-code', tabindex: '0' });
     codeEl.textContent = code; // textContent is critical for security
 
@@ -387,12 +434,24 @@
     dismissBtn = el('button', {
       type: 'button', class: 'btn btn-accent',
       disabled: 'disabled',
-      onClick: () => { close(); },
+      onClick: () => {
+        if (!savedChk.checked) return;
+        close(true);
+        unlock();
+        if (recovered && UI.toast) UI.toast('Password reset — you are signed in.', 'info', 3500);
+      },
     }, 'Done');
 
-    return setBody(el('div', { class: 'modal' }, [
-      header(pending ? 'Save your recovery code (pending approval)' : 'Save your recovery code'),
+    const title = recovered
+      ? 'Save your new recovery code'
+      : (pending ? 'Save your recovery code (pending approval)' : 'Save your recovery code');
+    setBody(el('div', { class: 'modal' }, [
+      header(title, { noClose: true }),
       el('div', { class: 'modal-body' }, [
+        recovered
+          ? el('p', { class: 'auth-warning', text:
+              'Your password has been reset and you are signed in. Your old recovery code no longer works — this new one replaces it.' })
+          : null,
         pending
           ? el('p', { class: 'auth-warning', text:
               'Your account is created but awaiting admin approval. You will not be able to sign in until you have been approved. The recovery code below works whenever you do sign in.' })
@@ -405,6 +464,10 @@
       ].filter(Boolean)),
       footerBtns([dismissBtn]),
     ]));
+    // Make sure it is actually showing (the recover form calls this while
+    // the modal is open; the 'recovery-code' mode opens it fresh).
+    open();
+    setTimeout(() => { try { codeEl.focus(); } catch (_) {} }, 0);
   }
 
   // ── Recover (use recovery code to set new password) ───────────────────
@@ -456,13 +519,31 @@
       errEl.setAttribute('hidden', '');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Resetting…';
+      // Lock BEFORE the request: a successful recover signs the user in, and
+      // the sign-in can open another dialog (sync's account-switch question)
+      // in the same tick. Locked, that dialog waits until the new code has
+      // been acknowledged instead of replacing it.
+      lock();
       try {
-        await App.Auth.recover(u, c, p);
-        close();
-        if (UI.toast) UI.toast('Password reset. You can sign in now.', 'info', 3500);
-        UI.showAuthModal('login');
+        const data = await App.Auth.recover(u, c, p);
+        if (data && data.recoveryCode) {
+          // The server rotated the code; the old one is dead. Show the new
+          // one exactly like signup does.
+          renderRecoveryCode(data.recoveryCode, data.username || u, false, { recovered: true });
+        } else {
+          unlock();
+          close(true);
+          if (UI.toast) UI.toast('Password reset — you are signed in.', 'info', 3500);
+        }
       } catch (err) {
-        errEl.textContent = 'Could not reset — check the username and recovery code.';
+        unlock();
+        if (err && err.status === 403 && err.data && err.data.error === 'pending_approval') {
+          errEl.textContent = 'Your account is awaiting admin approval. Try again later.';
+        } else if (err && err.status === 403 && err.data && err.data.error === 'revoked') {
+          errEl.textContent = 'Your account has been revoked. Contact the site admin.';
+        } else {
+          errEl.textContent = 'Could not reset — check the username and recovery code.';
+        }
         errEl.removeAttribute('hidden');
       } finally {
         submitBtn.disabled = false;
@@ -540,9 +621,17 @@
         close();
         if (UI.toast) UI.toast('Password updated.', 'info', 2500);
       } catch (err) {
-        errEl.textContent = (err && err.status === 401)
-          ? 'Current password is incorrect.'
-          : 'Could not update password.';
+        if (err && err.sessionExpired) {
+          // Auth.changePassword confirmed the session is gone (it has
+          // already flipped the app to signed out).
+          errEl.textContent = 'You have been signed out. Sign in again, then change your password.';
+        } else if (err && err.status === 401) {
+          errEl.textContent = 'Current password is incorrect.';
+        } else if (err && err.status === 429) {
+          errEl.textContent = 'Too many attempts. Wait a few minutes and try again.';
+        } else {
+          errEl.textContent = 'Could not update password.';
+        }
         errEl.removeAttribute('hidden');
       } finally {
         submitBtn.disabled = false;
@@ -556,14 +645,87 @@
     ]);
   }
 
+  // ── Choice dialog (sign out, account switch) ──────────────────────────
+  // opts: { title, message: string | string[], choices: [{ id, label,
+  //   className }], cancelId?, dismissible? (default true) }
+  // Resolves with the chosen id, or cancelId when dismissed (×, Escape,
+  // backdrop — only when dismissible). Every choice is a real .btn button.
+  function renderChoice(opts) {
+    const dismiss = opts.dismissible !== false;
+    const paras = [].concat(opts.message || []).filter(Boolean)
+      .map(t => el('p', { class: 'auth-notice', text: String(t) }));
+    const btns = (opts.choices || []).map(c => el('button', {
+      type: 'button',
+      class: c.className || 'btn btn-outline',
+      'data-choice': c.id,
+      onClick: () => {
+        const ch = choice;
+        choice = null;
+        close(true);
+        if (ch) { try { ch.resolve(c.id); } catch (_) {} }
+      },
+    }, c.label));
+    const footer = footerBtns(btns);
+    footer.classList.add('auth-choice-footer');
+    // Three buttons side by side: let them wrap rather than overflow on a
+    // narrow desktop window (phones already wrap via css/mobile.css). Set
+    // through the CSSOM so no CSS file is needed for it.
+    footer.style.flexWrap = 'wrap';
+    footer.style.gap = '8px';
+    return el('div', { class: 'modal auth-choice' }, [
+      header(opts.title || 'Are you sure?', { noClose: !dismiss }),
+      el('div', { class: 'modal-body' }, paras),
+      footer,
+    ]);
+  }
+
+  UI.showAuthChoice = function (opts) {
+    opts = opts || {};
+    return new Promise((resolve) => {
+      const go = () => {
+        // The recovery code is up: wait for it to be acknowledged.
+        if (locked) { unlockWaiters.push(go); return; }
+        const m = $modal();
+        if (!m) { resolve(opts.cancelId != null ? opts.cancelId : null); return; }
+        // Another choice already open: it yields as cancelled.
+        if (choice) settleChoice(choice.cancelId);
+        // The Settings drawer sits above modals (z-index 1100 vs 1000) and
+        // its Sign out row awaits signOut() before closing itself, so the
+        // dialog would open hidden behind it. Close it first.
+        const sd = window.App && App.settingsDrawer;
+        if (sd && typeof sd.isOpen === 'function' && sd.isOpen() && typeof sd.close === 'function') {
+          try { sd.close(); } catch (_) {}
+        }
+        choice = {
+          resolve,
+          cancelId: opts.cancelId != null ? opts.cancelId : null,
+          dismissible: opts.dismissible !== false,
+        };
+        setBody(renderChoice(opts));
+        open();
+        setTimeout(() => {
+          const first = m.querySelector('.modal-footer button');
+          if (first) first.focus();
+        }, 0);
+      };
+      // Deferred a tick so a view being rendered in the same task (the
+      // recovery code after a recover) is in place — and locked — first.
+      setTimeout(go, 0);
+    });
+  };
+
   UI.showAuthModal = function (mode, opts) {
     const m = $modal();
     if (!m) return;
+    // Never replace the one-time recovery code, or an account question that
+    // must be answered.
+    if (!dismissible()) return;
+    if (choice) settleChoice(choice.cancelId);
     let body;
     switch (mode) {
       case 'register':         body = renderRegister(); break;
       case 'recover':          body = renderRecover(); break;
-      case 'recovery-code':    body = renderRecoveryCode((opts && opts.code) || '', (opts && opts.username) || ''); return;
+      case 'recovery-code':    renderRecoveryCode((opts && opts.code) || '', (opts && opts.username) || ''); return;
       case 'change-password':  body = renderChangePassword(); break;
       case 'login':
       default:                 body = renderLogin(); break;

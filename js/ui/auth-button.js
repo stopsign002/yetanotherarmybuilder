@@ -94,7 +94,14 @@
     if (!signedIn) {
       menu.appendChild(mkItem('Sign in', () => UI.showAuthModal && UI.showAuthModal('login')));
     } else {
+      // syncNow also re-arms anything the server refused earlier (parked
+      // ops) and cuts a retry backoff short — a plain pull + drain would
+      // leave both waiting.
       menu.appendChild(mkItem('Sync now', () => {
+        if (App.Sync && typeof App.Sync.syncNow === 'function') {
+          App.Sync.syncNow().catch(() => {});
+          return;
+        }
         if (App.Sync && typeof App.Sync.pullAll === 'function') {
           App.Sync.pullAll().catch(() => {});
         }
@@ -114,8 +121,8 @@
         if (UI.showAuthModal) UI.showAuthModal('change-password');
       }));
       // One shared implementation with the Settings drawer's Sign out — the
-      // confirm, the logout, the localStorage wipe and the toast all live in
-      // App.Auth.signOut(). This used to inline its own wipe list and the
+      // keep / remove / cancel dialog, the drain, the logout, the
+      // localStorage wipe and the toast all live in App.Auth.signOut(). This used to inline its own wipe list and the
       // drawer inlined a different one; see issue #51 and the comment on
       // App.Sync.ACCOUNT_LOCAL_KEYS. Do not re-inline it here.
       menu.appendChild(mkItem('Sign out', async () => {
