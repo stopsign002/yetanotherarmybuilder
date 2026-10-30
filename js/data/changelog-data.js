@@ -26,9 +26,81 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.26-3',
-    lastUpdated: '2026-10-26T12:00:00Z',
+    version:     '2026.10.30-1',
+    lastUpdated: '2026-10-30T20:00:00Z',
     entries: [
+      {
+        date: '2026-10-30',
+        kind: 'fix',
+        title: 'Points: Defilers and eleven other datasheets no longer carry a phantom wargear surcharge',
+        description: 'A Defiler showed 330 pts when the Munitorum Field Manual says 300 (270 for World Eaters). Wargear that upstream and the MFM priced under two different ids was being charged on every copy regardless of loadout. The same bug added 5–10 pts to Dominion Squad, Paragon Warsuits, Ravager, Terminator Assault Squad, Deathwatch Terminators, Ironstrider Ballistarii, Purgation Squad and Brotherhood Terminators. All now match the MFM; Victrix Honour Guard’s banner is unchanged. Open an existing list and the totals recalculate.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'fix',
+        title: 'Datasheets: Aquila Kill Team and Deathwatch Kill Team show every profile again',
+        description: 'A stat correction with fewer rows than the datasheet used to collapse it to one row, so Aquila Kill Team read as a single “Deathwatch Veteran T6 W3”. It now shows Gravis Veterans (T6 W3) and Deathwatch Veterans (T5 W2), and Deathwatch Kill Team keeps its Veterans row. Eradicator Squad, Marneus Calgar in Armour of Antilochus and Invader ATV pick up GW’s current datasheets (leaders can join Eradicators again), Cult of the Arkifane’s Soul-Tally Offerings has its text and Hearthguard Covenant shows all three stratagems.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'fix',
+        title: 'Sync: a bad connection no longer deletes your armies',
+        description: 'If the app could not reach the server when it opened (no signal, or the server mid-restart), it treated the empty answer as “the cloud has no armies” and removed every synced army from the device. It now leaves everything alone and tries again later. Painting and reserves edits made on one device are no longer overwritten by the next device to save, and undo stays on the army you are editing.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'fix',
+        title: 'Accounts: recovery shows your new code, sign-out really signs you out, and a shared device keeps accounts apart',
+        description: 'Resetting a password used to throw away the new recovery code it had just generated. It is now shown, and the code screen cannot be dismissed until you confirm you saved it. Sign out used to leave the server session alive, so a reload signed you back in; the dialog now has real Keep / Remove / Cancel buttons and Cancel means cancel. Signing in on a device that holds another account’s unsynced lists asks what to do with them instead of merging them into your account.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'fix',
+        title: 'Unnamed lists are saved',
+        description: 'A list you built without ever renaming it from “New Army” was not being saved and vanished on reload. Any list with at least one unit is now autosaved.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'fix',
+        title: 'Enhancements follow your detachment',
+        description: 'Changing detachment removes enhancements the new choice does not offer (with a note saying which), allied units that cannot take enhancements no longer get the option, stacked units no longer show a false “taken 2 times” warning, and saved lists pick up current enhancement and wargear prices when opened. Sir Hekhtur is no longer offered for free.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'fix',
+        title: 'Layout: the Army panel is back between 821 and 860 px, and long card names wrap',
+        description: 'iPad-portrait and half-screen windows stack the three panels instead of squeezing the Army panel to nothing; Help no longer runs off the edge of narrow windows. Printed data cards wrap long unit names instead of cutting them to “ASSAULT INTERCESSOR S…”. Collect’s bulk buttons fit on a phone, and every × close button has a proper box.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'fix',
+        title: 'Phone: tabs exit Collect and Cards, Back behaves after a reload, and Offline is visible',
+        description: 'Tapping Army, Units or Details from Collect or Cards returns you to Build (there was no way out before). The Back button no longer swallows presses after a reload. An Offline chip now sits above the tab bar when you have no connection.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'change',
+        title: 'Keyboard shortcuts stay in Build and leave your chords alone',
+        description: 'Ctrl/Cmd+A, Ctrl+K and Alt+arrows are no longer captured; Enter on a button presses the button; the roster shortcuts do nothing while you are in Cards, Play, Collect or Waha. The Export menu closes on Escape. The Reduced animations toggle now also stops confetti and smooth scrolling, and confetti only fires when you hit the limit yourself.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'fix',
+        title: 'Cards: card backs, uploads and long text',
+        description: 'Your card-back choice survives a failed image-library load, upload errors say what was wrong (too large, or an unsupported type), long rule and stratagem text splits across cards with its formatting kept, and very long sections no longer produce header-only cards. The Save button’s unsaved pulse clears after autosave.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'fix',
+        title: 'Feedback and admin',
+        description: 'Long diagnostics no longer make a bug report fail (the server trims them), Escape asks before discarding what you typed, and Cancel on an admin’s “Mark fixed” note no longer marks the report fixed. Password changes and bug submissions are rate-limited on the server, and sign-ups pause while more than 25 requests are waiting.',
+      },
+      {
+        date: '2026-10-30',
+        kind: 'change',
+        title: 'Smaller page: an unused PDF library is gone',
+        description: 'A 906 KB script nothing referenced was being downloaded on every visit. Cards still print through your browser’s print dialog as before.',
+      },
       {
         date: '2026-10-26',
         kind: 'fix',
