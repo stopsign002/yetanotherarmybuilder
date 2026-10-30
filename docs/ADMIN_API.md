@@ -175,8 +175,15 @@ List every uploaded image across all users (for moderation).
     ...
   ]
   ```
-- Newest-first ordering preferred. Pagination is fine to add later
-  if the library grows; the client renders them all today.
+- Newest-first ordering preferred. **There is no server-side
+  pagination:** the response holds every user's data URLs (up to 30 images
+  per user, each up to ~7 MB of text), so on a busy site it is the heaviest
+  request the panel makes. The client paginates **client-side**, 20 images
+  per page (Previous / Next above and below the grid), so only 20 `<img>`
+  elements exist at a time; the download itself is still the whole list.
+  Server pagination (`?limit=&before=`) is the follow-up if the response
+  size becomes a problem. The page resets to 1 on every tab load and is
+  clamped after a delete.
 
 ### `DELETE /api/admin/images/:id`
 
@@ -216,18 +223,41 @@ CREATE TABLE bug_reports (
   title           TEXT        NOT NULL,
   description     TEXT        NOT NULL,
   diagnostics     TEXT        NULL,
-  attachment_url  TEXT        NULL,                    -- public URL of stored upload, or NULL
+  attachment_file TEXT        NULL,                    -- server-generated filename under BUG_ATTACH_DIR (never sent to the client), or NULL
   attachment_mime TEXT        NULL,                    -- e.g. image/png, video/webm
   attachment_size BIGINT      NULL,                    -- bytes
   fixed        BOOLEAN     NOT NULL DEFAULT FALSE,
   fixed_at     TIMESTAMPTZ NULL,
   fixed_by     TEXT        NULL,
   fixed_note   TEXT        NULL,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- added later; email is written by POST /bugs, the rest ONLY by the hourly fixer:
+  email        TEXT        NULL,
+  fix_mode     TEXT        NULL,
+  fix_report   TEXT        NULL,
+  escalated_at TIMESTAMPTZ NULL,
+  attempts     INTEGER     NOT NULL DEFAULT 0,
+  notified_at  TIMESTAMPTZ NULL
 );
 CREATE INDEX bug_reports_created_at_desc ON bug_reports (created_at DESC);
 CREATE INDEX bug_reports_open            ON bug_reports (fixed) WHERE fixed = FALSE;
 ```
+
+The column that stores the upload is **`attachment_file`** (a
+server-generated filename). The row never holds a URL: `attachment_url` in
+the admin API is *derived* by the mapper as
+`/api/admin/bugs/<id>/attachment`, an admin-only route that streams the file
+with its MIME, `nosniff` and a sandbox CSP.
+
+**Fixer-owned columns.** `bug-fixer.py` (hourly, on the host) owns
+`fix_mode` (`'auto'` = verified and applied unattended, `'intervention'` = a
+human finished it), `fix_report` (JSON verdict), `escalated_at` (parked for a
+human; stops the hourly retry), `attempts`, and `notified_at` (the reporter
+has been told). The API and the admin panel never write them; marking a
+report fixed from the panel is picked up by the fixer's next run, which then
+emails the reporter (if they left an address). Consequence for the panel:
+**"Mark fixed" sends email**, so a mis-click is not free and Cancel on its
+dialog must abort.
 
 `username` is the submitter at the time of the report — store it
 literally (don't FK to `users.username`) so the row survives revoke /
@@ -256,9 +286,17 @@ Two request shapes:
 ```
 
 `kind` is `"bug"` or `"feature"`; missing/unknown values default to
-`"bug"`. Server should cap each string (`title` 200 chars,
-`description` 4000, `diagnostics` 16000) and reject empty
-`title` / `description` with 400.
+`"bug"`. Server caps: `title` 200 chars, `description` 4000,
+`diagnostics` 16000, `email` 254; empty `title` / `description` is a 400.
+An optional `email` (reporter's address, used only for the "fixed" note) is
+validated and a malformed one is a 400.
+
+**Diagnostics length.** The server truncates over-long `diagnostics` to 16,000
+characters (marker included) rather than rejecting the report. The client
+still slices first, to `16000 - marker.length` plus its own
+`\n…(truncated)…` marker, so the total never exceeds the cap on either path
+(it used to send 16,014 characters and get a 400 for exactly the large-army
+case it meant to handle).
 
 **b) With attachment — `multipart/form-data`**:
 
@@ -314,6 +352,21 @@ List every report, newest first. Admin only.
 - Filter shape (`?status=open|fixed|all`) is **not** required —
   the client filters in-memory between the three Open / Fixed / All
   tabs. Adding a server-side filter is fine if the table grows large.
+  Like `/admin/images`, this returns every row (diagnostics included) with
+  no pagination.
+
+### Panel load behaviour (client)
+
+- A failed load (network, 5xx) shows an error state in the tab body with a
+  **Retry** button; it is never rendered as "No open reports" / "No users".
+  A `403` still closes the panel ("Admin access denied"); a `401` runs the
+  session-expired path.
+- Every load carries a request token: a response that arrives after the user
+  has switched tab (or reloaded) is discarded, so tab A's rows cannot paint
+  under tab B.
+- Revoke, delete-image and delete-report confirm through `UI.askDialog`
+  (styled `.modal`, `.btn-outline` Cancel beside a `.btn-danger` primary); no
+  native `prompt()` / `confirm()` remains in `admin.js`.
 
 ### `POST /api/admin/bugs/:id/fix`
 
@@ -324,7 +377,11 @@ Mark a report fixed. Admin only.
   { "note": "fixed in commit 4939e8e" }
   ```
 - Sets `fixed = TRUE`, `fixed_at = now()`, `fixed_by = <admin-username>`,
-  `fixed_note = body.note ?? NULL`.
+  `fixed_note = body.note ?? NULL`. The note is trimmed, an empty one is
+  stored as NULL, and over 4000 chars is a `400 note too long`.
+- The panel asks for the note in a styled dialog (`UI.askDialog`); **Cancel
+  aborts without sending the request** (an earlier `prompt() || ''` treated
+  Cancel as "no note" and marked the report fixed anyway).
 - **Response 200**: either `{ "ok": true }` or the updated record (the
   client merges in whatever it receives, falling back to a local patch
   if the response is just `{ ok: true }`).

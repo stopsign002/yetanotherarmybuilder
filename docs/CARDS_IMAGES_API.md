@@ -1,149 +1,112 @@
 # Cards mode: image library API
 
-Reference for the deploying agent. The Cards-mode feature
-([js/ui/cards-mode.js](../js/ui/cards-mode.js)) lets users save
-card-back images they re-use across print jobs. **Anonymous users**
-keep their library in browser-local IndexedDB. **Signed-in users**
-need their library on the server so it follows them across devices
-(the user's stated workflow: "prep cards on one computer, print from
-another").
+Reference for the card-back image library behind Cards mode
+([js/ui/cards-mode.js](../js/ui/cards-mode.js)). This is the **deployed**
+contract (server: `api/images.js`, table `card_back_images`), not a spec.
 
-This document specifies the server-side API the client expects. The
-client wrapper that calls it is `ImageStore` in
-[cards-mode.js](../js/ui/cards-mode.js). It already exists and falls
-back to `YaabDB.images` (browser IndexedDB) when not signed in, so
-the IDB path keeps working before the API is deployed; until the
-server endpoints exist, signed-in users will see an empty library
-+ a "Couldn't save to your account — check your connection." toast
-on upload.
+**Anonymous users** keep their library in browser-local IndexedDB
+(`YaabDB.images`, owner `'anon'`). **Signed-in users** use the server so the
+library follows them across devices ("prep cards on one computer, print from
+another"). The client wrapper is `ImageStore` in `cards-mode.js`; it returns
+the same `{ id, name, dataUrl, addedAt }` shape either way.
 
 ## 1. Endpoints
 
-All routes are same-origin under `/api/images*`. Authentication is
-the existing cookie session (same as `/api/armies`, `/api/state`,
-`/api/auth/*`). Reject unauthenticated callers with 401 and let the
-client's `App.Auth.handleSessionExpired()` path kick in.
+All routes are same-origin under `/api/images*`, authenticated with the
+cookie session (`yaab_sid`). Unauthenticated callers get 401 and the client
+runs `App.Auth.handleSessionExpired()`.
 
 ### `GET /api/images`
 
-List the signed-in user's library.
+The signed-in user's library, newest first. **No pagination** — every row,
+with its full data URL, comes back in one response (up to 30 images, each up
+to ~7 MB of text). The client calls it once at Cards-mode mount and again on
+sign-in/out.
 
-- **Auth**: required (401 otherwise).
-- **Response 200**: JSON array of records, newest first.
-  ```json
-  [
-    { "id": 17, "name": "necron-back.jpg",
-      "dataUrl": "data:image/jpeg;base64,/9j/4AAQ…",
-      "addedAt": 1716412800000 }
-  ]
-  ```
-  - `id` may be a number or a string (UUID) — the client treats it
-    opaquely and round-trips via `String(id)` for comparisons.
-  - `dataUrl` is a `data:` URL with the embedded image bytes.
-  - `addedAt` is a millisecond epoch.
-- **Response 401**: `{ "error": "unauthorized" }`.
+```json
+[ { "id": 17, "name": "necron-back.jpg",
+    "dataUrl": "data:image/jpeg;base64,/9j/4AAQ…",
+    "addedAt": 1716412800000 } ]
+```
+
+- `id` is a JS number (BIGSERIAL cast by the server); the client treats it
+  opaquely and compares via `String(id)`.
+- `addedAt` is a millisecond epoch.
 
 ### `POST /api/images`
 
-Add a new image to the signed-in user's library.
+Body `{ "name": string, "dataUrl": string }`. Success: `200` with the created
+record (same shape as above).
 
-- **Auth**: required.
-- **Request body** (JSON):
-  ```json
-  { "name": "necron-back.jpg",
-    "dataUrl": "data:image/jpeg;base64,/9j/4AAQ…" }
-  ```
-  - `name`: any non-empty string. Trim and cap to ~200 chars
-    server-side.
-  - `dataUrl`: a `data:` URL. Validate the MIME prefix
-    (`image/png`, `image/jpeg`, `image/webp`, `image/gif`,
-    `image/svg+xml`). Reject otherwise with 400.
-- **Response 200**: the created record, same shape as items in the
-  list response. The client treats whatever `id` you return as
-  authoritative.
-- **Response 400**: malformed body. Body: `{ "error": "<reason>" }`.
-- **Response 409 or 413** when the user is at the cap (30 images):
-  ```json
-  { "error": "limit", "limit": 30, "count": 30 }
-  ```
-  Either status code works — the client checks for both. Include
-  `limit` and `count` so the toast can surface accurate numbers.
-  Prefer 409 ("Conflict") for a soft cap, 413 ("Payload Too Large")
-  for individual-image-too-big violations.
-- **Response 413** (payload too large) for individual image files
-  bigger than your chosen per-image cap. Suggested: 5 MB per image,
-  matching what most printers can render meaningfully.
+| Status | Body | Client reading |
+|---|---|---|
+| `400` | `{ error: 'name required' \| 'name too long' \| 'dataUrl required' \| 'unsupported image type' }` | `unsupported image type` -> "Unsupported image type. Use PNG, JPEG, WebP or GIF."; other 400s -> "The server rejected that image (<error>)" |
+| `401` | `{ error: 'unauthorized' }` | sign-in expired toast |
+| `409` | `{ error: 'limit', limit: 30, count: 30 }` | "Library is full (30 images)" — **only** 409 means the library cap |
+| `413` | `{ error: 'image too large' }` | "Image too large (max 5 MB)" — a per-image cap, **not** the library cap |
+| other / 5xx | — | "The server couldn't save that image (error N)" |
+| network failure | — | "check your connection" |
+
+In every failure case the image is still applied to the current print job
+locally; it just isn't saved to the library.
 
 ### `DELETE /api/images/:id`
 
-Delete an image owned by the signed-in user.
+`204` on success. `404` when the id does not exist **or belongs to another
+user** (existence is never leaked). `401` unauthenticated.
 
-- **Auth**: required.
-- `:id` is the same opaque id the client received from `GET /api/images`.
-- **Response 200** or 204 on success.
-- **Response 404** if the id doesn't exist OR doesn't belong to the
-  caller — never leak that the id exists for someone else.
+## 2. Limits (all enforced server-side)
 
-## 2. Server-side enforcement
+| Limit | Value | Where |
+|---|---|---|
+| Images per user | **30** | `LIMIT` in `images.js`; count + insert run in one transaction under `pg_advisory_xact_lock(user_id)` so concurrent POSTs cannot pass the cap |
+| `name` | 1-200 chars, trimmed | the client slices the file name to 200 before sending |
+| `dataUrl` length | **<= 7,000,000 chars** (~5 MB of binary after base64) | `DATA_URL_MAX`; over -> `413` |
+| Route body limit | **10,000,000 bytes** | route-level `bodyLimit` on `POST /images`; the global Fastify limit stays 2 MB for the small `/armies` and `/state` PUTs |
+| MIME | `image/png`, `image/jpeg`, `image/webp`, `image/gif`, `image/svg+xml` by `data:` prefix | `DATA_URL_RE`; payload beyond the prefix is not decoded or validated |
 
-These rules MUST hold server-side; client checks are best-effort:
+The server accepts SVG; **the client does not offer it**: the file input is
+`accept="image/png,image/jpeg,image/webp,image/gif"` and the change handler
+re-checks `file.type` against that list (the `accept` attribute is only a
+hint — drag/drop and "All files" bypass it).
 
-1. **Owner scoping**. Every read/write filters on the authenticated
-   user. Never trust an `owner`/`username` field from the client.
-2. **30-image cap per user**. Enforce on `POST` in the same DB
-   transaction as the insert (count + insert under the same lock).
-3. **Per-image size cap**. Reject overly large data URLs at the
-   request-body limit AND at the application layer.
-4. **MIME allowlist**. Reject anything that isn't an image MIME.
+Every read and write is scoped to `req.user.user_id`; an `owner` or
+`username` sent by the client is ignored.
 
-## 3. Schema sketch
-
-If using SQL:
+## 3. Schema
 
 ```sql
 CREATE TABLE card_back_images (
   id          BIGSERIAL PRIMARY KEY,
-  username    TEXT        NOT NULL
-              REFERENCES users(username) ON DELETE CASCADE,
+  user_id     BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name        TEXT        NOT NULL,
   data_url    TEXT        NOT NULL,         -- data:image/...;base64,...
   added_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX idx_card_back_images_username
-  ON card_back_images (username, added_at DESC);
+CREATE INDEX card_back_images_user_idx
+  ON card_back_images (user_id, added_at DESC);
 ```
 
-Or store the bytes in object storage (S3/etc) and only keep
-`{ id, username, name, content_type, blob_key, added_at }` in the
-DB; on `GET` re-emit the `dataUrl` by reading the blob and base64-
-encoding it. Either approach is fine — the API surface is the
-contract.
+Keyed on `user_id`, not `username`. The bytes live in the row as the full data
+URL, so the table (and every `GET /images`) is as large as the library.
 
-A row-count constraint can be enforced in the app layer:
+## 4. Client behaviour worth knowing
 
-```sql
--- Pseudo-ish: in a single transaction
-BEGIN;
-SELECT count(*) FROM card_back_images WHERE username = :u FOR UPDATE;
--- if >= 30 → roll back, return 409
-INSERT INTO card_back_images (username, name, data_url)
-  VALUES (:u, :name, :dataUrl) RETURNING id, added_at;
-COMMIT;
-```
-
-(Or rely on a `CHECK` trigger that maintains a per-user count.)
-
-## 4. Body-size limit
-
-Image data URLs can be hundreds of KB to a few MB. Whatever JSON
-body limit Fastify (or whatever the server uses) is configured for
-needs to allow at least **8 MB** to comfortably accept a 5 MB image
-encoded as base64 (≈ 6.7 MB) plus the JSON envelope. Without this
-the `POST` will fail before the route handler runs.
-
-Existing `/api/armies` PUT bodies are tiny — bumping the limit just
-for `/api/images` (e.g. via a route-level `bodyLimit`) is safer than
-raising the global limit.
+- **A failed library fetch is not an empty library.** `ImageStore.list()`
+  resolves `null` on a network error, 5xx or 401 (an array only on success).
+  `reloadSavedImages()` then marks the library *unavailable*, keeps the
+  thumbnails it already had for that owner, and shows "Image library
+  unavailable right now" with a Retry button. `rehydrateCardBack()` and
+  preset loading leave `cardBack.activeId` / `enabled` alone in that state;
+  clearing them would be persisted by `savePrefs()` and synced (the prefs
+  live in `yaab_cards_prefs`, a synced bag key), wiping the user's choice on
+  one transient failure. Only a *successful* list that lacks the id means
+  "that image was deleted".
+- Preferences store only the image **id** (`cardBack.activeId`); the bytes
+  stay in the library and are resolved by `rehydrateCardBack()` after the
+  list loads.
+- Library fetch happens at mount for signed-in users and downloads every
+  data URL. There is no lazy or thumbnail endpoint.
 
 ## 5. Curl examples
 
@@ -162,14 +125,13 @@ curl -b cookies.txt -X POST https://yaab.example/api/images \
 curl -b cookies.txt -X DELETE https://yaab.example/api/images/17
 ```
 
-## 6. Things NOT in scope
+## 6. Not in scope
 
-- **Migrating an anon library to a signed-in account**. The client
-  doesn't auto-import IDB images on sign-in. Could be a follow-up if
-  users complain.
-- **Cross-user sharing**. Images are private to their owner.
-- **Image editing on the server**. The client uploads exactly what
-  the user picked; server stores/returns the same bytes.
-- **Sync-bag inclusion**. These images are NOT in the small KV bag
-  (`/api/state`) — they're too big. Treat them as a separate
-  resource like `/api/armies`, not part of the bag.
+- **Migrating an anon library to a signed-in account.** The client does not
+  auto-import IndexedDB images on sign-in.
+- **Cross-user sharing.** Images are private to their owner (admins can list
+  and delete any image through `/api/admin/images`, see `ADMIN_API.md`).
+- **Image editing on the server.** The server stores and returns the bytes
+  the client uploaded.
+- **Sync-bag inclusion.** Images are not in the small KV bag (`/api/state`);
+  they are too large.

@@ -23,7 +23,8 @@
     (App.CHANGELOG && App.CHANGELOG.version) ? App.CHANGELOG.version : '(unknown)';
   const ENDPOINT    = '/api/bugs';
   const MAX_BODY    = 4000;
-  const MAX_DIAG    = 16000;
+  const MAX_DIAG    = 16000;        // server rejects diagnostics longer than this (api/bugs.js DIAGNOSTICS_MAX)
+  const DIAG_MARKER = '\n…(truncated)…';
   const MAX_ATTACH  = 50 * 1024 * 1024;   // 50 MB cap matches the UI label
   const ATTACH_ACCEPT = 'image/*,video/*';
   const KINDS = [
@@ -31,6 +32,9 @@
     { value: 'feature', label: 'Feature request' },
   ];
   let chosenAttachment = null;            // File | null — picked file for the current modal session
+  // The form is reset on open only when the previous one was sent or
+  // knowingly discarded. A draft survives closing the modal and a failed send.
+  let needsReset = true;
 
   let modalEl = null;
 
@@ -161,7 +165,9 @@
       '</div>';
     document.body.appendChild(backdrop);
 
-    backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+    // Backdrop click and Esc are accidental-prone: confirm before losing text.
+    // The × / Cancel buttons are deliberate and just hide the form (draft kept).
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) requestClose(); });
     backdrop.querySelector('#bug-report-close').addEventListener('click', closeModal);
     backdrop.querySelector('#bug-report-cancel').addEventListener('click', closeModal);
     backdrop.querySelector('#bug-report-submit').addEventListener('click', onSubmit);
@@ -259,7 +265,10 @@
     const description = (descEl.value || '').trim();
     let   diagnostics = (diagEl.value || '').trim();
     const email       = ((emailEl && emailEl.value) || '').trim();
-    if (diagnostics.length > MAX_DIAG) diagnostics = diagnostics.slice(0, MAX_DIAG) + '\n…(truncated)…';
+    // Total (text + marker) must stay <= MAX_DIAG or the server answers 400.
+    if (diagnostics.length > MAX_DIAG) {
+      diagnostics = diagnostics.slice(0, MAX_DIAG - DIAG_MARKER.length) + DIAG_MARKER;
+    }
 
     if (!title) {
       setStatus('Please add a short summary.', 'error');
@@ -324,6 +333,7 @@
       }
       toast((kind === 'feature' ? 'Feature request sent' : 'Bug report sent') +
         (email ? ' — we\u2019ll email you when it\u2019s fixed.' : ' — thanks!'), 'success', 3800);
+      needsReset = true;               // only a successful send discards the draft
       closeModal();
     } catch (err) {
       setStatus('Send failed: ' + (err.message || 'unknown'), 'error');
@@ -366,6 +376,12 @@
     submitBtn.hidden = false;
     setStatus('');
 
+    // A kept draft (closed without sending) is restored as-is.
+    if (!needsReset) {
+      setTimeout(() => titleEl.focus(), 0);
+      return;
+    }
+    needsReset = false;
     // Reset values; gather diagnostics async.
     titleEl.value = '';
     descEl.value  = '';
@@ -388,8 +404,36 @@
     if (modalEl) modalEl.hidden = true;
   }
 
+  function isDirty() {
+    if (!modalEl) return false;
+    const t = modalEl.querySelector('#bug-report-summary');
+    const d = modalEl.querySelector('#bug-report-desc');
+    return !!((t && t.value.trim()) || (d && d.value.trim()) || chosenAttachment);
+  }
+
+  // Esc / backdrop: close straight away when there is nothing to lose,
+  // otherwise ask. "Keep editing" is the default focus; "Discard" clears.
+  let closing = false;
+  async function requestClose() {
+    if (!modalEl || modalEl.hidden || closing) return;
+    if (!isDirty() || !UI.askDialog) { closeModal(); return; }
+    closing = true;
+    try {
+      const discard = await UI.askDialog({
+        title: 'Discard this report?',
+        message: 'What you typed hasn\u2019t been sent.',
+        confirmLabel: 'Discard',
+        cancelLabel: 'Keep editing',
+        danger: true,
+      });
+      if (discard) { needsReset = true; closeModal(); }
+    } finally { closing = false; }
+  }
+
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && modalEl && !modalEl.hidden) closeModal();
+    if (e.key !== 'Escape' || !modalEl || modalEl.hidden) return;
+    if (UI.askDialog && UI.askDialog.isOpen && UI.askDialog.isOpen()) return;
+    requestClose();
   });
 
   // ── hook registration ───────────────────────────────────────────────────

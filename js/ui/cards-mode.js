@@ -466,6 +466,12 @@
           cardBack.activeId = img.id;
           cardBack.src      = img.dataUrl;
           cardBack.name     = img.name || s.cardBack.name || '';
+        } else if (savedImagesUnavailable) {
+          // Library unreadable right now: keep the preset's choice and let
+          // rehydrateCardBack() resolve it after the next successful load.
+          cardBack.activeId = s.cardBack.activeId;
+          cardBack.src      = '';
+          cardBack.name     = s.cardBack.name || '';
         } else {
           cardBack.activeId = null;
           cardBack.src      = '';
@@ -718,6 +724,16 @@
   // Card-backs section. Reset + reloaded whenever the auth user changes.
   let savedImages = [];
   let savedImagesLoading = false;
+  // True when the last library fetch FAILED (network, 5xx, 401). That is not
+  // the same as "the library is empty": the card-back selection must survive
+  // it, so rehydrate/preset code checks this before concluding an image was
+  // deleted. `savedImagesOwner` stops a stale list from one account being
+  // shown under another after a sign-in change.
+  let savedImagesUnavailable = false;
+  let savedImagesOwner = null;
+  // Types the server accepts for card backs (SVG is deliberately not offered).
+  const BACK_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+  const BACK_IMAGE_MAX_MB = 5;
 
   // ImageStore — thin abstraction over the persistence layer. Signed-in
   // users hit the server (so the library follows them across devices —
@@ -743,6 +759,13 @@
         App.Auth.handleSessionExpired();
       }
     },
+    ownerKey() {
+      if (!this.signedIn()) return 'anon';
+      const u = App.Auth.getCurrentUser();
+      return 'u:' + ((u && u.username) || '');
+    },
+    // Resolves to an array on success, or `null` when the library could not
+    // be read (network error, 5xx, 401). Callers must NOT treat null as empty.
     async list() {
       if (this.signedIn()) {
         try {
@@ -751,13 +774,13 @@
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' },
           });
-          if (resp.status === 401) { this._on401(); return []; }
+          if (resp.status === 401) { this._on401(); return null; }
           if (resp.ok) {
             const data = await resp.json();
             return Array.isArray(data) ? data : [];
           }
         } catch (_) {}
-        return [];
+        return null;
       }
       return (window.YaabDB && YaabDB.images) ? YaabDB.images.list('anon') : [];
     },
@@ -775,9 +798,13 @@
             const img = await resp.json();
             return { ok: true, id: img.id, image: img };
           }
-          if (resp.status === 409 || resp.status === 413) {
-            let body = null;
-            try { body = await resp.json(); } catch (_) {}
+          let body = null;
+          try { body = await resp.json(); } catch (_) {}
+          // 409 = the 30-image library cap. 413 = this one image is too big.
+          // 400 = rejected input (unsupported type, name too long, …).
+          // Anything else the server answered is a server problem, not a
+          // connectivity one — don't tell the user to check their connection.
+          if (resp.status === 409) {
             return {
               ok: false,
               reason: 'limit',
@@ -785,6 +812,12 @@
               count: (body && body.count) || 0,
             };
           }
+          if (resp.status === 413) return { ok: false, reason: 'too_large' };
+          if (resp.status === 400) {
+            const msg = String((body && body.error) || '');
+            return { ok: false, reason: /type/i.test(msg) ? 'type' : 'invalid', message: msg };
+          }
+          return { ok: false, reason: 'server', status: resp.status };
         } catch (_) {}
         return { ok: false, reason: 'network' };
       }
@@ -809,8 +842,20 @@
 
   async function reloadSavedImages() {
     savedImagesLoading = true;
-    try { savedImages = await ImageStore.list(); }
-    catch (_) { savedImages = []; }
+    const owner = ImageStore.ownerKey();
+    let list = null;
+    try { list = await ImageStore.list(); } catch (_) { list = null; }
+    if (Array.isArray(list)) {
+      savedImages = list;
+      savedImagesUnavailable = false;
+    } else {
+      // Fetch failed: mark the library unavailable, keep whatever we already
+      // had for THIS owner (so thumbnails don't vanish on a blip), and never
+      // fall through to "the active image was deleted".
+      savedImagesUnavailable = true;
+      if (savedImagesOwner !== owner) savedImages = [];
+    }
+    savedImagesOwner = owner;
     savedImagesLoading = false;
     rehydrateCardBack();
   }
@@ -820,6 +865,11 @@
   // from the library, drop the selection cleanly.
   function rehydrateCardBack() {
     if (cardBack.activeId == null || cardBack.src) return;
+    // Library couldn't be read — we don't know whether the image still
+    // exists, so keep activeId/enabled/name untouched (the next successful
+    // reload resolves it). Clearing here would be persisted by savePrefs and
+    // synced, wiping the user's choice on a transient failure.
+    if (savedImagesUnavailable && !savedImages.some(i => String(i.id) === String(cardBack.activeId))) return;
     const img = savedImages.find(i => String(i.id) === String(cardBack.activeId));
     if (img) {
       cardBack.src  = img.dataUrl;
@@ -1960,6 +2010,16 @@
         running += h;
         continue;
       }
+      // GUARD: nothing has been kept on this card yet, so this section is
+      // taller than the whole card can hold. Spilling it would only hand the
+      // same oversized section to the continuation (which would spill it
+      // again, cascading into header-only cards until the depth cap). Keep it
+      // here — it is clipped by the card, as a lone oversized section always
+      // was — and spill only what follows it.
+      if (i === 0) {
+        running += h;
+        continue;
+      }
       // Otherwise this section + every later section spill as whole units.
       for (let j = i; j < middle.length; j++) {
         const k = middle[j].getAttribute('data-sec');
@@ -2012,6 +2072,11 @@
 
     const split = splitUnitCardBySections(card.html, spillKeys);
     if (!split) return [card];   // keys matched nothing (stale override) — leave whole
+    // Safety net for the AUTO path: a front with no section left on it is a
+    // header-only card and means the continuation would just repeat the same
+    // content. Leave the card whole (a manual override is the user's call).
+    const manualOverride = depth === 0 && card.id && Array.isArray(spillOverrides[card.id]);
+    if (!manualOverride && split.frontHtml.indexOf('data-sec=') === -1) return [card];
 
     // In 'fullCard' mode each continuation is its own front-grid card, so a
     // dense unit can cascade across as many cards as it needs: recurse on the
@@ -2138,11 +2203,11 @@
     return [primary, cont];
   }
 
-  // Rule-card spillover. Rule cards have a single body section (the
+  // Rule- and stratagem-card spillover. Both have a single body section (the
   // `<div class="dcc-rule-text">` blob), so overflow can only split
   // mid-text. Always on: the alternative is silently clipping rules
-  // prose (Nurgle's Gift ran off the card). Long rules paginate across
-  // as many faces as they need.
+  // prose (Nurgle's Gift ran off the card). Long text paginates across
+  // as many faces as it needs, keeping its bold/keyword markup.
   function splitOverflowingRuleCards(ruleCards, layout) {
     if (ruleCards.length === 0) return ruleCards;
     const { w: cardW, h: cardH } = cardSizeFor(layout);
@@ -2162,13 +2227,73 @@
       document.body.removeChild(stage);
     }
   }
-  // Re-inject rule text by swapping the dcc-rule-text contents in a rule
-  // card's HTML — keeps every other class / attribute intact.
-  function withRuleText(html, newText) {
-    return html.replace(
-      /(<div class="dcc-rule-text">)[\s\S]*?(<\/div>)/,
-      '$1' + esc(newText) + '$2'
-    );
+  // Re-inject rule text by swapping the .dcc-rule-text contents in a rule /
+  // stratagem card's HTML — keeps every other class / attribute intact.
+  // `innerHtml` is markup taken from the card's own (already escaped) DOM, so
+  // **bold**, keyword <strong> and glossary wrappers survive a page split.
+  // With `dropHeader`, the card's <header> is removed from the result.
+  function withRuleHtml(html, innerHtml, dropHeader) {
+    const root = document.createElement('div');
+    root.innerHTML = html;
+    const t = root.querySelector('.dcc-rule-text');
+    if (t) t.innerHTML = innerHtml;
+    if (dropHeader) {
+      const h = root.querySelector('header');
+      if (h) h.remove();
+    }
+    return root.innerHTML;
+  }
+
+  // Token-level slicing of a rich-text element, for splitting an overflowing
+  // rule across cards without flattening it to textContent. Tokens are the
+  // runs of non-whitespace and whitespace across every text node, in document
+  // order. sliceRichTokens() returns a clone holding only tokens [from, to);
+  // elements that end up empty are dropped, ancestors of kept text stay (so a
+  // <strong> that spans the cut is re-opened on the next card).
+  function countRichTokens(root) {
+    let n = 0;
+    const walk = (node) => {
+      node.childNodes.forEach(ch => {
+        if (ch.nodeType === 3) n += (ch.nodeValue.match(/\s+|\S+/g) || []).length;
+        else if (ch.nodeType === 1) {
+          if (/^(BR|HR|IMG)$/.test(ch.tagName)) n++;   // void elements are one token each
+          else walk(ch);
+        }
+      });
+    };
+    walk(root);
+    return n;
+  }
+  function sliceRichTokens(root, from, to) {
+    const clone = root.cloneNode(true);
+    let idx = 0;
+    const walk = (node) => {
+      Array.from(node.childNodes).forEach(ch => {
+        if (ch.nodeType === 3) {
+          const toks = ch.nodeValue.match(/\s+|\S+/g) || [];
+          const kept = [];
+          for (const t of toks) { if (idx >= from && idx < to) kept.push(t); idx++; }
+          if (kept.length) ch.nodeValue = kept.join('');
+          else ch.remove();
+        } else if (ch.nodeType === 1) {
+          if (/^(BR|HR|IMG)$/.test(ch.tagName)) {
+            if (!(idx >= from && idx < to)) ch.remove();
+            idx++;
+          } else {
+            walk(ch);
+            if (!ch.firstChild) ch.remove();
+          }
+        }
+      });
+    };
+    walk(clone);
+    // Trim whitespace at the cut edges so a page doesn't start/end on a gap.
+    const firstText = (n) => { for (const c of n.childNodes) { if (c.nodeType === 3) return c; if (c.nodeType === 1) { const r = firstText(c); if (r) return r; } } return null; };
+    const lastText  = (n) => { for (let i = n.childNodes.length - 1; i >= 0; i--) { const c = n.childNodes[i]; if (c.nodeType === 3) return c; if (c.nodeType === 1) { const r = lastText(c); if (r) return r; } } return null; };
+    if (from > 0) { const f = firstText(clone); if (f) f.nodeValue = f.nodeValue.replace(/^\s+/, ''); }
+    const l = lastText(clone);
+    if (l && to < Infinity) l.nodeValue = l.nodeValue.replace(/\s+$/, '');
+    return clone.innerHTML;
   }
 
   // Fit ONE page of a rule card: measure `html` at card size; when it
@@ -2176,11 +2301,12 @@
   // { fitHtml, remainderHtml } — remainderHtml is a full rule card carrying
   // the leftover text under a cloned "(cont.)" head, ready to be fitted
   // again. remainderHtml is null when everything fits.
-  function fitRuleCardPage(html, cardW, cardH, stage) {
+  function fitRuleCardPage(html, cardW, cardH, stage, kind) {
+    kind = kind === 'strat' ? 'strat' : 'rule';
     const host = document.createElement('div');
     host.style.cssText = 'width:' + cardW + 'mm; height:' + cardH + 'mm;';
     const cardEl = document.createElement('article');
-    cardEl.className = 'dcc-card dcc-card-rule ' + templateClass();
+    cardEl.className = 'dcc-card dcc-card-' + kind + ' ' + templateClass();
     cardEl.style.cssText = 'width:100%;height:100%;box-sizing:border-box;';
     cardEl.innerHTML = html;
     host.appendChild(cardEl);
@@ -2191,51 +2317,41 @@
       const header = cardEl.querySelector('.dcc-head');
       const textEl = cardEl.querySelector('.dcc-rule-text');
       if (!header || !textEl) return { fitHtml: html, remainderHtml: null };
-      const fullText = textEl.textContent || '';
-      if (!fullText.trim()) return { fitHtml: html, remainderHtml: null };
+      if (!(textEl.textContent || '').trim()) return { fitHtml: html, remainderHtml: null };
 
-      // Tokenise so we can rebuild any prefix without losing whitespace:
-      // double-newline → paragraph, single-newline → soft break, words +
-      // their trailing whitespace otherwise. Binary search finds the
-      // largest prefix whose rendered card still fits.
-      const tokens = [];
-      const paraParts = fullText.split(/(\n\n+)/);
-      for (const seg of paraParts) {
-        if (/^\n{2,}$/.test(seg)) { tokens.push(seg); continue; }
-        const lineParts = seg.split(/(\n)/);
-        for (const lp of lineParts) {
-          if (lp === '\n') { tokens.push(lp); continue; }
-          if (!lp) continue;
-          const wordParts = lp.split(/(\s+)/);
-          for (const wp of wordParts) if (wp) tokens.push(wp);
-        }
-      }
-      if (tokens.length < 2) return { fitHtml: html, remainderHtml: null };
+      // Work on the element's RICH content (nodes, not textContent) so bold /
+      // keyword / glossary markup survives. Binary search finds the largest
+      // token prefix whose rendered card still fits.
+      const srcEl = textEl.cloneNode(true);
+      const total = countRichTokens(srcEl);
+      if (total < 2) return { fitHtml: html, remainderHtml: null };
 
-      let lo = 1, hi = tokens.length, bestFit = 0;
+      let lo = 1, hi = total, bestFit = 0;
       while (lo <= hi) {
         const mid = (lo + hi) >> 1;
-        textEl.textContent = tokens.slice(0, mid).join('').replace(/\s+$/, '');
+        textEl.innerHTML = sliceRichTokens(srcEl, 0, mid);
         if (cardEl.scrollHeight <= cardEl.clientHeight + 2) {
           bestFit = mid; lo = mid + 1;
         } else {
           hi = mid - 1;
         }
       }
-      if (bestFit === 0 || bestFit >= tokens.length) return { fitHtml: html, remainderHtml: null };
+      if (bestFit === 0 || bestFit >= total) return { fitHtml: html, remainderHtml: null };
 
-      const fitText      = tokens.slice(0, bestFit).join('').replace(/\s+$/, '');
-      const overflowText = tokens.slice(bestFit).join('').replace(/^\s+/, '');
-      if (!overflowText) return { fitHtml: html, remainderHtml: null };
+      const fitInner      = sliceRichTokens(srcEl, 0, bestFit);
+      const overflowInner = sliceRichTokens(srcEl, bestFit, Infinity);
+      if (!overflowInner.replace(/<[^>]*>/g, '').trim()) return { fitHtml: html, remainderHtml: null };
 
       // Remainder page: same card HTML with the leftover text and the head
       // cloned as a continuation ("(cont.)" pseudo-element). Idempotent for
       // pages 3+ — the class list is fixed, not appended.
-      const clonedHead = '<header class="dcc-head dcc-head-rule dcc-head-cont">' +
+      const headCls = (header.getAttribute('class') || 'dcc-head dcc-head-' + kind)
+        .split(/\s+/).filter(c => c && c !== 'dcc-head-cont').concat('dcc-head-cont').join(' ');
+      const clonedHead = '<header class="' + headCls + '">' +
         (header.innerHTML || '') + '</header>';
-      const overflowBodyHtml = withRuleText(html, overflowText).replace(/^[\s\S]*?<\/header>/, '');
+      const overflowBodyHtml = withRuleHtml(html, overflowInner, true);
       return {
-        fitHtml: withRuleText(html, fitText),
+        fitHtml: withRuleHtml(html, fitInner),
         remainderHtml: clonedHead + overflowBodyHtml,
       };
     } finally {
@@ -2253,7 +2369,7 @@
     let cur = card.html;
     let guard = 0;
     while (cur && guard++ < 12) {
-      const res = fitRuleCardPage(cur, cardW, cardH, stage);
+      const res = fitRuleCardPage(cur, cardW, cardH, stage, card.kind);
       pages.push(res.fitHtml);
       cur = res.remainderHtml;
     }
@@ -2291,20 +2407,24 @@
     const all = selectedCards();
 
     // Pre-pass: split any unit card whose content overflows the cell at
-    // its target physical size. Rule and stratagem cards aren't split —
-    // they're typically short and benefit from staying contiguous.
+    // its target physical size. Rule and stratagem cards paginate their text
+    // (formatting kept) when it overflows.
     const unitsRaw  = all.filter(c => c.kind === 'unit');
     const rulesRaw  = all.filter(c => c.kind === 'rule');
-    const strats    = all.filter(c => c.kind === 'strat');
+    const stratsRaw = all.filter(c => c.kind === 'strat');
     const unitsLayout = getLayoutFor('unit');
     const rulesLayout = getLayoutFor('rule');
     const units = splitOverflowingUnitCards(unitsRaw, unitsLayout);
     const rules = splitOverflowingRuleCards(rulesRaw, rulesLayout);
+    const stratsLayout = getLayoutFor('strat');
+    // Stratagem cards paginate through the same text splitter as rule cards
+    // (their body is the same .dcc-rule-text blob) instead of clipping.
+    const strats = splitOverflowingRuleCards(stratsRaw, stratsLayout);
 
     const groups = [
       { kind: 'unit',  cards: units,  layout: unitsLayout            },
       { kind: 'rule',  cards: rules,  layout: rulesLayout            },
-      { kind: 'strat', cards: strats, layout: getLayoutFor('strat')  },
+      { kind: 'strat', cards: strats, layout: stratsLayout           },
     ];
 
     const frag = document.createDocumentFragment();
@@ -2686,7 +2806,7 @@
         </label>
         <div class="cards-field" style="padding:4px 12px 0">
           <span class="cards-field-label">Upload new image</span>
-          <input type="file" id="cards-back-file" accept="image/*" class="cards-file">
+          <input type="file" id="cards-back-file" accept="image/png,image/jpeg,image/webp,image/gif" class="cards-file">
           ${cardBack.name ? `<div class="cards-help" style="margin:4px 0 0">Active: ${esc(cardBack.name)}</div>` : ''}
           ${cardBack.src ? `<button type="button" class="cards-link-btn" id="cards-back-clear">Use no image</button>` : ''}
         </div>
@@ -2953,6 +3073,12 @@
     if (e.target && e.target.id === 'cards-back-file') {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
+      // `accept` is only a hint (drag/drop and "All files" bypass it).
+      if (BACK_IMAGE_TYPES.indexOf(file.type) === -1) {
+        if (UI && UI.toast) UI.toast('Unsupported image type. Use a PNG, JPEG, WebP or GIF.', 'warning', 5000);
+        e.target.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onload = async () => {
         const dataUrl = reader.result;
@@ -2964,17 +3090,30 @@
         refreshPreview();
         refreshSummary();
         // Then persist to the library (server when signed in, IDB when anon).
-        const result = await ImageStore.add(file.name, dataUrl);
+        const result = await ImageStore.add(String(file.name || 'image').slice(0, 200), dataUrl);
         if (result.ok) {
           cardBack.activeId = result.id;
           savedImages.unshift(result.image);
           savePrefs();
-        } else if (result.reason === 'limit' && UI && UI.toast) {
-          UI.toast(`Library is full (${result.limit} images). Delete one to save more.`, 'warning', 5000);
-        } else if (result.reason === 'network' && UI && UI.toast) {
-          UI.toast('Couldn\'t save to your account — check your connection.', 'warning', 5000);
-        } else if (result.reason === 'auth' && UI && UI.toast) {
-          UI.toast('Sign-in expired. Sign in again to save images to your account.', 'warning', 6000);
+        } else if (UI && UI.toast) {
+          const notSaved = ' It is used for this print but not saved to the library.';
+          if (result.reason === 'limit') {
+            UI.toast(`Library is full (${result.limit} images). Delete one to save more.`, 'warning', 5000);
+          } else if (result.reason === 'too_large') {
+            UI.toast('Image too large (max ' + BACK_IMAGE_MAX_MB + ' MB).' + notSaved, 'warning', 6000);
+          } else if (result.reason === 'type') {
+            UI.toast('Unsupported image type. Use a PNG, JPEG, WebP or GIF.' + notSaved, 'warning', 6000);
+          } else if (result.reason === 'invalid') {
+            UI.toast('The server rejected that image' + (result.message ? ' (' + result.message + ')' : '') + '.' + notSaved, 'warning', 6000);
+          } else if (result.reason === 'server') {
+            UI.toast('The server couldn\'t save that image (error ' + (result.status || '?') + ').' + notSaved, 'warning', 6000);
+          } else if (result.reason === 'network') {
+            UI.toast('Couldn\'t save to your account — check your connection.', 'warning', 5000);
+          } else if (result.reason === 'auth') {
+            UI.toast('Sign-in expired. Sign in again to save images to your account.', 'warning', 6000);
+          } else {
+            UI.toast('Couldn\'t save the image to this browser\'s library.' + notSaved, 'warning', 5000);
+          }
         }
         refreshSidebar();
       };
@@ -3047,53 +3186,85 @@
   }
   function onSidebarClick(e) {
     // Preset buttons (save / update / rename / delete).
+    // Dialogs are UI.askDialog (js/app/admin.js) — the site's styled
+    // .modal + .btn / .btn-outline, not the browser's prompt()/confirm().
     if (e.target && e.target.id === 'cards-preset-new') {
-      const name = (window.prompt('Name this preset (e.g. "steve orks")') || '').trim();
-      if (!name) return;
-      const p = {
-        id: newPresetId(),
-        name,
-        createdAt: nowIso(),
-        updatedAt: nowIso(),
-        settings: captureSettings(),
-      };
-      presets.push(p);
-      activePresetId = p.id;
-      savePresets();
-      refreshSidebar();
-      if (UI && UI.toast) UI.toast('Saved preset “' + name + '”', 'success');
+      UI.askDialog({
+        title: 'Save preset',
+        input: { label: 'Name this preset', placeholder: 'e.g. steve orks', maxlength: 60 },
+        confirmLabel: 'Save',
+      }).then(typed => {
+        const name = (typed || '').trim();
+        if (!name) return;
+        const p = {
+          id: newPresetId(),
+          name,
+          createdAt: nowIso(),
+          updatedAt: nowIso(),
+          settings: captureSettings(),
+        };
+        presets.push(p);
+        activePresetId = p.id;
+        savePresets();
+        refreshSidebar();
+        if (UI && UI.toast) UI.toast('Saved preset “' + name + '”', 'success');
+      });
       return;
     }
     if (e.target && e.target.id === 'cards-preset-update') {
       const p = findPreset(activePresetId);
       if (!p) return;
-      if (!window.confirm('Overwrite preset “' + p.name + '” with the current settings?')) return;
-      p.settings  = captureSettings();
-      p.updatedAt = nowIso();
-      savePresets();
-      refreshSidebar();
-      if (UI && UI.toast) UI.toast('Updated preset “' + p.name + '”', 'success');
+      const pid = p.id;
+      UI.askDialog({
+        title: 'Overwrite preset?',
+        message: 'Replace “' + p.name + '” with the current settings?',
+        confirmLabel: 'Overwrite',
+      }).then(ok => {
+        const cur = findPreset(pid);
+        if (!ok || !cur) return;
+        cur.settings  = captureSettings();
+        cur.updatedAt = nowIso();
+        savePresets();
+        refreshSidebar();
+        if (UI && UI.toast) UI.toast('Updated preset “' + cur.name + '”', 'success');
+      });
       return;
     }
     if (e.target && e.target.id === 'cards-preset-rename') {
       const p = findPreset(activePresetId);
       if (!p) return;
-      const name = (window.prompt('Rename preset', p.name) || '').trim();
-      if (!name || name === p.name) return;
-      p.name      = name;
-      p.updatedAt = nowIso();
-      savePresets();
-      refreshSidebar();
+      const pid = p.id;
+      UI.askDialog({
+        title: 'Rename preset',
+        input: { label: 'Preset name', value: p.name, maxlength: 60 },
+        confirmLabel: 'Rename',
+      }).then(typed => {
+        const cur = findPreset(pid);
+        const name = (typed || '').trim();
+        if (!cur || !name || name === cur.name) return;
+        cur.name      = name;
+        cur.updatedAt = nowIso();
+        savePresets();
+        refreshSidebar();
+      });
       return;
     }
     if (e.target && e.target.id === 'cards-preset-delete') {
       const p = findPreset(activePresetId);
       if (!p) return;
-      if (!window.confirm('Delete preset “' + p.name + '”? This can\'t be undone.')) return;
-      presets = presets.filter(x => x.id !== activePresetId);
-      activePresetId = null;
-      savePresets();
-      refreshSidebar();
+      const pid = p.id;
+      UI.askDialog({
+        title: 'Delete preset?',
+        message: 'Delete “' + p.name + '”? This can\'t be undone.',
+        confirmLabel: 'Delete',
+        danger: true,
+      }).then(ok => {
+        if (!ok) return;
+        presets = presets.filter(x => x.id !== pid);
+        if (activePresetId === pid) activePresetId = null;
+        savePresets();
+        refreshSidebar();
+      });
       return;
     }
     // Inner category tabs (Pick cards: Units/Rules/Stratagems)
@@ -3154,6 +3325,13 @@
     // Records can have integer ids (IDB autoIncrement) or string ids
     // (server UUIDs); we round-trip via String() to keep the comparison
     // robust either way.
+    if (e.target.closest('[data-images-retry]')) {
+      e.preventDefault();
+      reloadSavedImages().then(() => {
+        if (mounted) { refreshSidebar(); refreshPreview(); refreshSummary(); }
+      });
+      return;
+    }
     const delBtn = e.target.closest('[data-image-del]');
     if (delBtn) {
       e.preventDefault();
@@ -3227,6 +3405,12 @@
       ? 'Saved to your account — available on any device you sign in from.'
       : 'Saved to this browser only. Sign in to sync the library across devices.';
     const count = savedImages.length;
+    const unavailNote = savedImagesUnavailable
+      ? `<div class="cards-help" role="status" style="margin:4px 12px 6px">
+           Image library unavailable right now. Your card-back choice is kept.
+           <button type="button" class="btn btn-outline btn-sm" data-images-retry style="margin-left:6px;flex:none">Retry</button>
+         </div>`
+      : '';
 
     let inner;
     if (savedImagesLoading) {
@@ -3234,7 +3418,7 @@
     } else if (where === 'local' && (!window.YaabDB || !YaabDB.images)) {
       inner = `<div class="cards-help" style="margin:4px 12px 6px">Saved-image library unavailable in this browser.</div>`;
     } else if (count === 0) {
-      inner = `<div class="cards-help" style="margin:4px 12px 6px">
+      inner = savedImagesUnavailable ? unavailNote : `<div class="cards-help" style="margin:4px 12px 6px">
         ${whereNote} (Up to ${limit}.)
       </div>`;
     } else {
@@ -3248,7 +3432,7 @@
                     title="Delete from library" aria-label="Delete ${esc(img.name)}">×</button>
           </div>`;
       }).join('');
-      inner = `
+      inner = unavailNote + `
         <div class="cards-help" style="margin:4px 12px 4px; display:flex; justify-content:space-between">
           <span>Library (${ownerLabel}${where === 'cloud' ? ' · cloud' : ' · local'})</span>
           <span><strong>${count}/${limit}</strong></span>
@@ -3480,21 +3664,34 @@
     document.addEventListener('keydown', onSpillPanelKey);
   }
 
+  // How many cards of each kind are selected — the same inclusion rules as
+  // selectedCards(), but WITHOUT rendering any card HTML. The summary and the
+  // print button only need counts; renderUnitCard() for every selected card on
+  // every sidebar tweak was pure waste (the preview does its own render).
+  function selectedKindCounts() {
+    const counts = { unit: 0, rule: 0, strat: 0 };
+    gatherUnits().forEach(u => { if (include.units && include.units.has(u.id)) counts.unit++; });
+    gatherRules().forEach(r => { if (include.rules && include.rules.has(r.id)) counts.rule++; });
+    gatherStratagems().forEach(s => { if (include.strats && include.strats.has(s.id)) counts.strat++; });
+    return counts;
+  }
+
   function refreshSummary() {
     const sum = hostEl && hostEl.querySelector('#cards-summary');
     if (!sum) return;
-    const all = selectedCards();
+    const counts = selectedKindCounts();
+    const total = counts.unit + counts.rule + counts.strat;
     let frontPages = 0;
     ['unit','rule','strat'].forEach(kind => {
-      const cards = all.filter(c => c.kind === kind);
-      if (cards.length === 0) return;
+      const n = counts[kind];
+      if (n === 0) return;
       const layout = getLayoutFor(kind);
-      frontPages += Math.ceil(cards.length / (layout.cols * layout.rows));
+      frontPages += Math.ceil(n / (layout.cols * layout.rows));
     });
     const backsOn = !!(cardBack.enabled && cardBack.src);
     const totalPages = backsOn ? frontPages * 2 : frontPages;
     const backNote = backsOn ? ` (${frontPages} front + ${frontPages} back)` : '';
-    sum.textContent = `${all.length} card${all.length === 1 ? '' : 's'} · ${totalPages} page${totalPages === 1 ? '' : 's'}${backNote}`;
+    sum.textContent = `${total} card${total === 1 ? '' : 's'} · ${totalPages} page${totalPages === 1 ? '' : 's'}${backNote}`;
   }
 
   // ── Print / Save PDF ─────────────────────────────────────────────────────
@@ -3502,12 +3699,21 @@
   // page size, add `body.cards-printing` so the @media print CSS in
   // cards-mode.css can hide everything except .dcc-page elements, and
   // call window.print(). Cleanup when the dialog closes (afterprint).
+  // The previous print's cleanup (listener + 30 s fallback timer). A second
+  // click on Print inside that window must cancel it, or the old timer fires
+  // mid-print and strips the new print's @page rule and body class.
+  let printCleanup = null;
+  let printCleanupTimer = null;
+
   function onPrint() {
-    const cards = selectedCards();
-    if (cards.length === 0) {
+    const counts = selectedKindCounts();
+    if (counts.unit + counts.rule + counts.strat === 0) {
       if (UI && UI.toast) UI.toast('Nothing selected', 'warning');
       return;
     }
+    const cards = ['unit', 'rule', 'strat']
+      .filter(k => counts[k] > 0)
+      .map(k => ({ kind: k }));   // only .kind is read below
 
     // Collect every distinct paper size in play. If categories use the
     // same w/h (e.g. all 4×6 with different grids — the common case),
@@ -3549,16 +3755,23 @@
     document.head.appendChild(style);
     document.body.classList.add('cards-printing');
 
+    if (printCleanupTimer) { clearTimeout(printCleanupTimer); printCleanupTimer = null; }
+    if (printCleanup) { window.removeEventListener('afterprint', printCleanup); printCleanup = null; }
     function cleanup() {
       document.body.classList.remove('cards-printing');
       const s = document.getElementById('cards-print-style');
       if (s) s.remove();
       window.removeEventListener('afterprint', cleanup);
+      if (printCleanup === cleanup) {
+        printCleanup = null;
+        if (printCleanupTimer) { clearTimeout(printCleanupTimer); printCleanupTimer = null; }
+      }
     }
+    printCleanup = cleanup;
     window.addEventListener('afterprint', cleanup);
     // Some browsers (Safari) don't fire afterprint reliably — also clean
     // up after a short timeout fallback.
-    setTimeout(cleanup, 30000);
+    printCleanupTimer = setTimeout(cleanup, 30000);
 
     // Defer one frame so the browser repaints with the body class applied.
     requestAnimationFrame(() => {
