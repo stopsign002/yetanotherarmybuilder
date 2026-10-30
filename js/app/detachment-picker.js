@@ -185,6 +185,27 @@
     }
   }
 
+  // Remove, from every entry of the current army, enhancements that are not in
+  // the union of the selected detachments (matched by name, case-insensitive).
+  // Returns [{ who, enh }] for what was removed.
+  function pruneEnhancements() {
+    const army = App.state && App.state.currentArmy;
+    if (!army || !Array.isArray(army.entries) || typeof army.setEnhancements !== 'function') return [];
+    const offered = new Set(App.getActiveEnhancements().map(e => String(e.name).toLowerCase()));
+    const removed = [];
+    army.entries.forEach((e, i) => {
+      const enhs = (e && e.enhancements) || [];
+      if (!enhs.length) return;
+      const keep = enhs.filter(x => x && x.name && offered.has(String(x.name).toLowerCase()));
+      if (keep.length === enhs.length) return;
+      enhs.forEach(x => {
+        if (!keep.includes(x)) removed.push({ who: e.customName || e.unitName || 'A unit', enh: (x && x.name) || '?' });
+      });
+      army.setEnhancements(i, keep);
+    });
+    return removed;
+  }
+
   // Canonical entry point for CHANGING the selection. `names` is the full new
   // list of selected detachment names; only names present in the available list
   // are kept. Resolves them to objects, syncs state + the current army, and
@@ -206,11 +227,31 @@
       state.currentArmy.setDetachments(clean, { touch: persist });
     }
 
+    // Enhancements belong to a detachment. When the user changes the set,
+    // drop any an army entry still carries that no selected detachment offers
+    // any more — otherwise a Captain kept (and paid for) a Gladius enhancement
+    // after the Gladius detachment was unticked, with no warning anywhere.
+    // Only on a genuine user toggle (persist), never on a programmatic
+    // load/restore, which can run before every detachment is resolved. Skipped
+    // while NO detachment is selected: that is the middle of a swap (untick A,
+    // tick B), and pruning there would throw away an enhancement B also offers.
+    const pruned = (persist && clean.length) ? pruneEnhancements() : [];
+
     App.renderDetachmentPicker();
     if (window.UI && typeof UI.updateFactionRules === 'function') {
       UI.updateFactionRules(typeof App.getCurrentFaction === 'function' ? App.getCurrentFaction() : null);
     }
     refreshOpenDetail();
+    if (pruned.length) {
+      if (window.UI && typeof UI.renderArmyList === 'function' && state.currentArmy) {
+        UI.renderArmyList(state.currentArmy);
+      }
+      if (window.UI && typeof UI.toast === 'function') {
+        const names = Array.from(new Set(pruned.map(p => p.enh)));
+        UI.toast(`Removed ${names.join(', ')}: no selected detachment offers ${names.length === 1 ? 'it' : 'them'}`,
+          'info', 5000);
+      }
+    }
 
     if (persist && state.currentArmy && state.armyManager &&
         window.ArmyManager && ArmyManager.isNamed && ArmyManager.isNamed(state.currentArmy)) {

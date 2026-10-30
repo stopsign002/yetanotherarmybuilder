@@ -455,6 +455,26 @@
       expect: { M: '4"', W: '4' },
       set: { profiles: [{ name: '', M: '5"', T: '7', SV: '2+', W: '5', LD: '6+', OC: '2' }] },
     },
+    // Agents of the Imperium kill teams (#112). The generated dump-audit fix
+    // for both compared OUR first profile against GW's first profile, and the
+    // two lists are in a different order on the Aquila Kill Team (ours:
+    // Deathwatch Veteran, Gravis Veteran; GW's: Gravis first), so it wrote
+    // the Gravis statline onto the Deathwatch Veteran. On the Deathwatch Kill
+    // Team it fixed only the Watch Sergeant although GW has the Veterans at T5
+    // too. These named / full-length rows (GW app data, GDC agents.json)
+    // shadow the generated ones and still expect upstream's old T4 on the
+    // first profile, so they self-heal once 40kdc carries T5.
+    'agents-of-the-imperium::aquila-kill-team': {
+      expect: { T: '4', W: '2' },
+      set: { profiles: [
+        { name: 'Deathwatch Veteran', M: '6"', T: '5', SV: '3+', W: '2', LD: '6+', OC: '2' },
+        { name: 'Gravis Veteran', M: '5"', T: '6', SV: '3+', W: '3', LD: '6+', OC: '2' },
+      ] },
+    },
+    'agents-of-the-imperium::deathwatch-kill-team': {
+      expect: { T: '4' },
+      set: { profiles: [{ T: '5' }, { T: '5' }] },
+    },
     // World Eaters Heldrake: upstream ships it as a NON-Aircraft at M12", while
     // the identical CSM / Emperor's Children / Thousand Sons Heldrakes are all
     // Aircraft at M20" (and the Heldrake has always been an Aircraft — 20+"
@@ -1267,12 +1287,36 @@
       .replace(new RegExp('^' + esc + '(?:[\\s\\u00a0]*\\([^)]*\\))?[\\s\\u00a0]*:[\\s\\u00a0]*', 'i'), '')
       .trim();
   }
+  // Every overlay description in the COMMITTED bundle is empty: GW's wording
+  // lives only in the server-only dc-prose.js, which fills them in at load.
+  // Without that file (a fresh clone, GitHub Pages, a failed request, a
+  // harness that skips it) an update would write '' over upstream's text — 130
+  // abilities wiped, Celestine's "Healing Tears" among them — and an add would
+  // inject 60 empty abilities (2026-10-30 review §4). So: an UPDATE with an
+  // empty description is always skipped (blanking text is never a fix), and an
+  // ADD with an empty description is skipped when the prose file is absent.
+  // With prose present the few adds it leaves empty keep today's behaviour.
+  let overlayProse = null;
+  function overlayHasProse() {
+    if (overlayProse !== null) return overlayProse;
+    overlayProse = false;
+    try {
+      const ops = ['updateNamed', 'updateWargear', 'addNamed', 'addWargear'];
+      overlayProse = Object.keys(DC.abilityFixes || {}).some((k) => {
+        const v = DC.abilityFixes[k] || {};
+        return ops.some((op) => Array.isArray(v[op]) && v[op].some((x) => x && x.description));
+      });
+    } catch (_) { overlayProse = false; }
+    return overlayProse;
+  }
+  const skipEmptyAdd = (p) => !(p && p.description) && !overlayHasProse();
+
   // `updateNamed` rewrites an existing ability's description in place — gated
   // on `expectContains` so it self-heals once upstream carries the new text.
   function applyOverlayUpdateNamed(fixOv, abilities) {
     if (!fixOv || !Array.isArray(fixOv.updateNamed) || !Array.isArray(abilities)) return;
     fixOv.updateNamed.forEach((u) => {
-      if (!u || !u.name) return;
+      if (!u || !u.name || !u.description) return;   // empty → never blank upstream text
       const target = abilities.find((a) => a.name && a.name.toLowerCase() === u.name.toLowerCase());
       if (!target) return;   // ability not present → no-op
       if (u.expectContains && !(target.description || '').toLowerCase()
@@ -1292,7 +1336,7 @@
   function applyOverlayUpdateWargear(fixOv, wargearAbilities) {
     if (!fixOv || !Array.isArray(fixOv.updateWargear) || !Array.isArray(wargearAbilities)) return;
     fixOv.updateWargear.forEach((p) => {
-      if (!p || !p.name) return;
+      if (!p || !p.name || !p.description) return;   // empty → never blank upstream text
       const key = p.name.toLowerCase();
       const target = wargearAbilities.find((x) => (x.name || '').toLowerCase() === key);
       if (!target) return;   // not on this datasheet → no-op
@@ -1301,6 +1345,26 @@
       target.description = p.description || '';
     });
   }
+
+  // ── Flat per-squad wargear charges (alwaysCost) ─────────────────────────
+  // A priced item that no option or default loadout can reach used to be
+  // charged flat on EVERY copy of the unit. That was meant for ability-modelled
+  // wargear (a banner the squad always carries), but in practice almost every
+  // unreachable id was the same item priced twice: upstream's generic id
+  // (`meltagun`) next to the overlay's per-unit id (`meltagun-dominion-squad`),
+  // or an MFM name that matches no 40kdc weapon (the Defiler's
+  // `reaper-autocannon` / `twin-lascannon`, which the options call
+  // `heavy-reaper-autocannon` / `hades-lascannon`). Twelve datasheets were
+  // overcharged 5-30 pts per copy that way (#111). Now ONLY the ids listed here
+  // may be charged flat; any other unreachable priced id is left in
+  // `itemCosts` (the MFM audit reads it) but billed nowhere, and warned once.
+  // Key is `faction_id/unit_id`, the same key as the MFM wargear overlay.
+  const ALWAYS_COST_ITEMS = {
+    // Victrix Honour Guard: the Banner of Macragge Inviolate is carried by the
+    // squad, not taken through a swap option, and MFM prices it.
+    'adeptus-astartes/victrix-honour-guard': ['banner-of-macragge'],
+  };
+  const warnedUnreachable = new Set();
 
   function toUnit(uv) {
     const u = uv.raw || uv;
@@ -1320,20 +1384,39 @@
         : String(first0[k]) === String(exp[k])));
       if (stillWrong) {
         if (Array.isArray(statFix.set.profiles) && statFix.set.profiles.length) {
-          // Each fix profile is a PATCH over the profile at the same index, not
-          // a replacement: dump-audit.py emits sparse rows ({W:'2'}) and a
+          // Each fix profile is a PATCH over one existing profile, not a
+          // replacement: dump-audit.py emits sparse rows ({W:'2'}) and a
           // replacement wiped M/T/SV/LD/OC off Breaka Boyz (2026-09-09). A row
-          // that names every field still overrides every field, and a shorter
-          // list still collapses the datasheet, so full profiles behave as
-          // before.
-          modelStats = statFix.set.profiles.map((p, i) => {
-            const base = modelStats[i] || {};
+          // that names every field still overrides every field.
+          //
+          // A fix row that carries a non-empty `name` matching an existing
+          // profile patches THAT profile; otherwise it patches the profile at
+          // the same index. Profiles the fix does not mention are KEPT: a
+          // shorter list used to collapse the datasheet to the fix's length,
+          // which turned Aquila Kill Team into one profile and dropped the
+          // Veterans row off Deathwatch Kill Team (#112). A fix that really
+          // means to replace the whole list says `replaceProfiles: true`.
+          const fixRows = statFix.set.profiles;
+          const patch = (base, p) => {
             const row = { name: p.name != null ? p.name : (base.name || '') };
             ['M', 'T', 'SV', 'W', 'LD', 'OC'].forEach((k) => {
               row[k] = p[k] != null ? p[k] : base[k];
             });
             return row;
-          });
+          };
+          if (statFix.replaceProfiles || statFix.set.replaceProfiles) {
+            modelStats = fixRows.map((p, i) => patch(modelStats[i] || {}, p));
+          } else {
+            const next = modelStats.slice();
+            const nameKey = (n) => String(n || '').toLowerCase().trim();
+            fixRows.forEach((p, i) => {
+              let at = -1;
+              if (p && p.name) at = next.findIndex((m) => nameKey(m.name) === nameKey(p.name));
+              if (at < 0) at = i;
+              next[at] = patch(next[at] || {}, p || {});
+            });
+            modelStats = next;
+          }
         }
         if ('invuln' in statFix.set) invulnOverride = statFix.set.invuln;
         if ('invulnNote' in statFix.set) invulnNoteOverride = statFix.set.invulnNote;
@@ -1478,6 +1561,7 @@
       (abilityFixOv.addNamed || []).forEach((p) => {
         const name = p && p.name;
         if (!name || have.has(abilityNameKey(name))) return;
+        if (skipEmptyAdd(p)) return;                   // no prose file → no empty injection
         have.add(abilityNameKey(name));
         abilities.push({ name, description: stripEchoedName(name, p.description || ''),
                          isCore: CORE_ABILITY_RE.test(name), _injected: true });
@@ -1563,6 +1647,7 @@
       abilityFixOv.addWargear.forEach((p) => {
         const key = p && p.name && p.name.toLowerCase();
         if (!key || haveAb.has(key)) return;   // self-heal no-op
+        if (skipEmptyAdd(p)) return;           // no prose file → no empty injection
         if (!wargearAbilities.some((x) => x.name.toLowerCase() === key)) {
           wargearAbilities.push({ name: p.name, description: p.description || '' });
         }
@@ -1774,7 +1859,8 @@
       // Terminator Assault Squad pays +5/thunder hammer by default and gets
       // it back when a model swaps to free lightning claws). Priced items
       // that live outside the swap/defaults model entirely (ability-modelled
-      // wargear like a banner) are charged flat per squad via alwaysCost.
+      // wargear like a banner) are charged flat per squad via alwaysCost —
+      // but only when listed in ALWAYS_COST_ITEMS (see there, #111).
       let defaultCostBySize = null;
       let alwaysCost = 0;
       if (itemCosts) {
@@ -1794,9 +1880,30 @@
           o.replaces.forEach((x) => reachable.add(x.id));
           o.choices.forEach((grp) => grp.forEach((x) => reachable.add(x.id)));
         });
+        // Generic upstream id shadowed by a REACHABLE overlay id for the same
+        // item (`meltagun` vs `meltagun-dominion-squad`): the generic one is a
+        // duplicate price, not a second item. Drop it outright.
+        if (upstreamCosts && overlayCosts) {
+          Object.keys(upstreamCosts).forEach((id) => {
+            if (reachable.has(id) || (id in overlayCosts)) return;
+            const sibling = Object.keys(overlayCosts).some((oid) =>
+              reachable.has(oid) && oid.indexOf(id + '-') === 0);
+            if (sibling) delete itemCosts[id];
+          });
+        }
+        const allowFlat = new Set(ALWAYS_COST_ITEMS[u.faction_id + '/' + u.id] || []);
+        const unbilled = [];
         Object.keys(itemCosts).forEach((id) => {
-          if (!reachable.has(id)) alwaysCost += itemCosts[id];
+          if (reachable.has(id)) return;
+          if (allowFlat.has(id)) alwaysCost += itemCosts[id];
+          else unbilled.push(id + '=' + itemCosts[id]);
         });
+        const wkey = u.faction_id + '/' + u.id;
+        if (unbilled.length && !warnedUnreachable.has(wkey)) {
+          warnedUnreachable.add(wkey);
+          console.warn('[DC] ' + wkey + ': priced wargear matches no option or default, not billed: '
+            + unbilled.join(', '));
+        }
       }
       // Units with priced items but no authored options still need a profile
       // (the base-cost math and the picker's default-loadout chips use it).
@@ -1948,7 +2055,14 @@
       // and the live overlay confirms the absence (see MFM_DELISTED).
       isLegends: !!u.is_legend
         || (!mfmPts && !!MFM_DELISTED[u.faction_id + '::' + u.id]
-            && mfmOverlayHealthy()),
+            && mfmOverlayHealthy())
+        || (!squadOptions.length && !pointsOptions.length),
+      // No price from ANY source (no MFM entry, no upstream points; GDC's
+      // `points` is empty too) — Sir Hekhtur today. Left alone it costs 0 and
+      // reads as a legal free unit, so it is flagged like a Legends sheet
+      // (hidden by default, LEGENDS badge) and marked so a renderer can say
+      // "unpriced" rather than "0 pts".
+      _unpriced: !squadOptions.length && !pointsOptions.length,
       attachmentRole: resolveAttachmentRole(u),   // 'leader' | 'support' | null
       // Fallback "Led By" targets from 40kdc's structured leaderAttachments
       // table, used when GDC prose carries none (e.g. all Necrons leaders). The
@@ -2148,8 +2262,11 @@
 
   // Reconcile 40kdc strats with the GDC-attached list on a detachment, in place.
   // 40kdc decides WHICH strats exist + CP/phase; GDC is a TEXT fallback only,
-  // matched by folded name onto the 40kdc set. GDC-only strats (no 40kdc match)
-  // are intentionally DROPPED when 40kdc supplied a strat set for this detachment:
+  // matched by folded name onto the 40kdc set (a textless 40kdc row may borrow
+  // the nearest unique GDC name — see nearKey below). GDC-only strats (no 40kdc
+  // match) are DROPPED when 40kdc supplied a strat set for this detachment,
+  // UNLESS GW's set is a strict superset of 40kdc's (then GW's extras are
+  // appended — see the end of the function):
   // GDC's Space Wolves/SM files still carry legacy prior-edition detachments under
   // the same names (e.g. an old "Champions of Fenris" whose strat list — Chilling
   // Howl, Stalking Wolves, even the core Armour of Contempt — has nothing to do
@@ -2204,8 +2321,47 @@
     // nothing but punctuation can change. Self-healing — once upstream keeps
     // its hyphens the two strings match and the choice stops mattering.
     const squash = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const out = dcList.map((d) => {
+    // Name drift fallback (2026-10-30 review §5). A 40kdc row with NO text and
+    // no exact-name GDC match borrows the NEAREST unmatched GDC name in this
+    // same detachment — "Soul-tally Offering" ↔ GW's "Soul-Tally Offerings" —
+    // but only when that nearest name is unique, close (edit distance ≤ 2, or
+    // ≤ 15% of the name), and wanted by no other textless row. Anything looser
+    // stays textless rather than borrowing a different stratagem's rules.
+    const lev = (a, b) => {
+      if (a === b) return 0;
+      let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+      for (let i = 1; i <= a.length; i++) {
+        const cur = [i];
+        for (let j = 1; j <= b.length; j++) {
+          cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1,
+            prev[j - 1] + (a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1));
+        }
+        prev = cur;
+      }
+      return prev[b.length];
+    };
+    const exactKeys = new Set(dcList.map((d) => foldName(d.name)).filter((k) => gdcByKey.has(k)));
+    const nearKey = new Map();          // dc folded name → gdc folded name
+    const claims = new Map();           // gdc folded name → number of rows wanting it
+    dcList.forEach((d) => {
       const k = foldName(d.name);
+      if (!k || d.description || gdcByKey.has(k)) return;
+      let best = null, bestD = Infinity, tie = false;
+      gdcByKey.forEach((g, gk) => {
+        if (exactKeys.has(gk) || !g.description) return;
+        const dist = lev(k, gk);
+        if (dist < bestD) { best = gk; bestD = dist; tie = false; }
+        else if (dist === bestD) tie = true;
+      });
+      if (!best || tie) return;
+      if (bestD > Math.max(2, Math.floor(Math.max(k.length, best.length) * 0.15))) return;
+      nearKey.set(k, best);
+      claims.set(best, (claims.get(best) || 0) + 1);
+    });
+    nearKey.forEach((gk, k) => { if (claims.get(gk) > 1) nearKey.delete(k); });
+    const out = dcList.map((d) => {
+      const k0 = foldName(d.name);
+      const k = nearKey.get(k0) || k0;
       const g = gdcByKey.get(k);
       const gText = (g && g.description) ? g.description : '';
       const samePunctLoss = !!gText && !!d.description
@@ -2227,6 +2383,31 @@
         source: (description && description === d.description) ? '40kdc' : (gText ? 'gdc' : '40kdc'),
       };
     });
+    // GW's set a STRICT SUPERSET of 40kdc's (every 40kdc row found a GW name,
+    // and GW has more): 40kdc has simply not authored the rest yet — Votann
+    // Hearthguard Covenant showed 2 of GW's 3. Append GW's extras. The
+    // superset test is what keeps the legacy-detachment collision described
+    // above out: a stale GDC detachment of the same name does not contain
+    // every current 40kdc stratagem, so nothing from it is appended.
+    const usedKeys = new Set(dcList.map((d) => { const k0 = foldName(d.name); return nearKey.get(k0) || k0; }));
+    const allMatched = dcList.every((d) => { const k0 = foldName(d.name); return gdcByKey.has(nearKey.get(k0) || k0); });
+    if (allMatched && gdcByKey.size > usedKeys.size) {
+      gdcByKey.forEach((g, gk) => {
+        if (usedKeys.has(gk)) return;
+        out.push({
+          name: g.name,
+          cp: g.cp != null ? g.cp : null,
+          phase: g.phase || '',
+          phases: Array.isArray(g.phases) && g.phases.length ? g.phases : (g.phase ? [g.phase] : []),
+          turn: g.turn || '',
+          timing: '',
+          type: g.type || '',
+          description: g.description || '',
+          source: 'gdc',
+        });
+        nGdcFallback++;
+      });
+    }
     detachment.gdcStratagems = out;
     return { n40kdc: dcList.length, nGdcFallback, total: out.length };
   }
@@ -2629,6 +2810,14 @@
         clone._allySourceFaction = srcFactionName;
         clone._allyLabel = rule.label || rule.name || 'Allies';
         clone._allyRuleIds = Array.from(ruleIds);
+        // 15 of 19 allied rules forbid Enhancements. A unit granted by several
+        // rules is barred only when EVERY granting rule bars it (the most
+        // permissive rule could be the one in force — same reading the allied
+        // points check uses). detail.js gates the Enhancements picker on it.
+        clone._allyNoEnhancements = Array.from(ruleIds).every((rid) => {
+          const rr = ruleById.get(rid);
+          return !!(rr && rr.cannot_take_enhancements);
+        });
         clone._allyDetachments = (detNames && detNames.length) ? detNames.slice() : null;
         additions.push(clone);
       });
@@ -3404,8 +3593,10 @@
   // cannot be taken, and the daily MFM audit reports exactly that as
   // "app charges nothing" — a true signal, deliberately left standing.
   // Note this is NOT a case for a bare `itemCosts`-only profile: with no
-  // reachable options every cost falls into `alwaysCost`, which would charge
-  // EVERY Gunwagon the +10.
+  // reachable options every cost is unreachable, which used to fall into
+  // `alwaysCost` and charge EVERY Gunwagon the +10. Since #111 only the
+  // ALWAYS_COST_ITEMS allowlist is charged flat, but the option still could
+  // not be taken.
   // EMPTY on purpose, and the map and adoptGdcUnits() below stay: this is the
   // mechanism for the WINDOW between a codex landing and 40kdc authoring its
   // datasheets, and that window reopens with every codex. It held

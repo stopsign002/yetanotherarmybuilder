@@ -825,7 +825,19 @@
     const kws = unit.keywords || [];
     const isCharacter = kws.some(k => String(k).toLowerCase() === 'character');
     const isEpicHero  = kws.some(k => String(k).toLowerCase() === 'epic hero');
-    const canTakeEnhancement = isCharacter && !isEpicHero;
+    // Allied units: most allied rules say "cannot take Enhancements"
+    // (dc-adapter stamps `_allyNoEnhancements` when every rule granting the
+    // unit says so). Fall back to the host faction's alliedRules for a unit
+    // object built before that flag existed.
+    const allyNoEnh = !!(unit._allyOf && (unit._allyNoEnhancements != null
+      ? unit._allyNoEnhancements
+      : (() => {
+          const host = ((App.state && App.state.factions) || []).find(f => f.factionName === unit._allyOf);
+          const ids = unit._allyRuleIds || [];
+          const rules = ((host && host.alliedRules) || []).filter(r => ids.indexOf(r.id) !== -1);
+          return rules.length > 0 && rules.every(r => r.cannotTakeEnhancements);
+        })()));
+    const canTakeEnhancement = isCharacter && !isEpicHero && !allyNoEnh;
     // "<TARGET> unit only" clause → the upgrade's target (null = regular
     // character enhancement). TARGET is uppercase in the prose. The clause is
     // usually first, but some 11e enhancements open with a sentence of flavour
@@ -898,6 +910,7 @@
       return missing.length ? kws : null;
     };
     const enhEligibility = (enh) => {
+      if (allyNoEnh) return { eligible: false, note: 'Allied unit — cannot take enhancements', upgrade: false };
       const target = upgradeTarget(enh);
       if (target) {
         const miss = keywordsMissing(enh);

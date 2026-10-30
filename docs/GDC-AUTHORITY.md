@@ -21,8 +21,10 @@ for all of those. Wahapedia's 11e CSVs agreed with GDC against us in every
 material case. So: for an allowlisted faction, **GDC is the source of record
 for everything it carries**, and 40kdc only supplies what GDC lacks.
 
-`GDC_STATS_AUTHORITATIVE` (js/data/dc-adapter.js ~2275) already does this for
-statlines + invulns. This change widens it into `GDC_AUTHORITATIVE`.
+`GDC_STATS_AUTHORITATIVE` already did this for statlines + invulns when this
+was written; this change widened it into `GDC_AUTHORITATIVE`, which is the
+only name in the code today (`js/data/dc-adapter.js`, search
+`const GDC_AUTHORITATIVE`).
 
 ## Division of authority for an allowlisted faction
 
@@ -49,6 +51,27 @@ Everything not in the table is untouched. **Non-allowlisted factions must be
 byte-identical before and after** — that is the regression test.
 
 ## Implementation notes (dc-adapter.js unless stated)
+
+> **Reading this against today's code (2026-10-30).** The notes below are
+> the contract as written on 2026-09-09; three names in them are gone:
+> - `GDC_STATS_AUTHORITATIVE` → `GDC_AUTHORITATIVE` (done, item 1).
+> - `synthesizeUnit` and `gdcCoreAbilityAdds` no longer exist. The GDC
+>   ability / keyword / leader rebuild they are cited as a model for lives in
+>   `applyGdcDatasheetAuthority()`, called from `applyGdcStatlines()`.
+>   Line numbers ("~2275", "~2500-2540") are stale; search by name.
+> - Item 3 says `applyWeaponFixes` must be a no-op for authoritative units.
+>   Only its **`add`** path is (`if (u._gdcAuthoritative) return;`). The
+>   expect-gated **match/set** path stays live on authoritative units on
+>   purpose: an expect-gated fix no-ops wherever GDC already agrees, and still
+>   corrects a GW-side error where it does not.
+>
+> Also current: GW renames a datasheet now and then while 40kdc keeps the old
+> name, and an unmatched name silently loses every GDC merge. `GDC_NAME_ALIASES`
+> in `js/gdc.js` bridges our name to GW's (Eradicator Squad → "Eradicator Squad
+> with melta rifles", Marneus Calgar in Armour of Antilochus → "Marneus
+> Calgar", Invader ATV → "Invader ATVs", plus the Ork and Sisters of Silence
+> pairs). The authority pass maps GW's leader-target names back through the
+> same table, so a leader listing GW's name attaches to our unit.
 
 1. Rename `GDC_STATS_AUTHORITATIVE` → `GDC_AUTHORITATIVE`; value stays a note
    string. Keep the function name `applyGdcStatlines` and the

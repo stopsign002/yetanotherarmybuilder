@@ -127,5 +127,8 @@
   P._internal.classifyProfile    = classifyProfile;
   P._internal.stripVariantPrefix = stripVariantPrefix;
   P._internal.hasVariantPrefix   = hasVariantPrefix;
-  P._internal.foldKey            = foldKey;
+  // dc-adapter.js (loaded earlier) installs a punctuation-stripping foldKey
+  // that attachments.js relies on; this dormant parser's version keeps
+  // punctuation. Do not overwrite the live one.
+  if (!P._internal.foldKey) P._internal.foldKey = foldKey;
 })();

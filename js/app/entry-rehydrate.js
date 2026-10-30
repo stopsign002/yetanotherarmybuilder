@@ -70,6 +70,74 @@
     return true;
   }
 
+  // Enhancement and wargear prices are ALSO add-time copies on the entry
+  // (`enhancements[i].pts`, `wargear[i].pts`), so after an MFM change they
+  // disagree with the live default-loadout cost army.js recomputes. Re-read
+  // both. Enhancements: by name, from the selected detachments first, then
+  // from every detachment of the unit's faction (and its chapter parent) —
+  // the latter only when all same-named enhancements there agree on a price.
+  // Wargear: the stored selection names its option id + choice index, so the
+  // NET delta is recomputed against the fresh wargearProfile exactly as the
+  // picker would. Anything that no longer resolves is left alone.
+  function enhancementPrice(name, facName) {
+    const key = String(name || '').toLowerCase();
+    if (!key) return null;
+    const s = App.state || {};
+    const fromDets = (dets) => {
+      const prices = new Set();
+      (dets || []).forEach((d) => (d && d.enhancements || []).forEach((x) => {
+        if (x && String(x.name || '').toLowerCase() === key && Number.isFinite(x.pts)) prices.add(x.pts);
+      }));
+      return prices.size === 1 ? prices.values().next().value : null;
+    };
+    const sel = fromDets(s.selectedDetachments);
+    if (sel != null) return sel;
+    const facs = s.factions || [];
+    const names = [facName, App.CHAPTER_PARENTS && App.CHAPTER_PARENTS[facName]].filter(Boolean);
+    const dets = [];
+    facs.forEach((f) => { if (names.indexOf(f.factionName) !== -1) dets.push(...(f.detachments || [])); });
+    return fromDets(dets);
+  }
+
+  // Mirror of wargear-picker.js's private groupCost/effReplaces (prefer an
+  // exported App.WargearPicker.groupCost if that module ever offers one). Keep
+  // the two in step: this is what the entry is billed.
+  function groupCost(profile, opt, grp) {
+    if (App.WargearPicker && typeof App.WargearPicker.groupCost === 'function') {
+      return App.WargearPicker.groupCost(profile, opt, grp);
+    }
+    const ic = profile.itemCosts;
+    let d = opt.cost || 0;
+    if (!ic) return d;
+    const reps = opt.replaces || [];
+    const eff = (reps.length <= 1 || opt.andSwap || (grp && grp.length > 1)) ? reps : [reps[0]];
+    (grp || []).forEach((x) => { d += ic[x.id] || 0; });
+    eff.forEach((x) => { d -= ic[x.id] || 0; });
+    return d;
+  }
+
+  function repairAddOnPts(entry, fresh) {
+    let changed = false;
+    const facName = (fresh && fresh._factionName) || (entry.unitData && entry.unitData._factionName) || '';
+    (entry.enhancements || []).forEach((x) => {
+      if (!x || !x.name) return;
+      const pts = enhancementPrice(x.name, facName);
+      if (pts != null && pts !== x.pts) { x.pts = pts; changed = true; }
+    });
+    const prof = fresh && fresh.wargearProfile;
+    if (prof && Array.isArray(prof.options)) {
+      (entry.wargear || []).forEach((w) => {
+        if (!w || w.optionId == null || w.choice == null) return;
+        const opt = prof.options.find((o) => o && o.id === w.optionId);
+        const grp = opt && opt.choices && opt.choices[w.choice];
+        if (!grp) return;
+        const pts = groupCost(prof, opt, grp);
+        if (Number.isFinite(pts) && pts !== w.pts) { w.pts = pts; changed = true; }
+      });
+    }
+    return changed;
+  }
+
   // An entry whose unitId matches NO current unit is stuck: findUnit misses,
   // nothing above runs, and the add-time snapshot (and its price) lives on
   // forever. That is every entry added before the 40kdc cutover — they carry
@@ -127,7 +195,9 @@
         e.unitData = fresh;
         swapped++;
       }
-      if (repairSelectedPts(e, prevUnit, fresh)) repriced++;
+      const a = repairSelectedPts(e, prevUnit, fresh);
+      const b = repairAddOnPts(e, fresh);
+      if (a || b) repriced++;
     });
     return { swapped, repriced, remapped };
   }

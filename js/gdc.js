@@ -790,6 +790,13 @@
     prosecutors: 'prosecutorsquad',
     vigilators: 'vigilatorsquad',
     witchseekers: 'witchseekersquad',
+    // 2026-10-02 Space Marines codex renames (#3 of the 2026-10-30 review).
+    // Without these the three kept index-era data under GDC authority, Lord
+    // Calgar's ability had no text, and every leader GW lists for
+    // "Eradicator Squad with melta rifles" attached to nothing.
+    eradicatorsquad: 'eradicatorsquadwithmeltarifles',
+    marneuscalgarinarmourofantilochus: 'marneuscalgar',
+    invaderatv: 'invaderatvs',
   };
 
   // nameKey for looking a OUR unit up in a GDC index.

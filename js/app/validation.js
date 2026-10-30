@@ -1,4 +1,4 @@
-// app/validation.js — advisory 10e composition checks (Rule of Three, warlord).
+// app/validation.js — advisory 11e composition checks (Rule of Three, enhancements, a Character, allied points).
 (function () {
   const App = window.App = window.App || {};
   if (!App.hooks) return;
@@ -66,7 +66,10 @@
         if (typeof App.isUpgradeEnhancement === 'function' && App.isUpgradeEnhancement(x)) return;
         const k = x.name.toLowerCase();
         const cur = enhUse.get(k) || { name: x.name, n: 0 };
-        cur.n += Number.isFinite(e.count) && e.count > 0 ? e.count : 1;
+        // Once per ENTRY, whatever its `count`: the enhancement hangs off the
+        // entry and army.js bills it once per entry, so counting copies here
+        // warned "taken 2 times" on a list that pays for it once.
+        cur.n += 1;
         enhUse.set(k, cur);
       });
     });
