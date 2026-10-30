@@ -6,6 +6,12 @@
 //   * parses "80 / 165 pts" as two costs, not the integer 80165
 //   * undoes an ADD specifically, not whatever mutation happened to be last
 // READ-ONLY (localStorage in a throwaway profile).
+//
+// Pruned 2026-10-30 to the live surface: the "palette finds analytics",
+// "palette exposes the button-less tools" and "detail header offers
+// star/print/calc" checks were deleted (those features were removed on
+// purpose); the palette check now looks for Collect mode, which is reachable
+// on desktop only through Ctrl+K.
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
@@ -172,36 +178,17 @@ await page.keyboard.press('Control+k');
 await page.waitForSelector('.cmdp-modal', { timeout: 8000 }).catch(() => {});
 await page.waitForTimeout(600);
 const before = await page.evaluate(() => document.querySelectorAll('.cmdp-row').length);
-await page.keyboard.type('analytics', { delay: 60 });
+await page.keyboard.type('collect', { delay: 60 });
 await page.waitForTimeout(1200);
 const palette = await page.evaluate(() => ({
   rows: Array.from(document.querySelectorAll('.cmdp-row')).map(r => r.textContent.trim().slice(0, 60)),
   empty: !!document.querySelector('.cmdp-empty'),
   value: (document.querySelector('.cmdp-input') || {}).value,
 }));
-check('command palette finds "analytics" when typed', palette.rows.some(r => /analytic/i.test(r)),
+check('command palette finds "Collect mode" when typed', palette.rows.some(r => /collect mode/i.test(r)),
   `input="${palette.value}" rowsBefore=${before} rowsNow=${palette.rows.length} ${palette.empty ? '(empty state)' : ''} ${JSON.stringify(palette.rows.slice(0,4))}`);
 await shot('04-palette');
-// can the dropped tools be reached from here at all?
-await page.evaluate(() => { const i = document.querySelector('.cmdp-input'); if (i) { i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true })); } });
-await page.waitForTimeout(800);
-const allRows = await page.evaluate(() => Array.from(document.querySelectorAll('.cmdp-row')).map(r => r.textContent.trim().slice(0, 50)));
-const wanted = ['match', 'analytic', 'crusade', 'kill team', 'deploy', 'stratagem', 'synerg', 'tournament', 'coach', 'collection'];
-const found = wanted.filter(w => allRows.some(r => new RegExp(w, 'i').test(r)));
-check('command palette exposes the button-less tools', found.length >= wanted.length - 2,
-  `found ${found.length}/${wanted.length}: ${found.join(', ')} | missing: ${wanted.filter(w => !found.includes(w)).join(', ')}`);
-writeFileSync(`${OUT}/palette-rows.json`, JSON.stringify(allRows, null, 2));
 await page.keyboard.press('Escape');
-
-// ── 8. detailActions — are the star / print / calc buttons really gone? ───
-await page.evaluate(() => { const c = document.querySelector('#unit-grid .unit-card'); if (c) c.click(); });
-await page.waitForTimeout(1500);
-const da = await page.evaluate(() => ({
-  hookLen: ((window.App && App.hooks && App.hooks.detailActions) || []).length,
-  domBtns: Array.from(document.querySelectorAll('.detail-action-btn, .detail-header button, .detail-banner button')).map(b => (b.id || b.className || '').slice(0, 40)),
-}));
-check('unit detail header still offers its actions (star/print/calc)', da.hookLen > 0 || da.domBtns.length > 1,
-  `detailActions=${da.hookLen}, header buttons=${JSON.stringify(da.domBtns)}`);
 
 writeFileSync(`${OUT}/verify-claims.json`, JSON.stringify({ confirmedOk: pass, realBugs: fail, results }, null, 2));
 console.log(`\nbehaving correctly: ${pass}   genuine problems: ${fail}`);

@@ -90,7 +90,7 @@ Cross-cutting docs:
 
 ### `js/app/hooks.js`
 - **Purpose:** Extension registry so feature modules don't need to edit shared files.
-- **Exports:** `App.hooks = { bootstrap, armyChange, selectionChange, detailActions, armyToolbarActions, rosterFilters, cardClassContributors, modeChange }`. `App.fireBootstrap`, `App.fireArmyChange`, `App.fireSelectionChange`, `App.fireModeChange`.
+- **Exports:** `App.hooks = { bootstrap, armyChange, selectionChange, detailActions, armyToolbarActions, rosterFilters, cardClassContributors, armyEntryActions, paletteCommands }`. `App.fireBootstrap`, `App.fireArmyChange(kind, army?)`, `App.fireSelectionChange`. (`modeChange` is created by `mode-shell.js`, which fires it through its own local `fireHooks(mode)`; there is no `App.fireModeChange`.) `armyChange` kinds actually fired: `render`, `save`, `delete`, `rename`.
 - **Depends on:** none.
 - **Storage:** none.
 - **DOM:** none.
@@ -102,7 +102,7 @@ Cross-cutting docs:
 - **Depends on:** `UI.init`, `App.state`, `ArmyManager`, `App.renderAll`, `App.setupResizablePanels`, `App.wireEvents`, `App.fireBootstrap`, `App.autoLoadFromBSData`.
 - **Storage:** reads `localStorage.yaab_armies` via `ArmyManager`.
 - **DOM:** wires `#topbar-icons`, `#toolbar-extras`, `#tools-menu`, `#more-menu`, `#export-extras`.
-- **Notes:** Most-recently-updated saved army becomes `currentArmy`. Action Center routing maps action ids to sections. `TOPBAR_SHELF_IDS` whitelist: account, bug-report, changelog. `ICON_VISIBLE_IDS`: undo / redo / cmdp.
+- **Notes:** The army whose id is in `yaab_current_army_id` becomes `currentArmy` at boot (falling back to the newest `updatedAt`). `TOPBAR_SHELF_IDS` allow-list for the top-bar shelf: auth, bug-report, changelog, Play, Waha. `BOTTOM_INLINE_ICON_IDS`: undo / redo. Actions in no allow-listed region render nowhere (the Tools/More dropdowns and the Action Center were removed).
 
 ### `js/app/filters.js`
 - **Purpose:** Faction/chapter resolution + `rebuildAllUnits` (by reference, not copy).
@@ -154,7 +154,7 @@ Cross-cutting docs:
 
 ### `js/app/selections.js`
 - **Purpose:** Chapter sub-dropdown + detachment dropdown population + import sync.
-- **Exports:** `App.updateChapterDropdown`, `App.updateDetachmentOptions`, `App.applyImportedSelections`.
+- **Exports:** `App.updateChapterDropdown`, `App.applyImportedSelections`.
 - **Depends on:** `App.state`, `App.getCurrentFaction`, `App.getDetachmentFaction`.
 - **Storage:** none.
 - **DOM:** `#army-chapter-group`, `#army-chapter-select`, `#army-detachment-select`.
@@ -187,13 +187,13 @@ Cross-cutting docs:
 ### `js/app/events.js`
 - **Purpose:** All event listeners (toolbar, dropdowns, unit grid, modals, faction/detachment dropdowns).
 - **Exports:** `App.wireEvents`.
-- **Depends on:** `App.state`, `App.findUnit`, `App.renderUnitRosterWithContext`, `App.applyFactionColor`, `App.updateChapterDropdown`, `App.updateDetachmentOptions`, `App.applyImportedSelections`, `Storage.*`, every `UI.show*Modal` / `UI.render*`, `UI.toast`.
+- **Depends on:** `App.state`, `App.findUnit`, `App.renderUnitRosterWithContext`, `App.applyFactionColor`, `App.updateChapterDropdown`, `App.applyImportedSelections`, `Storage.*`, every `UI.show*Modal` / `UI.render*`, `UI.toast`.
 - **Storage:** none directly (delegates to Army/Storage/Sync).
 - **DOM:** delegates from `#unit-grid`, `#army-entry-list`, `#unit-detail-panel`, `#army-rules-section`, `#saved-army-list`. Direct on `#search-input`, `#army-name-input`, `#points-limit-input`, `#army-faction-select`, `#army-chapter-select`, `#army-detachment-select`, every `#btn-*`, `#modal-*-close`.
 - **Notes:** Double-click on a unit card adds 1× silently. On Load, races a 2s `App.Sync.pullAll()` so cloud-synced armies show up before the modal renders.
 
 ### `js/app/topbar.js`
-- **Purpose:** Wires the top app bar (brand, mode tabs, search, Settings + Help, account chip mirror, ⌘K trigger, Action Center, status row).
+- **Purpose:** Wires the top app bar: the brand (click returns to Build), the ⌘K search button, the Settings gear and the Help (?) button. The mode tabs row exists in markup but is hidden by CSS (`.topbar-modes { display:none !important }`).
 - **Exports:** none (event-listener IIFE).
 - **Depends on:** `App.state`, `App.hooks`, `App.Auth`, `UI.toast`, `App.Admin`.
 - **Storage:** none.
@@ -355,7 +355,7 @@ Cross-cutting docs:
 ### `js/app/hero-state.js`
 - **Purpose:** Empty-army hero CTA + Cmd+K hint badge + recent-faction chip row.
 - **Exports:** `App.heroState = { pushRecent, readRecents, rerender }`.
-- **Depends on:** `App.state`, `App.hooks`, `App.openStarterLists`, `App.starterListsRollRandom`.
+- **Depends on:** `App.state`, `App.hooks`. (An earlier version called `App.openStarterLists` / `App.starterListsRollRandom`; those modules were deleted and nothing defines them.)
 - **Storage:** `localStorage.yaab_recent_factions` (Array, cap 5).
 - **DOM:** `#yaab-hero-cta`, `.yaab-search-wrap`, `.yaab-kbd-hint`.
 - **Notes:** Wraps `#search-input` in `.yaab-search-wrap` so the Cmd+K badge can be absolutely positioned. The wrap's `width: 100%` is essential — `expand-pane.css` relies on it as a flex item.
@@ -439,7 +439,7 @@ Cross-cutting docs:
 - **Depends on:** `reserves.js` (`App.Reserves.getQty/setQty/getView`), `army.js` (`addUnit` opts, `setCustomName`, the `fromJSON` whitelist), `App.renderUnitRosterWithContext`, `App.getMode`.
 - **Storage:** `localStorage.yaab_custom_names` (`{instanceId: {u, n, t}}`, **cloud-synced**). Army-entry names ride `entry.customName` in `yaab_armies` instead. Instance ids are opaque `ci_*` so `id-migration.js` needs no knowledge of them.
 - **DOM:** `#unit-grid` (MutationObserver → `.unit-card-subname`), `#unit-detail-panel` (MutationObserver → `.custom-name-widget`, mounted after `reserves.js`'s stockpile stepper inside `.detail-add-section`).
-- **Consumed by:** `storage.js` (YAAB1 7th tuple slot, text + CSV export), `ui/army-list.js`, `ui/cards-mode.js` (card header + the per-card options panel), `ui/tournament-export.js`.
+- **Consumed by:** `storage.js` (YAAB1 7th tuple slot, text + CSV export), `ui/army-list.js`, `ui/cards-mode.js` (card header + the per-card options panel).
 - **Notes:** Every touchpoint in `reserves.js` / `cards-mode.js` is guarded (`App.CustomNames && …`), so a load failure degrades to pre-feature behaviour. Naming is a **split**, not an addition — `reserves.js`'s points badge, empty-state note, owned-types count and "⚠ owns N" warning all add `countFor()` back in so the totals are unchanged by naming.
 
 ### `js/app/split-entry.js`
@@ -492,7 +492,7 @@ Cross-cutting docs:
 
 ### `js/app/mode-shell.js`
 - **Purpose:** Build / Collect / Play / Cards mode container switching.
-- **Exports:** `App.setMode(modeName)`, `App.getMode()`. Owns `App.fireModeChange`.
+- **Exports:** `App.setMode(modeName)`, `App.getMode()`, `App.prefersReducedMotion()` (OS media query OR `body.reduce-motion`). Owns the `App.hooks.modeChange` array (callbacks receive `(mode)`); it fires them from a local `fireHooks(mode)`, not an `App.fireModeChange`.
 - **Depends on:** `App.hooks.modeChange`.
 - **Storage:** `localStorage.yaab_mode`.
 - **DOM:** `body[data-mode]`, `.mode-page` elements (`#build-mode`, `#collect-mode`, `#cards-mode`).
@@ -507,7 +507,7 @@ Cross-cutting docs:
 - **Notes:** `roster.js` strips matching tokens before name/keyword fuzzy-match. Multiple comparators AND together. A unit passes if ANY of its squad/variant costs satisfies all comparators.
 
 ### `js/app/settings-drawer.js`
-- **Purpose:** Slide-in Settings drawer (sound, voice, ork-math, legends, kill-team, collection badges, reduced motion + utilities).
+- **Purpose:** Slide-in Settings / More drawer: Go rows (Build, Collect, Waha, Play, What's new), Army actions, Account, Appearance (theme radiogroup), toggles (Legends, allied units, painting badges, reduced animations) and utilities (clear cached game data, About).
 - **Exports:** Drawer open/close.
 - **Depends on:** every toggle module + `App.Auth`.
 - **Storage:** `localStorage.yaab_reduced_motion`. Reads many other keys.
@@ -630,10 +630,10 @@ Cross-cutting docs:
 - **DOM:** `#army-name-input`, `#points-limit-input`, `#points-current`, `#points-limit-display`, `#points-bar-pct`, `#points-bar-remaining`, `#points-bar`, `.points-summary`, `#unit-grid`, `.army-entry`, `.army-entry-card`, `.army-qty-input`, `.army-entry-remove`, `[data-build-hero="*"]` mirrors.
 - **Notes:** Dual-update path: legacy `#points-*` spans AND `[data-build-hero=*]` mirrors so `build-mode.js` doesn't lag a render behind. Enhancements rendered as badges under the name. Drag-handle stripe on the left, remove button top-right.
 
-> **Note:** there is no longer a standalone `js/ui/datasheet.js` module. GW-style
-> datasheet rendering now lives in `js/ui/tournament-export.js` (`renderDatasheetPages`,
-> the full-datasheet section of the PDF bundle) and `js/ui/cards-mode.js` (printable
-> data cards). Nothing else references the old `UI.printDatasheet*` API.
+> **Note:** there is no `js/ui/datasheet.js` and no `js/ui/tournament-export.js`
+> (both were deleted). Printable output is `js/ui/cards-mode.js` (data cards via
+> `window.print()`); the on-screen datasheet is `UI.renderUnitDetail` in `detail.js`.
+> Nothing references the old `UI.printDatasheet*` API.
 
 ### `js/ui/build-mode.js`
 - **Purpose:** Build-mode orchestrator: hero header, rules pinboard tab, roster polish.
@@ -644,20 +644,20 @@ Cross-cutting docs:
 - **Notes:** Prefers `#topbar-hero-slot` mount; falls back to inside `#build-mode`. Two-way sync between hero name input and legacy `#army-name-input`. Updates mirrors on `armyChange`.
 
 ### `js/ui/collect-mode.js`
-- **Purpose:** Collect mode page (Painting / Crusade / Kill Team sub-tabs).
+- **Purpose:** Collect mode page (a single Painting sub-tab; the Crusade and Kill Team sub-tabs were removed).
 - **Exports:** none (hook-registered).
 - **Depends on:** `App.hooks.bootstrap`, `App.hooks.modeChange`.
-- **Storage:** reads `yaab_collection`, `yaab_crusade_rosters`, `yaab_kt_mode`. Owns `localStorage.yaab_collect_debug` (dev flag).
+- **Storage:** reads/writes `yaab_collection`. Owns `localStorage.yaab_collect_debug` (dev flag). (Crusade and Kill Team sub-tabs, and their keys, are gone.)
 - **DOM:** `#collect-mode` panel + sub-tabs.
 - **Notes:** Lazy-built on first activate.
 
 ### `js/ui/cards-mode.js`
 - **Purpose:** Cards mode — full-page printable data-card designer (owns `#cards-mode`).
 - **Exports:** `App.openCardsMode` (entry point); shares `App.setMode` / `App.getMode` with `mode-shell.js`.
-- **Depends on:** `App.hooks`, `App.state`, `UI.escapeHtml`, `YaabDB.images`, localStorage.
+- **Depends on:** `App.hooks`, `App.state`, `UI.escapeHtml`, `YaabDB.images`, `/api/images` (signed in), localStorage.
 - **Storage:** `localStorage.yaab_cards_prefs` (live display/texture/layout/typography prefs), `yaab_cards_presets` (named snapshots of every setting — **cloud-synced**), `yaab_cards_selection` (per-category deselections — device-local), `yaab_cards_spill` (per-card manual page-split overrides — device-local).
 - **DOM:** `#cards-mode` host; injected `#cards-texture-style` + `#cards-print-style` stylesheets; `#cards-spill-panel` / `#cards-spill-backdrop`.
-- **Notes:** `@media print` CSS hides everything else. Textures via inline SVG data URLs (`feTurbulence`). Card-back images stored in IDB (`YaabDB.images`), not in prefs. Typography multipliers 0.5 – 2.0×. Presets sync via the KV state bag; selection + spill stay device-local.
+- **Notes:** `@media print` CSS hides everything else. Textures via inline SVG data URLs (`feTurbulence`). Card-back images are not in prefs: signed-in users keep a server library (`/api/images`, see `docs/CARDS_IMAGES_API.md`) and anonymous users fall back to the browser-local IDB store (`YaabDB.images`), capped at 30 per owner either way. Typography multipliers 0.5 – 2.0×. Presets sync via the KV state bag; selection + spill stay device-local.
 
 ### `js/ui/play-mode.js`
 - **Purpose:** Play mode — fast-switching game-day reference (owns `#play-mode`). Persistent unit switcher + Sheets / Stratagems / Rules / Enhancements tabs, everything pre-rendered so switching is class-toggling only. Desktop Sheets tab has a layout toggle: "One" (switcher rail, one sheet visible) or "All" (every datasheet in one horizontal, sideways-scrolling row) — phones always get "One". Light tracking: CP counter, per-entry destroyed toggle.
@@ -680,7 +680,7 @@ Cross-cutting docs:
 - **Exports:** none (hook-registered).
 - **Depends on:** `App.hooks.armyToolbarActions`.
 - **Storage:** none.
-- **DOM:** `#yaab-btn-export`, `#yaab-export-menu`. Programmatically clicks the original (now-hidden) panel-footer Export buttons.
+- **DOM:** `#topbar-export-btn`, `#topbar-export-menu`. Programmatically clicks the matching panel-footer Export buttons (`#btn-export-string`, `#btn-export-text`, `#btn-export-csv`, ...).
 - **Notes:** Clicking the topbar items fires the original buttons' click handlers so existing wiring stays intact.
 
 ### `js/ui/auth-button.js`
@@ -803,7 +803,7 @@ Cross-cutting docs:
 
 ### `js/parser/classify.js`
 - **Purpose:** Text helpers, Crusade-section filter, profile classifier.
-- **Exports:** `_internal.cleanText`, `_internal.isCrusadeSection`, `_internal.classifyProfile`, `_internal.getAttr`, `_internal.dedup`, `CRUSADE_RE`.
+- **Exports:** `_internal.cleanText`, `_internal.isCrusadeSection`, `_internal.classifyProfile`, `_internal.getAttr`, `_internal.stripVariantPrefix`, `_internal.hasVariantPrefix`, `_internal.foldKey`, `CRUSADE_RE`.
 - **Depends on:** none.
 - **Storage:** none.
 - **DOM:** none.
@@ -875,7 +875,7 @@ Cross-cutting docs:
 
 ### `js/parser/index.js`
 - **Purpose:** Public WahapediaParser API assembly. Loaded last.
-- **Exports:** `WahapediaParser.parse`, `addToSharedIndex`, `releaseSharedIndex`, `lastReport`.
+- **Exports:** `WahapediaParser.parse`, `addToSharedIndex`, `releaseSharedIndex`.
 - **Depends on:** `WahapediaParser._internal` (populated by sibling modules).
 - **Storage:** none.
 - **DOM:** none.
@@ -886,7 +886,7 @@ Cross-cutting docs:
 - **Exports:** N/A (produces `js/vendor/dc-bundle.js`).
 - **Depends on:** `@alpaca-software/40kdc-data` (built from 40kdc-data git `main`, not npm) + the `40kdc-abilities` text store.
 - **Storage:** writes `js/vendor/dc-bundle.js`. `abilities-index.json` is generated (do not hand-edit).
-- **Notes:** Auto-refreshed + redeployed by `~/sites/base/refresh-40kdc.sh` (weekly, Mondays; daily until the 2026-07-01 cutover), which validates against the live adapter before deploying. See `build/README.md` for rebuild commands.
+- **Notes:** Auto-refreshed + redeployed by `~/sites/base/refresh-40kdc.sh` as stage 1 of `~/sites/base/yaab-pipeline.sh` (cron `35 4 * * 1`: weekly, Mondays 04:35 UTC; nightly 2026-07-28 to 2026-09-10), which validates against the live adapter before deploying. **Frozen:** `~/sites/base/DATA-FREEZE` (since 2026-09-17) makes stage 1 exit until removed; a one-off run needs `DATA_FREEZE_OVERRIDE=1`. See `build/README.md` for rebuild commands.
 
 ### `scripts/mirror-bsdata.mjs` (DORMANT)
 - **Purpose:** **DORMANT — kept for rollback.** Cron-driven Node 20 script that diffs `BSData/wh40k-10e` blob SHAs and downloads only changed files into `data/bsdata/`.

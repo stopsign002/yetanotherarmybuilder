@@ -10,15 +10,28 @@ This is the ONE build step in an otherwise buildless app. The committed
 
 ## When a new MFM (Munitorum Field Manual) drops
 
-The daily `~/sites/base/refresh-40kdc.sh` cron (04:45) re-scrapes
-mfm.warhammer-community.com every run and rebuilds the bundle, so a new MFM
-picks itself up the next morning with zero manual work. To pull it
-immediately:
+`~/sites/base/refresh-40kdc.sh` re-scrapes mfm.warhammer-community.com every
+run and rebuilds the bundle. It runs as **stage 1 of
+`~/sites/base/yaab-pipeline.sh`, cron `35 4 * * 1` — weekly, Mondays 04:35 UTC**
+(it was a nightly 04:45 cron until 2026-09-10), so a new MFM is picked up on the
+next Monday run *unless the refresh is frozen*.
+
+**It is frozen right now.** `~/sites/base/DATA-FREEZE` has existed since
+2026-09-17 (owner decision: unit-datasheet data is applied by hand as codexes
+come out). While that file exists stage 1 — the whole refresh, MFM points and
+wargear costs included — logs `refresh skipped (DATA FREEZE)` and exits 0, and
+the pipeline reports "frozen" instead of "no-change". Nothing picks a new MFM up
+automatically until the file is removed (or you override for one run). To pull it
+now, deliberately:
 
 ```
-FORCE_REFRESH=1 ~/sites/base/refresh-40kdc.sh
+DATA_FREEZE_OVERRIDE=1 ~/sites/base/refresh-40kdc.sh
 tail -25 ~/sites/base/refresh-40kdc.log
 ```
+
+(`FORCE_REFRESH=1`, which older notes show here, was removed — it gated nothing.
+Under the freeze the script exits before doing anything without
+`DATA_FREEZE_OVERRIDE=1`.)
 
 The last log lines print the scrape + validation summary. Sanity check them
 against the previous run:
@@ -49,8 +62,11 @@ against the previous run:
 
 The script auto-commits `js/vendor/dc-bundle.js` + `build/abilities-index.json`
 and emails a summary via the mailer. Caddy's `no-cache` header makes the new
-bundle reach users on the next page load — no changelog / stamp / version bump
-needed (the bundle isn't stamped; it's revalidated).
+bundle reach users on the next page load — no changelog entry or version bump
+is needed. The deploy does re-stamp `index.html` with a **data-only** stamp
+(`stamp-assets.mjs --data <bundle-md5>`, a `-d<md5-8>` suffix on `?v=`; see
+`CLAUDE.md` "HTTP caching") so proxy caches pick the new bundle up; the
+pipeline stamps once at the end of the run.
 
 ## Files
 - `dc-entry.mjs` — esbuild entry; imports the 40kdc collections + `abilities-index.json`.
@@ -132,7 +148,7 @@ per-faction files, not fetched, and the adapter looks text up faction-first.
 - **Scoped entries** are emitted for every faction's record of every id that
   appears in more than one faction — including the winner's — and for nothing
   else. Expected: ~240 ids, a few hundred scoped keys, well under 200 KB extra.
-- **EXCEPT ids present in `core.json`** (17 of them: deep-strike, the
+- **EXCEPT ids present in the upstream abilities repo's `core.json`** (17 of them: deep-strike, the
   deadly-demise-* and feel-no-pain-* family, stealth, scouts-6, infiltrators,
   lone-operative, fights-first, hover, firing-deck-*, super-heavy-walker):
   those get NO scoped entries at all. The core text IS the rule; the faction

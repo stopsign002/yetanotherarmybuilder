@@ -68,12 +68,15 @@ page.on('pageerror', (e) => pageErrors.push(e.message));
 // ── 1. The page itself ───────────────────────────────────────────────────────
 await page.goto(BASE + '/', { waitUntil: 'networkidle', timeout: 90000 });
 
-// Two console messages are expected on a clean load and are filtered out:
+// Console messages that are expected on a clean load and are filtered out:
 //   * a 401 from auth.js probing /api/auth/me — this is a signed-out visit.
-//   * Chrome's notice that `frame-ancestors` is ignored in a <meta> CSP. That
-//     is true and long-standing (see homewebhost#11); yaab keeps its CSP in a
-//     meta tag deliberately, so the policy stays in git rather than in an
-//     unversioned Caddy fragment. Nothing to do with the service worker.
+//   * Chrome's notice that `frame-ancestors` is ignored in a <meta> CSP. This
+//     is now only a harmless guard: the real CSP (including
+//     `frame-ancestors 'none'`) is sent as a response header from
+//     ~/sites/base/conf.d/yetanotherarmybuilder.caddy (homewebhost#11), and
+//     the <meta> copy in index.html omits `frame-ancestors`, so the notice no
+//     longer fires. The two policies must be kept in sync; the browser
+//     enforces their intersection. Nothing to do with the service worker.
 const EXPECTED = [/status of 401/, /'frame-ancestors' is ignored/];
 const realConsole = consoleErrors.filter(t => !EXPECTED.some(re => re.test(t)));
 check('no page exceptions', pageErrors.length === 0, pageErrors[0]);

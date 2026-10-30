@@ -39,7 +39,7 @@ localStorage `yaab_armies`
 9. `App.mountArmyToolbarActions()` renders all hook-registered toolbar/icon-shelf/menu buttons. Reads `App.hooks.armyToolbarActions` and routes by `region`/`category`.
 10. `App.fireBootstrap(state)` runs every `App.hooks.bootstrap[]` entry.
 11. `App.autoLoadFromBSData()` returns immediately and starts the background load via `BSData.loadAllFactions` (overridden by `dc-adapter.js`). The adapter builds each faction from `window.DC`, runs the GDC overlay + `reconcileStrats()`, then fires the same per-faction callback — so each faction, as it's built, is pushed into `state.factions`, triggering `rebuildAllUnits` + `buildChaptersMap` + `updateFactionFilter` + `renderUnitRosterWithContext`. No XML fetch or DOM parsing happens; the only live network call is the GDC fallback text.
-12. `topbar.js` IIFE runs (loaded after `app/index.js`) and wires the top-bar chip mirror, ⌘K trigger, Action Center button, status row.
+12. `topbar.js` IIFE runs (loaded after `app/index.js`) and wires the top-bar brand (click returns to Build), the ⌘K search button, the Settings gear and the Help (?) button.
 13. `sw-register.js` registers `/sw.js` after `window.load`, with `updateViaCache: 'none'` so the worker script is never served from the HTTP cache. Registration is fire-and-forget — without a worker the app behaves exactly as before, just with more round trips and no install prompt. (From 2026-04-27 to 2026-08-16 this file did the opposite and unregistered everything; see the "Service worker" section of `CLAUDE.md`.)
 
 ## Memory model
@@ -58,7 +58,7 @@ localStorage `yaab_armies`
 | `yaab_bsdata_filelist_10e_v2` | sessionStorage | **Unused** — dormant BattleScribe file listing. |
 | `yaab_armies` | localStorage | User data — never invalidate silently |
 | `yaab_factions` | localStorage | Legacy — kept only for back-compat; not on the active read path |
-| `yaab-shell-<token>` | Cache API | The app shell, ~200 entries / ~14 MB, written by `sw.js`. The name carries the deployed `?v=` token and `activate()` deletes every other key, so exactly one generation exists at a time. **Excludes `/api/` and `/data/` entirely.** Do not add entries to `SHELL` — assets are cached on first use by stale-while-revalidate. |
+| `yaab-shell-<token>` | Cache API | The app shell, ~160 entries / ~14 MB, written by `sw.js`. The name carries the deployed `?v=` token and `activate()` deletes every other key, so exactly one generation exists at a time. **Excludes `/api/` and `/data/` entirely.** Do not add entries to `SHELL` — assets are cached on first use by stale-while-revalidate. |
 
 `BSData.clearFactionCache()` wipes legacy session keys + the IndexedDB `factions` and `gst` stores in one call.
 
@@ -82,47 +82,36 @@ Defined in `js/app/hooks.js`. Every hook is an array of callbacks; failure in on
 | Hook | Fired | Callback signature | Notes |
 |---|---|---|---|
 | `bootstrap` | once after `wireEvents` + `mountArmyToolbarActions` | `(state) => void` | Late init: open modal handles, register lazy DOM elements, prefetch JSON, etc. |
-| `armyChange` | after every `Army` mutation (add/remove/qty/enhancement/new/load/import/save) | `(army, kind?) => void` | Used by history (snapshot), validation (re-check), analytics (re-render), save-pulse, sound-fx, deployment, opponent matchup, celebrations. |
-| `selectionChange` | after faction / chapter / detachment dropdown changes | `(state) => void` | Used by hero-state, scanline, animated-crest, lore button, flavor, nickname, ork-math, activity-log, favorites. |
-| `armyToolbarActions` | read once at boot by `App.mountArmyToolbarActions` | n/a (data) | Action shape: `{ id, region?, priority?, category?, label, title?, ariaLabel?, className?, onClick }`. |
-| `detailActions` | read by `ui/detail.js` when rendering the unit detail header | n/a (data) | Action shape: `{ id, title, html, label?, onClick(unit) }`. Star (favorites) and Print (datasheet) live here. |
-| `rosterFilters` | called per-unit during `UI.renderUnitRoster` filtering | `(unit) => boolean` | Returning `false` hides the unit. Used by legends-toggle, kill-team, favorites (filtered view), collection (status filter). |
-| `cardClassContributors` | called per-unit during card render | `(unit) => string \| null` | Adds extra class names to the `.unit-card`. Used by legends-toggle (`.unit-legends`), collection (status badges), role-icons, unit-card-themes (`faction-<slug>`). |
+| `armyChange` | `App.fireArmyChange(kind, army?)`. **Only four kinds are ever fired:** `'render'` (top of `UI.renderArmyList`, so it fires on every army-list re-render, which every mutation triggers), `'save'` and `'delete'` (`army.js`), `'rename'` (`events.js`). There is no `'add'`/`'remove'`/`'load'`/`'import'` kind: a consumer that needs to know *what* changed must diff the army itself (as `favorites.js` does). | `(army, kind) => void` | Used by history (snapshot), validation (re-check), autosave, save-pulse, celebrations, rehydrate/entry-rehydrate, hero-state, flavor, nickname, kotc, faction-fx, scanline, animated-crest, mobile-shell, pwa-install (badges), reserves, collection, favorites, and the mode pages (build/collect/cards/play). |
+| `selectionChange` | after faction / chapter / detachment selection changes | `(state) => void` | Used by hero-state, scanline, animated-crest, flavor, nickname, kotc, faction-fx, faction-glyphs, mobile-shell, rehydrate, favorites, collection, reserves, requisitions, custom-names, and the mode pages. |
+| `armyToolbarActions` | read at boot by `App.mountArmyToolbarActions` (and again by the Settings drawer's `clickToolbarBtn` fallback) | n/a (data) | Action shape: `{ id, region?, section?, label, title?, ariaLabel?, className?, onClick }`. Only the regions listed under "Toolbar region routing" render anywhere. |
+| `detailActions` | read by `ui/detail.js` when rendering the unit detail header | n/a (data) | Action shape: `{ id, title, html, label?, onClick(unit) }`. Only the Star (favorites) button lives here today. |
+| `rosterFilters` | called per-unit during `UI.renderUnitRoster` filtering | `(unit) => boolean` | Returning `false` hides the unit. Used by legends-toggle, allies, sm-chapter-filter, points-filter, favorites (filtered view), collection (status filter), reserves and requisitions (the Units-pane view). |
+| `cardClassContributors` | called per-unit during card render | `(unit) => string \| null` | Adds extra class names to the `.unit-card`. Used by legends-toggle (`.unit-legends`), allies, collection (status badges), custom-names, role-icons, unit-card-themes (`faction-<slug>`). |
 | `armyEntryActions` | read by `ui/army-list.js` for every army-entry card it renders | n/a (data) | Action shape: `{ id, className?, title, ariaLabel(entry)?, svg, visible(entry, index, army)?, onClick(entry, index, army, ev) }`. Icon buttons on an army-list row, left of the remove ×. The dispatcher resolves the entry by `entryId`, **not** by array index, so an action may splice `army.entries` safely. Used by `split-entry`. |
-| `modeChange` | after `mode-shell.js` switches the visible top-level container | `(newMode, prevMode) => void` | Modes are `'build'` / `'collect'` / `'cards'` / `'play'` / `'waha'`. Used by `build-mode` and `collect-mode` to lazy-build their panels on first activation. |
-| `paletteCommands` | read by `command-palette.js` each time Cmd/Ctrl+K opens | n/a (data, or `() => command[]`) | Command shape: `{ id, label, hint?, run() }`. Push an object, or a function for state-dependent items. `id` dedupes (first wins). Commands join the Actions group. Used by `mode-shell` (Build/Collect), `waha-mode`, `play-mode`. |
+| `modeChange` | after `mode-shell.js` switches the visible top-level container (its local `fireHooks(mode)`; there is no `App.fireModeChange`). Also dispatches a `yaab:mode-change` DOM event with `detail.mode`. The array is created by `mode-shell.js`, not `hooks.js`, so modules push with `if (!Array.isArray(App.hooks.modeChange)) App.hooks.modeChange = []` first | `(mode) => void` — **one argument, the new mode; there is no previous-mode argument** | Modes are `'build'` / `'collect'` / `'cards'` / `'play'` / `'waha'`. Used by `build-mode`, `collect-mode`, `cards-mode`, `play-mode`, `waha-mode` (activate on entry), plus collection/reserves/requisitions/pwa-install. |
+| `paletteCommands` | read by `command-palette.js` each time Cmd/Ctrl+K opens | n/a (data, or `() => command[]`) | Command shape: `{ id, label, hint?, run() }`. Push an object, or a function for state-dependent items. `id` dedupes (first wins). Commands join the Actions group. Used by `mode-shell` (mode switches), `waha-mode`, `play-mode`. |
 
 ## Toolbar region routing
 
-`App.mountArmyToolbarActions` (`js/app/index.js`) routes each hook action to a DOM container by `region`:
+`App.mountArmyToolbarActions` (`js/app/index.js`) routes each `armyToolbarActions` entry by `region`. The old Tools ▾ / More ▾ dropdowns and the slide-in "Action Center" were removed; only three surfaces render now:
 
-| Region | DOM target | Default if not in allowlist |
+| Region | DOM target | Rule |
 |---|---|---|
-| `primary` | `#toolbar-extras` (left-panel toolbar inline row) | Funneled into `#tools-menu` (Tools ▾ dropdown), grouped by `category` |
-| `icon` | `#toolbar-icons` (top-bar icon shelf) | Funneled into `#more-menu` (More ▾) |
-| `tools-menu` | `#tools-menu` (always there) | n/a |
-| `more-menu` | `#more-menu` (always there) | n/a |
-| `export-menu` | `#export-extras` (Export ▾ dropdown) | n/a |
+| `icon` | `#toolbar-undo-redo` (bottom toolbar) | only ids in `BOTTOM_INLINE_ICON_IDS` (`yaab-btn-undo`, `yaab-btn-redo`) |
+| `icon` | `#topbar-icons` (top-bar shelf) | only ids in `TOPBAR_SHELF_IDS`: `yaab-btn-auth`, `yaab-btn-bug-report`, `yaab-btn-changelog`, `btn-play-mode`, `btn-waha-mode` |
+| `export-menu` | `#export-extras` (inside the bottom-toolbar Export ▾ menu) | every entry mounts |
+| `primary`, `tools-menu`, `more-menu`, and any other `icon` id | nowhere | the action is registered but renders no button |
 
-Two allowlists in `app/index.js` decide which `primary`/`icon` actions stay inline vs. fall into a dropdown:
+Actions that render nowhere are still reachable: the Settings drawer's `clickToolbarBtn` falls back to calling the registered hook's `onClick` directly, and the Cmd/Ctrl+K palette (`paletteCommands`) lists the modes and a few actions. `#tools-menu`, `#more-menu`, `#toolbar-extras` and `#toolbar-icons` still exist in `index.html` inside a hidden `.toolbar-compat-shelf`, empty, so a stray `getElementById` does not crash.
 
-- `PRIMARY_VISIBLE_IDS` — currently empty. All hook-registered `primary` actions go into Tools ▾ unless the action sets `priority: 'visible'`.
-- `ICON_VISIBLE_IDS` — `yaab-btn-undo`, `yaab-btn-redo`, `yaab-btn-cmdp`. Everything else with `region: 'icon'` falls into More ▾.
+## Mode pages
 
-Tools menu items are grouped by `category` (`analysis` / `game` / `data` / `export` / `other`) using `DEFAULT_CATEGORY_BY_ID` for actions that don't set one explicitly.
-
-A parallel slide-in **Action Center** (`js/ui/action-center.js`, `UI.actionCenter`) is registered with sections (`game-day`, `analyze`, `export`, `browse`, `collection`, `settings`) and triggered from `#topbar-action-center`. It is an alternative surface to the Tools/More dropdowns — both currently coexist.
+`js/app/mode-shell.js` owns the five top-level modes (`build`, `collect`, `cards`, `play`, `waha`), the `body[data-mode]` attribute, and persistence in `yaab_mode` (only `build`/`collect`/`waha` are restored on launch). Each non-Build mode is a `<section id="<mode>-mode">` built lazily on first activation by its `js/ui/*-mode.js` module (`build-mode`, `collect-mode`, `cards-mode`, `play-mode`, `waha-mode`); see `docs/UI.md` for the module rows. `App.prefersReducedMotion()` (OS media query OR the in-app `body.reduce-motion` toggle) lives in `mode-shell.js` for every JS animation to share.
 
 ## Lazy-loading strategy
 
-Implemented in `js/app/lazy-modules.js` (wired in `index.html` between `app/index.js` and the feature-modules block). When the placeholder fires, the module:
-
-1. Registers placeholder toolbar/detail actions BEFORE `mountArmyToolbarActions` runs at boot, so menus include the buttons.
-2. On first click, injects the real `<script>` (in dependency order, `async = false`), waits for `load`, then fires any newly-registered `bootstrap` hooks.
-3. Rewires the in-DOM placeholder button to the real action's `onClick`. Splices the placeholder out of the hook array.
-4. For modules without a button (e.g. `lore` triggered via `.detail-faction` clicks), uses capture-phase delegated listeners that pre-empt the real handler until the module loads.
-
-Currently every feature module is also eager-loaded from `index.html`. Lazy-modules.js is an opt-in path waiting to replace the eager block. (The service worker needs no per-module registration: it is stale-while-revalidate, so any URL the page requests is cached on first use.)
+There is none. `js/app/lazy-modules.js` (a placeholder-loader idea) was never wired in and no longer exists; every feature module is a `<script defer>` in `index.html`, between `<!-- FEATURE-MODULES-START -->` and `<!-- FEATURE-MODULES-END -->`. The service worker needs no per-module registration: it is stale-while-revalidate, so any URL the page requests is cached on first use. The one genuinely deferred thing is the mode pages' DOM, built on first activation (see "Mode pages").
 
 ## Script load order rules
 
@@ -131,7 +120,8 @@ Currently every feature module is also eager-loaded from `index.html`. Lazy-modu
 - `storage.js` → `army.js`.
 - `ui/index.js` first to define `UI.init`. Feature `ui/*` modules attach methods after.
 - `app/state.js` first (defines `App.state`, colors, `VIRTUAL_PARENTS`). `app/hooks.js` next (defines the hook arrays so feature modules can push). `app/index.js` LAST: it is the `DOMContentLoaded` bootstrap.
-- `topbar.js` and `sw-register.js` come AFTER `app/index.js` because they don't need to be visible during boot rendering.
+- `js/theme-boot.js` is the only non-`defer` script and sits last in `<head>`; `js/app/id-migration.js` is the first deferred script (it must rewrite stale ids before anything reads them).
+- `topbar.js`, `mode-shell.js`, `settings-drawer.js`, `mobile-history.js` and `sw-register.js` come AFTER `app/index.js` because they don't need to be visible during boot rendering (and `mode-shell` creates `App.hooks.modeChange`, so modules that load earlier create the array defensively).
 - The block between `<!-- FEATURE-MODULES-START -->` and `<!-- FEATURE-MODULES-END -->` in `index.html` is intentionally re-orderable; modules within it only communicate via `App.hooks` and `window.UI`/`window.App` namespaces.
 
 ## Things that look weird but are intentional
@@ -142,7 +132,6 @@ Currently every feature module is also eager-loaded from `index.html`. Lazy-modu
 - **Inline-rule vs `infoLink` rule detection in `parser/catalogue.js` detachment block** — Space Marines embed detachment rules inline under `<rules>`, Necrons use `<infoLinks type="rule" targetId>` into `sharedRules`. Both paths exist; do not collapse them.
 - **`chapterFactions` hide-set in the faction dropdown** — chapter catalogues are still loaded and indexed so their units feed the roster under the parent, but they are hidden from the top-level filter `<select>` via `UI.updateFactionFilter`'s `hide` option.
 - **Capped-render, not windowed virtualization** — the unit grid uses `auto-fill, minmax(...)` so per-row card count depends on viewport width. Fixed-row-height windowing would break responsive layout. Capped-render trades a small DOM overhead for simplicity.
-- **Both Action Center AND Tools/More dropdowns mount the same hook actions** — they coexist intentionally. Each routing strategy reads `App.hooks.armyToolbarActions` independently; future cleanup may collapse to one.
-- **`activity-log` writes per-day buckets under one localStorage key**, prunes to 30 days, and degrades to dropping oldest day on quota errors. Don't change the bucket key shape (`YYYY-MM-DD`) without a migration.
+- **Hook actions that render nowhere** — most `armyToolbarActions` entries (`primary`, `tools-menu`, `more-menu`, un-shelved `icon` ids) have no DOM surface since the Tools/More dropdowns and the Action Center went away. That is why the Settings drawer and the palette call hook `onClick`s directly. Do not "fix" it by re-adding a dropdown without a design decision.
 - **`history.js` snapshots are debounced 500ms** and capped at 50; the redo stack clears on any non-undo mutation. That's a hard requirement of the `armyChange` hook contract.
 - **Parser DB version (`db.js`) and parsed-shape changes are coupled** — bumping `DB_VERSION` drops both `factions` AND `gst` stores in `onupgradeneeded`. No partial migrations.

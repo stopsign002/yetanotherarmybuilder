@@ -8,6 +8,18 @@
 // READ-ONLY. Touches localStorage in a throwaway profile only. No account,
 // nothing server-side, no writes to any DB.
 //
+// Pruned 2026-10-30 to the LIVE surface: the 18 removed 'primary' feature
+// modals, the Crusade / Kill Team collect sub-tabs and the five old Play
+// sub-tabs were deleted (they can only ever MISS). Expected MISSes that remain,
+// so a failing run still means something:
+//   * zz-negative-control          — must MISS; that is the control working.
+//   * phone only: 00/01/02/05      — the Units panel is not the active mobile
+//                                    panel at load, so its selectors are hidden.
+//   * 27-export-dropdown (desktop) — MISSED on 2026-10-30 and NOT explained by
+//                                    a removed feature; treat a MISS here as
+//                                    something to look at, not to delete.
+// (Phone skips the two topbar-menu surfaces: #topbar is display:none at 390px.)
+//
 // Opens every surface in one theme/width, screenshots it, asserts it actually
 // MOUNTED (a modal that failed to open still screenshots fine as the page
 // behind it), and runs the styling probes. Emits report.json.
@@ -253,11 +265,8 @@ const dismiss = async () => {
   await page.keyboard.press('Escape').catch(() => {});
   await page.waitForTimeout(250);
   await page.evaluate(() => {
-    const sels = ['.modal-close', '.mm-close', '[data-mm-act="close"]', '.lore-close', '.strat-close',
-      '.cmdp-help-close', '#settings-drawer-close', '[data-yaab-dp-close]', '[data-yaab-an-close]',
-      '[data-yaab-dc-close]', '[data-yaab-syn-close]', '[data-yaab-opp-close]', '[data-yaab-mu-close]',
-      '[data-crus-close]', '[data-coll-close]', '#kt-close', '#diff-close', '#al-close', '#community-close',
-      '#starter-close', '#points-override-close', '#qr-share-close', '#tp-close', '#changelog-close',
+    const sels = ['.modal-close', '.lore-close', '.strat-close',
+      '.cmdp-help-close', '#settings-drawer-close', '#qr-share-close', '#changelog-close',
       '#bug-report-close', '.admin-close', '#modal-load-close', '#modal-import-close', '#modal-export-close'];
     for (const s of sels) {
       const b = document.querySelector(s);
@@ -417,14 +426,18 @@ await capture('24-keyboard-help', '.cmdp-help-modal', '? key');
 await dismiss();
 
 // ── topbar menus ──────────────────────────────────────────────────────────
-await page.evaluate(() => { const b = document.getElementById('yaab-btn-auth'); if (b) b.click(); });
-await page.waitForTimeout(500);
-await capture('25-account-menu', '#yaab-auth-menu', 'click #yaab-btn-auth');
-await page.keyboard.press('Escape'); await page.mouse.click(700, 400).catch(()=>{}); await page.waitForTimeout(400);
-await page.evaluate(() => { const b = document.getElementById('topbar-export-btn'); if (b) b.click(); });
-await page.waitForTimeout(500);
-await capture('26-topbar-export-menu', '#topbar-export-menu', 'click #topbar-export-btn');
-await page.mouse.click(700, 400).catch(()=>{}); await page.waitForTimeout(400);
+// #topbar is display:none at phone width (the tab bar / More drawer replace
+// it), so these two surfaces only exist on desktop.
+if (WIDTH !== 'phone') {
+  await page.evaluate(() => { const b = document.getElementById('yaab-btn-auth'); if (b) b.click(); });
+  await page.waitForTimeout(500);
+  await capture('25-account-menu', '#yaab-auth-menu', 'click #yaab-btn-auth');
+  await page.keyboard.press('Escape'); await page.mouse.click(700, 400).catch(()=>{}); await page.waitForTimeout(400);
+  await page.evaluate(() => { const b = document.getElementById('topbar-export-btn'); if (b) b.click(); });
+  await page.waitForTimeout(500);
+  await capture('26-topbar-export-menu', '#topbar-export-menu', 'click #topbar-export-btn');
+  await page.mouse.click(700, 400).catch(()=>{}); await page.waitForTimeout(400);
+}
 await page.evaluate(() => { const t = document.querySelector('#export-dropdown .dropdown-trigger'); if (t) t.click(); });
 await page.waitForTimeout(500);
 await capture('27-export-dropdown', '#export-dropdown-menu', 'click .dropdown-trigger');
@@ -440,28 +453,12 @@ await page.waitForTimeout(900);
 await capture('29-bug-report', '.bug-report-modal', 'click #yaab-btn-bug-report');
 await dismiss();
 
-// ── the 16 dropped 'primary' actions — measure reachability ───────────────
-// Each has NO toolbar button (UI.actionCenter is undefined). Fire the hook
-// directly and record that the DOM route was missing.
+// ── hook-registered actions with no visible button ────────────────────────
+// QR share's button is in the DOM but hidden (dom-hidden); firing it is the
+// only way to reach the modal. The 18 other 'primary' actions this list used
+// to cover were deleted from the app (js/ not just unwired), so they are gone
+// from here too.
 const HOOKED = [
-  ['30-match-mode',    'yaab-btn-match',           '.mm-shell'],
-  ['31-analytics',     'yaab-btn-analytics',       '.yaab-an-modal'],
-  ['32-damage-calc',   'yaab-btn-dmgcalc',         '.yaab-dc-modal'],
-  ['33-stratagems',    'yaab-btn-stratagems',      '.strat-modal'],
-  ['34-crusade',       'yaab-btn-crusade',         '.crusade-modal'],
-  ['35-kill-team',     'yaab-btn-kill-team',       '#modal-kill-team .modal, #modal-kill-team'],
-  ['36-deployment',    'yaab-btn-deploy',          '.yaab-dp-modal'],
-  ['37-synergy',       'yaab-btn-synergy',         '.yaab-syn-modal'],
-  ['38-opponent',      'yaab-btn-opponent',        '.yaab-opp-modal'],
-  ['39-matchup',       'yaab-btn-matchup',         '.yaab-mu-modal'],
-  ['40-army-diff',     'yaab-btn-history',         '#modal-army-diff .modal, #modal-army-diff'],
-  ['41-activity-log',  'yaab-btn-activity-log',    '#modal-activity-log'],
-  ['42-community',     'yaab-btn-community-feed',  '#modal-community-feed'],
-  ['43-starter-lists', 'yaab-btn-starter-lists',   '#modal-starter-lists'],
-  ['44-collection',    'yaab-btn-collection',      '.collection-modal'],
-  ['45-points-override','yaab-btn-points-override','#modal-points-override'],
-  ['46-tournament',    'yaab-btn-tournament',      '#modal-tp .tp-modal, #modal-tp'],
-  ['47-list-coach',    'yaab-btn-list-coach',      '.list-coach-backdrop'],
   ['48-qr-share',      'yaab-btn-qr-share',        '#modal-qr-share'],
 ];
 for (const [name, id, sel] of HOOKED) {
@@ -497,22 +494,16 @@ for (const [name, mode, sel] of [
   await capture(name, sel, how);
 }
 
-// collect sub-tabs
+// collect sub-tab (Painting is the only one left; Crusade and Kill Team were removed)
 await page.evaluate(() => window.App && App.setMode && App.setMode('collect'));
 await page.waitForTimeout(2000);
-for (const tab of ['painting', 'crusade', 'kill-team']) {
+for (const tab of ['painting']) {
   await page.evaluate(t => { const b = document.querySelector(`.collect-subtab[data-tab="${t}"]`); if (b) b.click(); }, tab);
   await page.waitForTimeout(1600);
   await capture(`52-collect-${tab}`, '#collect-body', `.collect-subtab[data-tab=${tab}]`);
 }
-// play sub-tabs
-await page.evaluate(() => window.App && App.setMode && App.setMode('play'));
-await page.waitForTimeout(2000);
-for (const tab of ['match', 'stratagems', 'calc', 'opponent', 'deploy']) {
-  await page.evaluate(t => { const b = document.querySelector(`.play-tab[data-play-tab="${t}"]`); if (b) b.click(); }, tab);
-  await page.waitForTimeout(1500);
-  await capture(`53-play-${tab}`, `#play-panel-${tab}`, `.play-tab[data-play-tab=${tab}]`);
-}
+// (Play's old Match / Stratagems / Calc / Opponent / Deploy sub-tabs were
+// removed with the cockpit rewrite; there is no sub-tab sweep for Play yet.)
 await page.evaluate(() => window.App && App.setMode && App.setMode('build'));
 await page.waitForTimeout(1500);
 

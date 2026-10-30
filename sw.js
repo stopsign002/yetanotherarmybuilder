@@ -44,24 +44,24 @@
 // don't. The round trip is already off the critical path, and the failure mode
 // you would be reintroducing costs hours of confusion to save milliseconds.
 
-// VERSION is both the cache name and the ?v= token the page stamps onto all 190
+// VERSION is both the cache name and the ?v= token the page stamps onto all ~157
 // of its js/css URLs. scripts/stamp-assets.mjs writes both from
-// App.CHANGELOG.version (plus the nightly -d<md5> data suffix), so they cannot
+// App.CHANGELOG.version (plus the -d<md5> data suffix a data refresh adds), so they cannot
 // drift — do not hand-edit it.
 //
 // The coupling is load-bearing, not tidiness. The Cache API keys on the FULL
-// URL including the query string, so a release rotates all 190 cache keys at
+// URL including the query string, so a release rotates all ~157 cache keys at
 // once. If VERSION did not move with them, activate() would never fire and the
 // cache would accumulate a fresh ~14 MB generation on every single release.
 // Nothing in SHELL below is a js/css file, and stamp-assets.mjs only stamps
 // those — so no SHELL entry needs a ?v= suffix appended here to match what the
 // page will request.
-const VERSION = 'yaab-shell-2026.10.26-3';
+const VERSION = 'yaab-shell-2026.10.30-1';
 
 // Precached on install: ONLY what a cold OFFLINE navigation needs before the
 // page can start asking for things itself.
 //
-// Deliberately NOT the 192 files index.html references (~14 MB, of which
+// Deliberately NOT the ~157 ?v=-stamped files index.html references (~14 MB, of which
 // js/vendor/dc-bundle.js alone is 9.5 MB). Every one of those is requested by
 // index.html on EVERY load, so rule 3 caches the whole set on load #1 for free.
 // Precaching them would mean downloading 14 MB TWICE on the install visit —
@@ -176,7 +176,7 @@ async function staleWhileRevalidate(req) {
   const net = fetch(req).then((res) => {
     if (!res || !res.ok) return res;
     // Deviation from the fuel/meds pattern, which cache.put()s unconditionally.
-    // That is fine for ~20 files; yaab revalidates 190 URLs per load and one of
+    // That is fine for ~20 files; yaab revalidates ~157 URLs per load and one of
     // them is 9.5 MB, so an unconditional put rewrites ~14 MB to disk on EVERY
     // page load — real battery and flash wear on a phone. Caddy's file_server
     // ETags everything under app/, so an unchanged file costs a string compare
