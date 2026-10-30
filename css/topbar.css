@@ -2,7 +2,6 @@
 
 :root {
   --topbar-h:        56px;
-  --topbar-h-mobile: 48px;
   --topbar-bg:       rgba(20, 20, 24, 0.82);
   --topbar-border:   rgba(var(--accent-rgb), 0.22);
   --topbar-pad-x:    18px;
@@ -260,118 +259,6 @@ body { padding-top: var(--topbar-h); }
 }
 .build-hero--in-topbar .build-hero-bar { box-shadow: none; }
 .build-hero--in-topbar .build-hero-bar-pct { font-size: 11px; }
-.topbar-army-name,
-.topbar-army-select {
-  height: 32px;
-  padding: 0 10px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font: inherit;
-  font-size: 13px;
-  min-width: 0;
-}
-.topbar-army-name {
-  flex: 0 1 200px;
-}
-.topbar-army-select {
-  flex: 0 1 180px;
-  appearance: none;
-  -webkit-appearance: none;
-  padding-right: 22px;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
-                    linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: calc(100% - 12px) 14px, calc(100% - 8px) 14px;
-  background-size: 4px 4px, 4px 4px;
-  background-repeat: no-repeat;
-  cursor: pointer;
-}
-.topbar-army-name:focus,
-.topbar-army-select:focus {
-  outline: none;
-  border-color: rgba(var(--accent-rgb), 0.6);
-  background-color: rgba(255,255,255,0.06);
-}
-
-/* ── Inline points widget ────────────────────────────────── */
-.topbar-points {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 1 auto;
-  min-width: 0;
-  font-size: 13px;
-}
-.topbar-points-text {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-}
-.topbar-points .points-current { font-weight: 600; }
-.topbar-points .points-current.over-limit { color: #ff8b8b; }
-.topbar-points .points-separator { color: var(--text-muted); margin: 0 2px; }
-.topbar-points .points-label { color: var(--text-muted); margin-left: 4px; }
-.topbar-points-limit-input {
-  width: 4ch;
-  height: 22px;
-  padding: 0 2px;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 13px;
-  text-align: center;
-  border-radius: 3px;
-  -moz-appearance: textfield;
-}
-.topbar-points-limit-input::-webkit-outer-spin-button,
-.topbar-points-limit-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.topbar-points-limit-input:hover,
-.topbar-points-limit-input:focus {
-  border-color: rgba(var(--accent-rgb), 0.5);
-  outline: none;
-  background: rgba(255,255,255,0.04);
-}
-.topbar-points-bar-wrap {
-  position: relative;
-  flex: 0 0 110px;
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(255,255,255,0.08);
-  overflow: hidden;
-}
-.topbar-points-bar-wrap .points-bar {
-  position: absolute;
-  inset: 0;
-  width: 0%;
-  background: var(--accent);
-  transition: width 0.2s ease;
-}
-.topbar-points-bar-wrap .points-bar.over-limit { background: #ff5b5b; }
-.topbar-points-bar-wrap .points-bar.near-limit { background: #ffa84a; }
-
-/* The topbar reuses .points-summary on its compact widget so existing
-   JS that toggles .points-over still works. Override the legacy
-   panel-style chrome from style.css that would otherwise frame the
-   topbar widget like a card. Also shrink the now-massive .points-current
-   font and the .points-limit label-side font. */
-.topbar-points.points-summary {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  margin: 0;
-}
-.topbar-points .points-current { font-size: 14px; line-height: 1; }
-.topbar-points .points-separator { font-size: 14px; }
-.topbar-points .points-limit { font-size: 14px; }
-
 /* ── Right group: Settings + Help ─────────────────────────── */
 .topbar-actions {
   display: inline-flex;
@@ -425,6 +312,20 @@ body { padding-top: var(--topbar-h); }
 /* Help button is icon-only at narrower widths to save space. */
 .topbar-action-label-help { display: inline; }
 
+/* 821-900px: the topbar is still shown (it hides at <= 820) but its content
+   is wider than the bar - measured live, #topbar-help's right edge sat at
+   867px at every width from 821 to 880, so Help was cut off below 867.
+   Settings and Help drop to icon-only (both keep aria-label/title) and the
+   bar tightens its gaps. */
+@media (min-width: 821px) and (max-width: 900px) {
+  .topbar-inner { gap: 10px; padding: 0 12px; }
+  .topbar-actions { gap: 4px; }
+  #topbar-settings .topbar-action-label,
+  #topbar-help .topbar-action-label { display: none; }
+  #topbar-settings.topbar-action-btn,
+  #topbar-help.topbar-action-btn { padding: 0 9px; min-width: 36px; justify-content: center; }
+}
+
 /* ── Toolbar (left panel footer) — preserved from previous layout */
 .army-toolbar { gap: 4px; }
 .toolbar-status-row {
@@ -475,13 +376,6 @@ body { padding-top: var(--topbar-h); }
 }
 .toolbar-icons-inline:empty { display: none; }
 .toolbar-compat-shelf { display: none !important; }
-
-/* ── Tablet ────────────────────────────────────────────────── */
-@media (max-width: 960px) {
-  .topbar-army-name   { flex-basis: 140px; }
-  .topbar-army-select { flex-basis: 140px; }
-  .topbar-points-bar-wrap { flex-basis: 80px; }
-}
 
 /* ── Mobile (≤820px) — topbar is hidden entirely.
    Brand, page title, account, settings, help, and export are surfaced

@@ -322,7 +322,9 @@ body[data-mode="build"] #collection-backlog-note {
   font-style: italic;
 }
 
-/* mobile tightening */
+/* mobile tightening. 640 is deliberately not the 820 phone-layout cutoff:
+   the dashboard grid only needs to drop to two columns when it is genuinely
+   narrow, which is a different question from "show the tab bar". */
 @media (max-width: 640px) {
   .collection-dash-faction {
     grid-template-columns: 1fr 1fr;

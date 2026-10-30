@@ -289,9 +289,15 @@ body.admin-modal-open { overflow: hidden; }
 }
 .admin-pending-banner-btn:hover { background: #fce5b8; }
 .admin-pending-banner-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
   background: transparent;
   color: inherit;
-  border: none;
+  border: 1px solid currentColor;
+  border-radius: 4px;
   font-size: 18px;
   line-height: 1;
   cursor: pointer;

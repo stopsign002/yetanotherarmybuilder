@@ -352,7 +352,9 @@ body[data-mode="cards"]   .reserves-pts-badge {
   vertical-align: 1px;
 }
 
-/* ── mobile tightening ─────────────────────────────────────────────── */
+/* ── mobile tightening ───────────────────────────────────────────────
+   640, not the 820 phone-layout cutoff, on purpose: these are control-size
+   squeezes for genuinely narrow screens, not a layout switch. */
 @media (max-width: 640px) {
   .reserves-view-btn { padding: 6px 10px; font-size: 12px; }
   .reserves-view-label { display: none; } /* icon + count only on phones */

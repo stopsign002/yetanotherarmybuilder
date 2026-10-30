@@ -7,8 +7,10 @@
  *   1c "Stratagem reading view" → rule/detachment details: stratagem cards with
  *      a name + phase + CP header row and a fixed 58px WHEN/TARGET/EFFECT grid.
  *
- * Loaded LAST (after style.css / typography.css / build-mode.css / detachments.css
- * / expand-pane.css) so these rules win. Presentation only — no markup class
+ * Loaded near the end of index.html (after style.css / typography.css /
+ * build-mode.css / detachments.css / expand-pane.css; only wargear-picker,
+ * custom-names, split-entry, offline-pip and glossary come later) so these
+ * rules win. Presentation only — no markup class
  * names, hooks, or event wiring change semantics. Colours map to the existing
  * CSS-variable system (--accent/--text/…) wherever a variable exists so faction
  * accent theming keeps working; the fixed weapon/CP/phase hues (blue ranged,
@@ -316,23 +318,6 @@
 .unit-detail-content .detail-section .detail-detachment-card:last-child { border-bottom: none; }
 .unit-detail-content .detail-section .strat-card {
   border-left: 2px solid rgba(245, 200, 66, 0.5);
-  padding-left: 8px;
-}
-
-/* Wargear picker: ONE box — the section card holds everything; the inner
-   default/option boxes flatten to groups separated by rules. Over-limit red
-   becomes an inset bar (the group border is gone). */
-#detail-wargear-picker .wgp-option {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  border-bottom: 1px solid rgba(58, 58, 68, 0.5);
-  padding: 8px 0;
-  margin-bottom: 0;
-}
-#detail-wargear-picker .wgp-option:last-child { border-bottom: none; padding-bottom: 2px; }
-#detail-wargear-picker .wgp-option.wgp-over {
-  box-shadow: inset 3px 0 0 rgba(220, 74, 74, 0.7);
   padding-left: 8px;
 }
 

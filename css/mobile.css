@@ -6,7 +6,6 @@
 /* ── Tokens (mobile-only) ─────────────────────────────────────── */
 @media (max-width: 820px) {
   :root {
-    --m-topbar-h: 48px;
     --m-tabbar-h: 56px;
     --m-pts-pill-h: 44px;
     /* Safe-area insets: 0 on devices that don't expose them. */
@@ -100,7 +99,7 @@
      underneath the tab bar where it could be neither read nor tapped.
 
      ID selectors are deliberate: `.mode-page { height: 100% }` lives in
-     mode-shell.css (#37) and this file is #4, so a class-level rule here
+     mode-shell.css, which loads after this file, so a class-level rule here
      would lose. `min-height: 0` is restated for self-documentation. */
   #collect-mode,
   #cards-mode,
@@ -521,8 +520,8 @@
      grows.
 
      Specificity: `body.build-mode-enhanced .army-entry-qty input`
-     (build-mode.css #41) sets width:38px and
-     `.army-entry-attached .army-entry-qty input` (card-chassis.css #45)
+     (build-mode.css) sets width:38px and
+     `.army-entry-attached .army-entry-qty input` (card-chassis.css)
      sets width:30px — both load after this file. Two things make this
      win: min-width/min-height clamp width/height regardless of source
      order, AND the 3-class selector out-specifies both anyway. */
@@ -603,8 +602,8 @@
      authoritative, and the empty-state <li> is excluded so a
      non-interactive row doesn't advertise a false affordance.
 
-     Specificity: `body.build-mode-enhanced .army-entry` (build-mode.css
-     #41, after this file) sets `background` at (0,2,1). The bare
+     Specificity: `body.build-mode-enhanced .army-entry` (build-mode.css,
+     which loads after this file) sets `background` at (0,2,1). The bare
      `.army-entry:not(.is-dragging):active` reaches (0,3,0) — enough on
      its own — and the `body.build-mode-enhanced …` variants reach (0,4,1)
      so the enhanced DOM (the live default) is covered with margin. */
@@ -631,7 +630,7 @@
     transform: scale(0.94);
   }
 
-  /* Army rules list rows. Only style.css (#1) styles these, so (0,2,0)
+  /* Army rules list rows. Only style.css styles these, so (0,2,0)
      here beats its `.army-rule-item:hover` on source order — which also
      means a stale sticky :hover from a previous tap can't mask the
      press state. */

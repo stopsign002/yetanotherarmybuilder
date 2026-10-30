@@ -29,11 +29,6 @@
   --font-mono:    'Consolas', 'Monaco', 'Courier New', monospace;
   --font-display: 'Cinzel', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
   --font-body:    var(--font);
-  --scale-h1:     24px;
-  --scale-h2:     18px;
-  --scale-h3:     15px;
-  --scale-body:   15px;
-  --scale-small:  12px;
 
   /* Tokens below were REFERENCED by ~50 rules across css/ but never defined
      here — every call site silently took its own hardcoded fallback instead
@@ -1016,18 +1011,25 @@ ul { list-style: none; }
 }
 
 .modal-close {
-  background: none;
-  border: none;
+  /* A real box: >= 32px hit area and a visible border, so the x reads as a
+     control rather than a stray glyph (mobile.css grows it to 44px). */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  background: transparent;
+  border: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 22px;
   cursor: pointer;
   line-height: 1;
   padding: 0 4px;
-  border-radius: 3px;
-  transition: color 0.15s;
+  border-radius: var(--radius);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
-.modal-close:hover { color: var(--text); }
+.modal-close:hover { color: var(--text); border-color: var(--border-light); background: rgba(255, 255, 255, 0.05); }
 
 .modal-body {
   padding: 16px 20px;
@@ -1596,23 +1598,58 @@ ul { list-style: none; }
   :root { --col-left: 290px; --col-right: 360px; }
 }
 
-/* Legacy stacked-panel responsive layout for the narrow tablet band
-   that's too small for the 3-column grid but too wide for the
-   tab-bar mobile layout in mobile.css. Bounded to (821px, 860px) so
-   the `.panel { height: auto }` and `.panel-body { max-height: 500px }`
-   here don't leak into ≤820px and collapse the mobile panel — which
-   left the army-toolbar floating mid-screen instead of pinned above
-   the mobile tab bar. */
+/* Stacked-panel layout for the narrow tablet band (822-860px) that is too
+   small for the 3-column grid but too wide for the tab-bar mobile layout in
+   mobile.css. Army, Units and Details stack top to bottom and the page
+   scrolls. Bounded to (821px, 860px) so the `height: auto` /
+   `max-height: 500px` here don't leak into <=820px and collapse the mobile
+   panel (which left the army-toolbar floating mid-screen instead of pinned
+   above the tab bar).
+
+   Why this is a flex column with !important and ids, not the old
+   `grid-template-columns: 1fr !important`: the panels carry
+   `grid-row: 2` (build-mode.css) so in a one-column grid they were forced
+   into row 2 and auto-placed across IMPLICIT columns - the Units and Details
+   columns took their content width (501 + 338 px) and the 1fr column that
+   held the Army panel was left with ~0px. Measured live at 840px:
+   `0px 0px 501px 0px 338px`, Army panel width 0, nothing else reached it.
+   A flex column has no grid tracks to land in, and the !important + id
+   selectors also beat expand-pane.css's `!important` column templates and
+   its opacity:0 / pointer-events:none collapsed state, so a pane that was
+   expanded at a wider width cannot hide the others here. */
 @media (min-width: 821px) and (max-width: 860px) {
   html, body { overflow: auto; }
-  .app-main {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto 4px auto 4px auto;
-    height: auto;
-    overflow: visible;
+  body #build-mode,
+  body.build-mode-enhanced #build-mode {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
   }
-  .resize-handle { height: 4px; width: 100%; cursor: row-resize; }
-  .panel { min-width: 0; height: auto; min-height: 300px; border-right: none; border-bottom: 1px solid var(--border); }
+  body #app-main.app-main {
+    display: flex !important;
+    flex-direction: column;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  /* Drag-resizing and pane-expanding make no sense in a single column. */
+  body #app-main.app-main > .resize-handle { display: none !important; }
+  body #app-main.app-main .panel-expand-btn { display: none !important; }
+  body #app-main.app-main .panel-header h2 { pointer-events: none; }
+  body #app-main.app-main > .panel {
+    flex: 0 0 auto !important;
+    width: auto;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 300px !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    border-right: none;
+    border-left: none;
+    border-bottom: 1px solid var(--border);
+  }
   .panel-body { max-height: 500px; overflow-y: auto; }
 }
 

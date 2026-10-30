@@ -9,7 +9,6 @@
   --yaab-card-pad-tight:  6px 8px;
   --yaab-card-bg:         var(--card-bg, #2c2c34);
   --yaab-card-bg-hover:   var(--card-hover, #34343c);
-  --yaab-card-border:     var(--border-light, #4a4a54);
   --yaab-card-border-soft: var(--border, #3a3a44);
   --yaab-card-accent:     var(--accent, #ffffff);
   --yaab-card-accent-rgb: var(--accent-rgb, 255, 255, 255);

@@ -37,17 +37,10 @@
 }
 .mode-placeholder p { font-size: 14px; }
 
-/* ── Mode enter animation (fade + slight slide) ───────────── */
-@keyframes mode-enter-anim {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* ── Mode enter animation (fade + slight slide) ─────────────
+   The @keyframes mode-enter-anim lives in animations-polish.css (it
+   replaced the original here, which was dead because the later
+   definition of the same name wins). */
 .mode-page.mode-enter {
   animation: mode-enter-anim 200ms ease-out;
 }

@@ -142,10 +142,8 @@
   100% { transform: rotate(360deg); }
 }
 
-@keyframes atmosphere-crest-pulse {
-  0%, 100% { opacity: 0.85; }
-  50%      { opacity: 1; }
-}
+/* @keyframes atmosphere-crest-pulse is defined in animations-polish.css
+   (the later copy of the same name always won, so this one was dead). */
 
 /* ──────────────────────────────────────────────────────────────────────
    Reduced-motion: kill animations across the board.

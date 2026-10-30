@@ -298,6 +298,23 @@
   gap: 6px;
   margin-left: auto;
 }
+/* The three bulk buttons are .btn (nowrap, fixed 28px height, and in the
+   brutalist themes uppercase + 900 weight + wide tracking), so on a phone
+   their labels were wider than the box and clipped on both sides ("MARK
+   VISIBLE O"). Let them wrap and grow instead of clipping. */
+@media (max-width: 820px) {
+  .collect-bulk-actions .btn.btn-sm {
+    white-space: normal;
+    height: auto;
+    line-height: 1.2;
+    text-align: center;
+  }
+}
+/* Phone width: one full-width button per row beats three cramped columns. */
+@media (max-width: 480px) {
+  .collect-bulk-actions { flex-direction: column; align-items: stretch; }
+  .collect-bulk-actions .btn.btn-sm { flex: 0 0 auto; width: 100%; }
+}
 
 /* ── unit grid (cards mirror .unit-card chassis) ───────────────────── */
 .collect-unit-grid {
@@ -358,165 +375,8 @@
   padding: 4px 6px;
 }
 
-/* ── CRUSADE MAIN ──────────────────────────────────────────────────── */
-.collect-detail-empty {
-  padding: 40px 30px;
-  text-align: center;
-  background: var(--panel-bg, #22222a);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
-}
-.collect-detail-empty p { margin: 10px 0; }
-.collect-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 14px;
-  background: var(--panel-bg, #22222a);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
-}
-.collect-stat-num {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--accent, #fff);
-  font-variant-numeric: tabular-nums;
-}
-.collect-stat-lbl {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted, #a8a8a8);
-}
-.collect-section-title {
-  font-family: var(--font-display, 'Cinzel', Georgia, serif);
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted, #a8a8a8);
-  margin: 0 0 8px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--border, #3a3a44);
-}
-.collect-battle-date  { font-variant-numeric: tabular-nums; color: var(--text-muted, #a8a8a8); }
-.collect-battle-vs    { font-weight: 500; }
-.collect-battle-score { text-align: right; font-variant-numeric: tabular-nums; }
-.collect-battle-verdict {
-  text-align: center;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-radius: 3px;
-  padding: 2px 6px;
-}
-.collect-battle-verdict-win  { color: #a8e6b7; background: rgba(168, 230, 183, 0.12); }
-.collect-battle-verdict-loss { color: #e6a8a8; background: rgba(230, 168, 168, 0.12); }
-.collect-battle-verdict-draw { color: #e6dba8; background: rgba(230, 219, 168, 0.12); }
-
-.collect-deferred-cta {
-  margin-top: 14px;
-  padding: 14px;
-  background: var(--panel-bg, #22222a);
-  border: 1px dashed var(--border-light, #4a4a54);
-  border-radius: var(--radius, 6px);
-  text-align: center;
-}
-.collect-deferred-cta p { margin: 0 0 8px; }
-
-/* ── KILL TEAM TAB ────────────────────────────────────────────────── */
-.collect-kt-status {
-  margin-bottom: 18px;
-  padding: 14px 18px;
-  background: var(--panel-bg, #22222a);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
-}
-.collect-kt-status-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-.collect-kt-status-title {
-  font-family: var(--font-display, 'Cinzel', Georgia, serif);
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text, #e0e0e0);
-  margin-bottom: 2px;
-}
-
-.collect-kt-section {
-  margin-bottom: 22px;
-}
-
-.collect-kt-templates {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 10px;
-}
-.collect-kt-template {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
-  background: var(--card-bg, #2c2c34);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
-  transition: border-color 0.12s;
-}
-.collect-kt-template:hover { border-color: var(--border-light, #4a4a54); }
-.collect-kt-template-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-.collect-kt-template-title {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text, #e0e0e0);
-}
-.collect-kt-template-pill {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--accent-on, #111);
-  background: var(--accent, #fff);
-  border-radius: 12px;
-  padding: 2px 8px;
-}
-.collect-kt-template-faction { font-size: 11px; }
-.collect-kt-template-desc { font-size: 12px; color: var(--text-muted, #a8a8a8); }
-.collect-kt-template-actions { margin-top: 4px; }
-
-.collect-kt-mission-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 12px;
-}
-.collect-kt-mission-display {
-  flex: 1 1 280px;
-  min-height: 60px;
-  padding: 10px 14px;
-  background: var(--panel-bg, #22222a);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
-  display: flex;
-  align-items: center;
-}
-.collect-kt-mission-card { width: 100%; }
-.collect-kt-mission-name {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--accent, #fff);
-  margin-bottom: 2px;
-}
-
-/* ── Mobile collapse ──────────────────────────────────────────────── */
-@media (max-width: 720px) {
+/* ── Mobile collapse (820 = the app-wide phone layout cutoff) ─────── */
+@media (max-width: 820px) {
   #collect-mode .collect-header {
     padding: 12px 14px;
   }

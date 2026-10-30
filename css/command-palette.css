@@ -198,8 +198,13 @@
   color: var(--text);
 }
 .cmdp-help-close {
-  background: none;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  background: transparent;
+  border: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 22px;
   cursor: pointer;
@@ -207,7 +212,7 @@
   padding: 0 4px;
   border-radius: 4px;
 }
-.cmdp-help-close:hover { color: var(--accent); }
+.cmdp-help-close:hover { color: var(--accent); border-color: var(--border-light); }
 
 .cmdp-help-grid {
   padding: 14px 18px;

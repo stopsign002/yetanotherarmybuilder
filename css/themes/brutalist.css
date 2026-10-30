@@ -2337,3 +2337,31 @@ body.build-mode-enhanced .army-entry-remove:hover { background: var(--danger); c
   border-radius: 0;
 }
 .disposition-fixed-name { color: var(--text); font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* x close buttons: stamped boxes, like every other control in this theme
+   (default-theme rule: modal/drawer/palette/spill/admin banner each own a
+   >= 32px box with a hairline border; here the border is the ink edge). */
+.modal-close,
+.settings-drawer-close,
+.cmdp-help-close {
+  background: var(--nb-paper);
+  color: var(--text);
+  border: var(--nb-bw) solid var(--nb-ink);
+  border-radius: 0;
+  font-weight: 900;
+  transition: none;
+}
+.modal-close:hover,
+.settings-drawer-close:hover,
+.cmdp-help-close:hover {
+  background: var(--nb-sunken);
+  color: var(--text);
+  border-color: var(--nb-ink);
+}
+/* These two sit on panels that keep their own ground in this theme, so the
+   edge follows the glyph colour rather than assuming ink-on-paper. */
+.cards-spill-close,
+.admin-pending-banner-close {
+  border: var(--nb-bw) solid currentColor;
+  border-radius: 0;
+}
