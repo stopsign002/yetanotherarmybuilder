@@ -1,0 +1,43 @@
+/* keyframes.css — tier 0 tokens.
+ * Owns: @keyframes used by more than one component file, or defined more than
+ * once. */
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* 5. Add-to-army FLIP landing — bigger glow pulse + settle bounce.
+ * flip-animations.js applies .flip-landed on the destination card; we
+ * amplify the visual. */
+@keyframes flip-landed-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.55), 0 0 18px 4px rgba(var(--accent-rgb), 0.45); transform: scale(1.04); }
+  40% { box-shadow: 0 0 0 6px rgba(var(--accent-rgb), 0.0), 0 0 0 rgba(var(--accent-rgb), 0.0); transform: scale(0.985); }
+  70% { transform: scale(1.012); }
+  100% { box-shadow: none; transform: scale(1); }
+}
+
+/* 6. LOADING-STATE PLACEHOLDER — Cinzel-styled stub for tab-render
+ * delays. Modules opt in by emitting <div class="yaab-loading">Loading…</div>. */
+@keyframes yaab-loading-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1.00; transform: scale(1.05); }
+}
+@keyframes dice-pop {
+  0% { transform: translateY(4px) scale(0.7); opacity: 0; }
+  15% { transform: translateY(0) scale(1.05); opacity: 1; }
+  30% { transform: translateY(-2px) scale(1); opacity: 1; }
+  80% { transform: translateY(-10px) scale(1); opacity: 0.95; }
+  100% { transform: translateY(-18px) scale(1); opacity: 0; }
+}
+@keyframes settings-drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (max-width: 820px) {
+  @keyframes settings-drawer-in {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+}

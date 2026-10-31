@@ -1,0 +1,87 @@
+/* dropdown.css — tier 1 base.
+ * Owns: .dropdown, .dropdown-menu and menu items (Export / Tools / More
+ * menus). */
+
+/* Dropdown menu — used by Export group in army toolbar. */
+.dropdown { position: relative; display: inline-block; flex: 0 1 auto; }
+.dropdown-trigger .caret { font-size: 10px; margin-left: 3px; opacity: 0.7; }
+
+/* Disabled trigger (no actions registered). */
+.dropdown-trigger[disabled] { opacity: 0.45; cursor: not-allowed; }
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 4px;
+  z-index: 100;
+  /* Don't let the dropdown menu demand more than the panel width. */
+  max-width: calc(var(--col-left) - 20px);
+  min-width: min(180px, calc(var(--col-left) - 20px));
+}
+.dropdown-menu > button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: calc(var(--radius) - 1px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Buttons inside dropdown menus (Tools / More / Export / Action Center)
+ * already render as full-width menu items. Lock their min-height so a
+ * row with a long label doesn't stand taller than its neighbour. */
+.dropdown-menu > button,
+.dropdown-menu .tools-menu > button,
+.dropdown-menu .more-menu > button,
+.dropdown-menu button.menu-item,
+.dropdown-menu .export-extras > button {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+}
+.dropdown-menu > button:hover, .dropdown-menu > button:focus { background: rgba(255, 255, 255, 0.06); outline: none; }
+.dropdown.open > .dropdown-menu { display: block; }
+
+/* Empty-state placeholder (shown when no actions registered). */
+.dropdown-empty { font-size: 11px; color: var(--text-muted); padding: 10px 12px; font-style: italic; }
+
+/* Menu items inside .tools-menu / .more-menu — match existing
+ * .dropdown-menu > button styling so they look unified. */
+.dropdown-menu .tools-menu > button, .dropdown-menu .more-menu > button, .dropdown-menu button.menu-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: calc(var(--radius) - 1px);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+.tools-menu, .more-menu { display: flex; flex-direction: column; gap: 1px; }
+.tools-menu:empty, .more-menu:empty { display: none; }
+.dropdown-menu .tools-menu > button:hover,
+.dropdown-menu .more-menu > button:hover,
+.dropdown-menu button.menu-item:hover,
+.dropdown-menu .tools-menu > button:focus,
+.dropdown-menu .more-menu > button:focus,
+.dropdown-menu button.menu-item:focus {
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+
+/* Width-clamp dropdown menus to the panel column. */
+#tools-dropdown-menu, #more-dropdown-menu, #export-dropdown-menu { max-width: calc(var(--col-left) - 20px); }

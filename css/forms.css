@@ -1,0 +1,30 @@
+/* forms.css — tier 1 base.
+ * Owns: input / select / textarea defaults and .form-*. */
+
+/* ── Form Elements */
+.form-group { margin-bottom: 12px; }
+.army-setup-body .form-group { margin: 0; }
+.auth-form .form-group { margin-bottom: 12px; }
+.form-label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 5px; }
+.form-input, .form-select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+}
+.modal-save-as .form-input { width: 100%; }
+
+/* The "Add to Army" row pairs a number input with a wide button. Make
+ * them the same height so they don't visually mismatch. */
+.detail-add-row .form-input { height: 32px; box-sizing: border-box; padding: 0 8px; }
+.form-input:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.2); }
+.form-select option { background: var(--panel-bg); }
+
+@media (min-width: 821px) {
+  .panel-right.panel-expanded .detail-add-row .form-input { height: 40px; width: 84px; }
+}

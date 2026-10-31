@@ -1,6 +1,10 @@
-/* offline-pip.css — topbar chip for offline state + pending sync queue.
+/* offline-pip.css — tier 3 components.
+ * Owns: topbar offline / pending-sync chip. */
+
+/* Carried from the old offline-pip.css header: topbar chip for offline state + pending sync queue.
  * See js/ui/offline-pip.js. Tokens only, no fixed colours, so every theme
  * (including any future one) is covered by construction. */
+
 .topbar-offline-pip[hidden] {
   /* The [hidden] boolean attribute only hides an element via a UA-stylesheet
    * `display:none` — equal-specificity author rules like the one below
@@ -24,10 +28,3 @@
   white-space: nowrap;
 }
 .topbar-offline-pip .topbar-offline-n { color: var(--accent); font-weight: 700; margin: 0 2px; }
-@media (max-width: 480px) {
-  .topbar-offline-pip { padding: 0 8px; }
-
-  /* Collapses "Offline · 3 queued" to "Offline · 3", and "3 queued" to
-   * "3" — the count span stays, only the word goes. */
-  .topbar-offline-pip .topbar-offline-word { display: none; }
-}

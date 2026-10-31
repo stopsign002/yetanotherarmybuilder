@@ -1,9 +1,10 @@
-/* utilities.css — styles for the bug-report and qr-share modules. */
+/* bug-report.css — tier 3 components.
+ * Owns: bug-report and QR-share modals. */
+
 /* ── points override */
 /* Banner injected into #panel-center .panel-controls */
 /* ── bug report */
 .bug-report-modal { max-width: 720px; width: 100%; }
-.bug-report-modal .modal-body { display: flex; flex-direction: column; gap: 10px; }
 .bug-report-diag {
   width: 100%;
   min-height: 240px;
@@ -20,7 +21,6 @@
   white-space: pre;
   word-break: normal;
 }
-.bug-report-diag:focus { border-color: var(--accent); }
 .bug-report-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 4px 0 4px; }
 .bug-report-summary, .bug-report-desc, .bug-report-kind, .bug-report-email, .bug-report-attach { width: 100%; }
 
@@ -37,10 +37,10 @@
 .bug-report-status-error { color: #e89090; }
 .bug-report-signin { text-align: center; padding: 16px 0; }
 .bug-report-signin p { margin-bottom: 12px; color: var(--text-muted); }
+.bug-report-diag:focus { border-color: var(--accent); }
 
 /* ── qr share */
 .qr-share-modal { max-width: 440px; width: 100%; }
-.qr-share-modal .modal-body { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
 .qr-share-canvas {
   width: 320px;
   height: 320px;
@@ -71,7 +71,6 @@
   outline: none;
   word-break: break-all;
 }
-.qr-share-url:focus { border-color: var(--accent); }
 .qr-share-warn {
   padding: 8px 12px;
   border-radius: var(--radius-sm);
@@ -81,8 +80,9 @@
   font-size: 12px;
   line-height: 1.4;
 }
+.qr-share-url:focus { border-color: var(--accent); }
 
-/* ── reduced motion respect */
 @media (prefers-reduced-motion: reduce) {
+  /* ── reduced motion respect */
   .bug-report-modal, .qr-share-modal { transition: none !important; animation: none !important; }
 }

@@ -36,7 +36,7 @@ Each attaches methods onto `window.UI`.
 | `faction-glyphs.js` | Inline-SVG geometric faction glyphs (24×24 viewBox, `currentColor`) + DOM injection helpers. Original abstract geometry — no GW iconography. |
 | `datasheet-parts.js` | `UI.ds.{statsTable,weaponRows,abilityList,keywordChips}` — the shared datasheet renderer used by detail, cards, Waha and Play (added 2026-10-31). |
 | `role-icons.js` | Small role icon prefix on unit cards (Character / Psyker / Vehicle / Monster / Battleline / Infantry). Registered as `cardClassContributor`; also exposes `App.classifyUnitRole(unit)`. |
-| `unit-card-themes.js` | `cardClassContributor` that adds a `faction-<slug>` class to each unit card so `unit-card-themes.css` can paint per-faction gradients. Slug is the last segment of `_factionName` after `" - "`. |
+| `unit-card-themes.js` | `cardClassContributor` that adds a `faction-<slug>` class to each unit card so `css/unit-card.css` (its faction-theme section) can paint per-faction gradients. Slug is the last segment of `_factionName` after `" - "`. |
 | `flip-animations.js` | FLIP-style add-to-army flight ghost + drag-to-reorder + micro-interactions on the unit roster. Reduced-motion aware. Single-flight gate so concurrent clicks don't compound. |
 
 ## App modules (`js/app/`)
@@ -167,7 +167,7 @@ The Tools ▾ / More ▾ menus are gone. The one dropdown that still takes hook 
 Only two inline surfaces exist, both allow-listed in `js/app/index.js`: push with `region: 'icon'` and add the id to `TOPBAR_SHELF_IDS` for the top-bar shelf (today: auth, bug-report, changelog, Play, Waha), or to `BOTTOM_INLINE_ICON_IDS` for the bottom toolbar's icon row (undo/redo). An `icon` action whose id is in neither set is dropped. Remember the top bar is hidden at ≤820px, so anything phone users need must also be in the tab bar (`pwa-install.js`) or the More drawer (`settings-drawer.js`).
 
 ### Add a CSS-only design tweak
-Create `css/<feature>.css` and link it from `index.html` `<head>`. **Nothing to do for the service worker** — see below.
+Put the rule in the file that owns its **subject compound** (the last compound selector) — `css/unit-card.css` for anything whose subject is `.unit-card`, `css/detail-pane.css` for `.detail-*`, and so on; the tier list and the rules are in `docs/ARCHITECTURE.md` "Stylesheets". Phone-only rules (`@media (max-width: 820px)`) go in `css/mobile.css`. A genuinely new component gets its own file in tier 3, linked from `index.html` in that tier's alphabetical slot with the same `?v=` stamp. Do **not** add a late "polish" or "fixes" file to win a tie: that is the patch-layer pattern the 2026-10-31 reorganisation removed. If moving or adding a rule could reorder an equal-specificity competitor, run `scripts/verify/css-order-check.py` against `HEAD`. **Nothing to do for the service worker** — see below.
 
 ### Add a service-worker-cached asset
 **There is nothing to do.** `sw.js` is stale-while-revalidate, so any same-origin GET the page makes is cached on first use and revalidated on every use afterwards. The old `PRECACHE` / `SHELL` recipe described here no longer exists — that design served the shell cache-first and is exactly why the worker was killed in April 2026.

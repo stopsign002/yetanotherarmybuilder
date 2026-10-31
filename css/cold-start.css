@@ -1,4 +1,8 @@
-/* css/cold-start.css — first-visit splash overlay shown while BSData factions load. */
+/* cold-start.css — tier 2 layout.
+ * Owns: first-visit splash overlay (.cold-start-*). */
+
+/* Cold-start splash crest if present. */
+.cold-start-crest svg, .cold-start-crest { animation-duration: 8s !important; }
 .cold-start-root {
   position: fixed;
   inset: 0;
@@ -15,7 +19,6 @@
   transition: opacity 1s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.cold-start-root.is-fading { opacity: 0; pointer-events: none; }
 .cold-start-inner {
   position: relative;
   width: min(420px, calc(100vw - 32px));
@@ -31,14 +34,6 @@
 .cold-start-crest { width: 80px; height: 80px; display: block; color: var(--accent); filter: drop-shadow(0 0 12px rgba(var(--accent-rgb), 0.45)); }
 .cold-start-crest-rotor { transform-origin: 50% 50%; transform-box: fill-box; animation: cold-start-rotor-spin 8s linear infinite; }
 .cold-start-crest-pulse { transform-origin: 50% 50%; transform-box: fill-box; animation: cold-start-pulse 3.6s ease-in-out infinite; }
-@keyframes cold-start-rotor-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-@keyframes cold-start-pulse {
-  0%, 100% { opacity: 0.65; }
-  50% { opacity: 1; }
-}
 
 /* ── Title */
 .cold-start-title {
@@ -50,9 +45,6 @@
   text-transform: uppercase;
   margin: 0;
   color: #f1f1f3;
-}
-@media (min-width: 480px) {
-  .cold-start-title { font-size: 26px; }
 }
 .cold-start-tagline { font-size: 13px; letter-spacing: 0.06em; color: rgba(241, 241, 243, 0.72); margin: -6px 0 0; }
 
@@ -74,10 +66,6 @@
   inset: 0;
   background: linear-gradient( 90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.35) 50%, rgba(255, 255, 255, 0) 100% );
   animation: cold-start-shimmer 1.6s ease-in-out infinite;
-}
-@keyframes cold-start-shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
 }
 .cold-start-status {
   display: flex;
@@ -101,7 +89,6 @@
   text-align: left;
   transition: opacity 200ms ease;
 }
-.cold-start-status-name.is-swapping { opacity: 0; }
 .cold-start-status-count { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; color: rgba(241, 241, 243, 0.65); flex: 0 0 auto; }
 
 /* ── Recently-completed list */
@@ -127,14 +114,8 @@
   text-overflow: ellipsis;
   animation: cold-start-recent-in 380ms ease-out both;
 }
-.cold-start-recent-item.is-aged { opacity: 0.55; }
-.cold-start-recent-item.is-faded { opacity: 0.32; }
 .cold-start-recent-tick { color: var(--accent); flex: 0 0 auto; width: 12px; text-align: center; font-weight: 700; }
 .cold-start-recent-name { overflow: hidden; text-overflow: ellipsis; }
-@keyframes cold-start-recent-in {
-  0% { opacity: 0; transform: translateY(6px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
 
 /* ── Skip button */
 .cold-start-skip {
@@ -152,9 +133,6 @@
   transform: translateY(4px);
   transition: opacity 320ms ease, transform 320ms ease, color 200ms ease, border-color 200ms ease, background 200ms ease;
 }
-.cold-start-skip.is-visible { opacity: 1; transform: translateY(0); }
-.cold-start-skip:hover, .cold-start-skip:focus-visible { color: var(--accent); border-color: var(--accent); background: rgba(var(--accent-rgb), 0.08); outline: none; }
-.cold-start-skip:focus-visible { box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.35); }
 
 /* ── Error state */
 .cold-start-error {
@@ -168,13 +146,6 @@
   border-left: 2px solid #d36969;
   padding: 16px 18px;
   border-radius: 4px;
-}
-.cold-start-root.is-error .cold-start-error { display: flex; }
-.cold-start-root.is-error .cold-start-progress,
-.cold-start-root.is-error .cold-start-recent,
-.cold-start-root.is-error .cold-start-skip,
-.cold-start-root.is-error .cold-start-tagline {
-  display: none;
 }
 .cold-start-error-title { font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: 0.04em; margin: 0; color: #f1f1f3; }
 .cold-start-error-list {
@@ -200,16 +171,50 @@
   cursor: pointer;
   transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
 }
+.cold-start-error-actions .cold-start-btn-retry { border-color: rgba(var(--accent-rgb), 0.45); color: var(--accent); }
+.cold-start-skip:hover, .cold-start-skip:focus-visible { color: var(--accent); border-color: var(--accent); background: rgba(var(--accent-rgb), 0.08); outline: none; }
+.cold-start-skip:focus-visible { box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.35); }
 .cold-start-error-actions button:hover, .cold-start-error-actions button:focus-visible {
   color: var(--accent);
   border-color: var(--accent);
   background: rgba(var(--accent-rgb), 0.08);
   outline: none;
 }
-.cold-start-error-actions .cold-start-btn-retry { border-color: rgba(var(--accent-rgb), 0.45); color: var(--accent); }
+.cold-start-root.is-fading { opacity: 0; pointer-events: none; }
+.cold-start-status-name.is-swapping { opacity: 0; }
+.cold-start-recent-item.is-aged { opacity: 0.55; }
+.cold-start-recent-item.is-faded { opacity: 0.32; }
+.cold-start-skip.is-visible { opacity: 1; transform: translateY(0); }
+.cold-start-root.is-error .cold-start-error { display: flex; }
+.cold-start-root.is-error .cold-start-progress,
+.cold-start-root.is-error .cold-start-recent,
+.cold-start-root.is-error .cold-start-skip,
+.cold-start-root.is-error .cold-start-tagline {
+  display: none;
+}
+@keyframes cold-start-rotor-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes cold-start-pulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+@keyframes cold-start-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes cold-start-recent-in {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
 
-/* ── Reduced motion */
+@media (min-width: 480px) {
+  .cold-start-title { font-size: 26px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  /* ── Reduced motion */
   .cold-start-crest-rotor, .cold-start-crest-pulse, .cold-start-bar-fill::after, .cold-start-recent-item { animation: none !important; }
   .cold-start-root, .cold-start-skip, .cold-start-bar-fill, .cold-start-status-name { transition: none !important; }
 }

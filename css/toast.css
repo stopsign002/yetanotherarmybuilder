@@ -1,0 +1,49 @@
+/* toast.css — tier 1 base.
+ * Owns: .toast and .toast-container. */
+
+/* ── Toast */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  max-width: 300px;
+  pointer-events: none;
+}
+.toast.toast-success { border-left-color: var(--success); }
+.toast.toast-error { border-left-color: var(--danger); }
+.toast.toast-warning { border-left-color: var(--warning); }
+.toast.fade-out { animation: toast-out 0.3s ease forwards; }
+.toast-container .toast, .toast { animation: toast-bounce-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1); will-change: transform, opacity; }
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(20px); }
+}
+
+/* 4. Save success toast — bouncy entrance.
+ * Toast container animates with a subtle settle. Existing toast.js adds
+ * its toast-in class; we extend it. */
+@keyframes toast-bounce-in {
+  0% { opacity: 0; transform: translateY(20px) scale(0.92); }
+  55% { opacity: 1; transform: translateY(-3px) scale(1.02); }
+  78% { transform: translateY(1px) scale(0.997); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ── Toast entrance for celebration */
+  .toast.toast-celebrate {
+    animation: yaab-toast-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1.2) 1;
+    border: 1px solid rgba(var(--accent-rgb), 0.6);
+    box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.35);
+  }
+  @keyframes yaab-toast-in {
+    0% { transform: translate3d(0, 18px, 0) scale(0.92); opacity: 0; }
+    100% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  }
+}

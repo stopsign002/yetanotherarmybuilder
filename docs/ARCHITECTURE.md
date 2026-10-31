@@ -96,6 +96,47 @@ Actions that render nowhere are still reachable: the Settings drawer's `clickToo
 
 `js/app/mode-shell.js` owns the five top-level modes (`build`, `collect`, `cards`, `play`, `waha`), the `body[data-mode]` attribute, and persistence in `yaab_mode` (only `build`/`collect`/`waha` are restored on launch). Each non-Build mode is a `<section id="<mode>-mode">` built lazily on first activation by its `js/ui/*-mode.js` module (`build-mode`, `collect-mode`, `cards-mode`, `play-mode`, `waha-mode`); see `docs/UI.md` for the module rows. `App.prefersReducedMotion()` (OS media query OR the in-app `body.reduce-motion` toggle) lives in `mode-shell.js` for every JS animation to share.
 
+## Stylesheets
+
+`index.html` links one stylesheet per file, in six tiers, and that `<link>`
+order is the cascade order (there is no `@layer`): when two rules have equal
+specificity and match the same element, the later file wins. Reorganised by
+component on 2026-10-31 (`docs/CSS-REORG-2026-10-31.md`), replacing a stack of
+patch layers (`aaa-polish.css`, `card-chassis.css`, `detail-redesign.css`, ...)
+whose order was the only record of what overrode what.
+
+| tier | files |
+|---|---|
+| 0 tokens | `tokens.css` (`:root` custom properties, `@font-face`), `keyframes.css` (`@keyframes` shared by more than one file) |
+| 1 base | `base.css`, `buttons.css`, `dropdown.css`, `forms.css`, `modal.css`, `panel.css`, `toast.css` |
+| 2 layout | `admin.css`, `auth.css`, `cold-start.css`, `expand-pane.css`, `mode-shell.css`, `settings-drawer.css`, `shell.css`, `topbar.css` |
+| 3 components | `army-list.css`, `atmosphere.css`, `bug-report.css`, `changelog.css`, `command-palette.css`, `detail-pane.css`, `kotc.css`, `offline-pip.css`, `particle-fx.css`, `roster.css`, `unit-card.css` |
+| 4 modes | `build-mode.css`, `cards-mode.css`, `collect-mode.css`, `play-mode.css`, `waha-mode.css` |
+| 5 responsive | `mobile.css` — every `@media (max-width: 820px)` (and narrower) rule, plus the `.mobile-*` tab bar |
+| 6 theme | `css/themes/brutalist.css`, never linked: `js/theme-boot.js` appends it last |
+
+Rules:
+
+- **A rule lives with the owner of its subject compound** (the last compound
+  selector): `#play-mode .detail-section-title` is Details-pane styling and
+  lives in `detail-pane.css`; a mode file holds only rules whose subject is the
+  mode's own class.
+- **Inside a file**, rules read base → variants → hover → selected →
+  selected:hover → faction themes, then media queries, reduced-motion last,
+  except where the cascade forbids it.
+- **A rule that cannot sit with its owner** (it must keep its place relative
+  to an equal-specificity rule in another file) stays in that other file and
+  carries an `/* order: ... */` comment naming the rule it must follow or
+  precede; the file header counts them. Do not "tidy" one back to its owner
+  without re-running the check below.
+- **`scripts/verify/css-order-check.py <old-tree> <new-tree> [matches.json]`**
+  is the safety net for any CSS move: it fails on every pair of
+  equal-specificity, same-property, co-matching declarations whose order
+  changed, and on any lost selector, token, `@keyframes` or `@font-face`.
+  `git archive HEAD css index.html | tar -x -C /tmp/old` gives the old tree;
+  without a `matches.json` (from `scripts/verify/css-cascade.mjs`) it assumes
+  every pair co-matches, which is the strict mode for small edits.
+
 ## Lazy-loading strategy
 
 There is none. `js/app/lazy-modules.js` (a placeholder-loader idea) was never wired in and no longer exists; every feature module is a `<script defer>` in `index.html`, between `<!-- FEATURE-MODULES-START -->` and `<!-- FEATURE-MODULES-END -->`. The service worker needs no per-module registration: it is stale-while-revalidate, so any URL the page requests is cached on first use. The one genuinely deferred thing is the mode pages' DOM, built on first activation (see "Mode pages").

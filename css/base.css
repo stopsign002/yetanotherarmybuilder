@@ -1,0 +1,239 @@
+/* base.css — tier 1 base.
+ * Owns: element defaults (html, body, a, ul, p, h*), the reset, scrollbars,
+ * utilities (.hidden, .muted, .spinner), reduced-motion kill switches, and
+ * rules whose selector list spans three or more components.
+ *
+ * Order dependencies: 4 rule(s) belonging by subject to army-list.css (1),
+ * buttons.css (1), mobile.css (1), unit-card.css (1) stay here to keep their
+ * cascade position beside a rule in this file; each has an `order:` comment
+ * naming it. */
+
+/* ── Reset / Base */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+ul { list-style: none; }
+
+/* ── Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--panel-bg); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #666; }
+
+/* order: lives here, not in army-list.css: must precede `.army-rules-title` {font-weight} below (equal specificity, same element, font-weight). */
+.army-entry-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+
+/* ── Buttons */
+/* order: lives here, not in buttons.css: must precede `.btn-accent` {transition} below (equal specificity, same element, transition). */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  outline: none;
+  box-sizing: border-box;
+  height: 32px;
+  line-height: 1.15;
+  vertical-align: middle;
+}
+
+/* ── 1. Faction-accent morph */
+a,
+a:hover,
+.btn-accent,
+.btn-accent:hover,
+.unit-card,
+.unit-card:hover,
+.unit-card::before,
+.unit-card.selected,
+.search-input,
+.search-input:focus,
+.form-input,
+.form-input:focus,
+.form-select,
+.form-select:focus,
+.points-bar,
+.points-current,
+.army-entry-qty input,
+.army-entry-qty input:focus,
+.army-enh-badge,
+.enhancement-item,
+.detail-pts,
+.detail-faction,
+.chip,
+.chip.active,
+.role-chip,
+.role-chip.active,
+.weapon-kw,
+.page-progress-bar,
+.spinner {
+  transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, box-shadow 300ms ease, outline-color 300ms ease;
+}
+
+/* ── Utility */
+.muted { color: var(--text-muted); }
+.hidden { display: none !important; }
+
+/* ── Loading Spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Display-font headings & names */
+.panel-header h2, .detail-name, .unit-card-name, .ds-name, .detail-section-title, .modal-header h3, .army-rules-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+/* ── Slim accent scrollbar for unit grid + dropdown menus */
+.unit-grid::-webkit-scrollbar, .panel-body::-webkit-scrollbar, .dropdown-menu::-webkit-scrollbar { width: 6px; height: 6px; }
+.unit-grid::-webkit-scrollbar-thumb, .panel-body::-webkit-scrollbar-thumb, .dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(var(--accent-rgb), 0.35);
+  border-radius: 3px;
+}
+.unit-grid::-webkit-scrollbar-thumb:hover, .panel-body::-webkit-scrollbar-thumb:hover, .dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb), 0.6);
+}
+body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+/* 3. SECTION-HEADER ACCENT UNDERLINE — extend the panel-header treatment
+ * to every section header throughout the app. 24px accent bar, left-
+ * aligned. Sub-tab titles, modal headers, detail-section titles all
+ * inherit the same indicator. */
+.detail-section-title, .modal-header h3, .army-rules-title { position: relative; }
+body { padding-top: var(--topbar-h); }
+body.reduce-motion .mode-page.mode-enter,
+body.reduce-motion .unit-card,
+body.reduce-motion .toast,
+body.reduce-motion .unit-detail-content,
+body.reduce-motion .faction-glyph,
+body.reduce-motion .build-hero-bar::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (min-width: 821px) and (max-width: 860px) {
+  /* Stacked-panel layout for the narrow tablet band (822-860px) that is too
+   * small for the 3-column grid but too wide for the tab-bar mobile layout in
+   * mobile.css. Army, Units and Details stack top to bottom and the page
+   * scrolls. Bounded to (821px, 860px) so the `height: auto` /
+   * `max-height: 500px` here don't leak into <=820px and collapse the mobile
+   * panel (which left the army-toolbar floating mid-screen instead of pinned
+   * above the tab bar).
+   * Why this is a flex column with !important and ids, not the old
+   * `grid-template-columns: 1fr !important`: the panels carry
+   * `grid-row: 2` (build-mode.css) so in a one-column grid they were forced
+   * into row 2 and auto-placed across IMPLICIT columns - the Units and Details
+   * columns took their content width (501 + 338 px) and the 1fr column that
+   * held the Army panel was left with ~0px. Measured live at 840px:
+   * `0px 0px 501px 0px 338px`, Army panel width 0, nothing else reached it.
+   * A flex column has no grid tracks to land in, and the !important + id
+   * selectors also beat expand-pane.css's `!important` column templates and
+   * its opacity:0 / pointer-events:none collapsed state, so a pane that was
+   * expanded at a wider width cannot hide the others here. */
+  html, body { overflow: auto; }
+}
+
+/* Push everything below the fixed top bar. */
+html, body {
+  height: 100%;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  font-feature-settings: 'tnum';
+  background: var(--bg);
+  color: var(--text);
+  /* Push everything below the fixed top bar. */
+  overflow: hidden;
+}
+
+@media (max-width: 820px) {
+  /* order: lives here, not in mobile.css: must precede `html` {overflow} below (equal specificity, same element, overflow). */
+  html, body { height: 100%; overflow: hidden !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced-motion: kill animation, preserve final state. */
+  /* order: lives here, not in unit-card.css: must precede `.unit-card` {animation} below (equal specificity, same element, animation). */
+  .unit-card, .army-entry, .yaab-flip-ghost { transition: none !important; animation: none !important; }
+
+  /* ── Reduced-motion fallback: keep color transitions, drop anims */
+  .points-bar-celebrate, .points-summary.points-shake, .points-summary.points-landed, .unit-card.selected.just-selected::after, .toast.toast-celebrate {
+    animation: none !important;
+  }
+
+  /* 11. Reduced-motion overrides — disable every keyframe + transition we
+   * layered above. Honors both the media query and the `body.reduce-motion`
+   * class fallback. */
+  .mode-page.mode-enter,
+  .unit-card,
+  .toast,
+  .toast-container .toast,
+  .unit-detail-content,
+  .unit-detail-datasheet,
+  .faction-glyph,
+  .build-hero-bar::after,
+  body:has(.atmosphere-scanline) .panel-body::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* 11b. Reduced-motion CATCH-ALL.
+   * The Settings drawer's "Reduced animations" toggle only adds
+   * `body.reduce-motion`, but 23 of the 28 stylesheets that handle reduced
+   * motion listen ONLY for `@media (prefers-reduced-motion: reduce)`. So the
+   * toggle silently did nothing for the overwhelming majority of the app's
+   * animation — its help text promises it "overrides system preference when on",
+   * and it didn't.
+   * Rather than hand-edit 23 files (and re-edit every future one), this blanket
+   * rule makes the class do what the media query does. `!important` on a
+   * universal selector means source order stops mattering, so a stylesheet added
+   * later is covered automatically.
+   * Durations are near-zero rather than `none` on purpose: `transitionend` and
+   * `animationend` still fire, so JS that waits on them keeps working —
+   * js/ui/flip-animations.js:163 (flight ghost), js/ui/toast.js:51 (toast
+   * teardown) and js/ui/scanline.js:36 all depend on that. */
+}
+
+@media print {
+  /* ── Print stylesheet */
+  /* JS adds body.cards-printing + a dynamic <style id="cards-print-style">
+   * with @page { size: <layout>; margin: 0 } before calling window.print().
+   * These rules hide everything except the cards and unwrap the preview's
+   * fit-to-viewport scaling so each page prints at full physical size. */
+  /* Reset html/body so default margins don't add a phantom first page. */
+  html, body.cards-printing {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+    overflow: visible !important;
+    width: auto !important;
+    height: auto !important;
+  }
+}

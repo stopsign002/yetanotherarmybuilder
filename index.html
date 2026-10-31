@@ -19,52 +19,53 @@
   <title>Yet Another Army Builder</title>
   <link rel="preload" as="font" type="font/woff2" href="js/vendor/fonts/cinzel-400.woff2" crossorigin />
   <link rel="preload" as="font" type="font/woff2" href="js/vendor/fonts/cinzel-600.woff2" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/validation.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/kotc.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/mobile.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/celebrations.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/command-palette.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/quirky.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/legends-toggle.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/allies.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/favorites.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/cards-mode.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/utilities.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/collection.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/reserves.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/requisitions.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/design-pass.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/hero-state.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/atmosphere.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/topbar.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/auth.css?v=2026.10.31-3" />
+  <!-- Stylesheets, in cascade order. Six tiers, declared here and nowhere
+       else (no @layer): equal-specificity ties are decided by this order,
+       so a file never moves tier without re-running
+       scripts/verify/css-order-check.py.
+         0 tokens      :root custom properties, @font-face, shared @keyframes
+         1 base        element defaults, buttons, dropdown, forms, modal, panel, toast
+         2 layout      admin, auth, cold-start, expand-pane, mode-shell, settings drawer, shell, topbar
+         3 components  one file per component, all of its states in cascade order
+         4 modes       one file per mode
+         5 responsive  mobile.css: phone layout for everything (max-width 820px)
+         6 theme       css/themes/*.css, appended last by js/theme-boot.js below
+       Within a tier files are alphabetical; a file's header comment names
+       any rule it holds for another component and why. -->
+  <link rel="stylesheet" href="css/tokens.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/keyframes.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/base.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/buttons.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/dropdown.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/forms.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/modal.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/panel.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/toast.css?v=2026.10.31-3" />
   <link rel="stylesheet" href="css/admin.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/auth.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/cold-start.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/expand-pane.css?v=2026.10.31-3" />
   <link rel="stylesheet" href="css/mode-shell.css?v=2026.10.31-3" />
   <link rel="stylesheet" href="css/settings-drawer.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/cold-start.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/shell.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/topbar.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/army-list.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/atmosphere.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/bug-report.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/changelog.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/command-palette.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/detail-pane.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/kotc.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/offline-pip.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/particle-fx.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/roster.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/unit-card.css?v=2026.10.31-3" />
   <link rel="stylesheet" href="css/build-mode.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/detachments.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/cards-mode.css?v=2026.10.31-3" />
   <link rel="stylesheet" href="css/collect-mode.css?v=2026.10.31-3" />
   <link rel="stylesheet" href="css/play-mode.css?v=2026.10.31-3" />
   <link rel="stylesheet" href="css/waha-mode.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/card-chassis.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/bugfix-pass.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/menu-overflow-fixes.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/theming-pass.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/animations-polish.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/unit-card-themes.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/aaa-polish.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/particle-fx.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/faction-banner.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/changelog.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/expand-pane.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/detail-redesign.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/wargear-picker.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/custom-names.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/split-entry.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/offline-pip.css?v=2026.10.31-3" />
-  <link rel="stylesheet" href="css/glossary.css?v=2026.10.31-3" />
+  <link rel="stylesheet" href="css/mobile.css?v=2026.10.31-3" />
   <!-- Interchangeable themes. NOT deferred like every other script here,
        and it has to stay last in <head>: it appends the chosen theme's
        stylesheet, which must land after every link above to win on

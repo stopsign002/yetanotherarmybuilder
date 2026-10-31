@@ -1,0 +1,495 @@
+/* unit-card.css — tier 3 components.
+ * Owns: .unit-card in all states: base, badges (legends, allies, favourite
+ * star, collection), hover, selected, per-faction themes, celebrations, FLIP
+ * ghost.
+ *
+ * Order dependencies: 4 rule(s) belonging by subject to collect-mode.css (2),
+ * mobile.css (2) stay here to keep their cascade position beside a rule in
+ * this file; each has an `order:` comment naming it. */
+
+/* Carried from the old allies.css header: styling for allied units surfaced on a host faction's roster.
+ * Mirrors the Legends badge, but in a cool teal so the two badges stay
+ * distinguishable (Legends owns amber #d9b566). */
+
+.unit-count-badge { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.unit-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--accent); opacity: 0; }
+.unit-card-faction { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Chapter badge (SM parent roster units whose datasheet is really
+ * chapter-locked — Venerable Dreadnought = Space Wolves, Death Company, …).
+ * `.keyword-tag` is already accent-token driven, so this just nudges the
+ * baseline to sit next to the plain faction text; no new colours. */
+.unit-card-chapter-badge { vertical-align: 1px; margin-left: 2px; }
+.unit-card-header { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 8px; gap: 4px; min-width: 0; }
+.unit-card-name { font-size: 14px; line-height: 1.2; flex: 0 0 auto; width: 100%; min-width: 0; overflow-wrap: break-word; }
+.unit-card-pts { font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; flex: 0 0 auto; }
+.unit-card-keywords { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 8px; }
+.unit-card-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; text-align: center; }
+
+/* Corner badge on roster unit cards for Legends units.
+ * Uses ::after because .unit-card::before is already the selection accent. */
+.unit-card.unit-card-legends::after {
+  content: "LEGENDS";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 8pt;
+  letter-spacing: 0.1em;
+  color: #d9b566;
+  font-weight: 700;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Subtle amber tint on the card itself so Legends entries read as "casual". */
+.unit-card.unit-card-legends {
+  border-color: rgba(217, 181, 102, 0.35);
+  background: linear-gradient( to bottom, rgba(217, 181, 102, 0.05), transparent 60% ), var(--card-bg);
+}
+
+/* Corner badge on roster unit cards for allied units.
+ * ::after because .unit-card::before is already the selection accent. */
+.unit-card.unit-card-ally::after {
+  content: "ALLY";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 8pt;
+  letter-spacing: 0.1em;
+  color: #6fb7c4;
+  font-weight: 700;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* A Legends unit that is ALSO an ally would stack two ::after badges on the
+ * same corner. Allies win the corner; the Legends state still reads from the
+ * border tint and the detail panel. */
+.unit-card.unit-card-ally.unit-card-legends::after { content: "ALLY"; color: #6fb7c4; }
+
+/* Subtle teal tint so allied entries read as "from another codex". */
+.unit-card.unit-card-ally {
+  border-color: rgba(111, 183, 196, 0.35);
+  background: linear-gradient( to bottom, rgba(111, 183, 196, 0.05), transparent 60% ), var(--card-bg);
+}
+
+/* CSS-only fallback — only fires when no .role-icon span has been injected. */
+.unit-card.role-character .unit-card-name:not(:has(.role-icon))::before { content: "\25C6 "; }
+.unit-card.role-psyker .unit-card-name:not(:has(.role-icon))::before { content: "\2756 "; }
+.unit-card.role-monster .unit-card-name:not(:has(.role-icon))::before { content: "\2B22 "; }
+.unit-card.role-vehicle .unit-card-name:not(:has(.role-icon))::before { content: "\25B2 "; }
+.unit-card.role-battleline .unit-card-name:not(:has(.role-icon))::before { content: "\25A3 "; }
+.unit-card.role-infantry .unit-card-name:not(:has(.role-icon))::before { content: "\25CF "; }
+.unit-card[class*="role-"] .unit-card-name::before { color: var(--accent); font-size: 0.85em; margin-right: 6px; opacity: 0.8; letter-spacing: 0; }
+
+/* ── roster card: a named unique unit */
+.unit-card.unit-card-named { border-color: rgba(198, 160, 74, 0.55); box-shadow: inset 3px 0 0 0 rgba(198, 160, 74, 0.75); }
+.unit-card .unit-card-subname {
+  padding: 0 0.65rem 0.15rem;
+  margin-top: -0.1rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.unit-card:hover {
+  background: var(--card-hover);
+  transform: translateY(-2px) scale(1.005);
+}
+body.reduce-motion .unit-card:hover { transform: none !important; }
+.unit-card[class*="faction-"]:hover { border-left-color: rgba(255, 255, 255, 0.35); }
+.unit-card:hover::before, .unit-card.selected::before { opacity: 1; }
+
+/* Selected-state amplification — when a card is active in the roster,
+ * the faction stripe goes full strength regardless of hover. Stops the
+ * accent stripe disappearing under the existing .unit-card.selected
+ * chassis treatment. */
+.unit-card.selected[class*="faction-"] { border-left-width: 3px; }
+
+/* Unit card: hide the faction line when a specific faction/chapter is selected. */
+.unit-card.faction-hidden .unit-card-faction { display: none; }
+
+/* ─── Imperium — blue family */
+.unit-card.faction-adeptus-astartes, .unit-card.faction-space-marines, .unit-card.faction-ultramarines {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(168, 189, 230, 0.06) 100%);
+  border-left-color: rgba(168, 189, 230, 0.5);
+}
+.unit-card.faction-adeptus-astartes:hover, .unit-card.faction-space-marines:hover, .unit-card.faction-ultramarines:hover {
+  border-left-color: rgba(168, 189, 230, 0.95);
+  box-shadow: 0 4px 18px rgba(168, 189, 230, 0.20);
+}
+
+/* Blood Angels — red */
+.unit-card.faction-blood-angels { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 168, 168, 0.07) 100%); border-left-color: rgba(230, 168, 168, 0.5); }
+.unit-card.faction-blood-angels:hover { border-left-color: rgba(230, 168, 168, 0.95); box-shadow: 0 4px 18px rgba(230, 168, 168, 0.22); }
+
+/* Dark Angels — green */
+.unit-card.faction-dark-angels { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(168, 230, 168, 0.06) 100%); border-left-color: rgba(168, 230, 168, 0.5); }
+.unit-card.faction-dark-angels:hover { border-left-color: rgba(168, 230, 168, 0.95); box-shadow: 0 4px 18px rgba(168, 230, 168, 0.20); }
+
+/* Grey Knights — silvered violet */
+.unit-card.faction-grey-knights { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(168, 173, 230, 0.06) 100%); border-left-color: rgba(168, 173, 230, 0.5); }
+.unit-card.faction-grey-knights:hover { border-left-color: rgba(168, 173, 230, 0.95); box-shadow: 0 4px 18px rgba(168, 173, 230, 0.20); }
+
+/* Space Wolves — pale ice blue */
+.unit-card.faction-space-wolves { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(168, 199, 230, 0.06) 100%); border-left-color: rgba(168, 199, 230, 0.5); }
+.unit-card.faction-space-wolves:hover { border-left-color: rgba(168, 199, 230, 0.95); box-shadow: 0 4px 18px rgba(168, 199, 230, 0.20); }
+
+/* Imperial Fists — gold */
+.unit-card.faction-imperial-fists {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 219, 168, 0.06) 100%);
+  border-left-color: rgba(230, 219, 168, 0.55);
+}
+.unit-card.faction-imperial-fists:hover { border-left-color: rgba(230, 219, 168, 0.95); box-shadow: 0 4px 18px rgba(230, 219, 168, 0.22); }
+
+/* Black Templars / Iron Hands — neutral steel */
+.unit-card.faction-black-templars, .unit-card.faction-iron-hands {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(187, 199, 211, 0.06) 100%);
+  border-left-color: rgba(187, 199, 211, 0.5);
+}
+.unit-card.faction-black-templars:hover, .unit-card.faction-iron-hands:hover {
+  border-left-color: rgba(187, 199, 211, 0.95);
+  box-shadow: 0 4px 18px rgba(187, 199, 211, 0.20);
+}
+
+/* Salamanders — emerald */
+.unit-card.faction-salamanders { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(168, 230, 178, 0.06) 100%); border-left-color: rgba(168, 230, 178, 0.5); }
+.unit-card.faction-salamanders:hover { border-left-color: rgba(168, 230, 178, 0.95); box-shadow: 0 4px 18px rgba(168, 230, 178, 0.20); }
+
+/* White Scars — sand */
+.unit-card.faction-white-scars { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(211, 199, 187, 0.06) 100%); border-left-color: rgba(211, 199, 187, 0.5); }
+.unit-card.faction-white-scars:hover { border-left-color: rgba(211, 199, 187, 0.95); box-shadow: 0 4px 18px rgba(211, 199, 187, 0.20); }
+
+/* Raven Guard — pale lilac on near-black */
+.unit-card.faction-raven-guard { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(195, 187, 211, 0.06) 100%); border-left-color: rgba(195, 187, 211, 0.5); }
+.unit-card.faction-raven-guard:hover { border-left-color: rgba(195, 187, 211, 0.95); box-shadow: 0 4px 18px rgba(195, 187, 211, 0.20); }
+
+/* Deathwatch — slate blue (treated like Space Wolves palette) */
+.unit-card.faction-deathwatch { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(168, 199, 230, 0.05) 100%); border-left-color: rgba(168, 199, 230, 0.5); }
+.unit-card.faction-deathwatch:hover { border-left-color: rgba(168, 199, 230, 0.95); box-shadow: 0 4px 18px rgba(168, 199, 230, 0.20); }
+
+/* Adeptus Mechanicus — rust red */
+.unit-card.faction-adeptus-mechanicus {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 173, 168, 0.06) 100%);
+  border-left-color: rgba(230, 173, 168, 0.5);
+}
+.unit-card.faction-adeptus-mechanicus:hover { border-left-color: rgba(230, 173, 168, 0.95); box-shadow: 0 4px 18px rgba(230, 173, 168, 0.22); }
+
+/* Astra Militarum — drab gold/yellow */
+.unit-card.faction-astra-militarum {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 230, 168, 0.06) 100%);
+  border-left-color: rgba(230, 230, 168, 0.55);
+}
+.unit-card.faction-astra-militarum:hover { border-left-color: rgba(230, 230, 168, 0.95); box-shadow: 0 4px 18px rgba(230, 230, 168, 0.22); }
+
+/* Adepta Sororitas — rose */
+.unit-card.faction-adepta-sororitas {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 168, 183, 0.06) 100%);
+  border-left-color: rgba(230, 168, 183, 0.5);
+}
+.unit-card.faction-adepta-sororitas:hover { border-left-color: rgba(230, 168, 183, 0.95); box-shadow: 0 4px 18px rgba(230, 168, 183, 0.22); }
+
+/* Adeptus Custodes — gold */
+.unit-card.faction-adeptus-custodes, .unit-card.faction-imperial-knights {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 214, 168, 0.06) 100%);
+  border-left-color: rgba(230, 214, 168, 0.55);
+}
+.unit-card.faction-adeptus-custodes:hover, .unit-card.faction-imperial-knights:hover {
+  border-left-color: rgba(230, 214, 168, 0.95);
+  box-shadow: 0 4px 18px rgba(230, 214, 168, 0.22);
+}
+
+/* Genestealer Cults — magenta */
+.unit-card.faction-genestealer-cults {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(219, 168, 230, 0.06) 100%);
+  border-left-color: rgba(219, 168, 230, 0.5);
+}
+.unit-card.faction-genestealer-cults:hover { border-left-color: rgba(219, 168, 230, 0.95); box-shadow: 0 4px 18px rgba(219, 168, 230, 0.22); }
+
+/* Leagues of Votann — bronze */
+.unit-card.faction-leagues-of-votann {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 199, 168, 0.06) 100%);
+  border-left-color: rgba(230, 199, 168, 0.5);
+}
+.unit-card.faction-leagues-of-votann:hover { border-left-color: rgba(230, 199, 168, 0.95); box-shadow: 0 4px 18px rgba(230, 199, 168, 0.22); }
+
+/* Thousand Sons — arcane blue */
+.unit-card.faction-thousand-sons { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(168, 189, 230, 0.06) 100%); border-left-color: rgba(168, 189, 230, 0.5); }
+.unit-card.faction-thousand-sons:hover { border-left-color: rgba(168, 189, 230, 0.95); box-shadow: 0 4px 18px rgba(168, 189, 230, 0.22); }
+
+/* World Eaters — burnt red-orange */
+.unit-card.faction-world-eaters { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 178, 168, 0.07) 100%); border-left-color: rgba(230, 178, 168, 0.5); }
+.unit-card.faction-world-eaters:hover { border-left-color: rgba(230, 178, 168, 0.95); box-shadow: 0 4px 18px rgba(230, 178, 168, 0.22); }
+
+/* Emperor's Children — magenta */
+.unit-card.faction-emperor-s-children {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 168, 230, 0.06) 100%);
+  border-left-color: rgba(230, 168, 230, 0.5);
+}
+.unit-card.faction-emperor-s-children:hover { border-left-color: rgba(230, 168, 230, 0.95); box-shadow: 0 4px 18px rgba(230, 168, 230, 0.22); }
+
+/* ─── Xenos */
+/* Necrons — necron green */
+.unit-card.faction-necrons { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(168, 230, 183, 0.06) 100%); border-left-color: rgba(168, 230, 183, 0.5); }
+.unit-card.faction-necrons:hover { border-left-color: rgba(168, 230, 183, 0.95); box-shadow: 0 4px 18px rgba(168, 230, 183, 0.22); }
+
+/* T'au Empire — cyan. Slug = `t-au-empire` because the apostrophe is
+ * collapsed to `-` by slugify(). */
+.unit-card.faction-t-au-empire { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(168, 219, 230, 0.06) 100%); border-left-color: rgba(168, 219, 230, 0.5); }
+.unit-card.faction-t-au-empire:hover { border-left-color: rgba(168, 219, 230, 0.95); box-shadow: 0 4px 18px rgba(168, 219, 230, 0.22); }
+
+/* Tyranids — bio-pink */
+.unit-card.faction-tyranids { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 168, 209, 0.07) 100%); border-left-color: rgba(230, 168, 209, 0.5); }
+.unit-card.faction-tyranids:hover { border-left-color: rgba(230, 168, 209, 0.95); box-shadow: 0 4px 18px rgba(230, 168, 209, 0.24); }
+
+/* Orks — bright green */
+.unit-card.faction-orks { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(204, 230, 168, 0.07) 100%); border-left-color: rgba(204, 230, 168, 0.55); }
+.unit-card.faction-orks:hover { border-left-color: rgba(204, 230, 168, 0.95); box-shadow: 0 4px 18px rgba(204, 230, 168, 0.24); }
+
+/* Aeldari — sky cyan */
+.unit-card.faction-aeldari { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(168, 214, 230, 0.06) 100%); border-left-color: rgba(168, 214, 230, 0.5); }
+.unit-card.faction-aeldari:hover { border-left-color: rgba(168, 214, 230, 0.95); box-shadow: 0 4px 18px rgba(168, 214, 230, 0.22); }
+
+/* Drukhari — violet */
+.unit-card.faction-drukhari { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(209, 168, 230, 0.06) 100%); border-left-color: rgba(209, 168, 230, 0.5); }
+.unit-card.faction-drukhari:hover { border-left-color: rgba(209, 168, 230, 0.95); box-shadow: 0 4px 18px rgba(209, 168, 230, 0.22); }
+
+/* Harlequins — saturated coral */
+.unit-card.faction-harlequins { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 183, 168, 0.06) 100%); border-left-color: rgba(230, 183, 168, 0.5); }
+.unit-card.faction-harlequins:hover { border-left-color: rgba(230, 183, 168, 0.95); box-shadow: 0 4px 18px rgba(230, 183, 168, 0.22); }
+.yaab-flip-ghost, .yaab-flip-ghost * { cursor: default !important; user-select: none !important; }
+
+/* FLIP add-to-army animation primitives. */
+.yaab-flip-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  margin: 0;
+  pointer-events: none;
+  z-index: 9999;
+  box-sizing: border-box;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(var(--yaab-card-accent-rgb), 0.35);
+  border-radius: var(--yaab-card-radius);
+  overflow: hidden;
+  /* Lock the cloned card's hover/transition behavior so it stays stable. */
+  transition: none !important;
+  filter: brightness(1.04) saturate(1.05);
+}
+
+/* Click micro-animation: scale up then settle back. */
+@keyframes yaab-fav-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  70% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+.fav-star {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-muted);
+  transform-origin: center;
+  transition: transform 0.12s ease, color 0.15s ease;
+}
+.fav-star.fav-pop { animation: yaab-fav-pop 280ms ease-out; }
+.detail-action-btn:hover .fav-star { transform: scale(1.1); color: #e6d6a8; }
+.fav-star.is-starred {
+  color: #e6d6a8;
+  /* pastel gold, matches palette accents */
+  text-shadow: 0 0 6px rgba(230,214,168,0.35);
+}
+
+/* order: lives here, not in collect-mode.css: must precede `.unit-card:hover` {border-color} below (equal specificity, same element, border-color). */
+.collect-unit-card:hover { border-color: var(--border-light); background: var(--card-hover); }
+
+/* Hover lift. GPU-friendly transform only.
+ * We avoid touching .army-entry's hover so the list doesn't jump 1px on
+ * every cursor pass — the chassis still gives it border + shadow polish. */
+.unit-card:hover { border-color: rgba(var(--yaab-card-accent-rgb), 0.55); box-shadow: var(--yaab-card-shadow-h); }
+
+/* Active squash. */
+.unit-card:active {
+  transform: translateY(0) scale(0.997);
+  /* Active squash. */
+  box-shadow: none;
+  transition-duration: 90ms;
+}
+
+/* Keyboard focus ring for accessibility. */
+.unit-card:focus-visible, .army-entry:focus-visible { outline: none; box-shadow: var(--yaab-card-shadow-a); }
+
+/* Selected / active state — accent border + tint.
+ * The accent border + selection ring is the only "you picked this" cue;
+ * a previous version of this file added a small ::after dot at the
+ * top-right corner, but that conflicted with the Reserves "×N" badge
+ * anchored to the same corner. Per design call, the ring is enough. */
+/* Selected unit-card / army-entry: dial up the accent border + tint over
+ * what card-chassis.css already provides. */
+.unit-card.selected {
+  border-color: var(--accent) !important;
+  background: linear-gradient(180deg, rgba(var(--yaab-card-accent-rgb), 0.06), transparent 60%), var(--yaab-card-bg-hover);
+  /* Selected / active state — accent border + tint.
+   * The accent border + selection ring is the only "you picked this" cue;
+   * a previous version of this file added a small ::after dot at the
+   * top-right corner, but that conflicted with the Reserves "×N" badge
+   * anchored to the same corner. Per design call, the ring is enough. */
+  /* Selected unit-card / army-entry: dial up the accent border + tint over
+   * what card-chassis.css already provides. */
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.45), 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+@media (min-width: 821px) {
+  .panel-center.panel-expanded .unit-card { padding: 14px; }
+}
+
+@media (min-width: 821px) and (max-width: 1100px) {
+  #waha-mode .waha-unit-card .unit-card-stat-strip { display: none; }
+}
+
+@media (max-width: 820px) {
+  /* order: lives here, not in mobile.css: must precede `.unit-card` {min-height} below (equal specificity, same element, min-height). */
+  .unit-card { padding: 12px; min-height: 96px; }
+}
+
+@media (max-width: 480px) {
+  /* order: lives here, not in mobile.css: must precede `.collect-unit-card` {padding} below (equal specificity, same element, padding). */
+  .unit-card { min-height: 76px; padding: 10px 12px; }
+}
+
+/* order: lives here, not in collect-mode.css: must precede `.unit-card` {background} below (equal specificity, same element, background). */
+.collect-unit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.12s, background 0.12s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ── 2. Unit-card hover lift + selected shimmer */
+  .unit-card { will-change: transform; }
+}
+
+/* Base chassis. Any element can opt-in by adding `.yaab-card`.
+ * It is also applied additively to existing well-known card selectors.
+ * We keep specificity low so component-specific rules win. */
+.unit-card, .army-entry {
+  background: var(--yaab-card-bg);
+  border: 1px solid var(--yaab-card-border-soft);
+  border-radius: var(--yaab-card-radius);
+  position: relative;
+  transition: border-color 0.18s var(--yaab-card-ease), background 0.18s var(--yaab-card-ease), transform 0.16s var(--yaab-card-ease), box-shadow 0.18s var(--yaab-card-ease);
+  will-change: transform;
+}
+
+/* ── Unit Cards */
+/* Padding by default — tighter for the army-entry list rows. */
+.unit-card {
+  cursor: pointer;
+  overflow: hidden;
+  user-select: none;
+  /* ── Unit Cards */
+  /* Padding by default — tighter for the army-entry list rows. */
+  padding: var(--yaab-card-pad);
+  will-change: transform;
+  /* 2. Unit-card hover lift — smooth, slightly springy.
+   * The base transition in style.css uses linear timing for transform; we
+   * layer a springier curve here without touching the base. */
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .unit-card:hover:not(.selected) { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(var(--accent-rgb), 0.25); }
+}
+.unit-card.faction-chaos-space-marines:hover { border-left-color: rgba(230, 168, 168, 0.95); box-shadow: 0 4px 18px rgba(230, 168, 168, 0.22); }
+.unit-card.faction-death-guard:hover { border-left-color: rgba(214, 230, 168, 0.95); box-shadow: 0 4px 18px rgba(214, 230, 168, 0.22); }
+.unit-card.faction-chaos-daemons:hover { border-left-color: rgba(230, 168, 189, 0.95); box-shadow: 0 4px 18px rgba(230, 168, 189, 0.22); }
+.unit-card.faction-chaos-knights:hover { border-left-color: rgba(199, 168, 230, 0.95); box-shadow: 0 4px 18px rgba(199, 168, 230, 0.22); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .unit-card.selected { position: relative; }
+}
+
+/* Strategy
+ * `js/ui/unit-card-themes.js` adds a `faction-<slug>` class to each
+ * unit card. Slugs come from each faction's short name (last segment
+ * after " - " in unit._factionName), lowercased with non-alnum runs
+ * collapsed to `-`. See App.FACTION_COLORS in js/app/state.js for the
+ * canonical list — every key there has a matching block below.
+ * Each block adds, ON TOP of .unit-card chassis:
+ * a faint diagonal gradient washing the faction's accent across the card
+ * a 3px accent-color left border stripe
+ * a brighter stripe + tinted shadow on hover
+ * Opacities are tuned so the cards remain dark and readable; the accent
+ * only whispers under the chassis. Hover bumps things up to ~50% alpha
+ * so the hovered card pops with its faction colour.
+ * Variables follow the [accent, hover, dark, rgb] palette. We pull the
+ * `rgb` triple from the JS palette into rgba() literals so we don't need
+ * per-card inline styles. */
+/* Generic baseline for any card with a `faction-*` class — keeps left
+ * stripe geometry consistent even when a specific block below doesn't
+ * override the colour (covers brand-new factions added to BSData).
+ * The `--card-bg` var is provided by card-chassis.css; the fallback
+ * keeps things sensible if it isn't set. */
+.unit-card[class*="faction-"] {
+  position: relative;
+  border-left: 3px solid rgba(255, 255, 255, 0.10);
+  transition: border-left-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+
+/* ─── Chaos — red / pestilent / arcane */
+/* Chaos Space Marines — blood red */
+.unit-card.faction-chaos-space-marines {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 168, 168, 0.07) 100%);
+  border-left-color: rgba(230, 168, 168, 0.5);
+}
+
+/* Death Guard — pestilent green */
+.unit-card.faction-death-guard { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(214, 230, 168, 0.06) 100%); border-left-color: rgba(214, 230, 168, 0.5); }
+
+/* Chaos Daemons — sickly pink */
+.unit-card.faction-chaos-daemons { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(230, 168, 189, 0.06) 100%); border-left-color: rgba(230, 168, 189, 0.5); }
+
+/* Chaos Knights — violet */
+.unit-card.faction-chaos-knights { background: linear-gradient(135deg, var(--card-bg) 0%, rgba(199, 168, 230, 0.06) 100%); border-left-color: rgba(199, 168, 230, 0.5); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .unit-card.selected.just-selected::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: linear-gradient( 110deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, 0.35) 50%, rgba(255, 255, 255, 0) 65%, rgba(255, 255, 255, 0) 100% );
+    background-size: 250% 100%;
+    background-position: 150% 0;
+    mix-blend-mode: screen;
+    animation: yaab-shimmer 650ms ease-out 1;
+    border-radius: inherit;
+  }
+  @keyframes yaab-shimmer {
+    0% { background-position: 150% 0; opacity: 0; }
+    20% { opacity: 1; }
+    100% { background-position: -150% 0; opacity: 0; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unit-card:hover, .unit-card:active { transform: none !important; }
+
+  /* prefers-reduced-motion: gradients & stripes are static, but the
+   * border/shadow transitions are gated for users who want zero motion. */
+  .unit-card[class*="faction-"] { transition: none !important; }
+  .fav-star, .detail-action-btn:hover .fav-star { transition: none; }
+  .fav-star.fav-pop { animation: none; }
+}

@@ -1,4 +1,6 @@
-/* command-palette.css — Cmd/Ctrl+K palette + keyboard-help overlay. */
+/* command-palette.css — tier 3 components.
+ * Owns: Cmd/Ctrl+K palette and the keyboard-help overlay. */
+
 /* Palette backdrop/modal */
 .cmdp-backdrop {
   position: fixed;
@@ -27,14 +29,6 @@
   flex-direction: column;
   overflow: hidden;
   animation: cmdp-scale-in 0.14s ease;
-}
-@keyframes cmdp-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes cmdp-scale-in {
-  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Input */
@@ -155,11 +149,7 @@
   padding: 0 4px;
   border-radius: 4px;
 }
-.cmdp-help-close:hover { color: var(--accent); border-color: var(--border-light); }
 .cmdp-help-grid { padding: 14px 18px; overflow-y: auto; display: grid; grid-template-columns: 1fr; gap: 8px 18px; }
-@media (min-width: 520px) {
-  .cmdp-help-grid { grid-template-columns: 1fr 1fr; }
-}
 .cmdp-help-row {
   display: flex;
   align-items: center;
@@ -170,5 +160,18 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 .cmdp-help-keys { flex: 0 0 auto; min-width: 120px; display: flex; align-items: center; flex-wrap: wrap; }
-.cmdp-kbd-plus { color: var(--text-muted); font-size: 10px; padding: 0 1px; }
 .cmdp-help-desc { color: var(--text-muted); flex: 1 1 auto; }
+.cmdp-help-close:hover { color: var(--accent); border-color: var(--border-light); }
+.cmdp-kbd-plus { color: var(--text-muted); font-size: 10px; padding: 0 1px; }
+@keyframes cmdp-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes cmdp-scale-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (min-width: 520px) {
+  .cmdp-help-grid { grid-template-columns: 1fr 1fr; }
+}

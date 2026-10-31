@@ -66,7 +66,7 @@
 
   // The ?v= cache-buster. scripts/stamp-assets.mjs only rewrites URLs that are
   // literally in index.html, and the theme stylesheet never is — so borrow the
-  // stamp off css/style.css, which is always present and always stamped. That
+  // stamp off css/tokens.css, which is always present and always stamped. That
   // keeps the theme file on the same cache generation as everything else
   // without the stamper needing to learn about runtime-injected links.
   function stamp() {
@@ -74,7 +74,7 @@
       var links = document.getElementsByTagName('link');
       for (var i = 0; i < links.length; i++) {
         var href = links[i].getAttribute('href') || '';
-        if (href.indexOf('css/style.css') !== 0) continue;
+        if (href.indexOf('css/tokens.css') !== 0) continue;
         var q = href.indexOf('?');
         return q > -1 ? href.slice(q) : '';
       }

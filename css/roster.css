@@ -1,0 +1,279 @@
+/* roster.css — tier 3 components.
+ * Owns: centre panel: unit grid, search, filter / favourite / recent chips,
+ * faction list, hero CTA, legends / allies toggles. */
+
+/* ── Load status (in center panel header) */
+.load-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); flex: 1; justify-content: center; }
+.load-status-count { color: var(--accent); font-weight: 600; }
+.load-status.load-complete { color: var(--success); }
+
+/* ── Faction List */
+.faction-list { display: flex; flex-direction: column; gap: 6px; }
+.faction-list-empty { color: var(--text-muted); font-size: 12px; line-height: 1.6; padding: 12px 0; }
+.faction-item {
+  display: flex;
+  align-items: center;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  gap: 8px;
+  transition: border-color 0.15s;
+  /* Faction-list rows: same pattern — info column shrinks, delete stays put. */
+  min-width: 0;
+}
+.faction-item:hover { border-color: var(--border-light); }
+.faction-item-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.faction-item-count { font-size: 11px; color: var(--text-muted); }
+.faction-item-del {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+  flex: 0 0 auto;
+}
+.faction-item-del:hover { color: var(--danger); background: rgba(231,76,60,0.15); }
+.faction-item-info { min-width: 0; flex: 1 1 auto; }
+.faction-select { font-size: 12px; padding: 5px 8px; }
+.search-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+}
+.search-input::placeholder { color: var(--text-muted); }
+
+/* Clear (×) button on the unit-search box — added by
+ * js/app/search-clear.js. Lives inside either hero-state.js's
+ * `.yaab-search-wrap` (preferred — it already pads the input on the
+ * right for the Ctrl-K badge, which is hidden whenever there's text)
+ * or, if that's absent, a fallback `.search-input-wrap` we create. */
+.search-input-wrap { flex: 1; position: relative; display: flex; }
+.search-input-wrap > .search-input {
+  flex: 1;
+  padding-right: 28px;
+  /* room for the × button */
+}
+.yaab-search-wrap > .search-input {
+  width: 100%;
+  /* leave room for the badge */
+  padding-right: 56px;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-clear {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  display: none;
+  /* shown only when the field has text */
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.12s, color 0.12s;
+}
+.yaab-search-wrap.has-search-value .search-clear, .search-input-wrap.has-search-value .search-clear { display: inline-flex; }
+.search-clear:hover { background: var(--accent); color: var(--accent-on); }
+
+/* ── Unit Grid */
+.unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.unit-grid::-webkit-scrollbar-track, .dropdown-menu::-webkit-scrollbar-track { background: transparent; }
+#panel-center .panel-body > #unit-grid { flex: 0 0 auto; }
+.roster-empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.roster-empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+.roster-empty p { margin-bottom: 6px; }
+.roster-empty .muted { font-size: 12px; }
+
+/* In Reserves / Requisitions views, hide the legacy "Loading faction
+ * data…" placeholder inside #unit-grid — it has stale text post-load,
+ * and our own empty-state notes describe the actual situation. */
+body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view="requisitions"] #unit-grid #roster-empty { display: none !important; }
+
+/* ── Wargear options (bullet list) */
+/* === Phase-2 UX additions === */
+/* Filter chips row (rendered inside #panel-center .panel-controls, after search) */
+.filter-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 6px; }
+.filter-chip {
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.filter-chips-clear {
+  font-size: 14px;
+  line-height: 1;
+  /* Was 18x18 with margin-left: 2px — under the WCAG 2.2 AA (2.5.8) 24x24
+   * floor and effectively flush against the last role chip. */
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: 8px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0.7;
+  position: relative;
+  /* anchors the touch-target overlay below */
+}
+
+/* Tri-state: a second click on a chip excludes (red strike-through) any
+ * units carrying that keyword. Third click clears it. */
+.filter-chip.excluded {
+  background: rgba(231, 76, 60, 0.18);
+  border-color: rgba(231, 76, 60, 0.55);
+  color: #f5b8b1;
+  text-decoration: line-through;
+  text-decoration-color: rgba(231, 76, 60, 0.7);
+  text-decoration-thickness: 1.5px;
+}
+
+/* Favorites + Recents chips (live in #roster-filter-chips) */
+.filter-chip.fav-chip, .filter-chip.recent-chip { display: inline-flex; align-items: center; gap: 4px; }
+.filter-chip:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+.filter-chips-clear:hover { opacity: 1; background: rgba(255,255,255,0.08); color: var(--text); }
+.filter-chip.excluded:hover { background: rgba(231, 76, 60, 0.28); color: #ffd6cf; }
+.filter-chip.active { background: rgba(168,232,138,0.18); border-color: rgba(168,232,138,0.55); color: #d4f5bb; }
+
+/* Active state: reuse the existing pastel highlight but tint toward gold
+ * for favorites and slate for recents so the two chips read distinctly. */
+.filter-chip.fav-chip.active { background: rgba(230,214,168,0.18); border-color: rgba(230,214,168,0.55); color: #f1e4b8; }
+.filter-chip.recent-chip.active { background: rgba(var(--accent-rgb), 0.16); border-color: rgba(var(--accent-rgb), 0.5); color: var(--accent); }
+.filter-chip.collection-chip-owned.active { background: rgba(230,199,168,0.15); border-color: var(--coll-painting); color: #f2dcc2; }
+.filter-chip.collection-chip-needs.active { background: rgba(138,138,138,0.18); border-color: #b5b5b5; color: #e2e2e2; }
+.filter-chip.collection-chip-painted.active { background: rgba(168,230,183,0.18); border-color: var(--coll-done); color: #d7f2df; }
+
+/* Toolbar icon active state. .toolbar-icons button.is-on is a generic amber
+ * rule from legends-toggle.css; scope this one to the allies button so the
+ * two toggles don't look identical when both are on. */
+.toolbar-icons button#yaab-btn-allies.is-on {
+  border-color: #6fb7c4;
+  color: #b7e3ea;
+  background: rgba(111, 183, 196, 0.12);
+  box-shadow: 0 0 0 1px rgba(111, 183, 196, 0.45), 0 0 8px rgba(111, 183, 196, 0.25);
+}
+
+/* 1. Hero CTA — replaces the small "No units added yet" placeholder */
+.yaab-hero-cta {
+  list-style: none;
+  margin: 18px 0 8px;
+  padding: 22px 18px 18px;
+  border: 1px solid rgba(var(--accent-rgb), 0.22);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.06) 0%, rgba(var(--accent-rgb), 0.02) 100%);
+  text-align: left;
+  position: relative;
+}
+.yaab-hero-headline {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  margin: 0 0 6px;
+  line-height: 1.15;
+}
+.yaab-hero-sub { font-size: 13px; color: var(--text-muted); margin: 0 0 16px; line-height: 1.4; }
+.yaab-hero-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.yaab-hero-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(var(--accent-rgb), 0.28);
+  border-radius: 8px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+.yaab-hero-btn-title { font-weight: 600; font-size: 13px; color: var(--text); }
+.yaab-hero-btn-sub { font-size: 11px; color: var(--text-muted); line-height: 1.3; }
+
+/* Mini variant — when a faction is selected but army still empty */
+.yaab-hero-cta-mini { padding: 14px 14px; }
+.yaab-hero-mini-headline { font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 4px; }
+.yaab-hero-mini-sub { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+.yaab-hero-btn:hover { background: rgba(var(--accent-rgb), 0.10); border-color: rgba(var(--accent-rgb), 0.55); }
+.yaab-hero-btn:active { transform: translateY(1px); }
+.yaab-hero-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 2. Cmd+K search hint badge */
+.yaab-search-wrap { position: relative; display: block; width: 100%; }
+.yaab-kbd-hint {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 20px;
+  padding: 0 6px;
+  font: 600 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.30);
+  border-radius: 4px;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.yaab-kbd-hint-hidden { opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.92); }
+.yaab-kbd-hint:hover { background: rgba(var(--accent-rgb), 0.22); color: var(--text); }
+.filter-chip.fav-chip .fav-chip-glyph, .filter-chip.recent-chip .recent-chip-glyph { font-size: 12px; line-height: 1; opacity: 0.85; }
+.filter-chip.fav-chip .fav-chip-count, .filter-chip.recent-chip .recent-chip-count { font-size: 10px; line-height: 1; opacity: 0.7; margin-left: 1px; }
+.filter-chip.fav-chip.active .fav-chip-glyph { opacity: 1; color: #e6d6a8; }
+.filter-chip.recent-chip.active .recent-chip-glyph { opacity: 1; }
+
+@media (min-width: 821px) {
+  .panel-center.panel-expanded > .panel-controls .search-input { font-size: 15px; padding: 12px 14px; min-height: 44px; }
+  .panel-center.panel-expanded .unit-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important; gap: 14px; align-content: start; }
+  .panel-center.panel-expanded #roster-filter-chips { flex: 0 1 auto; margin-top: 0; max-width: none; }
+  .panel-center.panel-expanded .filter-chip { padding: 6px 12px; font-size: 12px; }
+  .panel-center.panel-expanded > .panel-controls > .yaab-search-wrap, .panel-center.panel-expanded > .panel-controls > .search-input {
+    flex: 1 1 320px;
+    min-width: 280px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion */
+  .yaab-hero-btn, .yaab-kbd-hint { transition: none !important; }
+}
