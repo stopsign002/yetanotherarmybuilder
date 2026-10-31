@@ -9,8 +9,8 @@
 // and the icons were all already in place, so this was the single missing
 // criterion — js/app/pwa-install.js has been listening for a
 // `beforeinstallprompt` that could never fire. Offline support comes along for
-// free, and matters more here than it looks: the entire 40k dataset is embedded
-// in js/vendor/dc-bundle.js and every army lives in localStorage, so the ONLY
+// free, and matters more here than it looks: (when written) the entire 40k dataset was embedded
+// in js/vendor/dc-bundle.js (v1; the dataset is now fetched from /data/dataset/ and is not cached offline) and every army lives in localStorage, so the ONLY
 // reason yaab dies without a network today is that the browser cannot fetch the
 // page's own JavaScript. That is an artificial dependency, and this removes it.
 //
@@ -56,13 +56,13 @@
 // Nothing in SHELL below is a js/css file, and stamp-assets.mjs only stamps
 // those — so no SHELL entry needs a ?v= suffix appended here to match what the
 // page will request.
-const VERSION = 'yaab-shell-2026.10.31-1';
+const VERSION = 'yaab-shell-2026.10.31-2';
 
 // Precached on install: ONLY what a cold OFFLINE navigation needs before the
 // page can start asking for things itself.
 //
 // Deliberately NOT the ~157 ?v=-stamped files index.html references (~14 MB, of which
-// js/vendor/dc-bundle.js alone is 9.5 MB). Every one of those is requested by
+// the old dc-bundle.js alone was 9.5 MB). Every one of those is requested by
 // index.html on EVERY load, so rule 3 caches the whole set on load #1 for free.
 // Precaching them would mean downloading 14 MB TWICE on the install visit —
 // once for the page, once for cache.add() — for zero extra offline coverage.

@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.31-1',
-    lastUpdated: '2026-10-31T04:00:00Z',
+    version:     '2026.10.31-2',
+    lastUpdated: '2026-10-31T05:30:00Z',
     entries: [
+      {
+        date: '2026-10-31',
+        kind: 'change',
+        title: 'Under-the-hood cleanup',
+        description: 'About 7,500 lines of duplicated or dead code and styling were removed and every repeated helper now exists once, so a fix lands everywhere at once. Nothing should look or behave differently; the one visible fix is that a printed data card\u2019s FACTION KEYWORDS line now names the unit\u2019s own faction (a Death Guard card read \u201cChaos Space Marines\u201d before). If something does look off, use Feedback.',
+      },
       {
         date: '2026-10-31',
         kind: 'change',
