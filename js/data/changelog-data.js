@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.31-3',
-    lastUpdated: '2026-10-31T06:45:00Z',
+    version:     '2026.10.31-4',
+    lastUpdated: '2026-10-31T18:30:00Z',
     entries: [
+      {
+        date: '2026-10-31',
+        kind: 'feature',
+        title: 'Fits budget filter and points on the Units tab',
+        description: 'A new \u201cFits budget\u201d checkbox in the unit filter row shows only datasheets whose cheapest size still fits in the points you have left; it follows every add, remove and limit change and clears with the \u00d7. On phones the Units tab now carries the same points readout as the Army tab, with how many points are left (or by how many you are over).',
+      },
+      {
+        date: '2026-10-31',
+        kind: 'change',
+        title: 'Stylesheets reorganised by component',
+        description: 'The 47 stylesheets became 34, one per component in a declared load order, with the patch layers dissolved into the files they patched. Nothing should look different in any theme; the change was checked by comparing the computed style of every element across 48 screen states and by pixel-diffing 45 screenshots. If something looks off, use Feedback.',
+      },
       {
         date: '2026-10-31',
         kind: 'fix',
