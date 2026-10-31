@@ -32,7 +32,7 @@ const loadDir = (dir) => {
   if (!fs.existsSync(dir)) return m;
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.json') || f === 'manifest.json' || f === 'report.json' || f.startsWith('_')) continue;
-    const x = j(path.join(dir, f)); if (x) m.set(x._factionId || f.slice(0, -5), x);
+    const x = j(path.join(dir, f)); if (x && Array.isArray(x.units)) m.set(x._factionId || f.slice(0, -5), x);  // core-rules.json etc. are not factions
   }
   return m;
 };
