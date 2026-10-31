@@ -7,47 +7,21 @@
 // READ-ONLY: anonymous, throwaway profile, all state in localStorage. yaab is
 // not an SSO site, so there is no cookie to mint and no server write anywhere.
 // THEME=brutalist|brutalist-dark to check the other themes.
-import { chromium } from 'playwright';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
+import { OUT, launch, newPage, until, wire, makeChecker, boot } from './_lib.mjs';
 
-const OUT   = process.env.OUT || '/out';
 const THEME = process.env.THEME || 'grimdark';
-const SITE  = process.env.SITE || 'https://yaab.thewheeliebois.com/';
-mkdirSync(OUT, { recursive: true });
 
-let pass = 0, fail = 0;
-const results = [];
-function check(label, ok, detail) {
-  console.log(`${ok ? 'ok  ' : 'FAIL'}  ${label}${detail !== undefined ? `  [${detail}]` : ''}`);
-  results.push({ label, ok: !!ok, detail: detail === undefined ? null : String(detail).slice(0, 300) });
-  if (ok) pass++; else fail++;
-}
-// Poll via evaluate. NOT page.waitForFunction — it needs eval and every vhost
-// here ships a CSP without 'unsafe-eval', so it throws instantly rather than
-// waiting, and every later assertion then races the fetch it should have
-// waited for.
-async function until(page, fn, { timeout = 15000, step = 250, arg } = {}) {
-  const deadline = Date.now() + timeout;
-  for (;;) {
-    const v = await page.evaluate(fn, arg).catch(() => null);
-    if (v) return v;
-    if (Date.now() > deadline) return null;
-    await page.waitForTimeout(step);
-  }
-}
+const C = makeChecker({ strict: true });
+const { check, results } = C;
 
-const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
-await ctx.addInitScript(t => { try { localStorage.setItem('yaab_theme', t); } catch (_) {} }, THEME);
-const page = await ctx.newPage();
-const errors = [];
-page.on('pageerror', e => errors.push('EXCEPTION ' + e.message.slice(0, 200)));
-page.on('console', m => { if (m.type() === 'error' && !/401|auth\/me|favicon/.test(m.text())) errors.push('console: ' + m.text().slice(0, 200)); });
+const browser = await launch();
+const { page } = await newPage(browser, { theme: THEME, reducedMotion: 'reduce' });
+const errors = wire(page);
 page.on('dialog', async d => { await d.dismiss().catch(() => {}); });
 const shot = n => page.screenshot({ path: `${OUT}/split-${THEME}-${n}.png`, fullPage: true }).catch(() => {});
 
-await page.goto(SITE, { waitUntil: 'domcontentloaded', timeout: 180000 });
-const booted = await until(page, () => document.querySelectorAll('#unit-grid .unit-card').length > 0, { timeout: 240000, step: 1000 });
+const booted = await boot(page);
 check('boot: roster renders', !!booted);
 
 // ── Necrons, so we can use Warriors + a Cryptek as the leader ──────────────
@@ -284,7 +258,7 @@ await shot('4-phone');
 
 check('no page exceptions / console errors', errors.length === 0, errors.slice(0, 4).join(' ;; '));
 
-writeFileSync(`${OUT}/split-${THEME}-results.json`, JSON.stringify({ theme: THEME, pass, fail, results, errors }, null, 2));
-console.log(`\n${THEME}: ${pass} passed, ${fail} failed`);
+writeFileSync(`${OUT}/split-${THEME}-results.json`, JSON.stringify({ theme: THEME, pass: C.pass, fail: C.fail, results, errors }, null, 2));
+const fail = C.summary({ prefix: `${THEME}: ` });
 await browser.close();
 process.exit(fail ? 1 : 0);

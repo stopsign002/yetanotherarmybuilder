@@ -26,33 +26,18 @@
 //
 // browse.sh copies this file into browser/ as .run-$$.mjs, so it must stay a
 // single file with no relative imports.
-import { chromium } from 'playwright';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
+import { OUT, launch, until, boot } from './_lib.mjs';
 
-const OUT   = process.env.OUT || '/out';
 const THEME = process.env.THEME || 'grimdark';
 const WIDTH = process.env.WIDTH || 'desktop';
-const SITE  = 'https://yaab.thewheeliebois.com/';
 const VP    = WIDTH === 'phone' ? { width: 390, height: 844 } : { width: 1440, height: 900 };
-mkdirSync(OUT, { recursive: true });
 
 const R = { theme: THEME, width: WIDTH, surfaces: [], notes: [], counts: {} };
 let attempted = 0, opened = 0, shot = 0;
 
-// DO NOT use page.waitForFunction — yaab's CSP is script-src 'self' with no
-// 'unsafe-eval', so it rejects instantly instead of waiting. page.evaluate is
-// fine (CDP, not subject to page CSP).
-async function until(page, fn, { timeout = 15000, step = 250, arg } = {}) {
-  const deadline = Date.now() + timeout;
-  for (;;) {
-    const v = await page.evaluate(fn, arg).catch(() => null);
-    if (v) return v;
-    if (Date.now() > deadline) return null;
-    await page.waitForTimeout(step);
-  }
-}
 
-const browser = await chromium.launch();
+const browser = await launch();
 const ctx = await browser.newContext({
   viewport: VP, ignoreHTTPSErrors: true, reducedMotion: 'reduce', deviceScaleFactor: 1,
 });
@@ -278,8 +263,7 @@ const dismiss = async () => {
 
 // ── boot ──────────────────────────────────────────────────────────────────
 console.log(`\n=== yaab sweep — theme=${THEME} width=${WIDTH} ===`);
-await page.goto(SITE, { waitUntil: 'domcontentloaded', timeout: 180000 });
-const booted = await until(page, () => document.querySelectorAll('#unit-grid .unit-card').length > 0, { timeout: 240000, step: 1000 });
+const booted = await boot(page);
 if (!booted) { R.notes.push('BOOT FAILED — no .unit-card after 240s'); console.log('!! boot failed'); }
 
 // Theme must actually be applied, or every screenshot below is a false pass.

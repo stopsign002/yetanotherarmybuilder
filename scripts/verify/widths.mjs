@@ -8,13 +8,10 @@
 //     ~/sites/base/browser/out/yaab-widths-brutalist
 //
 // READ-ONLY.
-import { chromium } from 'playwright';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
+import { OUT, launch, newPage, boot } from './_lib.mjs';
 
-const OUT   = process.env.OUT || '/out';
 const THEME = process.env.THEME || 'grimdark';
-const SITE  = process.env.SITE || 'https://yaab.thewheeliebois.com/';
-mkdirSync(OUT, { recursive: true });
 
 const WIDTHS = [360, 390, 480, 600, 700, 760, 820, 860, 900, 960, 1024, 1100, 1200, 1440, 1600];
 
@@ -63,16 +60,9 @@ const PROBE = () => {
   return out;
 };
 
-const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
-await ctx.addInitScript(t => { try { localStorage.setItem('yaab_theme', t); } catch (_) {} }, THEME);
-const page = await ctx.newPage();
-await page.goto(SITE, { waitUntil: 'domcontentloaded', timeout: 180000 });
-for (let i = 0; i < 240; i++) {
-  const n = await page.evaluate(() => document.querySelectorAll('#unit-grid .unit-card').length).catch(() => 0);
-  if (n > 0) break;
-  await page.waitForTimeout(1000);
-}
+const browser = await launch();
+const { ctx, page } = await newPage(browser, { theme: THEME, reducedMotion: 'reduce' });
+await boot(page);
 // seed content so the hero, points bar and army panel are all populated
 await page.evaluate(() => {
   const s = document.getElementById('army-faction-select');

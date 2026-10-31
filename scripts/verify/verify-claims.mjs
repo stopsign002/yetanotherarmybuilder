@@ -12,12 +12,8 @@
 // star/print/calc" checks were deleted (those features were removed on
 // purpose); the palette check now looks for Collect mode, which is reachable
 // on desktop only through Ctrl+K.
-import { chromium } from 'playwright';
-import { mkdirSync, writeFileSync } from 'node:fs';
-
-const OUT = process.env.OUT || '/out';
-const SITE = 'https://yaab.thewheeliebois.com/';
-mkdirSync(OUT, { recursive: true });
+import { writeFileSync } from 'node:fs';
+import { OUT, launch, newPage, boot } from './_lib.mjs';
 
 let pass = 0, fail = 0; const results = [];
 const check = (label, ok, detail) => {
@@ -25,20 +21,14 @@ const check = (label, ok, detail) => {
   results.push({ label, appBehavesCorrectly: !!ok, detail: detail === undefined ? null : String(detail).slice(0, 400) });
   ok ? pass++ : fail++;
 };
-async function until(page, fn, { timeout = 15000, step = 250, arg } = {}) {
-  const d = Date.now() + timeout;
-  for (;;) { const v = await page.evaluate(fn, arg).catch(() => null); if (v) return v; if (Date.now() > d) return null; await page.waitForTimeout(step); }
-}
 
-const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
-const page = await ctx.newPage();
+const browser = await launch();
+const { ctx, page } = await newPage(browser, { reducedMotion: 'reduce' });
 // ACCEPT dialogs — dismissing them cancelled New-army last time.
 page.on('dialog', async d => { await d.accept().catch(() => {}); });
 const shot = n => page.screenshot({ path: `${OUT}/v-${n}.png` }).catch(() => {});
 
-await page.goto(SITE, { waitUntil: 'domcontentloaded', timeout: 180000 });
-await until(page, () => document.querySelectorAll('#unit-grid .unit-card').length > 0, { timeout: 240000, step: 1000 });
+await boot(page);
 
 // ── 1. boot splash ────────────────────────────────────────────────────────
 const splash = await page.evaluate(() => {

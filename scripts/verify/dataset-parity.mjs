@@ -6,13 +6,11 @@
 // Part 1: BSData.loadAllFactions() on both, diffed per unit/detachment with the
 //         parity.mjs categories. Part 2: five fixed armies built through the UI,
 //         #points-current compared. No page.waitForFunction (CSP) — polling via evaluate.
-import { chromium } from 'playwright';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
+import { OUT, launch, newPage, until, boot } from './_lib.mjs';
 
-const OUT  = process.env.OUT || '/out';
 const LIVE = process.env.LIVE || 'https://yaab.thewheeliebois.com/';
 const TEST = process.env.TEST || 'https://yaab-test.thewheeliebois.com/';
-mkdirSync(OUT, { recursive: true });
 
 // Fixed armies: faction option matcher + [unit name, count].
 const ARMIES = [
@@ -23,23 +21,12 @@ const ARMIES = [
   { name: 'Agents of the Imperium', faction: 'Agents of the Imperium', units: [['Inquisitor', 1], ['Aquila Kill Team', 1]] },
 ];
 
-async function until(page, fn, { timeout = 15000, step = 250, arg } = {}) {
-  const deadline = Date.now() + timeout;
-  for (;;) {
-    const v = await page.evaluate(fn, arg).catch(() => null);
-    if (v) return v;
-    if (Date.now() > deadline) return null;
-    await page.waitForTimeout(step);
-  }
-}
 
-const browser = await chromium.launch();
+const browser = await launch();
 async function open(url) {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
-  const page = await ctx.newPage();
+  const { ctx, page } = await newPage(browser, { reducedMotion: 'reduce' });
   page.on('dialog', d => d.dismiss().catch(() => {}));
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 });
-  await page.waitForSelector('#unit-grid .unit-card', { state: 'attached', timeout: 240000 });
+  if (!(await boot(page, { url }))) throw new Error('roster never rendered: ' + url);
   return { ctx, page };
 }
 

@@ -13,46 +13,25 @@
 //                  account and exercise the account menu + admin panel.
 //
 // It NEVER clicks approve/revoke on a row that is not the fixture user.
-import { chromium } from 'playwright';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
+import { OUT, launch, newPage, until, wire, makeChecker, boot } from './_lib.mjs';
 
-const OUT   = process.env.OUT || '/out';
 const STAGE = process.env.STAGE || 'register';
 const THEME = process.env.THEME || 'grimdark';
 const USER  = process.env.FIXTURE_USER;
 const PASS  = process.env.FIXTURE_PASS;
-const SITE  = 'https://yaab.thewheeliebois.com/';
 if (!USER || !PASS) { console.log('FIXTURE_USER and FIXTURE_PASS are required'); process.exit(2); }
-mkdirSync(OUT, { recursive: true });
 
-let pass = 0, fail = 0; const results = [];
-const check = (label, ok, detail) => {
-  console.log(`${ok ? 'ok  ' : 'FAIL'}  ${label}${detail ? `  [${detail}]` : ''}`);
-  results.push({ label, ok: !!ok, detail: detail === undefined ? null : String(detail).slice(0, 300) });
-  ok ? pass++ : fail++;
-};
-async function until(page, fn, { timeout = 15000, step = 250, arg } = {}) {
-  const d = Date.now() + timeout;
-  for (;;) {
-    const v = await page.evaluate(fn, arg).catch(() => null);
-    if (v) return v;
-    if (Date.now() > d) return null;
-    await page.waitForTimeout(step);
-  }
-}
+const C = makeChecker();
+const { check, results } = C;
 
-const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
-await ctx.addInitScript(t => { try { localStorage.setItem('yaab_theme', t); } catch (_) {} }, THEME);
-const page = await ctx.newPage();
-const errors = [];
-page.on('pageerror', e => errors.push('EXCEPTION ' + e.message.slice(0, 200)));
-page.on('console', m => { if (m.type() === 'error' && !/401|auth\/me|favicon/.test(m.text())) errors.push('console: ' + m.text().slice(0, 200)); });
+const browser = await launch();
+const { ctx, page } = await newPage(browser, { theme: THEME, reducedMotion: 'reduce' });
+const errors = wire(page);
 page.on('dialog', async d => { await d.dismiss().catch(() => {}); });
 const shot = n => page.screenshot({ path: `${OUT}/${STAGE}-${THEME}-${n}.png` }).catch(() => {});
 
-await page.goto(SITE, { waitUntil: 'domcontentloaded', timeout: 180000 });
-await until(page, () => document.querySelectorAll('#unit-grid .unit-card').length > 0, { timeout: 240000, step: 1000 });
+await boot(page);
 
 if (STAGE === 'register') {
   await page.evaluate(() => UI.showAuthModal('register'));
@@ -175,9 +154,9 @@ if (STAGE === 'register') {
   await shot('15-after-sync');
 }
 
-writeFileSync(`${OUT}/${STAGE}.json`, JSON.stringify({ stage: STAGE, theme: THEME, user: USER, pass, fail, results, errors }, null, 2));
-console.log(`\npassed ${pass}, failed ${fail}`);
-if (fail) console.log('failed: ' + results.filter(r => !r.ok).map(r => r.label).join('; '));
+writeFileSync(`${OUT}/${STAGE}.json`, JSON.stringify({ stage: STAGE, theme: THEME, user: USER, pass: C.pass, fail: C.fail, results, errors }, null, 2));
+console.log(`\npassed ${C.pass}, failed ${C.fail}`);
+if (C.fail) console.log('failed: ' + results.filter(r => !r.ok).map(r => r.label).join('; '));
 console.log('errors: ' + (errors.length ? [...new Set(errors)].slice(0, 8).join(' | ') : '(none)'));
 await ctx.close();
 await browser.close();

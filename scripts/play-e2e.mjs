@@ -4,26 +4,11 @@
 // READ-ONLY server-wise: everything it creates lives in the browser's own
 // localStorage (a throwaway context), signed out, so sync never fires.
 // No waitForFunction anywhere — yaab's CSP has no 'unsafe-eval'.
-import { chromium } from 'playwright';
+import { OUT, BASE, launch, newPage, until, makeChecker } from './_lib.mjs';
 
-const OUT = process.env.OUT || '/out';
-const BASE = process.env.BASE || process.env.SITE || 'https://yaab.thewheeliebois.com';
-
-let pass = 0, fail = 0;
-const fails = [];
-function check(label, ok, detail) {
-  console.log(`${ok ? 'ok  ' : 'FAIL'}  ${label}${detail ? `  [${detail}]` : ''}`);
-  if (ok) pass++; else { fail++; fails.push(label); }
-}
-async function poll(page, fn, { timeout = 45000, step = 250 } = {}) {
-  const t0 = Date.now();
-  while (Date.now() - t0 < timeout) {
-    const v = await page.evaluate(fn).catch(() => null);
-    if (v) return v;
-    await page.waitForTimeout(step);
-  }
-  return null;
-}
+const C = makeChecker();
+const { check } = C;
+const poll = (page, fn, o = {}) => until(page, fn, { timeout: 45000, ...o });
 
 // Build a small real army through the app's own APIs: 3 entries incl. an
 // attached leader with an enhancement, two detachments. Returns a summary.
@@ -96,12 +81,11 @@ async function bootAndSeed(page) {
   return seed;
 }
 
-const browser = await chromium.launch();
+const browser = await launch();
 
 // ════════════════════════ DESKTOP 1440 ════════════════════════
 {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  const page = await ctx.newPage();
+  const { ctx, page } = await newPage(browser);
   page.on('dialog', d => d.accept());
   const seed = await bootAndSeed(page);
   console.log('# seeded:', JSON.stringify(seed.units), 'dets:', JSON.stringify(seed.dets));
@@ -444,10 +428,7 @@ const browser = await chromium.launch();
 
 // ════════════════════════ PHONE 390 ════════════════════════
 {
-  const ctx = await browser.newContext({
-    viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true,
-  });
-  const page = await ctx.newPage();
+  const { ctx, page } = await newPage(browser, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   page.on('dialog', d => d.accept());
   const seed = await bootAndSeed(page);
 
@@ -552,5 +533,5 @@ const browser = await chromium.launch();
 }
 
 await browser.close();
-console.log(`\n${pass} passed, ${fail} failed${fail ? ':\n  - ' + fails.join('\n  - ') : ''}`);
+const fail = C.summary({ list: true });
 process.exit(fail ? 1 : 0);

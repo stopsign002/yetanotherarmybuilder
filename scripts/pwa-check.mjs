@@ -24,18 +24,10 @@
 // This needs neither channel:'chromium' nor launchPersistentContext. Those are
 // Notifications/Push requirements; installability is visible from plain
 // headless with an ordinary context.
-import { chromium } from 'playwright';
+import { OUT, BASE, launch, newPage, until as untilBase, makeChecker } from './_lib.mjs';
 
-const OUT = process.env.OUT || '/out';
-const BASE = process.env.BASE || process.env.SITE || 'https://yaab.thewheeliebois.com';
-
-let pass = 0, fail = 0;
-const fails = [];
-function check(label, ok, detail) {
-  const line = `${ok ? 'ok  ' : 'FAIL'}  ${label}${detail ? `  [${detail}]` : ''}`;
-  console.log(line);
-  if (ok) pass++; else { fail++; fails.push(label); }
-}
+const C = makeChecker();
+const { check, fails } = C;
 
 /**
  * Poll a page.evaluate until it returns something truthy.
@@ -47,19 +39,10 @@ function check(label, ok, detail) {
  * and every assertion after it races the page. page.evaluate itself is fine —
  * it goes over CDP and is not subject to the page's CSP.
  */
-async function until(page, fn, { timeout = 20000, step = 250 } = {}) {
-  const deadline = Date.now() + timeout;
-  for (;;) {
-    const v = await page.evaluate(fn).catch(() => null);
-    if (v) return v;
-    if (Date.now() > deadline) return null;
-    await page.waitForTimeout(step);
-  }
-}
+const until = (page, fn, o = {}) => untilBase(page, fn, { timeout: 20000, ...o });
 
-const browser = await chromium.launch();
-const ctx = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1440, height: 900 } });
-const page = await ctx.newPage();
+const browser = await launch();
+const { ctx, page } = await newPage(browser);
 
 const consoleErrors = [], pageErrors = [];
 page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
@@ -216,5 +199,5 @@ await page.waitForTimeout(500);
 await page.screenshot({ path: `${OUT}/pwa-phone.png`, fullPage: false });
 
 await browser.close();
-console.log(`\n${pass} passed, ${fail} failed`);
+const fail = C.summary();
 if (fail) { console.log('failed: ' + fails.join('; ')); process.exit(1); }
