@@ -83,7 +83,7 @@
        js/ui/cold-start.js used to be the only loading screen, but it
        registers on App.hooks.bootstrap, which fires at DOMContentLoaded —
        and DOMContentLoaded does not happen until ~13s on a cold load,
-       because building 34 factions from dc-bundle.js and repainting the
+       because building 34 factions and repainting the
        roster as they stream in all runs during script execution. So the
        splash appeared at 12.9s and vanished at 14.7s: a 1.8s flash at the
        END of the wait, with nothing at all during it.
@@ -581,26 +581,12 @@
        reserves.js/requisitions.js so the first render is correct. -->
   <script defer src="js/app/id-migration.js?v=2026.10.31-1"></script>
   <script defer src="js/db.js?v=2026.10.31-1"></script>
-  <!-- Dormant BattleScribe loader; dataset-loader.js below overrides window.BSData. -->
-  <script defer src="js/bsdata.js?v=2026.10.31-1"></script>
-  <!-- Retired GDC layer: a no-op App.GDC stub for the dormant bsdata.js. -->
+  <!-- Retired GDC layer: a no-op App.GDC stub. -->
   <script defer src="js/gdc.js?v=2026.10.31-1"></script>
   <!-- Live data source (docs/DATASET.md §7): fetches data/dataset/<which>/ and
-       overrides window.BSData. AFTER bsdata.js, BEFORE js/parser/ (foldKey stub). -->
+       installs window.BSData and the foldKey stub. -->
   <script defer src="js/data/dataset-loader.js?v=2026.10.31-1"></script>
 
-  <!-- Parser: shared-index + classify seed internals; leaf helpers; entry; catalogue; public API last. -->
-  <script defer src="js/parser/shared-index.js?v=2026.10.31-1"></script>
-  <script defer src="js/parser/classify.js?v=2026.10.31-1"></script>
-  <script defer src="js/parser/stats.js?v=2026.10.31-1"></script>
-  <script defer src="js/parser/weapons.js?v=2026.10.31-1"></script>
-  <script defer src="js/parser/abilities.js?v=2026.10.31-1"></script>
-  <script defer src="js/parser/wargear.js?v=2026.10.31-1"></script>
-  <script defer src="js/parser/costs.js?v=2026.10.31-1"></script>
-  <script defer src="js/parser/keywords.js?v=2026.10.31-1"></script>
-  <script defer src="js/parser/entry.js?v=2026.10.31-1"></script>
-  <script defer src="js/parser/catalogue.js?v=2026.10.31-1"></script>
-  <script defer src="js/parser/index.js?v=2026.10.31-1"></script>
 
   <script defer src="js/storage.js?v=2026.10.31-1"></script>
   <script defer src="js/army.js?v=2026.10.31-1"></script>

@@ -19,14 +19,8 @@
 // (woff2) are intentionally skipped — their URLs must match the CSS
 // @font-face requests or the preload is wasted.
 //
-// The nightly data refresh also redeploys js/vendor/dc-bundle.js WITHOUT a
-// release, and that content needs a new URL too. It must not bump
-// App.CHANGELOG.version to get one: changelog.js lights the "What's new" dot by
-// comparing that version against yaab_changelog_seen, so bumping it daily would
-// show every user a new-updates badge over an unchanged changelog. Instead the
-// refresh passes --data <hash>, which suffixes the token as `<version>-d<hash>`.
-// The release version stays visible in the URL, the cache key still changes,
-// and the changelog is untouched.
+// (`--data <hash>` suffixes the token as `<version>-d<hash>`: a v1 mechanism for
+// the retired dc-bundle redeploy, unused by the v2 dataset flow, kept harmless.)
 //
 // It also stamps the service worker's cache name (`const VERSION` in sw.js)
 // from the same token. That coupling is load-bearing rather than tidy: the
