@@ -7,7 +7,7 @@
 import { chromium } from 'playwright';
 
 const OUT = process.env.OUT || '/out';
-const BASE = 'https://yaab.thewheeliebois.com';
+const BASE = process.env.BASE || process.env.SITE || 'https://yaab.thewheeliebois.com';
 
 let pass = 0, fail = 0;
 const fails = [];

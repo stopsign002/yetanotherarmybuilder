@@ -13,7 +13,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 
 const OUT   = process.env.OUT || '/out';
 const THEME = process.env.THEME || 'grimdark';
-const SITE  = 'https://yaab.thewheeliebois.com/';
+const SITE  = process.env.SITE || 'https://yaab.thewheeliebois.com/';
 mkdirSync(OUT, { recursive: true });
 
 const WIDTHS = [360, 390, 480, 600, 700, 760, 820, 860, 900, 960, 1024, 1100, 1200, 1440, 1600];

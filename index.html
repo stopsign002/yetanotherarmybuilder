@@ -581,18 +581,13 @@
        reserves.js/requisitions.js so the first render is correct. -->
   <script defer src="js/app/id-migration.js?v=2026.10.30-1"></script>
   <script defer src="js/db.js?v=2026.10.30-1"></script>
-  <!-- 40kdc 11th-edition dataset, bundled to a window.DC global. Loaded before
-       the adapter so it can read it. Built offline from build/dc-entry.mjs. -->
-  <script defer src="js/vendor/dc-bundle.js?v=2026.10.30-1"></script>
-    <script defer src="js/vendor/dc-prose.js?v=2026.10.30-1"></script>
+  <!-- Dormant BattleScribe loader; dataset-loader.js below overrides window.BSData. -->
   <script defer src="js/bsdata.js?v=2026.10.30-1"></script>
-  <!-- GDC stratagem layer — bsdata.js's Phase 3 hook calls App.GDC.loadAll()
-       after factions parse, so this must be loaded BEFORE any code that
-       imports from window.App.GDC. -->
+  <!-- Retired GDC layer: a no-op App.GDC stub for the dormant bsdata.js. -->
   <script defer src="js/gdc.js?v=2026.10.30-1"></script>
-  <!-- 40kdc adapter: maps the 40kdc dataset → yaab's parser shape and overrides
-       window.BSData. Must load AFTER gdc.js (uses App.GDC) and dc-bundle.js. -->
-  <script defer src="js/data/dc-adapter.js?v=2026.10.30-1"></script>
+  <!-- Live data source (docs/DATASET.md §7): fetches data/dataset/<which>/ and
+       overrides window.BSData. AFTER bsdata.js, BEFORE js/parser/ (foldKey stub). -->
+  <script defer src="js/data/dataset-loader.js?v=2026.10.30-1"></script>
 
   <!-- Parser: shared-index + classify seed internals; leaf helpers; entry; catalogue; public API last. -->
   <script defer src="js/parser/shared-index.js?v=2026.10.30-1"></script>

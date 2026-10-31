@@ -1,0 +1,34 @@
+{
+  "_comment": "Pinned inputs for the v2 dataset pipeline (docs/DATASET.md §2). Paths are as seen inside the build container (/app = the app tree, /work = ~/sites/base/yaab-data).",
+  "gdc": {
+    "repo": "game-datacards/datasources",
+    "ref": "main",
+    "edition": "11th",
+    "snapshotDir": "/app/data/gdc/11th/gdc",
+    "rawBase": "https://raw.githubusercontent.com/game-datacards/datasources/main/11th/gdc/",
+    "files": [
+      "adeptasororitas", "adeptuscustodes", "adeptusmechanicus", "aeldari", "agents",
+      "astramilitarum", "blacktemplar", "bloodangels", "chaos_spacemarines", "chaosdaemons",
+      "chaosknights", "darkangels", "deathguard", "deathwatch", "drukhari",
+      "emperors_children", "greyknights", "gsc", "imperialknights", "necrons",
+      "orks", "space_marines", "spacewolves", "tau", "thousandsons",
+      "tyranids", "votann", "worldeaters"
+    ]
+  },
+  "mfm": {
+    "base": "https://mfm.warhammer-community.com/en"
+  },
+  "dc": {
+    "repo": "wn-mitch/40kdc-data",
+    "sha": "709ecd9f5bb6c06b7446eda6a6a0eae6b921a1c8",
+    "checkout": "/work/checkouts/40kdc-data"
+  },
+  "coreRules": {
+    "_comment": "Core-rule glossary (Deep Strike, Deadly Demise X, Lethal Hits, ...). GDC prints core abilities and weapon keywords by NAME only, so their rule text has no GDC source. One-time snapshot of the 72 faction=='core' entries of the v1 build/abilities-index.json, frozen as a pinned file. Generic rules, not per-unit text; no other v1 store content is used.",
+    "path": "/work/core-rules.json",
+    "md5": "2d2b068cfe8232c98d89abb027540a43"
+  },
+  "work": "/work/work",
+  "golden": "/work/golden",
+  "datasetDir": "/app/data/dataset"
+}

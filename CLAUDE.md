@@ -2,9 +2,9 @@
 
 ## What this is
 
-A client-only static site that sources Warhammer 40k **11th-edition** data from the community **40kdc dataset** (`wn-mitch/40kdc-data`) and lets a user build, share, and play 40k armies. The dataset is built offline into a single committed browser bundle, `js/vendor/dc-bundle.js`, which exposes a global `window.DC` (collections: units, factions, weapons, detachments, stratagems, enhancements, abilities, plus an embedded `abilityText` store). `js/data/dc-adapter.js` maps `window.DC` into the exact parser output shape the old BattleScribe parser emitted (see `docs/PARSER.md`) and **overrides `window.BSData`** at load — so every downstream renderer keeps working unchanged. 40kdc ships no rules prose, so `js/gdc.js` runs as a hybrid fallback for stratagem/unit text, served from the committed `data/gdc/` snapshot (a bundled ability-text store covers ~98% of unit abilities; the server-only `js/vendor/dc-prose.js` overlay takes it to 100%). Persists user data in `localStorage`. Optional username/password account with offline-first cloud sync of armies + a small KV bag (favorites, collection, crusade rosters, etc.) via the sibling `api/` backend.
+A client-only static site for building, sharing and playing Warhammer 40k **11th-edition** armies. Game data comes from the **v2 dataset pipeline** (`pipeline/`, contract `docs/DATASET.md`): **GDC** (GW's own app data via Game Datacards) and the official **MFM** site are the primary sources; a **pinned 40kdc snapshot** supplies only what GDC has no structured form of (wargear option structure, allied rules, force dispositions, game-mode flags). The pipeline builds one JSON file per faction in the exact renderer shape (the shape `docs/PARSER.md` documents) under `data/dataset/current/` (gitignored, served, backed up by the media leg). `js/data/dataset-loader.js` fetches `data/dataset/current/manifest.json` plus the faction files and installs them as `window.BSData.loadAllFactions()` — so every downstream renderer keeps working unchanged. `?data=candidate:<id>` loads an unapproved candidate for review in the real UI. There is **no corrections layer**: no stat, text or points overrides; the one hand-maintained data file is `pipeline/aliases.json` (name joins only). Persists user data in `localStorage`. Optional username/password account with offline-first cloud sync of armies + a small KV bag (favorites, collection, crusade rosters, etc.) via the sibling `api/` backend.
 
-The **app's own JavaScript is still buildless** (plain `<script src>`, IIFEs, namespace globals, no framework/bundler/TS). The single exception is the offline data-bundle build under `build/` (esbuild → `js/vendor/dc-bundle.js`); its output is just a static `.js` asset loaded like any other. See `build/README.md`. The bundle is auto-refreshed + frozen, not live-fetched: `window.DC` data is embedded (no runtime network calls for game data at all — the GDC prose/weapon source is a committed snapshot under `data/gdc/`, refreshed by the same cron; it was fetched live from GitHub until 2026-07-28), and `~/sites/base/refresh-40kdc.sh` rebuilds + redeploys it as stage 1 of `~/sites/base/yaab-pipeline.sh` (cron `35 4 * * 1` — **weekly, Mondays 04:35 UTC**; it was nightly at 04:45 from 2026-07-28 until 2026-09-10, and weekly on Fridays between the 2026-07-01 cutover and 2026-07-28), validating against the live adapter before deploying. **The refresh is frozen:** `~/sites/base/DATA-FREEZE` has existed since 2026-09-17 and makes stage 1 (the whole refresh, MFM points included) exit until the file is removed; a one-off run needs `DATA_FREEZE_OVERRIDE=1` (the old `FORCE_REFRESH=1` was removed and does nothing). Do NOT hand-edit `js/vendor/dc-bundle.js` or `build/abilities-index.json` — they're generated.
+The **app's own JavaScript is still buildless** (plain `<script src>`, IIFEs, namespace globals, no framework/bundler/TS). Game data is **not built in the browser and not committed**: `app/pipeline/` (Node `.mjs` extractors run in Docker, `mfm.py` on the host, CLI `pipeline/yaab-data`) builds a **candidate** dataset daily; nothing goes live until approved. Workflow: `yaab-data build` → `validate <id>` → `report <id>` (diff vs current, mailed only when it differs) → `yaab-data approve <id>` (atomic swap into `data/dataset/current/`, last 5 kept in `previous/`) → `yaab-data rollback [<n>]` if needed; `list` and `preview <id>` (prints the `?data=candidate:<id>` URL) are read-only. Not approving **is** the pause — there is no freeze file. Caddy serves `/data/dataset/*` with `Cache-Control: no-cache`, so an approve is visible on the next load. Never hand-edit anything under `data/dataset/`: it is generated. Full contract, source ownership table and validator rules: `docs/DATASET.md`; the v1 scripts' retirement steps: `pipeline/retire-v1.md`; the v1 bundle path (40kdc `dc-bundle.js`, `dc-adapter.js`, overlays, `DATA-FREEZE`, weekly `yaab-pipeline.sh`) is gone or being removed and survives only as history in git.
 
 ## Running it
 
@@ -12,9 +12,9 @@ The **app's own JavaScript is still buildless** (plain `<script src>`, IIFEs, na
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000/`. Cannot be opened via `file://` — the GDC fallback fetch requires http(s).
+Then open `http://localhost:8000/`. Cannot be opened via `file://` — the dataset loader fetches `data/dataset/*` over http(s), and the dataset is gitignored, so a fresh clone needs `pipeline/yaab-data build` + `approve` (or a copy of `data/dataset/`) before it shows any units.
 
-**No automated CI suite** (the only workflow in `.github/` is `mirror-bsdata.yml`). Verify changes by exercising the running site. The
+**No automated CI suite** (the old `mirror-bsdata.yml` workflow is scheduled for removal in `pipeline/retire-v1.md`). Verify changes by exercising the running site. The
 Node tooling is: `node scripts/stamp-assets.mjs` (cache-bust stamper; `--check`
 fails on a stale stamp — run it by hand, nothing runs it in CI — see "HTTP
 caching" below), the analysis reports `scripts/parser-coverage.mjs` +
@@ -25,7 +25,7 @@ hand-run headless-browser checks driven with
 `widths.mjs`, `signedin.mjs`, `interact.mjs`, `sweep.mjs`, ...). The app itself
 needs no `npm install` — vendored deps are committed. Note `app/.gitignore`
 ignores `package.json` / `package-lock.json` at any depth; `build/package.json`
-is tracked on purpose and survived the rule, but a new one elsewhere under
+is tracked on purpose (until retire-v1 deletes `build/`) and survived the rule, but a new one elsewhere under
 `app/` would be silently ignored.
 
 ## File map
@@ -39,15 +39,15 @@ is tracked on purpose and survived the rule, but a new one elsewhere under
 | `css/auth.css` | Auth UI styling (sign-in button, dropdown, auth modal). |
 | `sw.js` | **App-shell service worker.** Network-first navigations, stale-while-revalidate assets, `/api` + `/data` never touched. Its four rules and the rollback are in the "Service worker" section below. `sw-kill.js` is the emergency kill switch. |
 | `manifest.json` | PWA manifest (installable). |
-| `js/db.js` | `YaabDB` IndexedDB wrapper: `factions` + `gst` + `gdc` + `cardBackImages` stores. (The adapter does NOT cache factions here — they're rebuilt from `window.DC` each load.) |
-| `js/vendor/dc-bundle.js` | **Generated.** Embedded 40kdc 11e dataset + ability-text store, exposed as `window.DC`. Built offline by `build/`. Do not hand-edit. |
-| `js/data/dc-adapter.js` | **Live data source.** Maps `window.DC` into the parser output shape, overrides `window.BSData.loadAllFactions`, runs the GDC overlay + `reconcileStrats()`, and adds 11e two-dimensional points (`parsePoints` → `squadOptions` / `pointsOptions` / `unit.ordinal`). Stubs `WahapediaParser._internal.foldKey`. |
-| `build/` | The ONE build step: esbuild (`dc-entry.mjs` + `abilities-index.json`) → `js/vendor/dc-bundle.js`. See `build/README.md`. |
-| `js/bsdata.js` | **DORMANT — kept for rollback, overridden at runtime by `dc-adapter.js`.** Old BattleScribe XML fetcher (mirror-first, GitHub-raw fallback, 6-worker loader). Loads but never runs. |
-| `data/bsdata/` | **DORMANT — kept for rollback.** Server-side mirror of `BSData/wh40k-10e`. Still updated by the mirror Action but unread at runtime. |
-| `scripts/mirror-bsdata.mjs` | **DORMANT — kept for rollback.** Cron-driven Node 20 script that diffs `BSData/wh40k-10e` by blob SHA into `data/bsdata/`. No deps. |
-| `.github/workflows/mirror-bsdata.yml` | **DORMANT — kept for rollback.** Runs `scripts/mirror-bsdata.mjs` every 6h; updates an unread mirror. |
-| `js/parser/` | **DORMANT — kept for rollback, overridden at runtime by `dc-adapter.js`.** BattleScribe XML → plain-object units. Its `WahapediaParser.parse()` output shape is now the contract `dc-adapter.js` emits. See `docs/PARSER.md`. |
+| `js/db.js` | `YaabDB` IndexedDB wrapper: `factions` + `gst` + `gdc` + `cardBackImages` stores. (The loader does NOT cache factions here — they are fetched from `data/dataset/` each load.) |
+| `pipeline/` | **The v2 data pipeline** (in git, hidden by Caddy under `/pipeline/*`): `sources.json` (pinned inputs), `aliases.json` (the only hand file: name joins), `extract/{gdc.mjs,mfm.py,dc.mjs}`, `build.mjs`, `validate.mjs`, `report.mjs`, `parity.mjs`, `schema/faction.schema.json`, CLI `yaab-data`. Contract: `docs/DATASET.md`. Retiring v1: `pipeline/retire-v1.md`. |
+| `js/data/dataset-loader.js` | **Live data source.** Reads `?data=candidate:<id>` (else `current`), fetches `data/dataset/<which>/manifest.json` + the faction files and installs `window.BSData.loadAllFactions()` resolving to the faction array (parser output shape, `docs/PARSER.md`). Keeps the `WahapediaParser._internal.foldKey` stub that `attachments.js` needs. Replaced `dc-adapter.js` + the merging half of `gdc.js`. |
+| `data/dataset/` | **Generated, gitignored, served.** `current/<factionId>.json` + `manifest.json`, `candidate/<id>/`, `previous/<n>/` (last 5 approved). Written only by `yaab-data`; backed up by the media leg. |
+| `js/bsdata.js` | **Dormant, scheduled for removal in retire-v1.** Old BattleScribe XML fetcher. Loads but never runs. |
+| `data/bsdata/` | **Dormant, scheduled for removal in retire-v1.** Server-side mirror of `BSData/wh40k-10e`, unread at runtime. |
+| `scripts/mirror-bsdata.mjs` | **Dormant, scheduled for removal in retire-v1.** Cron-driven script that fills `data/bsdata/`. |
+| `.github/workflows/mirror-bsdata.yml` | **Dormant, scheduled for removal in retire-v1.** Runs `scripts/mirror-bsdata.mjs` every 6h; updates an unread mirror. |
+| `js/parser/` | **Dormant, scheduled for removal in retire-v1** (blocked until the loader keeps the `foldKey` stub; `index.html` still has the script tags). BattleScribe XML → plain-object units. Its `WahapediaParser.parse()` output shape is the contract the dataset files follow. See `docs/PARSER.md`. |
 | `js/storage.js` | `localStorage` armies + compact `YAAB1:` deflate-base64url export/import. |
 | `js/army.js` | `Army` + `ArmyManager` data model. |
 | `js/app/auth.js` | `App.Auth`: session state + auth API client. (See `docs/AUTH.md`.) |
@@ -56,9 +56,9 @@ is tracked on purpose and survived the rule, but a new one elsewhere under
 | `js/ui/auth-button.js` | Top-bar Sign-in / username button + dropdown menu (Sync now, Change password, Sign out). |
 | `js/ui/cards-mode.js` | Cards: full-page printable data-card designer (owns `#cards-mode` + `css/cards-mode.css`). Settings rail, named presets (cloud-synced), per-card page-split. |
 | `js/app/admin.js` | Site-operator admin panel (admins only). Approve/revoke users, browse+resolve bug reports, moderate card-back images. Client for `/api/admin/*`; contract in `docs/ADMIN_API.md`. |
-| `js/app/id-migration.js` | One-time per-device shim: migrates stale reserve/requisition unit-ids from dormant BSData GUIDs to 40kdc slug ids. |
+| `js/app/id-migration.js` | One-time per-device shim: migrates stale reserve/requisition unit-ids from dormant BSData GUIDs to slug ids. |
 | `js/app/entry-rehydrate.js` | Refreshes army entries' embedded `unitData` snapshots against current `window.DC` (add-time copies go stale across data refreshes). |
-| `js/data/` | Static data modules: the 40kdc adapter, stratagem data, the changelog. |
+| `js/data/` | Static data modules: the dataset loader, stratagem data, the changelog. |
 | `js/ui/` | DOM-rendering modules. Each attaches to `window.UI`. See `docs/UI.md`. |
 | `js/app/` | Bootstrap, state, events, and feature modules. Each attaches to `window.App`. See `docs/UI.md` and `docs/MODULE-REFERENCE.md`. |
 | `fonts/` | Faces a THEME needs, as opposed to the app's own. Today just `Archivo-100-900.woff2` (variable 100-900, latin subset, 34KB), loaded by an `@font-face` inside `css/themes/brutalist.css` and therefore fetched only by users on a brutalist theme. Same file ledger and Tandem use for the same look. `font-src` is `'self'`, so it is served from here rather than Google. |
@@ -112,7 +112,7 @@ Grouped by user intent. One module per row; module path is the search target.
 | Polish | Faction flavor quotes on empty army | `js/app/flavor.js` |
 | Polish | Hero CTA + Cmd+K hint + recent factions chip | `js/app/hero-state.js` |
 | Polish | Legends-units toggle | `js/app/legends-toggle.js` |
-| Build | Allied units on the host faction's roster (Daemonic Pact, Imperial Agents, …) | `js/data/dc-adapter.js` (`attachAlliedUnits`), `js/app/allies.js` |
+| Build | Allied units on the host faction's roster (Daemonic Pact, Imperial Agents, …) | dataset build (`pipeline/build.mjs`, rules from the pinned 40kdc `alliedRules`), `js/app/allies.js` |
 | Polish | PWA install prompt + mobile tab bar | `js/app/pwa-install.js` |
 | Polish | App-shell service worker (installable + offline) | `sw.js`, `js/app/sw-register.js` |
 | Polish | Bug-report modal (server-backed, signed-in users post to `/api/bugs`; admin Reports tab marks fixed) | `js/app/bug-report.js` |
@@ -138,7 +138,7 @@ Grouped by user intent. One module per row; module path is the search target.
 
 ## Module conventions
 
-- No build step for APP code. No `import`/`export`. Plain `<script src>` in `index.html`. Each file is an IIFE that attaches to `window.WahapediaParser`, `window.UI`, `window.App`, `window.YaabDB`, or one of the legacy globals (`Storage`, `Army`, `ArmyManager`, `BSData`). The ONE exception is the offline data-bundle build under `build/` (esbuild → `js/vendor/dc-bundle.js`); its output is a static `.js` loaded like any other asset. Don't introduce a bundler/framework/TypeScript for the app itself.
+- No build step for APP code. No `import`/`export`. Plain `<script src>` in `index.html`. Each file is an IIFE that attaches to `window.WahapediaParser`, `window.UI`, `window.App`, `window.YaabDB`, or one of the legacy globals (`Storage`, `Army`, `ArmyManager`, `BSData`). There is no browser build step at all any more (the old `build/` esbuild bundle is retired; data is built by `pipeline/` into JSON). Don't introduce a bundler/framework/TypeScript for the app itself.
 - **Hook-first architecture**. Feature modules MUST register via `App.hooks` — do NOT edit shared files (`events.js`, `detail.js`, `index.html` toolbar, etc.) to add a new feature. Push onto `App.hooks.armyToolbarActions`, `App.hooks.detailActions`, `App.hooks.bootstrap`, `App.hooks.armyChange`, `App.hooks.selectionChange`, `App.hooks.rosterFilters`, `App.hooks.cardClassContributors`, `App.hooks.armyEntryActions` (icon buttons on an army-list row), `App.hooks.paletteCommands` (a Cmd/Ctrl+K command), or `App.hooks.modeChange` from your new module's IIFE. See `js/app/hooks.js`.
 - **Toolbar regions**: `primary` (Tools menu by default), `icon` (top-bar icon shelf or More menu), `tools-menu`, `more-menu`, `export-menu`. See `js/app/index.js` for the routing rules.
 - **No lazy loading.** Every feature module is eager-loaded by a `<script defer>` in `index.html`; the old `lazy-modules.js` placeholder mechanism no longer exists. A new module is one more `<script>` tag.
@@ -150,7 +150,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 
 | Key | Store | Module | Purpose | Invalidation |
 |---|---|---|---|---|
-| `yaab` DB / `factions` | IndexedDB | `js/db.js` | Parsed faction objects | **No longer written by the active path** — `dc-adapter.js` rebuilds factions from `window.DC` every load (no faction cache to invalidate). `DB_VERSION` is `37` (the 11e cutover bumped it once to drop the stale 10e cache). |
+| `yaab` DB / `factions` | IndexedDB | `js/db.js` | Parsed faction objects | **No longer written by the active path** — the loader fetches `data/dataset/` each load (no faction cache to invalidate). `DB_VERSION` is `37` (the 11e cutover bumped it once to drop the stale 10e cache). |
 | `yaab` DB / `gst` | IndexedDB | `js/db.js` | (Dormant) raw `.gst` + `Library *.cat` XML — only `bsdata.js` wrote this | Dropped on a `DB_VERSION` bump |
 | `yaab_bsdata_filelist_10e_v2` | sessionStorage | `bsdata.js` (dormant) | **Unused** — dormant BattleScribe file listing | n/a |
 | `yaab_bsdata_filelist_10e_v1` | sessionStorage | `cold-start.js` | Only ever read/removed (the cold-start Retry button clears it; nothing writes it any more) | n/a |
@@ -170,7 +170,7 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_crusade_rosters` | localStorage | — | **No writer** (Crusade was removed). Still in `sync.js`'s synced bag-key list, so a value left on a device is still pushed/pulled | Legacy, cloud-synced |
 | `yaab_points_overrides` | localStorage | — | **No writer** (the points-override feature was removed). Still in `sync.js`'s synced bag-key list | Legacy, cloud-synced |
 | `yaab_cards_prefs` | localStorage | `cards-mode.js` (`PREFS_KEY`) | Live Cards-mode settings (the unsaved current state; named snapshots are `yaab_cards_presets`); cloud-synced via `sync.js` | User pref, cloud-synced |
-| `yaab_idmig_v1` | localStorage | `id-migration.js` | One-shot flag: reserve/requisition unit ids already migrated from BSData GUIDs to 40kdc slugs | One-shot |
+| `yaab_idmig_v1` | localStorage | `id-migration.js` | One-shot flag: reserve/requisition unit ids already migrated from BSData GUIDs to slug ids | One-shot |
 | `yaab_show_legends` | localStorage | `legends-toggle.js` | Show [Legends] units | User pref |
 | `yaab_show_allies` | localStorage | `allies.js` | Show allied units on a host faction's roster (**defaults on**) | User pref |
 | `yaab_pwa_dismissed` | localStorage | `pwa-install.js` | Install banner dismissal | User pref |
@@ -295,14 +295,14 @@ Add an entry to `THEMES` in `js/theme-boot.js` and a stylesheet under
 
 `sw.js` is a real app-shell worker again as of 2026-08-16. It was a **kill switch** from 2026-04-27 (commit `ad3fca7`) until then, because the version before it precached the shell and served it **cache-first**, so every fix needed a `SHELL` bump and two reloads to appear and the bug report was always "works in a private window but not my normal browser, and a hard refresh doesn't help."
 
-It is back because Chrome will not offer "Install app" without a registered worker that has a fetch handler — that was the only missing installability criterion. Offline support comes with it, and matters more than it sounds: the whole dataset is in `js/vendor/dc-bundle.js` and all user data is in localStorage, so the only thing yaab was still fetching to boot was its own code.
+It is back because Chrome will not offer "Install app" without a registered worker that has a fetch handler — that was the only missing installability criterion. Offline support comes with it, and matters more than it sounds: the dataset is fetched from `data/dataset/` (which the worker never caches, so a first offline visit has no game data) and all user data is in localStorage, so the only thing yaab was still fetching to boot was its own code.
 
 **The four rules** (the full text lives at the top of `sw.js`; the same block, naming yaab as the cautionary tale, is in `sites/boop`, `sites/fuel` and `sites/meds`):
 
 1. **`sw.js` is never cached by itself** — Caddy `no-cache` on `*.js`, `updateViaCache:'none'` on the registration, and `ours()` refuses to intercept `/sw.js`. A cached worker can't be replaced by a fixed one, and this is what keeps `sw-kill.js` reachable.
 2. **Navigations are network-first with NO timeout**, falling back to the cached shell only when the fetch actually fails. This is deliberate: the old fuel/meds pattern raced a 1500 ms timer, and "slow" and "offline" are not the same thing — a timer served the stale shell on a slow connection. Do not re-add one. A deploy can never be invisible.
 3. **Static assets are stale-while-revalidate, never cache-first.** The cache self-heals within one extra load even if `VERSION` never moves. This is the precise line the old one got wrong.
-4. **`/api/` and `/data/` are never touched.** `/api` is user data behind an auth cookie. `/data` is 48 MB — 11 MB of GDC prose that `js/gdc.js` already read-throughs into IndexedDB (so those requests never recur), plus 37 MB of dormant BSData XML. Mind the near-collision: `js/data/*` is under `/js/`, not `/data/`, so it IS cached (that is the adapter, the stratagem data and the changelog).
+4. **`/api/` and `/data/` are never touched.** `/api` is user data behind an auth cookie. `/data` holds the generated dataset (`/data/dataset/*`, served `no-cache` by Caddy) plus the GDC snapshot and dormant BSData XML. **This now matters for datasets:** because the worker never intercepts `/data/`, an approve (or rollback) is visible on the very next load with no `VERSION` bump and no cache rotation, and `?data=candidate:<id>` can never be served stale. The flip side is that game data is not available offline. Mind the near-collision: `js/data/*` is under `/js/`, not `/data/`, so it IS cached (that is the loader, the stratagem data and the changelog).
 
 **`SHELL` is deliberately tiny** — `/`, `/index.html`, `/manifest.json` and the icons. It is the *offline navigation fallback*, not a precache list. All ~157 `?v=`-stamped files index.html references are requested on every load anyway, so rule 3 caches them on load #1 for free; precaching them would download ~14 MB twice on the install visit for no extra coverage. **Do not add files to `SHELL` when you add a module.**
 
@@ -322,10 +322,10 @@ It is back because Chrome will not offer "Install app" without a registered work
 
 Three layers now keep a parser/datasheet fix from getting stuck behind a cached copy of the old code (the failure mode behind the kind of "I already fixed this but a user still reports it" bug). They compose rather than compete: layer 1 decides freshness, layer 2 changes the URL so a stale copy can't be matched at all, and layer 3 (the service worker) only ever *adds* an offline fallback — it is network-first for navigations and never cache-first for anything, so it cannot override either of the other two.
 
-1. **Revalidation headers (the guarantee).** The host Caddy config (`~/sites/base/conf.d/yetanotherarmybuilder.caddy`) serves `/`, `*.html`, `*.js`, and `*.css` with `Cache-Control: no-cache`. The browser keeps its copy but must revalidate with an `If-None-Match` on every load; Caddy answers `304` when the file is unchanged (one tiny round-trip) and `200` with fresh bytes when it changed. So a fix goes live on the next *ordinary* reload — no hard-refresh. Deliberately **not** applied to `data/bsdata/**` (multi-MB XML the app caches itself via IndexedDB + `index.json` SHAs) or the woff2 fonts (immutable).
+1. **Revalidation headers (the guarantee).** The host Caddy config (`~/sites/base/conf.d/yetanotherarmybuilder.caddy`) serves `/`, `*.html`, `*.js`, and `*.css` with `Cache-Control: no-cache`. The browser keeps its copy but must revalidate with an `If-None-Match` on every load; Caddy answers `304` when the file is unchanged (one tiny round-trip) and `200` with fresh bytes when it changed. So a fix goes live on the next *ordinary* reload — no hard-refresh. Applied as well to `/data/dataset/*` (v2: approve must be visible on the next load). Deliberately **not** applied to the woff2 fonts (immutable).
 2. **Version stamp (belt-and-suspenders).** `scripts/stamp-assets.mjs` appends `?v=<App.CHANGELOG.version>` to every local `js/`+`css/` reference in `index.html`, so the URLs themselves change each release — covering heuristic/proxy caches that ignore `no-cache`. The version is read from `js/data/changelog-data.js`, so there is one source of truth. **After bumping the changelog version, run `node scripts/stamp-assets.mjs`** (or `--check` in CI to fail on a stale stamp). Re-running is idempotent; font preloads are intentionally skipped so they keep matching the CSS `@font-face` URLs.
 
-   **Data-only deploys stamp too.** A data refresh (weekly Monday via `yaab-pipeline.sh`, when not frozen) redeploys `js/vendor/dc-bundle.js` without a release, so it runs `stamp-assets.mjs --data <bundle-md5>`, which stamps `?v=<version>-d<md5-8>`. Do **not** "fix" this by bumping the changelog version instead: `changelog.js` lights the "What's new" dot by comparing `App.CHANGELOG.version` against `yaab_changelog_seen`, so a bump per refresh would badge every user over an unchanged changelog. `--check` accepts the bare version *or* the version with a `-d…` suffix, so a data-only deploy never reads as a stale stamp.
+   **Data-only deploys need no stamp.** An approve swaps files under `data/dataset/current/`, which Caddy serves `no-cache` and the service worker never touches, so the next load revalidates and gets the new manifest. `stamp-assets.mjs --data` was a v1 mechanism for the bundle and is not part of the v2 flow. Do **not** bump the changelog version for a data refresh: `changelog.js` lights the "What's new" dot by comparing `App.CHANGELOG.version` against `yaab_changelog_seen`, so it would badge every user over an unchanged changelog.
 
 3. **Service worker (offline, not freshness).** `sw.js` caches the shell so the app boots with no network. It is stale-while-revalidate for assets and network-first for navigations, and `stamp-assets.mjs` moves its cache name in lockstep with layer 2 — so a new `?v=` URL is a guaranteed cache miss and goes to the network. See the "Service worker" section above for the four rules and the rollback.
 
@@ -344,7 +344,7 @@ Common questions and where to look first.
 | "How do I expose a new API route?" | `../api/CLAUDE.md` (sibling repo). Endpoints under `/api/*` are contract — paths and shapes are versioned. |
 | "Why isn't my new feature showing up?" | (1) Did you add the `<script>` tag to `index.html`? (2) Did the IIFE bail early (look for early returns guarding `App.hooks` or DOM nodes)? (3) Hard-refresh: Ctrl+Shift+R / ⌘⇧R — static-site caches stick. |
 | "Why does X re-render twice?" | `armyChange` fires on every mutation, with a `kind` of `render` (the army list re-rendered), `save`, `delete` or `rename` — those are the only four. If your renderer is also called by a button handler, the hook will refire it. Either gate the renderer with a `kind` check or use `selectionChange` instead. |
-| "Why is my data/field change not visible?" | The BattleScribe parser (`js/parser/`) is DORMANT — live data comes from `js/vendor/dc-bundle.js` (`window.DC`) via `js/data/dc-adapter.js`, which rebuilds factions on every load (no IndexedDB faction cache, no `DB_VERSION` bump needed). If a unit/field is wrong, fix `dc-adapter.js`. The bundle itself is generated — do NOT hand-edit it; the cron rebuilds it from 40kdc git `main`. |
+| "Why is my data/field change not visible?" | Live data comes from `data/dataset/current/` via `js/data/dataset-loader.js` (no IndexedDB faction cache, no `DB_VERSION` bump). If a unit/field is wrong, the fix is in the source or the build (`pipeline/`), not the browser: GDC and MFM own the values, `pipeline/aliases.json` owns name joins, and there are no overrides. Rebuild a candidate, validate, preview with `?data=candidate:<id>`, approve. Never hand-edit `data/dataset/`. |
 | "How do I make my module aware of mode (Build / Collect / Play / Waha / Cards)?" | `App.hooks.modeChange.push(mode => { ... })` — one argument, the new mode; there is no previous-mode argument. Mode is also reflected as `body[data-mode]` for CSS. |
 | "Where do I add a changelog entry?" | `js/data/changelog-data.js`. Bump `version` + `lastUpdated`. EVERY user-visible change must add one (see editing guidance #6 below). |
 
@@ -352,8 +352,8 @@ Common questions and where to look first.
 
 1. **Find the right file FIRST. Don't grep blindly.** The file map above is intentionally exhaustive. If you can't tell where a feature lives from the table, scan `js/app/` and `js/ui/` filenames first — every module is named after what it does.
 2. **Hook-first.** Adding a new feature should never require touching `events.js`, `detail.js`, `index.html` toolbar markup, or any other shared file. Create a new file under `js/app/` or `js/ui/`, register via `App.hooks.*`, and append the script tag to `index.html`. See `docs/UI.md` "How to add X".
-3. **Don't introduce a bundler, framework, or TypeScript for APP code.** Vanilla JS, IIFE, namespace globals. That's the deal. (The offline `build/` data-bundle step is the one sanctioned exception — it produces a static `js/vendor/dc-bundle.js`.)
-4. **The parser output shape is now a contract `dc-adapter.js` emits** (documented in `docs/PARSER.md`). Don't break it — every renderer reads it. There is no faction IndexedDB cache anymore (the adapter rebuilds from `window.DC` each load), so a data/field change does NOT require a `DB_VERSION` bump. Don't hand-edit `js/vendor/dc-bundle.js` or `build/abilities-index.json` — they're generated and auto-refreshed by `~/sites/base/refresh-40kdc.sh`.
+3. **Don't introduce a bundler, framework, or TypeScript for APP code.** Vanilla JS, IIFE, namespace globals. That's the deal. (The offline `pipeline/` data build is separate: Node scripts run in Docker that emit static JSON, no browser code.)
+4. **The renderer shape (`docs/PARSER.md`) is the contract the dataset files follow** (`docs/DATASET.md` §1). Don't break it — every renderer reads it. There is no faction IndexedDB cache, so a data/field change does NOT require a `DB_VERSION` bump. Don't hand-edit `data/dataset/`; change the pipeline and approve a new candidate.
 5. **Don't break the namespaces** (`window.App`, `window.UI`, `window.Storage`, `window.Army`, `window.ArmyManager`, `window.BSData`, `window.WahapediaParser`, `window.YaabDB`, `App.hooks`). External tabs reload through them.
 6. **Update the user-facing changelog on every shippable change.** This is a HARD requirement. Any new feature, visible bug fix, or data correction the user can notice MUST add an entry to `js/data/changelog-data.js` (and bump `version` + `lastUpdated`) **in the same commit as the code change** — not a follow-up. The "What's new" button in the topbar (`js/app/changelog.js`) is the only place users see release notes; if your fix isn't there, the user thinks you forgot. Skip entries only for pure refactors, internal-only behaviour, doc edits, and CI plumbing. See the comment at the top of `changelog-data.js` for the entry shape and the `feature` / `fix` / `change` `kind` values.
 
@@ -368,12 +368,18 @@ Common questions and where to look first.
 
 ## Don't break
 
-- `WahapediaParser.parse()` output shape (see `docs/PARSER.md`) — now the contract `dc-adapter.js` emits and every renderer consumes.
+- `WahapediaParser.parse()` output shape (see `docs/PARSER.md`) — the contract the dataset files follow and every renderer consumes.
 - `App.hooks.*` action shapes. New feature modules consume them.
 - `Army.toJSON()` / `Army.fromJSON()`. Saved armies must keep deserializing.
 - `Army.toJSON()` keys must include `createdAt` and `updatedAt`, and the constructor must accept them. Every `fromJSON` path that drops the timestamps breaks cross-device sync (every load looks "newer" than cloud → uploads stale → clobbers other devices).
 - API endpoint paths under `/api/*` and their request/response shapes are contract — see `../api/CLAUDE.md`.
 - `YAAB1:` v2 export format (`storage.js`). Bookmarked share URLs depend on it.
 - The hook iteration in `App.fireBootstrap` / `fireArmyChange` / `fireSelectionChange` — they wrap each call in try/catch, so one broken module shouldn't break others. Keep that pattern.
-- `releaseSharedIndex()` was called once in `bsdata.js` after Phase 2 (now dormant). If you ever revive the XML parser path, don't hold DOM refs alive past that point — it leaks tens of MB.
+- `releaseSharedIndex()` was called once in `bsdata.js` after Phase 2 (now dormant, scheduled for removal). If you ever revive the XML parser path, don't hold DOM refs alive past that point — it leaks tens of MB.
 - The changelog-entry rule (editing guidance #6). Shipping a user-visible change without an entry is a regression — the user can't find out about the fix, can't tell whether their report was addressed, and will reasonably assume nothing happened. Every commit that touches user-facing behaviour stages `js/data/changelog-data.js` too.
+
+## Not yet wired (pending until M4 lands)
+
+- **Daily candidate cron.** Nothing builds candidates on a schedule yet; run `pipeline/yaab-data build` by hand. Planned: a daily host cron that builds, validates, reports and mails only when the candidate differs from current.
+- **Monitor check** "days since the last approved candidate vs GDC `updated`" on monitor.thewheeliebois.com (`monitor/ops/api`, Prometheus). Not added.
+- **Caddy `no-cache` on `/data/dataset/*`** and the **backup leg** (`data/dataset` in `MEDIA_GLOBS`) are host changes made at cutover; see `pipeline/retire-v1.md`.

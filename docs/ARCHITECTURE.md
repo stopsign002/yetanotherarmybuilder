@@ -2,15 +2,16 @@
 
 ## Data flow
 
-The 40kdc 11e dataset is embedded in a committed browser bundle (`js/vendor/dc-bundle.js` → `window.DC`); `js/data/dc-adapter.js` builds faction objects from it on every load (no faction cache), indexes them by `App.state`, renders through `UI.*`, and writes user armies back to `localStorage` through the `Army` model.
+Game data is a **generated dataset**, not code: `pipeline/` (GDC + MFM primary, a pinned 40kdc snapshot for wargear structure / allied rules / dispositions, `pipeline/aliases.json` for name joins, no corrections layer) builds a candidate daily; `yaab-data approve` swaps it into `data/dataset/current/`. The browser fetches `manifest.json` plus one JSON file per faction (`js/data/dataset-loader.js`), indexes them by `App.state`, renders through `UI.*`, and writes user armies back to `localStorage` through the `Army` model. Contract: `docs/DATASET.md`.
 
 ```
-js/vendor/dc-bundle.js  (window.DC — embedded 40kdc 11e data, generated offline)
-   │  BSData.loadAllFactions  (OVERRIDDEN by js/data/dc-adapter.js)
-   │    builds faction objects from window.DC, parsePoints → squadOptions/ordinal
+GDC datasources + MFM site + pinned 40kdc + aliases.json   (offline, pipeline/yaab-data)
+   │  build → validate → report → approve    (candidate/<id> → current/, last 5 in previous/)
+   ▼
+data/dataset/current/manifest.json + <factionId>.json   (Caddy no-cache; SW never touches /data/)
+   │  BSData.loadAllFactions  (installed by js/data/dataset-loader.js; ?data=candidate:<id> previews)
    ▼
 faction objects { factionName, units, armyRules, detachments, ... }  (parser output shape)
-   │  GDC overlay (js/gdc.js) + reconcileStrats() → detachment.gdcStratagems
    │  fires per-faction callback → pushed into App.state.factions  (js/app/bsdata-load.js)
    ▼
 App.rebuildAllUnits  (js/app/filters.js, bumps state.factionsVersion)
@@ -38,13 +39,13 @@ localStorage `yaab_armies`
 8. `App.wireEvents()` attaches every direct/delegated listener in `js/app/events.js`.
 9. `App.mountArmyToolbarActions()` renders all hook-registered toolbar/icon-shelf/menu buttons. Reads `App.hooks.armyToolbarActions` and routes by `region`/`category`.
 10. `App.fireBootstrap(state)` runs every `App.hooks.bootstrap[]` entry.
-11. `App.autoLoadFromBSData()` returns immediately and starts the background load via `BSData.loadAllFactions` (overridden by `dc-adapter.js`). The adapter builds each faction from `window.DC`, runs the GDC overlay + `reconcileStrats()`, then fires the same per-faction callback — so each faction, as it's built, is pushed into `state.factions`, triggering `rebuildAllUnits` + `buildChaptersMap` + `updateFactionFilter` + `renderUnitRosterWithContext`. No XML fetch or DOM parsing happens; the only live network call is the GDC fallback text.
+11. `App.autoLoadFromBSData()` returns immediately and starts the background load via `BSData.loadAllFactions` (installed by `dataset-loader.js`). The loader fetches the manifest and the faction files and fires the same per-faction callback as each arrives — so each faction is pushed into `state.factions`, triggering `rebuildAllUnits` + `buildChaptersMap` + `updateFactionFilter` + `renderUnitRosterWithContext`. No XML fetch, DOM parsing, overlay or merge happens in the browser; the only game-data network calls are the dataset files.
 12. `topbar.js` IIFE runs (loaded after `app/index.js`) and wires the top-bar brand (click returns to Build), the ⌘K search button, the Settings gear and the Help (?) button.
 13. `sw-register.js` registers `/sw.js` after `window.load`, with `updateViaCache: 'none'` so the worker script is never served from the HTTP cache. Registration is fire-and-forget — without a worker the app behaves exactly as before, just with more round trips and no install prompt. (From 2026-04-27 to 2026-08-16 this file did the opposite and unregistered everything; see the "Service worker" section of `CLAUDE.md`.)
 
 ## Memory model
 
-- **`window.DC`**: the embedded 40kdc dataset (plain JS objects in `js/vendor/dc-bundle.js`). `dc-adapter.js` reads it directly to build faction objects each load — no XML, no `DOMParser`, no IndexedDB faction cache. (The dormant XML parser's shared-index / `releaseSharedIndex` memory machinery — DOM `Map`s held alive via `ownerDocument` — no longer runs; see the dormant note in `docs/PARSER.md`.)
+- **The dataset**: plain JSON faction files fetched from `data/dataset/current/` each load by `dataset-loader.js` — no XML, no `DOMParser`, no IndexedDB faction cache. (The dormant XML parser's shared-index / `releaseSharedIndex` memory machinery — DOM `Map`s held alive via `ownerDocument` — no longer runs; see the dormant note in `docs/PARSER.md`.)
 - **`App.state.factions`**: full faction objects (plain JSON, parser output shape). Single source of truth.
 - **`App.state.allUnits`**: array of REFERENCES into `state.factions[].units` (not spread copies). `_factionName` is stamped in-place. Rebuilt on every faction-loaded event in `App.rebuildAllUnits`. `state.factionsVersion` bumps each rebuild and is used to invalidate `ui/detail.js`'s Led-By cache.
 - **Unit grid**: capped-initial-render (120 cards) + scroll-append (80 more per scroll-to-bottom event, rAF-throttled). Keeps DOM under ~200 `.unit-card` nodes. See `INITIAL_PAGE`, `APPEND_PAGE`, `SCROLL_APPEND_PX` in `js/ui/roster.js`.
@@ -53,18 +54,18 @@ localStorage `yaab_armies`
 
 | Key | Store | When to invalidate |
 |---|---|---|
-| `yaab` IDB / `factions` | IndexedDB | **No longer written by the active path** — `dc-adapter.js` rebuilds factions from `window.DC` each load. `DB_VERSION` is `37` (the 11e cutover bumped it once to drop the stale 10e cache). |
+| `yaab` IDB / `factions` | IndexedDB | **No longer written by the active path** — the loader fetches `data/dataset/` each load. `DB_VERSION` is `37` (the 11e cutover bumped it once to drop the stale 10e cache). |
 | `yaab` IDB / `gst` | IndexedDB | (Dormant) only the old `bsdata.js` wrote this. Dropped on a `DB_VERSION` bump. |
 | `yaab_bsdata_filelist_10e_v2` | sessionStorage | **Unused** — dormant BattleScribe file listing. |
 | `yaab_armies` | localStorage | User data — never invalidate silently |
 | `yaab_factions` | localStorage | Legacy — kept only for back-compat; not on the active read path |
-| `yaab-shell-<token>` | Cache API | The app shell, ~160 entries / ~14 MB, written by `sw.js`. The name carries the deployed `?v=` token and `activate()` deletes every other key, so exactly one generation exists at a time. **Excludes `/api/` and `/data/` entirely.** Do not add entries to `SHELL` — assets are cached on first use by stale-while-revalidate. |
+| `yaab-shell-<token>` | Cache API | The app shell, ~160 entries / ~14 MB, written by `sw.js`. The name carries the deployed `?v=` token and `activate()` deletes every other key, so exactly one generation exists at a time. **Excludes `/api/` and `/data/` entirely** (so a dataset approve shows on the next load). Do not add entries to `SHELL` — assets are cached on first use by stale-while-revalidate. |
 
 `BSData.clearFactionCache()` wipes legacy session keys + the IndexedDB `factions` and `gst` stores in one call.
 
 ## Parser shared index lifecycle (DORMANT)
 
-> This describes the dormant `js/parser/` path, kept for rollback. The live load seam is `dc-adapter.js`'s `loadAllFactions` building factions from `window.DC` — no phased XML parse runs.
+> This describes the dormant `js/parser/` path, kept for rollback. The live load seam is `dataset-loader.js`'s `loadAllFactions` fetching `data/dataset/` — no phased XML parse runs. Scheduled for removal in `pipeline/retire-v1.md`.
 
 ```
 Phase 1   — .gst files           → addToSharedIndex   (Maps fill)
@@ -115,7 +116,7 @@ There is none. `js/app/lazy-modules.js` (a placeholder-loader idea) was never wi
 
 ## Script load order rules
 
-- `db.js` → `bsdata.js` first so `YaabDB` and `BSData` are defined before anything that imports them. Then `js/vendor/dc-bundle.js` (defines `window.DC`) → `js/data/dc-adapter.js`, which OVERRIDES `window.BSData.loadAllFactions` with the live 40kdc path. `gdc.js` must be loaded before the adapter's GDC overlay runs.
+- `db.js` → `bsdata.js` first so `YaabDB` and `BSData` are defined before anything that imports them. Then `js/data/dataset-loader.js`, which OVERRIDES `window.BSData.loadAllFactions` with the dataset path. `gdc.js` (now a thin module of renderer-facing helpers, no fetching or merging) loads before the loader.
 - In `js/parser/`: `shared-index.js` first (populates `WahapediaParser._internal` with the Maps and helpers). Leaf helpers (`classify`, `stats`, `weapons`, `abilities`, `wargear`, `costs`, `keywords`) load in any order — they reference each other via `P._internal` at call time. Then `entry.js`, `catalogue.js`, `index.js` LAST (exposes the public surface).
 - `storage.js` → `army.js`.
 - `ui/index.js` first to define `UI.init`. Feature `ui/*` modules attach methods after.
@@ -127,7 +128,7 @@ There is none. `js/app/lazy-modules.js` (a placeholder-loader idea) was never wi
 ## Things that look weird but are intentional
 
 - **`VIRTUAL_PARENTS` in `app/state.js`** — single-entry list (currently just Adeptus Astartes) that synthesizes a parent faction in the top-level dropdown from chapter-named BSData catalogues. Chapter catalogues live in `state.chapterFactions` and are hidden from the dropdown; choosing the virtual parent reveals a Chapter sub-dropdown.
-- **Four cost patterns in `parser/costs.js`** — A: group-level `min`/`max`. B: per-model constraints in a group. C: entry-level constraints. D: per-model constraints at the entry. Different BSData authors use different patterns; tried in order.
+- **Four cost patterns in `parser/costs.js`** (dormant) — A: group-level `min`/`max`. B: per-model constraints in a group. C: entry-level constraints. D: per-model constraints at the entry. Different BSData authors use different patterns; tried in order.
 - **Crusade regex in `parser/classify.js`** — `CRUSADE_RE` filters Battle Honours / Scars / Traits / Psychic Tradition out of standard 10e output. Removing it surfaces a ton of garbage abilities/wargear.
 - **Inline-rule vs `infoLink` rule detection in `parser/catalogue.js` detachment block** — Space Marines embed detachment rules inline under `<rules>`, Necrons use `<infoLinks type="rule" targetId>` into `sharedRules`. Both paths exist; do not collapse them.
 - **`chapterFactions` hide-set in the faction dropdown** — chapter catalogues are still loaded and indexed so their units feed the roster under the parent, but they are hidden from the top-level filter `<select>` via `UI.updateFactionFilter`'s `hide` option.

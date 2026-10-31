@@ -12,7 +12,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 
 const OUT   = process.env.OUT || '/out';
 const THEME = process.env.THEME || 'grimdark';
-const SITE  = 'https://yaab.thewheeliebois.com/';
+const SITE  = process.env.SITE || 'https://yaab.thewheeliebois.com/';
 mkdirSync(OUT, { recursive: true });
 
 let pass = 0, fail = 0;

@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+# yaab-data — yaab game-data pipeline v2 CLI (docs/DATASET.md section 8).
+#   yaab-data build [--app P]            extract all -> build -> candidate; prints the candidate id
+#   yaab-data validate <id> [--app P]    schema + invariants + parity; exit 1 on any failure
+#   yaab-data report <id> [--mail] [--app P]
+#                                        write candidate/<id>/report.md; --mail sends it only if it differs from current
+#   yaab-data approve <id> [--app P] [--force]
+#                                        current -> previous/<ts>, candidate -> current (atomic), keep 5
+#   yaab-data rollback [<n>] [--app P]   restore previous/<n> (1 = newest); the replaced current is kept in previous/
+#   yaab-data list [--app P]             current, candidates, previous
+#   yaab-data preview <id> [--app P]     print the ?data=candidate:<id> URL
+#
+# --app is the app tree whose data/dataset/ is read and written.
+#   approve / rollback: default is the LIVE app (~/sites/sites/yetanotherarmybuilder/app).
+#   everything else:    default is the app tree this script lives in (the worktree), so a
+#                       bare `yaab-data build` can never touch the live tree.
+# Pipeline code always comes from the tree this script lives in. Node scripts run in
+# Docker (the host has no node): node:22-slim, app at /app, work dir at /work, the
+# target dataset dir at /dataset (env YAAB_DATASET_DIR=/dataset, WORK_DIR=/work).
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CODE_APP="$(dirname "$HERE")"
+LIVE_APP="$HOME/sites/sites/yetanotherarmybuilder/app"
+YAAB_DATA_DIR="${YAAB_DATA_DIR:-$HOME/sites/base/yaab-data}"
+KEEP_PREVIOUS=5
+NODE_IMAGE="node:22-slim"
+
+die(){ echo "yaab-data: $*" >&2; exit 1; }
+usage(){ sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-2}"; }
+
+[ $# -ge 1 ] || usage
+CMD="$1"; shift
+APP=""; ID=""; MAIL=0; FORCE=0; N=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --app) [ $# -ge 2 ] || die "--app needs a path"; APP="$2"; shift 2;;
+    --mail) MAIL=1; shift;;
+    --force) FORCE=1; shift;;
+    -h|--help) usage 0;;
+    -*) die "unknown option $1";;
+    *) if [ -z "$ID" ]; then ID="$1"; else die "unexpected argument $1"; fi; shift;;
+  esac
+done
+if [ -z "$APP" ]; then
+  case "$CMD" in approve|rollback) APP="$LIVE_APP";; *) APP="$CODE_APP";; esac
+fi
+APP="$(realpath -m "$APP")"
+[ -d "$APP" ] || die "app tree not found: $APP"
+DS="$APP/data/dataset"
+
+node_run(){ # node_run <script relative to pipeline/> [args...]
+  mkdir -p "$DS" "$YAAB_DATA_DIR/work"
+  local extra=()
+  [ "${NET_HOST:-0}" = "1" ] && extra+=(--network host -e MAILER_TOKEN -e MAILER_URL)
+  docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e YAAB_DATASET_DIR=/dataset -e WORK_DIR=/work \
+    "${extra[@]}" \
+    -v "$CODE_APP":/app -v "$YAAB_DATA_DIR":/work -v "$DS":/dataset \
+    -w /app/pipeline "$NODE_IMAGE" node "$@"
+}
+
+need_id(){ [ -n "$ID" ] || die "$CMD needs a candidate id (see: yaab-data list)"; }
+cand_dir(){ echo "$DS/candidate/$ID"; }
+need_cand(){ need_id; [ -f "$(cand_dir)/manifest.json" ] || die "no candidate $ID in $DS/candidate/ (see: yaab-data list)"; }
+manifest_field(){ python3 -c 'import json,sys
+try: print(json.load(open(sys.argv[1])).get(sys.argv[2],""))
+except Exception: print("")' "$1" "$2"; }
+
+prune_previous(){
+  [ -d "$DS/previous" ] || return 0
+  # names start with a UTC timestamp, so lexical order == chronological
+  ls -1 "$DS/previous" | sort -r | tail -n +$((KEEP_PREVIOUS + 1)) | while read -r d; do rm -rf "$DS/previous/$d"; done
+}
+stamp(){ date -u +%Y%m%dT%H%M%SZ; }
+lock(){ mkdir -p "$DS"; exec 9>"$DS/.lock"; flock -w 60 9 || die "another yaab-data approve/rollback holds $DS/.lock"; }
+
+case "$CMD" in
+  build)
+    echo "== extract gdc" >&2
+    if [ -f "$HERE/extract/gdc.mjs" ]; then node_run extract/gdc.mjs >&2; else echo "(extract/gdc.mjs missing - skipped)" >&2; fi
+    echo "== extract mfm" >&2
+    mkdir -p "$YAAB_DATA_DIR/work" "$YAAB_DATA_DIR/cache/mfm"
+    PYTHONDONTWRITEBYTECODE=1 python3 -I "$HERE/extract/mfm.py" --out "$YAAB_DATA_DIR/work/mfm.json" --cache-dir "$YAAB_DATA_DIR/cache/mfm" >&2
+    echo "== extract 40kdc" >&2
+    node_run extract/dc.mjs >&2
+    echo "== build" >&2
+    OUT="$(node_run build.mjs)"; RC=$?
+    printf '%s\n' "$OUT" >&2
+    CID="$(printf '%s\n' "$OUT" | grep -Eo '[0-9]{8}-[0-9]{4}-[^[:space:]]+' | tail -n1 || true)"
+    [ -n "$CID" ] || die "build.mjs printed no candidate id"
+    echo "$CID";;
+  validate) need_cand; node_run validate.mjs "$ID";;
+  report)
+    need_cand
+    if [ "$MAIL" = 1 ]; then
+      # shellcheck disable=SC1090
+      set -a; . "$HOME/sites/base/backup.env"; set +a
+      MAILER_TOKEN="${MAILER_TOKEN:-}"; [ -n "$MAILER_TOKEN" ] || die "no MAILER_TOKEN in backup.env"
+      export MAILER_TOKEN MAILER_URL="${MAILER_URL:-http://127.0.0.1:8025/send}"
+      NET_HOST=1 node_run report.mjs "$ID" --mail
+    else
+      node_run report.mjs "$ID"
+    fi;;
+  approve)
+    need_cand
+    CD="$(cand_dir)"
+    if [ "$FORCE" != 1 ]; then
+      python3 - "$CD/report.json" <<'PY' || die "candidate $ID has no passing validation (run: yaab-data validate $ID; --force overrides)"
+import json, sys
+try: r = json.load(open(sys.argv[1]))
+except Exception: sys.exit(1)
+sys.exit(0 if r.get("ok") is True else 1)
+PY
+    fi
+    [ "$(manifest_field "$DS/current/manifest.json" id)" = "$ID" ] && { echo "$ID is already current - nothing to do"; exit 0; }
+    lock
+    TS="$(stamp)"
+    NEW="$DS/.new-$$"; rm -rf "$NEW"
+    cp -a "$CD" "$NEW"; rm -f "$NEW/report.md"
+    mkdir -p "$DS/previous"
+    OLDID="$(manifest_field "$DS/current/manifest.json" id)"
+    if [ -d "$DS/current" ]; then
+      mv -T "$DS/current" "$DS/.old-$$"
+      mv -T "$NEW" "$DS/current"
+      mv -T "$DS/.old-$$" "$DS/previous/${TS}-${OLDID:-unknown}"
+    else
+      mv -T "$NEW" "$DS/current"
+    fi
+    prune_previous
+    echo "approved $ID into $DS/current (previous: ${OLDID:-none})";;
+  rollback)
+    N="${ID:-1}"; case "$N" in ''|*[!0-9]*) die "rollback takes a number (1 = newest previous)";; esac
+    [ -d "$DS/previous" ] || die "no previous/ in $DS"
+    TARGET="$(ls -1 "$DS/previous" | sort -r | sed -n "${N}p")"
+    [ -n "$TARGET" ] || die "no previous entry #$N (see: yaab-data list)"
+    lock
+    TS="$(stamp)"
+    NEW="$DS/.new-$$"; rm -rf "$NEW"; cp -a "$DS/previous/$TARGET" "$NEW"
+    OLDID="$(manifest_field "$DS/current/manifest.json" id)"
+    mv -T "$DS/current" "$DS/.old-$$"
+    mv -T "$NEW" "$DS/current"
+    mv -T "$DS/.old-$$" "$DS/previous/${TS}-rolledback-${OLDID:-unknown}"
+    prune_previous
+    echo "rolled back to $TARGET (replaced ${OLDID:-none}, kept in previous/)";;
+  list)
+    CUR="$(manifest_field "$DS/current/manifest.json" id)"
+    echo "app:       $APP"
+    echo "current:   ${CUR:-(none)}"
+    echo "candidates:"
+    if [ -d "$DS/candidate" ] && [ -n "$(ls -A "$DS/candidate" 2>/dev/null)" ]; then
+      ls -1 "$DS/candidate" | sort -r | while read -r c; do
+        v="unvalidated"
+        if [ -f "$DS/candidate/$c/report.json" ]; then
+          v="$(python3 -c 'import json,sys
+r=json.load(open(sys.argv[1])); print({True:"pass",False:"FAIL"}.get(r.get("ok"),"?"))' "$DS/candidate/$c/report.json" 2>/dev/null || echo '?')"
+        fi
+        mark=""; [ "$c" = "$CUR" ] && mark="  <- current"
+        echo "  $c  [$v]$mark"
+      done
+    else echo "  (none)"; fi
+    echo "previous (1 = newest):"
+    if [ -d "$DS/previous" ] && [ -n "$(ls -A "$DS/previous" 2>/dev/null)" ]; then
+      ls -1 "$DS/previous" | sort -r | awk '{printf "  %d  %s\n", NR, $0}'
+    else echo "  (none)"; fi;;
+  preview)
+    need_cand
+    case "$APP" in *yaab-test*) HOST="yaab-test.thewheeliebois.com";; *) HOST="yaab.thewheeliebois.com";; esac
+    echo "https://$HOST/?data=candidate:$ID";;
+  *) usage;;
+esac

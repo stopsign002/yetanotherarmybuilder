@@ -1,0 +1,204 @@
+{
+ "_comment": "Name joins only (DATASET.md section 5). Default join = normalised name: lowercase, strip ' and curly apostrophes, U+2011 -> '-', every non-alphanumeric run -> ' ', drop a leading the/a/an, remove spaces. An entry is needed only where that fails; a stale entry is reported by validate. factions: keyed by GDC file id (filename without .json). space_marines.json feeds adeptus-astartes plus the alsoFactionIds (chapter factions with no units of their own); blacktemplar/bloodangels/darkangels/deathwatch/spacewolves files carry chapter datasheets that live under adeptus-astartes (unitsInto) and are priced on their own MFM page (mfm) in addition to space-marines. mfmAlso = further MFM pages to search for the same file. dc = 40kdc faction dir (null = none). Units: key <home factionId>/<GDC _slug>; mfm = MFM unit name as printed (mfm.json key after the '|'), dc = 40kdc unit id (same faction dir unless dcFaction given). Items: key <factionId>/<unit slug>/<40kdc item id or GDC item slug> -> MFM item name as printed. dcAlso = further 40kdc faction dirs searched for shared chassis (CSM legion factions reuse chaos-space-marines and chaos-daemons datasheets).",
+ "factions": {
+  "adeptasororitas": {
+   "factionId": "adepta-sororitas",
+   "mfm": "adepta-sororitas",
+   "dc": "adepta-sororitas"
+  },
+  "adeptuscustodes": {
+   "factionId": "adeptus-custodes",
+   "mfm": "adeptus-custodes",
+   "dc": "adeptus-custodes"
+  },
+  "adeptusmechanicus": {
+   "factionId": "adeptus-mechanicus",
+   "mfm": "adeptus-mechanicus",
+   "dc": "adeptus-mechanicus"
+  },
+  "aeldari": {
+   "factionId": "aeldari",
+   "mfm": "aeldari",
+   "dc": "aeldari"
+  },
+  "agents": {
+   "factionId": "agents-of-the-imperium",
+   "mfm": "imperial-agents",
+   "dc": "agents-of-the-imperium"
+  },
+  "astramilitarum": {
+   "factionId": "astra-militarum",
+   "mfm": "astra-militarum",
+   "dc": "astra-militarum"
+  },
+  "blacktemplar": {
+   "factionId": "black-templars",
+   "mfm": "black-templars",
+   "dc": "adeptus-astartes",
+   "unitsInto": "adeptus-astartes"
+  },
+  "bloodangels": {
+   "factionId": "blood-angels",
+   "mfm": "blood-angels",
+   "dc": "adeptus-astartes",
+   "unitsInto": "adeptus-astartes"
+  },
+  "chaos_spacemarines": {
+   "factionId": "chaos-space-marines",
+   "mfm": "chaos-space-marines",
+   "dc": "chaos-space-marines"
+  },
+  "chaosdaemons": {
+   "factionId": "chaos-daemons",
+   "mfm": "chaos-daemons",
+   "dc": "chaos-daemons"
+  },
+  "chaosknights": {
+   "factionId": "chaos-knights",
+   "mfm": "chaos-knights",
+   "dc": "chaos-knights"
+  },
+  "darkangels": {
+   "factionId": "dark-angels",
+   "mfm": "dark-angels",
+   "dc": "adeptus-astartes",
+   "unitsInto": "adeptus-astartes"
+  },
+  "deathguard": {
+   "factionId": "death-guard",
+   "mfm": "death-guard",
+   "dc": "death-guard",
+   "dcAlso": [
+    "chaos-space-marines",
+    "chaos-daemons"
+   ]
+  },
+  "deathwatch": {
+   "factionId": "deathwatch",
+   "mfm": "deathwatch",
+   "dc": "adeptus-astartes",
+   "unitsInto": "adeptus-astartes"
+  },
+  "drukhari": {
+   "factionId": "drukhari",
+   "mfm": "drukhari",
+   "dc": "drukhari"
+  },
+  "emperors_children": {
+   "factionId": "emperors-children",
+   "mfm": "emperors-children",
+   "dc": "emperors-children",
+   "dcAlso": [
+    "chaos-space-marines",
+    "chaos-daemons"
+   ]
+  },
+  "greyknights": {
+   "factionId": "grey-knights",
+   "mfm": "grey-knights",
+   "dc": "grey-knights"
+  },
+  "gsc": {
+   "factionId": "genestealer-cults",
+   "mfm": "genestealer-cults",
+   "dc": "genestealer-cults"
+  },
+  "imperialknights": {
+   "factionId": "imperial-knights",
+   "mfm": "imperial-knights",
+   "dc": "imperial-knights"
+  },
+  "necrons": {
+   "factionId": "necrons",
+   "mfm": "necrons",
+   "dc": "necrons"
+  },
+  "orks": {
+   "factionId": "orks",
+   "mfm": "orks",
+   "dc": "orks"
+  },
+  "space_marines": {
+   "factionId": "adeptus-astartes",
+   "mfm": "space-marines",
+   "dc": "adeptus-astartes",
+   "mfmAlso": [
+    "black-templars",
+    "blood-angels",
+    "dark-angels",
+    "deathwatch",
+    "space-wolves"
+   ],
+   "alsoFactionIds": [
+    "imperial-fists",
+    "iron-hands",
+    "raven-guard",
+    "salamanders",
+    "ultramarines",
+    "white-scars"
+   ]
+  },
+  "spacewolves": {
+   "factionId": "space-wolves",
+   "mfm": "space-wolves",
+   "dc": "adeptus-astartes",
+   "unitsInto": "adeptus-astartes"
+  },
+  "tau": {
+   "factionId": "tau-empire",
+   "mfm": "tau-empire",
+   "dc": "tau-empire"
+  },
+  "thousandsons": {
+   "factionId": "thousand-sons",
+   "mfm": "thousand-sons",
+   "dc": "thousand-sons",
+   "dcAlso": [
+    "chaos-space-marines",
+    "chaos-daemons"
+   ]
+  },
+  "tyranids": {
+   "factionId": "tyranids",
+   "mfm": "tyranids",
+   "dc": "tyranids"
+  },
+  "votann": {
+   "factionId": "leagues-of-votann",
+   "mfm": "leagues-of-votann",
+   "dc": "leagues-of-votann"
+  },
+  "worldeaters": {
+   "factionId": "world-eaters",
+   "mfm": "world-eaters",
+   "dc": "world-eaters",
+   "dcAlso": [
+    "chaos-space-marines",
+    "chaos-daemons"
+   ]
+  }
+ },
+ "units": {
+  "adeptus-astartes/eradicator-squad-with-melta-rifles": {
+   "dc": "eradicator-squad"
+  },
+  "adeptus-astartes/invader-atvs": {
+   "dc": "invader-atv"
+  },
+  "adeptus-astartes/marneus-calgar": {
+   "dc": "marneus-calgar-in-armour-of-antilochus"
+  },
+  "adeptus-custodes/prosecutor-squad": {
+   "dc": "prosecutors"
+  },
+  "adeptus-custodes/vigilator-squad": {
+   "dc": "vigilators"
+  },
+  "adeptus-custodes/witchseeker-squad": {
+   "dc": "witchseekers"
+  }
+ },
+ "items": {
+  "adeptus-astartes/impulsor/orbital-comms-array-aura": "Orbital Comms Array"
+ }
+}
