@@ -1,5 +1,5 @@
 {
-  "_comment": "Pinned inputs for the v2 dataset pipeline (docs/DATASET.md §2). Paths are as seen inside the build container (/app = the app tree, /work = ~/sites/base/yaab-data).",
+  "_comment": "Pinned inputs for the v2 dataset pipeline (docs/DATASET.md \u00a72). Paths are as seen inside the build container (/app = the app tree, /work = ~/sites/base/yaab-data).",
   "gdc": {
     "repo": "game-datacards/datasources",
     "ref": "main",
@@ -7,12 +7,34 @@
     "snapshotDir": "/app/data/gdc/11th/gdc",
     "rawBase": "https://raw.githubusercontent.com/game-datacards/datasources/main/11th/gdc/",
     "files": [
-      "adeptasororitas", "adeptuscustodes", "adeptusmechanicus", "aeldari", "agents",
-      "astramilitarum", "blacktemplar", "bloodangels", "chaos_spacemarines", "chaosdaemons",
-      "chaosknights", "darkangels", "deathguard", "deathwatch", "drukhari",
-      "emperors_children", "greyknights", "gsc", "imperialknights", "necrons",
-      "orks", "space_marines", "spacewolves", "tau", "thousandsons",
-      "tyranids", "votann", "worldeaters"
+      "adeptasororitas",
+      "adeptuscustodes",
+      "adeptusmechanicus",
+      "aeldari",
+      "agents",
+      "astramilitarum",
+      "blacktemplar",
+      "bloodangels",
+      "chaos_spacemarines",
+      "chaosdaemons",
+      "chaosknights",
+      "darkangels",
+      "deathguard",
+      "deathwatch",
+      "drukhari",
+      "emperors_children",
+      "greyknights",
+      "gsc",
+      "imperialknights",
+      "necrons",
+      "orks",
+      "space_marines",
+      "spacewolves",
+      "tau",
+      "thousandsons",
+      "tyranids",
+      "votann",
+      "worldeaters"
     ]
   },
   "mfm": {
@@ -26,9 +48,14 @@
   "coreRules": {
     "_comment": "Core-rule glossary (Deep Strike, Deadly Demise X, Lethal Hits, ...). GDC prints core abilities and weapon keywords by NAME only, so their rule text has no GDC source. One-time snapshot of the 72 faction=='core' entries of the v1 build/abilities-index.json, frozen as a pinned file. Generic rules, not per-unit text; no other v1 store content is used.",
     "path": "/work/core-rules.json",
-    "md5": "2d2b068cfe8232c98d89abb027540a43"
+    "md5": "e50f11e61bebf0b5f7574d87c2f9536e"
   },
   "work": "/work/work",
   "golden": "/work/golden",
-  "datasetDir": "/app/data/dataset"
+  "datasetDir": "/app/data/dataset",
+  "abilityIndex": {
+    "_comment": "Pinned v1 40kdc ability-text index (keys: ability slug, or <faction>/<slug>). Fallback text for GDC name-only faction abilities and the 40kdc-only Legends sheets, after GDC's own rules (owner ruling 2026-10-31).",
+    "path": "/work/checkouts/abilities-index.json",
+    "md5": "7fca2b23b7aa20cd013fc2796db05687"
+  }
 }

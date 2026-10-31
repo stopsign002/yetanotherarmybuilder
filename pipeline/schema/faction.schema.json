@@ -1,0 +1,743 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "yaab/faction.schema.json",
+ "title": "yaab dataset faction file (docs/DATASET.md \u00a71)",
+ "type": "object",
+ "required": [
+  "factionName",
+  "_factionId",
+  "filename",
+  "unitCount",
+  "units",
+  "armyRules",
+  "detachments",
+  "linkedCatalogues",
+  "_source"
+ ],
+ "properties": {
+  "factionName": {
+   "type": "string"
+  },
+  "_factionId": {
+   "type": "string"
+  },
+  "filename": {
+   "type": "string"
+  },
+  "unitCount": {
+   "type": "integer"
+  },
+  "units": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "type",
+     "chapterBadge",
+     "role",
+     "transportCapacity",
+     "stats",
+     "modelStats",
+     "invulnSave",
+     "invulnNote",
+     "weapons",
+     "abilities",
+     "wargearAbilities",
+     "wargearProfile",
+     "keywords",
+     "wargearOptions",
+     "points",
+     "pointsOptions",
+     "squadOptions",
+     "ordinal",
+     "description",
+     "isLegends",
+     "_unpriced",
+     "attachmentRole",
+     "gdcLeadBy",
+     "_mfmPoints",
+     "_provisional",
+     "gdcLoadout",
+     "gdcWargear",
+     "gdcComposition",
+     "gdcMeleeWeapons",
+     "gdcRangedWeapons"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "minLength": 1
+     },
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "type": {
+      "enum": [
+       "unit"
+      ]
+     },
+     "chapterBadge": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "role": {
+      "enum": [
+       null,
+       "epic-hero",
+       "character",
+       "battleline",
+       "dedicated-transport"
+      ]
+     },
+     "transportCapacity": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "stats": {
+      "type": "object",
+      "required": [
+       "M",
+       "T",
+       "SV",
+       "W",
+       "LD",
+       "OC"
+      ],
+      "properties": {
+       "M": {
+        "type": "string"
+       },
+       "T": {
+        "type": "string"
+       },
+       "SV": {
+        "type": "string"
+       },
+       "W": {
+        "type": "string"
+       },
+       "LD": {
+        "type": "string"
+       },
+       "OC": {
+        "type": "string"
+       }
+      }
+     },
+     "modelStats": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+       "type": "object",
+       "required": [
+        "name",
+        "M",
+        "T",
+        "SV",
+        "W",
+        "LD",
+        "OC"
+       ],
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "M": {
+         "type": "string"
+        },
+        "T": {
+         "type": "string"
+        },
+        "SV": {
+         "type": "string"
+        },
+        "W": {
+         "type": "string"
+        },
+        "LD": {
+         "type": "string"
+        },
+        "OC": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "invulnSave": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "invulnNote": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "weapons": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "name",
+        "_typeName",
+        "Range",
+        "A",
+        "S",
+        "AP",
+        "D"
+       ],
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "_typeName": {
+         "enum": [
+          "Melee",
+          "Ranged"
+         ]
+        },
+        "Range": {
+         "type": "string"
+        },
+        "A": {
+         "type": "string"
+        },
+        "S": {
+         "type": "string"
+        },
+        "AP": {
+         "type": "string"
+        },
+        "D": {
+         "type": "string"
+        },
+        "WS": {
+         "type": "string"
+        },
+        "BS": {
+         "type": "string"
+        },
+        "Keywords": {
+         "type": "string"
+        },
+        "_keywordDefs": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "abilities": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "name",
+        "description",
+        "isCore"
+       ],
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "description": {
+         "type": "string"
+        },
+        "isCore": {
+         "type": "boolean"
+        },
+        "id": {
+         "type": [
+          "string",
+          "null"
+         ]
+        },
+        "_typeName": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "wargearAbilities": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "name",
+        "description"
+       ],
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "description": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "wargearProfile": {
+      "type": [
+       "object",
+       "null"
+      ],
+      "required": [
+       "options",
+       "budgets",
+       "modelsBySize",
+       "defaultsBySize",
+       "itemCosts",
+       "defaultCostBySize",
+       "alwaysCost"
+      ],
+      "properties": {
+       "options": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "required": [
+          "id",
+          "replaces",
+          "choices",
+          "constraint",
+          "cost"
+         ],
+         "properties": {
+          "id": {
+           "type": "string"
+          },
+          "replaces": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "required": [
+             "id",
+             "name"
+            ],
+            "properties": {
+             "id": {
+              "type": "string"
+             },
+             "name": {
+              "type": "string"
+             }
+            }
+           }
+          },
+          "choices": {
+           "type": "array",
+           "items": {
+            "type": "array",
+            "items": {
+             "type": "object",
+             "required": [
+              "id",
+              "name"
+             ],
+             "properties": {
+              "id": {
+               "type": "string"
+              },
+              "name": {
+               "type": "string"
+              }
+             }
+            }
+           }
+          },
+          "constraint": {
+           "type": "object"
+          },
+          "cost": {
+           "type": "number"
+          }
+         }
+        }
+       },
+       "budgets": {
+        "type": "array"
+       },
+       "modelsBySize": {
+        "type": [
+         "object",
+         "null"
+        ]
+       },
+       "defaultsBySize": {
+        "type": [
+         "object",
+         "null"
+        ]
+       },
+       "itemCosts": {
+        "type": [
+         "object",
+         "null"
+        ]
+       },
+       "defaultCostBySize": {
+        "type": [
+         "object",
+         "null"
+        ]
+       },
+       "alwaysCost": {
+        "type": "number"
+       }
+      }
+     },
+     "keywords": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "wargearOptions": {
+      "type": "array"
+     },
+     "points": {
+      "type": "integer"
+     },
+     "pointsOptions": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      }
+     },
+     "squadOptions": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "models",
+        "pts"
+       ],
+       "properties": {
+        "models": {
+         "type": [
+          "integer",
+          "null"
+         ]
+        },
+        "pts": {
+         "type": "integer"
+        }
+       }
+      }
+     },
+     "ordinal": {
+      "type": [
+       "object",
+       "null"
+      ],
+      "required": [
+       "fromCount",
+       "surcharge"
+      ],
+      "properties": {
+       "fromCount": {
+        "type": "integer"
+       },
+       "surcharge": {
+        "type": "integer"
+       }
+      }
+     },
+     "description": {
+      "type": "string"
+     },
+     "isLegends": {
+      "type": "boolean"
+     },
+     "_unpriced": {
+      "type": "boolean"
+     },
+     "attachmentRole": {
+      "enum": [
+       null,
+       "leader",
+       "support"
+      ]
+     },
+     "gdcLeadBy": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "_mfmPoints": {
+      "type": "boolean"
+     },
+     "_provisional": {
+      "type": "boolean"
+     },
+     "gdcLoadout": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "gdcWargear": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "gdcComposition": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "gdcMeleeWeapons": {
+      "type": "array"
+     },
+     "gdcRangedWeapons": {
+      "type": "array"
+     },
+     "_allyOf": {
+      "type": "string"
+     },
+     "_allySourceFaction": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "_allyLabel": {
+      "type": "string"
+     },
+     "_allyRuleIds": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "_allyNoEnhancements": {
+      "type": "boolean"
+     },
+     "_allyDetachments": {
+      "type": [
+       "array",
+       "null"
+      ]
+     }
+    }
+   }
+  },
+  "armyRules": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "name",
+     "description"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "detachments": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "name",
+     "rules",
+     "enhancements",
+     "_factionId",
+     "id",
+     "points",
+     "dispositions",
+     "stratagemIds",
+     "gdcStratagems"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "rules": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "name",
+        "description"
+       ],
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "description": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "enhancements": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "name",
+        "pts",
+        "description",
+        "keywords"
+       ],
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "pts": {
+         "type": "integer"
+        },
+        "description": {
+         "type": "string"
+        },
+        "keywords": {
+         "type": [
+          "array",
+          "null"
+         ]
+        },
+        "id": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "_factionId": {
+      "type": "string"
+     },
+     "id": {
+      "type": "string"
+     },
+     "points": {
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "dispositions": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "id",
+        "name",
+        "text"
+       ],
+       "properties": {
+        "id": {
+         "type": [
+          "string",
+          "null"
+         ]
+        },
+        "name": {
+         "type": "string"
+        },
+        "text": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "stratagemIds": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "gdcStratagems": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "name",
+        "cp",
+        "phase",
+        "phases",
+        "turn",
+        "timing",
+        "type",
+        "description",
+        "source"
+       ],
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "cp": {
+         "type": "integer"
+        },
+        "phase": {
+         "type": "string"
+        },
+        "phases": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "turn": {
+         "type": "string"
+        },
+        "timing": {
+         "type": "string"
+        },
+        "type": {
+         "type": "string"
+        },
+        "description": {
+         "type": "string"
+        },
+        "source": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "_gdcFactionTag": {
+      "type": [
+       "string",
+       "null"
+      ]
+     }
+    }
+   }
+  },
+  "linkedCatalogues": {
+   "type": "array"
+  },
+  "_source": {
+   "type": "string"
+  },
+  "_retiredDetachments": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "alliedRules": {
+   "type": "array"
+  },
+  "allyUnitCount": {
+   "type": "integer"
+  }
+ }
+}

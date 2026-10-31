@@ -26,9 +26,21 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.30-1',
-    lastUpdated: '2026-10-30T20:00:00Z',
+    version:     '2026.10.31-1',
+    lastUpdated: '2026-10-31T04:00:00Z',
     entries: [
+      {
+        date: '2026-10-31',
+        kind: 'change',
+        title: 'Game data now comes straight from GW’s app data and the Munitorum Field Manual',
+        description: 'Every datasheet, ability, weapon profile, stratagem, enhancement and detachment rule is now taken from GW’s own app data (via Game Datacards), and every price from the official MFM site, including the Legends view that the old data missed, so Legends units such as the Razorback, Predators, Vindicator and Whirlwind now carry their real MFM prices instead of stale ones. Hand-written corrections are gone; where GW’s data and the old community data disagreed, GW wins. Some unit, weapon and ability names changed spelling or capitalisation to match GW’s print, a few abilities the 11th-edition sheets no longer carry are gone, and Space Marine datasheets GW has retired (Tactical Squad, Devastator Squad, Suppressors, Death Company with Bolt Rifles and the Custodes spear squads) remain available as Legends. The app also loads faster: the 13 MB game-data bundle is replaced by small per-faction files fetched as needed.',
+      },
+      {
+        date: '2026-10-31',
+        kind: 'fix',
+        title: 'Centurion Devastators priced correctly at 6 models',
+        description: 'The second squad size is 6 models for 350 pts as the MFM says, not 4.',
+      },
       {
         date: '2026-10-30',
         kind: 'fix',

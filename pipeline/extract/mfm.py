@@ -35,12 +35,16 @@ FACTION_PAGES = [
     "thousand-sons", "tyranids", "world-eaters",
 ]
 
-def fetch(slug, cache_dir=None, cache_hours=6.0, retries=3):
-    path = cache_dir and os.path.join(cache_dir, slug + ".html")
+def fetch(slug, cache_dir=None, cache_hours=6.0, retries=3, legends=False):
+    # The site's "Show Legends" toggle is a server action that sets the cookie
+    # isLegendsDisplayed=true; the default page omits Legends datasheets entirely.
+    headers = {"User-Agent": UA}
+    if legends: headers["Cookie"] = "isLegendsDisplayed=true"
+    path = cache_dir and os.path.join(cache_dir, slug + (".legends" if legends else "") + ".html")
     if path and os.path.exists(path) and os.path.getsize(path) > 10000 \
        and (time.time() - os.path.getmtime(path)) < cache_hours * 3600:
         return open(path, encoding="utf-8", errors="replace").read()
-    req = urllib.request.Request(f"{BASE}/{slug}", headers={"User-Agent": UA})
+    req = urllib.request.Request(f"{BASE}/{slug}", headers=headers)
     last = None
     for i in range(retries):
         try:
@@ -236,6 +240,18 @@ def main():
             print(f"FATAL: {slug}: {e}", file=sys.stderr)
             sys.exit(3)
         per_page[slug] = {"units": 0, "wargear": len(triples)}
+        # Legends pass: same page with the legends cookie. Rows absent from the
+        # default page are Legends datasheets and are tagged legends: true.
+        try:
+            l_triples, l_points = parse_page(fetch(slug, args.cache_dir, args.cache_hours, legends=True))
+        except Exception as e:
+            print(f"FATAL: {slug} (legends): {e}", file=sys.stderr)
+            sys.exit(3)
+        legend_names = set(l_points) - set(unit_points)
+        for n in legend_names: unit_points[n] = l_points[n]
+        triples = sorted(set(triples) | {t for t in l_triples if t[0] in legend_names}, key=str)
+        per_page[slug]["wargear"] = len(triples)
+        per_page[slug]["legends"] = 0
         for uname, bands in unit_points.items():
             rows = []
             for (lo, hi), sizes in sorted(bands.items(),
@@ -248,6 +264,9 @@ def main():
             if key in units:
                 collisions.append(key); continue
             units[key] = {"points": rows, "items": {}}
+            if uname in legend_names:
+                units[key]["legends"] = True
+                per_page[slug]["legends"] += 1
             per_page[slug]["units"] += 1
         for uname, iname, pts in triples:
             pairs += 1
@@ -264,7 +283,7 @@ def main():
     priced = sum(1 for u in units.values() if u["points"])
     wargear = sum(1 for u in units.values() if u["items"])
     meta = {"unitsPriced": priced, "wargearPriced": wargear, "pairs": pairs,
-            "unmatchedRows": unmatched, "keyCollisions": collisions,
+            "legendsPriced": sum(1 for u in units.values() if u.get("legends")), "unmatchedRows": unmatched, "keyCollisions": collisions,
             "itemConflicts": conflicts, "perPage": per_page}
     out = {"fetched": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
            "pages": len(FACTION_PAGES), "units": units, "meta": meta}
@@ -283,7 +302,7 @@ def main():
     os.replace(tmp, args.out)
     print(json.dumps({"unitsPriced": priced, "wargearPriced": wargear, "pairs": pairs,
                       "unmatchedRows": len(unmatched), "keyCollisions": len(collisions),
-                      "itemConflicts": len(conflicts), "out": args.out}))
+                      "itemConflicts": len(conflicts), "legendsPriced": meta["legendsPriced"], "out": args.out}))
     for u in unmatched[:20]:
         print("ORPHAN WARGEAR ROW: %(page)s / %(unit)s / %(item)s (%(pts)s pts)" % u, file=sys.stderr)
 

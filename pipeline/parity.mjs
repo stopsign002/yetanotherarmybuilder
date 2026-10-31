@@ -9,14 +9,14 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const FAIL_CATS = ['unit-missing', 'points-differs-from-mfm', 'stat-rows-lost', 'weapons-lost', 'text-lost'];
+export const FAIL_CATS = ['unit-missing', 'points-differs-from-mfm', 'stat-rows-lost', 'weapons-lost', 'text-lost', 'ability-missing'];
 export const LISTED_CATS = ['points-changed', 'text-changed', 'ability-renamed', 'keyword-changed', 'extra-unit',
-  'extra-weapon', 'extra-ability', 'strat-count-changed', 'enh-count-changed', 'det-missing', 'det-extra'];
+  'extra-weapon', 'extra-ability', 'strat-count-changed', 'enh-count-changed', 'det-missing', 'det-extra', 'stat-row-renamed', 'id-changed'];
 
 function loadDir(dir) {
   const m = new Map();
   for (const f of readdirSync(dir)) {
-    if (!f.endsWith('.json') || f.startsWith('_')) continue;
+    if (!f.endsWith('.json') || f.startsWith('_') || f === 'manifest.json' || f === 'report.json') continue;
     const j = JSON.parse(readFileSync(join(dir, f), 'utf8'));
     m.set(j._factionId || f.slice(0, -5), j);
   }
@@ -34,6 +34,23 @@ function byName(list) {
   }
   return m;
 }
+// normalised key: lowercase, curly quotes dropped, punctuation -> space, collapsed;
+// stripParen removes one trailing "(...)" such as "(Legends)".
+const nk = (v, stripParen = false) => {
+  let t = String(v ?? '').toLowerCase().replace(/[\u2018\u2019\u201b']/g, '');
+  if (stripParen) t = t.replace(/\s*\([^)]*\)\s*$/, '');
+  return t.replace(/[^a-z0-9]+/g, ' ').trim();
+};
+const abKey = v => nk(String(v ?? '').replace(/\s*\((aura|psychic|bondsman)\)\s*$/i, ''));
+// keyed map with #n suffix for duplicate keys
+function keyed(list, keyFn) {
+  const m = new Map(); const seen = {};
+  for (const x of list || []) {
+    const k = keyFn(x && x.name); seen[k] = (seen[k] || 0) + 1;
+    m.set(seen[k] > 1 ? `${k}#${seen[k]}` : k, x);
+  }
+  return m;
+}
 const sq = u => JSON.stringify((u.squadOptions || []).map(o => [o.models, o.pts]));
 const mfmSq = o => JSON.stringify((o || []).map(x => Array.isArray(x) ? [x[0], x[1]] : [x.models, x.pts]));
 
@@ -45,40 +62,46 @@ export function compareDatasets(dirA, dirB, opts = {}) {
 
   for (const [fid, fa] of A) {
     const fb = B.get(fid);
-    const ua = byName(fa.units);
-    if (!fb) { for (const [n] of ua) add('unit-missing', fid, { unit: n, a: 'present', b: 'faction file missing' }); continue; }
-    const ub = byName(fb.units);
-    for (const [n, a] of ua) {
-      const b = ub.get(n);
+    // match: pass 1 by id, pass 2 by normalised name (first unused)
+    const ua = fa.units || [], ub = fb.units || [];
+    const matchOf = new Map(); const used = new Set();
+    const byId = new Map(); for (const u of ub) if (u.id != null && !byId.has(u.id)) byId.set(u.id, u);
+    for (const a of ua) { const b = a.id != null ? byId.get(a.id) : null; if (b && !used.has(b)) { matchOf.set(a, b); used.add(b); } }
+    const byNm = new Map();
+    for (const u of ub) { if (used.has(u)) continue; const k = nk(u.name, true); if (!byNm.has(k)) byNm.set(k, []); byNm.get(k).push(u); }
+    for (const a of ua) {
+      if (matchOf.has(a)) continue;
+      const l = byNm.get(nk(a.name, true));
+      if (l && l.length) { const b = l.shift(); matchOf.set(a, b); used.add(b); if (a.id != null && b.id != null && a.id !== b.id) add('id-changed', fid, { unit: a.name, field: 'id', a: a.id, b: b.id }); }
+    }
+    for (const a of ua) {
+      const n = a.name, b = matchOf.get(a);
       if (!b) { add('unit-missing', fid, { unit: n, a: 'present', b: null }); continue; }
       unitsCompared++;
-      // points
       for (const f of ['points', 'ordinal']) if (JSON.stringify(a[f] ?? null) !== JSON.stringify(b[f] ?? null))
         add('points-changed', fid, { unit: n, field: f, a: a[f] ?? null, b: b[f] ?? null });
       if (sq(a) !== sq(b)) add('points-changed', fid, { unit: n, field: 'squadOptions', a: a.squadOptions, b: b.squadOptions });
-      // stat rows
+      // stat rows: only a drop in COUNT is a loss; same count with different names is a rename
       const ra = (a.modelStats || []).map(r => r.name), rb = (b.modelStats || []).map(r => r.name);
-      const lostRows = ra.filter(x => !rb.includes(x));
-      if (rb.length < ra.length || lostRows.length) add('stat-rows-lost', fid, { unit: n, field: 'modelStats', a: ra, b: rb });
+      if (rb.length < ra.length) add('stat-rows-lost', fid, { unit: n, field: 'modelStats', a: ra, b: rb });
+      else if (JSON.stringify(ra.map(x => nk(x)).sort()) !== JSON.stringify(rb.slice(0, ra.length).map(x => nk(x)).sort()) && rb.length === ra.length)
+        add('stat-row-renamed', fid, { unit: n, field: 'modelStats', a: ra, b: rb });
       // weapons
-      const wa = byName(a.weapons), wb = byName(b.weapons);
-      for (const [wn] of wa) if (!wb.has(wn)) add('weapons-lost', fid, { unit: n, field: 'weapons', a: wn, b: null });
-      for (const [wn] of wb) if (!wa.has(wn)) add('extra-weapon', fid, { unit: n, field: 'weapons', a: null, b: wn });
-      // abilities
-      const aa = byName(a.abilities), ab = byName(b.abilities);
-      const gone = [], extra = [];
-      for (const [an, x] of aa) {
-        const y = ab.get(an);
-        if (!y) { gone.push(an); continue; }
+      const wa = keyed(a.weapons, v => nk(v)), wb = keyed(b.weapons, v => nk(v));
+      for (const [k, w] of wa) if (!wb.has(k)) add('weapons-lost', fid, { unit: n, field: 'weapons', a: w.name, b: null });
+      for (const [k, w] of wb) if (!wa.has(k)) add('extra-weapon', fid, { unit: n, field: 'weapons', a: null, b: w.name });
+      // abilities = abilities + wargearAbilities
+      const aa = keyed([...(a.abilities || []), ...(a.wargearAbilities || [])], abKey);
+      const ab = keyed([...(b.abilities || []), ...(b.wargearAbilities || [])], abKey);
+      for (const [k, x] of aa) {
+        const y = ab.get(k);
+        if (!y) { add('ability-missing', fid, { unit: n, field: `ability:${x.name}`, a: x.name, b: null }); continue; }
+        if (nk(x.name) !== nk(y.name)) add('ability-renamed', fid, { unit: n, field: 'abilities', a: x.name, b: y.name });
         const ta = norm(x.description), tb = norm(y.description);
-        if (ta && !tb) add('text-lost', fid, { unit: n, field: `ability:${an}`, a: ta.slice(0, 200), b: '' });
-        else if (ta !== tb) add('text-changed', fid, { unit: n, field: `ability:${an}`, a: ta.slice(0, 200), b: tb.slice(0, 200) });
+        if (ta && !tb) add('text-lost', fid, { unit: n, field: `ability:${x.name}`, a: ta.slice(0, 200), b: '' });
+        else if (ta !== tb) add('text-changed', fid, { unit: n, field: `ability:${x.name}`, a: ta.slice(0, 200), b: tb.slice(0, 200) });
       }
-      for (const [bn] of ab) if (!aa.has(bn)) extra.push(bn);
-      const pairs = Math.min(gone.length, extra.length);
-      for (let i = 0; i < pairs; i++) add('ability-renamed', fid, { unit: n, field: 'abilities', a: gone[i], b: extra[i] });
-      for (const g of gone.slice(pairs)) add('text-lost', fid, { unit: n, field: `ability:${g}`, a: norm(aa.get(g).description).slice(0, 200), b: null });
-      for (const e of extra.slice(pairs)) add('extra-ability', fid, { unit: n, field: 'abilities', a: null, b: e });
+      for (const [k, y] of ab) if (!aa.has(k)) add('extra-ability', fid, { unit: n, field: 'abilities', a: null, b: y.name });
       // unit description
       if (norm(a.description) && !norm(b.description)) add('text-lost', fid, { unit: n, field: 'description', a: norm(a.description).slice(0, 200), b: '' });
       else if (norm(a.description) !== norm(b.description)) add('text-changed', fid, { unit: n, field: 'description', a: norm(a.description).slice(0, 200), b: norm(b.description).slice(0, 200) });
@@ -86,10 +109,10 @@ export function compareDatasets(dirA, dirB, opts = {}) {
       const ka = [...new Set(a.keywords || [])].sort(), kb = [...new Set(b.keywords || [])].sort();
       if (JSON.stringify(ka) !== JSON.stringify(kb)) add('keyword-changed', fid, { unit: n, field: 'keywords', a: ka.filter(x => !kb.includes(x)), b: kb.filter(x => !ka.includes(x)) });
     }
-    for (const [n] of ub) if (!ua.has(n)) add('extra-unit', fid, { unit: n, a: null, b: 'present' });
+    for (const u of ub) if (!used.has(u)) add('extra-unit', fid, { unit: u.name, a: null, b: 'present' });
 
     // MFM check on B
-    if (opts.mfm) for (const [n, b] of ub) {
+    if (opts.mfm) for (const b of ub) { const n = b.name;
       const m = opts.mfm[`${fid}/${n}`];
       if (m && mfmSq(m) !== sq(b)) add('points-differs-from-mfm', fid, { unit: n, field: 'squadOptions', a: m, b: b.squadOptions });
     }

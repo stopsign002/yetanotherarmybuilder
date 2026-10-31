@@ -1,0 +1,3110 @@
+[
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Penitent Engines",
+  "a": "Twin penitent flails",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adepta-sororitas",
+  "unit": "Ministorum Priest",
+  "a": "Holy Hatred",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adepta-sororitas",
+  "unit": "Ministorum Priest",
+  "a": "Holy Piety",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adepta-sororitas",
+  "unit": "Ministorum Priest",
+  "a": "War Hymns",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Krak",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Frag",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Aquila Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Aquila Kill Team",
+  "a": "Combat knife",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Aquila Kill Team",
+  "a": "Boltgun",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Standard",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Supercharge",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adepta-sororitas",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adepta-sororitas",
+  "unit": "Callidus Assassin",
+  "a": "Lord of Deceit (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adepta-sororitas",
+  "unit": "Corvus Blackstar",
+  "a": "Infernum Halo-launcher",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Deathwatch Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Deathwatch Kill Team",
+  "a": "Combi-weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Deathwatch Kill Team",
+  "a": "Deathwatch thunder hammer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adepta-sororitas",
+  "unit": "Deathwatch Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Inquisitorial Agents",
+  "a": "Agent’s Firearm",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adepta-sororitas",
+  "unit": "Inquisitorial Agents",
+  "a": "Tome-skull",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Ranged",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Melee",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adepta-sororitas",
+  "unit": "Watch Master",
+  "a": "Rites of Battle",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adepta-sororitas",
+  "unit": "Watch Master",
+  "a": "Strategic Knowledge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adepta-sororitas",
+  "unit": "Canis Rex",
+  "a": "Questoris multi-laser",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "stat-rows-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Wardens of Ultramar",
+  "a": [
+   "Aemelia Minervas",
+   "Ancient Gadriel",
+   "Dainal Kornelius",
+   "Gaius Silva",
+   "Lucia Vestha",
+   "Veteran Sergeant Metaurus"
+  ],
+  "reason": "GDC 11e profile rows are the owner (Wardens of Ultramar prints 4 rows)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-astartes",
+  "unit": "Pedro Kantor",
+  "a": "INSPIRING COMMANDER",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Krak",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Frag",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Aquila Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Aquila Kill Team",
+  "a": "Combat knife",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Aquila Kill Team",
+  "a": "Boltgun",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Standard",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Supercharge",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-astartes",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-astartes",
+  "unit": "Callidus Assassin",
+  "a": "Lord of Deceit (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Combi-weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Deathwatch thunder hammer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-astartes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Inquisitorial Agents",
+  "a": "Agent’s Firearm",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-astartes",
+  "unit": "Inquisitorial Agents",
+  "a": "Tome-skull",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-astartes",
+  "unit": "Ministorum Priest",
+  "a": "Holy Mission",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-astartes",
+  "unit": "Ministorum Priest",
+  "a": "Holy Piety",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-astartes",
+  "unit": "Ministorum Priest",
+  "a": "Righteous Smiting",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-astartes",
+  "unit": "Ministorum Priest",
+  "a": "War Hymns",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-astartes",
+  "unit": "Sanctifiers",
+  "a": "Attached Unit",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-astartes",
+  "unit": "Canis Rex",
+  "a": "Questoris multi-laser",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Telemon Heavy Dreadnought",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Contemptor-Achillus Dreadnought",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Contemptor-Galatus Dreadnought",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Venerable Contemptor Dreadnought",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Blade Champion",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Caladius Grav-tank",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Allarus Custodians",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Shield-Captain on Dawneagle Jetbike",
+  "a": "At the start of the battle round, if a model with this ability is your WARLORD, gain 1CP.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Shield-Captain on Dawneagle Jetbike",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Ares Gunship",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Custodian Guard",
+  "a": "Vexilla",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Orion Assault Dropship",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Venerable Land Raider",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Custodian Wardens",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Pallas Grav-attack",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Vertus Praetors",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Valerian",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Valerian",
+  "a": "At the start of the battle round, if a model with this ability is your WARLORD, gain 1CP.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Shield-Captain in Allarus Terminator Armour",
+  "a": "At the start of the battle round, if a model with this ability is your WARLORD, gain 1CP.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Shield-Captain in Allarus Terminator Armour",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Aquilon Custodians",
+  "a": "From Golden Light",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Coronus Grav-carrier",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Shield-Captain",
+  "a": "At the start of the battle round, if a model with this ability is your WARLORD, gain 1CP.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Shield-Captain",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Trajann Valoris",
+  "a": "At the start of the battle round, if a model with this ability is your WARLORD, gain 1CP.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Trajann Valoris",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquilon Terminators with Solarite Power Gauntlets",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquilon Terminators with Solarite Power Talons",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Caladius Annihilator Grav‑Tank",
+  "a": "Damaged 5",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Caladius Annihilator Grav‑Tank",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Custodian Guard Sodality",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Gyrfalcon Jetbike Sodality",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Sentinel Guard Sodality",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Venatari with Kinetic Destroyers",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "text-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Venatari with Verutum Lances",
+  "a": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds.",
+  "reason": "no GDC, 40kdc or v1-index text exists for this ability (v1 showed hand-written text, dropped by the no-hand-text rule)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Krak",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Frag",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquila Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquila Kill Team",
+  "a": "Combat knife",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquila Kill Team",
+  "a": "Boltgun",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Standard",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Supercharge",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Callidus Assassin",
+  "a": "Lord of Deceit (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Corvus Blackstar",
+  "a": "Infernum Halo-launcher",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Combi-weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Deathwatch thunder hammer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Deathwatch Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Inquisitorial Agents",
+  "a": "Agent’s Firearm",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Inquisitorial Agents",
+  "a": "Tome-skull",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Ministorum Priest",
+  "a": "Holy Mission",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Ministorum Priest",
+  "a": "Holy Piety",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Ministorum Priest",
+  "a": "Righteous Smiting",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Ministorum Priest",
+  "a": "War Hymns",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Sanctifiers",
+  "a": "Attached Unit",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Ranged",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Melee",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Watch Master",
+  "a": "Rites of Battle",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-custodes",
+  "unit": "Watch Master",
+  "a": "Strategic Knowledge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-custodes",
+  "unit": "Canis Rex",
+  "a": "Questoris multi-laser",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Thulia Ghuld",
+  "a": "Rod Of The War Forge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Krak",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Frag",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Aquila Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Aquila Kill Team",
+  "a": "Combat knife",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Aquila Kill Team",
+  "a": "Boltgun",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Standard",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Supercharge",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Callidus Assassin",
+  "a": "Lord of Deceit (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Corvus Blackstar",
+  "a": "Infernum Halo-launcher",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Deathwatch Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Deathwatch Kill Team",
+  "a": "Combi-weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Deathwatch Kill Team",
+  "a": "Deathwatch thunder hammer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Deathwatch Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Inquisitorial Agents",
+  "a": "Agent’s Firearm",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Inquisitorial Agents",
+  "a": "Tome-skull",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Ministorum Priest",
+  "a": "Holy Mission",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Ministorum Priest",
+  "a": "Holy Piety",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Ministorum Priest",
+  "a": "Righteous Smiting",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Ministorum Priest",
+  "a": "War Hymns",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Sanctifiers",
+  "a": "Attached Unit",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Ranged",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Melee",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Watch Master",
+  "a": "Rites of Battle",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "adeptus-mechanicus",
+  "unit": "Watch Master",
+  "a": "Strategic Knowledge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "adeptus-mechanicus",
+  "unit": "Canis Rex",
+  "a": "Questoris multi-laser",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "aeldari",
+  "unit": "Striking Scorpions",
+  "a": "Scorpion's claw",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "aeldari",
+  "unit": "Corsair Voidscarred",
+  "a": "Executioner",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "aeldari",
+  "unit": "Warlock Skyrunners",
+  "a": "Destructor",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "aeldari",
+  "unit": "Hemlock Wraithfighter",
+  "a": "Mindshock Pod (Aura, Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "aeldari",
+  "unit": "Jain Zar",
+  "a": "Blade of Destruction",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "aeldari",
+  "unit": "Warlock",
+  "a": "Destructor",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "aeldari",
+  "unit": "Warlock Conclave",
+  "a": "Destructor",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "aeldari",
+  "unit": "Dragon Knights",
+  "a": "Laser lance – Ranged",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "aeldari",
+  "unit": "Dragon Knights",
+  "a": "Laser lance – Melee",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Sanctifiers",
+  "a": "Attached Unit",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Callidus Assassin",
+  "a": "Lord of Deceit (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Inquisitorial Agents",
+  "a": "Agent’s Firearm",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Inquisitorial Agents",
+  "a": "Tome-skull",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Deathwatch Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Deathwatch Kill Team",
+  "a": "Combi-weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Deathwatch Kill Team",
+  "a": "Deathwatch thunder hammer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Deathwatch Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Krak",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Frag",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Aquila Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Aquila Kill Team",
+  "a": "Combat knife",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Aquila Kill Team",
+  "a": "Boltgun",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Standard",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Supercharge",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Ranged",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Melee",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Watch Master",
+  "a": "Rites of Battle",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Watch Master",
+  "a": "Strategic Knowledge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Corvus Blackstar",
+  "a": "Infernum Halo-launcher",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Ministorum Priest",
+  "a": "Holy Mission",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Ministorum Priest",
+  "a": "Holy Piety",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Ministorum Priest",
+  "a": "Righteous Smiting",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "agents-of-the-imperium",
+  "unit": "Ministorum Priest",
+  "a": "War Hymns",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "agents-of-the-imperium",
+  "unit": "Canis Rex",
+  "a": "Questoris multi-laser",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Ministorum Priest",
+  "a": "Holy Hatred",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Ministorum Priest",
+  "a": "Holy Mission",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Ministorum Priest",
+  "a": "Righteous Smiting",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Ministorum Priest",
+  "a": "Zealot",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Shadowsword",
+  "a": "Titan-killer",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Krak",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Frag",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Aquila Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Aquila Kill Team",
+  "a": "Combat knife",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Aquila Kill Team",
+  "a": "Boltgun",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Standard",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Supercharge",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Callidus Assassin",
+  "a": "Lord of Deceit (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Corvus Blackstar",
+  "a": "Infernum Halo-launcher",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Deathwatch Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Deathwatch Kill Team",
+  "a": "Combi-weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Deathwatch Kill Team",
+  "a": "Deathwatch thunder hammer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Deathwatch Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Inquisitorial Agents",
+  "a": "Agent’s Firearm",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Inquisitorial Agents",
+  "a": "Tome-skull",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Sanctifiers",
+  "a": "Attached Unit",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Ranged",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Melee",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Watch Master",
+  "a": "Rites of Battle",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "astra-militarum",
+  "unit": "Watch Master",
+  "a": "Strategic Knowledge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "astra-militarum",
+  "unit": "Canis Rex",
+  "a": "Questoris multi-laser",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-daemons",
+  "unit": "Poxbringer",
+  "a": "Feculent Despair (Aura, Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-daemons",
+  "unit": "Sorcerer",
+  "a": "Empyric Guidance (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-daemons",
+  "unit": "Sorcerer",
+  "a": "Twisted Sorceries (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-daemons",
+  "unit": "Sorcerer",
+  "a": "Warped Interference (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-daemons",
+  "unit": "Sorcerer",
+  "a": "Wracking Agonies (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-daemons",
+  "unit": "Sorcerer in Terminator Armour",
+  "a": "Empyric Guidance (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-daemons",
+  "unit": "Sorcerer in Terminator Armour",
+  "a": "Marked by Fate (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-knights",
+  "unit": "Poxbringer",
+  "a": "Feculent Despair (Aura, Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Sorcerer in Terminator Armour",
+  "a": "Empyric Guidance (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Sorcerer in Terminator Armour",
+  "a": "Marked by Fate (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Sorcerer",
+  "a": "Empyric Guidance (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Sorcerer",
+  "a": "Twisted Sorceries (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Sorcerer",
+  "a": "Warped Interference (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Sorcerer",
+  "a": "Wracking Agonies (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Spawn",
+  "a": "Deadly Demise 1",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Spawn",
+  "a": "Lethal Ichor",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Spawn",
+  "a": "Regenerating Monstrosities",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Spawn",
+  "a": "Scouts 6\"",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Spawn",
+  "a": "Scouts 8\"",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Spawn",
+  "a": "Scuttling Horrors",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Spawn",
+  "a": "To Slake its Rage",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Predator Annihilator",
+  "a": "Blood-hungry Annihilator",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Predator Annihilator",
+  "a": "Ensorcelled Annihilation",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Predator Annihilator",
+  "a": "Metalophagic Infection",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "chaos-space-marines",
+  "unit": "Defiler",
+  "a": "Defiler claws",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "chaos-space-marines",
+  "unit": "Defiler",
+  "a": "Defiler cannon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Predator Destructor",
+  "a": "Ensorcelled Destruction",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Predator Destructor",
+  "a": "Hail of Corrosive Disease",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Predator Destructor",
+  "a": "Punishing Suppression",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Heldrake",
+  "a": "Flame-wreathed",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Forgefiend",
+  "a": "Blazing Salvoes",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Forgefiend",
+  "a": "Furious Onslaught",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Master of Executions",
+  "a": "A Worthy Skull",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Master of Executions",
+  "a": "Forwards, for Blood!",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Helbrute",
+  "a": "Diseased Malice",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Helbrute",
+  "a": "Frenzy",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Helbrute",
+  "a": "Froth-spattered Frenzy",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Helbrute",
+  "a": "Terrifying Assault",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Maulerfiend",
+  "a": "Glutton for Punishment",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Maulerfiend",
+  "a": "Savage Exaltation",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Maulerfiend",
+  "a": "Snarling Protector",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Maulerfiend",
+  "a": "The Scent of Blood",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Rhino",
+  "a": "Assault Vehicle",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Rhino",
+  "a": "Fire Support",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Rhino",
+  "a": "Meet Any Challenge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Chaos Rhino",
+  "a": "Sorcerous Support",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Masters of the Maelstrom",
+  "a": "Masters of the Maelstrom",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "chaos-space-marines",
+  "unit": "Huron Blackheart",
+  "a": "Tyrant’s Claw heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Abaddon the Despoiler",
+  "a": "The Warmaster",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Khorne Lord of Skulls",
+  "a": "Idol of Blessed Blood",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Khorne Lord of Skulls",
+  "a": "Super-heavy War Engine",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "chaos-space-marines",
+  "unit": "Mutilators",
+  "a": "Fleshmetal weapons – sweep",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "chaos-space-marines",
+  "unit": "Mutilators",
+  "a": "Fleshmetal weapons – strike",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Mutilators",
+  "a": "CULT OF DESTRUCTION",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Mutilators",
+  "a": "Death Frenzy",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "chaos-space-marines",
+  "unit": "Poxbringer",
+  "a": "Feculent Despair (Aura, Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Spawn",
+  "a": "Mind-breaking Mutations (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Spawn",
+  "a": "Regenerating Monstrosities",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Spawn",
+  "a": "Scouts 8\"",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Spawn",
+  "a": "Scuttling Horrors",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Spawn",
+  "a": "To Slake its Rage",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Predator Annihilator",
+  "a": "Annihilator",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Predator Annihilator",
+  "a": "Blood-hungry Annihilator",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Predator Annihilator",
+  "a": "Ensorcelled Annihilation",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Predator Destructor",
+  "a": "Destructor",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Predator Destructor",
+  "a": "Ensorcelled Destruction",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Predator Destructor",
+  "a": "Punishing Suppression",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Helbrute",
+  "a": "Dark Ascension (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Helbrute",
+  "a": "Devoted to Destruction",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Helbrute",
+  "a": "Frenzy",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Helbrute",
+  "a": "Terrifying Assault",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Rhino",
+  "a": "Assault Vehicle",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Rhino",
+  "a": "Meet Any Challenge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Rhino",
+  "a": "Self Repair",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Chaos Rhino",
+  "a": "Sorcerous Support",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "death-guard",
+  "unit": "Typhus",
+  "a": "The Destroyer Hive",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "drukhari",
+  "unit": "Talos",
+  "a": "Macro-scalpel",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "drukhari",
+  "unit": "Corsair Voidscarred",
+  "a": "Executioner",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Terminators",
+  "a": "Bloody Fury",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Sorcerer",
+  "a": "Empyric Guidance (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Sorcerer",
+  "a": "Gift of Chaos (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Sorcerer",
+  "a": "Prescience (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Sorcerer",
+  "a": "Twisted Sorceries (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Spawn",
+  "a": "Deadly Demise 1",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Spawn",
+  "a": "Lethal Ichor",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Spawn",
+  "a": "Mind-breaking Mutations (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Spawn",
+  "a": "Regenerating Monstrosities",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Spawn",
+  "a": "Scouts 6\"",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Spawn",
+  "a": "Scouts 8\"",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Spawn",
+  "a": "To Slake its Rage",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Rhino",
+  "a": "Fire Support",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Rhino",
+  "a": "Meet Any Challenge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Rhino",
+  "a": "Self Repair",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Chaos Rhino",
+  "a": "Sorcerous Support",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Fulgrim",
+  "a": "Serpentine",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Heldrake",
+  "a": "Flame-wreathed",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Maulerfiend",
+  "a": "Savage Exaltation",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Maulerfiend",
+  "a": "Siege Crawler",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Maulerfiend",
+  "a": "Snarling Protector",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "emperors-children",
+  "unit": "Maulerfiend",
+  "a": "The Scent of Blood",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "genestealer-cults",
+  "unit": "Reductus Saboteur",
+  "a": "Demolition Charges",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "genestealer-cults",
+  "unit": "Shadowsword",
+  "a": "Titan-killer",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Land Raider Crusader",
+  "a": "Legacy of Jerulas",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Razorback",
+  "a": "Fire Support",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Rhino",
+  "a": "Self Repair",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Brotherhood Techmarine",
+  "a": "Omnissian power axe",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Krak",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Frag",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Combat knife",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Boltgun",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Standard",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Supercharge",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Callidus Assassin",
+  "a": "Lord of Deceit (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Corvus Blackstar",
+  "a": "Infernum Halo-launcher",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Combi-weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Deathwatch thunder hammer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Inquisitorial Agents",
+  "a": "Agent’s Firearm",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Inquisitorial Agents",
+  "a": "Tome-skull",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Ministorum Priest",
+  "a": "Holy Mission",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Ministorum Priest",
+  "a": "Holy Piety",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Ministorum Priest",
+  "a": "Righteous Smiting",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Ministorum Priest",
+  "a": "War Hymns",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Sanctifiers",
+  "a": "Attached Unit",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Ranged",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Melee",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Watch Master",
+  "a": "Rites of Battle",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "grey-knights",
+  "unit": "Watch Master",
+  "a": "Strategic Knowledge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "grey-knights",
+  "unit": "Canis Rex",
+  "a": "Questoris multi-laser",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Canis Rex",
+  "a": "Questoris multi-laser",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Krak",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes grenade launcher – Frag",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Combat knife",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Boltgun",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Standard",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Plasma pistol – Supercharge",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Aquila Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Callidus Assassin",
+  "a": "Lord of Deceit (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Corvus Blackstar",
+  "a": "Infernum Halo-launcher",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Close combat weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Combi-weapon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Deathwatch thunder hammer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy bolter",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Infernus heavy bolter – Heavy flamer",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Deathwatch Kill Team",
+  "a": "Astartes Shield",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Inquisitorial Agents",
+  "a": "Agent’s Firearm",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Inquisitorial Agents",
+  "a": "Tome-skull",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Ministorum Priest",
+  "a": "Holy Mission",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Ministorum Priest",
+  "a": "Holy Piety",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Ministorum Priest",
+  "a": "Righteous Smiting",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Ministorum Priest",
+  "a": "War Hymns",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Sanctifiers",
+  "a": "Attached Unit",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Ranged",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "imperial-knights",
+  "unit": "Watch Master",
+  "a": "Vigil spear – Melee",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Watch Master",
+  "a": "Rites of Battle",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "imperial-knights",
+  "unit": "Watch Master",
+  "a": "Strategic Knowledge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "necrons",
+  "unit": "Seraptek Heavy Construct",
+  "a": "Titanic Walker",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "necrons",
+  "unit": "Technomancer",
+  "a": "Technomancer",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "necrons",
+  "unit": "Cryptothralls",
+  "a": "Support",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "necrons",
+  "unit": "Tesseract Vault",
+  "a": "Tesla sphere",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "necrons",
+  "unit": "Tesseract Vault",
+  "a": "Cosmic Fire",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "necrons",
+  "unit": "Tesseract Vault",
+  "a": "Time’s Arrow",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "necrons",
+  "unit": "Tesseract Vault",
+  "a": "Antimatter Meteor",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "necrons",
+  "unit": "Nekrosor Ammentar",
+  "a": "Blade tail and whip coils",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "necrons",
+  "unit": "The Silent King",
+  "a": "Weapons of the Final Triarch",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "necrons",
+  "unit": "The Silent King",
+  "a": "Deadly Demise D6+3 (Szarekh model only)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "orks",
+  "unit": "Painboy",
+  "a": "Dok’s Toolz",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Helbrute",
+  "a": "Dark Ascension (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Helbrute",
+  "a": "Diseased Malice",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Helbrute",
+  "a": "Frenzy",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Helbrute",
+  "a": "Froth-spattered Frenzy",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Spawn",
+  "a": "Deadly Demise 1",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Spawn",
+  "a": "Lethal Ichor",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Spawn",
+  "a": "Mind-breaking Mutations (Aura)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Spawn",
+  "a": "Scouts 6\"",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Spawn",
+  "a": "Scouts 8\"",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Spawn",
+  "a": "Scuttling Horrors",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Spawn",
+  "a": "To Slake its Rage",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Sorcerer",
+  "a": "Gift of Chaos (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Sorcerer",
+  "a": "Prescience (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Sorcerer",
+  "a": "Warped Interference (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Sorcerer",
+  "a": "Wracking Agonies (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Rhino",
+  "a": "Assault Vehicle",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Rhino",
+  "a": "Fire Support",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Rhino",
+  "a": "Meet Any Challenge",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Rhino",
+  "a": "Self Repair",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Predator Destructor",
+  "a": "Destructor",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Predator Destructor",
+  "a": "Hail of Corrosive Disease",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Predator Destructor",
+  "a": "Punishing Suppression",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Defiler",
+  "a": "Feel No Pain 6+",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Maulerfiend",
+  "a": "Glutton for Punishment",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Maulerfiend",
+  "a": "Savage Exaltation",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Maulerfiend",
+  "a": "Siege Crawler",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Maulerfiend",
+  "a": "The Scent of Blood",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Sorcerer in Terminator Armour",
+  "a": "Death Hex (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Sorcerer in Terminator Armour",
+  "a": "Warptime (Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Sorcerer in Terminator Armour",
+  "a": "Chaos Familiar",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Predator Annihilator",
+  "a": "Annihilator",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Predator Annihilator",
+  "a": "Blood-hungry Annihilator",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Chaos Predator Annihilator",
+  "a": "Metalophagic Infection",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Forgefiend",
+  "a": "Daemonic Ordnance",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Forgefiend",
+  "a": "Furious Onslaught",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Heldrake",
+  "a": "Airborne Predator",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Heldrake",
+  "a": "Hover",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "thousand-sons",
+  "unit": "Daemon Prince of Tzeentch",
+  "a": "Glamour of Tzeentch (Aura, Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "weapons-lost",
+  "faction": "tyranids",
+  "unit": "Norn Assimilator",
+  "a": "Toxinjector harpoon",
+  "reason": "GDC 11e weapon name/list is the owner (renamed or no longer on the sheet)"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "tyranids",
+  "unit": "Zoanthropes",
+  "a": "Spirit Leech (Aura, Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "tyranids",
+  "unit": "Zoanthropes",
+  "a": "Warp Field (Aura, Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "tyranids",
+  "unit": "Tervigon",
+  "a": "Brood Progenitor (Aura, Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "tyranids",
+  "unit": "Maleceptor",
+  "a": "Encephalic Diffusion (Aura, Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ },
+ {
+  "category": "ability-missing",
+  "faction": "tyranids",
+  "unit": "Hive Tyrant",
+  "a": "Onslaught (Aura, Psychic)",
+  "reason": "GDC 11e sheet does not carry this ability (v1 had it from 40kdc or hand data); GDC is the owner"
+ }
+]
