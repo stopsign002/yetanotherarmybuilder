@@ -55,26 +55,12 @@ localStorage `yaab_armies`
 | Key | Store | When to invalidate |
 |---|---|---|
 | `yaab` IDB / `factions` | IndexedDB | **No longer written by the active path** — the loader fetches `data/dataset/` each load. `DB_VERSION` is `37` (the 11e cutover bumped it once to drop the stale 10e cache). |
-| `yaab` IDB / `gst` | IndexedDB | (Dormant) only the old `bsdata.js` wrote this. Dropped on a `DB_VERSION` bump. |
-| `yaab_bsdata_filelist_10e_v2` | sessionStorage | **Unused** — dormant BattleScribe file listing. |
+| `yaab` IDB / `gst` | IndexedDB | Dead store (the BattleScribe path is deleted). Dropped on a `DB_VERSION` bump. |
 | `yaab_armies` | localStorage | User data — never invalidate silently |
 | `yaab_factions` | localStorage | Legacy — kept only for back-compat; not on the active read path |
 | `yaab-shell-<token>` | Cache API | The app shell, ~160 entries / ~14 MB, written by `sw.js`. The name carries the deployed `?v=` token and `activate()` deletes every other key, so exactly one generation exists at a time. **Excludes `/api/` and `/data/` entirely** (so a dataset approve shows on the next load). Do not add entries to `SHELL` — assets are cached on first use by stale-while-revalidate. |
 
 `BSData.clearFactionCache()` wipes legacy session keys + the IndexedDB `factions` and `gst` stores in one call.
-
-## Parser shared index lifecycle (DORMANT)
-
-> This describes the dormant `js/parser/` path, kept for rollback. The live load seam is `dataset-loader.js`'s `loadAllFactions` fetching `data/dataset/` — no phased XML parse runs. Scheduled for removal in `pipeline/retire-v1.md`.
-
-```
-Phase 1   — .gst files           → addToSharedIndex   (Maps fill)
-Phase 1.5 — Library *.cat        → addToSharedIndex   (Maps fill more)
-Phase 2   — faction catalogues   → parse()            (buildIndexes copies refs per catalogue; output is plain JSON)
-Done      — releaseSharedIndex()                       (Maps cleared; XML Documents become GC-eligible)
-```
-
-`buildIndexes(root)` in `parser/catalogue.js` seeds its per-catalogue maps from the shared index (`new Map(I.sharedEntriesById)` etc.), then overlays any in-catalogue `sharedSelectionEntries` / `sharedProfiles` / `sharedRules` / `rules`. Parsed output is plain objects; releasing the shared Maps is safe once every catalogue has parsed.
 
 ## Hook system (`App.hooks.*`)
 
@@ -116,8 +102,8 @@ There is none. `js/app/lazy-modules.js` (a placeholder-loader idea) was never wi
 
 ## Script load order rules
 
-- `db.js` → `bsdata.js` first so `YaabDB` and `BSData` are defined before anything that imports them. Then `js/data/dataset-loader.js`, which OVERRIDES `window.BSData.loadAllFactions` with the dataset path. `gdc.js` (now a thin module of renderer-facing helpers, no fetching or merging) loads before the loader.
-- In `js/parser/`: `shared-index.js` first (populates `WahapediaParser._internal` with the Maps and helpers). Leaf helpers (`classify`, `stats`, `weapons`, `abilities`, `wargear`, `costs`, `keywords`) load in any order — they reference each other via `P._internal` at call time. Then `entry.js`, `catalogue.js`, `index.js` LAST (exposes the public surface).
+- `db.js` first so `YaabDB` is defined. Then `js/data/dataset-loader.js`, which DEFINES `window.BSData.loadAllFactions` (the old `bsdata.js` and `js/parser/` were deleted). `gdc.js` (now a thin module of renderer-facing helpers, no fetching or merging) loads before the loader.
+- `js/ui/helpers.js` → `js/ui/datasheet-parts.js` → the detail/cards/mode modules that call `UI.ds.*`.
 - `storage.js` → `army.js`.
 - `ui/index.js` first to define `UI.init`. Feature `ui/*` modules attach methods after.
 - `app/state.js` first (defines `App.state`, colors, `VIRTUAL_PARENTS`). `app/hooks.js` next (defines the hook arrays so feature modules can push). `app/index.js` LAST: it is the `DOMContentLoaded` bootstrap.
@@ -128,9 +114,6 @@ There is none. `js/app/lazy-modules.js` (a placeholder-loader idea) was never wi
 ## Things that look weird but are intentional
 
 - **`VIRTUAL_PARENTS` in `app/state.js`** — single-entry list (currently just Adeptus Astartes) that synthesizes a parent faction in the top-level dropdown from chapter-named BSData catalogues. Chapter catalogues live in `state.chapterFactions` and are hidden from the dropdown; choosing the virtual parent reveals a Chapter sub-dropdown.
-- **Four cost patterns in `parser/costs.js`** (dormant) — A: group-level `min`/`max`. B: per-model constraints in a group. C: entry-level constraints. D: per-model constraints at the entry. Different BSData authors use different patterns; tried in order.
-- **Crusade regex in `parser/classify.js`** — `CRUSADE_RE` filters Battle Honours / Scars / Traits / Psychic Tradition out of standard 10e output. Removing it surfaces a ton of garbage abilities/wargear.
-- **Inline-rule vs `infoLink` rule detection in `parser/catalogue.js` detachment block** — Space Marines embed detachment rules inline under `<rules>`, Necrons use `<infoLinks type="rule" targetId>` into `sharedRules`. Both paths exist; do not collapse them.
 - **`chapterFactions` hide-set in the faction dropdown** — chapter catalogues are still loaded and indexed so their units feed the roster under the parent, but they are hidden from the top-level filter `<select>` via `UI.updateFactionFilter`'s `hide` option.
 - **Capped-render, not windowed virtualization** — the unit grid uses `auto-fill, minmax(...)` so per-row card count depends on viewport width. Fixed-row-height windowing would break responsive layout. Capped-render trades a small DOM overhead for simplicity.
 - **Hook actions that render nowhere** — most `armyToolbarActions` entries (`primary`, `tools-menu`, `more-menu`, un-shelved `icon` ids) have no DOM surface since the Tools/More dropdowns and the Action Center went away. That is why the Settings drawer and the palette call hook `onClick`s directly. Do not "fix" it by re-adding a dropdown without a design decision.

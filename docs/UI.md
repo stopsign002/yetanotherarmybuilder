@@ -34,6 +34,7 @@ Each attaches methods onto `window.UI`.
 | `offline-pip.js` | Topbar "Offline" chip and pending-sync-queue count (`#topbar-offline`), inserted at bootstrap next to the auth button. The topbar is hidden at ≤820px, so phones have no offline indicator unless a later change adds one (#85). |
 | `topbar-export.js` | Export button + dropdown in the topbar (`#topbar-export-btn`, `#topbar-export-menu`), next to the account button. Each item programmatically clicks the matching panel-footer Export button so existing event wiring keeps firing. |
 | `faction-glyphs.js` | Inline-SVG geometric faction glyphs (24×24 viewBox, `currentColor`) + DOM injection helpers. Original abstract geometry — no GW iconography. |
+| `datasheet-parts.js` | `UI.ds.{statsTable,weaponRows,abilityList,keywordChips}` — the shared datasheet renderer used by detail, cards, Waha and Play (added 2026-10-31). |
 | `role-icons.js` | Small role icon prefix on unit cards (Character / Psyker / Vehicle / Monster / Battleline / Infantry). Registered as `cardClassContributor`; also exposes `App.classifyUnitRole(unit)`. |
 | `unit-card-themes.js` | `cardClassContributor` that adds a `faction-<slug>` class to each unit card so `unit-card-themes.css` can paint per-faction gradients. Slug is the last segment of `_factionName` after `" - "`. |
 | `flip-animations.js` | FLIP-style add-to-army flight ghost + drag-to-reorder + micro-interactions on the unit roster. Reduced-motion aware. Single-flight gate so concurrent clicks don't compound. |
@@ -48,7 +49,7 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 | `hooks.js` | `App.hooks` arrays + `fireBootstrap` / `fireArmyChange` / `fireSelectionChange`. |
 | `filters.js` | `App.rebuildAllUnits`, `App.buildChaptersMap`, `App.getVirtualParentOf`, `App.getEffectiveFilter`, `App.findUnit`, `App.getCurrentFaction`, `App.getDetachmentFaction`. |
 | `render.js` | `App.renderAll`, `App.renderUnitRosterWithContext`. |
-| `bsdata-load.js` | `App.autoLoadFromBSData` — kicks off `BSData.loadAllFactions`. |
+| `bsdata-load.js` | `App.autoLoadFromBSData` — kicks off `BSData.loadAllFactions` (installed by `js/data/dataset-loader.js`). |
 | `selections.js` | `App.updateChapterDropdown`, `App.applyImportedSelections` (detachment choice lives in `detachment-picker.js`). |
 | `resize.js` | `App.setupResizablePanels`. |
 | `events.js` | `App.wireEvents` — every direct + delegated DOM listener. |
@@ -154,7 +155,7 @@ Create `js/app/<feature>.js` (or `js/ui/<feature>.js` if it owns DOM). IIFE that
 Then: add the `<script>` to `index.html` between the `FEATURE-MODULES-START`/`END` markers. **Nothing to do for the service worker** — see below.
 
 ### Add a stat / field to the unit detail
-Edit `UI.renderUnitDetail` in `js/ui/detail.js`. If the field is data-derived, add it to the unit object built in `js/data/dc-adapter.js` (the live data source — the `js/parser/` tree is dormant; see `docs/PARSER.md`). No `DB_VERSION` bump is needed: the adapter rebuilds factions from `window.DC` each load, so there's no faction cache to invalidate.
+Edit `UI.renderUnitDetail` in `js/ui/detail.js`. If the field is data-derived, add it to the unit object built in `pipeline/build.mjs` (the live data source — the `js/parser/` tree is dormant; see `docs/PARSER.md`). No `DB_VERSION` bump is needed: the adapter rebuilds factions from `window.DC` each load, so there's no faction cache to invalidate.
 
 ### Add a new modal
 Create the markup in JS (your feature module's IIFE, on first open). Don't add to `index.html`. Wire `Escape` either via the existing global handler in `events.js` or your own. Show/hide pattern: `removeAttribute('hidden')` / `setAttribute('hidden','')`.
@@ -176,7 +177,7 @@ Do **not** add paths to `SHELL` in `sw.js`. It is deliberately limited to the of
 Two things are never cached: anything under `/api/` and anything under `/data/`. If your feature needs offline data, put it in IndexedDB (`js/db.js`) like `js/gdc.js` does, not in the service worker. Full reasoning in the "Service worker" section of `CLAUDE.md`.
 
 ### Change faction data / unit fields
-Edit `js/data/dc-adapter.js` (the live data source mapping `window.DC` into the parser output shape). No `DB_VERSION` bump is needed — the adapter rebuilds factions on every load (no faction IndexedDB cache). Don't hand-edit `js/vendor/dc-bundle.js`; it's generated and auto-refreshed. The `js/parser/` tree is dormant. See `docs/PARSER.md`.
+Edit `pipeline/build.mjs` (the dataset build that emits the parser-output shape). No `DB_VERSION` bump is needed — the adapter rebuilds factions on every load (no faction IndexedDB cache). Don't hand-edit `js/vendor/dc-bundle.js`; it's generated and auto-refreshed. The `js/parser/` tree is dormant. See `docs/PARSER.md`.
 
 ### Add a new virtual-parent faction grouping
 Edit `App.VIRTUAL_PARENTS` in `js/app/state.js`. Shape: `{ name, baseChapter }`. `buildChaptersMap` auto-populates `chaptersMap` / `chapterFactions` / `virtualBase` for any catalogue named `<name> - ...`.
@@ -203,7 +204,7 @@ The build mode is the historical 3-pane app; the others are alternative top-leve
 `#roster-filter-chips` is created once by `js/ui/roster.js` (`ensureChipBar`),
 which owns the six keyword chips (Battleline … Psyker) and the trailing `×`
 clear button. **Feature modules add their own chips by injecting into that bar**
-rather than by extending `ROLE_CHIPS` — `favorites.js` (★ Favorites, ⟲ Recents)
+rather than by extending the `UI.roles` table — `favorites.js` (★ Favorites, ⟲ Recents)
 and `collection.js` (Owned / Needs paint / Painted) are the two precedents:
 
 - wait for the bar with a `MutationObserver` on `#panel-center`, disconnect once
@@ -254,7 +255,7 @@ at the end of your chip's own click handler. See `favorites.js`
 ### The Ally chip
 
 Owned by **`js/app/allies.js`**, not roster.js — it filters on `unit._allyOf`
-(stamped per host-faction clone by `attachAlliedUnits()` in `dc-adapter.js`),
+(stamped per host-faction clone by `attachAlliedUnits()` in `pipeline/build.mjs`),
 not on `unit.keywords`, and it has to co-operate with that module's existing
 `yaab_show_allies` toolbar toggle.
 

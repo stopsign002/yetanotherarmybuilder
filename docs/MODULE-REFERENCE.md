@@ -37,14 +37,6 @@ Cross-cutting docs:
 - **DOM:** none directly.
 - **Notes:** Does no mapping, patching or overlaying: the dataset files are already in renderer shape (`docs/DATASET.md` §1, §7). Runtime-only derivations (points filters, allied roster assembly, chapter filtering) live in the app modules. Data is served `no-cache` from `/data/dataset/*` and is never touched by the service worker, so an approve is visible on the next load. v1 history (git): `dc-adapter.js` built factions from `window.DC` with hand maps, `parsePoints()` and `reconcileStrats()`.
 
-### `js/bsdata.js` (DORMANT)
-- **Purpose:** **DORMANT — scheduled for removal in `pipeline/retire-v1.md`; overridden at runtime by `dataset-loader.js`.** Old BattleScribe XML fetcher; mirror-first (`data/bsdata/index.json` + `data/bsdata/files/...`) with GitHub raw fallback. Two-phase parallel catalogue loader with GDC merge.
-- **Exports:** `window.BSData = { fetchFileList, fetchFile, loadAllFactions, clearCache, clearFactionCache }` — immediately overridden by `dataset-loader.js`.
-- **Depends on:** `YaabDB`, `WahapediaParser`, `App.state`, `App.GDC.loadAll`, `UI.*`.
-- **Storage:** sessionStorage `yaab_bsdata_filelist_10e_v2` (now unused). IDB `factions` / `gst` / `gdc` via `YaabDB`.
-- **DOM:** none.
-- **Notes:** Loads but never runs (the loader overrides `BSData` at load). The remaining notes (Phase 1/1.5/2, shared index, `releaseSharedIndex`) only apply if the XML path is ever revived.
-
 ### `js/gdc.js`
 - **Purpose:** v2: a thin module holding only the helpers renderers call directly (`App.GDC.*` outside this file). GDC data now arrives pre-merged in the dataset files; the fetching, IndexedDB read-through, `GDC_AUTHORITATIVE` handling and browser-side merge (`mergeIntoFactions`, `mergeUnitDataIntoFactions`) are deleted. GDC itself is read only by `pipeline/extract/gdc.mjs`.
 - **Exports:** the subset of `App.GDC` that renderers call (`docs/DATASET.md` §7; v1 exposed `FACTION_TO_GDC, loadAll, mergeIntoFactions, mergeUnitDataIntoFactions, _rawCache, _projectStratagem, _nameKey`).
@@ -120,21 +112,13 @@ Cross-cutting docs:
 - **DOM:** none.
 - **Notes:** Calls `applyImportedSelections` per-faction-loaded so the user sees their selection sync the moment its data lands; final safety pass after load completes.
 
-### `js/app/rehydrate.js`
-- **Purpose:** Refresh saved armies' embedded `entry.unitData` snapshots against freshly-parsed faction data.
-- **Exports:** `App.rehydrateArmy`. Registers `App.hooks.armyChange` + `selectionChange`.
-- **Depends on:** `App.state`, `ArmyManager`.
-- **Storage:** reads/writes `localStorage.yaab_armies`.
-- **DOM:** none.
-- **Notes:** Army entries snapshot the full unit object at add-time and persist it (localStorage + cloud). Without rehydration, later data-layer changes (new ability flags, corrected points, `wargearProfile`) never reach old entries, so printed cards / the details pane render a stale datasheet. See `entry-rehydrate.js` for the per-mutation counterpart.
-
 ### `js/app/entry-rehydrate.js`
 - **Purpose:** Per-entry refresh of `unitData` snapshots on every `armyChange`, plus repair of stale `selectedPts`.
 - **Exports:** `App.rehydrateEntryUnitData` (returns the number of entries repriced). Registers `App.hooks.armyChange`.
 - **Depends on:** `App.state`, current faction data from `window.DC`, `App.getPointsOverride` (optional), `UI.renderArmyList`.
 - **Storage:** none directly (mutates the in-memory army; `autosave.js` persists).
 - **DOM:** none (may trigger one `UI.renderArmyList` when a price changed).
-- **Notes:** Complements `rehydrate.js` — keeps the currently-edited army's entries current so a months-old add-time copy doesn't survive across data refreshes. Swapping `unitData` alone does NOT fix points: the billed cost lives on the entry as `selectedPts`, copied at add-time. When that value matches no squad option on the fresh datasheet, the entry is repriced for the SAME squad size (identified from `squadLabel`, else the pre-refresh snapshot, else a single-option datasheet) — never a different size, and never when a `yaab_points_overrides` entry exists for that unit. Re-entrancy-guarded so it can redraw from inside a `'render'` hook.
+- **Notes:** The only rehydration module (`rehydrate.js` was merged into it and deleted, 2026-10-31) — keeps the currently-edited army's entries current so a months-old add-time copy doesn't survive across data refreshes. Swapping `unitData` alone does NOT fix points: the billed cost lives on the entry as `selectedPts`, copied at add-time. When that value matches no squad option on the fresh datasheet, the entry is repriced for the SAME squad size (identified from `squadLabel`, else the pre-refresh snapshot, else a single-option datasheet) — never a different size, and never when a `yaab_points_overrides` entry exists for that unit. Re-entrancy-guarded so it can redraw from inside a `'render'` hook.
 
 ### `js/app/id-migration.js`
 - **Purpose:** One-time, per-device migration of stale Reserves / Requisitions unit-ids from dormant BattleScribe GUIDs to current slug ids.
@@ -534,9 +518,17 @@ Cross-cutting docs:
 - **DOM:** none.
 - **Notes:** `UI.init(state)` stashes the state reference and calls `UI._initTooltip()`.
 
+### `js/ui/datasheet-parts.js`
+- **Purpose:** The one datasheet renderer shared by `detail.js`, `cards-mode.js`, `waha-mode.js` and `play-mode.js` (added 2026-10-31, simplification pass).
+- **Exports:** `UI.ds = { statsTable(modelStats, opts), weaponRows(weapons, opts), abilityList(abilities, opts), keywordChips(keywords) }`; also the unit chip/stat-row helpers (`UI.renderUnitChip`, `UI.statRow`) used by the roster and mode pages.
+- **Depends on:** `UI.escapeHtml`, `UI.factionShort` (helpers.js). Loads immediately after `helpers.js`, before `detail.js`.
+- **Storage:** none.
+- **DOM:** returns HTML strings only.
+- **Notes:** Signatures are the contract in the file header; change them there first.
+
 ### `js/ui/helpers.js`
 - **Purpose:** Shared utilities used across UI render paths.
-- **Exports:** `UI.escapeHtml`, `UI._STAT_ALIASES`, `UI._CARD_STAT_PREF`.
+- **Exports:** `UI.escapeHtml`, `UI.factionShort`, `UI.slug`/`UI.nameKey`, `UI.fmtPts`, `UI.debounce` (canonical helpers; per-module copies were removed 2026-10-31), `UI._STAT_ALIASES`, `UI._CARD_STAT_PREF`.
 - **Depends on:** none.
 - **Storage:** none.
 - **DOM:** none.
@@ -733,7 +725,7 @@ Cross-cutting docs:
 
 ### `js/ui/faction-glyphs.js`
 - **Purpose:** Inline-SVG geometric faction glyphs + injection helpers.
-- **Exports:** `App._factionGlyphsInstalled`, `glyph()` helper.
+- **Exports:** `App._factionGlyphsInstalled`, `App.factionGlyph(factionName)` (`App.factionGlyphPath` and `App.hasFactionGlyph` were removed 2026-10-31).
 - **Depends on:** none.
 - **Storage:** none.
 - **DOM:** SVG injection into faction chips, roster cards, detail panel.
@@ -741,7 +733,7 @@ Cross-cutting docs:
 
 ### `js/ui/role-icons.js`
 - **Purpose:** Role icon prefix on unit cards (Character / Vehicle / Monster / Battleline / Infantry / Psyker).
-- **Exports:** `App.classifyUnitRole(unit)`. `cardClassContributor`.
+- **Exports:** `App.classifyUnitRole(unit)`, `UI.roles` (the single role taxonomy; replaces roster.js `ROLE_CHIPS`). `cardClassContributor`.
 - **Depends on:** `App.hooks.cardClassContributors`, `unit.keywords`.
 - **Storage:** none.
 - **DOM:** unit cards (mutated with role icon + class).
@@ -781,111 +773,12 @@ Cross-cutting docs:
 
 ---
 
-## Parser (`js/parser/*`) — DORMANT
-
-> **DORMANT — scheduled for removal in `pipeline/retire-v1.md` (blocked until the loader keeps the `foldKey` stub).** The whole `js/parser/` tree loads but no longer parses live data; factions come from the dataset files. Its `WahapediaParser.parse()` output shape is still the contract the dataset follows. See `docs/PARSER.md`.
-
-### `js/parser/shared-index.js`
-- **Purpose:** Module-level Maps of DOM nodes from `.gst` + Library `.cat` catalogues for cross-catalogue infoLink resolution.
-- **Exports:** `WahapediaParser._internal = { sharedProfilesById, sharedRulesById, sharedEntriesById, sharedRootEntryLinksByCatalogueId, addToSharedIndex, releaseSharedIndex }`.
-- **Depends on:** `DOMParser`.
-- **Storage:** none (in-memory only).
-- **DOM:** none.
-- **Notes:** DOM nodes held in Maps via their `ownerDocument`. Must call `releaseSharedIndex()` after bulk load to free XML memory (tens of MB). Loads first.
-
-### `js/parser/classify.js`
-- **Purpose:** Text helpers, Crusade-section filter, profile classifier.
-- **Exports:** `_internal.cleanText`, `_internal.isCrusadeSection`, `_internal.classifyProfile`, `_internal.getAttr`, `_internal.stripVariantPrefix`, `_internal.hasVariantPrefix`, `_internal.foldKey`, `CRUSADE_RE`.
-- **Depends on:** none.
-- **Storage:** none.
-- **DOM:** none.
-- **Notes:** `cleanText` trims, collapses whitespace, strips markdown. `isCrusadeSection` matches Crusade / Kill Team / Boarding Actions tags. `classifyProfile` checks characteristic names + typeName to bucket as stats / weapon / ability / transport / other.
-
-### `js/parser/stats.js`
-- **Purpose:** Extract unit stats + direct profiles (stats / weapons / abilities) from selectionEntry DOM.
-- **Exports:** `_internal.parseDirectProfiles`, `_internal.findStats`, `_internal.parseDirectStatProfiles`, `_internal.statProfilesFromInfoLinks`, `_internal.findStatProfiles`.
-- **Depends on:** `_internal.classifyProfile`, `_internal.getAttr`, `_internal.cleanText`, `_internal.isCrusadeSection`.
-- **Storage:** none.
-- **DOM:** none.
-- **Notes:** Ability prose found in three characteristics: Description (vanilla), Effect (primarch), Capacity (Ork transport). Multi-profile units preserve all statlines.
-
-### `js/parser/weapons.js`
-- **Purpose:** Recursive weapon collection + parameterized-keyword lookup.
-- **Exports:** `_internal.collectWeapons`, `_internal.findWeaponKeywordDesc`.
-- **Depends on:** `_internal` helpers.
-- **Storage:** none.
-- **DOM:** none.
-- **Notes:** Weapon keyword rule text stashed in `_keywordDefs` so UI tooltips don't re-query.
-
-### `js/parser/abilities.js`
-- **Purpose:** Walk a unit entry collecting direct + linked abilities, including profile/rule infoLinks + recursion into model variants.
-- **Exports:** `_internal.collectAbilities`.
-- **Depends on:** `_internal.parseDirectProfiles`, `_internal.classifyProfile`, `_internal.getAttr`, `_internal.cleanText`, `_internal.isCrusadeSection`.
-- **Storage:** none.
-- **DOM:** none.
-- **Notes:** Recursion depth 5 (Lion El'Jonson's primarch sub-abilities sit 4 levels deep). Visited set guards cycles. Walks selectionEntries regardless of type. Also walks `entryLinks` + `infoGroups` (Ghazghkull's Leader block — easily missed).
-
-### `js/parser/wargear.js`
-- **Purpose:** Two-flavour wargear-options list (model variants inside squad-size groups, and direct equipment-choice groups).
-- **Exports:** `_internal.collectWargearOptions`.
-- **Depends on:** `_internal.findCosts`, `_internal.getAttr`, `_internal.cleanText`, `_internal.isCrusadeSection`.
-- **Storage:** none.
-- **DOM:** none.
-- **Notes:** Squad-size tiers detected via modifier conditions (`atLeast`, `equalTo`, `greaterThan`). Each tier takes the upper bound (next threshold − 1, or `maxModels`). Weapon keywords appended to variant names.
-
-### `js/parser/costs.js`
-- **Purpose:** Points/cost resolution. Handles four BSData author patterns + squad-size variants via modifier "set".
-- **Exports:** `_internal.findCosts`.
-- **Depends on:** `_internal.readCost`, `_internal.getAttr`.
-- **Storage:** none.
-- **DOM:** none.
-- **Notes:** Patterns A: group-level `min`/`max`. B: per-model in a group. C: entry-level. D: per-model at entry. Different BSData authors use different patterns; tried in order. Don't collapse them.
-
-### `js/parser/keywords.js`
-- **Purpose:** `categoryLink`-based keyword extraction + dedup.
-- **Exports:** `_internal.parseKeywords`.
-- **Depends on:** `_internal.cleanText`, `_internal.isCrusadeSection`.
-- **Storage:** none.
-- **DOM:** none.
-- **Notes:** Crusade-section keywords skipped.
-
-### `js/parser/entry.js`
-- **Purpose:** Assemble one unit object from a selectionEntry DOM node.
-- **Exports:** `_internal.parseEntry`.
-- **Depends on:** every leaf helper in `_internal`.
-- **Storage:** none.
-- **DOM:** none.
-- **Notes:** Multi-paragraph choose-from-N ability split into parent + synthetic children (Guilliman). Chapter-locked rule filter (Templar Vows drops if not Black Templars). Weapon dedup on name + classification (ranged vs melee) — also strips Rapid Fire 1 → Rapid Fire suffix. Invuln save harvested from abilities if not in stats. Transport capacity pulled into dedicated field. Wound-band profiles dropped. Legends tag preserved.
-
-### `js/parser/catalogue.js`
-- **Purpose:** Top-level `parse()` — builds per-catalogue indexes, iterates units, extracts detachments + enhancements + army rules + stratagems.
-- **Exports:** `_internal.parse`.
-- **Depends on:** all `_internal` helpers + `sharedEntriesById` / `sharedRulesById` / `sharedProfilesById` from shared-index.
-- **Storage:** none.
-- **DOM:** none.
-- **Notes:** Four entry patterns: (A) `selectionEntries`, (B) root `entryLinks` → shared, (C) `catalogueLinks` `importRootEntries`, (D) detachment extraction. Stratagem heuristic: CP cost + "Stratagem" keyword. Detachment name dedup. Inline-rule vs `infoLink` rule paths both retained (Space Marines vs Necrons authoring style — do NOT collapse).
-
-### `js/parser/index.js`
-- **Purpose:** Public WahapediaParser API assembly. Loaded last.
-- **Exports:** `WahapediaParser.parse`, `addToSharedIndex`, `releaseSharedIndex`.
-- **Depends on:** `WahapediaParser._internal` (populated by sibling modules).
-- **Storage:** none.
-- **DOM:** none.
-- **Notes:** Must load AFTER all parser submodules.
-
 ### `pipeline/` (data build, v2)
 - **Purpose:** Builds the served dataset. `extract/gdc.mjs` (28 GDC files), `extract/mfm.py` (MFM site), `extract/dc.mjs` (pinned 40kdc checkout), `build.mjs`, `validate.mjs`, `report.mjs`, `parity.mjs`, `schema/faction.schema.json`, CLI `yaab-data` (`build | validate | report | approve | rollback | list | preview`).
 - **Exports:** N/A (Node/Python scripts; Node runs in Docker, the host has no node).
 - **Depends on:** `pipeline/sources.json` (pinned inputs), `pipeline/aliases.json` (the only hand file; names only).
 - **Storage:** writes `data/dataset/{candidate,current,previous}/` (gitignored, backed up by the media leg) and scratch under `~/sites/base/yaab-data/`.
 - **Notes:** Contract and validator rules: `docs/DATASET.md`. No overrides layer. The old `build/` esbuild bundle is retired (`build/README.md`).
-
-### `scripts/mirror-bsdata.mjs` (DORMANT)
-- **Purpose:** **DORMANT — scheduled for removal in `pipeline/retire-v1.md`.** Cron-driven Node 20 script that diffs `BSData/wh40k-10e` blob SHAs and downloads only changed files into `data/bsdata/`.
-- **Exports:** N/A (Node script).
-- **Depends on:** Node 20+ (no npm deps).
-- **Storage:** writes `data/bsdata/index.json` + `data/bsdata/files/<original/path>.xml`.
-- **Notes:** Still triggered every 6h by `.github/workflows/mirror-bsdata.yml`, but updates an unread mirror (the app no longer reads `data/bsdata/`). Generated files; do not hand-edit.
 
 ---
 
