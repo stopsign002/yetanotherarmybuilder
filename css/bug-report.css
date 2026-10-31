@@ -1,5 +1,19 @@
 /* bug-report.css — tier 3 components.
- * Owns: bug-report and QR-share modals. */
+ * Owns: bug-report and QR-share modals.
+ *
+ * Order dependencies: 7 rule(s) belonging by subject to mobile.css (3),
+ * roster.css (1), settings-drawer.css (1), army-list.css (1), expand-pane.css
+ * (1) stay here to keep their cascade position beside a rule in this file;
+ * each has an `order:` comment naming it. */
+
+/* order: lives here, not in roster.css: must precede `.settings-about-card p` {margin-bottom} below (equal specificity, same element, margin-bottom). */
+.roster-empty p { margin-bottom: 6px; }
+
+/* order: lives here, not in mobile.css: must precede `.qr-share-canvas svg` {width} below (equal specificity, same element, width). */
+.yaab-install-fab-icon svg { width: 18px; height: 18px; display: block; }
+
+/* order: lives here, not in mobile.css: must precede `.qr-share-canvas svg` {width} below (equal specificity, same element, width). */
+.ios-install-step-glyph svg { width: 100%; height: 100%; display: block; }
 
 /* ── points override */
 /* Banner injected into #panel-center .panel-controls */
@@ -28,11 +42,8 @@
  * than .bug-report-label so it reads as a note on the field above, not a
  * heading for the field below. */
 .bug-report-hint { font-size: 12px; line-height: 1.45; color: var(--text-muted); margin: 5px 0 4px; }
-.bug-report-desc { resize: vertical; min-height: 120px; font-family: inherit; }
-.bug-report-attach { padding: 4px 0; }
 .bug-report-attach-info { font-size: 12px; color: var(--text-muted); min-height: 16px; margin: 2px 0 6px; }
 .bug-report-diag-wrap { font-size: 12px; color: var(--text-muted); }
-.bug-report-diag-wrap > summary { cursor: pointer; user-select: none; padding: 4px 0; }
 .bug-report-status { font-size: 12px; min-height: 18px; padding: 2px 0; }
 .bug-report-status-error { color: #e89090; }
 .bug-report-signin { text-align: center; padding: 16px 0; }
@@ -81,6 +92,25 @@
   line-height: 1.4;
 }
 .qr-share-url:focus { border-color: var(--accent); }
+
+/* order: lives here, not in settings-drawer.css: must follow `.roster-empty p` {margin-bottom} above (equal specificity, same element, margin-bottom). */
+.settings-about-card p { margin-bottom: 6px; }
+
+/* order: lives here, not in army-list.css: must follow `.qr-share-canvas svg` {display} above (equal specificity, same element, display). */
+.army-entry-action svg { display: block; }
+
+@media (min-width: 821px) {
+  /* order: lives here, not in expand-pane.css: must follow `.qr-share-canvas svg` {width} above (equal specificity, same element, width). */
+  .panel-expand-btn svg { width: 14px; height: 14px; fill: currentColor; pointer-events: none; }
+}
+
+@media (max-width: 820px) {
+  /* ── Forms (army setup) */
+  /* order: lives here, not in mobile.css: must precede `.bug-report-desc` {min-height} below (equal specificity, same element, min-height). */
+  .form-input, .form-select { min-height: 44px; padding: 10px 12px; }
+}
+.bug-report-desc { resize: vertical; min-height: 120px; font-family: inherit; }
+.bug-report-attach { padding: 4px 0; }
 
 @media (prefers-reduced-motion: reduce) {
   /* ── reduced motion respect */

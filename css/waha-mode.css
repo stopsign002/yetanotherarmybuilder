@@ -1,9 +1,9 @@
 /* waha-mode.css — tier 4 modes.
  * Owns: Waha mode (.waha-*).
  *
- * Order dependencies: 3 rule(s) belonging by subject to mobile.css (2),
- * buttons.css (1) stay here to keep their cascade position beside a rule in
- * this file; each has an `order:` comment naming it. */
+ * Order dependencies: 10 rule(s) belonging by subject to mobile.css (7),
+ * buttons.css (2), army-list.css (1) stay here to keep their cascade position
+ * beside a rule in this file; each has an `order:` comment naming it. */
 
 /* Carried from the old waha-mode.css header: Waha mode: look anything up, build nothing.
  * Contract: docs/WAHA-MODE.md. Tokens only (--accent, --border, --text, …) so
@@ -57,8 +57,6 @@
   font-size: 13px;
   cursor: pointer;
 }
-.waha-faction-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.waha-faction-name { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--text); }
 .waha-faction:focus, .waha-enh-select:focus { outline: none; border-color: var(--accent); }
 .waha-exit {
   flex: 0 0 auto;
@@ -137,7 +135,9 @@ body.reduce-motion .waha-reader { animation: none !important; }
 .waha-from-btn:hover, .waha-btn:hover, .waha-more:hover { background: var(--card-hover); border-color: var(--accent); }
 .waha-btn { padding: 6px 12px; margin-left: auto; }
 .waha-enh-for { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.waha-faction-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .waha-enh-label { flex: 0 0 auto; font-size: 12px; color: var(--text-muted); }
+.waha-faction-name { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--text); }
 .waha-enh-select { flex: 1 1 auto; min-width: 0; max-width: 360px; }
 
 /* ── Result groups + rows */
@@ -234,10 +234,31 @@ body.reduce-motion .waha-reader { animation: none !important; }
 .waha-hint-btn:hover { background: var(--card-hover); border-color: var(--accent); }
 
 @media (max-width: 820px) {
+  /* order: lives here, not in mobile.css: must precede `.mobile-tabbar .mtab-icon svg` {width} below (equal specificity, same element, width). */
+  .mobile-tabbar .mtab-icon svg { width: 22px; height: 22px; fill: currentColor; display: block; }
+
   /* ── Buttons */
   /* order: lives here, not in mobile.css: must precede `.btn-sm` {font-size} below (equal specificity, same element, font-size). */
   .btn { font-size: 14px; padding: 10px 14px; min-height: 44px; }
 
+  /* The three bulk buttons are .btn (nowrap, fixed 28px height, and in the
+   * brutalist themes uppercase + 900 weight + wide tracking), so on a phone
+   * their labels were wider than the box and clipped on both sides ("MARK
+   * VISIBLE O"). Let them wrap and grow instead of clipping. */
+  /* order: lives here, not in mobile.css: must precede `.modal-footer .btn.btn-sm` {height} below (equal specificity, same element, height). */
+  .collect-bulk-actions .btn.btn-sm { white-space: normal; height: auto; line-height: 1.2; text-align: center; }
+
+  /* order: lives here, not in mobile.css: must precede `.army-toolbar .btn.btn-icon` {height} below (equal specificity, same element, height). */
+  .army-toolbar .btn.btn-sm { height: 26px; padding: 0 8px; }
+
+  /* order: lives here, not in mobile.css: must precede `.modal-footer .btn.btn-sm` {height} below (equal specificity, same element, height). */
+  .army-toolbar .btn.btn-icon { width: 26px; height: 26px; min-width: 26px; }
+}
+
+/* order: lives here, not in buttons.css: must follow `.collect-bulk-actions .btn.btn-sm` {height} above (equal specificity, same element, height). */
+.modal-footer .btn.btn-sm { height: 28px; }
+
+@media (max-width: 820px) {
   /* order: lives here, not in mobile.css: must precede `.btn` {padding} below (equal specificity, same element, padding). */
   .btn-sm { min-height: 40px; padding: 8px 12px; font-size: 13px; }
 }
@@ -256,6 +277,14 @@ body.reduce-motion .waha-reader { animation: none !important; }
  * the user's display-font line metrics. */
 /* order: lives here, not in buttons.css: must follow `.btn` {padding} above (equal specificity, same element, padding). */
 .btn { padding: 0 14px; }
+
+@media (max-width: 380px) {
+  /* order: lives here, not in mobile.css: must precede `.army-entry-attached .army-entry-action svg` {width} below (equal specificity, same element, width). */
+  .mobile-tabbar .mtab-icon svg { width: 20px; height: 20px; }
+}
+
+/* order: lives here, not in army-list.css: must follow `.mobile-tabbar .mtab-icon svg` {width} above (equal specificity, same element, width). */
+.army-entry-attached .army-entry-action svg { width: 11px; height: 11px; }
 
 @media (prefers-reduced-motion: reduce) {
   .waha-reader { animation: none !important; }

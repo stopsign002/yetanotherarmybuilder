@@ -174,12 +174,6 @@
 .cold-start-error-actions .cold-start-btn-retry { border-color: rgba(var(--accent-rgb), 0.45); color: var(--accent); }
 .cold-start-skip:hover, .cold-start-skip:focus-visible { color: var(--accent); border-color: var(--accent); background: rgba(var(--accent-rgb), 0.08); outline: none; }
 .cold-start-skip:focus-visible { box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.35); }
-.cold-start-error-actions button:hover, .cold-start-error-actions button:focus-visible {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.08);
-  outline: none;
-}
 .cold-start-root.is-fading { opacity: 0; pointer-events: none; }
 .cold-start-status-name.is-swapping { opacity: 0; }
 .cold-start-recent-item.is-aged { opacity: 0.55; }

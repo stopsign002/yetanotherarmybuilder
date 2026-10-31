@@ -38,16 +38,7 @@
 
 /* ── Auth modal body styling (slots into existing .modal pattern) ── */
 #modal-auth .modal { width: min(420px, 92vw); }
-.modal-header h3 {
-  font-size: 17px;
-  color: var(--text);
-  letter-spacing: 0.04em;
-  min-width: 0;
-  flex: 1 1 auto;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.modal-header h3 { font-size: 17px; color: var(--text); }
 .modal-header::before {
   content: '';
   position: absolute;

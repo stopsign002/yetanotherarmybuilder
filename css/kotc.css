@@ -1,22 +1,49 @@
 /* kotc.css — tier 3 components.
- * Owns: King of the Coliseum box (.kotc-*).
- *
- * Order dependencies: 2 rule(s) belonging by subject to mobile.css (1),
- * detail-pane.css (1) stay here to keep their cascade position beside a rule
- * in this file; each has an `order:` comment naming it. */
+ * Owns: King of the Coliseum box (.kotc-*). */
 
 /* Carried from the old kotc.css header: the "King of the Coliseum" box (js/app/kotc.js).
  * The box chrome (section / summary / body) is shared with Army setup and the
  * Detachments picker via .army-setup-section / .army-setup-summary /
  * .army-setup-body, so this file only styles the box's own content. */
 
+/* Status badge pinned to the right of the shared summary, like the
+ * detachments points total. */
+.kotc-summary { justify-content: flex-start; }
+.kotc-summary-label { flex: 0 0 auto; }
+.kotc-status {
+  margin-left: auto;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 8px;
+  border: 1px solid transparent;
+}
+.kotc-status:empty { display: none; }
 .kotc-status-idle { color: var(--text-muted); background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.12); }
 .kotc-status-ok { color: var(--success); background: rgba(46, 204, 113, 0.12); border-color: rgba(46, 204, 113, 0.4); }
 .kotc-status-bad { color: var(--danger); background: rgba(231, 76, 60, 0.14); border-color: rgba(231, 76, 60, 0.45); }
+
+/* --- Enable toggle */
+.kotc-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  cursor: pointer;
+}
 .kotc-toggle-cb { margin: 2px 0 0; flex: 0 0 auto; cursor: pointer; accent-color: var(--accent); }
 .kotc-toggle-text { display: flex; flex-direction: column; gap: 2px; }
 .kotc-toggle-title { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.kotc-toggle-hint { font-size: 0.72rem; line-height: 1.35; color: var(--text-muted); }
 .kotc-toggle:hover { border-color: rgba(var(--accent-rgb), 0.6); }
+
+/* --- Rule list */
+.kotc-rules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .kotc-rule {
   display: flex;
   align-items: flex-start;
@@ -66,22 +93,3 @@
 .kotc-twist-label { flex: 0 0 auto; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); padding-top: 1px; }
 .kotc-twist-text { font-size: 0.72rem; line-height: 1.4; color: var(--text-muted); }
 .kotc-twist-text strong { color: var(--text); font-weight: 600; }
-
-@media (max-width: 820px) {
-  /* ── Forms (army setup) */
-  /* order: lives here, not in mobile.css: must precede `.detachment-row` {padding} below (equal specificity, same element, padding). */
-  .form-input, .form-select { min-height: 44px; padding: 10px 12px; }
-}
-
-/* order: lives here, not in detail-pane.css: must follow `.kotc-toggle-cb` {cursor} above (equal specificity, same element, cursor). */
-.detachment-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card-bg);
-  cursor: pointer;
-  transition: border-color 0.12s ease, background 0.12s ease;
-}

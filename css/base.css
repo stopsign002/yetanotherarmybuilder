@@ -3,10 +3,9 @@
  * utilities (.hidden, .muted, .spinner), reduced-motion kill switches, and
  * rules whose selector list spans three or more components.
  *
- * Order dependencies: 4 rule(s) belonging by subject to army-list.css (1),
- * buttons.css (1), mobile.css (1), unit-card.css (1) stay here to keep their
- * cascade position beside a rule in this file; each has an `order:` comment
- * naming it. */
+ * Order dependencies: 2 rule(s) belonging by subject to mode-shell.css (1),
+ * mobile.css (1) stay here to keep their cascade position beside a rule in
+ * this file; each has an `order:` comment naming it. */
 
 /* ── Reset / Base */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,64 +18,6 @@ ul { list-style: none; }
 ::-webkit-scrollbar-track { background: var(--panel-bg); }
 ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #666; }
-
-/* order: lives here, not in army-list.css: must precede `.army-rules-title` {font-weight} below (equal specificity, same element, font-weight). */
-.army-entry-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
-
-/* ── Buttons */
-/* order: lives here, not in buttons.css: must precede `.btn-accent` {transition} below (equal specificity, same element, transition). */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border-radius: var(--radius);
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
-  border: 1px solid transparent;
-  white-space: nowrap;
-  outline: none;
-  box-sizing: border-box;
-  height: 32px;
-  line-height: 1.15;
-  vertical-align: middle;
-}
-
-/* ── 1. Faction-accent morph */
-a,
-a:hover,
-.btn-accent,
-.btn-accent:hover,
-.unit-card,
-.unit-card:hover,
-.unit-card::before,
-.unit-card.selected,
-.search-input,
-.search-input:focus,
-.form-input,
-.form-input:focus,
-.form-select,
-.form-select:focus,
-.points-bar,
-.points-current,
-.army-entry-qty input,
-.army-entry-qty input:focus,
-.army-enh-badge,
-.enhancement-item,
-.detail-pts,
-.detail-faction,
-.chip,
-.chip.active,
-.role-chip,
-.role-chip.active,
-.weapon-kw,
-.page-progress-bar,
-.spinner {
-  transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, box-shadow 300ms ease, outline-color 300ms ease;
-}
 
 /* ── Utility */
 .muted { color: var(--text-muted); }
@@ -95,13 +36,6 @@ a:hover,
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-/* ── Display-font headings & names */
-.panel-header h2, .detail-name, .unit-card-name, .ds-name, .detail-section-title, .modal-header h3, .army-rules-title {
-  font-family: var(--font-display);
-  letter-spacing: 0.02em;
-  font-weight: 600;
 }
 
 /* ── Slim accent scrollbar for unit grid + dropdown menus */
@@ -128,6 +62,10 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
  * inherit the same indicator. */
 .detail-section-title, .modal-header h3, .army-rules-title { position: relative; }
 body { padding-top: var(--topbar-h); }
+
+/* Reduced-motion overrides. */
+/* order: lives here, not in mode-shell.css: must precede `body.reduce-motion .mode-page.mode-enter` {animation} below (equal specificity, same element, animation). */
+body.reduce-motion .mode-page, body.reduce-motion .mode-page.mode-enter { animation: none !important; }
 body.reduce-motion .mode-page.mode-enter,
 body.reduce-motion .unit-card,
 body.reduce-motion .toast,
@@ -179,45 +117,10 @@ html, body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Reduced-motion: kill animation, preserve final state. */
-  /* order: lives here, not in unit-card.css: must precede `.unit-card` {animation} below (equal specificity, same element, animation). */
-  .unit-card, .army-entry, .yaab-flip-ghost { transition: none !important; animation: none !important; }
-
   /* ── Reduced-motion fallback: keep color transitions, drop anims */
   .points-bar-celebrate, .points-summary.points-shake, .points-summary.points-landed, .unit-card.selected.just-selected::after, .toast.toast-celebrate {
     animation: none !important;
   }
-
-  /* 11. Reduced-motion overrides — disable every keyframe + transition we
-   * layered above. Honors both the media query and the `body.reduce-motion`
-   * class fallback. */
-  .mode-page.mode-enter,
-  .unit-card,
-  .toast,
-  .toast-container .toast,
-  .unit-detail-content,
-  .unit-detail-datasheet,
-  .faction-glyph,
-  .build-hero-bar::after,
-  body:has(.atmosphere-scanline) .panel-body::before {
-    animation: none !important;
-    transition: none !important;
-  }
-  /* 11b. Reduced-motion CATCH-ALL.
-   * The Settings drawer's "Reduced animations" toggle only adds
-   * `body.reduce-motion`, but 23 of the 28 stylesheets that handle reduced
-   * motion listen ONLY for `@media (prefers-reduced-motion: reduce)`. So the
-   * toggle silently did nothing for the overwhelming majority of the app's
-   * animation — its help text promises it "overrides system preference when on",
-   * and it didn't.
-   * Rather than hand-edit 23 files (and re-edit every future one), this blanket
-   * rule makes the class do what the media query does. `!important` on a
-   * universal selector means source order stops mattering, so a stylesheet added
-   * later is covered automatically.
-   * Durations are near-zero rather than `none` on purpose: `transitionend` and
-   * `animationend` still fire, so JS that waits on them keeps working —
-   * js/ui/flip-animations.js:163 (flight ghost), js/ui/toast.js:51 (toast
-   * teardown) and js/ui/scanline.js:36 all depend on that. */
 }
 
 @media print {

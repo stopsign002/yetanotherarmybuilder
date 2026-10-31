@@ -1,6 +1,18 @@
 /* admin.css — tier 2 layout.
- * Owns: the admin panel modal (.admin-*). */
+ * Owns: the admin panel modal (.admin-*).
+ *
+ * Order dependencies: 3 rule(s) belonging by subject to cards-mode.css (2),
+ * bug-report.css (1) stay here to keep their cascade position beside a rule in
+ * this file; each has an `order:` comment naming it. */
 
+/* order: lives here, not in cards-mode.css: must precede `.admin-img > img` {width} below (equal specificity, same element, width). */
+.cards-img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* order: lives here, not in cards-mode.css: must precede `.admin-table td` {padding} below (equal specificity, same element, padding). */
+.dcc-w-table td { padding: 0.7mm 0.4mm; vertical-align: top; }
+
+/* order: lives here, not in bug-report.css: must precede `.admin-bug-diag-wrap > summary` {cursor} below (equal specificity, same element, cursor). */
+.bug-report-diag-wrap > summary { cursor: pointer; user-select: none; padding: 4px 0; }
 .admin-backdrop {
   position: fixed;
   inset: 0;
@@ -79,19 +91,14 @@ body.admin-modal-open { overflow: hidden; }
 .admin-pill.is-ok { background: #1a3525; color: var(--coll-done); }
 .admin-pill.is-admin { background: #b89052; color: #111; }
 .admin-pill.is-revoked { background: #3a0d0d; color: #efc8c8; }
-
-/* Bug-report attachment preview (js/app/admin.js renderBugAttachment). */
-.admin-pill.is-feature { background: #1f2f4a; color: #b9cff0; }
 .admin-btn { background: #20232a; color: #e7e9ee; border: 1px solid #2e323a; border-radius: 5px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
 .admin-btn[disabled] { opacity: 0.5; cursor: progress; }
 .admin-btn-primary { background: #b89052; color: #111; border-color: transparent; }
 .admin-btn-danger { background: #3a0d0d; color: #efc8c8; border-color: transparent; }
 .admin-img .admin-btn { margin-top: 4px; }
-.admin-btn-outline { background: transparent; color: #cbd0db; border: 1px solid #4b566c; }
 .admin-btn:hover { background: #2a2e36; }
 .admin-btn-primary:hover { background: #c8a872; }
 .admin-btn-danger:hover { background: #5a1818; }
-.admin-btn-outline:hover { background: #2a3142; }
 
 /* Image moderation grid */
 .admin-img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
@@ -104,13 +111,14 @@ body.admin-modal-open { overflow: hidden; }
 /* ── Reports tab */
 .admin-bug-filters { display: flex; gap: 6px; margin-bottom: 12px; }
 .admin-bug-list { display: flex; flex-direction: column; gap: 12px; }
-.admin-bug-card { background: #1a1d24; border: 1px solid #2a2f38; border-radius: 6px; padding: 12px 14px; }
 .admin-bug-head { display: flex; align-items: center; gap: 10px; justify-content: space-between; margin-bottom: 4px; }
+.admin-bug-diag-wrap > summary { cursor: pointer; user-select: none; }
+.admin-filter { background: transparent; color: #c8ccd6; border: 1px solid #2a2f38; border-radius: 4px; padding: 4px 12px; font-size: 12px; cursor: pointer; }
+.admin-bug-card { background: #1a1d24; border: 1px solid #2a2f38; border-radius: 6px; padding: 12px 14px; }
 .admin-bug-title { font-weight: 600; font-size: 15px; flex: 1; min-width: 0; }
 .admin-bug-meta { display: flex; gap: 12px; font-size: 12px; color: #8c92a0; margin-bottom: 8px; }
 .admin-bug-desc { margin: 0 0 8px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; color: #cbd0db; }
 .admin-bug-diag-wrap { margin-bottom: 8px; font-size: 12px; color: #8c92a0; }
-.admin-bug-diag-wrap > summary { cursor: pointer; user-select: none; }
 .admin-bug-diag {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
@@ -124,13 +132,10 @@ body.admin-modal-open { overflow: hidden; }
   white-space: pre;
 }
 .admin-bug-fixed-meta { font-size: 12px; color: #7fb88a; margin-bottom: 8px; }
-.admin-bug-attach { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 8px 0; }
-.admin-bug-attach-media { display: block; max-width: 100%; max-height: 320px; border: 1px solid var(--border); border-radius: var(--radius); background: #000; }
-.admin-bug-attach-link { color: var(--accent); font-size: 0.85rem; }
-.admin-bug-attach-meta { color: var(--text-muted); font-size: 0.75rem; }
-.admin-filter { background: transparent; color: #c8ccd6; border: 1px solid #2a2f38; border-radius: 4px; padding: 4px 12px; font-size: 12px; cursor: pointer; }
+.admin-btn-outline { background: transparent; color: #cbd0db; border: 1px solid #4b566c; }
 .admin-filter:hover { border-color: #4b566c; }
 .admin-filter.is-active { background: #2a3142; border-color: #5b6580; color: #fff; }
+.admin-btn-outline:hover { background: #2a3142; }
 
 /* ── Admin-only "pending approvals" banner */
 .admin-pending-banner {
@@ -170,5 +175,12 @@ body.admin-modal-open { overflow: hidden; }
   padding: 0 4px;
   opacity: 0.75;
 }
+.admin-bug-attach { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 8px 0; }
+.admin-bug-attach-media { display: block; max-width: 100%; max-height: 320px; border: 1px solid var(--border); border-radius: var(--radius); background: #000; }
+.admin-bug-attach-link { color: var(--accent); font-size: 0.85rem; }
+.admin-bug-attach-meta { color: var(--text-muted); font-size: 0.75rem; }
 .admin-pending-banner-btn:hover { background: #fce5b8; }
+
+/* Bug-report attachment preview (js/app/admin.js renderBugAttachment). */
+.admin-pill.is-feature { background: #1f2f4a; color: #b9cff0; }
 .admin-pending-banner-close:hover { opacity: 1; }

@@ -3,9 +3,10 @@
  * star, collection), hover, selected, per-faction themes, celebrations, FLIP
  * ghost.
  *
- * Order dependencies: 4 rule(s) belonging by subject to collect-mode.css (2),
- * mobile.css (2) stay here to keep their cascade position beside a rule in
- * this file; each has an `order:` comment naming it. */
+ * Order dependencies: 23 rule(s) belonging by subject to army-list.css (14),
+ * collect-mode.css (5), mobile.css (3), base.css (1) stay here to keep their
+ * cascade position beside a rule in this file; each has an `order:` comment
+ * naming it. */
 
 /* Carried from the old allies.css header: styling for allied units surfaced on a host faction's roster.
  * Mirrors the Legends badge, but in a cool teal so the two badges stay
@@ -41,12 +42,6 @@
   pointer-events: none;
 }
 
-/* Subtle amber tint on the card itself so Legends entries read as "casual". */
-.unit-card.unit-card-legends {
-  border-color: rgba(217, 181, 102, 0.35);
-  background: linear-gradient( to bottom, rgba(217, 181, 102, 0.05), transparent 60% ), var(--card-bg);
-}
-
 /* Corner badge on roster unit cards for allied units.
  * ::after because .unit-card::before is already the selection accent. */
 .unit-card.unit-card-ally::after {
@@ -62,17 +57,6 @@
   pointer-events: none;
 }
 
-/* A Legends unit that is ALSO an ally would stack two ::after badges on the
- * same corner. Allies win the corner; the Legends state still reads from the
- * border tint and the detail panel. */
-.unit-card.unit-card-ally.unit-card-legends::after { content: "ALLY"; color: #6fb7c4; }
-
-/* Subtle teal tint so allied entries read as "from another codex". */
-.unit-card.unit-card-ally {
-  border-color: rgba(111, 183, 196, 0.35);
-  background: linear-gradient( to bottom, rgba(111, 183, 196, 0.05), transparent 60% ), var(--card-bg);
-}
-
 /* CSS-only fallback — only fires when no .role-icon span has been injected. */
 .unit-card.role-character .unit-card-name:not(:has(.role-icon))::before { content: "\25C6 "; }
 .unit-card.role-psyker .unit-card-name:not(:has(.role-icon))::before { content: "\2756 "; }
@@ -81,9 +65,6 @@
 .unit-card.role-battleline .unit-card-name:not(:has(.role-icon))::before { content: "\25A3 "; }
 .unit-card.role-infantry .unit-card-name:not(:has(.role-icon))::before { content: "\25CF "; }
 .unit-card[class*="role-"] .unit-card-name::before { color: var(--accent); font-size: 0.85em; margin-right: 6px; opacity: 0.8; letter-spacing: 0; }
-
-/* ── roster card: a named unique unit */
-.unit-card.unit-card-named { border-color: rgba(198, 160, 74, 0.55); box-shadow: inset 3px 0 0 0 rgba(198, 160, 74, 0.75); }
 .unit-card .unit-card-subname {
   padding: 0 0.65rem 0.15rem;
   margin-top: -0.1rem;
@@ -99,6 +80,18 @@
   background: var(--card-hover);
   transform: translateY(-2px) scale(1.005);
 }
+
+/* Subtle amber tint on the card itself so Legends entries read as "casual". */
+.unit-card.unit-card-legends {
+  border-color: rgba(217, 181, 102, 0.35);
+  background: linear-gradient( to bottom, rgba(217, 181, 102, 0.05), transparent 60% ), var(--card-bg);
+}
+
+/* Subtle teal tint so allied entries read as "from another codex". */
+.unit-card.unit-card-ally {
+  border-color: rgba(111, 183, 196, 0.35);
+  background: linear-gradient( to bottom, rgba(111, 183, 196, 0.05), transparent 60% ), var(--card-bg);
+}
 body.reduce-motion .unit-card:hover { transform: none !important; }
 .unit-card[class*="faction-"]:hover { border-left-color: rgba(255, 255, 255, 0.35); }
 .unit-card:hover::before, .unit-card.selected::before { opacity: 1; }
@@ -108,9 +101,6 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
  * accent stripe disappearing under the existing .unit-card.selected
  * chassis treatment. */
 .unit-card.selected[class*="faction-"] { border-left-width: 3px; }
-
-/* Unit card: hide the faction line when a specific faction/chapter is selected. */
-.unit-card.faction-hidden .unit-card-faction { display: none; }
 
 /* ─── Imperium — blue family */
 .unit-card.faction-adeptus-astartes, .unit-card.faction-space-marines, .unit-card.faction-ultramarines {
@@ -262,31 +252,15 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
 .unit-card.faction-harlequins:hover { border-left-color: rgba(230, 183, 168, 0.95); box-shadow: 0 4px 18px rgba(230, 183, 168, 0.22); }
 .yaab-flip-ghost, .yaab-flip-ghost * { cursor: default !important; user-select: none !important; }
 
-/* FLIP add-to-army animation primitives. */
-.yaab-flip-ghost {
-  position: fixed;
-  top: 0;
-  left: 0;
-  margin: 0;
-  pointer-events: none;
-  z-index: 9999;
-  box-sizing: border-box;
-  transform-origin: 0 0;
-  will-change: transform, opacity;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(var(--yaab-card-accent-rgb), 0.35);
-  border-radius: var(--yaab-card-radius);
-  overflow: hidden;
-  /* Lock the cloned card's hover/transition behavior so it stays stable. */
-  transition: none !important;
-  filter: brightness(1.04) saturate(1.05);
-}
-
 /* Click micro-animation: scale up then settle back. */
 @keyframes yaab-fav-pop {
   0% { transform: scale(1); }
   40% { transform: scale(1.35); }
   70% { transform: scale(0.92); }
   100% { transform: scale(1); }
+}
+@keyframes collect-spin {
+  to { transform: rotate(360deg); }
 }
 .fav-star {
   display: inline-block;
@@ -297,11 +271,34 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
   transition: transform 0.12s ease, color 0.15s ease;
 }
 .fav-star.fav-pop { animation: yaab-fav-pop 280ms ease-out; }
-.detail-action-btn:hover .fav-star { transform: scale(1.1); color: #e6d6a8; }
 .fav-star.is-starred {
   color: #e6d6a8;
   /* pastel gold, matches palette accents */
   text-shadow: 0 0 6px rgba(230,214,168,0.35);
+}
+
+/* ── empty / loading state */
+/* order: lives here, not in collect-mode.css: must precede `.collect-unit-card` {display} below (equal specificity, same element, display). */
+.collect-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 80px 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* order: lives here, not in collect-mode.css: must precede `.collect-empty-spinner` {border-top-color} below (equal specificity, same element, border vs border-top-color). */
+.collect-empty-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--accent);
+  animation: collect-spin 0.9s linear infinite;
 }
 
 /* order: lives here, not in collect-mode.css: must precede `.unit-card:hover` {border-color} below (equal specificity, same element, border-color). */
@@ -343,6 +340,47 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
   box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.45), 0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
+/* ── roster card: a named unique unit */
+.unit-card.unit-card-named { border-color: rgba(198, 160, 74, 0.55); box-shadow: inset 3px 0 0 0 rgba(198, 160, 74, 0.75); }
+
+/* Drag-to-reorder visuals. */
+/* order: lives here, not in army-list.css: must follow `.army-entry:focus-visible` {box-shadow} above (equal specificity, same element, box-shadow). */
+.army-entry.is-dragging {
+  opacity: 0.55;
+  cursor: grabbing !important;
+  z-index: 5;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(var(--yaab-card-accent-rgb), 0.55);
+}
+
+/* order: lives here, not in army-list.css: must follow `.army-entry:focus-visible` {box-shadow} above (equal specificity, same element, box-shadow). */
+.army-entry.is-drop-target-before { box-shadow: 0 -2px 0 0 var(--yaab-card-accent) inset; }
+
+/* order: lives here, not in army-list.css: must follow `.army-entry:focus-visible` {box-shadow} above (equal specificity, same element, box-shadow). */
+.army-entry.is-drop-target-after { box-shadow: 0 2px 0 0 var(--yaab-card-accent) inset; }
+
+/* Drag-to-attach drop indicators.
+ * `--ok` (green) fires when App.Attachments.canAttach returned true —
+ * GDC data confirms the pairing. `--soft` (amber) fires when the data
+ * doesn't list this pairing but the drop is still allowed (soft
+ * enforcement). Both replace whatever reorder-band paint was in
+ * progress on the same row. */
+/* order: lives here, not in army-list.css: must follow `.army-entry:focus-visible` {box-shadow} above (equal specificity, same element, box-shadow). */
+.army-entry.is-attach-target--ok {
+  outline: 2px solid #4caf50;
+  outline-offset: -2px;
+  box-shadow: 0 0 12px rgba(76, 175, 80, 0.55) inset, 0 0 0 1px rgba(76, 175, 80, 0.7);
+}
+
+/* order: lives here, not in army-list.css: must follow `.army-entry:focus-visible` {box-shadow} above (equal specificity, same element, box-shadow). */
+.army-entry.is-attach-target--soft {
+  outline: 2px dashed #d8a838;
+  outline-offset: -2px;
+  box-shadow: 0 0 10px rgba(216, 168, 56, 0.45) inset, 0 0 0 1px rgba(216, 168, 56, 0.65);
+}
+
+/* order: lives here, not in army-list.css: must follow `.army-entry.is-attach-target--ok` {outline} above (equal specificity, same element, outline). */
+.army-entry-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 @media (min-width: 821px) {
   .panel-center.panel-expanded .unit-card { padding: 14px; }
 }
@@ -354,6 +392,10 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
 @media (max-width: 820px) {
   /* order: lives here, not in mobile.css: must precede `.unit-card` {min-height} below (equal specificity, same element, min-height). */
   .unit-card { padding: 12px; min-height: 96px; }
+
+  /* Make the army-setup details summary a bigger tap target. */
+  /* order: lives here, not in mobile.css: must precede `.army-entry-attachments` {display} below (equal specificity, same element, display). */
+  .army-setup-summary, .army-rules-summary { min-height: 44px; padding: 10px 12px; font-size: 14px; display: flex; align-items: center; }
 }
 
 @media (max-width: 480px) {
@@ -361,52 +403,9 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
   .unit-card { min-height: 76px; padding: 10px 12px; }
 }
 
-/* order: lives here, not in collect-mode.css: must precede `.unit-card` {background} below (equal specificity, same element, background). */
-.collect-unit-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: border-color 0.12s, background 0.12s;
-}
-
 @media (prefers-reduced-motion: no-preference) {
   /* ── 2. Unit-card hover lift + selected shimmer */
   .unit-card { will-change: transform; }
-}
-
-/* Base chassis. Any element can opt-in by adding `.yaab-card`.
- * It is also applied additively to existing well-known card selectors.
- * We keep specificity low so component-specific rules win. */
-.unit-card, .army-entry {
-  background: var(--yaab-card-bg);
-  border: 1px solid var(--yaab-card-border-soft);
-  border-radius: var(--yaab-card-radius);
-  position: relative;
-  transition: border-color 0.18s var(--yaab-card-ease), background 0.18s var(--yaab-card-ease), transform 0.16s var(--yaab-card-ease), box-shadow 0.18s var(--yaab-card-ease);
-  will-change: transform;
-}
-
-/* ── Unit Cards */
-/* Padding by default — tighter for the army-entry list rows. */
-.unit-card {
-  cursor: pointer;
-  overflow: hidden;
-  user-select: none;
-  /* ── Unit Cards */
-  /* Padding by default — tighter for the army-entry list rows. */
-  padding: var(--yaab-card-pad);
-  will-change: transform;
-  /* 2. Unit-card hover lift — smooth, slightly springy.
-   * The base transition in style.css uses linear timing for transform; we
-   * layer a springier curve here without touching the base. */
-  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease, border-color 180ms ease, background-color 180ms ease;
-}
-
-@media (prefers-reduced-motion: no-preference) {
   .unit-card:hover:not(.selected) { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(var(--accent-rgb), 0.25); }
 }
 .unit-card.faction-chaos-space-marines:hover { border-left-color: rgba(230, 168, 168, 0.95); box-shadow: 0 4px 18px rgba(230, 168, 168, 0.22); }
@@ -477,6 +476,14 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
     animation: yaab-shimmer 650ms ease-out 1;
     border-radius: inherit;
   }
+}
+
+/* A Legends unit that is ALSO an ally would stack two ::after badges on the
+ * same corner. Allies win the corner; the Legends state still reads from the
+ * border tint and the detail panel. */
+.unit-card.unit-card-ally.unit-card-legends::after { content: "ALLY"; color: #6fb7c4; }
+
+@media (prefers-reduced-motion: no-preference) {
   @keyframes yaab-shimmer {
     0% { background-position: 150% 0; opacity: 0; }
     20% { opacity: 1; }
@@ -487,9 +494,197 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .unit-card:hover, .unit-card:active { transform: none !important; }
 
+  /* Reduced-motion: kill animation, preserve final state. */
+  .unit-card, .army-entry, .yaab-flip-ghost { transition: none !important; animation: none !important; }
+
   /* prefers-reduced-motion: gradients & stripes are static, but the
    * border/shadow transitions are gated for users who want zero motion. */
   .unit-card[class*="faction-"] { transition: none !important; }
   .fav-star, .detail-action-btn:hover .fav-star { transition: none; }
   .fav-star.fav-pop { animation: none; }
+
+  /* order: lives here, not in collect-mode.css: must precede `.collect-unit-card` {border} below (equal specificity, same element, border-top-color vs border). */
+  .collect-empty-spinner { animation: none; border-top-color: rgba(255, 255, 255, 0.45); }
+}
+
+/* order: lives here, not in collect-mode.css: must precede `.unit-card` {background} below (equal specificity, same element, background). */
+.collect-unit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.12s, background 0.12s;
+}
+
+/* Base chassis. Any element can opt-in by adding `.yaab-card`.
+ * It is also applied additively to existing well-known card selectors.
+ * We keep specificity low so component-specific rules win. */
+.unit-card, .army-entry {
+  background: var(--yaab-card-bg);
+  border: 1px solid var(--yaab-card-border-soft);
+  border-radius: var(--yaab-card-radius);
+  position: relative;
+  transition: border-color 0.18s var(--yaab-card-ease), background 0.18s var(--yaab-card-ease), transform 0.16s var(--yaab-card-ease), box-shadow 0.18s var(--yaab-card-ease);
+  will-change: transform;
+}
+
+/* ── Unit Cards */
+/* Padding by default — tighter for the army-entry list rows. */
+.unit-card {
+  cursor: pointer;
+  overflow: hidden;
+  user-select: none;
+  /* ── Unit Cards */
+  /* Padding by default — tighter for the army-entry list rows. */
+  padding: var(--yaab-card-pad);
+  will-change: transform;
+  /* 2. Unit-card hover lift — smooth, slightly springy.
+   * The base transition in style.css uses linear timing for transform; we
+   * layer a springier curve here without touching the base. */
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+/* Nested attached children. Indented under the leader with a thin
+ * tether line down the left edge in the faction accent colour so the
+ * parent-child relationship reads at a glance. */
+/* order: lives here, not in army-list.css: must follow `.army-setup-summary` {display} above (equal specificity, same element, display). */
+.army-entry-attachments {
+  list-style: none;
+  /* Tighter indent + thinner tether than the originally-shipped 18px / 2px:
+   * reclaims ~10px of horizontal space per nesting level so the nested
+   * cards have room for their name and stats row. The 1px line still
+   * reads visually as an ownership tether. */
+  margin: 8px 0 2px;
+  padding: 0 0 0 10px;
+  border-left: 1px solid rgba(var(--yaab-card-accent-rgb), 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* order: lives here, not in army-list.css: must follow `.army-setup-summary` {font-size} above (equal specificity, same element, font-size). */
+.army-entry-attached {
+  font-size: 0.92em;
+  opacity: 0.96;
+  /* The drag handle widget eats ~24px of chrome that attached cards
+   * can't afford. Drag still activates from the card body (see
+   * flip-animations.js:374–395 — the only exemptions are inputs and
+   * the remove button), so hiding the handle is purely cosmetic. */
+  padding-left: 10px;
+}
+
+/* Sub-line row.
+ * Hosts the squad-size label (e.g. "20 models") and / or the "+N
+ * attached" cluster pill on a dedicated line beneath the unit title.
+ * Keeping both pieces out of the title's flex row gives long names
+ * (e.g. "Necron Warriors", "Canoptek Cryptothralls") the full header
+ * width — otherwise the pill + label would compete for space and
+ * force "NE…" / "TECHNOMANC…" truncation. The row is emitted only
+ * when at least one piece exists, so unsized non-attached entries
+ * look identical to pre-feature. Squad label leads, pill follows;
+ * `align-items: center` keeps the pill's bordered chip vertically
+ * centered on the muted-grey model count. */
+/* order: lives here, not in army-list.css: must follow `.army-entry-attachments` {display} above (equal specificity, same element, display). */
+.army-entry-subline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 1px 0 4px 0;
+  font-family: var(--ui-font);
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* order: lives here, not in army-list.css: must follow `.army-setup-summary` {display} above (equal specificity, same element, display). */
+.army-entry-attached-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  font-size: 0.78em;
+  font-weight: 600;
+  border-radius: 10px;
+  background: rgba(var(--yaab-card-accent-rgb), 0.18);
+  color: var(--yaab-card-accent);
+  vertical-align: middle;
+  border: 1px solid rgba(var(--yaab-card-accent-rgb), 0.4);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── army list row */
+/* order: lives here, not in army-list.css: must follow `.army-setup-summary` {display} above (equal specificity, same element, display). */
+.army-entry-datasheet {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* order: lives here, not in army-list.css: must follow `.army-entry-attachments` {display} above (equal specificity, same element, display). */
+.army-entry-actions { display: flex; align-items: flex-start; gap: 2px; flex-shrink: 0; margin-left: 4px; }
+
+/* Matches .army-entry-remove's box in build-mode.css so the two sit as a pair
+ * rather than as a styled button next to a loose glyph. */
+/* order: lives here, not in army-list.css: must follow `.army-entry-attachments` {display} above (equal specificity, same element, display). */
+.army-entry-action {
+  align-self: flex-start;
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 5px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* order: lives here, not in army-list.css: must follow `.army-entry-action` {transition} above (equal specificity, same element, transition). */
+  .army-entry-action { transition: none; }
+
+  /* 11. Reduced-motion overrides — disable every keyframe + transition we
+   * layered above. Honors both the media query and the `body.reduce-motion`
+   * class fallback. */
+  /* order: lives here, not in base.css: must follow `.unit-card` {animation} above (equal specificity, same element, animation). */
+  .mode-page.mode-enter,
+  .unit-card,
+  .toast,
+  .toast-container .toast,
+  .unit-detail-content,
+  .unit-detail-datasheet,
+  .faction-glyph,
+  .build-hero-bar::after,
+  body:has(.atmosphere-scanline) .panel-body::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* 11b. Reduced-motion CATCH-ALL.
+   * The Settings drawer's "Reduced animations" toggle only adds
+   * `body.reduce-motion`, but 23 of the 28 stylesheets that handle reduced
+   * motion listen ONLY for `@media (prefers-reduced-motion: reduce)`. So the
+   * toggle silently did nothing for the overwhelming majority of the app's
+   * animation — its help text promises it "overrides system preference when on",
+   * and it didn't.
+   * Rather than hand-edit 23 files (and re-edit every future one), this blanket
+   * rule makes the class do what the media query does. `!important` on a
+   * universal selector means source order stops mattering, so a stylesheet added
+   * later is covered automatically.
+   * Durations are near-zero rather than `none` on purpose: `transitionend` and
+   * `animationend` still fire, so JS that waits on them keeps working —
+   * js/ui/flip-animations.js:163 (flight ghost), js/ui/toast.js:51 (toast
+   * teardown) and js/ui/scanline.js:36 all depend on that. */
 }

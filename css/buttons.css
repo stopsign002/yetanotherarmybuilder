@@ -5,6 +5,26 @@
  * dropdown.css (1) stay here to keep their cascade position beside a rule in
  * this file; each has an `order:` comment naming it. */
 
+/* ── Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  outline: none;
+  box-sizing: border-box;
+  height: 32px;
+  line-height: 1.15;
+  vertical-align: middle;
+}
 .btn.btn-icon.btn-sm { width: 28px; height: 28px; min-width: 28px; padding: 0; font-size: 13px; }
 
 /* The army-toolbar previously hardcoded its own 28px / 26px values. Keep
@@ -15,9 +35,6 @@
 
 /* Modal footer buttons: unified default-tier height. */
 .modal-footer .btn { height: 32px; }
-.modal-footer .btn.btn-sm { height: 28px; }
-.settings-drawer button.btn, .settings-drawer .btn { height: 32px; }
-.detail-add-row .btn { height: 32px; }
 .btn:active { transform: scale(0.97); }
 .btn-accent { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
 .btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
@@ -112,6 +129,8 @@
   font-size: 15px;
   line-height: 1;
 }
+.settings-drawer button.btn, .settings-drawer .btn { height: 32px; }
+.detail-add-row .btn { height: 32px; }
 
 @media (prefers-reduced-motion: reduce) {
   .btn-outline:hover { box-shadow: none; }

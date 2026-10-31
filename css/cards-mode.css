@@ -1,5 +1,9 @@
 /* cards-mode.css — tier 4 modes.
- * Owns: Cards mode: designer shell, .dcc-* card chrome, print rules. */
+ * Owns: Cards mode: designer shell, .dcc-* card chrome, print rules.
+ *
+ * Order dependencies: 3 rule(s) belonging by subject to mobile.css (3) stay
+ * here to keep their cascade position beside a rule in this file; each has an
+ * `order:` comment naming it. */
 
 /* Carried from the old cards-mode.css header: Cards mode (full-page) + card chrome + print rules.
  * Layout
@@ -35,9 +39,6 @@
 .cards-side { width: 340px; flex-shrink: 0; background: #14171c; border-right: 1px solid #23272e; display: flex; flex-direction: column; min-height: 0; }
 .cards-side-head { padding: 14px 18px 8px; border-bottom: 1px solid #23272e; }
 .cards-side-body { flex: 1 1 auto; overflow-y: auto; padding: 6px 4px 12px; }
-
-/* Footer: print button */
-.cards-side-foot { padding: 12px 18px 16px; border-top: 1px solid #23272e; background: #14171c; }
 .cards-title { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.02em; }
 .cards-summary { margin: 4px 0 0; font-size: 12px; color: #9aa1ad; }
 .cards-row {
@@ -212,7 +213,6 @@
   /* Subtle gold ring like the swatches. */
   box-shadow: inset 0 0 0 1px rgba(184, 144, 82, 0.2);
 }
-.cards-img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cards-img-del {
   position: absolute;
   top: 2px;
@@ -245,25 +245,6 @@
   color: #fff;
   text-shadow: 0 1px 2px rgba(0,0,0,0.85);
 }
-
-/* Ten call sites in js/ui/cards-mode.js, several of them destructive ("Delete
- * preset", "Reset typography", "Reset to defaults"), all of them rendered as
- * bare underlined words. They are controls and they get control chrome —
- * quieter than .cards-btn below so they still read as the secondary row, but
- * a box you can see and aim at. Hardcoded darks rather than tokens on purpose:
- * the whole cards sidebar paints its own dark ground in every theme
- * (app/CLAUDE.md), so these have to match that chrome, not the page's. */
-.cards-link-btn {
-  background: #20232a;
-  border: 1px solid #2e323a;
-  border-radius: 6px;
-  color: #cfd4de;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 10px;
-  cursor: pointer;
-  text-decoration: none;
-}
 .cards-link-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .cards-link-btn:hover:not(:disabled) { background: #2a2e36; border-color: #3f4550; color: #fff; }
 
@@ -271,78 +252,10 @@
  * in cards-mode.js already tints the label; give the box the same warning. */
 #cards-preset-delete { border-color: #573233; background: #2b2124; }
 #cards-preset-delete:hover:not(:disabled) { background: #3a2729; border-color: #7a4244; }
-.cards-btn {
-  width: 100%;
-  background: #20232a;
-  color: #e7e9ee;
-  border: 1px solid #2e323a;
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.cards-btn-primary { background: var(--accent); color: var(--accent-on); border-color: transparent; }
 .cards-btn:hover { background: #2a2e36; }
 .cards-btn-primary:hover { background: var(--accent-hover); }
-
-/* ── Preview pane */
-.cards-preview-wrap { flex: 1 1 auto; overflow: auto; background: #0c0d10; padding: 24px; display: flex; justify-content: center; }
 .cards-preview { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.cards-empty { padding: 24px; text-align: center; color: #888c95; font-size: 13px; }
-.cards-empty-large { padding: 64px 24px; font-size: 15px; color: #aab0bc; }
-.cards-spill-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 40; }
-.cards-spill-panel {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(340px, calc(100vw - 32px));
-  max-height: calc(100vh - 48px);
-  overflow: auto;
-  background: #14171c;
-  color: #e7e9ee;
-  border: 1px solid #2a2f38;
-  border-radius: 10px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
-  z-index: 41;
-}
-.cards-spill-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 14px 16px 8px; border-bottom: 1px solid #23272e; }
-.cards-spill-title { font-size: 15px; font-weight: 600; }
-.cards-spill-sub { font-size: 12px; color: #9aa1ad; margin-top: 2px; }
-.cards-spill-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  min-height: 32px;
-  background: transparent;
-  border: 1px solid rgba(154, 161, 173, 0.4);
-  border-radius: 4px;
-  color: #9aa1ad;
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 2px;
-}
-.cards-spill-help { margin: 8px 16px 4px; font-size: 12px; color: #9aa1ad; }
-.cards-spill-list { padding: 4px 8px 8px; }
-.cards-spill-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; }
 .cards-spill-row input[type="checkbox"] { accent-color: var(--accent); }
-.cards-spill-foot { padding: 6px 16px 14px; border-top: 1px solid #23272e; }
-.cards-spill-namerow { display: block; margin: 0 0 0.75rem; }
-.cards-spill-name {
-  display: block;
-  width: 100%;
-  margin-top: 0.25rem;
-  padding: 0.4rem 0.55rem;
-  font: inherit;
-  font-size: 0.85rem;
-  color: var(--text);
-  background: var(--bg-input);
-  border: 1px solid var(--border-subtle);
-  border-radius: 3px;
-}
 .cards-spill-close:hover { color: #fff; border-color: rgba(255, 255, 255, 0.6); }
 .cards-spill-row:hover { background: #1b1f26; }
 .cards-spill-name:focus { outline: none; border-color: rgba(198, 160, 74, 0.7); }
@@ -461,79 +374,6 @@
 
 /* Tighten card padding for many-up grids */
 .dcc-page[style*="grid-template-columns: repeat(3"] .dcc-card, .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-card { padding: 1.2mm; gap: 0.9mm; }
-
-/* ── Template skins
- * A "template" is a full visual skin for the printable datacards, applied
- * as a `.dcc-tpl-<id>` class on every `.dcc-card` cell (fronts, backs,
- * continuations, empty padders, and the off-screen measure stage) by
- * cards-mode.js.
- * The DEFAULT look — gilded parchment, GW 10e style — is the un-suffixed
- * chrome above. It is exposed in the UI as the `classic` template
- * ("Gilded Parchment") and needs NO overrides here: `.dcc-tpl-classic`
- * simply inherits the base `.dcc-*` rules unchanged.
- * To add a template:
- *   1. add an entry to the TEMPLATES array in js/ui/cards-mode.js
- *      (id + label + a preview `swatch` gradient), and
- *   2. add a `.dcc-card.dcc-tpl-<id>` skin block below.
- * Nothing else changes — the renderer already tags every card cell with
- * the active template class and the measure stage matches it.
- * Specificity note: the texture system injects `.dcc-card { background }`
- * (0,1,0) and `.dcc-card-cont .dcc-cont-overlay { background }` (0,2,0)
- * at runtime via <style id="cards-texture-style">. A template that
- * recolours the card SURFACE must out-specify those, hence the
- * `.dcc-card.dcc-tpl-<id>` (0,2,0) and
- * `.dcc-card.dcc-tpl-<id> .dcc-cont-overlay` (0,3,0) selectors. Plain
- * ink/border overrides (e.g. `.dcc-tpl-<id> .dcc-rule-text`) already beat
- * the static base rules on specificity, so source order doesn't matter. */
-/* Grimdark Iron
- * A full gothic-industrial REBUILD — not just a recolour. The skin
- * restructures the card's SHAPES, not only its palette:
- *   - the card is a cut-corner (octagonal-bevel) ARMOUR PLATE with a drawn
- *     oxidised-bronze frame and corner rivets;
- *   - the header is a bevelled BANNER with a double gilt edge + a gilt boss;
- *   - stat cells are chamfered STAT PILLARS with a bronze top bevel;
- *   - section bars are arrow-tailed riveted BANNERS;
- *   - the footer carries an ornamental gilt STAR boss on its divider.
- * Palette is the research "Imperial Gothic": blackened iron (near-black, NOT
- * #000 — avoids halation + worst home-printer ink pooling), warm BONE ink
- * (#e3dac9, never pure white), oxidised bronze/gold gilt, dried-blood pips.
- * Every shape is CSS clip-path + gradients + inline-SVG (no external art) so
- * it survives print; the print sheet already forces print-color-adjust:exact
- * on .dcc-card / .dcc-head / .dcc-section-head / .dcc-stat-cell /
- * .dcc-cont-overlay.
- * Shape architecture (the load-bearing trick): the card element IS the gold
- * plate — its background is the bronze metal, chamfered by clip-path. An
- * inset ::before paints the IRON interior (also chamfered), so the gold only
- * shows as a frame ring. Flow children are lifted to z-index:1 to sit above
- * that iron ::before; ::after stamps the corner rivets. Continuation / back /
- * empty cells opt OUT of the sandwich at the end of this block. */
-.dcc-card.dcc-tpl-grimdark {
-  --gd-ink: #e3dac9;
-  /* bone — primary body ink */
-  --gd-ink-strong: #f6efda;
-  /* brighter bone for <strong> */
-  --gd-ink-muted: #a2977f;
-  /* ash — fine print, sub-bullets */
-  --gd-gold: #c39a45;
-  /* oxidised gold accent */
-  --gd-gold-bright: #e7c87a;
-  --gd-gold-deep: #7c5a22;
-  --gd-rule: rgba(195, 154, 69, 0.42);
-  --gd-bezel: 2.6mm;
-  /* card corner cut */
-  color: var(--gd-ink);
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  padding: calc(1.5mm + var(--dcc-safe, 0mm)) calc(1.7mm + var(--dcc-safe, 0mm));
-  overflow: hidden;
-  /* The card background IS the bronze frame (a faceted gold/brown metal
-   * sweep). The iron interior is painted by ::before, inset by the frame
-   * width, so the gold reads as a gilt ring around the plate. */
-  background: linear-gradient(135deg, #b98f3c 0%, #e7c87a 17%, #8a6a2a 37%, #caa24a 52%, #6f5021 71%, #e7c87a 88%, #a87f33 100%);
-  /* Octagonal bevel — the signature "tech-plate" cut corner. */
-  clip-path: polygon( var(--gd-bezel) 0, calc(100% - var(--gd-bezel)) 0, 100% var(--gd-bezel), 100% calc(100% - var(--gd-bezel)), calc(100% - var(--gd-bezel)) 100%, var(--gd-bezel) 100%, 0 calc(100% - var(--gd-bezel)), 0 var(--gd-bezel));
-}
 .dcc-card.dcc-tpl-grimdark::before {
   content: '';
   position: absolute;
@@ -574,40 +414,6 @@
 }
 .dcc-card.dcc-tpl-grimdark.dcc-card-empty { background: transparent; }
 .dcc-card.dcc-tpl-grimdark.dcc-card-back { background: #15120c; }
-
-/* Industrial Stencil
- * Light, print-friendly skin recreated from the "Warhammer Datacard Design"
- * handoff (its locked `stencil` renderVals spec). Cream cardstock, near-black
- * ink, a full-bleed dark header bar with a faction-accent bottom rule, Cinzel
- * display + EB Garamond body, ink-chip section heads with an accent diamond
- * tick, faction-accent shield/hex badges, and accent pills. A single accent
- * colour — `--dcc-accent`, auto-derived per faction by cards-mode.js (default
- * Necron green #74c043) — recolours every accented element via color-mix.
- * Tokens: paper #ece5d6 · panel #f5f0e3 · ink #29251f · muted #7c7360 ·
- * dim #4a4337 · hairline = ink @ 24%. EB Garamond + Cinzel are vendored in
- * css/style.css, so the skin renders identically offline + in print.
- * Several elements only exist on this template (emitted by cards-mode.js when
- * templateId==='stencil'): .dcc-kicker, .dcc-statline(-rows), .dcc-invuln-
- * shield/-val/-lbl, .dcc-w-tag, .dcc-ab-block/-head/-name/-text. The other
- * templates never see them. */
-.dcc-card.dcc-tpl-stencil {
-  --st-paper: #ece5d6;
-  --st-panel: #f5f0e3;
-  --st-ink: #29251f;
-  --st-mut: #7c7360;
-  --st-dim: #4a4337;
-  --st-hair: color-mix(in srgb, #29251f 24%, transparent);
-  --st-accent: var(--dcc-accent, #74c043);
-  --st-accent-dark: color-mix(in srgb, var(--st-accent) 58%, #29251f);
-  --st-pill: color-mix(in srgb, var(--st-accent) 22%, transparent);
-  --st-pill-bd: color-mix(in srgb, var(--st-accent) 50%, transparent);
-  --st-body: 'EB Garamond', Georgia, 'Times New Roman', serif;
-  color: var(--st-ink);
-  background: var(--st-paper);
-  border: 0;
-  box-shadow: none;
-  font-family: var(--st-body);
-}
 .dcc-card.dcc-tpl-stencil.dcc-card-back { background: var(--st-panel); }
 
 /* ── Page-2 spill panel */
@@ -666,21 +472,6 @@
  * the cloned header on the continuation card. */
 .dcc-head-cont::after { content: ' (cont.)'; font-style: italic; font-weight: 400; opacity: 0.7; font-size: 0.75em; }
 
-/* Metallic title bar with a subtle horizontal sheen + gold accent rule. */
-.dcc-head {
-  background: linear-gradient(180deg, #0b0b0b 0%, #1c1c1c 30%, #292929 50%, #1c1c1c 70%, #0b0b0b 100%);
-  color: #f4ead2;
-  padding: 1.2mm 1.6mm;
-  /* Default falls back to a noticeable rounding so the bar reads as
-   * "tab-shaped" if cards-mode.js never gets to inject its dynamic
-   * --dcc-head-radius. The Layout sub-tab's "Header corners" slider
-   * controls the live value. */
-  border-radius: var(--dcc-head-radius, 3mm);
-  margin: -0.6mm -0.6mm 0;
-  position: relative;
-  box-shadow: 0 0.2mm 0 #5a4a22 inset, 0 -0.2mm 0 rgba(255,255,255,0.06) inset;
-}
-
 /* Gold accent stripe immediately under the header. */
 .dcc-head::after {
   content: '';
@@ -708,18 +499,6 @@
   pointer-events: none;
 }
 
-/* Header — a bevelled banner with a double gilt edge and a centred boss. */
-.dcc-tpl-grimdark .dcc-head {
-  margin: 0.2mm 0 1.0mm;
-  border-radius: 0;
-  padding: 1.3mm 2.2mm 1.5mm;
-  background: linear-gradient(180deg, #262219 0%, #16130c 52%, #0a0805 100%);
-  color: #efe3c4;
-  /* Octagonal banner — both top + bottom corners cut. */
-  clip-path: polygon( 1.4mm 0, calc(100% - 1.4mm) 0, 100% 1.0mm, 100% calc(100% - 1.0mm), calc(100% - 1.6mm) 100%, 1.6mm 100%, 0 calc(100% - 1.0mm), 0 1.0mm);
-  box-shadow: inset 0 0.32mm 0 var(--gd-gold), inset 0 -0.46mm 0 var(--gd-gold);
-}
-
 /* Base flourish/stripe pseudo-elements are clipped away — repurpose ::before
  * as the banner boss and drop ::after. */
 .dcc-tpl-grimdark .dcc-head::after { display: none; }
@@ -734,20 +513,6 @@
   background: linear-gradient(135deg, var(--gd-gold-bright) 0%, var(--gd-gold) 45%, var(--gd-gold-deep) 100%);
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   z-index: 2;
-}
-
-/* Header — full-bleed dark bar with a faction-accent bottom rule. */
-.dcc-tpl-stencil .dcc-head {
-  /* Bleed the bar to the card edge by negating the full content padding
-   * (base + safe margin); pad the text back in by the same amount so it
-   * lines up with the body content and clears the borderless trim. */
-  margin: calc(-1.6mm - var(--dcc-safe, 0mm)) calc(-2mm - var(--dcc-safe, 0mm)) 1.4mm;
-  padding: calc(1.6mm + var(--dcc-safe, 0mm)) calc(2mm + var(--dcc-safe, 0mm));
-  background: var(--st-ink);
-  color: var(--st-panel);
-  border-radius: 0;
-  border-bottom: 0.7mm solid var(--st-accent);
-  box-shadow: none;
 }
 .dcc-tpl-stencil .dcc-head::before, .dcc-tpl-stencil .dcc-head::after { display: none; }
 .dcc-back-img {
@@ -765,6 +530,21 @@
   transform: translate(calc(-50% + var(--dcc-back-x, 0%)), calc(-50% + var(--dcc-back-y, 0%))) scale(var(--dcc-back-scale, 1));
   user-select: none;
   pointer-events: none;
+}
+
+/* Metallic title bar with a subtle horizontal sheen + gold accent rule. */
+.dcc-head {
+  background: linear-gradient(180deg, #0b0b0b 0%, #1c1c1c 30%, #292929 50%, #1c1c1c 70%, #0b0b0b 100%);
+  color: #f4ead2;
+  padding: 1.2mm 1.6mm;
+  /* Default falls back to a noticeable rounding so the bar reads as
+   * "tab-shaped" if cards-mode.js never gets to inject its dynamic
+   * --dcc-head-radius. The Layout sub-tab's "Header corners" slider
+   * controls the live value. */
+  border-radius: var(--dcc-head-radius, 3mm);
+  margin: -0.6mm -0.6mm 0;
+  position: relative;
+  box-shadow: 0 0.2mm 0 #5a4a22 inset, 0 -0.2mm 0 rgba(255,255,255,0.06) inset;
 }
 .dcc-name-line { display: flex; align-items: baseline; gap: 1.6mm; }
 .dcc-name {
@@ -898,6 +678,32 @@
   margin: 0.9mm 0 0.2mm;
 }
 .dcc-stat-rowlabel:first-child { margin-top: 0.3mm; }
+
+/* Header — a bevelled banner with a double gilt edge and a centred boss. */
+.dcc-tpl-grimdark .dcc-head {
+  margin: 0.2mm 0 1.0mm;
+  border-radius: 0;
+  padding: 1.3mm 2.2mm 1.5mm;
+  background: linear-gradient(180deg, #262219 0%, #16130c 52%, #0a0805 100%);
+  color: #efe3c4;
+  /* Octagonal banner — both top + bottom corners cut. */
+  clip-path: polygon( 1.4mm 0, calc(100% - 1.4mm) 0, 100% 1.0mm, 100% calc(100% - 1.0mm), calc(100% - 1.6mm) 100%, 1.6mm 100%, 0 calc(100% - 1.0mm), 0 1.0mm);
+  box-shadow: inset 0 0.32mm 0 var(--gd-gold), inset 0 -0.46mm 0 var(--gd-gold);
+}
+
+/* Header — full-bleed dark bar with a faction-accent bottom rule. */
+.dcc-tpl-stencil .dcc-head {
+  /* Bleed the bar to the card edge by negating the full content padding
+   * (base + safe margin); pad the text back in by the same amount so it
+   * lines up with the body content and clears the borderless trim. */
+  margin: calc(-1.6mm - var(--dcc-safe, 0mm)) calc(-2mm - var(--dcc-safe, 0mm)) 1.4mm;
+  padding: calc(1.6mm + var(--dcc-safe, 0mm)) calc(2mm + var(--dcc-safe, 0mm));
+  background: var(--st-ink);
+  color: var(--st-panel);
+  border-radius: 0;
+  border-bottom: 0.7mm solid var(--st-accent);
+  box-shadow: none;
+}
 .dcc-stat-cell {
   background: linear-gradient(180deg, #1a1308 0%, #2a1f0e 100%);
   color: #f4ead2;
@@ -947,7 +753,6 @@
 .dcc-tpl-grimdark .dcc-stat-cell > * { position: relative; z-index: 1; }
 .dcc-tpl-grimdark .dcc-stat-key { color: var(--gd-gold-bright); }
 .dcc-tpl-grimdark .dcc-stat-rowlabel { color: var(--gd-gold); }
-.dcc-tpl-stencil .dcc-stat-cell { background: var(--st-panel); color: var(--st-ink); border: 0.35mm solid var(--st-ink); border-radius: 0.5mm; box-shadow: none; }
 .dcc-tpl-stencil .dcc-stat-key { color: var(--st-mut); font-family: 'Cinzel', serif; }
 .dcc-tpl-stencil .dcc-stat-val { color: var(--st-ink); font-family: 'Cinzel', serif; }
 .dcc-tpl-stencil .dcc-stat-rowlabel { color: var(--st-accent-dark); }
@@ -1086,7 +891,6 @@
 /* A weapon's stat row and its full-width keyword row are one entry: drop the
  * divider between them so the rule only falls below the keywords. */
 .dcc-w-table tr.dcc-w-row.has-kw { border-bottom: none; }
-.dcc-w-table td { padding: 0.7mm 0.4mm; vertical-align: top; }
 
 /* Full-width keyword row — spans name + all stat columns, indented to line up
  * under the weapon name, with no top padding so it tucks under the stat row. */
@@ -1106,21 +910,6 @@
 /* Keyword pills sit on their own line under the weapon name and wrap as a
  * group, rather than trailing inline off the name and breaking mid-row. */
 .dcc-tpl-stencil .dcc-w-tags { display: flex; flex-wrap: wrap; gap: 0.8mm; margin-top: 0.5mm; }
-.dcc-tpl-stencil .dcc-w-tag {
-  display: inline-block;
-  font-family: var(--st-body);
-  font-size: calc(2.0mm * var(--dcc-w-mul, 1));
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0.1mm 0.9mm;
-  border-radius: 0.6mm;
-  background: var(--st-pill);
-  border: 0.2mm solid var(--st-pill-bd);
-  color: var(--st-ink);
-  white-space: nowrap;
-  vertical-align: baseline;
-}
 .dcc-num {
   text-align: center;
   /* Base width is for the always-narrow S / AP columns; wider stats get an
@@ -1145,6 +934,129 @@
   position: relative;
 }
 .dcc-abilities-primarch .dcc-abilities-body { border-top: 0.2mm solid rgba(184, 144, 82, 0.6); }
+
+/* ── Template skins
+ * A "template" is a full visual skin for the printable datacards, applied
+ * as a `.dcc-tpl-<id>` class on every `.dcc-card` cell (fronts, backs,
+ * continuations, empty padders, and the off-screen measure stage) by
+ * cards-mode.js.
+ * The DEFAULT look — gilded parchment, GW 10e style — is the un-suffixed
+ * chrome above. It is exposed in the UI as the `classic` template
+ * ("Gilded Parchment") and needs NO overrides here: `.dcc-tpl-classic`
+ * simply inherits the base `.dcc-*` rules unchanged.
+ * To add a template:
+ *   1. add an entry to the TEMPLATES array in js/ui/cards-mode.js
+ *      (id + label + a preview `swatch` gradient), and
+ *   2. add a `.dcc-card.dcc-tpl-<id>` skin block below.
+ * Nothing else changes — the renderer already tags every card cell with
+ * the active template class and the measure stage matches it.
+ * Specificity note: the texture system injects `.dcc-card { background }`
+ * (0,1,0) and `.dcc-card-cont .dcc-cont-overlay { background }` (0,2,0)
+ * at runtime via <style id="cards-texture-style">. A template that
+ * recolours the card SURFACE must out-specify those, hence the
+ * `.dcc-card.dcc-tpl-<id>` (0,2,0) and
+ * `.dcc-card.dcc-tpl-<id> .dcc-cont-overlay` (0,3,0) selectors. Plain
+ * ink/border overrides (e.g. `.dcc-tpl-<id> .dcc-rule-text`) already beat
+ * the static base rules on specificity, so source order doesn't matter. */
+/* Grimdark Iron
+ * A full gothic-industrial REBUILD — not just a recolour. The skin
+ * restructures the card's SHAPES, not only its palette:
+ *   - the card is a cut-corner (octagonal-bevel) ARMOUR PLATE with a drawn
+ *     oxidised-bronze frame and corner rivets;
+ *   - the header is a bevelled BANNER with a double gilt edge + a gilt boss;
+ *   - stat cells are chamfered STAT PILLARS with a bronze top bevel;
+ *   - section bars are arrow-tailed riveted BANNERS;
+ *   - the footer carries an ornamental gilt STAR boss on its divider.
+ * Palette is the research "Imperial Gothic": blackened iron (near-black, NOT
+ * #000 — avoids halation + worst home-printer ink pooling), warm BONE ink
+ * (#e3dac9, never pure white), oxidised bronze/gold gilt, dried-blood pips.
+ * Every shape is CSS clip-path + gradients + inline-SVG (no external art) so
+ * it survives print; the print sheet already forces print-color-adjust:exact
+ * on .dcc-card / .dcc-head / .dcc-section-head / .dcc-stat-cell /
+ * .dcc-cont-overlay.
+ * Shape architecture (the load-bearing trick): the card element IS the gold
+ * plate — its background is the bronze metal, chamfered by clip-path. An
+ * inset ::before paints the IRON interior (also chamfered), so the gold only
+ * shows as a frame ring. Flow children are lifted to z-index:1 to sit above
+ * that iron ::before; ::after stamps the corner rivets. Continuation / back /
+ * empty cells opt OUT of the sandwich at the end of this block. */
+.dcc-card.dcc-tpl-grimdark {
+  --gd-ink: #e3dac9;
+  /* bone — primary body ink */
+  --gd-ink-strong: #f6efda;
+  /* brighter bone for <strong> */
+  --gd-ink-muted: #a2977f;
+  /* ash — fine print, sub-bullets */
+  --gd-gold: #c39a45;
+  /* oxidised gold accent */
+  --gd-gold-bright: #e7c87a;
+  --gd-gold-deep: #7c5a22;
+  --gd-rule: rgba(195, 154, 69, 0.42);
+  --gd-bezel: 2.6mm;
+  /* card corner cut */
+  color: var(--gd-ink);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: calc(1.5mm + var(--dcc-safe, 0mm)) calc(1.7mm + var(--dcc-safe, 0mm));
+  overflow: hidden;
+  /* The card background IS the bronze frame (a faceted gold/brown metal
+   * sweep). The iron interior is painted by ::before, inset by the frame
+   * width, so the gold reads as a gilt ring around the plate. */
+  background: linear-gradient(135deg, #b98f3c 0%, #e7c87a 17%, #8a6a2a 37%, #caa24a 52%, #6f5021 71%, #e7c87a 88%, #a87f33 100%);
+  /* Octagonal bevel — the signature "tech-plate" cut corner. */
+  clip-path: polygon( var(--gd-bezel) 0, calc(100% - var(--gd-bezel)) 0, 100% var(--gd-bezel), 100% calc(100% - var(--gd-bezel)), calc(100% - var(--gd-bezel)) 100%, var(--gd-bezel) 100%, 0 calc(100% - var(--gd-bezel)), 0 var(--gd-bezel));
+}
+
+/* Industrial Stencil
+ * Light, print-friendly skin recreated from the "Warhammer Datacard Design"
+ * handoff (its locked `stencil` renderVals spec). Cream cardstock, near-black
+ * ink, a full-bleed dark header bar with a faction-accent bottom rule, Cinzel
+ * display + EB Garamond body, ink-chip section heads with an accent diamond
+ * tick, faction-accent shield/hex badges, and accent pills. A single accent
+ * colour — `--dcc-accent`, auto-derived per faction by cards-mode.js (default
+ * Necron green #74c043) — recolours every accented element via color-mix.
+ * Tokens: paper #ece5d6 · panel #f5f0e3 · ink #29251f · muted #7c7360 ·
+ * dim #4a4337 · hairline = ink @ 24%. EB Garamond + Cinzel are vendored in
+ * css/style.css, so the skin renders identically offline + in print.
+ * Several elements only exist on this template (emitted by cards-mode.js when
+ * templateId==='stencil'): .dcc-kicker, .dcc-statline(-rows), .dcc-invuln-
+ * shield/-val/-lbl, .dcc-w-tag, .dcc-ab-block/-head/-name/-text. The other
+ * templates never see them. */
+.dcc-card.dcc-tpl-stencil {
+  --st-paper: #ece5d6;
+  --st-panel: #f5f0e3;
+  --st-ink: #29251f;
+  --st-mut: #7c7360;
+  --st-dim: #4a4337;
+  --st-hair: color-mix(in srgb, #29251f 24%, transparent);
+  --st-accent: var(--dcc-accent, #74c043);
+  --st-accent-dark: color-mix(in srgb, var(--st-accent) 58%, #29251f);
+  --st-pill: color-mix(in srgb, var(--st-accent) 22%, transparent);
+  --st-pill-bd: color-mix(in srgb, var(--st-accent) 50%, transparent);
+  --st-body: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  color: var(--st-ink);
+  background: var(--st-paper);
+  border: 0;
+  box-shadow: none;
+  font-family: var(--st-body);
+}
+.dcc-tpl-stencil .dcc-stat-cell { background: var(--st-panel); color: var(--st-ink); border: 0.35mm solid var(--st-ink); border-radius: 0.5mm; box-shadow: none; }
+.dcc-tpl-stencil .dcc-w-tag {
+  display: inline-block;
+  font-family: var(--st-body);
+  font-size: calc(2.0mm * var(--dcc-w-mul, 1));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.1mm 0.9mm;
+  border-radius: 0.6mm;
+  background: var(--st-pill);
+  border: 0.2mm solid var(--st-pill-bd);
+  color: var(--st-ink);
+  white-space: nowrap;
+  vertical-align: baseline;
+}
 
 /* Abilities */
 .dcc-abilities-body { padding: 0.8mm 1.4mm; font-size: calc(2.52mm * var(--dcc-body-mul, 1)); line-height: 1.3; color: #1a1a1a; }
@@ -1341,6 +1253,118 @@
   }
 }
 
+/* Footer: print button */
+.cards-side-foot { padding: 12px 18px 16px; border-top: 1px solid #23272e; background: #14171c; }
+
+/* Ten call sites in js/ui/cards-mode.js, several of them destructive ("Delete
+ * preset", "Reset typography", "Reset to defaults"), all of them rendered as
+ * bare underlined words. They are controls and they get control chrome —
+ * quieter than .cards-btn below so they still read as the secondary row, but
+ * a box you can see and aim at. Hardcoded darks rather than tokens on purpose:
+ * the whole cards sidebar paints its own dark ground in every theme
+ * (app/CLAUDE.md), so these have to match that chrome, not the page's. */
+.cards-link-btn {
+  background: #20232a;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  color: #cfd4de;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.cards-btn {
+  width: 100%;
+  background: #20232a;
+  color: #e7e9ee;
+  border: 1px solid #2e323a;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cards-btn-primary { background: var(--accent); color: var(--accent-on); border-color: transparent; }
+
+/* ── Preview pane */
+.cards-preview-wrap { flex: 1 1 auto; overflow: auto; background: #0c0d10; padding: 24px; display: flex; justify-content: center; }
+.cards-empty { padding: 24px; text-align: center; color: #888c95; font-size: 13px; }
+.cards-empty-large { padding: 64px 24px; font-size: 15px; color: #aab0bc; }
+.cards-spill-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 40; }
+.cards-spill-title { font-size: 15px; font-weight: 600; }
+
+@media (max-width: 820px) {
+  /* order: lives here, not in mobile.css: must precede `.cards-spill-close` {min-height} below (equal specificity, same element, min-height). */
+  .cards-shell {
+    flex-direction: column;
+    height: auto;
+    /* 100vh is the LARGE-viewport height — with a mobile URL bar on screen it
+     * is taller than what is actually visible. dvh tracks the live viewport.
+     * The vh line stays first as a fallback for browsers without dvh; they
+     * now scroll rather than clip, so they degrade to merely imperfect. */
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* order: lives here, not in mobile.css: must precede `.cards-spill-panel` {width} below (equal specificity, same element, width). */
+  .cards-side { width: 100%; max-height: 50vh; max-height: 50dvh; border-right: 0; border-bottom: 1px solid #23272e; }
+}
+.cards-spill-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(340px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  background: #14171c;
+  color: #e7e9ee;
+  border: 1px solid #2a2f38;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  z-index: 41;
+}
+.cards-spill-sub { font-size: 12px; color: #9aa1ad; margin-top: 2px; }
+
+@media (max-width: 820px) {
+  /* order: lives here, not in mobile.css: must precede `.cards-spill-head` {padding} below (equal specificity, same element, padding). */
+  .cards-preview-wrap { padding: 12px; }
+}
+.cards-spill-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 14px 16px 8px; border-bottom: 1px solid #23272e; }
+.cards-spill-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  background: transparent;
+  border: 1px solid rgba(154, 161, 173, 0.4);
+  border-radius: 4px;
+  color: #9aa1ad;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.cards-spill-help { margin: 8px 16px 4px; font-size: 12px; color: #9aa1ad; }
+.cards-spill-list { padding: 4px 8px 8px; }
+.cards-spill-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.cards-spill-foot { padding: 6px 16px 14px; border-top: 1px solid #23272e; }
+.cards-spill-namerow { display: block; margin: 0 0 0.75rem; }
+.cards-spill-name {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+}
+
 @media print {
   /* Override mode-shell.css's `.mode-page { height: calc(100vh - …);
    * overflow: hidden }` (clips past one viewport height during print)
@@ -1354,11 +1378,11 @@
     height: auto !important;
     overflow: visible !important;
   }
-  body.cards-printing .cards-shell { display: block !important; height: auto !important; background: #fff !important; }
 
   /* Inside cards-mode, hide just the settings rail; everything else
    * (.cards-shell -> .cards-preview-wrap -> ... -> .dcc-page) shows. */
   body.cards-printing .cards-side, body.cards-printing .cards-side-foot { display: none !important; }
+  body.cards-printing .cards-shell { display: block !important; height: auto !important; background: #fff !important; }
   body.cards-printing .cards-preview-wrap { overflow: visible !important; background: #fff !important; padding: 0 !important; display: block !important; }
   body.cards-printing .cards-preview { display: block !important; gap: 0 !important; }
 

@@ -1,6 +1,10 @@
 /* dropdown.css — tier 1 base.
  * Owns: .dropdown, .dropdown-menu and menu items (Export / Tools / More
- * menus). */
+ * menus).
+ *
+ * Order dependencies: 1 rule(s) belonging by subject to army-list.css (1) stay
+ * here to keep their cascade position beside a rule in this file; each has an
+ * `order:` comment naming it. */
 
 /* Dropdown menu — used by Export group in army toolbar. */
 .dropdown { position: relative; display: inline-block; flex: 0 1 auto; }
@@ -55,22 +59,8 @@
 /* Empty-state placeholder (shown when no actions registered). */
 .dropdown-empty { font-size: 11px; color: var(--text-muted); padding: 10px 12px; font-style: italic; }
 
-/* Menu items inside .tools-menu / .more-menu — match existing
- * .dropdown-menu > button styling so they look unified. */
-.dropdown-menu .tools-menu > button, .dropdown-menu .more-menu > button, .dropdown-menu button.menu-item {
-  width: 100%;
-  text-align: left;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font: inherit;
-  font-size: 12px;
-  padding: 7px 10px;
-  border-radius: calc(var(--radius) - 1px);
-  cursor: pointer;
-  white-space: nowrap;
-  line-height: 1.3;
-}
+/* order: lives here, not in army-list.css: must precede `.dropdown-menu .tools-menu > button:hover` {background} below (equal specificity, same element, background). */
+.dropdown-menu .export-extras > button:hover { background: rgba(255, 255, 255, 0.06); }
 .tools-menu, .more-menu { display: flex; flex-direction: column; gap: 1px; }
 .tools-menu:empty, .more-menu:empty { display: none; }
 .dropdown-menu .tools-menu > button:hover,

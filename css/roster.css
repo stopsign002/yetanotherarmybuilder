@@ -1,6 +1,13 @@
 /* roster.css — tier 3 components.
  * Owns: centre panel: unit grid, search, filter / favourite / recent chips,
- * faction list, hero CTA, legends / allies toggles. */
+ * faction list, hero CTA, legends / allies toggles.
+ *
+ * Order dependencies: 5 rule(s) belonging by subject to unit-card.css (2),
+ * particle-fx.css (2), mobile.css (1) stay here to keep their cascade position
+ * beside a rule in this file; each has an `order:` comment naming it. */
+
+/* Carried from the old particle-fx.css header: accent-colored particle bursts emitted by faction-fx.js
+ * on add-to-army landings. Uses GPU-friendly transform + opacity. */
 
 /* ── Load status (in center panel header) */
 .load-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); flex: 1; justify-content: center; }
@@ -102,7 +109,6 @@
 #panel-center .panel-body > #unit-grid { flex: 0 0 auto; }
 .roster-empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); }
 .roster-empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
-.roster-empty p { margin-bottom: 6px; }
 .roster-empty .muted { font-size: 12px; }
 
 /* In Reserves / Requisitions views, hide the legacy "Loading faction
@@ -114,17 +120,6 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
 /* === Phase-2 UX additions === */
 /* Filter chips row (rendered inside #panel-center .panel-controls, after search) */
 .filter-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 6px; }
-.filter-chip {
-  font-size: 11px;
-  line-height: 1;
-  padding: 4px 9px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.04);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
-}
 .filter-chips-clear {
   font-size: 14px;
   line-height: 1;
@@ -146,6 +141,27 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
   position: relative;
   /* anchors the touch-target overlay below */
 }
+.filter-chips-clear:hover { opacity: 1; background: rgba(255,255,255,0.08); color: var(--text); }
+.filter-chip {
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+/* Checkbox chips (fits-budget.js): a real <input> inside the chip label. */
+.filter-chip-check { display: inline-flex; align-items: center; gap: 5px; user-select: none; }
+.filter-chip-check input { width: 11px; height: 11px; margin: 0; accent-color: currentColor; cursor: inherit; }
+.filter-chip-check:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
+
+/* Favorites + Recents chips (live in #roster-filter-chips) */
+.filter-chip.fav-chip, .filter-chip.recent-chip { display: inline-flex; align-items: center; gap: 4px; }
+.filter-chip:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 
 /* Tri-state: a second click on a chip excludes (red strike-through) any
  * units carrying that keyword. Third click clears it. */
@@ -157,25 +173,24 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
   text-decoration-color: rgba(231, 76, 60, 0.7);
   text-decoration-thickness: 1.5px;
 }
-
-/* Favorites + Recents chips (live in #roster-filter-chips) */
-.filter-chip.fav-chip, .filter-chip.recent-chip { display: inline-flex; align-items: center; gap: 4px; }
-.filter-chip:hover { background: rgba(255,255,255,0.08); color: var(--text); }
-.filter-chips-clear:hover { opacity: 1; background: rgba(255,255,255,0.08); color: var(--text); }
 .filter-chip.excluded:hover { background: rgba(231, 76, 60, 0.28); color: #ffd6cf; }
 .filter-chip.active { background: rgba(168,232,138,0.18); border-color: rgba(168,232,138,0.55); color: #d4f5bb; }
-/* Checkbox chips (fits-budget.js): a real <input> inside the chip label. */
-.filter-chip-check { display: inline-flex; align-items: center; gap: 5px; user-select: none; }
-.filter-chip-check input { width: 11px; height: 11px; margin: 0; accent-color: currentColor; cursor: inherit; }
-.filter-chip-check:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
-
-/* Active state: reuse the existing pastel highlight but tint toward gold
- * for favorites and slate for recents so the two chips read distinctly. */
-.filter-chip.fav-chip.active { background: rgba(230,214,168,0.18); border-color: rgba(230,214,168,0.55); color: #f1e4b8; }
 .filter-chip.recent-chip.active { background: rgba(var(--accent-rgb), 0.16); border-color: rgba(var(--accent-rgb), 0.5); color: var(--accent); }
-.filter-chip.collection-chip-owned.active { background: rgba(230,199,168,0.15); border-color: var(--coll-painting); color: #f2dcc2; }
-.filter-chip.collection-chip-needs.active { background: rgba(138,138,138,0.18); border-color: #b5b5b5; color: #e2e2e2; }
-.filter-chip.collection-chip-painted.active { background: rgba(168,230,183,0.18); border-color: var(--coll-done); color: #d7f2df; }
+
+/* ── PWA install FAB + iOS install sheet (issue #60)
+ * The install button and the iOS-only instruction sheet are built
+ * entirely in js/app/pwa-install.js (index.html is off-limits) and both
+ * start `hidden`, so a non-iOS / non-installable load never paints this
+ * block. The FAB's visibility (desktop vs. phone/tablet) is now gated in
+ * JS — mobileLayout() in pwa-install.js, the same ≤820px cutoff this file
+ * uses elsewhere — with an iOS exemption, since an iPad in landscape is
+ * >820px wide and never fires beforeinstallprompt. This CSS block stays
+ * un-gated by the file's usual ≤820px cutoff for that same iPad reason.
+ * The button reuses .btn/.btn-accent and the sheet reuses
+ * .modal/.modal-header/.modal-body/.modal-footer/.btn-outline — all four
+ * theme-derived already, nothing new to re-theme here. */
+/* order: lives here, not in mobile.css: must precede `.yaab-hero-cta` {position} below (equal specificity, same element, position). */
+.yaab-install-fab { position: fixed; right: 12px; bottom: calc(var(--m-tabbar-h, 56px) + var(--m-safe-bottom, 0px) + 12px); z-index: 900; box-shadow: var(--shadow-lg); }
 
 /* Toolbar icon active state. .toolbar-icons button.is-on is a generic amber
  * rule from legends-toggle.css; scope this one to the allies button so the
@@ -261,14 +276,25 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
 }
 .yaab-kbd-hint-hidden { opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.92); }
 .yaab-kbd-hint:hover { background: rgba(var(--accent-rgb), 0.22); color: var(--text); }
+
+/* order: lives here, not in unit-card.css: must precede `.filter-chip.fav-chip.active` {color} below (equal specificity, same element, color). */
+.detail-action-btn:hover .fav-star { transform: scale(1.1); color: #e6d6a8; }
+
+/* Active state: reuse the existing pastel highlight but tint toward gold
+ * for favorites and slate for recents so the two chips read distinctly. */
+.filter-chip.fav-chip.active { background: rgba(230,214,168,0.18); border-color: rgba(230,214,168,0.55); color: #f1e4b8; }
 .filter-chip.fav-chip .fav-chip-glyph, .filter-chip.recent-chip .recent-chip-glyph { font-size: 12px; line-height: 1; opacity: 0.85; }
 .filter-chip.fav-chip .fav-chip-count, .filter-chip.recent-chip .recent-chip-count { font-size: 10px; line-height: 1; opacity: 0.7; margin-left: 1px; }
 .filter-chip.fav-chip.active .fav-chip-glyph { opacity: 1; color: #e6d6a8; }
 .filter-chip.recent-chip.active .recent-chip-glyph { opacity: 1; }
+@keyframes yaab-fx-particle-burst {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  18% { opacity: 1; transform: translate(calc(var(--dx, 0px) * 0.3), calc(var(--dy, 0px) * 0.3)) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(0.5); }
+}
 
 @media (min-width: 821px) {
   .panel-center.panel-expanded > .panel-controls .search-input { font-size: 15px; padding: 12px 14px; min-height: 44px; }
-  .panel-center.panel-expanded .unit-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important; gap: 14px; align-content: start; }
   .panel-center.panel-expanded #roster-filter-chips { flex: 0 1 auto; margin-top: 0; max-width: none; }
   .panel-center.panel-expanded .filter-chip { padding: 6px 12px; font-size: 12px; }
   .panel-center.panel-expanded > .panel-controls > .yaab-search-wrap, .panel-center.panel-expanded > .panel-controls > .search-input {
@@ -280,4 +306,39 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
 @media (prefers-reduced-motion: reduce) {
   /* Reduced motion */
   .yaab-hero-btn, .yaab-kbd-hint { transition: none !important; }
+}
+
+/* FLIP add-to-army animation primitives. */
+/* order: lives here, not in unit-card.css: must precede `.yaab-fx-particle` {position} below (equal specificity, same element, position). */
+.yaab-flip-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  margin: 0;
+  pointer-events: none;
+  z-index: 9999;
+  box-sizing: border-box;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(var(--yaab-card-accent-rgb), 0.35);
+  border-radius: var(--yaab-card-radius);
+  overflow: hidden;
+  /* Lock the cloned card's hover/transition behavior so it stays stable. */
+  transition: none !important;
+  filter: brightness(1.04) saturate(1.05);
+}
+
+/* order: lives here, not in particle-fx.css: must follow `.yaab-install-fab` {position} above (equal specificity, same element, position). */
+.yaab-fx-particle {
+  position: absolute;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor, 0 0 14px currentColor;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: yaab-fx-particle-burst 620ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* order: lives here, not in particle-fx.css: must follow `.yaab-kbd-hint-hidden` {opacity} above (equal specificity, same element, opacity). */
+  .yaab-fx-particle { animation: none; opacity: 0; }
 }

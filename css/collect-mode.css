@@ -2,9 +2,9 @@
  * Owns: Collect mode page plus the collection tracker (.collection-*) it
  * absorbed.
  *
- * Order dependencies: 1 rule(s) belonging by subject to mobile.css (1) stay
- * here to keep their cascade position beside a rule in this file; each has an
- * `order:` comment naming it. */
+ * Order dependencies: 4 rule(s) belonging by subject to roster.css (3),
+ * detail-pane.css (1) stay here to keep their cascade position beside a rule
+ * in this file; each has an `order:` comment naming it. */
 
 /* Tab strip active state — accent underline. Matches the section-title
  * indicator visual language. (build-mode.css already gives the build
@@ -123,27 +123,6 @@ body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-
 
 /* ── body */
 #collect-mode .collect-body { flex: 1 1 auto; overflow: auto; padding: 18px 22px; }
-
-/* ── empty / loading state */
-.collect-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 80px 16px;
-  color: var(--text-muted);
-  font-size: 14px;
-  text-align: center;
-}
-.collect-empty-spinner {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.12);
-  border-top-color: var(--accent);
-  animation: collect-spin 0.9s linear infinite;
-}
 .collect-empty-text { font-style: italic; }
 
 /* ── PAINTING TAB layout */
@@ -217,7 +196,6 @@ body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-
 .collect-main-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 16px; margin-bottom: 12px; }
 .collect-main-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: 0.04em; margin: 0; color: var(--text); }
 .collect-main-summary { font-size: 13px; color: var(--text); }
-.collect-main-summary strong { color: var(--accent); }
 .collect-main-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -321,6 +299,25 @@ body[data-mode="build"] .filter-chip.collection-chip, body[data-mode="build"] .c
 .collection-status-btn.collection-status-primed.active { background: var(--coll-primed); border-color: var(--coll-primed); }
 .collection-status-btn.collection-status-painting.active { background: var(--coll-painting); border-color: var(--coll-painting); }
 .collection-status-btn.collection-status-done.active { background: var(--coll-done); border-color: var(--coll-done); }
+
+/* order: lives here, not in roster.css: must follow `.collection-status-btn.collection-status-none.active` {background} above (equal specificity, same element, background). */
+.filter-chip.collection-chip-owned.active { background: rgba(230,199,168,0.15); border-color: var(--coll-painting); color: #f2dcc2; }
+
+/* order: lives here, not in roster.css: must follow `.collection-status-btn.collection-status-none.active` {background} above (equal specificity, same element, background). */
+.filter-chip.collection-chip-needs.active { background: rgba(138,138,138,0.18); border-color: #b5b5b5; color: #e2e2e2; }
+
+/* order: lives here, not in roster.css: must follow `.collection-status-btn.collection-status-none.active` {background} above (equal specificity, same element, background). */
+.filter-chip.collection-chip-painted.active { background: rgba(168,230,183,0.18); border-color: var(--coll-done); color: #d7f2df; }
+
+/* ── army-panel painting progress bar */
+.collection-progress {
+  margin: 8px 0 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+}
 .collection-progress-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
 .collection-progress-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
 .collection-progress-count { color: var(--text); flex: 1 1 auto; text-align: center; }
@@ -350,6 +347,7 @@ body[data-mode="build"] .filter-chip.collection-chip, body[data-mode="build"] .c
 .collection-dash-totals { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: rgba(255,255,255,0.02); }
 .collection-dash-total-line { font-size: 15px; color: var(--text); }
 .collection-dash-total-line strong { color: var(--coll-done); font-size: 18px; }
+.collect-main-summary strong { color: var(--accent); }
 .collection-dash-total-sub { font-size: 12px; margin-top: 4px; }
 
 /* per-faction rows */
@@ -389,26 +387,6 @@ body[data-mode="build"] .filter-chip.collection-chip, body[data-mode="build"] .c
 .collection-dash-unit-faction { font-size: 11px; }
 .collection-dash-unit-controls { display: flex; gap: 4px; flex-wrap: wrap; }
 .collection-dash-empty { padding: 20px; text-align: center; font-style: italic; }
-@keyframes collect-spin {
-  to { transform: rotate(360deg); }
-}
 
-@media (max-width: 820px) {
-  /* ── Army list rows */
-  /* order: lives here, not in mobile.css: must precede `.collection-progress` {font-size} below (equal specificity, same element, font-size). */
-  .army-entries-header { font-size: 10px; padding: 6px 8px; }
-}
-
-/* ── army-panel painting progress bar */
-.collection-progress {
-  margin: 8px 0 10px;
-  padding: 8px 10px;
-  background: rgba(255,255,255,0.025);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 12px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .collect-empty-spinner { animation: none; border-top-color: rgba(255, 255, 255, 0.45); }
-}
+/* order: lives here, not in detail-pane.css: must follow `.collection-dash-total-line strong` {color} above (equal specificity, same element, color). */
+.glossary-pop-body strong { color: var(--text); }

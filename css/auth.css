@@ -1,9 +1,16 @@
 /* auth.css — tier 2 layout.
- * Owns: auth button, auth modal, signed-out banner, topbar Export wrapper. */
+ * Owns: auth button, auth modal, signed-out banner, topbar Export wrapper.
+ *
+ * Order dependencies: 1 rule(s) belonging by subject to detail-pane.css (1)
+ * stay here to keep their cascade position beside a rule in this file; each
+ * has an `order:` comment naming it. */
 
 /* Carried from the old auth.css header: auth button + auth modal styling. Keeps the visual
  * language of the rest of the app: dark surfaces, accent on primary CTA,
  * monospace for the recovery code. */
+
+/* order: lives here, not in detail-pane.css: must precede `.auth-saved-lbl input[type="checkbox"]` {margin-top} below (equal specificity, same element, margin-top). */
+.enhancement-cb-item input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
 
 /* ── Top-bar shelf for hook-registered icons */
 .topbar-icons-shelf { display: flex; align-items: center; gap: 6px; }

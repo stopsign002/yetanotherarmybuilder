@@ -1,7 +1,7 @@
 /* panel.css — tier 1 base.
  * Owns: the three-pane .panel* chrome (header, body, footer, controls).
  *
- * Order dependencies: 1 rule(s) belonging by subject to mobile.css (1) stay
+ * Order dependencies: 2 rule(s) belonging by subject to mobile.css (2) stay
  * here to keep their cascade position beside a rule in this file; each has an
  * `order:` comment naming it. */
 
@@ -36,9 +36,6 @@ body.build-mode-enhanced #app-main > .panel, body.build-mode-enhanced #app-main 
   text-transform: uppercase;
   color: var(--text-muted);
   flex: 1;
-  letter-spacing: 0.08em;
-  position: relative;
-  padding-bottom: 1px;
 }
 .panel-header h2::after {
   content: '';
@@ -172,18 +169,8 @@ body[data-mode="build"] .panel-body > * { position: relative; z-index: 1; }
     /* ── Visible click affordance on the title text */
     transition: color 0.15s;
   }
-  .panel-expanded > .panel-header, .panel-build-focus > .panel-header { padding: 16px clamp(20px, 4vw, 56px) 12px; }
   .panel-expanded > .panel-header h2, .panel-build-focus > .panel-header h2 { font-size: 16px; letter-spacing: 2px; }
-
-  /* Bigger panel header band on units expanded: keep the count badge
-   * comfortably to the right of the title. */
-  .panel-center.panel-expanded > .panel-header { padding: 16px clamp(20px, 3vw, 40px) 12px; }
   .panel-header h2:hover { color: #fff; }
-
-  /* ── Layout pass: when expanded, reorganize the panel body into a
-   * wider, grid-based layout that uses the extra real estate. */
-  /* Common: relax the panel-body so its inner grid can breathe. */
-  .panel-expanded > .panel-body { padding: 24px clamp(20px, 4vw, 56px) 32px; }
 
   /* ── ARMY panel expanded
    * Two columns: setup + rules on the left, the army-entry list on the
@@ -200,9 +187,23 @@ body[data-mode="build"] .panel-body > * { position: relative; z-index: 1; }
     padding: 24px clamp(20px, 3vw, 40px) 32px;
   }
 
+  /* ── UNITS panel expanded
+   * Layout: full-bleed search/chip band at the top, then a 2-region
+   * workspace below — a sticky filter rail on the left (faction + role
+   * chips, vertical) and a dense, multi-column unit grid on the right
+   * that fills the rest of the viewport. The point of expanding is to
+   * see lots of units at once, so we explicitly target ≥4 columns and
+   * drop the centering caps that make the content look stranded. */
+  /* Top band: search input grows, chips wrap inline next to it. */
+  .panel-center.panel-expanded > .panel-controls { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px clamp(20px, 3vw, 40px); }
+
   /* Body: sidebar + grid. Rail keeps faction info / chip context anchored
    * so the user always knows what's filtering. */
   .panel-center.panel-expanded > .panel-body { padding: 18px clamp(20px, 3vw, 40px) 32px; max-width: none; margin: 0; }
+
+  /* Bigger panel header band on units expanded: keep the count badge
+   * comfortably to the right of the title. */
+  .panel-center.panel-expanded > .panel-header { padding: 16px clamp(20px, 3vw, 40px) 12px; }
 
   /* ── DETAILS panel expanded
    * Layout zones:
@@ -215,17 +216,6 @@ body[data-mode="build"] .panel-body > * { position: relative; z-index: 1; }
    * `.unit-detail-content`, so we can promote the top zones to span
    * the full grid width and let the rest auto-flow into columns. */
   .panel-right.panel-expanded > .panel-body { max-width: none; margin: 0; padding: 24px clamp(20px, 3vw, 40px) 32px; }
-  .panel-expanded > .panel-controls { padding: 12px clamp(20px, 4vw, 56px); }
-
-  /* ── UNITS panel expanded
-   * Layout: full-bleed search/chip band at the top, then a 2-region
-   * workspace below — a sticky filter rail on the left (faction + role
-   * chips, vertical) and a dense, multi-column unit grid on the right
-   * that fills the rest of the viewport. The point of expanding is to
-   * see lots of units at once, so we explicitly target ≥4 columns and
-   * drop the centering caps that make the content look stranded. */
-  /* Top band: search input grows, chips wrap inline next to it. */
-  .panel-center.panel-expanded > .panel-controls { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px clamp(20px, 3vw, 40px); }
 }
 
 @media (min-width: 821px) and (max-width: 860px) {
@@ -265,3 +255,18 @@ body[data-mode="build"] .panel-body > * { position: relative; z-index: 1; }
  * pinboard in a way that left empty space below — this enforces full
  * vertical fill via flex column inheritance. */
 .panel-right { min-height: 0; }
+
+@media (max-width: 820px) {
+  /* ── Army toolbar (panel-footer) */
+  /* order: lives here, not in mobile.css: must precede `.panel-expanded > .panel-body` {padding} below (equal specificity, same element, padding). */
+  .panel-footer.army-toolbar { padding: 10px 12px calc(10px + var(--m-safe-bottom)); gap: 8px; }
+}
+
+@media (min-width: 821px) {
+  /* ── Layout pass: when expanded, reorganize the panel body into a
+   * wider, grid-based layout that uses the extra real estate. */
+  /* Common: relax the panel-body so its inner grid can breathe. */
+  .panel-expanded > .panel-body { padding: 24px clamp(20px, 4vw, 56px) 32px; }
+  .panel-expanded > .panel-header, .panel-build-focus > .panel-header { padding: 16px clamp(20px, 4vw, 56px) 12px; }
+  .panel-expanded > .panel-controls { padding: 12px clamp(20px, 4vw, 56px); }
+}
