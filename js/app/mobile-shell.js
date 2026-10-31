@@ -1,5 +1,5 @@
 // app/mobile-shell.js — mobile-only chrome: sticky points pill at top of
-// Army panel, dynamic page-title in topbar, back-arrow in Detail panel
+// Army panel (and a copy beside the Units view toggle), dynamic page-title in topbar, back-arrow in Detail panel
 // header. Pure additive — desktop is untouched.
 //
 // Activation: only injects DOM when window.matchMedia('(max-width: 820px)')
@@ -15,6 +15,12 @@
     catch (_) { return false; }
   }
 
+  const PILL_HTML =
+    '<span class="mobile-pts-pill-faction" data-role="faction">No faction</span>' +
+    '<span class="mobile-pts-pill-spacer"></span>' +
+    '<span class="mobile-pts-pill-bar"><span class="mobile-pts-pill-bar-fill" data-role="bar"></span></span>' +
+    '<span class="mobile-pts-pill-value" data-role="value">0 / 2000</span>';
+
   // ── 1. Sticky points pill in Army panel ──────────────────────────────
   // Mounts at top of #panel-left .panel-body. Reads state.currentArmy on
   // every armyChange and reflects faction + current/limit + bar.
@@ -25,24 +31,51 @@
     if (pill) return pill;
     pill = document.createElement('div');
     pill.className = 'mobile-pts-pill';
-    pill.innerHTML =
-      '<span class="mobile-pts-pill-faction" data-role="faction">No faction</span>' +
-      '<span class="mobile-pts-pill-spacer"></span>' +
-      '<span class="mobile-pts-pill-bar"><span class="mobile-pts-pill-bar-fill" data-role="bar"></span></span>' +
-      '<span class="mobile-pts-pill-value" data-role="value">0 / 2000</span>';
+    pill.innerHTML = PILL_HTML;
     body.insertBefore(pill, body.firstChild);
     return pill;
   }
 
+  // Second copy of the pill in the Units panel, on the blank right half of
+  // the view-toggle row, so the points left are visible while browsing
+  // units. Same markup and the same update as the Army one (owner request
+  // 2026-10-31). The toggle is built lazily by reserves.js on first roster
+  // render, so this is attempted on every update and once more when the
+  // panel mutates; it wraps the toggle and the pill in one flex row and
+  // unwraps again on desktop.
+  function ensureUnitsPill() {
+    const toggle = document.getElementById('reserves-view-toggle');
+    if (!toggle) return null;
+    let head = toggle.closest('.mobile-units-head');
+    if (head) return head.querySelector('.mobile-pts-pill');
+    head = document.createElement('div');
+    head.className = 'mobile-units-head';
+    toggle.parentNode.insertBefore(head, toggle);
+    head.appendChild(toggle);
+    const pill = document.createElement('div');
+    pill.className = 'mobile-pts-pill mobile-pts-pill-units';
+    pill.innerHTML = PILL_HTML;
+    head.appendChild(pill);
+    return pill;
+  }
+
   function removePtsPill() {
-    const pill = document.querySelector('.mobile-pts-pill');
-    if (pill && pill.parentNode) pill.parentNode.removeChild(pill);
+    document.querySelectorAll('.mobile-pts-pill').forEach(pill => {
+      if (pill.parentNode) pill.parentNode.removeChild(pill);
+    });
+    document.querySelectorAll('.mobile-units-head').forEach(head => {
+      const toggle = head.querySelector('#reserves-view-toggle');
+      if (toggle) head.parentNode.insertBefore(toggle, head);
+      head.remove();
+    });
   }
 
   function updatePtsPill() {
     if (!isMobile()) return;
-    const pill = ensurePtsPill();
-    if (!pill) return;
+    ensurePtsPill();
+    ensureUnitsPill();
+    const pills = document.querySelectorAll('.mobile-pts-pill');
+    if (!pills.length) return;
     const army = App.state && App.state.currentArmy;
     let factionLabel = 'No faction';
     let pts = 0;
@@ -64,20 +97,43 @@
       }
     } catch (_) {}
 
-    const factionEl = pill.querySelector('[data-role="faction"]');
-    const valueEl   = pill.querySelector('[data-role="value"]');
-    const barEl     = pill.querySelector('[data-role="bar"]');
-    if (factionEl) factionEl.textContent = factionLabel;
-    if (valueEl) {
-      valueEl.textContent = pts + ' / ' + (limit || '—');
-      valueEl.classList.toggle('over', limit > 0 && pts > limit);
-    }
-    if (barEl) {
-      const pct = limit > 0 ? Math.min(120, Math.round((pts / limit) * 100)) : 0;
-      barEl.style.width = Math.min(100, pct) + '%';
-      barEl.classList.toggle('over', limit > 0 && pts > limit);
-      barEl.classList.toggle('near', limit > 0 && pts > limit * 0.85 && pts <= limit);
-    }
+    pills.forEach(pill => {
+      const factionEl = pill.querySelector('[data-role="faction"]');
+      const valueEl   = pill.querySelector('[data-role="value"]');
+      const barEl     = pill.querySelector('[data-role="bar"]');
+      // The Units copy has no room for a faction name on a phone (it
+      // truncated to "DEATH …"); it shows the points left instead, which is
+      // what that copy exists for.
+      if (factionEl) {
+        factionEl.textContent = !pill.classList.contains('mobile-pts-pill-units') ? factionLabel
+          : limit <= 0 ? '' : pts > limit ? (pts - limit) + ' over' : (limit - pts) + ' left';
+        factionEl.classList.toggle('over', pill.classList.contains('mobile-pts-pill-units') && limit > 0 && pts > limit);
+      }
+      if (valueEl) {
+        valueEl.textContent = pts + ' / ' + (limit || '—');
+        valueEl.classList.toggle('over', limit > 0 && pts > limit);
+      }
+      if (barEl) {
+        const pct = limit > 0 ? Math.min(120, Math.round((pts / limit) * 100)) : 0;
+        barEl.style.width = Math.min(100, pct) + '%';
+        barEl.classList.toggle('over', limit > 0 && pts > limit);
+        barEl.classList.toggle('near', limit > 0 && pts > limit * 0.85 && pts <= limit);
+      }
+    });
+  }
+
+  // The Units pill needs #reserves-view-toggle, which may appear after the
+  // first armyChange; watch the centre panel until it does.
+  function watchForToggle() {
+    if (document.getElementById('reserves-view-toggle')) { updatePtsPill(); return; }
+    const center = document.getElementById('panel-center');
+    if (!center) return;
+    const obs = new MutationObserver(() => {
+      if (!document.getElementById('reserves-view-toggle')) return;
+      obs.disconnect();
+      updatePtsPill();
+    });
+    obs.observe(center, { childList: true, subtree: true });
   }
 
   // ── 2. Init + listeners ──────────────────────────────────────────────
@@ -87,6 +143,7 @@
     if (isMobile()) {
       ensurePtsPill();
       updatePtsPill();
+      watchForToggle();
     } else {
       removePtsPill();
     }

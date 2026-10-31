@@ -246,6 +246,14 @@ if (!Array.isArray(App.hooks.chipActive))   App.hooks.chipActive   = [];
   `×` appears/disappears immediately rather than waiting for the next
   roster.js-driven chip change.
 
+**Checkbox chips.** `js/app/fits-budget.js` ("Fits budget (≤ N)", 2026-10-31)
+is the precedent for a chip that is a real `<label class="filter-chip
+filter-chip-check"><input type="checkbox">…</label>`: same bar, same hooks,
+same `×`; its clearer also unchecks the input. It filters on the cheapest
+`pointsOptions` entry (`App.PointsFilter.unitCosts`) against `pointsLimit −
+getTotalPoints()`, re-renders on `armyChange` while checked, is disabled with
+no points limit, hidden outside BUILD, and deliberately not persisted.
+
 A future chip: push a clearer that zeroes your flag(s), push a predicate that
 reports whether your chip is active, and call `UI.syncChipClearVisibility()`
 at the end of your chip's own click handler. See `favorites.js`
