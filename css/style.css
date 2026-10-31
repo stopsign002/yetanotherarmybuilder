@@ -1046,6 +1046,10 @@ ul { list-style: none; }
 }
 .filter-chip:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 .filter-chip.active { background: rgba(168,232,138,0.18); border-color: rgba(168,232,138,0.55); color: #d4f5bb; }
+/* Checkbox chips (fits-budget.js): a real <input> inside the chip label. */
+.filter-chip-check { display: inline-flex; align-items: center; gap: 5px; user-select: none; }
+.filter-chip-check input { width: 11px; height: 11px; margin: 0; accent-color: currentColor; cursor: inherit; }
+.filter-chip-check:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
 
 /* Tri-state: a second click on a chip excludes (red strike-through) any
  * units carrying that keyword. Third click clears it. */

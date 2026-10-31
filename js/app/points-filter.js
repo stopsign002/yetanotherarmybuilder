@@ -88,7 +88,8 @@
   }
 
   // Exposed for roster.js so it can strip points tokens before name matching.
-  App.PointsFilter = { TOKEN_RE };
+  // unitCosts is shared with fits-budget.js (cheapest size that fits).
+  App.PointsFilter = { TOKEN_RE, unitCosts };
 
   if (Array.isArray(App.hooks.bootstrap)) {
     App.hooks.bootstrap.push(register);
