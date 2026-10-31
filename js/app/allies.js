@@ -146,7 +146,7 @@
     if (!App.hooks) return;
     // chipClearers/chipActive aren't pre-created anywhere (unlike
     // rosterFilters) — lazily create them so whichever module loads first
-    // wins, mirroring collection.js's modeChange array.
+    // wins.
     if (!Array.isArray(App.hooks.chipClearers)) App.hooks.chipClearers = [];
     if (!Array.isArray(App.hooks.chipActive))   App.hooks.chipActive   = [];
     App.hooks.chipClearers.push(clearAllyChip);
@@ -179,7 +179,7 @@
     const clearBtn = bar.querySelector('.filter-chips-clear');
     // No longer bound directly to clearBtn (#95) — clearAllyChip is
     // registered on App.hooks.chipClearers instead, so the bar has one
-    // clear mechanism, shared with Favorites/Recents/Collection.
+    // clear mechanism, shared with Favorites/Recents.
     if (clearBtn) {
       bar.insertBefore(btn, clearBtn);
     } else {

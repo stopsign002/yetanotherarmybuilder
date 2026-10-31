@@ -215,7 +215,7 @@
         el.classList.remove('excluded');
         el.setAttribute('aria-pressed', 'false');
       });
-      // Feature modules (favorites.js, collection.js, allies.js) keep their
+      // Feature modules (favorites.js, allies.js) keep their
       // own chip state privately — the querySelectorAll above only resets
       // DOM classes. Give every registered module a chance to clear its own
       // state, like other hook loops (#95).
@@ -241,7 +241,7 @@
     const clear = bar.querySelector('.filter-chips-clear');
     if (!clear) return;
     // Shown when roster.js's own chips are active OR any feature module
-    // (favorites.js, collection.js, allies.js) reports its chip active via
+    // (favorites.js, allies.js) reports its chip active via
     // App.hooks.chipActive (#95).
     const activePreds = (window.App && App.hooks && App.hooks.chipActive) || [];
     const hookActive = activePreds.some(fn => {

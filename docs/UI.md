@@ -27,7 +27,6 @@ Each attaches methods onto `window.UI`.
 | `auth-button.js` | Top-bar Sign-in / username button + dropdown menu. See `docs/AUTH.md`. |
 | `auth-modal.js` | `UI.showAuthModal(mode)` for login/register/recover/change-password. See `docs/AUTH.md`. |
 | `build-mode.js` | Orchestrator for the BUILD mode page: hero header, rules pinboard tab, roster polish. Mounted by `mode-shell.js`. |
-| `collect-mode.js` | Orchestrator for the COLLECT mode page. One sub-tab remains (Painting); the Crusade and Kill Team tabs were deleted. Reads `yaab_collection`. Mounted by `mode-shell.js`. |
 | `waha-mode.js` | WAHA mode: look anything up (datasheet, detachment, stratagem, rule, enhancement; any faction) with no army and no builder writes. One search box, kind tabs, reader. Owns `yaab_waha_recent`; contract `docs/WAHA-MODE.md`. |
 | `play-mode.js` | PLAY mode: fast-switching game-day reference (unit switcher; stratagems / rules / enhancements tabs; CP counter and destroyed toggle). Owns `yaab_play_view` and `yaab_play_game`; layout notes `docs/PLAY-MODE-ROW-LAYOUT.md`. Not resumable on launch. Removes the legacy `yaab_play_tab` / `yaab_match_state` keys at bootstrap. |
 | `cards-mode.js` | CARDS mode: printable data-card designer (settings rail + physical-size preview, templates, named presets, per-card page-split). Print / Save PDF is `window.print()` with a body class and an injected `@page` rule. Owns `yaab_cards_prefs`, `yaab_cards_presets`, `yaab_cards_selection`, `yaab_cards_spill`. Card-back images live in the server library (`/api/images`, `docs/CARDS_IMAGES_API.md`) when signed in and in the browser-local IDB `cardBackImages` store (`YaabDB.images`) when not. Not resumable on launch. |
@@ -71,7 +70,6 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 | `hero-state.js` | Empty-army CTA, Cmd+K hint badge, recent-faction chip row. |
 | `legends-toggle.js` | Show/hide `[Legends]` units. |
 | `favorites.js` | Star/unstar units, Recents chip, filter view. |
-| `collection.js` | Owned/painted tracker. |
 | `bug-report.js` | Server-backed bug report modal with auto-attached diagnostics (UA, viewport, SW status, faction count, current-army YAAB1 code). `App.BugReport = { open }`. Auth-gated; reports posted to `/api/bugs`. |
 | `auth.js` | `App.Auth`: session state + auth API client. See `docs/AUTH.md`. |
 | `sync.js` | `App.Sync`: offline-first cloud sync. See `docs/SYNC.md`. |
@@ -79,9 +77,9 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 | `details-persist.js` | Remembers which `<details>` boxes are open across reloads. Targets `army-setup-section` + `army-rules-collapsible`. Persists to `yaab_details_state`. |
 | `faction-fx.js` | Faction-themed add stingers (synthesized WebAudio, no samples) + accent-colored particle bursts at the FLIP landing site + body class for hero-banner SVG. Reduced-motion + sound-enabled gated. |
 | `mobile-shell.js` | Mobile-only chrome (`max-width: 820px`): sticky points pill at top of Army panel, dynamic page-title in topbar, back-arrow in Detail panel header. Pure additive — desktop is untouched. Re-evaluates on resize. |
-| `mode-shell.js` | Container switching for the five modes (build / collect / cards / play / waha) + persistence. Owns `yaab_mode`, the `App.hooks.modeChange` bus (callbacks get `(mode)`) and `App.prefersReducedMotion()`. Loads after `app/index.js`; mode modules create the `modeChange` array defensively. |
+| `mode-shell.js` | Container switching for the four modes (build / cards / play / waha) + persistence. Owns `yaab_mode`, the `App.hooks.modeChange` bus (callbacks get `(mode)`) and `App.prefersReducedMotion()`. Loads after `app/index.js`; mode modules create the `modeChange` array defensively. |
 | `points-filter.js` | Comparator tokens in the unit search bar (`<=200`, `>=100`, `=150`, `<100`, `>50`, plus `≤`/`≥`). Multiple tokens AND together. A unit passes if ANY of its squad/variant costs satisfies the constraint. `roster.js` strips the same tokens before name/keyword matching. |
-| `settings-drawer.js` | Slide-in Settings / More drawer (`#topbar-settings` on desktop, the tab bar's More on phones). Sections: Go (Build, Collect, Waha, Play, What's new — on desktop the Go rows currently list only Waha and Play), Army (new/save/load/import/undo/redo), Account (sign in/out, sync now, change password), Appearance (theme radiogroup), toggles (Legends, allied units, painting badges, reduced animations) and utilities (clear cached game data, About). Owns `yaab_reduced_motion`. |
+| `settings-drawer.js` | Slide-in Settings / More drawer (`#topbar-settings` on desktop, the tab bar's More on phones). Sections: Go (Build, Waha, Play, What's new — on desktop the Go rows currently list only Waha and Play), Army (new/save/load/import/undo/redo), Account (sign in/out, sync now, change password), Appearance (theme radiogroup), toggles (Legends, allied units, reduced animations) and utilities (clear cached game data, About). Owns `yaab_reduced_motion`. |
 | `admin.js` | Server-backed admin panel (account approvals, image moderation, bug-report review). `App.Admin = { open, close, isAdmin }`. Visible only when `App.Auth.isAdmin()`. |
 | `pending-approval-banner.js` | **Admin-only** banner shown when one or more accounts await approval; polls `/api/admin/users/pending-count` and opens the admin panel on click. (It is not shown to the pending user — that user sees the pending message in the auth modal.) |
 | `changelog.js` | "What's new" modal driven by `App.CHANGELOG` (data lives in `js/data/changelog-data.js`). `App.Changelog = { open, close }`. Owns `yaab_changelog_seen` LS key + the unseen-version dot. Renders a hard-refresh tip banner (Ctrl+Shift+R / ⌘⇧R) above entries. |
@@ -185,19 +183,18 @@ Edit `App.VIRTUAL_PARENTS` in `js/app/state.js`. Shape: `{ name, baseChapter }`.
 ### Add a new faction color
 Edit `App.FACTION_COLORS` in `js/app/state.js`. Key is the full faction name OR the last segment after `" - "`. Value: `[accent, hover, dark, rgb-triplet-string]`. Auto-contrast for `--accent-on` is computed in `applyFactionColor`.
 
-## Top-level modes (Build / Collect / Cards / Play / Waha)
+## Top-level modes (Build / Cards / Play / Waha)
 
-`js/app/mode-shell.js` is the container switcher. `index.html` holds one sibling `<section class="mode-page">` per mode (`#build-mode`, `#collect-mode`, `#cards-mode`, `#waha-mode`, `#play-mode`); mode-shell shows exactly one and stamps `<body data-mode="...">` for CSS. Mode is persisted to `yaab_mode` (`'build'` default) but only the `RESUMABLE` modes are restored on launch. Mode switching fires the `App.hooks.modeChange` bus — callback signature `(mode) => void` (one argument) — and dispatches a `yaab:mode-change` DOM event.
+`js/app/mode-shell.js` is the container switcher. `index.html` holds one sibling `<section class="mode-page">` per mode (`#build-mode`, `#cards-mode`, `#waha-mode`, `#play-mode`); mode-shell shows exactly one and stamps `<body data-mode="...">` for CSS. Mode is persisted to `yaab_mode` (`'build'` default) but only the `RESUMABLE` modes are restored on launch. Mode switching fires the `App.hooks.modeChange` bus — callback signature `(mode) => void` (one argument) — and dispatches a `yaab:mode-change` DOM event.
 
 | Mode | Module | Persists |
 |---|---|---|
 | `build` | `js/ui/build-mode.js` | — (default mode; uses standard 3-pane layout + hero + Rules pinboard tab) |
-| `collect` | `js/ui/collect-mode.js` | reads/writes `yaab_collection` (in `RESUMABLE`) |
 | `cards` | `js/ui/cards-mode.js` | `yaab_cards_*` keys, see its MODULE-REFERENCE entry (not in `RESUMABLE` — reopening lands in Build) |
 | `waha` | `js/ui/waha-mode.js` | `yaab_waha_recent` (in `RESUMABLE` — reload lands back in Waha; contract `docs/WAHA-MODE.md`) |
 | `play` | `js/ui/play-mode.js` | `yaab_play_view`, `yaab_play_game` (not in `RESUMABLE` — game state survives independently, but reopening lands in Build) |
 
-The build mode is the historical 3-pane app; the others are alternative top-level surfaces that reuse the same data (current army, factions, collection, etc.) but render their own DOM trees. **Reachability:** on desktop the topbar shows PLAY and WAHA buttons; Collect is reachable only through Cmd/Ctrl+K and the drawer on phones; Cards through Export ▾ → Data cards… (and the drawer/palette). To add another mode: add the panel id to `VALID` in `mode-shell.js` (and to `RESUMABLE` if it should be restored), add its `<section>` to `index.html`, create the module, and listen on `modeChange` to build content on first activation.
+The build mode is the historical 3-pane app; the others are alternative top-level surfaces that reuse the same data (current army, factions, reserves, etc.) but render their own DOM trees. **Reachability:** on desktop the topbar shows PLAY and WAHA buttons; Cards through Export ▾ → Data cards… (and the drawer/palette). To add another mode: add the panel id to `VALID` in `mode-shell.js` (and to `RESUMABLE` if it should be restored), add its `<section>` to `index.html`, create the module, and listen on `modeChange` to build content on first activation.
 
 ## Roster filter chips — and the Ally chip (contract, 2026-09-17)
 
@@ -205,7 +202,7 @@ The build mode is the historical 3-pane app; the others are alternative top-leve
 which owns the six keyword chips (Battleline … Psyker) and the trailing `×`
 clear button. **Feature modules add their own chips by injecting into that bar**
 rather than by extending the `UI.roles` table — `favorites.js` (★ Favorites, ⟲ Recents)
-and `collection.js` (Owned / Needs paint / Painted) are the two precedents:
+and `allies.js` (Allies) are the two precedents:
 
 - wait for the bar with a `MutationObserver` on `#panel-center`, disconnect once
   injected, and re-check on `modeChange` (roster.js builds the bar on first
@@ -222,8 +219,7 @@ strips `.active` / `.excluded` off *every* chip in the bar (every feature
 chip included, since they all share that class), but on its own it only
 knows about its own `R.chipState` — a feature module's chip used to go back
 to looking off while its filter stayed on. Two hooks fix that, created lazily
-(not pre-created in `js/app/hooks.js`, so whichever module loads first wins —
-mirror collection.js's `modeChange` array):
+(not pre-created in `js/app/hooks.js`, so whichever module loads first wins):
 
 ```js
 if (!Array.isArray(App.hooks.chipClearers)) App.hooks.chipClearers = [];
@@ -257,8 +253,7 @@ no points limit, hidden outside BUILD, and deliberately not persisted.
 A future chip: push a clearer that zeroes your flag(s), push a predicate that
 reports whether your chip is active, and call `UI.syncChipClearVisibility()`
 at the end of your chip's own click handler. See `favorites.js`
-(`clearFavRecentChip` / `registerChipHooks`), `collection.js`
-(`clearCollectionChips`), or `allies.js` (`clearAllyChip`) for the pattern.
+(`clearFavRecentChip` / `registerChipHooks`) or `allies.js` (`clearAllyChip`) for the pattern.
 
 ### The Ally chip
 
@@ -335,6 +330,6 @@ hex.
 9. Save → reopen Load modal → army listed with correct points.
 10. Export → copy `YAAB1:` → New → Import → paste → all selections restore.
 11. Cmd/Ctrl+Z (undo) and Cmd/Ctrl+Shift+Z (redo) → state mutates correctly.
-12. Cmd/Ctrl+K → command palette; type `collect` → Enter → Collect mode opens (the YAAB logo returns to Build).
+12. Cmd/Ctrl+K → command palette; type `waha` → Enter → Waha mode opens (the YAAB logo returns to Build).
 13. Disable network in DevTools → reload → faction data still loads (it's embedded in `js/vendor/dc-bundle.js`, no fetch); only the live GDC fallback text degrades gracefully.
 14. Resize browser → left/right panel drag handles still work; unit grid reflows.

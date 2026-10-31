@@ -218,7 +218,7 @@
     if (!App.hooks) return;
     // chipClearers/chipActive aren't pre-created anywhere (unlike
     // rosterFilters) — lazily create them so whichever module loads first
-    // wins, mirroring collection.js's modeChange array.
+    // wins.
     if (!Array.isArray(App.hooks.chipClearers)) App.hooks.chipClearers = [];
     if (!Array.isArray(App.hooks.chipActive))   App.hooks.chipActive   = [];
     App.hooks.chipClearers.push(clearFavRecentChip);

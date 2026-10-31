@@ -37,7 +37,7 @@
   // renderUnitRoster is expensive in a way its own early-outs cannot fix: the
   // content-signature skip at the top of the function can only fire AFTER the
   // filter chain has run, because the rosterFilters predicates read module-
-  // private state (favorites, reserves, collection, legends, kill-team) that
+  // private state (favorites, reserves, legends, kill-team) that
   // the signature can't cheaply capture. So a no-op call still pays for the
   // full pass over ~1.7k units plus the fireSelectionChange fan-out to ~25
   // subscribers. Measured on a cold boot: 38 calls, 2 of which rebuilt the

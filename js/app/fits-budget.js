@@ -7,7 +7,7 @@
 // "Roster filter chips"). Session-only: it is not persisted, because a
 // filter that silently hides most of the roster on reload is a support
 // ticket, not a convenience. BUILD mode only — the predicate is a no-op and
-// the chip is hidden elsewhere (collection.js gates the same way).
+// the chip is hidden elsewhere.
 (function () {
   const App = window.App = window.App || {};
   if (!App.hooks) return;

@@ -87,7 +87,7 @@
     function onKey(e) {
       if (e.key === 'Escape') { e.stopPropagation(); closeMenu({ refocus: true }); }
     }
-    // Leaving Build (palette -> Collect, Waha, Play...) must not leave the menu
+    // Leaving Build (palette -> Waha, Play...) must not leave the menu
     // open behind the mode: it came back still visible and the next click on
     // the button then closed it (needed two clicks).
     App.hooks.modeChange = App.hooks.modeChange || [];

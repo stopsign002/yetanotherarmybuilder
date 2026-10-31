@@ -44,7 +44,7 @@
 .topbar-brand-mark { font-family: var(--font-display); font-weight: 600; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; }
 .topbar-brand:hover { color: var(--accent); }
 
-/* ── Mode tabs (Build / Collect / Play) */
+/* ── Mode tabs (Build / Waha / Cards) */
 .topbar-modes {
   align-items: center;
   gap: 4px;
@@ -53,7 +53,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 3px;
-  /* Hide Build/Collect/Cards mode nav until all modes are ready. */
+  /* Hide Build/Waha/Cards mode nav until all modes are ready. */
   display: none !important;
 }
 .topbar-mode-tab {

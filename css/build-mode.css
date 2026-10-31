@@ -464,9 +464,7 @@ body[data-faction-banner="votann"] .build-hero {
 
 @media (prefers-reduced-motion: reduce) {
   body[data-mode="build"] #build-mode::before,
-  body[data-mode="build"] #build-mode::after,
-  body[data-mode="collect"] #collect-mode::before,
-  body[data-mode="collect"] #collect-mode::after {
+  body[data-mode="build"] #build-mode::after {
     animation: none !important;
   }
 

@@ -1,10 +1,10 @@
 /* unit-card.css — tier 3 components.
  * Owns: .unit-card in all states: base, badges (legends, allies, favourite
- * star, collection), hover, selected, per-faction themes, celebrations, FLIP
+ * star), hover, selected, per-faction themes, celebrations, FLIP
  * ghost.
  *
- * Order dependencies: 23 rule(s) belonging by subject to army-list.css (14),
- * collect-mode.css (5), mobile.css (3), base.css (1) stay here to keep their
+ * Order dependencies: 18 rule(s) belonging by subject to army-list.css (14),
+ * mobile.css (2), base.css (1) stay here to keep their
  * cascade position beside a rule in this file; each has an `order:` comment
  * naming it. */
 
@@ -259,9 +259,6 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
   70% { transform: scale(0.92); }
   100% { transform: scale(1); }
 }
-@keyframes collect-spin {
-  to { transform: rotate(360deg); }
-}
 .fav-star {
   display: inline-block;
   font-size: 18px;
@@ -276,33 +273,6 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
   /* pastel gold, matches palette accents */
   text-shadow: 0 0 6px rgba(230,214,168,0.35);
 }
-
-/* ── empty / loading state */
-/* order: lives here, not in collect-mode.css: must precede `.collect-unit-card` {display} below (equal specificity, same element, display). */
-.collect-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 80px 16px;
-  color: var(--text-muted);
-  font-size: 14px;
-  text-align: center;
-}
-
-/* order: lives here, not in collect-mode.css: must precede `.collect-empty-spinner` {border-top-color} below (equal specificity, same element, border vs border-top-color). */
-.collect-empty-spinner {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.12);
-  border-top-color: var(--accent);
-  animation: collect-spin 0.9s linear infinite;
-}
-
-/* order: lives here, not in collect-mode.css: must precede `.unit-card:hover` {border-color} below (equal specificity, same element, border-color). */
-.collect-unit-card:hover { border-color: var(--border-light); background: var(--card-hover); }
 
 /* Hover lift. GPU-friendly transform only.
  * We avoid touching .army-entry's hover so the list doesn't jump 1px on
@@ -399,7 +369,6 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
 }
 
 @media (max-width: 480px) {
-  /* order: lives here, not in mobile.css: must precede `.collect-unit-card` {padding} below (equal specificity, same element, padding). */
   .unit-card { min-height: 76px; padding: 10px 12px; }
 }
 
@@ -502,21 +471,6 @@ body.reduce-motion .unit-card:hover { transform: none !important; }
   .unit-card[class*="faction-"] { transition: none !important; }
   .fav-star, .detail-action-btn:hover .fav-star { transition: none; }
   .fav-star.fav-pop { animation: none; }
-
-  /* order: lives here, not in collect-mode.css: must precede `.collect-unit-card` {border} below (equal specificity, same element, border-top-color vs border). */
-  .collect-empty-spinner { animation: none; border-top-color: rgba(255, 255, 255, 0.45); }
-}
-
-/* order: lives here, not in collect-mode.css: must precede `.unit-card` {background} below (equal specificity, same element, background). */
-.collect-unit-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: border-color 0.12s, background 0.12s;
 }
 
 /* Base chassis. Any element can opt-in by adding `.yaab-card`.

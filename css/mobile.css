@@ -52,7 +52,7 @@
 
   /* Filter chips. The chip's background is repainted by at least four
    * later files (style.css `.active`/`.excluded`, favorites.css
-   * `.fav-chip.active`, collection.css `.collection-chip-*.active`), the
+   * `.fav-chip.active`), the
    * highest at (0,3,0) — and favorites.css is being edited concurrently.
    * Rather than chase every variant, paint over whatever background is
    * there with a full-bleed inset box-shadow: nothing in css/ sets
@@ -172,7 +172,7 @@
    * The :not([hidden]) guard is load-bearing: this rule is (1,1,0)
    * !important, which beats mode-shell.css's `.mode-page[hidden]
    * { display: none !important }` at (0,2,0) — so without the guard,
-   * #build-mode stayed VISIBLE on mobile while Collect / Cards / Play
+   * #build-mode stayed VISIBLE on mobile while Cards / Play
    * was active, and the active mode rendered a full viewport below the
    * fold (body overflow:hidden made it look simply blank). */
   body.build-mode-enhanced #build-mode:not([hidden]) { display: block !important; grid-template-rows: none !important; }
@@ -186,17 +186,14 @@
   /* ── Sibling mode pages: subtract the tab bar too
    * Only #build-mode's inner .app-main was compensating for the fixed
    * bottom tab bar (see the calc() above). The other top-level
-   * sections in index.html — #collect-mode, #cards-mode —
+   * sections in index.html — #cards-mode, #play-mode, #waha-mode —
    * are siblings of #build-mode, not children, so they inherited
    * `.mode-page { height: 100% }` and ran their last ~56px of content
    * underneath the tab bar where it could be neither read nor tapped.
    * ID selectors are deliberate: `.mode-page { height: 100% }` lives in
    * mode-shell.css, which loads after this file, so a class-level rule here
    * would lose. `min-height: 0` is restated for self-documentation. */
-  #collect-mode, #cards-mode, #play-mode, #waha-mode { height: calc(100% - var(--m-tabbar-h) - var(--m-safe-bottom)); min-height: 0; }
-  /* Collect needs nothing further: .collect-root is height:100% +
-   * overflow:hidden with .collect-body as the real scroller, so shrinking
-   * the section is enough to bring its scroll viewport above the tab bar. */
+  #cards-mode, #play-mode, #waha-mode { height: calc(100% - var(--m-tabbar-h) - var(--m-safe-bottom)); min-height: 0; }
   /* Cards mode intentionally has NO .cards-shell height rule here.
    * css/cards-mode.css (its 760px block) owns the narrow-viewport layout: it
    * makes #cards-mode itself the scroll container and lets .cards-shell run to
@@ -208,13 +205,6 @@
    * therefore every image on them) down to nothing. The `height` rule on
    * #cards-mode above is enough: it keeps the section clear of the tab bar,
    * and cards-mode.css scrolls inside it. */
-  .collect-bulk-actions { margin-left: 0; width: 100%; }
-
-  /* ── Mobile collapse (820 = the app-wide phone layout cutoff) */
-  #collect-mode .collect-header, #collect-mode .collect-body { padding: 12px 14px; }
-  .collect-paint-layout { grid-template-columns: 1fr; }
-  .collect-paint-sidebar { display: none; }
-  .collect-paint-mobile-picker { display: block; margin-bottom: 12px; }
   body[data-mobile-panel="army"] .panel-left, body[data-mobile-panel="units"] .panel-center, body[data-mobile-panel="detail"] .panel-right { display: flex; flex: 1; }
   .panel-header, .panel-controls { flex-shrink: 0; }
 
@@ -420,14 +410,6 @@
   .stat-cell { padding: 4px 2px; }
   .keyword-tag { font-size: 10px; padding: 2px 6px; }
 
-  /* Hide the collection (Owned / Painted) widget on mobile — it's
-   * desktop-only chrome that clutters the small detail view. The widget
-   * is injected into the panel by js/app/collection.js after the detail
-   * content renders; CSS-hiding here keeps the JS path intact for
-   * desktop while the mobile detail pane stays focused on the unit /
-   * stratagem itself. */
-  .collection-detail-widget { display: none !important; }
-
   /* .army-entry-stat is `align-items: baseline` (build-mode.css). With a
    * 44px-tall input in the Qty cell that drags the Pts/Total labels off
    * the optical centre, so re-centre — mobile-only, where the tall input
@@ -627,12 +609,6 @@
   .reserves-view-btn { padding: 6px 10px; font-size: 12px; }
   .reserves-view-label { display: none; }
 
-  /* mobile tightening. 640 is deliberately not the 820 phone-layout cutoff:
-   * the dashboard grid only needs to drop to two columns when it is genuinely
-   * narrow, which is a different question from "show the tab bar". */
-  .collection-dash-faction { grid-template-columns: 1fr 1fr; }
-  .collection-dash-faction-bar-wrap, .collection-dash-faction-painted { grid-column: 1 / -1; }
-
   /* icon + count only on phones */
   .stockpile-step { width: 30px; height: 30px; font-size: 18px; }
   .stockpile-qty { min-width: 30px; font-size: 14px; }
@@ -666,10 +642,7 @@
    * "3" — the count span stays, only the word goes. */
   .topbar-offline-pip .topbar-offline-word { display: none; }
 
-  /* Phone width: one full-width button per row beats three cramped columns. */
-  .collect-bulk-actions { flex-direction: column; align-items: stretch; }
   .unit-grid { grid-template-columns: 1fr !important; gap: 8px; }
-  .collect-bulk-actions .btn.btn-sm { flex: 0 0 auto; width: 100%; }
 }
 
 @media (max-width: 380px) {

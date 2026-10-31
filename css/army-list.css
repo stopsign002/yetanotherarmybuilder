@@ -637,7 +637,7 @@ a:hover,
 
 /* The toggle is a Build-mode concept. Hide in any other mode the
  * panel-controls might be reused under. */
-body[data-mode="collect"] .reserves-view-toggle, body[data-mode="play"] .reserves-view-toggle, body[data-mode="cards"] .reserves-view-toggle { display: none; }
+body[data-mode="play"] .reserves-view-toggle, body[data-mode="cards"] .reserves-view-toggle { display: none; }
 .reserves-view-btn[data-view="requisitions"] .reserves-view-icon { color: var(--requisitions-accent); }
 .reserves-view-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }
 .reserves-view-btn.active { color: #111; background: var(--reserves-accent); border-color: var(--reserves-accent); font-weight: 600; }
@@ -708,13 +708,13 @@ body[data-units-view="requisitions"] .reserves-pts-badge {
 
 /* Only meaningful in BUILD; the header isn't reused elsewhere but guard
  * anyway. */
-body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-pts-badge, body[data-mode="cards"] .reserves-pts-badge { display: none; }
+body[data-mode="play"] .reserves-pts-badge, body[data-mode="cards"] .reserves-pts-badge { display: none; }
 
 /* ── per-card quantity badges
  * Small "×N" pill on each unit card showing how many of that unit are
  * in your Reserves (top-right) or Requisitions (bottom-right). Real DOM
- * spans (NOT pseudo-elements) so they don't fight with collection.css's
- * ::after paint dot or style.css's ::before selection accent. */
+ * spans (NOT pseudo-elements) so they don't fight with
+ * style.css's ::before selection accent. */
 .unit-card .reserves-qty-badge, .unit-card .requisitions-qty-badge {
   position: absolute;
   display: inline-flex;

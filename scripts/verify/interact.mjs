@@ -256,11 +256,11 @@ await page.waitForTimeout(900);
 const paletteOpen = await page.evaluate(() => !!document.querySelector('.cmdp-modal'));
 check('Ctrl+K opens the command palette', paletteOpen);
 if (paletteOpen) {
-  // Collect is reachable on desktop ONLY through this palette entry.
-  await page.evaluate(() => { const i = document.querySelector('.cmdp-input'); if (i) { i.value = 'collect'; i.dispatchEvent(new Event('input', { bubbles: true })); } });
+  // Waha is reachable on desktop ONLY through this palette entry.
+  await page.evaluate(() => { const i = document.querySelector('.cmdp-input'); if (i) { i.value = 'waha'; i.dispatchEvent(new Event('input', { bubbles: true })); } });
   await page.waitForTimeout(900);
   const rows = await page.evaluate(() => Array.from(document.querySelectorAll('.cmdp-row')).map(r => r.textContent.trim().slice(0, 50)));
-  check('palette finds "Collect mode"', rows.some(r => /collect mode/i.test(r)), rows.slice(0, 3).join(' | '));
+  check('palette finds "Waha"', rows.some(r => /waha/i.test(r)), rows.slice(0, 3).join(' | '));
   await shot('05-palette');
 }
 await page.keyboard.press('Escape');

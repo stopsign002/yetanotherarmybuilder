@@ -21,10 +21,10 @@
 /* Common: every mode root gets relative positioning so its decoration
  * pseudo-elements anchor correctly. We replaced the old ::after-driven
  * moving overlays with a single fixed ::before holding the SVG stack. */
-body[data-mode="build"] #build-mode, body[data-mode="collect"] #collect-mode, body[data-mode="play"] #play-mode { position: relative; }
+body[data-mode="build"] #build-mode, body[data-mode="play"] #play-mode { position: relative; }
 
 /* Children always sit above the static decoration. */
-body[data-mode="build"] #build-mode > *, body[data-mode="collect"] #collect-mode > *, body[data-mode="play"] #play-mode > * { position: relative; z-index: 1; }
+body[data-mode="build"] #build-mode > *, body[data-mode="play"] #play-mode > * { position: relative; z-index: 1; }
 .mode-page {
   /* Each mode owns the entire viewport below the topbar. */
   display: block;
@@ -40,7 +40,7 @@ body[data-mode="build"] #build-mode > *, body[data-mode="collect"] #collect-mode
  * definition of the same name wins). */
 .mode-page.mode-enter { animation: mode-enter-anim 280ms cubic-bezier(0.34, 1.16, 0.64, 1) both !important; will-change: opacity, transform; }
 
-/* Collect / Play placeholders shown until other agents fill them in. */
+/* Mode placeholders shown until a mode fills in. */
 .mode-placeholder {
   display: flex;
   flex-direction: column;

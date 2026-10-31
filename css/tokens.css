@@ -62,9 +62,6 @@
   --col-left: 330px;
   --col-right: 420px;
   /* ── status colors (shared variables) */
-  --coll-unpainted: #8a8a8a;
-  --coll-primed: #e8e8e8;
-  --coll-painting: #e6c7a8;
   --coll-done: #a8e6b7;
   --reserves-accent: var(--accent);
   --reserves-warn: #e6c7a8;

@@ -23,13 +23,6 @@
     document.body.classList.toggle('reduce-motion', on);
   }
 
-  // ── Painting badges flag (consumed by future collection UI) ─────────
-  function applyCollectionBadges() {
-    const on = lsBool('yaab_show_collection_badges', true);
-    if (!document.body) return;
-    document.body.classList.toggle('hide-collection-badges', !on);
-  }
-
   // ── Toggle handlers ─────────────────────────────────────────────────
   // For toggles that have an existing toolbar-button companion (with a
   // working onClick), prefer that companion — it owns side effects
@@ -92,17 +85,6 @@
         }
       },
       isOn() { return lsBool('yaab_show_allies', false); },
-    },
-    {
-      key:   'yaab_show_collection_badges',
-      label: 'Show painting status badges on cards',
-      help:  'Display owned / painted indicators on unit cards.',
-      defaultOn: true,
-      onChange(checked) {
-        App.store.setRaw('yaab_show_collection_badges', checked ? '1' : '0');
-        applyCollectionBadges();
-      },
-      isOn() { return lsBool('yaab_show_collection_badges', true); },
     },
     {
       key:   'yaab_reduced_motion',
@@ -197,18 +179,12 @@
       // Mode switching. The only other switcher is .topbar-modes, which is
       // display:none globally AND sits inside the topbar that's removed at
       // <=820px. So none of these rows is mobile-gated: on desktop they were
-      // the only visible way into Collect bar the Ctrl/Cmd+K palette (#115).
+      // the only visible way into the other modes bar the Ctrl/Cmd+K palette (#115).
       {
         id: 'go-build',
         label: mode === 'build' ? 'Build ✓' : 'Build',
         section: 'go',
         run() { goToMode('build'); },
-      },
-      {
-        id: 'go-collect',
-        label: mode === 'collect' ? 'Collect ✓' : 'Collect',
-        section: 'go',
-        run() { goToMode('collect'); },
       },
       // Waha (look anything up, builds nothing) — not mobile-gated either, for
       // the same reason as Play: phones have no topbar.
@@ -695,7 +671,7 @@
 
     b.appendChild(renderSectionHeader('Display'));
     renderToggles(['yaab_show_legends', 'yaab_show_allies',
-                   'yaab_show_collection_badges', 'yaab_reduced_motion']);
+                   'yaab_reduced_motion']);
 
     // HELP & SUPPORT
     b.appendChild(renderSectionHeader('Help & support'));
@@ -797,7 +773,6 @@
 
   function init() {
     applyReduceMotion();
-    applyCollectionBadges();
     bindChrome();
   }
 

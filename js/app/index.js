@@ -118,7 +118,7 @@
   // Renders hook-registered buttons into the new surfaces.
   // Action shape (unchanged for compatibility):
   //   { region:   'primary' | 'icon' | 'export-menu' | 'tools-menu' | 'more-menu',
-  //     section?: 'game-day' | 'analyze' | 'export' | 'browse' | 'collection' | 'settings',
+  //     section?: 'game-day' | 'analyze' | 'export' | 'browse' | 'settings',
   //     id, label, title, ariaLabel, onClick, className, category? }
   App.mountArmyToolbarActions = function () {
     const actions   = (App.hooks && App.hooks.armyToolbarActions) || [];
