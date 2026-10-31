@@ -6,8 +6,7 @@
   const LS_KEY = 'yaab_show_legends';
   const BTN_ID = 'yaab-btn-legends';
 
-  let showLegends = false;
-  try { showLegends = localStorage.getItem(LS_KEY) === '1'; } catch (_) { showLegends = false; }
+  let showLegends = App.store.getRaw(LS_KEY) === '1';
 
   // Roster filter: hide Legends unless the toggle is on.
   App.hooks.rosterFilters.push(function (unit) {
@@ -31,7 +30,7 @@
 
   function toggle() {
     showLegends = !showLegends;
-    try { localStorage.setItem(LS_KEY, showLegends ? '1' : '0'); } catch (_) {}
+    App.store.setRaw(LS_KEY, showLegends ? '1' : '0');
     updateButton();
     if (typeof App.renderUnitRosterWithContext === 'function') {
       App.renderUnitRosterWithContext();

@@ -27,8 +27,7 @@
   }
 
   function isDismissed() {
-    try { return localStorage.getItem(DISMISS_KEY) === '1'; }
-    catch (_) { return false; }
+    return App.store.getRaw(DISMISS_KEY) === '1';
   }
 
   // Safari never implements beforeinstallprompt, so it's the only signal
@@ -46,8 +45,7 @@
   // (2026-09-14). Gated on the same ≤820px cutoff mobile.css uses for its
   // other mobile-only chrome. iOS stays exempt below — an iPad in
   // landscape is wider than 820px and never fires beforeinstallprompt, so
-  // it needs the FAB regardless. Desktop still gets the Settings drawer's
-  // "Install app" row (App.pwaInstallAvailable, unchanged).
+  // it needs the FAB regardless.
   function mobileLayout() {
     try { return window.matchMedia && window.matchMedia('(max-width: 820px)').matches; }
     catch (_) { return false; }
@@ -170,7 +168,7 @@
   }
 
   function dismissAndCloseIosSheet() {
-    try { localStorage.setItem(DISMISS_KEY, '1'); } catch (_) {}
+    App.store.setRaw(DISMISS_KEY, '1');
     closeIosSheet();
     updateInstallBtn();
   }
@@ -213,7 +211,7 @@
       evt.prompt();
       const choice = await evt.userChoice;
       if (choice && choice.outcome === 'dismissed') {
-        try { localStorage.setItem(DISMISS_KEY, '1'); } catch (_) {}
+        App.store.setRaw(DISMISS_KEY, '1');
       }
     } catch (_) {}
     updateInstallBtn();
@@ -227,7 +225,7 @@
 
   window.addEventListener('appinstalled', function () {
     deferredPrompt = null;
-    try { localStorage.setItem(DISMISS_KEY, '1'); } catch (_) {}
+    App.store.setRaw(DISMISS_KEY, '1');
     updateInstallBtn();
   });
 
@@ -242,14 +240,6 @@
     } catch (_) { /* older Safari */ }
   }
 
-
-  // pwaInstallAvailable() is the honest version of the drawer's own check: the
-  // row should appear only when clicking it will actually do something, which
-  // needs a captured prompt — not merely "we aren't already installed".
-  App.pwaInstall = onInstallClick;
-  App.pwaInstallAvailable = function () {
-    return (!!deferredPrompt || isIOS()) && !isStandalone() && !isDismissed();
-  };
 
   // ── Mobile tab bar injection + wiring ──────────────────────────────────
   // Four tabs: Army | Units | Details | More. "More" opens the existing
@@ -289,7 +279,7 @@
     const prev = document.body.dataset.mobilePanel;
     if (prev && prev !== valid) rememberScroll(prev);
     document.body.dataset.mobilePanel = valid;
-    try { localStorage.setItem(PANEL_KEY, valid); } catch (_) {}
+    App.store.setRaw(PANEL_KEY, valid);
     if (prev !== valid) restoreScroll(valid);
     syncActiveTab(valid);
     // Notify listeners (mobile-shell.js binds to this for page-title updates).
@@ -300,10 +290,8 @@
   App.setMobilePanel = setPanel;
 
   function initialPanel() {
-    try {
-      const saved = localStorage.getItem(PANEL_KEY);
-      if (saved === 'army' || saved === 'units' || saved === 'detail') return saved;
-    } catch (_) {}
+    const saved = App.store.getRaw(PANEL_KEY);
+    if (saved === 'army' || saved === 'units' || saved === 'detail') return saved;
     // First-time default: land on the Army panel, not the Units grid.
     // Dropping a new user straight into the unit picker (with no army
     // context yet) reads as confusing; the Army tab is the friendlier

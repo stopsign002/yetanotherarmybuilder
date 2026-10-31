@@ -45,21 +45,16 @@
 
   // ── persistence ──────────────────────────────────────────────────────
   function loadPersisted() {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object') return;
-      Object.keys(parsed).forEach(k => {
-        const v = parsed[k];
-        if (Number.isFinite(v) && v > 0) QTY[k] = Math.floor(v);
-      });
-    } catch (_) { /* ignore */ }
+    const parsed = App.store.get(LS_KEY, null);
+    if (!parsed || typeof parsed !== 'object') return;
+    Object.keys(parsed).forEach(k => {
+      const v = parsed[k];
+      if (Number.isFinite(v) && v > 0) QTY[k] = Math.floor(v);
+    });
   }
 
   function persist() {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(QTY)); }
-    catch (_) { /* quota — ignore */ }
+    App.store.set(LS_KEY, QTY);
   }
 
   // Push UI updates that depend on a qty change.

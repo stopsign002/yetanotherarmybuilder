@@ -20,14 +20,6 @@
   const App = window.App = window.App || {};
   if (!App.hooks) return;
 
-  // Does the user have a manual dataslate override on this unit? If so its
-  // squadOptions are deliberately shifted off the official cost and we must
-  // not "correct" the entry back — that price is the user's, not data.
-  function hasOverride(unitId) {
-    return typeof App.getPointsOverride === 'function'
-      && App.getPointsOverride(unitId) != null;
-  }
-
   // Re-read the entry's price off the current datasheet when the stored one no
   // longer exists there.
   //
@@ -48,7 +40,6 @@
     const opts = (fresh && Array.isArray(fresh.squadOptions)) ? fresh.squadOptions : null;
     if (!opts || !opts.length) return false;
     if (opts.some((o) => o.pts === entry.selectedPts)) return false;  // still a real price
-    if (hasOverride(entry.unitId)) return false;
 
     // Which size? Prefer the saved label, then the pre-refresh snapshot's own
     // option list, then the case where there is only one size to begin with.

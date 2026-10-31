@@ -11,9 +11,6 @@
     selectedUnit:   null,
     factionFilter:  'all',
     selectedChapter: null,
-    chaptersMap:    {},
-    chapterFactions: new Set(),
-    virtualBase:    {},
     // Multi-detachment selection. `selectedDetachments` is the canonical array
     // of selected detachment OBJECTS (drives the picker + the Army Rules union);
     // `selectedDetachment` mirrors the FIRST for single-detachment readers.
@@ -24,6 +21,31 @@
     // Which tab the BUILD-mode right panel shows: 'detail' (Unit Detail) or
     // 'rules' (Rules pinboard). Owned by js/ui/build-mode.js.
     activeBuildTab: 'detail',
+  };
+
+  // ── App.store: JSON + try/catch around localStorage ────────────────────
+  // get() returns `fallback` on a missing key, corrupt JSON or blocked storage;
+  // set()/remove() swallow quota / private-mode errors and return success.
+  App.store = {
+    get(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw == null ? fallback : JSON.parse(raw);
+      } catch (_) { return fallback; }
+    },
+    getRaw(key) {
+      try { return localStorage.getItem(key); } catch (_) { return null; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+      catch (_) { return false; }
+    },
+    setRaw(key, value) {
+      try { localStorage.setItem(key, value); return true; } catch (_) { return false; }
+    },
+    remove(key) {
+      try { localStorage.removeItem(key); return true; } catch (_) { return false; }
+    },
   };
 
   // ── Remember which army is loaded, across reloads ─────────────────────
@@ -78,18 +100,6 @@
   App.getPersistedCurrentArmyId = function () {
     try { return localStorage.getItem(CURRENT_ARMY_KEY) || null; } catch (_) { return null; }
   };
-
-  // VIRTUAL_PARENTS used to group "Imperium - Adeptus Astartes - <Chapter>"
-  // sub-faction files under a synthetic parent so the UI could expose a
-  // Chapter sub-dropdown. BSData (wh40k-10e) has since flattened those files
-  // to top-level catalogues (e.g. `Imperium - Space Marines.cat`,
-  // `Imperium - Blood Angels.cat`), so no faction names match the old
-  // `<parent> - ` prefix scan in App.buildChaptersMap. The chapter dropdown
-  // therefore stays permanently hidden (group.hidden = true when chapters
-  // is empty — see selections.js). Each chapter is now a top-level faction
-  // option. Leaving this empty is the supported "no virtual parents" shape;
-  // filters.js / selections.js handle the empty map gracefully.
-  App.VIRTUAL_PARENTS = [];
 
   // Space Marines chapters all inherit the generic Space Marines unit roster
   // (Intercessors, Tactical Marines, Captain, etc.). Each chapter ships as its
@@ -221,9 +231,7 @@
   // default theme, so that path is byte-identical to a bare lookup.
   // See js/app/themes.js and the "Themes" section of CLAUDE.md.
   App.factionPalette = function (factionName) {
-    const shortName = factionName && factionName.includes(' - ')
-      ? factionName.split(' - ').pop().trim()
-      : (factionName || '');
+    const shortName = UI.factionShort(factionName);
     const colors = App.FACTION_COLORS[shortName] || App.FACTION_COLORS[factionName] || App.DEFAULT_ACCENT;
     if (App.Themes && typeof App.Themes.remapAccent === 'function') {
       try {

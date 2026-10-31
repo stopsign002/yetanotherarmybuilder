@@ -68,13 +68,11 @@
   }
 
   function loadRecords() {
-    try { return parseRecords(localStorage.getItem(LS_KEY)); }
-    catch (_) { return Object.create(null); }
+    return parseRecords(App.store.getRaw(LS_KEY));
   }
 
   function persist() {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(RECORDS)); }
-    catch (_) { /* quota — ignore, same as every other bag in this app */ }
+    App.store.set(LS_KEY, RECORDS);
   }
 
   function mintId() {
@@ -621,7 +619,7 @@
   window.addEventListener('yaab-bag-pulled', function (e) {
     const keys = (e && e.detail && e.detail.keys) || null;
     if (keys && keys.indexOf(LS_KEY) === -1) return;
-    try { rehydrate(localStorage.getItem(LS_KEY)); } catch (_) {}
+    try { rehydrate(App.store.getRaw(LS_KEY)); } catch (_) {}
   });
 
   // ── public API ─────────────────────────────────────────────────────────

@@ -21,32 +21,20 @@
   // ----- persistence -------------------------------------------------------
 
   function loadPersisted() {
-    try {
-      const favRaw = localStorage.getItem(LS_FAV);
-      if (favRaw) {
-        const arr = JSON.parse(favRaw);
-        if (Array.isArray(arr)) STATE.favorites = new Set(arr.filter(x => typeof x === 'string'));
-      }
-    } catch (_) { /* ignore corruption */ }
-    try {
-      const recRaw = localStorage.getItem(LS_RECENT);
-      if (recRaw) {
-        const arr = JSON.parse(recRaw);
-        if (Array.isArray(arr)) {
-          STATE.recents = arr.filter(r => r && typeof r.unitId === 'string').slice(0, RECENT_CAP);
-        }
-      }
-    } catch (_) { /* ignore */ }
+    const favs = App.store.get(LS_FAV, null);
+    if (Array.isArray(favs)) STATE.favorites = new Set(favs.filter(x => typeof x === 'string'));
+    const recs = App.store.get(LS_RECENT, null);
+    if (Array.isArray(recs)) {
+      STATE.recents = recs.filter(r => r && typeof r.unitId === 'string').slice(0, RECENT_CAP);
+    }
   }
 
   function saveFavorites() {
-    try { localStorage.setItem(LS_FAV, JSON.stringify([...STATE.favorites])); }
-    catch (_) { /* quota or private mode — ignore */ }
+    App.store.set(LS_FAV, [...STATE.favorites]);
   }
 
   function saveRecents() {
-    try { localStorage.setItem(LS_RECENT, JSON.stringify(STATE.recents)); }
-    catch (_) { /* ignore */ }
+    App.store.set(LS_RECENT, STATE.recents);
   }
 
   // ----- favorites toggling -----------------------------------------------

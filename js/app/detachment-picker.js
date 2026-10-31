@@ -51,7 +51,7 @@
         : parentNames.has(String(d && d.name || '').toLowerCase());
       (isGeneric ? generic : specific).push(d);
     });
-    const shortChapter = curName.includes(' - ') ? curName.split(' - ').pop().trim() : curName;
+    const shortChapter = UI.factionShort(curName);
     return [
       { label: shortChapter,             items: specific.sort(alpha) },
       { label: 'Space Marines (generic)', items: generic.sort(alpha) },
@@ -292,7 +292,7 @@
     const body  = document.getElementById('detachments-body');
     const total = document.getElementById('detachments-total');
     if (!body) return;
-    const esc = (window.UI && UI.escapeHtml) ? UI.escapeHtml : (s => String(s == null ? '' : s));
+    const esc = UI.escapeHtml;
 
     const detFaction = (typeof App.getDetachmentFaction === 'function') ? App.getDetachmentFaction() : null;
     const factionsReady = Array.isArray(App.state.factions) && App.state.factions.length > 0;

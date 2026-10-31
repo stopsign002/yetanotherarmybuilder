@@ -13,12 +13,7 @@
 
   let modalEl = null;
 
-  function esc(s) {
-    if (UI && UI.escapeHtml) return UI.escapeHtml(s == null ? '' : String(s));
-    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
-    }[c]));
-  }
+  const esc = UI.escapeHtml;
 
   function fmtDate(iso) {
     if (!iso) return '';
@@ -149,19 +144,14 @@
 
   // Show a small dot on the icon while the user has unseen entries.
   function markSeen() {
-    try {
-      const v = (App.CHANGELOG && App.CHANGELOG.version) || '';
-      if (v) localStorage.setItem(STORAGE_KEY, v);
-    } catch (_) {}
+    const v = (App.CHANGELOG && App.CHANGELOG.version) || '';
+    if (v) App.store.setRaw(STORAGE_KEY, v);
     refreshBadge();
   }
   function hasUnseen() {
-    try {
-      const v = (App.CHANGELOG && App.CHANGELOG.version) || '';
-      if (!v) return false;
-      const seen = localStorage.getItem(STORAGE_KEY);
-      return seen !== v;
-    } catch (_) { return false; }
+    const v = (App.CHANGELOG && App.CHANGELOG.version) || '';
+    if (!v) return false;
+    return App.store.getRaw(STORAGE_KEY) !== v;
   }
   function refreshBadge() {
     const btn = document.getElementById('yaab-btn-changelog');

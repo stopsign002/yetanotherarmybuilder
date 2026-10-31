@@ -9,6 +9,34 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   };
 
+  // "Space Marines - Ultramarines" -> "Ultramarines"; names with no " - " pass through.
+  UI.factionShort = function (name) {
+    if (!name) return '';
+    return name.includes(' - ') ? name.split(' - ').pop().trim() : name;
+  };
+
+  // The loader's normaliser: lowercase, drop apostrophes, runs of non-alphanumerics -> '-'.
+  UI.slug = function (s) {
+    return String(s || '').toLowerCase().replace(/[\u2018\u2019']/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  };
+  UI.nameKey = UI.slug;
+
+  // 1234 -> "1,234" (rounded; non-numbers read as 0).
+  UI.fmtPts = function (n) {
+    n = Math.round(Number(n) || 0);
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  UI.debounce = function (fn, ms) {
+    let t = null;
+    return function () {
+      const args = arguments, self = this;
+      if (t) clearTimeout(t);
+      t = setTimeout(function () { t = null; fn.apply(self, args); }, ms);
+    };
+  };
+
   // Phases a stratagem can be used in, for display. Sources carry `phases`
   // (array, 40kdc order) beside the single-string `phase`; five or more
   // collapses to 'Any'. Falls back to the lone `phase` string.

@@ -9,7 +9,6 @@
   const App = window.App = window.App || {};
 
   const PANEL_IDS = ['panel-left', 'panel-center', 'panel-right'];
-  const POSITION = { 'panel-left': 'left', 'panel-center': 'center', 'panel-right': 'right' };
 
   // Inline SVG icons — kept tiny and inherit currentColor so they pick up
   // the panel header's accent color.
@@ -160,15 +159,6 @@
     });
     document.addEventListener('keydown', onKeyDown);
   }
-
-  // Expose a small public surface so other modules (or tests) can drive
-  // the expanded state programmatically.
-  App.PaneExpand = {
-    expand: expandPanel,
-    collapse: clearExpanded,
-    toggle: togglePanel,
-    isExpanded: isExpanded,
-  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init, { once: true });

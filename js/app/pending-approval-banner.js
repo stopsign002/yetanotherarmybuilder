@@ -30,12 +30,6 @@
   // Set by a 401/403; cleared by the next Auth.onChange.
   let denied = false;
 
-  function esc(s) {
-    if (UI && UI.escapeHtml) return UI.escapeHtml(s == null ? '' : String(s));
-    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
-    }[c]));
-  }
 
   function ensureBanner() {
     if (bannerEl) return bannerEl;

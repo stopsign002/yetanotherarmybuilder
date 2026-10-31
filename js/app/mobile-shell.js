@@ -60,8 +60,7 @@
       }
       const sel = App.state && App.state.factionFilter;
       if (sel && sel !== 'all') {
-        const short = sel.includes(' - ') ? sel.split(' - ').pop().trim() : sel;
-        factionLabel = short;
+        factionLabel = UI.factionShort(sel);
       }
     } catch (_) {}
 

@@ -28,11 +28,7 @@
           if (!exists) {
             state.factions.push(faction);
             App.rebuildAllUnits();
-            App.buildChaptersMap();
-            UI.updateFactionFilter(state.factions, {
-              hide:   state.chapterFactions,
-              extras: Object.keys(state.chaptersMap),
-            });
+            UI.updateFactionFilter(state.factions);
             // Coalesced, not immediate. The live loader (dc-adapter.js) hands
             // us every faction in one synchronous forEach, so rendering here
             // repainted the roster ~34 times without the browser ever getting
@@ -49,7 +45,7 @@
           // populated. Restoring here from `want` (not currentArmy) keeps the
           // snapshot intact even though this dispatch wipes currentArmy.
           if (!restoredSelections && want) {
-            const wantTop = App.getVirtualParentOf(want.chapter || '') || want.factionName || '';
+            const wantTop = want.factionName || '';
             if (wantTop && state.factions.some(f => f.factionName === wantTop)) {
               try {
                 App.applyImportedSelections(want.factionName, want.chapter, want.detachmentNames);
@@ -67,7 +63,7 @@
       // load was in flight, so we don't clobber a deliberate choice.
       if (want && want.factionName) {
         const facSel  = document.getElementById('army-faction-select');
-        const wantTop = App.getVirtualParentOf(want.chapter || '') || want.factionName || '';
+        const wantTop = want.factionName || '';
         const userSwitched = facSel && facSel.value && facSel.value !== 'all' && facSel.value !== wantTop;
         if (!userSwitched) {
           try {

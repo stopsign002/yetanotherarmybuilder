@@ -140,13 +140,8 @@
   }
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   function hasOwn(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
-  function lsGet(key) {
-    try { return localStorage.getItem(key); } catch (_) { return null; }
-  }
-  function jsonGet(key, fallback) {
-    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
-    catch (_) { return fallback; }
-  }
+  const lsGet = App.store.getRaw;
+  const jsonGet = App.store.get;
   function jsonSet(key, value) {
     _suppressMonkeyPatch = true;
     try { localStorage.setItem(key, JSON.stringify(value)); }
@@ -237,15 +232,6 @@
 
   function bcPost(msg) {
     if (_bc) { try { _bc.postMessage(msg); } catch (_) {} }
-  }
-
-  function bagSnapshot() {
-    const out = {};
-    for (const k of SYNCED_BAG_KEYS) {
-      const raw = lsGet(k);
-      if (raw != null) out[k] = raw;
-    }
-    return out;
   }
 
   // ── Queue management with coalescing ─────────────────────────────────

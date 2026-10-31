@@ -1,4 +1,4 @@
-// app/hero-state.js — empty-army hero CTA, Cmd+K search hint badge, recent-faction chip row.
+// app/hero-state.js — empty-army hero CTA and Cmd+K search hint badge.
 (function () {
   const App = window.App = window.App || {};
   if (!App.hooks) return;
@@ -15,26 +15,7 @@
   const SHORTCUT_LABEL = isMac() ? '⌘K' : 'Ctrl K';
 
   // ── Helpers ───────────────────────────────────────────────────
-  function shortFaction(name) {
-    if (!name) return '';
-    return name.includes(' - ') ? name.split(' - ').pop().trim() : name;
-  }
-  function accentFor(factionName) {
-    // App.factionPalette is the single lookup: it does the short-name split
-    // AND lets the active theme re-light the hue for its own ground. Reading
-    // App.FACTION_COLORS directly here is what left this module painting the
-    // dark theme's pastels onto a light page. See js/app/state.js.
-    if (typeof App.factionPalette === 'function') return App.factionPalette(factionName)[0];
-    const colors = (App && App.FACTION_COLORS) || {};
-    const short = shortFaction(factionName);
-    const tuple = colors[short] || colors[factionName] || App.DEFAULT_ACCENT || ['#666'];
-    return tuple[0];
-  }
-  function esc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
+  const esc = UI.escapeHtml;
 
   // ─────────────────────────────────────────────────────────────
   // 1. Hero / cold-start state
@@ -67,7 +48,7 @@
     wrap.className = 'yaab-hero-cta';
 
     if (factionSelected) {
-      const short = shortFaction(state.factionFilter || '');
+      const short = UI.factionShort(state.factionFilter || '');
       wrap.classList.add('yaab-hero-cta-mini');
       wrap.innerHTML =
         '<div class="yaab-hero-mini-headline">No units in this army yet</div>' +
@@ -175,105 +156,19 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 3. Faction switcher chip row (recents)
-  // ─────────────────────────────────────────────────────────────
-
-  const RECENTS_KEY = 'yaab_recent_factions';
-  const RECENTS_MAX = 5;
-
-  function readRecents() {
-    try {
-      const raw = localStorage.getItem(RECENTS_KEY);
-      if (!raw) return [];
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr.filter(s => typeof s === 'string') : [];
-    } catch (_) { return []; }
-  }
-  function writeRecents(arr) {
-    try { localStorage.setItem(RECENTS_KEY, JSON.stringify(arr.slice(0, RECENTS_MAX))); }
-    catch (_) {}
-  }
-  function pushRecent(factionName) {
-    if (!factionName || factionName === 'all') return;
-    const cur = readRecents();
-    const filtered = cur.filter(n => n !== factionName);
-    filtered.unshift(factionName);
-    writeRecents(filtered);
-  }
-
-  function buildChipRow() {
-    const recents = readRecents();
-    if (recents.length === 0) return null;
-    const sel = document.getElementById('army-faction-select');
-    if (!sel) return null;
-    const valid = new Set(Array.from(sel.options).map(o => o.value));
-
-    const row = document.createElement('div');
-    row.id = 'yaab-faction-chips';
-    row.className = 'yaab-faction-chips';
-
-    let added = 0;
-    recents.forEach(name => {
-      if (!valid.has(name)) return; // skip recents that no longer load
-      const short = shortFaction(name);
-      const accent = accentFor(name);
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'yaab-faction-chip';
-      chip.title = 'Switch to ' + name;
-      chip.dataset.faction = name;
-      chip.innerHTML =
-        '<span class="yaab-faction-chip-dot" style="background:' + esc(accent) + '"></span>' +
-        '<span class="yaab-faction-chip-label">' + esc(short) + '</span>';
-      chip.addEventListener('click', () => {
-        sel.value = name;
-        sel.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-      row.appendChild(chip);
-      added++;
-    });
-    return added > 0 ? row : null;
-  }
-
-  function renderChipRow() {
-    // Recent-faction quick-select chips were judged useless and visually
-    // crowding the Army Setup form. Disable the render but keep the
-    // pushRecent/readRecents tracking in place — other modules read recents
-    // for telemetry and there's no harm in still recording them.
-    const existing = document.getElementById('yaab-faction-chips');
-    if (existing) existing.remove();
-  }
-
-  // ─────────────────────────────────────────────────────────────
   // Hooks
   // ─────────────────────────────────────────────────────────────
 
   App.hooks.bootstrap.push(function () {
     watchArmyList();
     injectKbdBadge();
-    renderChipRow();
   });
 
-  App.hooks.selectionChange.push(function (state) {
-    const cur = state && state.factionFilter;
-    if (cur && cur !== 'all') pushRecent(cur);
-    renderChipRow();
+  App.hooks.selectionChange.push(function () {
     // Hero text changes between empty-state ("no faction") and mini-state
     // ("faction selected") — re-inject if the army is still empty.
     const hero = document.getElementById(HERO_ID);
     if (hero && hero.parentNode) hero.remove();
     injectHeroIfEmpty();
   });
-
-  App.hooks.armyChange.push(function () {
-    // renderArmyList already wipes innerHTML; the MutationObserver re-injects
-    // when the empty placeholder reappears.
-  });
-
-  // Expose the recent-faction tracker for external use (e.g. tests, other modules).
-  App.heroState = {
-    pushRecent: pushRecent,
-    readRecents: readRecents,
-    rerender: function () { renderChipRow(); injectHeroIfEmpty(); },
-  };
 })();

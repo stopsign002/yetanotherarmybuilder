@@ -4,27 +4,11 @@
 
   App.updateChapterDropdown = function (factionName) {
     const state  = App.state;
-    const group  = document.getElementById('army-chapter-group');
-    const select = document.getElementById('army-chapter-select');
+    // Every chapter is a top-level faction option, so there is never a
+    // sub-dropdown to show: reset and keep it hidden.
     state.selectedChapter = null;
-    const chapters = (factionName && factionName !== 'all')
-      ? (state.chaptersMap[factionName] || [])
-      : [];
-    if (chapters.length === 0) {
-      group.hidden = true;
-      select.innerHTML = '<option value="">— All —</option>';
-      return;
-    }
-    group.hidden = false;
-    const prefix = factionName + ' - ';
-    select.innerHTML = '<option value="">— All Chapters —</option>';
-    chapters.slice().sort().forEach(c => {
-      const label = c.startsWith(prefix) ? c.slice(prefix.length) : c;
-      const opt = document.createElement('option');
-      opt.value = c;
-      opt.textContent = label;
-      select.appendChild(opt);
-    });
+    document.getElementById('army-chapter-group').hidden = true;
+    document.getElementById('army-chapter-select').innerHTML = '<option value="">— All —</option>';
   };
 
   // Token-based filter: when the user has selected an SM chapter, hide
@@ -105,7 +89,6 @@
   App.applyImportedSelections = function (factionName, chapter, detachment) {
     const state = App.state;
     const factionSelect    = document.getElementById('army-faction-select');
-    const chapterSelect    = document.getElementById('army-chapter-select');
 
     // `detachment` may be a single name (legacy saved armies / old share codes)
     // or an array of names (multi-detachment). Normalize to an array.
@@ -113,11 +96,9 @@
       ? detachment.filter(n => typeof n === 'string' && n)
       : (detachment ? [detachment] : []);
 
-    let topLevel = chapter ? (App.getVirtualParentOf(chapter) || factionName) : factionName;
-    if (!topLevel) topLevel = 'all';
+    let topLevel = factionName || 'all';
     const topLevelExists = topLevel === 'all'
-      || state.factions.some(f => f.factionName === topLevel)
-      || !!state.chaptersMap[topLevel];
+      || state.factions.some(f => f.factionName === topLevel);
     if (!topLevelExists) topLevel = 'all';
 
     // Dispatching 'change' on the faction/chapter selects resets the detachment
@@ -126,14 +107,9 @@
     // sync's visibility-pull and boot re-apply the SAME selections, and an
     // unconditional dispatch would reset the chapter + re-filter the roster —
     // snapping the user to the top of the units pane every time they tab back.
-    const chapterTarget = (chapter && [...chapterSelect.options].some(o => o.value === chapter)) ? chapter : '';
     if (factionSelect.value !== topLevel) {
       factionSelect.value = topLevel;
       factionSelect.dispatchEvent(new Event('change'));
-    }
-    if (chapterSelect.value !== chapterTarget) {
-      chapterSelect.value = chapterTarget;
-      chapterSelect.dispatchEvent(new Event('change'));
     }
 
     // Restore the detachment selection against the now-populated available list.

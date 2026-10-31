@@ -34,15 +34,12 @@
   const RESUMABLE = ['build', 'collect', 'waha'];
 
   function readPersisted() {
-    try {
-      const v = localStorage.getItem(LS_KEY);
-      if (RESUMABLE.indexOf(v) !== -1) return v;
-    } catch (_) {}
-    return DEFAULT_MODE;
+    const v = App.store.getRaw(LS_KEY);
+    return RESUMABLE.indexOf(v) !== -1 ? v : DEFAULT_MODE;
   }
 
   function writePersisted(mode) {
-    try { localStorage.setItem(LS_KEY, mode); } catch (_) {}
+    App.store.setRaw(LS_KEY, mode);
   }
 
   function getSection(mode) { return $(mode + '-mode'); }

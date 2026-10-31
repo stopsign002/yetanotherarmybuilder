@@ -21,10 +21,7 @@
   const LS_KEY = 'yaab_show_allies';
   const BTN_ID = 'yaab-btn-allies';
 
-  let showAllies = false;
-  try {
-    showAllies = localStorage.getItem(LS_KEY) === '1';
-  } catch (_) { showAllies = false; }
+  let showAllies = App.store.getRaw(LS_KEY) === '1';
 
   // Ally roster-filter chip state — 3-state cycle, exactly like the keyword
   // chips in roster.js, but owned here (not roster.js: see docs/UI.md
@@ -96,7 +93,7 @@
 
   function toggle() {
     showAllies = !showAllies;
-    try { localStorage.setItem(LS_KEY, showAllies ? '1' : '0'); } catch (_) {}
+    App.store.setRaw(LS_KEY, showAllies ? '1' : '0');
     updateButton();
     if (typeof App.renderUnitRosterWithContext === 'function') {
       App.renderUnitRosterWithContext();

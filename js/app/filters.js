@@ -20,46 +20,10 @@
     state.factionsVersion = (state.factionsVersion || 0) + 1;
   };
 
-  App.buildChaptersMap = function () {
-    const state = App.state;
-    state.chaptersMap = {};
-    state.virtualBase = {};
-    state.chapterFactions = new Set();
-    App.VIRTUAL_PARENTS.forEach(vp => {
-      const prefix = vp.name + ' - ';
-      const children = state.factions
-        .filter(f => f.factionName.startsWith(prefix))
-        .map(f => f.factionName);
-      if (children.length === 0) return;
-      state.chaptersMap[vp.name]   = children;
-      state.virtualBase[vp.name]   = vp.baseChapter;
-      children.forEach(c => state.chapterFactions.add(c));
-    });
-  };
-
-  App.getVirtualParentOf = function (chapterName) {
-    const map = App.state.chaptersMap;
-    for (const vp in map) {
-      if (map[vp].includes(chapterName)) return vp;
-    }
-    return null;
-  };
-
   App.getEffectiveFilter = function () {
     const state = App.state;
     if (state.selectedChapter) {
-      const linked = [];
-      const vp = App.getVirtualParentOf(state.selectedChapter);
-      if (vp && state.virtualBase[vp] && state.virtualBase[vp] !== state.selectedChapter) {
-        linked.push(state.virtualBase[vp]);
-      }
-      return { factionFilter: state.selectedChapter, linkedFactions: linked };
-    }
-    if (state.factionFilter !== 'all' && state.chaptersMap[state.factionFilter]) {
-      return {
-        factionFilter:  state.factionFilter,
-        linkedFactions: state.chaptersMap[state.factionFilter],
-      };
+      return { factionFilter: state.selectedChapter, linkedFactions: [] };
     }
     // Space Marine chapter inheritance: pull in generic SM units alongside the
     // chapter-specific roster. See App.CHAPTER_PARENTS in state.js for the map.
@@ -86,12 +50,7 @@
     const state = App.state;
     const name = state.selectedChapter || (state.factionFilter !== 'all' ? state.factionFilter : null);
     if (!name) return null;
-    const direct = state.factions.find(f => f.factionName === name);
-    if (direct) return direct;
-    if (state.virtualBase && state.virtualBase[name]) {
-      return state.factions.find(f => f.factionName === state.virtualBase[name]) || null;
-    }
-    return null;
+    return state.factions.find(f => f.factionName === name) || null;
   };
 
   App.getDetachmentFaction = function () {
@@ -108,12 +67,6 @@
     if (childName && parents[childName]) {
       const parent = state.factions.find(f => f.factionName === parents[childName]);
       if (parent && parent.detachments && parent.detachments.length > 0) return parent;
-    }
-    const vp = state.selectedChapter
-      ? App.getVirtualParentOf(state.selectedChapter)
-      : (state.factionFilter !== 'all' ? App.getVirtualParentOf(state.factionFilter) : null);
-    if (vp && state.virtualBase[vp]) {
-      return state.factions.find(f => f.factionName === state.virtualBase[vp]) || faction;
     }
     return faction;
   };

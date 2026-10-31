@@ -24,10 +24,7 @@
   const BATTLELINE_COPIES = 2;
   const OTHER_COPIES      = 1;
 
-  const esc = (s) => (window.UI && typeof UI.escapeHtml === 'function')
-    ? UI.escapeHtml(s == null ? '' : String(s))
-    : String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const esc = UI.escapeHtml;
 
   const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
 
@@ -35,11 +32,11 @@
   // Enabled flag
   // ---------------------------------------------------------------------------
   function isEnabled() {
-    try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch (_) { return false; }
+    return App.store.getRaw(STORAGE_KEY) === '1';
   }
 
   function setEnabled(on) {
-    try { localStorage.setItem(STORAGE_KEY, on ? '1' : '0'); } catch (_) {}
+    App.store.setRaw(STORAGE_KEY, on ? '1' : '0');
     render();
   }
 

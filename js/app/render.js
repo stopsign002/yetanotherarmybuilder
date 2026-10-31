@@ -21,10 +21,7 @@
   App.renderAll = function () {
     if (pendingRaf) { cancelAnimationFrame(pendingRaf); pendingRaf = 0; }
     const state = App.state;
-    UI.updateFactionFilter(state.factions, {
-      hide:   state.chapterFactions,
-      extras: Object.keys(state.chaptersMap),
-    });
+    UI.updateFactionFilter(state.factions);
     const { factionFilter, linkedFactions } = effectiveRosterFilter();
     UI.renderUnitRoster(
       state.allUnits,

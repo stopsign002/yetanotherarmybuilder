@@ -1,4 +1,4 @@
-// app/flavor.js — faction flavor quotes on empty army + save toast.
+// app/flavor.js — faction flavor quotes on the save toast.
 (function () {
   const App = window.App = window.App || {};
   if (!App.hooks) return;
@@ -43,11 +43,6 @@
 
   const GENERIC = ['For the Emperor, and glory.', 'The galaxy burns. Pick a side.', 'Begin. The battle waits.'];
 
-  function shortName(name) {
-    if (!name) return '';
-    return name.includes(' - ') ? name.split(' - ').pop().trim() : name;
-  }
-
   function pick(arr) {
     if (!arr || !arr.length) return '';
     return arr[Math.floor(Math.random() * arr.length)];
@@ -56,7 +51,7 @@
   function currentFactionShort() {
     const s = App.state || {};
     const name = s.selectedChapter || (s.factionFilter && s.factionFilter !== 'all' ? s.factionFilter : null);
-    return shortName(name);
+    return UI.factionShort(name);
   }
 
   function quoteFor(name) {
@@ -65,35 +60,7 @@
     return pick(GENERIC);
   }
 
-  function decorateEmpty(army) {
-    const el = document.getElementById('army-list-empty');
-    if (!el) return;
-    if (army && army.entries && army.entries.length > 0) return;
-    const q = quoteFor(currentFactionShort());
-    if (!q) return;
-    el.innerHTML =
-      'No units added yet.<br/>Select a unit, then &ldquo;Add to Army&rdquo;.' +
-      '<div class="flavor-quote">&ldquo;' + escapeHtml(q) + '&rdquo;</div>';
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
-  }
-
-  // armyChange fires BEFORE renderArmyList rebuilds the list, so defer.
-  App.hooks.armyChange.push(function (army) {
-    setTimeout(() => decorateEmpty(army), 0);
-  });
-
-  App.hooks.selectionChange.push(function () {
-    const army = App.state && App.state.currentArmy;
-    setTimeout(() => decorateEmpty(army), 0);
-  });
-
-  App.hooks.bootstrap.push(function (state) {
-    decorateEmpty(state && state.currentArmy);
+  App.hooks.bootstrap.push(function () {
     const btn = document.getElementById('btn-save-army');
     if (!btn) return;
     btn.addEventListener('click', function () {

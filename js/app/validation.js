@@ -166,13 +166,7 @@
       '<ul class="validation-banner-list">' + items + '</ul>';
   }
 
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
+  const escapeHtml = UI.escapeHtml;
 
   App.hooks.bootstrap.push(function (state) {
     ensureBanner();

@@ -48,15 +48,10 @@
 
   let userEdited = false;
 
-  function shortName(name) {
-    if (!name) return '';
-    return name.includes(' - ') ? name.split(' - ').pop().trim() : name;
-  }
-
   function currentFactionShort() {
     const s = App.state || {};
     const name = s.selectedChapter || (s.factionFilter && s.factionFilter !== 'all' ? s.factionFilter : null);
-    return shortName(name);
+    return UI.factionShort(name);
   }
 
   function topKeywords(army) {

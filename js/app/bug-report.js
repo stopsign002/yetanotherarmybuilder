@@ -99,12 +99,7 @@
     return lines.join('\n');
   }
 
-  function esc(s) {
-    if (UI && UI.escapeHtml) return UI.escapeHtml(s == null ? '' : String(s));
-    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
-    }[c]));
-  }
+  const esc = UI.escapeHtml;
   function toast(msg, kind, ms) {
     if (UI && UI.toast) UI.toast(msg, kind || 'info', ms || 2500);
   }

@@ -60,9 +60,7 @@
     if (window.UI && UI.renderArmyList) UI.renderArmyList(s.currentArmy);
   }
 
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
+  const esc = UI.escapeHtml;
   const cap = (s) => { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
   const names = (grp) => (grp || []).map((x) => x.name).join(' + ');
 

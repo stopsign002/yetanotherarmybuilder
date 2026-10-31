@@ -34,23 +34,6 @@
       App.renderDetachmentPicker();
     });
 
-    document.getElementById('army-chapter-select').addEventListener('change', e => {
-      state.selectedChapter = e.target.value || null;
-      state.selectedDetachment = null;
-      state.selectedDetachments = [];
-      state.detachmentFaction  = null;
-      state.selectedArmyEntryIndex = null;
-      if (state.currentArmy) {
-        state.currentArmy.chapter = state.selectedChapter;
-        state.currentArmy.setDetachments([], { touch: false });
-      }
-      App.applyFactionColor(state.selectedChapter || state.factionFilter);
-      App.renderUnitRosterWithContext();
-      const faction = App.getCurrentFaction();
-      UI.updateFactionRules(faction);
-      App.renderDetachmentPicker();
-    });
-
     // The detachment selection is driven by the Detachments box
     // (js/app/detachment-picker.js), which owns its own click handling and
     // re-renders the Army Rules union + open detail. No dropdown handler here.
@@ -152,8 +135,7 @@
       if (!state.selectedUnit) return;
 
       // Quantity box removed — Add always adds one; click again for more.
-      const qtyEl = document.getElementById('detail-qty');
-      const qty = qtyEl ? (parseInt(qtyEl.value, 10) || 1) : 1;
+      const qty = 1;
       const squadSelect = document.getElementById('detail-squad-select');
       let squadOption = null;
       if (squadSelect) {

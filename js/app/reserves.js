@@ -64,33 +64,25 @@
 
   // ── persistence ──────────────────────────────────────────────────────
   function loadPersisted() {
-    try {
-      const raw = localStorage.getItem(LS_RESERVES);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') {
-          Object.keys(parsed).forEach(k => {
-            const v = parsed[k];
-            if (Number.isFinite(v) && v > 0) QTY[k] = Math.floor(v);
-          });
-        }
-      }
-    } catch (_) { /* ignore */ }
+    const parsed = App.store.get(LS_RESERVES, null);
+    if (parsed && typeof parsed === 'object') {
+      Object.keys(parsed).forEach(k => {
+        const v = parsed[k];
+        if (Number.isFinite(v) && v > 0) QTY[k] = Math.floor(v);
+      });
+    }
 
-    try {
-      const v = localStorage.getItem(LS_VIEW);
-      if (v && ALLOWED_VIEWS[v]) _view = v;
-    } catch (_) { /* ignore */ }
+    const v = App.store.getRaw(LS_VIEW);
+    if (v && ALLOWED_VIEWS[v]) _view = v;
     applyViewBodyAttr();
   }
 
   function persist() {
-    try { localStorage.setItem(LS_RESERVES, JSON.stringify(QTY)); }
-    catch (_) { /* quota — ignore */ }
+    App.store.set(LS_RESERVES, QTY);
   }
 
   function persistView() {
-    try { localStorage.setItem(LS_VIEW, _view); } catch (_) {}
+    App.store.setRaw(LS_VIEW, _view);
   }
 
   function applyViewBodyAttr() {
@@ -146,11 +138,6 @@
     return 0;
   }
 
-  function formatPts(n) {
-    n = Math.round(Number(n) || 0);
-    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  }
-
   function effectiveFactionFilter() {
     if (typeof App.getEffectiveFilter === 'function') {
       const ef = App.getEffectiveFilter() || {};
@@ -166,9 +153,7 @@
   function factionShortLabel() {
     const { factionFilter } = effectiveFactionFilter();
     if (!factionFilter || factionFilter === 'all') return 'all factions';
-    return factionFilter.indexOf(' - ') !== -1
-      ? factionFilter.split(' - ').pop().trim()
-      : factionFilter;
+    return UI.factionShort(factionFilter);
   }
 
   // Returns { pts, types, total } for the active view, or null if the
@@ -243,7 +228,7 @@
       return;
     }
     badge.hidden = false;
-    badge.textContent = '≈ ' + formatPts(r.pts) + ' pts';
+    badge.textContent = '≈ ' + UI.fmtPts(r.pts) + ' pts';
     const what = _view === VIEW_REQUISITIONS ? 'Requisition Requests' : 'Reserves';
     badge.title = 'Approx. points value of your ' + what + ' for ' + factionShortLabel() +
       ' — ' + r.types + ' unit' + (r.types !== 1 ? 's' : '') +

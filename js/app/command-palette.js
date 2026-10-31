@@ -106,7 +106,6 @@
     (state.factions || []).forEach(f => {
       const name = f.factionName; // dc-adapter sets factionName, never name
       if (!name || seen.has(name)) return;
-      if (state.chapterFactions && state.chapterFactions.has(name)) return; // hidden
       if (options.length && options.indexOf(name) === -1) return;
       seen.add(name);
       out.push({
@@ -343,11 +342,7 @@
     }
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-    }[c]));
-  }
+  const escapeHtml = UI.escapeHtml;
 
   function renderResults() {
     const q = (paletteInput.value || '').trim().toLowerCase();

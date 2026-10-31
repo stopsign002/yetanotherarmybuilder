@@ -3,15 +3,8 @@
   const App = window.App = window.App || {};
 
   // ── localStorage helpers ─────────────────────────────────────────────
-  function lsRead(key, fallback) {
-    try {
-      const v = localStorage.getItem(key);
-      return (v === null || v === undefined) ? fallback : v;
-    } catch (_) { return fallback; }
-  }
-  function lsWrite(key, value) { try { localStorage.setItem(key, value); } catch (_) {} }
   function lsBool(key, defaultOn) {
-    const v = lsRead(key, null);
+    const v = App.store.getRaw(key);
     if (v === null) return !!defaultOn;
     return v === '1' || v === 'true';
   }
@@ -69,7 +62,7 @@
         if (clickToolbarBtn('yaab-btn-legends')) return;
         // Fallback: write the flag directly. Roster filter will pick it up
         // on the next render.
-        lsWrite('yaab_show_legends', checked ? '1' : '0');
+        App.store.setRaw('yaab_show_legends', checked ? '1' : '0');
         if (typeof App.renderUnitRosterWithContext === 'function') {
           App.renderUnitRosterWithContext();
         }
@@ -93,7 +86,7 @@
         // invokes the onClick even though no DOM button is ever mounted.
         if (clickToolbarBtn('yaab-btn-allies')) return;
         // Fallback: write the flag directly and re-render.
-        lsWrite('yaab_show_allies', checked ? '1' : '0');
+        App.store.setRaw('yaab_show_allies', checked ? '1' : '0');
         if (typeof App.renderUnitRosterWithContext === 'function') {
           App.renderUnitRosterWithContext();
         }
@@ -106,7 +99,7 @@
       help:  'Display owned / painted indicators on unit cards.',
       defaultOn: true,
       onChange(checked) {
-        lsWrite('yaab_show_collection_badges', checked ? '1' : '0');
+        App.store.setRaw('yaab_show_collection_badges', checked ? '1' : '0');
         applyCollectionBadges();
       },
       isOn() { return lsBool('yaab_show_collection_badges', true); },
@@ -117,7 +110,7 @@
       help:  'Suppress UI transitions and effects (overrides system preference when on).',
       defaultOn: false,
       onChange(checked) {
-        lsWrite('yaab_reduced_motion', checked ? '1' : '0');
+        App.store.setRaw('yaab_reduced_motion', checked ? '1' : '0');
         applyReduceMotion();
       },
       isOn() { return lsBool('yaab_reduced_motion', false); },

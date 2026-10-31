@@ -16,16 +16,12 @@
   ];
 
   function readState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return {};
-      const obj = JSON.parse(raw);
-      return (obj && typeof obj === 'object') ? obj : {};
-    } catch (_) { return {}; }
+    const obj = App.store.get(STORAGE_KEY, null);
+    return (obj && typeof obj === 'object') ? obj : {};
   }
 
   function writeState(state) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
+    App.store.set(STORAGE_KEY, state);
   }
 
   function applyAndWire(id) {

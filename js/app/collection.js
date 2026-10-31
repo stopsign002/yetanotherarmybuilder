@@ -62,9 +62,7 @@
   // (yaab_show_collection_badges). Treat a missing/null LS value as OFF so
   // BUILD starts clean for users who never touched the toggle.
   function showBadgesInBuild() {
-    try {
-      return localStorage.getItem(LS_SHOW_BADGES_IN_BUILD) === '1';
-    } catch (_) { return false; }
+    return App.store.getRaw(LS_SHOW_BADGES_IN_BUILD) === '1';
   }
 
   // Reflect the build-badge opt-in as a body class so CSS can override the
@@ -103,9 +101,7 @@
   // once at boot, so the next setStatus() persisted the stale in-memory copy
   // and erased every status set on another device, everywhere.
   function rehydrate() {
-    let raw = null;
-    try { raw = localStorage.getItem(LS_KEY); } catch (_) {}
-    hydrateFrom(raw);
+    hydrateFrom(App.store.getRaw(LS_KEY));
     document.querySelectorAll('.unit-card[data-unit-id]').forEach(card => {
       const next = 'collection-' + getStatus(card.getAttribute('data-unit-id'));
       STATUSES.forEach(st => card.classList.remove('collection-' + st));
@@ -125,23 +121,11 @@
   }
 
   function loadPersisted() {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object') return;
-      Object.keys(parsed).forEach(k => {
-        const v = parsed[k];
-        if (typeof v === 'string' && STATUSES.indexOf(v) !== -1 && v !== 'none') {
-          STATE[k] = v;
-        }
-      });
-    } catch (_) { /* ignore */ }
+    hydrateFrom(App.store.getRaw(LS_KEY));
   }
 
   function persist() {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(STATE)); }
-    catch (_) { /* quota — ignore */ }
+    App.store.set(LS_KEY, STATE);
   }
 
   function getStatus(unitId) {
@@ -201,37 +185,6 @@
   // ────────────────────────────────────────────────────────────────────
   // detail-panel status widget
   // ────────────────────────────────────────────────────────────────────
-
-  function getSelectedUnit() {
-    return (window.UI && UI._state && UI._state.selectedUnit) || null;
-  }
-
-  function buildDetailWidget(unit) {
-    const wrap = document.createElement('div');
-    wrap.className = 'collection-detail-widget';
-    wrap.dataset.unitId = unit.id;
-    const status = getStatus(unit.id);
-    const title = document.createElement('div');
-    title.className = 'collection-detail-title';
-    title.textContent = 'Collection status';
-    wrap.appendChild(title);
-    const row = document.createElement('div');
-    row.className = 'collection-detail-row';
-    STATUSES.forEach(s => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'collection-status-btn collection-status-' + s +
-        (status === s ? ' active' : '');
-      btn.dataset.status = s;
-      btn.textContent = STATUS_LABELS[s];
-      btn.addEventListener('click', () => {
-        setStatus(unit.id, s);
-      });
-      row.appendChild(btn);
-    });
-    wrap.appendChild(row);
-    return wrap;
-  }
 
   // Inject (or update) the widget inside #unit-detail-panel. Idempotent.
   // The collection-status widget has been removed from the unit-detail
