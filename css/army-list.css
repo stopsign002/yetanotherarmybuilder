@@ -37,29 +37,29 @@
  * missed. */
 
 .army-rules-title {
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   text-transform: uppercase;
   color: var(--text-muted);
-  padding: 4px 0 6px;
+  padding: var(--sp-2) 0 var(--sp-3);
   border-bottom: 1px solid var(--border);
-  margin-bottom: 6px;
+  margin-bottom: var(--sp-3);
 }
-.army-rules-list { display: flex; flex-direction: column; gap: 3px; }
+.army-rules-list { display: flex; flex-direction: column; gap: var(--sp-1); }
 .army-rules-summary::-webkit-details-marker { display: none; }
 .army-rules-summary::before {
   content: '\25B8';
   /* ▸ */
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   transition: transform 0.15s ease;
   color: var(--accent);
 }
-.army-rules-collapsible > .army-rules-section { padding: 8px 12px 12px; border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 0; }
+.army-rules-collapsible > .army-rules-section { padding: var(--sp-4) var(--sp-6) var(--sp-6); border-top: 1px solid var(--ov-1); margin-bottom: 0; }
 .army-rules-subsection:last-child { margin-bottom: 0; }
 
 /* === Army rules in left panel: render at natural height. The panel-body's
  * own overflow-y: auto handles overflow; we don't want a second scrollbar
  * inside the rules box. === */
-body.build-mode-enhanced #panel-left .army-rules-section { padding-right: 4px; }
+body.build-mode-enhanced #panel-left .army-rules-section { padding-right: var(--sp-2); }
 .army-rules-summary:hover { color: var(--text); }
 
 /* Explicit collapse: when <details> is closed, hide non-summary children.
@@ -71,12 +71,12 @@ body.build-mode-enhanced #panel-left .army-rules-section { padding-right: 4px; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px;
+  padding: var(--sp-3) var(--sp-4);
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   transition: border-color 0.15s, background 0.15s;
   user-select: none;
@@ -84,12 +84,12 @@ body.build-mode-enhanced #panel-left .army-rules-section { padding-right: 4px; }
 .army-rule-item:hover { border-color: var(--accent); background: var(--card-hover); }
 
 /* ── Army List */
-.army-meta { display: grid; grid-template-columns: 1fr 120px; gap: 10px; margin-bottom: 12px; }
+.army-meta { display: grid; grid-template-columns: 1fr 120px; gap: var(--sp-5); margin-bottom: var(--sp-6); }
 
 /* BSData browse modal styles removed — data now auto-loads */
 /* ── Army Rules: collapsible wrapper */
 .army-rules-collapsible {
-  margin-bottom: 12px;
+  margin-bottom: var(--sp-6);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: rgba(255,255,255,0.02);
@@ -101,7 +101,7 @@ body.build-mode-enhanced #panel-left .army-rules-section { padding-right: 4px; }
    * army units. */
   flex-shrink: 0;
 }
-.army-rules-section, .army-rules-subsection { margin-bottom: 12px; }
+.army-rules-section, .army-rules-subsection { margin-bottom: var(--sp-6); }
 
 /* Hide the now-redundant left-panel meta + points-summary when the hero
  * header has taken over those duties. The DOM elements remain so existing
@@ -112,7 +112,7 @@ body.build-mode-enhanced .army-meta, body.build-mode-enhanced .points-summary { 
  * chapter, detachment. Closed once the user is past setup so the entry
  * list has more room. */
 .army-setup-section {
-  margin-bottom: 12px;
+  margin-bottom: var(--sp-6);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: rgba(255,255,255,0.02);
@@ -125,28 +125,28 @@ body.build-mode-enhanced .army-meta, body.build-mode-enhanced .points-summary { 
   cursor: pointer;
   user-select: none;
   list-style: none;
-  padding: 8px 12px;
-  font-size: 12px;
+  padding: var(--sp-4) var(--sp-6);
+  font-size: var(--fs-sm);
   font-weight: 600;
-  letter-spacing: 0.6px;
+  letter-spacing: var(--tr-normal);
   text-transform: uppercase;
   color: var(--text-muted);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-4);
   border-radius: var(--radius);
 }
 .army-setup-summary::-webkit-details-marker { display: none; }
 .army-setup-summary::before {
   content: '\25B8';
   /* ▸ */
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   transition: transform 0.15s ease;
   color: var(--accent);
 }
-.army-setup-body { padding: 8px 12px 12px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 10px; }
+.army-setup-body { padding: var(--sp-4) var(--sp-6) var(--sp-6); border-top: 1px solid var(--ov-1); display: flex; flex-direction: column; gap: var(--sp-5); }
 .army-setup-summary:hover { color: var(--text); }
-.army-setup-section[open] { background: rgba(255,255,255,0.03); }
+.army-setup-section[open] { background: var(--ov-1); }
 .army-setup-section[open] > .army-setup-summary::before { transform: rotate(90deg); }
 .army-rules-collapsible[open] > .army-rules-summary::before { transform: rotate(90deg); }
 
@@ -154,38 +154,38 @@ body.build-mode-enhanced .army-meta, body.build-mode-enhanced .points-summary { 
 .army-entries-header {
   display: grid;
   grid-template-columns: 1fr 44px 50px 44px 28px;
-  gap: 4px;
-  padding: 4px 8px;
-  font-size: 10px;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-2xs);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: var(--tr-wider);
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-2);
 }
 
 /* Roster card upgrade (left-panel army entries) */
 /* Reset the army-entries header columns to match the new card layout
  * (we hide the per-column header text; the cards label their own stats). */
 body.build-mode-enhanced .army-entries-header { display: none; }
-.army-entry-list { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.army-entry-list { display: flex; flex-direction: column; gap: var(--sp-2); flex: 1; }
 .army-entry-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
 .army-entry-qty input {
   width: 42px;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   color: var(--text);
-  padding: 2px 4px;
-  font-size: 12px;
+  padding: var(--sp-1) var(--sp-2);
+  font-size: var(--fs-sm);
   text-align: center;
   outline: none;
 }
 body.build-mode-enhanced .army-entry-name {
   font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
-  font-size: 14px;
+  font-size: var(--fs-base);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tr-tight);
   color: var(--text);
   /* The outer name row stays flex (title + squad label side by side),
    * but content is allowed to wrap — the title element inside owns the
@@ -194,7 +194,7 @@ body.build-mode-enhanced .army-entry-name {
    * rules before the inner -webkit-line-clamp gets a turn. */
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
   min-width: 0;
 }
@@ -218,25 +218,25 @@ body.build-mode-enhanced .army-entry-title {
   min-width: 0;
   flex: 1 1 auto;
 }
-body.build-mode-enhanced .army-entry-squad { font-family: var(--ui-font); font-size: 11px; font-weight: 400; color: var(--text-muted); letter-spacing: 0; }
+body.build-mode-enhanced .army-entry-squad { font-family: var(--ui-font); font-size: var(--fs-xs); font-weight: 400; color: var(--text-muted); letter-spacing: 0; }
 body.build-mode-enhanced .army-entry-qty input {
   width: 38px;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text);
-  padding: 1px 4px;
-  font-size: 12px;
+  padding: 1px var(--sp-2);
+  font-size: var(--fs-sm);
   text-align: center;
   outline: none;
   font-weight: 600;
 }
 .army-entry.just-added { animation: yaab-just-added-pulse 700ms var(--yaab-card-ease); border-color: var(--yaab-card-accent) !important; }
 .army-entry.just-added-fade { animation: yaab-fade-in 220ms var(--yaab-card-ease); }
-.army-entry-attached .army-entry-qty input { width: 30px; padding: 0 3px; }
+.army-entry-attached .army-entry-qty input { width: 30px; padding: 0 var(--sp-1); }
 .army-entry-qty input:focus { border-color: var(--accent); }
 .army-entry-remove:hover { color: var(--danger); background: rgba(231,76,60,0.15); }
-.army-rules-collapsible[open] { background: rgba(255,255,255,0.03); }
+.army-rules-collapsible[open] { background: var(--ov-1); }
 body.build-mode-enhanced .army-entry:hover, .army-entry-card:hover {
   border-color: rgba(var(--accent-rgb),0.45);
   transform: translateY(-1px);
@@ -249,7 +249,7 @@ body.build-mode-enhanced .army-entry-qty input:focus { border-color: var(--accen
 body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); background: rgba(217,83,79,0.15); }
 
 /* Subtle accent ring on the army-entry hover (no lift). */
-.army-entry:hover { border-color: rgba(var(--yaab-card-accent-rgb), 0.40); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
+.army-entry:hover { border-color: rgba(var(--yaab-card-accent-rgb), 0.40); box-shadow: var(--shadow-sm); }
 .army-entry-action:active { transform: scale(0.94); }
 .army-entry.is-dragging .army-entry-handle { cursor: grabbing; }
 .army-entry.is-dragging * { cursor: grabbing !important; }
@@ -261,20 +261,20 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
   color: var(--nb-on-hot);
   border-color: var(--nb-ink);
 }
-.army-list-empty { color: var(--text-muted); font-size: 12px; line-height: 1.7; padding: 20px 8px; text-align: center; }
+.army-list-empty { color: var(--text-muted); font-size: var(--fs-sm); line-height: 1.7; padding: var(--sp-9) var(--sp-4); text-align: center; }
 .army-rules-summary {
   cursor: pointer;
   user-select: none;
   list-style: none;
-  padding: 8px 12px;
-  font-size: 12px;
+  padding: var(--sp-4) var(--sp-6);
+  font-size: var(--fs-sm);
   font-weight: 600;
-  letter-spacing: 0.6px;
+  letter-spacing: var(--tr-normal);
   text-transform: uppercase;
   color: var(--text-muted);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-4);
   border-radius: var(--radius);
 }
 
@@ -282,27 +282,27 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
  * collapsible starts minimized, so when the user opens it they want to
  * see every strat at once and use the page's own scroll. The class is
  * kept on markup/JS as a no-op so existing call sites still work. */
-.army-rules-list-scroll { padding-right: 4px; }
-.army-entry { display: grid; grid-template-columns: 1fr 44px 50px 44px 28px; align-items: center; gap: 4px; font-size: 12px; }
-.army-entry-pts { text-align: right; color: var(--text-muted); font-size: 11px; }
-.army-entry-total { text-align: right; color: var(--accent); font-size: 12px; }
+.army-rules-list-scroll { padding-right: var(--sp-2); }
+.army-entry { display: grid; grid-template-columns: 1fr 44px 50px 44px 28px; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); }
+.army-entry-pts { text-align: right; color: var(--text-muted); font-size: var(--fs-xs); }
+.army-entry-total { text-align: right; color: var(--accent); font-size: var(--fs-sm); }
 .army-entry-remove {
   background: none;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 15px;
+  font-size: var(--fs-base);
   line-height: 1;
-  padding: 2px;
-  border-radius: 3px;
+  padding: var(--sp-1);
+  border-radius: var(--radius-xs);
   transition: color 0.15s, background 0.15s;
   text-align: center;
 }
-.army-entry-squad { font-size: 10px; font-weight: 400; color: var(--text-muted); }
+.army-entry-squad { font-size: var(--fs-2xs); font-weight: 400; color: var(--text-muted); }
 
 /* Placeholder shown inside the always-visible army-rules-section when no
  * faction/detachment is yet selected. Compact, muted, single line. */
-.army-rules-empty { padding: 6px 8px; font-size: 12px; color: var(--text-muted); font-style: italic; }
+.army-rules-empty { padding: var(--sp-3) var(--sp-4); font-size: var(--fs-sm); color: var(--text-muted); font-style: italic; }
 
 /* ── Army Toolbar */
 .army-toolbar {
@@ -314,16 +314,16 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
 .army-toolbar, .army-toolbar .toolbar-row { min-width: 0; }
 
 /* Army entry enhancement badges */
-.army-enh-badges { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
-.army-entry-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
-.army-entry-stat { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.army-enh-badges { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-1); }
+.army-entry-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); justify-content: center; }
+.army-entry-stat { display: inline-flex; align-items: baseline; gap: var(--sp-2); white-space: nowrap; }
 
 /* ── Toolbar (left panel footer) — preserved from previous layout */
-.army-toolbar { gap: 4px; }
+.army-toolbar { gap: var(--sp-2); }
 .army-enh-badge {
-  font-size: 9px;
-  padding: 1px 4px;
-  border-radius: 3px;
+  font-size: var(--fs-2xs);
+  padding: 1px var(--sp-2);
+  border-radius: var(--radius-xs);
   background: rgba(var(--accent-rgb), 0.15);
   color: var(--text-muted);
   border: 1px solid rgba(var(--accent-rgb), 0.2);
@@ -337,65 +337,65 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
   width: 3px;
   background: var(--accent);
   box-shadow: 0 0 8px rgba(var(--accent-rgb),0.4);
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--radius) 0 0 var(--radius);
 }
 .army-entry-handle-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-muted); }
-.army-enh-pts { font-size: 9px; color: var(--text-muted); margin-left: 2px; }
+.army-enh-pts { font-size: var(--fs-2xs); color: var(--text-muted); margin-left: var(--sp-1); }
 
 /* "▲N" marker on an army entry total: extra pts from 11e per-army scaling. */
-.army-scaling-pts { font-size: 9px; color: var(--accent); margin-left: 3px; cursor: help; font-variant-numeric: tabular-nums; }
-.army-rule-item .rule-arrow { color: var(--text-muted); font-size: 11px; }
+.army-scaling-pts { font-size: var(--fs-2xs); color: var(--accent); margin-left: var(--sp-1); cursor: help; font-variant-numeric: tabular-nums; }
+.army-rule-item .rule-arrow { color: var(--text-muted); font-size: var(--fs-xs); }
 .play-strat-row .rule-arrow { display: inline-block; transition: transform 180ms ease-out; }
 .play-strat.is-open .play-strat-row .rule-arrow { transform: rotate(90deg); }
-.rule-item-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.rule-item-right { display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; }
 .play-strat-row .rule-item-right { flex-wrap: wrap; justify-content: flex-end; }
 .points-summary {
   background: rgba(var(--accent-rgb),0.1);
   border: 1px solid rgba(var(--accent-rgb),0.3);
   border-radius: var(--radius);
-  padding: 12px 14px;
-  margin-bottom: 14px;
+  padding: var(--sp-6) var(--sp-7);
+  margin-bottom: var(--sp-7);
 }
-.points-current { font-size: 28px; color: var(--accent); line-height: 1; }
+.points-current { font-size: var(--fs-3xl); color: var(--accent); line-height: 1; }
 
 /* ── Points Over Limit */
 .points-over .points-current { color: var(--danger); }
-.points-limit { font-size: 20px; color: var(--text); }
-.points-bar { height: 100%; background: var(--accent); border-radius: 3px; width: 0%; }
+.points-limit { font-size: var(--fs-xl); color: var(--text); }
+.points-bar { height: 100%; background: var(--accent); border-radius: var(--radius-xs); width: 0%; }
 .points-bar.over-limit { background: var(--danger); }
 .points-bar.near-limit { background: var(--warning); }
 
 /* ── Saved Army List */
-.saved-army-list { display: flex; flex-direction: column; gap: 8px; }
-.saved-army-empty { color: var(--text-muted); font-size: 13px; padding: 12px 0; }
+.saved-army-list { display: flex; flex-direction: column; gap: var(--sp-4); }
+.saved-army-empty { color: var(--text-muted); font-size: var(--fs-md); padding: var(--sp-6) 0; }
 .saved-army-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-5);
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: var(--sp-5) var(--sp-6);
   min-width: 0;
 }
 .saved-army-info {
   min-width: 0;
   flex: 1 1 auto;
 }
-.saved-army-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.saved-army-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.saved-army-name { font-size: var(--fs-base); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.saved-army-meta { font-size: var(--fs-xs); color: var(--text-muted); margin-top: var(--sp-1); }
 .saved-army-actions {
   display: flex;
-  gap: 6px;
+  gap: var(--sp-3);
   flex: 0 0 auto;
 }
 
 /* order: lives here, not in detail-pane.css: must precede `.validation-banner-list li` {line-height} below (equal specificity, same element, line-height). */
-.wl-choice-list li { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
-.army-toolbar .toolbar-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.wl-choice-list li { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.6; }
+.army-toolbar .toolbar-row { display: flex; gap: var(--sp-3); flex-wrap: wrap; align-items: center; }
 .army-toolbar .toolbar-spacer { flex: 1 1 auto; min-width: 0; }
-.army-toolbar .toolbar-icons { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; row-gap: 4px; }
-.toolbar-icons-inline { display: inline-flex; gap: 2px; }
+.army-toolbar .toolbar-icons { display: inline-flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap; row-gap: var(--sp-2); }
+.toolbar-icons-inline { display: inline-flex; gap: var(--sp-1); }
 
 /* Toolbar icon: active (amber-glow) state. Generic .is-on rule so any
  * icon button can opt-in to the same visual treatment. */
@@ -405,17 +405,17 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
   background: rgba(217, 181, 102, 0.12);
   box-shadow: 0 0 0 1px rgba(217, 181, 102, 0.45), 0 0 8px rgba(217, 181, 102, 0.25);
 }
-.army-toolbar .toolbar-extras { display: inline-flex; gap: 6px; align-items: center; }
+.army-toolbar .toolbar-extras { display: inline-flex; gap: var(--sp-3); align-items: center; }
 .toolbar-icons-inline:empty { display: none; }
 .army-toolbar .toolbar-extras:empty, .army-toolbar .toolbar-icons:empty { display: none; }
-.toolbar-status-row { display: flex; align-items: center; font-size: 11px; color: var(--text-muted); padding: 0 2px 2px; min-height: 14px; }
-.toolbar-status { display: inline-flex; align-items: center; gap: 6px; }
+.toolbar-status-row { display: flex; align-items: center; font-size: var(--fs-xs); color: var(--text-muted); padding: 0 var(--sp-1) var(--sp-1); min-height: 14px; }
+.toolbar-status { display: inline-flex; align-items: center; gap: var(--sp-3); }
 .toolbar-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
 .toolbar-status.is-saved::before { background: var(--success); }
 .toolbar-status.is-unsaved { color: var(--accent); font-weight: 600; }
 .toolbar-status.is-unsaved::before { background: var(--accent); box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.6); }
-.toolbar-divider { width: 1px; align-self: stretch; background: var(--border); margin: 2px 4px; }
-.toolbar-actions-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.toolbar-divider { width: 1px; align-self: stretch; background: var(--border); margin: var(--sp-1) var(--sp-2); }
+.toolbar-actions-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
 .toolbar-compat-shelf { display: none !important; }
 .dropdown-menu .export-extras:empty { display: none; }
 .dropdown-menu .export-extras > button {
@@ -425,14 +425,14 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
   border: none;
   color: var(--text);
   font: inherit;
-  font-size: 12px;
-  padding: 7px 10px;
+  font-size: var(--fs-sm);
+  padding: var(--sp-4) var(--sp-5);
   border-radius: calc(var(--radius) - 1px);
   cursor: pointer;
   white-space: nowrap;
 }
-.modal-save-as .save-as-hint { margin: 0 0 8px; }
-.save-as-error { margin: 2px 0 0; color: var(--danger); font-size: 0.85em; }
+.modal-save-as .save-as-hint { margin: 0 0 var(--sp-4); }
+.save-as-error { margin: var(--sp-1) 0 0; color: var(--danger); font-size: 0.85em; }
 .save-as-error[hidden] { display: none; }
 
 /* ── Stat values: heavier, tabular numerals */
@@ -455,27 +455,27 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
   to { opacity: 1; transform: none; }
 }
 .unit-detail-content .detail-add-section .stockpile-detail-title { display: none; }
-.unit-detail-content .detail-add-section .stockpile-detail-rows { gap: 2px; }
+.unit-detail-content .detail-add-section .stockpile-detail-rows { gap: var(--sp-1); }
 
 /* ── combined stockpile widget in the Details pane */
 .stockpile-detail-widget {
-  margin: 12px 0 14px;
-  padding: 10px 12px;
+  margin: var(--sp-6) 0 var(--sp-7);
+  padding: var(--sp-5) var(--sp-6);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.02);
 }
-.stockpile-detail-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 8px; }
-.stockpile-detail-rows { display: flex; flex-direction: column; gap: 6px; }
-.unit-detail-content .detail-add-section .stockpile-row { padding: 2px 0; }
+.stockpile-detail-title { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: var(--tr-wide); color: var(--text-muted); margin-bottom: var(--sp-4); }
+.stockpile-detail-rows { display: flex; flex-direction: column; gap: var(--sp-3); }
+.unit-detail-content .detail-add-section .stockpile-row { padding: var(--sp-1) 0; }
 .stockpile-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
+  gap: var(--sp-5);
+  padding: var(--sp-3) var(--sp-4);
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 .stockpile-detail-widget.reserves-has-qty .stockpile-row-reserves { border-color: rgba(var(--accent-rgb), 0.45); }
 .stockpile-detail-widget.requisitions-has-qty .stockpile-row-requisitions { border-color: rgba(211, 158, 197, 0.55); }
@@ -485,24 +485,24 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
  * stockpile steppers. Compact — no "Your stockpile" heading (the rows are
  * self-explanatory) and tight row spacing. */
 .unit-detail-content .detail-add-section .stockpile-detail-widget {
-  margin: 8px -12px 0;
-  padding: 4px 12px 0;
+  margin: var(--sp-4) calc(-1 * var(--sp-6)) 0;
+  padding: var(--sp-2) var(--sp-6) 0;
   border: none;
   border-top: 1px solid var(--border);
   border-radius: 0;
   background: transparent;
 }
-.stockpile-row-label { display: inline-flex; align-items: center; gap: 6px; flex: 1 1 auto; font-size: 13px; font-weight: 500; color: var(--text); }
-.stockpile-row-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; font-size: 12px; line-height: 1; }
+.stockpile-row-label { display: inline-flex; align-items: center; gap: var(--sp-3); flex: 1 1 auto; font-size: var(--fs-md); font-weight: 500; color: var(--text); }
+.stockpile-row-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; font-size: var(--fs-sm); line-height: 1; }
 .stockpile-row-reserves .stockpile-row-icon { color: var(--reserves-accent); }
 .stockpile-row-requisitions .stockpile-row-icon { color: var(--requisitions-accent); }
-.stockpile-row-hint { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-left: 4px; }
+.stockpile-row-hint { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: var(--tr-wide); color: var(--text-muted); margin-left: var(--sp-2); }
 .stockpile-stepper {
   display: inline-flex;
   align-items: center;
   gap: 0;
   padding: 1px;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--sh-3);
   border: 1px solid var(--border);
   border-radius: 14px;
   font-variant-numeric: tabular-nums;
@@ -514,7 +514,7 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
   border: none;
   background: transparent;
   color: var(--text);
-  font-size: 16px;
+  font-size: var(--fs-lg);
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
@@ -525,7 +525,7 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
   justify-content: center;
 }
 .stockpile-step:disabled { opacity: 0.35; cursor: not-allowed; }
-.stockpile-step:hover { background: rgba(255, 255, 255, 0.1); }
+.stockpile-step:hover { background: var(--ov-4); }
 .stockpile-row-reserves .stockpile-step:hover { color: var(--reserves-accent); }
 .stockpile-row-requisitions .stockpile-step:hover { color: var(--requisitions-accent); }
 .stockpile-qty {
@@ -533,27 +533,27 @@ body.build-mode-enhanced .army-entry-remove:hover { color: var(--danger); backgr
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--text);
-  padding: 0 4px;
+  padding: 0 var(--sp-2);
 }
 .stockpile-detail-widget.reserves-has-qty .stockpile-row-reserves .stockpile-qty { color: var(--reserves-accent); }
 .stockpile-detail-widget.requisitions-has-qty .stockpile-row-requisitions .stockpile-qty { color: var(--requisitions-accent); }
 .validation-banner {
-  margin: 0 12px 8px;
-  padding: 8px 10px;
+  margin: 0 var(--sp-6) var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
   background: rgba(243, 156, 18, 0.10);
   border: 1px solid rgba(243, 156, 18, 0.45);
   border-left: 3px solid var(--warning);
   border-radius: var(--radius);
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 .validation-banner[hidden] { display: none !important; }
-.validation-banner-title { font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 10px; color: var(--warning); margin-bottom: 4px; }
-.validation-banner-list { margin: 0; padding-left: 18px; list-style: disc; }
-.validation-banner-list li { margin: 2px 0; line-height: 1.35; }
+.validation-banner-title { font-weight: 700; text-transform: uppercase; letter-spacing: var(--tr-wider); font-size: var(--fs-2xs); color: var(--warning); margin-bottom: var(--sp-2); }
+.validation-banner-list { margin: 0; padding-left: var(--sp-8); list-style: disc; }
+.validation-banner-list li { margin: var(--sp-1) 0; line-height: 1.35; }
 
 /* ── 1. Faction-accent morph */
 /* order: lives here, not in base.css: must follow `.army-rule-item` {transition} above (equal specificity, same element, transition). */
@@ -594,54 +594,54 @@ a:hover,
   display: inline-flex;
   align-items: stretch;
   gap: 0;
-  margin: 0 0 8px;
-  padding: 2px;
-  background: rgba(255, 255, 255, 0.04);
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-1);
+  background: var(--ov-1);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   width: fit-content;
 }
 .reserves-view-btn {
   appearance: none;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  font-size: 12px;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-6);
+  font-size: var(--fs-sm);
   font-weight: 500;
   line-height: 1.2;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tr-tight);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   cursor: pointer;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
-.reserves-view-icon { font-size: 13px; line-height: 1; }
+.reserves-view-icon { font-size: var(--fs-md); line-height: 1; }
 .reserves-view-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 18px;
   height: 16px;
-  padding: 0 5px;
-  margin-left: 2px;
-  font-size: 10.5px;
+  padding: 0 var(--sp-2);
+  margin-left: var(--sp-1);
+  font-size: var(--fs-2xs);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--sh-2);
   color: inherit;
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 
 /* The toggle is a Build-mode concept. Hide in any other mode the
  * panel-controls might be reused under. */
 body[data-mode="collect"] .reserves-view-toggle, body[data-mode="play"] .reserves-view-toggle, body[data-mode="cards"] .reserves-view-toggle { display: none; }
 .reserves-view-btn[data-view="requisitions"] .reserves-view-icon { color: var(--requisitions-accent); }
-.reserves-view-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }
+.reserves-view-btn:hover { color: var(--text); background: var(--ov-1); }
 .reserves-view-btn.active { color: #111; background: var(--reserves-accent); border-color: var(--reserves-accent); font-weight: 600; }
-.reserves-view-btn.active .reserves-view-count { background: rgba(0, 0, 0, 0.18); color: #111; }
+.reserves-view-btn.active .reserves-view-count { background: var(--sh-1); color: #111; }
 .reserves-view-count.is-empty { display: none; }
 
 /* The shared toggle tab gets a wishlist-pink active state. */
@@ -654,46 +654,46 @@ body[data-mode="collect"] .reserves-view-toggle, body[data-mode="play"] .reserve
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 8px;
+  gap: var(--sp-4);
 }
 
 /* ── empty-state note (shown when Reserves view has nothing) */
 .reserves-empty-note {
   margin: 0;
-  padding: 28px 24px;
-  font-size: 13px;
+  padding: var(--sp-10) var(--sp-10);
+  font-size: var(--fs-md);
   line-height: 1.5;
   color: var(--text);
   background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), rgba(0,0,0,0.15);
   border: 1px dashed var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 .reserves-empty-note[hidden] { display: none; }
-.reserves-empty-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--reserves-accent); margin-bottom: 0; }
+.reserves-empty-title { font-size: var(--fs-base); font-weight: 600; text-transform: uppercase; letter-spacing: var(--tr-wide); color: var(--reserves-accent); margin-bottom: 0; }
 .reserves-empty-body { color: var(--text-muted); max-width: 32em; }
 .reserves-empty-link {
   appearance: none;
   background: transparent;
   border: 1px solid var(--border);
   color: var(--reserves-accent);
-  padding: 1px 8px;
-  border-radius: 4px;
+  padding: 1px var(--sp-4);
+  border-radius: var(--radius-sm);
   font: inherit;
   cursor: pointer;
 }
-.reserves-empty-link:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+.reserves-empty-link:hover { background: var(--ov-1); color: var(--text); }
 
 /* ── points total in the Units panel header
  * "Total points you have in your collection for this army": shown next
  * to the "N units" badge whenever the Reserves or Requisitions view is
  * active. Tinted with each stockpile's accent. */
 .reserves-pts-badge {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-  padding: 2px 8px;
-  border-radius: 10px;
+  letter-spacing: var(--tr-tight);
+  padding: var(--sp-1) var(--sp-4);
+  border-radius: var(--radius-lg);
   white-space: nowrap;
   background: rgba(var(--accent-rgb), 0.14);
   color: var(--accent);
@@ -721,36 +721,36 @@ body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-
   align-items: center;
   justify-content: center;
   min-width: 22px;
-  padding: 2px 7px;
-  font-size: 11px;
+  padding: var(--sp-1) var(--sp-4);
+  font-size: var(--fs-xs);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-  border-radius: 10px;
+  letter-spacing: var(--tr-tight);
+  border-radius: var(--radius-lg);
   pointer-events: none;
   z-index: 3;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
-.unit-card .reserves-qty-badge { top: 6px; right: 6px; background: var(--reserves-accent); color: #111; }
+.unit-card .reserves-qty-badge { top: var(--sp-3); right: var(--sp-3); background: var(--reserves-accent); color: #111; }
 
 /* ── soft-warn badge on army entries */
 .army-entry .reserves-warn {
   display: inline-flex;
   align-items: center;
-  margin-left: 6px;
-  padding: 1px 6px;
-  font-size: 10.5px;
+  margin-left: var(--sp-3);
+  padding: 1px var(--sp-3);
+  font-size: var(--fs-2xs);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tr-tight);
   color: #1a1208;
   background: var(--reserves-warn);
-  border-radius: 8px;
+  border-radius: var(--radius);
   white-space: nowrap;
   vertical-align: 1px;
 }
 .unit-card .requisitions-qty-badge {
-  bottom: 6px;
-  right: 6px;
+  bottom: var(--sp-3);
+  right: var(--sp-3);
   /* mirror the Reserves badge in the top-right corner */
   background: var(--requisitions-accent);
   color: #1a0d16;
@@ -759,33 +759,33 @@ body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-
 /* ── empty-state note (for the requisitions view) */
 .requisitions-empty-note {
   margin: 0;
-  padding: 28px 24px;
-  font-size: 13px;
+  padding: var(--sp-10) var(--sp-10);
+  font-size: var(--fs-md);
   line-height: 1.5;
   color: var(--text);
   background: linear-gradient(180deg, rgba(211, 158, 197, 0.06), rgba(211, 158, 197, 0.02)), rgba(0, 0, 0, 0.15);
   border: 1px dashed var(--requisitions-accent);
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 .requisitions-empty-note[hidden] { display: none; }
-.requisitions-empty-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--requisitions-accent); margin-bottom: 0; }
+.requisitions-empty-title { font-size: var(--fs-base); font-weight: 600; text-transform: uppercase; letter-spacing: var(--tr-wide); color: var(--requisitions-accent); margin-bottom: 0; }
 .requisitions-empty-body { color: var(--text-muted); max-width: 32em; }
 .requisitions-empty-link {
   appearance: none;
   background: transparent;
   border: 1px solid var(--border);
   color: var(--requisitions-accent);
-  padding: 1px 8px;
-  border-radius: 4px;
+  padding: 1px var(--sp-4);
+  border-radius: var(--radius-sm);
   font: inherit;
   cursor: pointer;
 }
-.requisitions-empty-heart { display: inline-block; color: var(--requisitions-accent); font-size: 13px; vertical-align: -1px; }
-.requisitions-empty-link:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+.requisitions-empty-heart { display: inline-block; color: var(--requisitions-accent); font-size: var(--fs-md); vertical-align: -1px; }
+.requisitions-empty-link:hover { background: var(--ov-1); color: var(--text); }
 
 /* ── the name widget (sits under the stockpile stepper) */
 .custom-name-widget { margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--border-subtle); }
-.custom-name-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem; }
+.custom-name-title { font-size: 0.72rem; font-weight: 600; letter-spacing: var(--tr-wider); text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem; }
 .custom-name-hint { font-size: 0.72rem; line-height: 1.35; color: var(--text-muted); opacity: 0.85; margin-bottom: 0.4rem; }
 .custom-name-row { display: flex; }
 .custom-name-input {
@@ -797,7 +797,7 @@ body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-
   color: var(--text);
   background: var(--bg-input);
   border: 1px solid var(--border-subtle);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 .custom-name-sub { margin-top: 0.3rem; font-size: 0.72rem; color: var(--text-muted); }
 .custom-name-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.45rem; }
@@ -806,15 +806,15 @@ body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-
   padding: 0.32rem 0.6rem;
   font: inherit;
   font-size: 0.76rem;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tr-normal);
   color: var(--text);
   background: transparent;
   border: 1px solid var(--border-subtle);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
 }
 .cn-btn-primary { border-color: rgba(198, 160, 74, 0.6); color: #e6c980; }
-.cn-btn:hover { background: rgba(255, 255, 255, 0.06); }
+.cn-btn:hover { background: var(--ov-2); }
 .cn-btn-danger:hover { border-color: rgba(200, 80, 70, 0.7); color: #e59a92; }
 
 @media (min-width: 821px) {
@@ -834,13 +834,13 @@ body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-
     grid-row: 1 / span 99;
     display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 10px;
+    gap: var(--sp-5);
     align-content: start;
   }
 
   /* Drag-reorder handle is moved to the card's top-right so it doesn't
    * consume the full-width name row inside the card. */
-  .panel-left.panel-expanded .army-entry-card .army-entry-handle { position: absolute; top: 8px; right: 36px; margin: 0; padding: 0; opacity: 0.35; }
+  .panel-left.panel-expanded .army-entry-card .army-entry-handle { position: absolute; top: var(--sp-4); right: var(--sp-11); margin: 0; padding: 0; opacity: 0.35; }
   .panel-left.panel-expanded .army-entry-card .army-entry-handle:hover { opacity: 0.85; }
 
   /* Name takes the full card width and is allowed to wrap to two lines
@@ -849,7 +849,7 @@ body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-
     white-space: normal !important;
     overflow: visible !important;
     text-overflow: clip !important;
-    padding-right: 56px;
+    padding-right: var(--sp-14);
     /* leave room for handle + remove */
     display: block !important;
     line-height: 1.25;
@@ -858,13 +858,13 @@ body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-
 
   /* Stats row: keep the inline "Pts X · Qty [1] · Total Y" layout but
    * give it a touch more breathing room inside the card. */
-  .panel-left.panel-expanded .army-entry-card .army-entry-stats { margin-top: 4px; gap: 10px 16px; font-size: 12px; }
+  .panel-left.panel-expanded .army-entry-card .army-entry-stats { margin-top: var(--sp-2); gap: var(--sp-5) var(--sp-8); font-size: var(--fs-sm); }
   .panel-left.panel-expanded .army-entry-card .army-entry-remove { margin: 0; }
 
   /* Expanded left pane: expand-pane.css pulls the remove × out of flow
    * (position:absolute; top:4px; right:6px). Position the WRAPPER instead, so
    * the actions stay a group and no per-button offset has to be hand-tuned. */
-  .panel-left.panel-expanded .army-entry-card .army-entry-actions { position: absolute; top: 4px; right: 6px; margin: 0; }
+  .panel-left.panel-expanded .army-entry-card .army-entry-actions { position: absolute; top: var(--sp-2); right: var(--sp-3); margin: 0; }
   .panel-left.panel-expanded .army-entry-card .army-entry-remove { position: static; top: auto; right: auto; }
 }
 
@@ -878,7 +878,7 @@ body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-
 
   /* ── Army list rows */
   /* order: lives here, not in mobile.css: must precede `.army-list-empty` {font-size} below (equal specificity, same element, font-size). */
-  .army-entries-header { font-size: 10px; padding: 6px 8px; }
+  .army-entries-header { font-size: var(--fs-2xs); padding: var(--sp-3) var(--sp-4); }
 
   /* order: lives here, not in mobile.css: must precede `.panel-left .army-list-empty` {min-height} below (equal specificity, same element, min-height). */
   .panel-left .army-entry-list { flex: 1 0 auto; min-height: 120px; }
@@ -889,21 +889,21 @@ body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-
  * stay legible, the "Pts / Qty / Total" labels go (the numbers are
  * self-explanatory in context). Saves ~50px and prevents stat-row
  * wrapping that pushed the card to 3+ lines on Necron stacks. */
-.army-entry-attached .army-entry-stats { gap: 8px; font-size: 10.5px; flex-wrap: nowrap; }
+.army-entry-attached .army-entry-stats { gap: var(--sp-4); font-size: var(--fs-2xs); flex-wrap: nowrap; }
 
 /* Smaller remove (×) on attached cards. The button is still a hit
  * target — just less visually prominent — so deleting a nested
  * bodyguard from the leader's cluster stays one click away. */
-.army-entry-attached .army-entry-remove { font-size: 13px; padding: 2px 4px; margin-left: 4px; }
+.army-entry-attached .army-entry-remove { font-size: var(--fs-md); padding: var(--sp-1) var(--sp-2); margin-left: var(--sp-2); }
 
 /* Nested bodyguard/leader mini-cards: shrink to match card-chassis.css's
  * smaller remove ×. An attached entry can still have count > 1, so the split
  * button really does render here. */
-.army-entry-attached .army-entry-action { padding: 2px 3px; }
+.army-entry-attached .army-entry-action { padding: var(--sp-1) var(--sp-1); }
 
 @media (max-width: 820px) {
   /* order: lives here, not in mobile.css: must precede `.army-list-empty` {font-size} below (equal specificity, same element, font-size). */
-  .army-entry { font-size: 13px; padding: 10px 8px; min-height: 44px; }
+  .army-entry { font-size: var(--fs-md); padding: var(--sp-5) var(--sp-4); min-height: 44px; }
 
   /* ── Tap feedback for what the rule above un-highlighted
    * `-webkit-tap-highlight-color: transparent` removes the platform's own
@@ -997,7 +997,7 @@ body[data-mode="collect"] .reserves-pts-badge, body[data-mode="play"] .reserves-
 
 @media (max-width: 820px) {
   /* order: lives here, not in mobile.css: must precede `.army-entry-card` {font-size} below (equal specificity, same element, font-size). */
-  .army-list-empty { padding: 24px 16px; line-height: 1.6; font-size: 14px; }
+  .army-list-empty { padding: var(--sp-10) var(--sp-8); line-height: 1.6; font-size: var(--fs-base); }
 }
 body.build-mode-enhanced .army-entry, .army-entry-card {
   position: relative;
@@ -1007,9 +1007,9 @@ body.build-mode-enhanced .army-entry, .army-entry-card {
   grid-template-columns: none !important;
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 10px 10px 18px;
-  font-size: 12px;
+  border-radius: var(--radius);
+  padding: var(--sp-5) var(--sp-5) var(--sp-5) var(--sp-8);
+  font-size: var(--fs-sm);
   transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s, background 0.18s;
   overflow: hidden;
 }
@@ -1017,47 +1017,47 @@ body.build-mode-enhanced .army-entry, .army-entry-card {
   display: grid;
   grid-template-columns: repeat(2, 3px);
   grid-template-rows: repeat(3, 3px);
-  gap: 2px;
+  gap: var(--sp-1);
   align-content: center;
   justify-content: center;
-  padding: 0 8px 0 2px;
-  margin-right: 4px;
+  padding: 0 var(--sp-4) 0 var(--sp-1);
+  margin-right: var(--sp-2);
   cursor: grab;
   opacity: 0.45;
   transition: color 0.15s ease;
   flex-shrink: 0;
   color: rgba(var(--accent-rgb), 0.55);
 }
-.army-entry-stats { display: flex; align-items: center; gap: 14px; margin-top: 2px; font-size: 11px; color: var(--text-muted); flex-wrap: wrap; }
-.army-entry-stat-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); opacity: 0.75; }
+.army-entry-stats { display: flex; align-items: center; gap: var(--sp-7); margin-top: var(--sp-1); font-size: var(--fs-xs); color: var(--text-muted); flex-wrap: wrap; }
+.army-entry-stat-label { font-size: var(--fs-2xs); letter-spacing: var(--tr-widest); text-transform: uppercase; color: var(--text-muted); opacity: 0.75; }
 .army-entry { padding: var(--yaab-card-pad-tight); }
-body.build-mode-enhanced .army-enh-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+body.build-mode-enhanced .army-enh-badges { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 body.build-mode-enhanced .army-entry-qty { display: inline-flex; }
 body.build-mode-enhanced .army-enh-badge {
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 999px;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--radius-pill);
   background: rgba(var(--accent-rgb),0.15);
   color: var(--accent);
   border: 1px solid rgba(var(--accent-rgb),0.35);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tr-normal);
 }
-body.build-mode-enhanced .army-entry-pts { text-align: left; color: var(--text); font-size: 12px; font-weight: 600; }
-body.build-mode-enhanced .army-enh-pts { font-size: 10px; color: var(--accent); margin-left: 2px; }
-body.build-mode-enhanced .army-entry-total { font-weight: 700; color: var(--accent); font-size: 14px; letter-spacing: 0.02em; }
+body.build-mode-enhanced .army-entry-pts { text-align: left; color: var(--text); font-size: var(--fs-sm); font-weight: 600; }
+body.build-mode-enhanced .army-enh-pts { font-size: var(--fs-2xs); color: var(--accent); margin-left: var(--sp-1); }
+body.build-mode-enhanced .army-entry-total { font-weight: 700; color: var(--accent); font-size: var(--fs-base); letter-spacing: var(--tr-tight); }
 body.build-mode-enhanced .army-entry-remove {
   align-self: flex-start;
-  margin-top: 2px;
-  margin-left: 6px;
+  margin-top: var(--sp-1);
+  margin-left: var(--sp-3);
   background: none;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 16px;
+  font-size: var(--fs-lg);
   line-height: 1;
-  padding: 4px 6px;
-  border-radius: 4px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
   transition: color 0.15s, background 0.15s;
   flex-shrink: 0;
 }
@@ -1093,28 +1093,28 @@ body.build-mode-enhanced .army-entry-remove {
   /* Card-shape each entry: switch the entry from a horizontal flex row
    * to a stacked card (handle + body + remove become layered/aligned
    * for a compact card surface). */
-  .panel-left.panel-expanded .army-entry-card { flex-direction: column; align-items: stretch; padding: 12px 14px 14px 18px; min-height: 100px; gap: 6px; }
+  .panel-left.panel-expanded .army-entry-card { flex-direction: column; align-items: stretch; padding: var(--sp-6) var(--sp-7) var(--sp-7) var(--sp-8); min-height: 100px; gap: var(--sp-3); }
 }
-:root[data-yaab-theme="brutalist"] .army-entry-actions, :root[data-yaab-theme="brutalist-dark"] .army-entry-actions { gap: 4px; }
+:root[data-yaab-theme="brutalist"] .army-entry-actions, :root[data-yaab-theme="brutalist-dark"] .army-entry-actions { gap: var(--sp-2); }
 
 @media (min-width: 821px) {
   /* Empty-state list item should fill the whole grid column nicely. */
-  .panel-left.panel-expanded .army-list-empty { grid-column: 1 / -1; padding: 60px 20px; text-align: center; }
+  .panel-left.panel-expanded .army-list-empty { grid-column: 1 / -1; padding: var(--sp-14) var(--sp-9); text-align: center; }
 }
 
 @media (max-width: 820px) {
   /* order: lives here, not in mobile.css: must precede `.army-toolbar .toolbar-row` {row-gap} below (equal specificity, same element, gap vs row-gap). */
-  .army-toolbar .toolbar-row { flex-wrap: wrap; gap: 5px; }
+  .army-toolbar .toolbar-row { flex-wrap: wrap; gap: var(--sp-2); }
 }
 
 /* Already partially handled in style.css line 1739+. We add:
  *  - sensible button min-width so labels don't ellipsize to nothing
  *  - clean wrap behaviour with consistent gap */
-.army-toolbar .toolbar-row { row-gap: 6px; }
+.army-toolbar .toolbar-row { row-gap: var(--sp-3); }
 
 @media (max-width: 820px) {
   /* order: lives here, not in mobile.css: must precede `.dropdown-menu .tools-menu > button` {background} below (equal specificity, same element, background). */
-  .mobile-tabbar button:active { background: rgba(255,255,255,0.03); }
+  .mobile-tabbar button:active { background: var(--ov-1); }
 
   /* order: lives here, not in mobile.css: must precede `.dropdown-menu .tools-menu > button` {color} below (equal specificity, same element, color). */
   .mobile-tabbar button[aria-current="page"] { color: var(--accent); }
@@ -1130,8 +1130,8 @@ body.build-mode-enhanced .army-entry-remove {
   border: none;
   color: var(--text);
   font: inherit;
-  font-size: 12px;
-  padding: 7px 10px;
+  font-size: var(--fs-sm);
+  padding: var(--sp-4) var(--sp-5);
   border-radius: calc(var(--radius) - 1px);
   cursor: pointer;
   white-space: nowrap;
@@ -1150,7 +1150,7 @@ body.build-mode-enhanced .army-entry-remove {
   .points-summary.points-shake { animation: yaab-shake 380ms cubic-bezier(0.36, 0.07, 0.19, 0.97) 1; }
 
   /* ── 6. Points landing pulse */
-  .points-summary.points-landed { animation: yaab-landed-pulse 1500ms ease-out 1; border-radius: 6px; }
+  .points-summary.points-landed { animation: yaab-landed-pulse 1500ms ease-out 1; border-radius: var(--radius); }
 
   /* ── 4. Rolling-number subtle highlight (opacity only, GPU) */
   .points-current.tweening { opacity: 0.92; text-shadow: 0 0 6px rgba(var(--accent-rgb), 0.4); }

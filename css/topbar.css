@@ -21,7 +21,7 @@
 .topbar-inner {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--sp-8);
   height: 100%;
   padding: 0 var(--topbar-pad-x);
   /* 1. TOP BAR — graceful collapse from desktop → tablet → mobile */
@@ -33,26 +33,26 @@
 .topbar-brand {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-4);
   text-decoration: none;
   color: var(--text);
   flex: 0 0 auto;
-  padding: 4px 6px;
+  padding: var(--sp-2) var(--sp-3);
   border-radius: var(--radius);
   outline-offset: 2px;
 }
-.topbar-brand-mark { font-family: var(--font-display); font-weight: 600; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; }
+.topbar-brand-mark { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-xl); letter-spacing: var(--tr-widest); text-transform: uppercase; }
 .topbar-brand:hover { color: var(--accent); }
 
 /* ── Mode tabs (Build / Collect / Play) */
 .topbar-modes {
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-2);
   height: 36px;
-  background: rgba(255,255,255,0.025);
+  background: var(--ov-1);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 3px;
+  padding: var(--sp-1);
   /* Hide Build/Collect/Cards mode nav until all modes are ready. */
   display: none !important;
 }
@@ -62,18 +62,18 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 0 14px;
+  padding: 0 var(--sp-7);
   background: transparent;
   border: none;
   color: var(--text-muted);
   font: inherit;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 1.4px;
+  font-size: var(--fs-sm);
+  letter-spacing: var(--tr-widest);
   text-transform: uppercase;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: var(--radius);
   /* 10. Topbar mode-tab focus / active polish — quicker accent slide. */
   transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 }
@@ -99,29 +99,29 @@ body.reduce-motion .topbar-mode-tab, body.reduce-motion .topbar-action-btn, body
 .topbar-actions {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-3);
   flex: 0 0 auto;
   min-width: 0;
 }
 .topbar-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-3);
   height: 36px;
-  padding: 0 12px;
+  padding: 0 var(--sp-6);
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 500;
-  letter-spacing: 0.5px;
+  letter-spacing: var(--tr-normal);
   cursor: pointer;
   transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
-.topbar-action-glyph { font-size: 14px; line-height: 1; }
-.topbar-action-label { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 1.2px; font-size: 11px; }
+.topbar-action-glyph { font-size: var(--fs-base); line-height: 1; }
+.topbar-action-label { font-family: var(--font-display); text-transform: uppercase; letter-spacing: var(--tr-widest); font-size: var(--fs-xs); }
 
 /* Help button is icon-only at narrower widths to save space. */
 .topbar-action-label-help { display: inline; }
@@ -144,18 +144,18 @@ body.reduce-motion .topbar-mode-tab, body.reduce-motion .topbar-action-btn, body
    * 867px at every width from 821 to 880, so Help was cut off below 867.
    * Settings and Help drop to icon-only (both keep aria-label/title) and the
    * bar tightens its gaps. */
-  .topbar-inner { gap: 10px; padding: 0 12px; }
+  .topbar-inner { gap: var(--sp-5); padding: 0 var(--sp-6); }
 }
 
 @media (max-width: 960px) {
   /* Prevent the brand block from forcing the modes off-row. */
-  .topbar-inner { gap: 10px; }
+  .topbar-inner { gap: var(--sp-5); }
 }
 
 @media (min-width: 821px) and (max-width: 900px) {
-  .topbar-actions { gap: 4px; }
+  .topbar-actions { gap: var(--sp-2); }
   #topbar-settings .topbar-action-label, #topbar-help .topbar-action-label { display: none; }
-  #topbar-settings.topbar-action-btn, #topbar-help.topbar-action-btn { padding: 0 9px; min-width: 36px; justify-content: center; }
+  #topbar-settings.topbar-action-btn, #topbar-help.topbar-action-btn { padding: 0 var(--sp-4); min-width: 36px; justify-content: center; }
 }
 
 @media (max-width: 820px) {

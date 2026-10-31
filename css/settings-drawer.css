@@ -9,18 +9,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--sp-5);
   width: 100%;
-  padding: 12px 12px;
+  padding: var(--sp-6) var(--sp-6);
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--fs-md);
   text-align: left;
   cursor: pointer;
-  margin-top: 4px;
+  margin-top: var(--sp-2);
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   /* Action button label should ellipsize if it ever exceeds the row
    * (e.g. the localized "Wipe all saved armies (irreversible)" label on
@@ -29,7 +29,7 @@
 }
 .settings-action-arrow {
   color: var(--text-muted);
-  font-size: 16px;
+  font-size: var(--fs-lg);
   line-height: 1;
   flex: 0 0 auto;
 }
@@ -49,10 +49,10 @@
 .settings-toggle-label, .settings-toggle-help { white-space: normal; overflow-wrap: anywhere; }
 
 /* ── Toggle row */
-.settings-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; cursor: pointer; border-radius: 6px; }
+.settings-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-6); padding: var(--sp-5) 0; cursor: pointer; border-radius: var(--radius); }
 .settings-toggle-text { flex: 1 1 auto; min-width: 0; overflow: hidden; word-break: break-word; }
-.settings-toggle-label { font-size: 13px; font-weight: 500; color: var(--text); }
-.settings-toggle-help { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.35; }
+.settings-toggle-label { font-size: var(--fs-md); font-weight: 500; color: var(--text); }
+.settings-toggle-help { font-size: var(--fs-xs); color: var(--text-muted); margin-top: var(--sp-1); line-height: 1.35; }
 
 /* Switch styling — visually-hidden checkbox + custom knob. */
 .settings-toggle-switch {
@@ -68,8 +68,8 @@
 .settings-toggle-input { position: absolute; inset: 0; margin: 0; appearance: none; -webkit-appearance: none; cursor: pointer; opacity: 0; width: 100%; height: 100%; }
 .settings-toggle-knob {
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: var(--sp-1);
+  left: var(--sp-1);
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -86,7 +86,7 @@
 .settings-drawer-scrim {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--sh-4);
   backdrop-filter: blur(2px);
   pointer-events: auto;
   animation: settings-scrim-in 200ms ease-out;
@@ -124,22 +124,22 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  padding: var(--sp-8) var(--sp-9);
+  padding-top: calc(var(--sp-8) + env(safe-area-inset-top, 0px));
   padding-right: max(20px, env(safe-area-inset-right, 0px));
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
-.settings-drawer-title { font-family: var(--font-display); font-size: 14px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--text); }
+.settings-drawer-title { font-family: var(--font-display); font-size: var(--fs-base); font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--text); }
 .settings-drawer-close {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 22px;
+  font-size: var(--fs-2xl);
   cursor: pointer;
   line-height: 1;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-sm);
   /* Was ~28x30 from font-size + padding alone. inline-flex + min-* makes the
    * box explicit instead of a side effect of the glyph metrics. */
   display: inline-flex;
@@ -152,7 +152,7 @@
 .settings-drawer-body {
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: 16px 20px 32px;
+  padding: var(--sp-8) var(--sp-9) var(--sp-11);
   /* Bottom edge: clear the iOS home indicator. mobile.css already lifts the
    * whole drawer root above the tab bar + safe-bottom at <= 820px, and
    * menu-overflow-fixes.css (later than this file, so it wins) sets a
@@ -165,7 +165,7 @@
   padding-right: max(20px, env(safe-area-inset-right, 0px));
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-4);
   -webkit-overflow-scrolling: touch;
   min-height: 0;
   overscroll-behavior: contain;
@@ -183,31 +183,31 @@ body.reduce-motion .settings-action-row {
 
 /* ── Body class while drawer is open: prevent scroll bleed ── */
 body.settings-drawer-open { overflow: hidden; }
-.settings-drawer-close:hover { color: var(--text); border-color: var(--border-light); background: rgba(255, 255, 255, 0.05); }
+.settings-drawer-close:hover { color: var(--text); border-color: var(--border-light); background: var(--ov-1); }
 .settings-drawer-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ── Section headings */
 .settings-section-heading {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: var(--tr-widest);
   text-transform: uppercase;
   color: var(--text-muted);
-  margin: 14px 0 4px;
-  padding-bottom: 4px;
+  margin: var(--sp-7) 0 var(--sp-2);
+  padding-bottom: var(--sp-2);
   border-bottom: 1px solid var(--border);
 }
 .settings-section-heading:first-child { margin-top: 0; }
 
 /* ── About inline panel */
 .settings-about-card {
-  margin-top: 12px;
-  padding: 14px;
-  background: rgba(255,255,255,0.03);
+  margin-top: var(--sp-6);
+  padding: var(--sp-7);
+  background: var(--ov-1);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 12px;
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
   color: var(--text);
   line-height: 1.5;
 }
@@ -219,16 +219,16 @@ body.settings-drawer-open { overflow: hidden; }
  * in js/app/settings-drawer.js. Nothing above this comment is modified, so
  * appending this file cannot change how the default theme looks anywhere
  * else. Themes restyle these through the same tokens as everything else. */
-.settings-theme-group { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.settings-theme-group { display: flex; flex-direction: column; gap: var(--sp-3); margin-top: var(--sp-2); }
 .settings-theme-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-6);
   width: 100%;
-  padding: 10px 12px;
+  padding: var(--sp-5) var(--sp-6);
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: var(--text);
   font: inherit;
   text-align: left;
@@ -237,12 +237,12 @@ body.settings-drawer-open { overflow: hidden; }
 }
 
 /* Three-band swatch: ground, ink, accent — the three decisions a theme makes. */
-.settings-theme-swatch { flex: 0 0 auto; display: flex; width: 34px; height: 34px; border: 1px solid var(--border-light); border-radius: 4px; overflow: hidden; }
+.settings-theme-swatch { flex: 0 0 auto; display: flex; width: 34px; height: 34px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); overflow: hidden; }
 .settings-theme-swatch i { flex: 1 1 0; display: block; }
 .settings-theme-text { flex: 1 1 auto; min-width: 0; }
-.settings-theme-name { display: block; font-size: 13px; font-weight: 600; }
-.settings-theme-blurb { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.35; }
-.settings-theme-check { flex: 0 0 auto; width: 14px; font-size: 14px; line-height: 1; color: var(--accent); }
+.settings-theme-name { display: block; font-size: var(--fs-md); font-weight: 600; }
+.settings-theme-blurb { display: block; font-size: var(--fs-xs); color: var(--text-muted); margin-top: var(--sp-1); line-height: 1.35; }
+.settings-theme-check { flex: 0 0 auto; width: 14px; font-size: var(--fs-base); line-height: 1; color: var(--accent); }
 body.reduce-motion .settings-theme-row { transition: none !important; }
 .settings-theme-row:hover { background: rgba(var(--accent-rgb), 0.08); }
 .settings-theme-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

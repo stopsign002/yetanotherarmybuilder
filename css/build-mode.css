@@ -75,7 +75,7 @@ body.build-mode-enhanced #build-mode > .build-hero, body.build-mode-enhanced #ap
 .build-hero--in-topbar {
   display: flex !important;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-6);
   width: 100%;
   padding: 0 !important;
   background: transparent !important;
@@ -95,7 +95,7 @@ body.build-mode-enhanced #build-mode > .build-hero, body.build-mode-enhanced #ap
 .build-hero--in-topbar .build-hero-main {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-5);
   flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -108,9 +108,9 @@ body.build-mode-enhanced #build-mode > .build-hero, body.build-mode-enhanced #ap
    * Templars" at 1201px brutalist left only 6px of slack. */
   max-width: calc(100% - 110px);
 }
-.build-hero--in-topbar .build-hero-status { font-size: 11px; }
+.build-hero--in-topbar .build-hero-status { font-size: var(--fs-xs); }
 .build-hero--in-topbar .build-hero-faction {
-  font-size: 13px;
+  font-size: var(--fs-md);
   padding: 0;
   margin: 0;
   /* The one variable-length part of the strip, so it is the part that gives
@@ -119,15 +119,15 @@ body.build-mode-enhanced #build-mode > .build-hero, body.build-mode-enhanced #ap
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.build-hero--in-topbar .build-hero-subtitle { align-items: center; gap: 6px; margin: 0; padding: 0; }
+.build-hero--in-topbar .build-hero-subtitle { align-items: center; gap: var(--sp-3); margin: 0; padding: 0; }
 .build-hero--in-topbar .build-hero-name {
   background: transparent;
   border: 1px solid transparent;
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--fs-md);
   font-weight: 600;
-  padding: 2px 6px;
+  padding: var(--sp-1) var(--sp-3);
   width: auto;
   min-width: 60px;
   max-width: 24ch;
@@ -153,9 +153,9 @@ body.build-mode-enhanced #build-mode > .build-hero, body.build-mode-enhanced #ap
  * while the slot itself still ended 10-16px clear of it. `safe` drops the
  * centring to flex-start exactly when it would overflow, and changes nothing
  * at the widths where it already fits. */
-.build-hero--in-topbar .build-hero-points { display: inline-flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; justify-content: safe center; }
-.build-hero--in-topbar .build-hero-points-readout { font-size: 13px; padding: 0; }
-.build-hero--in-topbar .build-hero-points-current { font-size: 14px; }
+.build-hero--in-topbar .build-hero-points { display: inline-flex; align-items: center; gap: var(--sp-4); flex: 1 1 auto; min-width: 0; justify-content: safe center; }
+.build-hero--in-topbar .build-hero-points-readout { font-size: var(--fs-md); padding: 0; }
+.build-hero--in-topbar .build-hero-points-current { font-size: var(--fs-base); }
 
 /* Hide the progress bar + percentage in the topbar — the "current /
  * limit PTS" readout already communicates points. The bar wrap and
@@ -168,7 +168,7 @@ body.build-mode-enhanced #build-mode > .build-hero, body.build-mode-enhanced #ap
  * outline) and shrink the height. */
 .build-hero--in-topbar .build-hero-bar-wrap { flex: 0 1 240px; min-width: 80px; height: 6px; border: 0 !important; box-shadow: none !important; }
 .build-hero--in-topbar .build-hero-bar { box-shadow: none; }
-.build-hero--in-topbar .build-hero-bar-pct { font-size: 11px; }
+.build-hero--in-topbar .build-hero-bar-pct { font-size: var(--fs-xs); }
 body.build-mode-enhanced #build-mode > .build-hero { grid-row: 1; }
 body.build-mode-enhanced #app-main > .build-hero { grid-column: 1 / -1; grid-row: 1; }
 
@@ -178,8 +178,8 @@ body.build-mode-enhanced #app-main > .build-hero { grid-column: 1 / -1; grid-row
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 16px;
-  padding: 6px 16px;
+  gap: var(--sp-8);
+  padding: var(--sp-3) var(--sp-8);
   background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08) 0%, rgba(0,0,0,0.0) 60%), var(--panel-alt);
   border-bottom: 1px solid var(--border);
   box-shadow: inset 0 -1px 0 rgba(var(--accent-rgb),0.15);
@@ -190,11 +190,11 @@ body.build-mode-enhanced #app-main > .build-hero { grid-column: 1 / -1; grid-row
 /* Make the army-name input readable but compact. */
 .build-hero-name {
   min-width: 80px !important;
-  font-size: 13px !important;
+  font-size: var(--fs-md) !important;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  padding: var(--sp-1) var(--sp-3);
   font: inherit;
   font-weight: 600;
   color: var(--text);
@@ -210,11 +210,11 @@ body.build-mode-enhanced #app-main > .build-hero { grid-column: 1 / -1; grid-row
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
   color: var(--text);
   min-width: 0;
-  padding-left: 10px;
+  padding-left: var(--sp-5);
   border-left: 1px solid rgba(var(--accent-rgb),0.2);
   overflow: hidden;
 }
@@ -227,8 +227,8 @@ body.build-mode-enhanced #app-main > .build-hero { grid-column: 1 / -1; grid-row
   opacity: 0.85;
 }
 .build-hero-crest-wrap { display: none; }
-.build-hero-main { min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 10px; flex-shrink: 0; position: relative; z-index: 1; }
-.build-hero-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.build-hero-main { min-width: 0; display: flex; flex-direction: row; align-items: center; gap: var(--sp-5); flex-shrink: 0; position: relative; z-index: 1; }
+.build-hero-status { display: inline-flex; align-items: center; gap: var(--sp-3); font-size: var(--fs-xs); letter-spacing: var(--tr-wider); text-transform: uppercase; color: var(--text-muted); }
 .build-hero-status-dot {
   width: 8px;
   height: 8px;
@@ -240,9 +240,9 @@ body.build-mode-enhanced #app-main > .build-hero { grid-column: 1 / -1; grid-row
 .build-hero-faction {
   font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
   font-weight: 600;
-  font-size: 15px;
+  font-size: var(--fs-base);
   line-height: 1.05;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tr-wide);
   text-transform: uppercase;
   color: var(--accent);
   text-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 0 24px rgba(var(--accent-rgb),0.18);
@@ -253,32 +253,32 @@ body.build-mode-enhanced #app-main > .build-hero { grid-column: 1 / -1; grid-row
   vertical-align: middle;
 }
 .build-hero-sep { color: var(--text-muted); font-weight: 400; }
-.build-hero-detachment { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.build-hero-detachment { font-size: var(--fs-sm); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Points block — horizontal row: readout | bar (grows) | pct */
-.build-hero-points { position: relative; z-index: 1; display: flex; flex-direction: row; align-items: center; gap: 14px; min-width: 0; }
+.build-hero-points { position: relative; z-index: 1; display: flex; flex-direction: row; align-items: center; gap: var(--sp-7); min-width: 0; }
 .build-hero-points-readout {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: var(--sp-2);
   font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tr-wide);
   white-space: nowrap;
   flex-shrink: 0;
 }
-.build-hero-points-current { font-size: 17px; color: var(--accent); line-height: 1; transition: color 0.2s; }
+.build-hero-points-current { font-size: var(--fs-lg); color: var(--accent); line-height: 1; transition: color 0.2s; }
 .build-hero.points-over .build-hero-points-current { color: var(--danger); }
-.build-hero-points-sep { color: var(--text-muted); font-size: 13px; }
-.build-hero-points-limit { color: var(--text); font-size: 13px; }
-.build-hero-points-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.12em; margin-left: 3px; }
+.build-hero-points-sep { color: var(--text-muted); font-size: var(--fs-md); }
+.build-hero-points-limit { color: var(--text); font-size: var(--fs-md); }
+.build-hero-points-label { font-size: var(--fs-2xs); color: var(--text-muted); letter-spacing: var(--tr-widest); margin-left: var(--sp-1); }
 .build-hero-bar-wrap {
   position: relative;
   flex: 1;
   min-width: 60px;
   height: 8px;
-  background: rgba(0,0,0,0.45);
-  border-radius: 999px;
+  background: var(--sh-3);
+  border-radius: var(--radius-pill);
   overflow: hidden;
   border: 1px solid rgba(var(--accent-rgb),0.18);
 }
@@ -287,7 +287,7 @@ body.build-mode-enhanced #app-main > .build-hero { grid-column: 1 / -1; grid-row
   inset: 0 auto 0 0;
   width: 0%;
   background: linear-gradient(90deg, rgba(var(--accent-rgb),0.7), var(--accent));
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   transition: width 480ms cubic-bezier(0.22, 0.9, 0.32, 1), background 320ms ease, box-shadow 320ms ease !important;
   box-shadow: 0 0 10px rgba(var(--accent-rgb),0.35);
 }
@@ -303,9 +303,9 @@ body.build-mode-enhanced #app-main > .build-hero { grid-column: 1 / -1; grid-row
   pointer-events: none;
   animation: build-hero-shimmer 4.5s linear infinite;
   mix-blend-mode: overlay;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
-.build-hero-bar-pct { font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; white-space: nowrap; flex-shrink: 0; }
+.build-hero-bar-pct { font-size: var(--fs-xs); color: var(--text-muted); letter-spacing: var(--tr-wider); white-space: nowrap; flex-shrink: 0; }
 
 /* === Hero header pushed panels off-screen ===
  * .app-main has hard `height: 100vh` (style.css:111). When the hero
@@ -318,13 +318,13 @@ body.build-mode-enhanced #app-main > .build-hero { grid-column: 1 / -1; grid-row
 /* Desktop only — on mobile the tab-bar offset in mobile.css controls height. */
 .build-hero-points-limit-input {
   width: 64px;
-  font-size: 18px;
+  font-size: var(--fs-xl);
   font-weight: 600;
   background: var(--panel-alt);
   color: var(--text);
   border: 1px solid var(--accent);
-  border-radius: 4px;
-  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  padding: var(--sp-1) var(--sp-3);
   text-align: center;
 }
 
@@ -377,7 +377,7 @@ body[data-mode="build"] .build-hero::after {
 }
 .build-hero-status.is-saved { color: #8fcb98; }
 .build-hero-status.is-unsaved { color: #e8b86a; }
-.build-hero-faction.is-empty { color: var(--text-muted); font-size: 13px; letter-spacing: 0.04em; text-shadow: none; }
+.build-hero-faction.is-empty { color: var(--text-muted); font-size: var(--fs-md); letter-spacing: var(--tr-normal); text-shadow: none; }
 .build-hero-detachment.is-empty { color: var(--text-muted); font-style: italic; }
 
 /* === Hero points-limit click-to-edit affordance === */

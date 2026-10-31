@@ -2,14 +2,14 @@
  * Owns: .toast and .toast-container. */
 
 /* ── Toast */
-.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast-container { position: fixed; bottom: var(--sp-9); right: var(--sp-9); z-index: 2000; display: flex; flex-direction: column; gap: var(--sp-4); pointer-events: none; }
 .toast {
   background: var(--panel-alt);
   border: 1px solid var(--border);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius);
-  padding: 10px 16px;
-  font-size: 13px;
+  padding: var(--sp-5) var(--sp-8);
+  font-size: var(--fs-md);
   color: var(--text);
   box-shadow: var(--shadow);
   max-width: 300px;

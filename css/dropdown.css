@@ -8,20 +8,20 @@
 
 /* Dropdown menu — used by Export group in army toolbar. */
 .dropdown { position: relative; display: inline-block; flex: 0 1 auto; }
-.dropdown-trigger .caret { font-size: 10px; margin-left: 3px; opacity: 0.7; }
+.dropdown-trigger .caret { font-size: var(--fs-2xs); margin-left: var(--sp-1); opacity: 0.7; }
 
 /* Disabled trigger (no actions registered). */
 .dropdown-trigger[disabled] { opacity: 0.45; cursor: not-allowed; }
 .dropdown-menu {
   display: none;
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + var(--sp-3));
   left: 0;
   background: var(--surface);
   border: 1px solid var(--border-light);
   border-radius: var(--radius);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  padding: 4px;
+  box-shadow: var(--shadow-lg);
+  padding: var(--sp-2);
   z-index: 100;
   /* Don't let the dropdown menu demand more than the panel width. */
   max-width: calc(var(--col-left) - 20px);
@@ -34,8 +34,8 @@
   border: none;
   color: var(--text);
   font: inherit;
-  font-size: 12px;
-  padding: 7px 10px;
+  font-size: var(--fs-sm);
+  padding: var(--sp-4) var(--sp-5);
   border-radius: calc(var(--radius) - 1px);
   cursor: pointer;
   white-space: nowrap;
@@ -53,14 +53,14 @@
   display: flex;
   align-items: center;
 }
-.dropdown-menu > button:hover, .dropdown-menu > button:focus { background: rgba(255, 255, 255, 0.06); outline: none; }
+.dropdown-menu > button:hover, .dropdown-menu > button:focus { background: var(--ov-2); outline: none; }
 .dropdown.open > .dropdown-menu { display: block; }
 
 /* Empty-state placeholder (shown when no actions registered). */
-.dropdown-empty { font-size: 11px; color: var(--text-muted); padding: 10px 12px; font-style: italic; }
+.dropdown-empty { font-size: var(--fs-xs); color: var(--text-muted); padding: var(--sp-5) var(--sp-6); font-style: italic; }
 
 /* order: lives here, not in army-list.css: must precede `.dropdown-menu .tools-menu > button:hover` {background} below (equal specificity, same element, background). */
-.dropdown-menu .export-extras > button:hover { background: rgba(255, 255, 255, 0.06); }
+.dropdown-menu .export-extras > button:hover { background: var(--ov-2); }
 .tools-menu, .more-menu { display: flex; flex-direction: column; gap: 1px; }
 .tools-menu:empty, .more-menu:empty { display: none; }
 .dropdown-menu .tools-menu > button:hover,
@@ -69,7 +69,7 @@
 .dropdown-menu .tools-menu > button:focus,
 .dropdown-menu .more-menu > button:focus,
 .dropdown-menu button.menu-item:focus {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--ov-2);
   outline: none;
 }
 

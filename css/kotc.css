@@ -14,14 +14,14 @@
   margin-left: auto;
   text-transform: none;
   letter-spacing: normal;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 700;
-  border-radius: 999px;
-  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  padding: 1px var(--sp-4);
   border: 1px solid transparent;
 }
 .kotc-status:empty { display: none; }
-.kotc-status-idle { color: var(--text-muted); background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.12); }
+.kotc-status-idle { color: var(--text-muted); background: var(--ov-1); border-color: var(--ov-4); }
 .kotc-status-ok { color: var(--success); background: rgba(46, 204, 113, 0.12); border-color: rgba(46, 204, 113, 0.4); }
 .kotc-status-bad { color: var(--danger); background: rgba(231, 76, 60, 0.14); border-color: rgba(231, 76, 60, 0.45); }
 
@@ -29,32 +29,32 @@
 .kotc-toggle {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card-bg);
   cursor: pointer;
 }
-.kotc-toggle-cb { margin: 2px 0 0; flex: 0 0 auto; cursor: pointer; accent-color: var(--accent); }
-.kotc-toggle-text { display: flex; flex-direction: column; gap: 2px; }
+.kotc-toggle-cb { margin: var(--sp-1) 0 0; flex: 0 0 auto; cursor: pointer; accent-color: var(--accent); }
+.kotc-toggle-text { display: flex; flex-direction: column; gap: var(--sp-1); }
 .kotc-toggle-title { font-size: 0.85rem; font-weight: 600; color: var(--text); }
 .kotc-toggle-hint { font-size: 0.72rem; line-height: 1.35; color: var(--text-muted); }
 .kotc-toggle:hover { border-color: rgba(var(--accent-rgb), 0.6); }
 
 /* --- Rule list */
-.kotc-rules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.kotc-rules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
 .kotc-rule {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 6px 8px;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
   border: 1px solid transparent;
-  border-left: 2px solid rgba(255, 255, 255, 0.10);
+  border-left: 2px solid var(--ov-4);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.02);
 }
-.kotc-rule-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kotc-rule-text { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
 .kotc-rule-title { font-size: 0.8rem; font-weight: 600; color: var(--text); }
 .kotc-rule-desc { font-size: 0.72rem; line-height: 1.35; color: var(--text-muted); }
 .kotc-rule-detail { font-size: 0.72rem; line-height: 1.35; font-weight: 600; overflow-wrap: anywhere; }
@@ -63,13 +63,13 @@
 .kotc-rule.kotc-ok { border-left-color: rgba(46, 204, 113, 0.55); }
 .kotc-rule.kotc-bad { border-left-color: var(--danger); background: rgba(231, 76, 60, 0.08); }
 .kotc-rule.kotc-bad .kotc-rule-title { color: var(--text); }
-.kotc-glyph { flex: 0 0 auto; width: 14px; text-align: center; font-size: 11px; line-height: 1.5; color: var(--text-muted); }
+.kotc-glyph { flex: 0 0 auto; width: 14px; text-align: center; font-size: var(--fs-xs); line-height: 1.5; color: var(--text-muted); }
 .kotc-rule.kotc-ok .kotc-glyph, .kotc-rule.kotc-ok .kotc-rule-detail { color: var(--success); }
 .kotc-rule.kotc-bad .kotc-glyph, .kotc-rule.kotc-bad .kotc-rule-detail { color: var(--danger); }
 .kotc-fix {
   align-self: flex-start;
-  margin-top: 3px;
-  padding: 3px 8px;
+  margin-top: var(--sp-1);
+  padding: var(--sp-1) var(--sp-4);
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--accent);
@@ -84,12 +84,12 @@
 .kotc-twist {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 7px 9px;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-4);
   border: 1px dashed rgba(var(--accent-rgb), 0.35);
   border-radius: var(--radius);
   background: rgba(var(--accent-rgb), 0.06);
 }
-.kotc-twist-label { flex: 0 0 auto; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); padding-top: 1px; }
+.kotc-twist-label { flex: 0 0 auto; font-size: 0.65rem; font-weight: 700; letter-spacing: var(--tr-wider); text-transform: uppercase; color: var(--accent); padding-top: 1px; }
 .kotc-twist-text { font-size: 0.72rem; line-height: 1.4; color: var(--text-muted); }
 .kotc-twist-text strong { color: var(--text); font-weight: 600; }

@@ -16,7 +16,7 @@ ul { list-style: none; }
 /* ── Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--panel-bg); }
-::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: var(--radius-xs); }
 ::-webkit-scrollbar-thumb:hover { background: #666; }
 
 /* ── Utility */
@@ -42,7 +42,7 @@ ul { list-style: none; }
 .unit-grid::-webkit-scrollbar, .panel-body::-webkit-scrollbar, .dropdown-menu::-webkit-scrollbar { width: 6px; height: 6px; }
 .unit-grid::-webkit-scrollbar-thumb, .panel-body::-webkit-scrollbar-thumb, .dropdown-menu::-webkit-scrollbar-thumb {
   background: rgba(var(--accent-rgb), 0.35);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 .unit-grid::-webkit-scrollbar-thumb:hover, .panel-body::-webkit-scrollbar-thumb:hover, .dropdown-menu::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--accent-rgb), 0.6);
@@ -102,7 +102,7 @@ body.reduce-motion .build-hero-bar::after {
 html, body {
   height: 100%;
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: var(--fs-base);
   line-height: 1.5;
   font-feature-settings: 'tnum';
   background: var(--bg);

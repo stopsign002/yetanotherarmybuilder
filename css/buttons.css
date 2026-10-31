@@ -10,10 +10,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--sp-3);
   border-radius: var(--radius);
   font-family: var(--font);
-  font-size: 13px;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
@@ -25,12 +25,12 @@
   line-height: 1.15;
   vertical-align: middle;
 }
-.btn.btn-icon.btn-sm { width: 28px; height: 28px; min-width: 28px; padding: 0; font-size: 13px; }
+.btn.btn-icon.btn-sm { width: 28px; height: 28px; min-width: 28px; padding: 0; font-size: var(--fs-md); }
 
 /* The army-toolbar previously hardcoded its own 28px / 26px values. Keep
  * those overrides authoritative for that surface (small density), but
  * make sure icon buttons there are SQUARE not just min-width. */
-.army-toolbar .btn.btn-sm { height: 28px; padding: 0 10px; }
+.army-toolbar .btn.btn-sm { height: 28px; padding: 0 var(--sp-5); }
 .army-toolbar .btn.btn-icon { width: 28px; height: 28px; min-width: 28px; padding: 0; }
 
 /* Modal footer buttons: unified default-tier height. */
@@ -40,14 +40,14 @@
 .btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .btn-outline { background: transparent; color: var(--text); border-color: var(--border-light); }
 .btn-outline:hover {
-  background: rgba(255,255,255,0.05);
+  background: var(--ov-1);
   border-color: var(--text-muted);
   /* ── Button hover lift */
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-sm);
 }
 /* ── Reduced motion: opt-out of the hover lift transform. */
 /* ── Mobile: keep three-row toolbar usable. */
-.btn-sm { padding: 5px 10px; font-size: 12px; flex: 1; min-width: 0; }
+.btn-sm { padding: var(--sp-2) var(--sp-5); font-size: var(--fs-sm); flex: 1; min-width: 0; }
 
 /* Undo our generic .btn-sm { flex:1 } inside the toolbar — we want buttons
  * to size to content so the layout doesn't stretch awkwardly. */
@@ -69,7 +69,7 @@
   background: none;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 5px 7px;
+  padding: var(--sp-2) var(--sp-4);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -103,14 +103,14 @@
 
 @media (max-width: 820px) {
   /* order: lives here, not in mobile.css: must precede `.army-toolbar .dropdown-trigger` {padding-right} below (equal specificity, same element, padding vs padding-right). */
-  .army-toolbar .btn-sm { font-size: 11px; padding: 4px 8px; height: 26px; }
+  .army-toolbar .btn-sm { font-size: var(--fs-xs); padding: var(--sp-2) var(--sp-4); height: 26px; }
 }
 
 /* The Export ▾ dropdown trigger is a `.btn-sm` with a caret — keep the
  * caret visible if the label ellipsizes by reserving room for it. */
 /* order: lives here, not in dropdown.css: must precede `.btn.btn-sm` {padding} below (equal specificity, same element, padding-right vs padding). */
-.army-toolbar .dropdown-trigger { padding-right: 8px; }
-.btn.btn-sm { box-sizing: border-box; height: 28px; line-height: 1.15; padding: 0 10px; font-size: 12px; }
+.army-toolbar .dropdown-trigger { padding-right: var(--sp-4); }
+.btn.btn-sm { box-sizing: border-box; height: 28px; line-height: 1.15; padding: 0 var(--sp-5); font-size: var(--fs-sm); }
 
 /* Compact icon button: square-ish, larger glyph, no wide horizontal padding. */
 /* Icon button: square. Override the existing .btn.btn-icon padding so the
@@ -126,7 +126,7 @@
   height: 32px;
   min-width: 32px;
   padding: 0;
-  font-size: 15px;
+  font-size: var(--fs-base);
   line-height: 1;
 }
 .settings-drawer button.btn, .settings-drawer .btn { height: 32px; }

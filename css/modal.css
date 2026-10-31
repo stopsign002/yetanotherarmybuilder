@@ -9,12 +9,12 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: var(--sh-4);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--sp-9);
   backdrop-filter: blur(2px);
 }
 .modal-backdrop[hidden] { display: none; }
@@ -38,13 +38,13 @@
 
 /* ── Auth modal body styling (slots into existing .modal pattern) ── */
 #modal-auth .modal { width: min(420px, 92vw); }
-.modal-header h3 { font-size: 17px; color: var(--text); }
+.modal-header h3 { font-size: var(--fs-lg); color: var(--text); }
 .modal-header::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 14px;
-  bottom: 14px;
+  top: var(--sp-7);
+  bottom: var(--sp-7);
   width: 3px;
   background: var(--accent);
   border-radius: 0 2px 2px 0;
@@ -62,19 +62,19 @@
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 22px;
+  font-size: var(--fs-2xl);
   cursor: pointer;
   line-height: 1;
-  padding: 0 4px;
+  padding: 0 var(--sp-2);
   border-radius: var(--radius);
   transition: color 0.15s, border-color 0.15s, background 0.15s;
   flex: 0 0 auto;
 }
-.modal-close:hover { color: var(--text); border-color: var(--border-light); background: rgba(255, 255, 255, 0.05); }
+.modal-close:hover { color: var(--text); border-color: var(--border-light); background: var(--ov-1); }
 .modal-body { overflow-y: auto; flex: 1; }
-.modal-save-as .modal-body { display: flex; flex-direction: column; gap: 6px; }
-.bug-report-modal .modal-body { display: flex; flex-direction: column; gap: 10px; }
-.qr-share-modal .modal-body { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+.modal-save-as .modal-body { display: flex; flex-direction: column; gap: var(--sp-3); }
+.bug-report-modal .modal-body { display: flex; flex-direction: column; gap: var(--sp-5); }
+.qr-share-modal .modal-body { display: flex; flex-direction: column; gap: var(--sp-6); align-items: stretch; }
 .modal-footer { border-top: 1px solid var(--border); display: flex; align-items: center; flex-shrink: 0; }
 
 /* Save As modal — duplicate the current army under a new name. */
@@ -86,7 +86,7 @@
 
 @media (max-width: 820px) {
   /* order: lives here, not in mobile.css: must precede `.modal-header` {position} below (equal specificity, same element, position). */
-  .modal-header { padding: 12px 16px; padding-top: calc(12px + var(--m-safe-top)); min-height: 56px; position: sticky; top: 0; background: var(--panel-bg); z-index: 2; }
+  .modal-header { padding: var(--sp-6) var(--sp-8); padding-top: calc(var(--sp-6) + var(--m-safe-top)); min-height: 56px; position: sticky; top: 0; background: var(--panel-bg); z-index: 2; }
 }
 
 /* Modal header: long titles should ellipsize, not push the close button off-screen. */
@@ -98,33 +98,33 @@
   flex-shrink: 0;
   min-width: 0;
   /* Modal header: long titles should ellipsize, not push the close button off-screen. */
-  gap: 8px;
+  gap: var(--sp-4);
   position: relative;
-  padding: 14px 22px 14px 18px;
+  padding: var(--sp-7) var(--sp-9) var(--sp-7) var(--sp-8);
 }
 
 @media (max-width: 820px) {
   /* order: lives here, not in mobile.css: must precede `.modal-body` {padding} below (equal specificity, same element, padding). */
-  .modal-body { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px; }
+  .modal-body { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: var(--sp-7) var(--sp-8); }
 }
 
 /* 7. SPACING RHYTHM — 12 / 18 / 24 grid. We only nudge surfaces that
  * looked cramped or sparse; existing per-feature spacing wins. */
-.modal-body { padding: 18px 22px; }
+.modal-body { padding: var(--sp-8) var(--sp-9); }
 
 @media (max-width: 820px) {
   /* order: lives here, not in mobile.css: must precede `.modal-footer` {gap} below (equal specificity, same element, gap). */
   .modal-footer {
-    padding: 12px 16px;
-    padding-bottom: calc(12px + var(--m-safe-bottom));
+    padding: var(--sp-6) var(--sp-8);
+    padding-bottom: calc(var(--sp-6) + var(--m-safe-bottom));
     border-top: 1px solid var(--border);
     background: var(--panel-bg);
     position: sticky;
     bottom: 0;
     display: flex;
-    gap: 8px;
+    gap: var(--sp-4);
     flex-wrap: wrap;
   }
 }
-.modal-footer { padding: 12px 22px; gap: 8px; }
+.modal-footer { padding: var(--sp-6) var(--sp-9); gap: var(--sp-4); }
 /* 8. REDUCED-MOTION RESPECT — kill any new animations / transforms. */

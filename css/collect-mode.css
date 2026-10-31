@@ -16,21 +16,21 @@
   background: transparent;
   color: var(--text-muted);
   border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 6px 14px;
-  font-size: 13px;
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3) var(--sp-7);
+  font-size: var(--fs-md);
   font-weight: 500;
-  letter-spacing: 0.03em;
+  letter-spacing: var(--tr-tight);
   cursor: pointer;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
-#collect-mode .collect-subtab:hover { background: rgba(255, 255, 255, 0.04); color: var(--text); }
+#collect-mode .collect-subtab:hover { background: var(--ov-1); color: var(--text); }
 #collect-mode .collect-subtab.active { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
 .collect-subtab.active::after {
   content: '';
   position: absolute;
-  left: 12px;
-  right: 12px;
+  left: var(--sp-6);
+  right: var(--sp-6);
   bottom: -1px;
   height: 2px;
   background: var(--accent);
@@ -86,35 +86,35 @@ body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 22px;
+  gap: var(--sp-6);
+  padding: var(--sp-7) var(--sp-9);
   border-bottom: 1px solid var(--border);
   background: var(--panel-bg);
 }
 #collect-mode .collect-title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 22px;
-  letter-spacing: 0.06em;
+  font-size: var(--fs-2xl);
+  letter-spacing: var(--tr-wide);
   text-transform: uppercase;
   color: var(--text);
   margin: 0;
 }
 
 /* ── sub-tab nav */
-#collect-mode .collect-subtabs { display: flex; gap: 4px; background: var(--panel-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px; }
+#collect-mode .collect-subtabs { display: flex; gap: var(--sp-2); background: var(--panel-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--sp-1); }
 
 /* ── exit: same box as .waha-exit (waha-mode.css), tokens only so every theme is covered */
 #collect-mode .collect-exit {
   flex: 0 0 auto;
   margin-left: auto;
   height: 34px;
-  padding: 6px 12px;
+  padding: var(--sp-3) var(--sp-6);
   border: 1px solid var(--border-light);
   border-radius: var(--radius);
   background: var(--card-bg);
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background 120ms ease, border-color 120ms ease;
@@ -122,11 +122,11 @@ body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-
 #collect-mode .collect-exit:hover { background: var(--card-hover); border-color: var(--accent); }
 
 /* ── body */
-#collect-mode .collect-body { flex: 1 1 auto; overflow: auto; padding: 18px 22px; }
+#collect-mode .collect-body { flex: 1 1 auto; overflow: auto; padding: var(--sp-8) var(--sp-9); }
 .collect-empty-text { font-style: italic; }
 
 /* ── PAINTING TAB layout */
-.collect-paint-layout { display: grid; grid-template-columns: 240px 1fr; gap: 18px; align-items: start; }
+.collect-paint-layout { display: grid; grid-template-columns: 240px 1fr; gap: var(--sp-8); align-items: start; }
 
 /* Mobile dropdown picker; hidden on wide screens. */
 .collect-paint-mobile-picker {
@@ -136,8 +136,8 @@ body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 8px 10px;
-  font-size: 14px;
+  padding: var(--sp-4) var(--sp-5);
+  font-size: var(--fs-base);
 }
 
 /* Faction sidebar */
@@ -145,7 +145,7 @@ body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 8px;
+  padding: var(--sp-5) var(--sp-4);
   position: sticky;
   top: 0;
   max-height: calc(100vh - 180px);
@@ -153,16 +153,16 @@ body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-
 }
 .collect-paint-sidebar-head {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: var(--tr-wide);
   color: var(--text-muted);
-  padding: 4px 8px 8px;
+  padding: var(--sp-2) var(--sp-4) var(--sp-4);
   border-bottom: 1px solid var(--border);
-  margin-bottom: 6px;
+  margin-bottom: var(--sp-3);
 }
 .collect-paint-faction-list { list-style: none; padding: 0; margin: 0; }
-.collect-paint-faction-list li { margin-bottom: 2px; }
+.collect-paint-faction-list li { margin-bottom: var(--sp-1); }
 
 /* ── faction main pane (Painting) */
 .collect-paint-main {
@@ -174,38 +174,38 @@ body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-
   display: grid;
   grid-template-columns: 12px 1fr auto;
   grid-template-rows: auto auto;
-  gap: 4px 8px;
+  gap: var(--sp-2) var(--sp-4);
   align-items: center;
-  padding: 6px 8px;
+  padding: var(--sp-3) var(--sp-4);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text);
   cursor: pointer;
   text-align: left;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   transition: background 0.12s, border-color 0.12s;
 }
 .collect-faction-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35); }
 .collect-faction-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.collect-faction-count { font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-muted); }
-.collect-faction-bar-wrap { grid-column: 1 / -1; height: 3px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; overflow: hidden; margin-top: 2px; }
+.collect-faction-count { font-variant-numeric: tabular-nums; font-size: var(--fs-xs); color: var(--text-muted); }
+.collect-faction-bar-wrap { grid-column: 1 / -1; height: 3px; background: var(--ov-3); border-radius: 2px; overflow: hidden; margin-top: var(--sp-1); }
 .collect-faction-bar { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #e6c7a8, var(--coll-done)); }
-.collect-faction-row:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.08); }
+.collect-faction-row:hover { background: var(--ov-1); border-color: var(--ov-3); }
 .collect-faction-row.active { background: rgba(var(--accent-rgb), 0.12); border-color: var(--accent); }
-.collect-main-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 16px; margin-bottom: 12px; }
-.collect-main-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: 0.04em; margin: 0; color: var(--text); }
-.collect-main-summary { font-size: 13px; color: var(--text); }
+.collect-main-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-8); margin-bottom: var(--sp-6); }
+.collect-main-title { font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; letter-spacing: var(--tr-normal); margin: 0; color: var(--text); }
+.collect-main-summary { font-size: var(--fs-md); color: var(--text); }
 .collect-main-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  margin-bottom: 12px;
+  margin-bottom: var(--sp-6);
 }
 .collect-search {
   flex: 1 1 220px;
@@ -213,34 +213,34 @@ body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-
   background: var(--panel-alt);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 6px 10px;
-  font-size: 13px;
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3) var(--sp-5);
+  font-size: var(--fs-md);
 }
-.collect-filter-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.collect-filter-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .collect-filter-chip {
   appearance: none;
   background: transparent;
   color: var(--text-muted);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 4px 12px;
-  font-size: 12px;
+  border-radius: var(--radius-lg);
+  padding: var(--sp-2) var(--sp-6);
+  font-size: var(--fs-sm);
   cursor: pointer;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
-.collect-filter-chip:hover { background: rgba(255, 255, 255, 0.04); color: var(--text); }
+.collect-filter-chip:hover { background: var(--ov-1); color: var(--text); }
 .collect-filter-chip.active { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
-.collect-bulk-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.collect-bulk-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-left: auto; }
 
 /* ── unit grid (cards mirror .unit-card chassis) */
-.collect-unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
-.collect-unit-card-head { display: flex; align-items: baseline; gap: 8px; }
+.collect-unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--sp-5); }
+.collect-unit-card-head { display: flex; align-items: baseline; gap: var(--sp-4); }
 .collect-unit-name {
   flex: 1 1 auto;
   min-width: 0;
   font-weight: 500;
-  font-size: 13px;
+  font-size: var(--fs-md);
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -253,8 +253,8 @@ body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-
  * taller than the rest of its grid row. Ellipsising the NAME is the intended
  * behaviour (js/ui/collect-mode.js puts the full text in a title), but only
  * the name. */
-.collect-unit-pts { flex: 0 0 auto; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-muted); }
-.collect-unit-status-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.collect-unit-pts { flex: 0 0 auto; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: var(--fs-sm); color: var(--text-muted); }
+.collect-unit-status-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 
 /* The per-card painting-status dot was retired — the Reserves "×N"
  * badge already conveys the only ownership signal users care about
@@ -273,26 +273,26 @@ body[data-mode="build"] .filter-chip.collection-chip, body[data-mode="build"] .c
 }
 
 /* ── detail panel: status widget */
-.collection-detail-widget { margin: 10px 0 14px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: rgba(255,255,255,0.02); }
-.collection-detail-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 8px; }
-.collection-detail-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.collection-detail-widget { margin: var(--sp-5) 0 var(--sp-7); padding: var(--sp-5) var(--sp-6); border: 1px solid var(--border); border-radius: var(--radius); background: rgba(255,255,255,0.02); }
+.collection-detail-title { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: var(--tr-wide); color: var(--text-muted); margin-bottom: var(--sp-4); }
+.collection-detail-row { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
 
 /* ── status buttons (shared: detail panel + dashboard rows) */
 .collection-status-btn {
   flex: 1 1 auto;
   min-width: 60px;
-  padding: 5px 10px;
-  font-size: 12px;
+  padding: var(--sp-2) var(--sp-5);
+  font-size: var(--fs-sm);
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
   line-height: 1.2;
 }
-.collect-unit-status-row .collection-status-btn { flex: 1 1 auto; font-size: 11px; padding: 4px 6px; }
-.collection-status-btn:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); }
+.collect-unit-status-row .collection-status-btn { flex: 1 1 auto; font-size: var(--fs-xs); padding: var(--sp-2) var(--sp-3); }
+.collection-status-btn:hover { background: var(--ov-1); border-color: var(--ov-6); }
 .collection-status-btn.active { color: #111; font-weight: 600; }
 .collection-status-btn.collection-status-none.active { background: #ccc; border-color: #aaa; }
 .collection-status-btn.collection-status-unpainted.active { background: var(--coll-unpainted); border-color: var(--coll-unpainted); color: #fff; }
@@ -311,82 +311,82 @@ body[data-mode="build"] .filter-chip.collection-chip, body[data-mode="build"] .c
 
 /* ── army-panel painting progress bar */
 .collection-progress {
-  margin: 8px 0 10px;
-  padding: 8px 10px;
+  margin: var(--sp-4) 0 var(--sp-5);
+  padding: var(--sp-4) var(--sp-5);
   background: rgba(255,255,255,0.025);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
-.collection-progress-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
-.collection-progress-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
+.collection-progress-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); margin-bottom: var(--sp-2); }
+.collection-progress-label { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: var(--tr-wide); color: var(--text-muted); }
 .collection-progress-count { color: var(--text); flex: 1 1 auto; text-align: center; }
 .collection-progress-pct { font-weight: 600; color: var(--coll-done); min-width: 38px; text-align: right; }
-.collection-progress-bar-wrap { width: 100%; height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+.collection-progress-bar-wrap { width: 100%; height: 5px; background: var(--ov-3); border-radius: var(--radius-xs); overflow: hidden; }
 .collection-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--coll-painting), var(--coll-done)); transition: width 0.25s ease; }
 .collection-progress.is-empty { opacity: 0.55; }
 .collection-progress.is-complete .collection-progress-bar { background: var(--coll-done); }
 
 /* ── selection backlog note above the roster */
 .collection-backlog-note {
-  margin: 0 0 8px;
-  padding: 6px 10px;
-  font-size: 12px;
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3) var(--sp-5);
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   background: rgba(255,255,255,0.02);
   border: 1px dashed var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 .collection-backlog-note[hidden] { display: none; }
 
 /* ── dashboard modal */
 .collection-modal { max-width: 820px; width: 92vw; max-height: 88vh; display: flex; flex-direction: column; }
-.collection-modal-body { overflow-y: auto; padding: 14px 18px; }
-.collection-dash-section { margin-bottom: 18px; }
-.collection-dash-section h4 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
-.collection-dash-totals { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: rgba(255,255,255,0.02); }
-.collection-dash-total-line { font-size: 15px; color: var(--text); }
-.collection-dash-total-line strong { color: var(--coll-done); font-size: 18px; }
+.collection-modal-body { overflow-y: auto; padding: var(--sp-7) var(--sp-8); }
+.collection-dash-section { margin-bottom: var(--sp-8); }
+.collection-dash-section h4 { margin: 0 0 var(--sp-4); font-size: var(--fs-md); text-transform: uppercase; letter-spacing: var(--tr-wide); color: var(--text-muted); }
+.collection-dash-totals { padding: var(--sp-5) var(--sp-6); border: 1px solid var(--border); border-radius: var(--radius); background: rgba(255,255,255,0.02); }
+.collection-dash-total-line { font-size: var(--fs-base); color: var(--text); }
+.collection-dash-total-line strong { color: var(--coll-done); font-size: var(--fs-xl); }
 .collect-main-summary strong { color: var(--accent); }
-.collection-dash-total-sub { font-size: 12px; margin-top: 4px; }
+.collection-dash-total-sub { font-size: var(--fs-sm); margin-top: var(--sp-2); }
 
 /* per-faction rows */
 .collection-dash-faction-list { list-style: none; padding: 0; margin: 0; }
 .collection-dash-faction {
   display: grid;
   grid-template-columns: 1.6fr 0.9fr 1.4fr 0.8fr;
-  gap: 8px;
+  gap: var(--sp-4);
   align-items: center;
-  padding: 4px 0;
-  font-size: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: var(--sp-2) 0;
+  font-size: var(--fs-sm);
+  border-bottom: 1px solid var(--ov-1);
 }
 .collection-dash-faction-name { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .collection-dash-faction-count { font-variant-numeric: tabular-nums; color: var(--text-muted); }
-.collection-dash-faction-bar-wrap { height: 5px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
+.collection-dash-faction-bar-wrap { height: 5px; background: var(--ov-3); border-radius: var(--radius-xs); overflow: hidden; }
 .collection-dash-faction-bar { display: block; height: 100%; background: linear-gradient(90deg, var(--coll-painting), var(--coll-done)); }
 .collection-dash-faction-painted { font-variant-numeric: tabular-nums; text-align: right; }
 
 /* filters + unit rows */
-.collection-dash-filters { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-.collection-dash-filter { display: flex; flex-direction: column; gap: 3px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+.collection-dash-filters { display: flex; gap: var(--sp-6); margin-bottom: var(--sp-5); flex-wrap: wrap; }
+.collection-dash-filter { display: flex; flex-direction: column; gap: var(--sp-1); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: var(--tr-normal); color: var(--text-muted); }
 .collection-dash-filter select {
   background: var(--bg-alt);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 4px 6px;
-  font-size: 13px;
+  border-radius: var(--radius-sm);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-md);
   text-transform: none;
   letter-spacing: 0;
 }
 .collection-dash-unit-list { list-style: none; padding: 0; margin: 0; }
-.collection-dash-unit { padding: 8px 10px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 6px; background: rgba(255,255,255,0.015); }
-.collection-dash-unit-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.collection-dash-unit { padding: var(--sp-4) var(--sp-5); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: var(--sp-3); background: rgba(255,255,255,0.015); }
+.collection-dash-unit-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-4); margin-bottom: var(--sp-3); }
 .collection-dash-unit-name { font-weight: 500; color: var(--text); }
-.collection-dash-unit-faction { font-size: 11px; }
-.collection-dash-unit-controls { display: flex; gap: 4px; flex-wrap: wrap; }
-.collection-dash-empty { padding: 20px; text-align: center; font-style: italic; }
+.collection-dash-unit-faction { font-size: var(--fs-xs); }
+.collection-dash-unit-controls { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.collection-dash-empty { padding: var(--sp-9); text-align: center; font-style: italic; }
 
 /* order: lives here, not in detail-pane.css: must follow `.collection-dash-total-line strong` {color} above (equal specificity, same element, color). */
 .glossary-pop-body strong { color: var(--text); }

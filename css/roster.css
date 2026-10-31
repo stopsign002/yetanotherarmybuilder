@@ -10,36 +10,36 @@
  * on add-to-army landings. Uses GPU-friendly transform + opacity. */
 
 /* ── Load status (in center panel header) */
-.load-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); flex: 1; justify-content: center; }
+.load-status { display: flex; align-items: center; gap: var(--sp-3); font-size: var(--fs-xs); color: var(--text-muted); flex: 1; justify-content: center; }
 .load-status-count { color: var(--accent); font-weight: 600; }
 .load-status.load-complete { color: var(--success); }
 
 /* ── Faction List */
-.faction-list { display: flex; flex-direction: column; gap: 6px; }
-.faction-list-empty { color: var(--text-muted); font-size: 12px; line-height: 1.6; padding: 12px 0; }
+.faction-list { display: flex; flex-direction: column; gap: var(--sp-3); }
+.faction-list-empty { color: var(--text-muted); font-size: var(--fs-sm); line-height: 1.6; padding: var(--sp-6) 0; }
 .faction-item {
   display: flex;
   align-items: center;
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 8px 10px;
-  gap: 8px;
+  padding: var(--sp-4) var(--sp-5);
+  gap: var(--sp-4);
   transition: border-color 0.15s;
   /* Faction-list rows: same pattern — info column shrinks, delete stays put. */
   min-width: 0;
 }
 .faction-item:hover { border-color: var(--border-light); }
-.faction-item-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.faction-item-count { font-size: 11px; color: var(--text-muted); }
+.faction-item-name { font-size: var(--fs-md); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.faction-item-count { font-size: var(--fs-xs); color: var(--text-muted); }
 .faction-item-del {
   background: none;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 14px;
-  padding: 2px 4px;
-  border-radius: 3px;
+  font-size: var(--fs-base);
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-xs);
   line-height: 1;
   transition: color 0.15s, background 0.15s;
   flex-shrink: 0;
@@ -47,15 +47,15 @@
 }
 .faction-item-del:hover { color: var(--danger); background: rgba(231,76,60,0.15); }
 .faction-item-info { min-width: 0; flex: 1 1 auto; }
-.faction-select { font-size: 12px; padding: 5px 8px; }
+.faction-select { font-size: var(--fs-sm); padding: var(--sp-2) var(--sp-4); }
 .search-input {
   flex: 1;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
-  padding: 6px 10px;
-  font-size: 13px;
+  padding: var(--sp-3) var(--sp-5);
+  font-size: var(--fs-md);
   font-family: var(--font);
   outline: none;
 }
@@ -69,19 +69,19 @@
 .search-input-wrap { flex: 1; position: relative; display: flex; }
 .search-input-wrap > .search-input {
   flex: 1;
-  padding-right: 28px;
+  padding-right: var(--sp-10);
   /* room for the × button */
 }
 .yaab-search-wrap > .search-input {
   width: 100%;
   /* leave room for the badge */
-  padding-right: 56px;
+  padding-right: var(--sp-14);
 }
 .search-input:focus { border-color: var(--accent); }
 .search-clear {
   position: absolute;
   top: 50%;
-  right: 6px;
+  right: var(--sp-3);
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
@@ -94,7 +94,7 @@
   border-radius: 50%;
   background: var(--border);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1;
   cursor: pointer;
   z-index: 2;
@@ -104,12 +104,12 @@
 .search-clear:hover { background: var(--accent); color: var(--accent-on); }
 
 /* ── Unit Grid */
-.unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--sp-5); }
 .unit-grid::-webkit-scrollbar-track, .dropdown-menu::-webkit-scrollbar-track { background: transparent; }
 #panel-center .panel-body > #unit-grid { flex: 0 0 auto; }
-.roster-empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); }
-.roster-empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
-.roster-empty .muted { font-size: 12px; }
+.roster-empty { grid-column: 1 / -1; text-align: center; padding: var(--sp-14) var(--sp-9); color: var(--text-muted); }
+.roster-empty-icon { font-size: var(--fs-display); margin-bottom: var(--sp-8); opacity: 0.4; }
+.roster-empty .muted { font-size: var(--fs-sm); }
 
 /* In Reserves / Requisitions views, hide the legacy "Loading faction
  * data…" placeholder inside #unit-grid — it has stale text post-load,
@@ -119,9 +119,9 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
 /* ── Wargear options (bullet list) */
 /* === Phase-2 UX additions === */
 /* Filter chips row (rendered inside #panel-center .panel-controls, after search) */
-.filter-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 6px; }
+.filter-chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-3); }
 .filter-chips-clear {
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1;
   /* Was 18x18 with margin-left: 2px — under the WCAG 2.2 AA (2.5.8) 24x24
    * floor and effectively flush against the last role chip. */
@@ -131,7 +131,7 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
   align-items: center;
   justify-content: center;
   padding: 0;
-  margin-left: 8px;
+  margin-left: var(--sp-4);
   border-radius: 50%;
   border: none;
   background: transparent;
@@ -141,27 +141,27 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
   position: relative;
   /* anchors the touch-target overlay below */
 }
-.filter-chips-clear:hover { opacity: 1; background: rgba(255,255,255,0.08); color: var(--text); }
+.filter-chips-clear:hover { opacity: 1; background: var(--ov-3); color: var(--text); }
 .filter-chip {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   line-height: 1;
-  padding: 4px 9px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.04);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--ov-5);
+  background: var(--ov-1);
   color: var(--text-muted);
   cursor: pointer;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
 /* Checkbox chips (fits-budget.js): a real <input> inside the chip label. */
-.filter-chip-check { display: inline-flex; align-items: center; gap: 5px; user-select: none; }
+.filter-chip-check { display: inline-flex; align-items: center; gap: var(--sp-2); user-select: none; }
 .filter-chip-check input { width: 11px; height: 11px; margin: 0; accent-color: currentColor; cursor: inherit; }
 .filter-chip-check:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
 
 /* Favorites + Recents chips (live in #roster-filter-chips) */
-.filter-chip.fav-chip, .filter-chip.recent-chip { display: inline-flex; align-items: center; gap: 4px; }
-.filter-chip:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+.filter-chip.fav-chip, .filter-chip.recent-chip { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.filter-chip:hover { background: var(--ov-3); color: var(--text); }
 
 /* Tri-state: a second click on a chip excludes (red strike-through) any
  * units carrying that keyword. Third click clears it. */
@@ -190,7 +190,7 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
  * .modal/.modal-header/.modal-body/.modal-footer/.btn-outline — all four
  * theme-derived already, nothing new to re-theme here. */
 /* order: lives here, not in mobile.css: must precede `.yaab-hero-cta` {position} below (equal specificity, same element, position). */
-.yaab-install-fab { position: fixed; right: 12px; bottom: calc(var(--m-tabbar-h, 56px) + var(--m-safe-bottom, 0px) + 12px); z-index: 900; box-shadow: var(--shadow-lg); }
+.yaab-install-fab { position: fixed; right: var(--sp-6); bottom: calc(var(--m-tabbar-h, 56px) + var(--m-safe-bottom, 0px) + var(--sp-6)); z-index: 900; box-shadow: var(--shadow-lg); }
 
 /* Toolbar icon active state. .toolbar-icons button.is-on is a generic amber
  * rule from legends-toggle.css; scope this one to the allies button so the
@@ -205,47 +205,47 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
 /* 1. Hero CTA — replaces the small "No units added yet" placeholder */
 .yaab-hero-cta {
   list-style: none;
-  margin: 18px 0 8px;
-  padding: 22px 18px 18px;
+  margin: var(--sp-8) 0 var(--sp-4);
+  padding: var(--sp-9) var(--sp-8) var(--sp-8);
   border: 1px solid rgba(var(--accent-rgb), 0.22);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.06) 0%, rgba(var(--accent-rgb), 0.02) 100%);
   text-align: left;
   position: relative;
 }
 .yaab-hero-headline {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: var(--fs-3xl);
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: var(--tr-tight);
   color: var(--text);
-  margin: 0 0 6px;
+  margin: 0 0 var(--sp-3);
   line-height: 1.15;
 }
-.yaab-hero-sub { font-size: 13px; color: var(--text-muted); margin: 0 0 16px; line-height: 1.4; }
-.yaab-hero-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.yaab-hero-sub { font-size: var(--fs-md); color: var(--text-muted); margin: 0 0 var(--sp-8); line-height: 1.4; }
+.yaab-hero-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
 .yaab-hero-btn {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
-  padding: 12px 12px;
-  background: rgba(255, 255, 255, 0.03);
+  gap: var(--sp-1);
+  padding: var(--sp-6) var(--sp-6);
+  background: var(--ov-1);
   border: 1px solid rgba(var(--accent-rgb), 0.28);
-  border-radius: 8px;
+  border-radius: var(--radius);
   color: inherit;
   text-align: left;
   cursor: pointer;
   font: inherit;
   transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
 }
-.yaab-hero-btn-title { font-weight: 600; font-size: 13px; color: var(--text); }
-.yaab-hero-btn-sub { font-size: 11px; color: var(--text-muted); line-height: 1.3; }
+.yaab-hero-btn-title { font-weight: 600; font-size: var(--fs-md); color: var(--text); }
+.yaab-hero-btn-sub { font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.3; }
 
 /* Mini variant — when a faction is selected but army still empty */
-.yaab-hero-cta-mini { padding: 14px 14px; }
-.yaab-hero-mini-headline { font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 4px; }
-.yaab-hero-mini-sub { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+.yaab-hero-cta-mini { padding: var(--sp-7) var(--sp-7); }
+.yaab-hero-mini-headline { font-weight: 600; font-size: var(--fs-base); color: var(--text); margin-bottom: var(--sp-2); }
+.yaab-hero-mini-sub { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.4; }
 .yaab-hero-btn:hover { background: rgba(var(--accent-rgb), 0.10); border-color: rgba(var(--accent-rgb), 0.55); }
 .yaab-hero-btn:active { transform: translateY(1px); }
 .yaab-hero-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -254,7 +254,7 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
 .yaab-search-wrap { position: relative; display: block; width: 100%; }
 .yaab-kbd-hint {
   position: absolute;
-  right: 8px;
+  right: var(--sp-4);
   top: 50%;
   transform: translateY(-50%);
   display: inline-flex;
@@ -262,13 +262,13 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
   justify-content: center;
   min-width: 30px;
   height: 20px;
-  padding: 0 6px;
+  padding: 0 var(--sp-3);
   font: 600 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tr-tight);
   color: var(--text-muted);
   background: rgba(var(--accent-rgb), 0.12);
   border: 1px solid rgba(var(--accent-rgb), 0.30);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   pointer-events: auto;
   cursor: pointer;
   user-select: none;
@@ -283,8 +283,8 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
 /* Active state: reuse the existing pastel highlight but tint toward gold
  * for favorites and slate for recents so the two chips read distinctly. */
 .filter-chip.fav-chip.active { background: rgba(230,214,168,0.18); border-color: rgba(230,214,168,0.55); color: #f1e4b8; }
-.filter-chip.fav-chip .fav-chip-glyph, .filter-chip.recent-chip .recent-chip-glyph { font-size: 12px; line-height: 1; opacity: 0.85; }
-.filter-chip.fav-chip .fav-chip-count, .filter-chip.recent-chip .recent-chip-count { font-size: 10px; line-height: 1; opacity: 0.7; margin-left: 1px; }
+.filter-chip.fav-chip .fav-chip-glyph, .filter-chip.recent-chip .recent-chip-glyph { font-size: var(--fs-sm); line-height: 1; opacity: 0.85; }
+.filter-chip.fav-chip .fav-chip-count, .filter-chip.recent-chip .recent-chip-count { font-size: var(--fs-2xs); line-height: 1; opacity: 0.7; margin-left: 1px; }
 .filter-chip.fav-chip.active .fav-chip-glyph { opacity: 1; color: #e6d6a8; }
 .filter-chip.recent-chip.active .recent-chip-glyph { opacity: 1; }
 @keyframes yaab-fx-particle-burst {
@@ -294,9 +294,9 @@ body[data-units-view="reserves"] #unit-grid #roster-empty, body[data-units-view=
 }
 
 @media (min-width: 821px) {
-  .panel-center.panel-expanded > .panel-controls .search-input { font-size: 15px; padding: 12px 14px; min-height: 44px; }
+  .panel-center.panel-expanded > .panel-controls .search-input { font-size: var(--fs-base); padding: var(--sp-6) var(--sp-7); min-height: 44px; }
   .panel-center.panel-expanded #roster-filter-chips { flex: 0 1 auto; margin-top: 0; max-width: none; }
-  .panel-center.panel-expanded .filter-chip { padding: 6px 12px; font-size: 12px; }
+  .panel-center.panel-expanded .filter-chip { padding: var(--sp-3) var(--sp-6); font-size: var(--fs-sm); }
   .panel-center.panel-expanded > .panel-controls > .yaab-search-wrap, .panel-center.panel-expanded > .panel-controls > .search-input {
     flex: 1 1 320px;
     min-width: 280px;

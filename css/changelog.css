@@ -11,65 +11,65 @@
 .changelog-refresh-tip {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  margin: 0 0 16px;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
+  margin: 0 0 var(--sp-8);
   background: rgba(var(--accent-rgb), 0.08);
   border: 1px solid rgba(var(--accent-rgb), 0.25);
   border-left-width: 3px;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: var(--radius);
+  font-size: var(--fs-md);
   line-height: 1.4;
   color: var(--text);
 }
-.changelog-refresh-tip-icon { font-size: 16px; line-height: 1; color: var(--accent); flex: 0 0 auto; }
+.changelog-refresh-tip-icon { font-size: var(--fs-lg); line-height: 1; color: var(--accent); flex: 0 0 auto; }
 .changelog-refresh-tip kbd {
   display: inline-block;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 4px;
-  padding: 1px 6px;
-  margin: 0 2px;
+  font-size: var(--fs-sm);
+  background: var(--sh-3);
+  border: 1px solid var(--ov-5);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--sp-3);
+  margin: 0 var(--sp-1);
   color: var(--accent);
   white-space: nowrap;
 }
-.changelog-header { align-items: flex-start; gap: 12px; }
+.changelog-header { align-items: flex-start; gap: var(--sp-6); }
 .changelog-header-text { flex: 1; min-width: 0; }
-.changelog-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; display: flex; flex-wrap: wrap; gap: 10px; }
-.changelog-version { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface-2); border-radius: 4px; padding: 1px 6px; }
+.changelog-meta { font-size: var(--fs-sm); color: var(--text-muted); margin-top: var(--sp-1); display: flex; flex-wrap: wrap; gap: var(--sp-5); }
+.changelog-version { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface-2); border-radius: var(--radius-sm); padding: 1px var(--sp-3); }
 .changelog-updated { font-style: italic; }
-.changelog-body { overflow: auto; padding: 12px 18px 18px; }
-.changelog-empty { color: var(--text-muted); text-align: center; padding: 24px 0; }
-.changelog-day { margin-bottom: 18px; }
+.changelog-body { overflow: auto; padding: var(--sp-6) var(--sp-8) var(--sp-8); }
+.changelog-empty { color: var(--text-muted); text-align: center; padding: var(--sp-10) 0; }
+.changelog-day { margin-bottom: var(--sp-8); }
 .changelog-day:last-child { margin-bottom: 0; }
 .changelog-day-head {
-  margin: 0 0 8px;
-  font-size: 13px;
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-md);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tr-wide);
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
-  padding-bottom: 4px;
+  padding-bottom: var(--sp-2);
 }
-.changelog-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
-.changelog-item { display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: start; }
+.changelog-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--sp-5); }
+.changelog-item { display: grid; grid-template-columns: 56px 1fr; gap: var(--sp-5); align-items: start; }
 .changelog-item-title { font-weight: 600; line-height: 1.35; }
-.changelog-item-desc { margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+.changelog-item-desc { margin-top: var(--sp-2); font-size: var(--fs-md); line-height: 1.5; color: var(--text-muted); }
 .changelog-kind {
   display: inline-block;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tr-normal);
   text-align: center;
-  border-radius: 3px;
-  padding: 2px 0;
+  border-radius: var(--radius-xs);
+  padding: var(--sp-1) 0;
   background: var(--surface-2);
   color: var(--text-muted);
   border: 1px solid var(--border);
-  margin-top: 2px;
+  margin-top: var(--sp-1);
 }
 .changelog-kind-feature { background: rgba(78, 156, 96, 0.18); color: #7ed293; border-color: rgba(78, 156, 96, 0.45); }
 .changelog-kind-fix { background: rgba(180, 100, 60, 0.18); color: #e9b18b; border-color: rgba(180, 100, 60, 0.45); }
@@ -81,8 +81,8 @@
 #yaab-btn-changelog.has-unseen::after {
   content: '';
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: var(--sp-3);
+  right: var(--sp-3);
   width: 7px;
   height: 7px;
   border-radius: 50%;

@@ -10,30 +10,30 @@
  * monospace for the recovery code. */
 
 /* order: lives here, not in detail-pane.css: must precede `.auth-saved-lbl input[type="checkbox"]` {margin-top} below (equal specificity, same element, margin-top). */
-.enhancement-cb-item input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+.enhancement-cb-item input[type="checkbox"] { margin-top: var(--sp-1); flex-shrink: 0; accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
 
 /* ── Top-bar shelf for hook-registered icons */
-.topbar-icons-shelf { display: flex; align-items: center; gap: 6px; }
+.topbar-icons-shelf { display: flex; align-items: center; gap: var(--sp-3); }
 
 /* Topbar Export button — same family as Settings/Help, with a caret +
  * absolutely-positioned dropdown menu reusing .auth-menu styling. */
 .topbar-export-wrap { position: relative; display: inline-block; }
-.topbar-export-caret { margin-left: 4px; opacity: 0.7; font-size: 0.85em; }
+.topbar-export-caret { margin-left: var(--sp-2); opacity: 0.7; font-size: 0.85em; }
 
 /* ── Auth icon button (signed out / signed in) */
 .auth-btn-wrap { position: relative; display: inline-block; }
 .auth-btn { white-space: nowrap; }
-.auth-btn-caret { margin-left: 4px; opacity: 0.7; font-size: 0.85em; }
+.auth-btn-caret { margin-left: var(--sp-2); opacity: 0.7; font-size: 0.85em; }
 .auth-menu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + var(--sp-3));
   right: 0;
   min-width: 180px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
-  padding: 4px 0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: var(--sp-2) 0;
   z-index: 1100;
   display: flex;
   flex-direction: column;
@@ -44,53 +44,53 @@
   min-width: 200px;
 }
 .auth-menu[hidden] { display: none; }
-.auth-menu-item { background: transparent; border: 0; color: inherit; text-align: left; padding: 8px 14px; font: inherit; cursor: pointer; }
+.auth-menu-item { background: transparent; border: 0; color: inherit; text-align: left; padding: var(--sp-4) var(--sp-7); font: inherit; cursor: pointer; }
 
 /* Visual divider between army actions and auth actions in the menu. */
-.auth-menu-divider { border-top: 1px solid var(--border); margin: 4px 0; }
+.auth-menu-divider { border-top: 1px solid var(--border); margin: var(--sp-2) 0; }
 .auth-menu-item:hover, .auth-menu-item:focus-visible { background: rgba(212, 163, 86, 0.12); }
 
 /* Submit button is rendered as the last child of the form (not in
  * .modal-footer) so it always sits with its inputs and can never be
  * pushed below the visible viewport on mobile. */
-.auth-form-submit { display: block; width: 100%; margin-top: 14px; }
+.auth-form-submit { display: block; width: 100%; margin-top: var(--sp-7); }
 .auth-error {
   background: rgba(180, 40, 40, 0.15);
   color: #ff8b8b;
   border: 1px solid rgba(180, 40, 40, 0.45);
-  padding: 8px 10px;
-  border-radius: 4px;
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--radius-sm);
   font-size: 0.92em;
-  margin: 8px 0 4px;
+  margin: var(--sp-4) 0 var(--sp-2);
 }
-.auth-notice { font-size: 0.9em; opacity: 0.8; margin: 4px 0 8px; }
+.auth-notice { font-size: 0.9em; opacity: 0.8; margin: var(--sp-2) 0 var(--sp-4); }
 .auth-warning {
   background: rgba(212, 163, 86, 0.12);
   border: 1px solid rgba(212, 163, 86, 0.4);
-  padding: 10px 12px;
-  border-radius: 4px;
+  padding: var(--sp-5) var(--sp-6);
+  border-radius: var(--radius-sm);
   font-size: 0.95em;
-  margin: 0 0 12px;
+  margin: 0 0 var(--sp-6);
 }
-.auth-switch { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.auth-switch { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-5); }
 
 /* ── Recovery code display */
 .auth-recovery-code {
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 1.15em;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tr-normal);
   user-select: all;
   background: #0e0c08;
   border: 1px solid var(--border);
-  padding: 12px 14px;
-  border-radius: 4px;
-  margin: 0 0 12px;
+  padding: var(--sp-6) var(--sp-7);
+  border-radius: var(--radius-sm);
+  margin: 0 0 var(--sp-6);
   word-break: break-all;
   white-space: pre-wrap;
 }
-.auth-recovery-actions { display: flex; gap: 8px; margin-bottom: 12px; }
-.auth-saved-lbl { display: flex; align-items: flex-start; gap: 8px; font-size: 0.92em; cursor: pointer; }
-.auth-saved-lbl input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; }
+.auth-recovery-actions { display: flex; gap: var(--sp-4); margin-bottom: var(--sp-6); }
+.auth-saved-lbl { display: flex; align-items: flex-start; gap: var(--sp-4); font-size: 0.92em; cursor: pointer; }
+.auth-saved-lbl input[type="checkbox"] { margin-top: var(--sp-1); flex-shrink: 0; }
 .signed-out-banner {
   position: fixed;
   top: var(--topbar-h);
@@ -99,13 +99,13 @@
   z-index: 390;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 14px;
+  gap: var(--sp-5);
+  padding: var(--sp-3) var(--sp-7);
   background: var(--panel-bg);
   color: var(--text);
   border-top: 2px solid var(--accent);
   border-bottom: 1px solid var(--border);
-  font-size: 13px;
+  font-size: var(--fs-md);
   line-height: 1.35;
 }
 .signed-out-banner[hidden] { display: none; }
@@ -113,17 +113,17 @@
 .signed-out-banner-btn, .signed-out-banner-close {
   flex: 0 0 auto;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--text);
   background: rgba(var(--accent-rgb), 0.10);
   border: 1px solid var(--accent);
-  border-radius: 4px;
-  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  padding: var(--sp-2) var(--sp-6);
   min-height: 30px;
   cursor: pointer;
 }
-.signed-out-banner-close { border-color: var(--border); background: transparent; padding: 5px 10px; font-size: 16px; line-height: 1; }
+.signed-out-banner-close { border-color: var(--border); background: transparent; padding: var(--sp-2) var(--sp-5); font-size: var(--fs-lg); line-height: 1; }
 .signed-out-banner-btn:hover, .signed-out-banner-btn:focus-visible, .signed-out-banner-close:hover, .signed-out-banner-close:focus-visible {
   background: rgba(var(--accent-rgb), 0.22);
   border-color: var(--accent);
