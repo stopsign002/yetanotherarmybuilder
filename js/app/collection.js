@@ -46,7 +46,7 @@
   //     the rosterFilters predicate a no-op when not in COLLECT).
   //   - CSS gating (`body[data-mode="build"] …`) for visual elements that
   //     have already been injected (card status dots, chips that may already
-  //     be in the DOM from an older mount). See css/collection.css.
+  //     be in the DOM from an older mount). See css/collect-mode.css.
 
   function getMode() {
     if (window.App && typeof App.getMode === 'function') return App.getMode();

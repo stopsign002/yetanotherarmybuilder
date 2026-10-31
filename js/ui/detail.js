@@ -1051,7 +1051,7 @@
 
     // Banner layout mirrors the unit datasheet header: a .detail-banner-row flex
     // row (name + points) over a full-width row. The wrapper is REQUIRED —
-    // .detail-header.detail-banner is display:block (css/detail-redesign.css),
+    // .detail-header.detail-banner is display:block (css/detail-pane.css),
     // so without it the points stack drops below the name instead of aligning
     // right. "Detachment" rides above the name as an eyebrow, which gives the
     // block a kind → name → dispositions hierarchy instead of three stacked
