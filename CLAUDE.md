@@ -33,7 +33,7 @@ is tracked on purpose (until retire-v1 deletes `build/`) and survived the rule, 
 | Path | Purpose |
 |---|---|
 | `index.html` | Single-page shell. Hardcoded `<script>` order matters. Holds the topbar + 3-pane layout + modal mounts. |
-| `css/*.css` | One file per feature surface. `style.css` is the base; everything else is additive. |
+| `css/*.css` | One file per component, in six tiers declared by the `<link>` order in `index.html` (tokens → base → layout → components → modes → mobile → theme). No `style.css`, no patch files; `docs/CSS-REORG-2026-10-31.md` is the contract and `scripts/verify/css-order-check.py` proves a CSS edit kept the cascade. |
 | `css/themes/*.css` | **Interchangeable themes.** Never linked from `index.html` — `js/theme-boot.js` appends the chosen one at parse time, so the default theme loads none of it. See "Themes" below. |
 | `js/theme-boot.js` | **The only non-`defer` script.** Sits last in `<head>`; reads `yaab_theme` and applies the theme before first paint. Owns the theme registry (`window.YAAB_THEMES`). |
 | `css/auth.css` | Auth UI styling (sign-in button, dropdown, auth modal). |
@@ -230,7 +230,7 @@ Three pieces:
   every other stylesheet to win on cascade order and has to be in the document
   before first paint or the user watches the theme get applied. The CSP
   (`script-src 'self'`) is why it is a file rather than an inline block.
-  It borrows the `?v=` stamp off `css/style.css` — `scripts/stamp-assets.mjs`
+  It borrows the `?v=` stamp off `css/tokens.css` — `scripts/stamp-assets.mjs`
   only rewrites URLs literally present in `index.html`, and this one never is.
 - **`js/app/themes.js`** — `App.Themes.{list,get,set,remapAccent}`. Switching
   is a live swap of that one `<link>` with no reload; because every theme is
@@ -272,8 +272,8 @@ Add an entry to `THEMES` in `js/theme-boot.js` and a stylesheet under
 `css/themes/`. Three things will bite:
 
 1. **Specificity, not order.** The theme link loads last, so an equal-specificity
-   rule wins — but `css/detail-redesign.css` qualifies almost everything with
-   `.unit-detail-content`, `css/unit-card-themes.css` uses
+   rule wins — but `css/detail-pane.css` qualifies much of the detail pane with
+   `.unit-detail-content`, `css/unit-card.css` uses
    `.unit-card.faction-x:hover`, and `css/mobile.css` hides its phone chrome
    inside a media query. Mirror those selectors rather than reaching for
    `!important`. `browse.sh run` + a rule-tracing probe answers "why did my
