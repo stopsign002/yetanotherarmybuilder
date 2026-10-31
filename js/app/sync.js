@@ -26,7 +26,6 @@
   const SYNCED_BAG_KEYS = [
     'yaab_favorites',
     'yaab_recents',
-    'yaab_collection',
     'yaab_reserves',
     'yaab_requisitions',
     'yaab_crusade_rosters',
@@ -311,7 +310,7 @@
     if (op.op === 'putArmy') {
       toast(`Couldn't sync "${name || 'an army'}" — ${why}. It is still saved on this device.`, 'error', 7000);
     } else if (op.op === 'putState') {
-      toast(`Couldn't sync your collection and settings — ${why}. They are still saved on this device.`, 'error', 7000);
+      toast(`Couldn't sync your reserves and settings — ${why}. They are still saved on this device.`, 'error', 7000);
     } else {
       toast(`Couldn't delete an army from the cloud — ${why}.`, 'warning', 6000);
     }
@@ -721,7 +720,7 @@
   // into the queue), and same-tab writes don't fire the native `storage`
   // event either. Modules hydrating from these keys would otherwise have no
   // way to know the bag just changed under them. The reserves /
-  // requisitions / favorites / collection / … modules each keep an
+  // requisitions / favorites / … modules each keep an
   // in-memory copy of their key's contents and their next write would
   // clobber the freshly-pulled cloud bag with the stale memory copy. So we:
   //   · dispatch a custom yaab-bag-pulled event for modules that opted into
@@ -813,7 +812,7 @@
   // in-memory reset comes first and matters: autosave's beforeunload flush
   // would otherwise write the old armies straight back during the reload.
   // Callers reload the page afterwards, which is what resets every OTHER
-  // module's in-memory copy (reserves QTY, favorites, collection, custom
+  // module's in-memory copy (reserves QTY, favorites, custom
   // names…) — removing keys alone left those to write the data back.
   function wipeAccountData() {
     try {
@@ -844,7 +843,7 @@
     const pending = queue().length;
     const message = [
       `The armies and settings on this device belong to "${owner}". You are signed in as "${user}". Nothing will sync until you choose:`,
-      `Keep as local copies — their armies stay on this device but never upload to your account (use Save as… to copy one into it). Their collection, reserves and settings here are replaced by yours.`,
+      `Keep as local copies — their armies stay on this device but never upload to your account (use Save as… to copy one into it). Their reserves and settings here are replaced by yours.`,
       `Remove them — everything of theirs is deleted from this device. Whatever they had already synced is still in their account.`,
     ];
     if (pending) {

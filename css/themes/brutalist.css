@@ -190,8 +190,6 @@
 /* Static SVG atmosphere layers + hero underline (css/theming-pass.css) */
 body[data-mode="build"] #build-mode::before,
 body[data-mode="build"] #build-mode::after,
-body[data-mode="collect"] #collect-mode::before,
-body[data-mode="collect"] #collect-mode::after,
 body[data-mode="play"] #play-mode::before,
 body[data-mode="play"] #play-mode::after,
 body[data-mode="build"] .build-hero::after {
@@ -753,10 +751,10 @@ input[type="checkbox"]:checked::after {
 /* ── Neutral: text that was only ever "light grey on dark" ── */
 .unit-detail-content .strat-section-text, .panel-header h2:hover { color: var(--text); }
 
-/* Filter chips: the collection / favourites variants each ship their own
+/* Filter chips: the favourites variant ships its own
  * pale-tint active state at a higher specificity than the generic
  * .filter-chip.active rule above. All of them mean the same thing here. */
-.filter-chip.fav-chip.active, .filter-chip.collection-chip-owned.active, .filter-chip.collection-chip-needs.active, .filter-chip.collection-chip-painted.active {
+.filter-chip.fav-chip.active {
   background: var(--accent);
   border-color: var(--nb-ink);
   color: var(--accent-on);
@@ -995,7 +993,6 @@ body.build-mode-enhanced .army-entry-name,
 .cmdp-input,
 .custom-name-input,
 .cards-spill-name,
-.collection-dash-filter select,
 .build-hero-points-limit-input,
 body.build-mode-enhanced .army-entry-qty input {
   background: var(--nb-sunken);
@@ -1009,7 +1006,7 @@ body.build-mode-enhanced .army-entry-qty input {
 
 /* ── Buttons: the offset-shadow press, everywhere */
 /* ── Selected / active: accent fill, never a pale wash */
-.cmdp-row.active, .collect-subtab.is-active { background: var(--accent); color: var(--accent-on); border-color: var(--nb-ink); }
+.cmdp-row.active { background: var(--accent); color: var(--accent-on); border-color: var(--nb-ink); }
 
 /* ── Chips + tags: outline, not tint */
 .changelog-kind { border: var(--nb-bw) solid var(--nb-ink); color: var(--text); font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; transition: none; }
@@ -1059,13 +1056,9 @@ body.build-mode-enhanced .army-entry-qty input {
  * it cannot surprise anything about layout. */
 .filter-chip.active *,
 .filter-chip.fav-chip.active *,
-.filter-chip.collection-chip-owned.active *,
-.filter-chip.collection-chip-needs.active *,
-.filter-chip.collection-chip-painted.active *,
 .topbar-mode-tab[aria-selected="true"] *,
 .btn-accent *,
 .cmdp-row.active *,
-.collect-subtab.is-active *,
 .cp-badge *,
 .enhancement-pts-badge *,
 .strat-phase-badge * {
@@ -1348,94 +1341,6 @@ body.build-mode-enhanced .army-entry-remove:hover { background: var(--danger); c
 }
 .validation-banner-title { color: var(--text); font-weight: 900; letter-spacing: 0.14em; }
 .validation-banner-list li { color: var(--text); }
-
-/* COLLECT MODE
- * Mostly already right, because its cards ride the shared
- * chassis. What is left is the three things it builds itself:
- * the sub-tab strip, the faction rail, and the five-way paint
- * status control on every card — which is the densest cluster
- * of buttons in the app and was still drawing 1px hairlines. */
-.collect-subtabs { border: var(--nb-bw) solid var(--nb-ink); background: var(--nb-paper); box-shadow: var(--nb-sh-chip); padding: 0; }
-.collect-subtab {
-  border-right: var(--nb-bw) solid var(--nb-ink);
-  background: var(--nb-paper);
-  color: var(--text-muted);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  transition: none;
-}
-.collect-subtab:last-child { border-right: 0; }
-.collect-subtab:hover { background: var(--nb-sunken); color: var(--text); }
-.collect-faction-row { border: var(--nb-bw) solid var(--nb-ink); background: var(--nb-paper); transition: none; }
-.collect-faction-row:hover { background: var(--nb-sunken); }
-.collect-faction-row.is-active, .collect-faction-row.is-on { background: var(--nb-sunken); border-left: 6px solid var(--accent); }
-.collect-faction-name { font-weight: 700; }
-.collect-faction-count { font-weight: 900; font-variant-numeric: tabular-nums; }
-.collect-faction-dot { border: var(--nb-bw-hair) solid var(--nb-ink); }
-.collect-faction-bar-wrap, .collection-dash-faction-bar-wrap { background: var(--nb-inset); border: var(--nb-bw) solid var(--nb-ink); }
-.collect-faction-bar, .collection-dash-faction-bar { background: var(--accent); }
-
-/* The paint-status control: five buttons that are one object. */
-.collect-unit-status-row .collection-status-btn, .collection-status-btn {
-  background: var(--nb-paper);
-  border: var(--nb-bw) solid var(--nb-ink);
-  color: var(--text);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  transition: none;
-}
-.collection-status-btn:hover { background: var(--nb-sunken); }
-.collection-status-btn.is-on, .collection-status-btn.active, .collection-status-btn[aria-pressed="true"] {
-  background: var(--accent);
-  color: var(--accent-on);
-  border-color: var(--nb-ink);
-}
-
-/* css/collection.css gives each status its own pale active fill at THREE
- * classes of specificity, so the accent fill above lost the background while
- * still winning the colour — and the selected button came out as
- * var(--accent-on) on #ccc, i.e. white on light grey at 1.61, the least
- * legible of the five when it is the one that matters. Mirror the selectors
- * rather than reach for !important (app/CLAUDE.md rule 1). The status is
- * named on the button face, so the colour coding was decoration; the accent
- * fill is what "selected" means everywhere else in this theme. */
-.collection-status-btn.collection-status-none.active,
-.collection-status-btn.collection-status-unpainted.active,
-.collection-status-btn.collection-status-primed.active,
-.collection-status-btn.collection-status-painting.active,
-.collection-status-btn.collection-status-done.active {
-  background: var(--accent);
-  color: var(--accent-on);
-  border-color: var(--nb-ink);
-}
-.collection-status-btn.is-on *, .collection-status-btn[aria-pressed="true"] * { color: var(--accent-on) !important; }
-.collect-unit-card { box-shadow: var(--nb-sh-card); }
-.collect-unit-name { font-weight: 900; letter-spacing: -0.01em; }
-.collect-unit-pts { font-weight: 900; font-variant-numeric: tabular-nums; }
-.collect-filter-chip {
-  background: var(--nb-paper);
-  border: var(--nb-bw) solid var(--nb-ink);
-  box-shadow: var(--nb-sh-chip);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.collect-filter-chip.is-on, .collect-filter-chip.active { background: var(--accent); color: var(--accent-on); }
-.collect-empty, .collection-dash-empty { color: var(--text-muted); }
-
-/* css/collect-mode.css:179 — the selected faction in the rail. `.active`,
- * not `.is-active`; the accent goes on the left edge, same as every other
- * selected row in the app. */
-.collect-faction-row.active { background: var(--nb-sunken); border-color: var(--nb-ink); border-left: 6px solid var(--accent); }
-.collect-faction-row.active .collect-faction-name { font-weight: 900; }
-
-/* css/collect-mode.css:351 — Collect's own search box, which does not share
- * a class with the roster's. Sunken like every other field. */
-.collect-search, .collect-search:not(:focus) { background: var(--nb-sunken); border: var(--nb-bw) solid var(--nb-ink); color: var(--text); font-weight: 600; }
-.collect-search:focus { background: var(--nb-paper); border-color: var(--nb-ink); box-shadow: var(--nb-sh-btn); outline: none; }
-.collect-search::placeholder { color: var(--text-faint); font-weight: 600; }
 
 /* css/reserves.css:120 — the Reserves / Requisitions empty-state note. Its
  * fill is a white-alpha gradient over `rgba(0,0,0,0.15)`, which on the cream

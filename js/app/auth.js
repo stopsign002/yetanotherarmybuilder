@@ -99,7 +99,7 @@
   // .wipeAccountData() removes those keys and resets the in-memory army list.
   //
   // Why the reload: removing keys does not touch the copies other modules
-  // hold in memory (reserves/requisitions QTY, favorites, collection, custom
+  // hold in memory (reserves/requisitions QTY, favorites, custom
   // names…). Their next write restored the removed data, and the next
   // account to sign in here received it. A reload is the one reset that
   // covers every module, including ones written later.
@@ -261,7 +261,7 @@
       const pending = (App.Sync && typeof App.Sync.queueLength === 'function') ? App.Sync.queueLength() : 0;
       const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
       const message = [
-        'Keep local data: your armies, collection and settings stay on this device. They will not sync while you are signed out.',
+        'Keep local data: your armies, reserves and settings stay on this device. They will not sync while you are signed out.',
         'Remove local data: they are deleted from this device. Everything already synced stays in your account.',
       ];
       if (pending) {

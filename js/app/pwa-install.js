@@ -306,7 +306,7 @@
                         && App.settingsDrawer.isOpen());
     const mode = (App.getMode && App.getMode()) || 'build';
     const inWaha = mode === 'waha';
-    // Collect / Cards / Play hide #build-mode, so no Army/Units/Details tab
+    // Cards / Play hide #build-mode, so no Army/Units/Details tab
     // describes what is on screen — light none of them in any non-build mode.
     const offBuild = mode !== 'build';
     nav.querySelectorAll('button[data-panel]').forEach(b => {
@@ -392,9 +392,9 @@
       }
       const panel = btn.getAttribute('data-panel');
       if (panel) {
-        // From ANY non-build mode (Waha, Collect, Cards) the panel tabs return to
+        // From ANY non-build mode (Waha, Cards) the panel tabs return to
         // Build first: #build-mode is hidden there, so setting the panel alone
-        // changed nothing visible and left Collect/Cards with no way out.
+        // changed nothing visible and left Cards with no way out.
         if (App.getMode && App.getMode() !== 'build' && typeof App.setMode === 'function') {
           if (App.settingsDrawer && typeof App.settingsDrawer.isOpen === 'function'
               && App.settingsDrawer.isOpen() && typeof App.settingsDrawer.close === 'function') {

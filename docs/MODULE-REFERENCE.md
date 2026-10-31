@@ -384,21 +384,13 @@ Cross-cutting docs:
 - **DOM:** `.fav-chip`, `.recent-chip`, `.favorite-toggle`, `.fav-star`.
 - **Notes:** Star button uses property getter for `html` so the icon updates instantly. Recents diff on `armyChange` (snapshot ids) so renders/qty edits don't pollute it.
 
-### `js/app/collection.js`
-- **Purpose:** Owned/painted tracker; roster filter chips, progress bar, dashboard.
-- **Exports:** `App.collection = { getStatus, setStatus, STATUSES, openDashboard, closeDashboard }`.
-- **Depends on:** `App.state`, `App.hooks`, `UI.*`.
-- **Storage:** `localStorage.yaab_collection` (`{ unitId: status }`), `yaab_show_collection_badges` (BUILD-mode opt-in).
-- **DOM:** `.collection-detail-widget`, dashboard modal.
-- **Notes:** Mode-gated. Badge toggle persists & syncs cross-tab via `storage` event. Detail widget is hidden on mobile.
-
 ### `js/app/reserves.js`
 - **Purpose:** "Reserves" — owned-units stockpile with per-unit quantities; the Build-mode unit-pane default view.
 - **Exports:** `App.Reserves`. Registers `bootstrap`, `armyChange`, `modeChange`, `rosterFilters`, `selectionChange`.
-- **Depends on:** `collection.js`, `App.renderUnitRosterWithContext`, `App.getEffectiveFilter`, `App.getMode`.
+- **Depends on:** `App.renderUnitRosterWithContext`, `App.getEffectiveFilter`, `App.getMode`.
 - **Storage:** `localStorage.yaab_reserves` (`{unitId: qty}`, **cloud-synced**), `yaab_units_view` (active unit-pane view: `reserves` / `requisitions` / `all`).
 - **DOM:** `#reserves-view-toggle`, `#reserves-pts-badge`, `#unit-grid`, `#army-entry-list`, `#unit-detail-panel`.
-- **Notes:** Layers on `collection.js` (paint status, no quantities). Owns the unit-pane view toggle AND the combined stockpile widget in the Details pane, shared with `requisitions.js`.
+- **Notes:** Owns the unit-pane view toggle AND the combined stockpile widget in the Details pane, shared with `requisitions.js`.
 
 ### `js/app/requisitions.js`
 - **Purpose:** "Requisition Requests" — wishlist of units to acquire/paint next, with per-unit quantity.
@@ -464,15 +456,15 @@ Cross-cutting docs:
 - **Depends on:** `window.matchMedia` (≤820px), browser history / `popstate`, the `yaab:mobile-panel-change` event from `pwa-install.js`.
 - **Storage:** none.
 - **DOM:** none directly (calls each trap's `closeFn`).
-- **Notes:** One `history.pushState` per live trap, pushed only at phone width; `popstate` is never gated so entries unwind after a rotate. `closed()` rewinds with an ASYNC `history.go(-n)`, so an `opened()` arriving while that traversal is in flight (drawer → mode, Collect → Play) is recorded at once but has its push deferred to the traversal's `popstate` (#73, #106) — otherwise the push landed first and the next rewind went past the document and reloaded the page.
+- **Notes:** One `history.pushState` per live trap, pushed only at phone width; `popstate` is never gated so entries unwind after a rotate. `closed()` rewinds with an ASYNC `history.go(-n)`, so an `opened()` arriving while that traversal is in flight (drawer → mode, Waha → Play) is recorded at once but has its push deferred to the traversal's `popstate` (#73, #106) — otherwise the push landed first and the next rewind went past the document and reloaded the page.
 
 ### `js/app/mode-shell.js`
-- **Purpose:** Build / Collect / Play / Cards mode container switching.
+- **Purpose:** Build / Waha / Play / Cards mode container switching.
 - **Exports:** `App.setMode(modeName)`, `App.getMode()`, `App.prefersReducedMotion()` (OS media query OR `body.reduce-motion`). Owns the `App.hooks.modeChange` array (callbacks receive `(mode)`); it fires them from a local `fireHooks(mode)`, not an `App.fireModeChange`.
 - **Depends on:** `App.hooks.modeChange`.
 - **Storage:** `localStorage.yaab_mode`.
-- **DOM:** `body[data-mode]`, `.mode-page` elements (`#build-mode`, `#collect-mode`, `#cards-mode`).
-- **Notes:** Loaded first among the mode modules. Bootstrap fires modeChange so build/collect/play modules can build their panels lazily.
+- **DOM:** `body[data-mode]`, `.mode-page` elements (`#build-mode`, `#waha-mode`, `#cards-mode`).
+- **Notes:** Loaded first among the mode modules. Bootstrap fires modeChange so build/waha/play modules can build their panels lazily.
 
 ### `js/app/points-filter.js`
 - **Purpose:** Comparator tokens in unit search bar (`<=200`, `>=100`, `=150`, etc.).
@@ -483,7 +475,7 @@ Cross-cutting docs:
 - **Notes:** `roster.js` strips matching tokens before name/keyword fuzzy-match. Multiple comparators AND together. A unit passes if ANY of its squad/variant costs satisfies all comparators.
 
 ### `js/app/settings-drawer.js`
-- **Purpose:** Slide-in Settings / More drawer: Go rows (Build, Collect, Waha, Play, What's new), Army actions, Account, Appearance (theme radiogroup), toggles (Legends, allied units, painting badges, reduced animations) and utilities (clear cached game data, About).
+- **Purpose:** Slide-in Settings / More drawer: Go rows (Build, Waha, Play, What's new), Army actions, Account, Appearance (theme radiogroup), toggles (Legends, allied units, reduced animations) and utilities (clear cached game data, About).
 - **Exports:** Drawer open/close.
 - **Depends on:** every toggle module + `App.Auth`.
 - **Storage:** `localStorage.yaab_reduced_motion`. Reads many other keys.
@@ -626,14 +618,6 @@ Cross-cutting docs:
 - **Storage:** none.
 - **DOM:** `#build-mode`, `#topbar-hero-slot`, `.build-hero` (created), `[data-build-hero="*"]` mirrors, `#unit-detail-panel`, `#rules-panel`.
 - **Notes:** Prefers `#topbar-hero-slot` mount; falls back to inside `#build-mode`. Two-way sync between hero name input and legacy `#army-name-input`. Updates mirrors on `armyChange`.
-
-### `js/ui/collect-mode.js`
-- **Purpose:** Collect mode page (a single Painting sub-tab; the Crusade and Kill Team sub-tabs were removed).
-- **Exports:** none (hook-registered).
-- **Depends on:** `App.hooks.bootstrap`, `App.hooks.modeChange`.
-- **Storage:** reads/writes `yaab_collection`. Owns `localStorage.yaab_collect_debug` (dev flag). (Crusade and Kill Team sub-tabs, and their keys, are gone.)
-- **DOM:** `#collect-mode` panel + sub-tabs.
-- **Notes:** Lazy-built on first activate.
 
 ### `js/ui/cards-mode.js`
 - **Purpose:** Cards mode — full-page printable data-card designer (owns `#cards-mode`).

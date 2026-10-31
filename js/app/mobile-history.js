@@ -46,11 +46,11 @@
 // history.go() is ASYNC: the traversal runs on a later task and only then
 // fires popstate. history.pushState() is SYNC. So a surface that closes one
 // trap and opens another in the same call — the Settings drawer handing off
-// to a mode, or mode-shell switching Collect → Play — used to push the new
+// to a mode, or mode-shell switching Waha → Play — used to push the new
 // entry BEFORE the queued go(-1) ran. The traversal then rewound relative to
 // the advanced position, leaving the document behind an orphaned forward
 // entry, and the NEXT closed() went one entry past the yaab document: on a
-// phone, Collect → Play → Build reloaded the page (#106). #73 fixed one
+// phone, Waha → Play → Build reloaded the page (#106). #73 fixed one
 // caller by waiting for the popstate; this fixes it for every caller.
 // opened() during an in-flight traversal records the trap at once (so
 // isTrapped() and nested closed() see it) but defers its pushState until the

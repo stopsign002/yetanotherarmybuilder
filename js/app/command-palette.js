@@ -182,8 +182,8 @@
 
   function openUnit(unit) {
     if (!unit || !window.App || !App.state) return;
-    // The Details pane lives in Build mode; rendering into it from Play, Waha
-    // or Collect would paint a hidden panel. Go where the unit will be seen.
+    // The Details pane lives in Build mode; rendering into it from Play or Waha
+    // would paint a hidden panel. Go where the unit will be seen.
     if (typeof App.getMode === 'function' && typeof App.setMode === 'function' && App.getMode() !== 'build') {
       App.setMode('build');
     }

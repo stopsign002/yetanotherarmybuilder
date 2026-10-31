@@ -1,9 +1,9 @@
-// app/mode-shell.js — Build/Collect mode container switching + persistence.
+// app/mode-shell.js — Build/Waha/Play/Cards mode container switching + persistence.
 (function () {
   const App = window.App = window.App || {};
 
   const LS_KEY = 'yaab_mode';
-  const VALID = ['build', 'collect', 'cards', 'play', 'waha'];
+  const VALID = ['build', 'cards', 'play', 'waha'];
   const DEFAULT_MODE = 'build';
 
   // Hook bus for cross-module mode-change notifications.
@@ -31,7 +31,7 @@
   // hides the whole builder while active, so restoring into it meant a user who
   // closed the tab from Cards mode reopened the app with no visible builder and
   // (before the Back fix) no way out.
-  const RESUMABLE = ['build', 'collect', 'waha'];
+  const RESUMABLE = ['build', 'waha'];
 
   function readPersisted() {
     const v = App.store.getRaw(LS_KEY);
@@ -125,7 +125,6 @@
   App.hooks.paletteCommands.push(function () {
     return [
       { id: 'mode-build',   label: 'Build mode',   hint: 'Go to the army builder' },
-      { id: 'mode-collect', label: 'Collect mode', hint: 'Go to your collection' },
     ].filter(c => c.id.slice(5) !== currentMode)
      .map(c => ({ id: c.id, label: c.label, hint: c.hint, run: () => applyMode(c.id.slice(5)) }));
   });

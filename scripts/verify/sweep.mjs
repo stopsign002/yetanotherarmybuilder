@@ -9,7 +9,7 @@
 // nothing server-side, no writes to any DB.
 //
 // Pruned 2026-10-30 to the LIVE surface: the 18 removed 'primary' feature
-// modals, the Crusade / Kill Team collect sub-tabs and the five old Play
+// modals and the five old Play
 // sub-tabs were deleted (they can only ever MISS). Expected MISSes that remain,
 // so a failing run still means something:
 //   * zz-negative-control          — must MISS; that is the control working.
@@ -464,7 +464,6 @@ for (const [name, id, sel] of HOOKED) {
 
 // ── modes ─────────────────────────────────────────────────────────────────
 for (const [name, mode, sel] of [
-  ['50-mode-collect', 'collect', '#collect-mode'],
   ['51-mode-play',    'play',    '#play-mode'],
 ]) {
   bucket = name;
@@ -478,14 +477,6 @@ for (const [name, mode, sel] of [
   await capture(name, sel, how);
 }
 
-// collect sub-tab (Painting is the only one left; Crusade and Kill Team were removed)
-await page.evaluate(() => window.App && App.setMode && App.setMode('collect'));
-await page.waitForTimeout(2000);
-for (const tab of ['painting']) {
-  await page.evaluate(t => { const b = document.querySelector(`.collect-subtab[data-tab="${t}"]`); if (b) b.click(); }, tab);
-  await page.waitForTimeout(1600);
-  await capture(`52-collect-${tab}`, '#collect-body', `.collect-subtab[data-tab=${tab}]`);
-}
 // (Play's old Match / Stratagems / Calc / Opponent / Deploy sub-tabs were
 // removed with the cockpit rewrite; there is no sub-tab sweep for Play yet.)
 await page.evaluate(() => window.App && App.setMode && App.setMode('build'));

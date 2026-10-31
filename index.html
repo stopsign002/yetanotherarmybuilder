@@ -62,7 +62,6 @@
   <link rel="stylesheet" href="css/unit-card.css?v=2026.10.31-4" />
   <link rel="stylesheet" href="css/build-mode.css?v=2026.10.31-4" />
   <link rel="stylesheet" href="css/cards-mode.css?v=2026.10.31-4" />
-  <link rel="stylesheet" href="css/collect-mode.css?v=2026.10.31-4" />
   <link rel="stylesheet" href="css/play-mode.css?v=2026.10.31-4" />
   <link rel="stylesheet" href="css/waha-mode.css?v=2026.10.31-4" />
   <link rel="stylesheet" href="css/mobile.css?v=2026.10.31-4" />
@@ -153,9 +152,6 @@
         <button class="topbar-mode-tab" id="topbar-mode-waha"
                 type="button" role="tab" data-mode="waha"
                 aria-selected="false" aria-controls="waha-mode">Waha</button>
-        <button class="topbar-mode-tab" id="topbar-mode-collect"
-                type="button" role="tab" data-mode="collect"
-                aria-selected="false" aria-controls="collect-mode">Collect</button>
         <button class="topbar-mode-tab" id="topbar-mode-cards"
                 type="button" role="tab" data-mode="cards"
                 aria-selected="false" aria-controls="cards-mode">Cards</button>
@@ -186,9 +182,9 @@
   </header>
 
   <!-- ============================================================
-       MODE PAGES — Build / Collect / Play. Only one is visible at a
+       MODE PAGES — Build / Waha / Cards / Play. Only one is visible at a
        time; mode-shell.js toggles the `mode-active` class + `hidden`
-       attribute. Other agents fill in the Collect/Play interiors.
+       attribute. Each mode fills in its own interior.
   ============================================================ -->
   <section id="build-mode" class="mode-page mode-active" data-mode="build">
 
@@ -431,14 +427,6 @@
 
   </section><!-- /#build-mode -->
 
-  <section id="collect-mode" class="mode-page" data-mode="collect" hidden>
-    <!-- COLLECT mode content — owned by another agent. -->
-    <div class="mode-placeholder">
-      <h2>Collection</h2>
-      <p class="muted">Collection mode loading&hellip;</p>
-    </div>
-  </section>
-
   <section id="cards-mode" class="mode-page" data-mode="cards" hidden>
     <!-- Owned by js/ui/cards-mode.js — mounted on bootstrap. -->
     <div class="mode-placeholder">
@@ -657,7 +645,6 @@
   <script defer src="js/data/changelog-data.js?v=2026.10.31-4"></script>
   <script defer src="js/app/changelog.js?v=2026.10.31-4"></script>
   <script defer src="js/app/qr-share.js?v=2026.10.31-4"></script>
-  <script defer src="js/app/collection.js?v=2026.10.31-4"></script>
   <script defer src="js/app/reserves.js?v=2026.10.31-4"></script>
   <script defer src="js/app/requisitions.js?v=2026.10.31-4"></script>
   <!-- custom-names.js wraps UI.renderUnitRoster, App.findUnit and
@@ -680,7 +667,6 @@
   <script defer src="js/ui/cold-start.js?v=2026.10.31-4"></script>
   <script defer src="js/app/faction-fx.js?v=2026.10.31-4"></script>
   <script defer src="js/ui/build-mode.js?v=2026.10.31-4"></script>
-  <script defer src="js/ui/collect-mode.js?v=2026.10.31-4"></script>
   <script defer src="js/ui/waha-mode.js?v=2026.10.31-4"></script>
   <script defer src="js/ui/play-mode.js?v=2026.10.31-4"></script>
   <script defer src="js/ui/flip-animations.js?v=2026.10.31-4"></script>

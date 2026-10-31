@@ -10,7 +10,7 @@
 // Pruned 2026-10-30 to the live surface: the "palette finds analytics",
 // "palette exposes the button-less tools" and "detail header offers
 // star/print/calc" checks were deleted (those features were removed on
-// purpose); the palette check now looks for Collect mode, which is reachable
+// purpose); the palette check now looks for Waha, which is reachable
 // on desktop only through Ctrl+K.
 import { writeFileSync } from 'node:fs';
 import { OUT, launch, newPage, boot } from './_lib.mjs';
@@ -168,14 +168,14 @@ await page.keyboard.press('Control+k');
 await page.waitForSelector('.cmdp-modal', { timeout: 8000 }).catch(() => {});
 await page.waitForTimeout(600);
 const before = await page.evaluate(() => document.querySelectorAll('.cmdp-row').length);
-await page.keyboard.type('collect', { delay: 60 });
+await page.keyboard.type('waha', { delay: 60 });
 await page.waitForTimeout(1200);
 const palette = await page.evaluate(() => ({
   rows: Array.from(document.querySelectorAll('.cmdp-row')).map(r => r.textContent.trim().slice(0, 60)),
   empty: !!document.querySelector('.cmdp-empty'),
   value: (document.querySelector('.cmdp-input') || {}).value,
 }));
-check('command palette finds "Collect mode" when typed', palette.rows.some(r => /collect mode/i.test(r)),
+check('command palette finds "Waha" when typed', palette.rows.some(r => /waha/i.test(r)),
   `input="${palette.value}" rowsBefore=${before} rowsNow=${palette.rows.length} ${palette.empty ? '(empty state)' : ''} ${JSON.stringify(palette.rows.slice(0,4))}`);
 await shot('04-palette');
 await page.keyboard.press('Escape');

@@ -2,7 +2,7 @@
 
 ## What this is
 
-A client-only static site for building, sharing and playing Warhammer 40k **11th-edition** armies. Game data comes from the **v2 dataset pipeline** (`pipeline/`, contract `docs/DATASET.md`): **GDC** (GW's own app data via Game Datacards) and the official **MFM** site are the primary sources; a **pinned 40kdc snapshot** supplies only what GDC has no structured form of (wargear option structure, allied rules, force dispositions, game-mode flags). The pipeline builds one JSON file per faction in the exact renderer shape (the shape `docs/PARSER.md` documents) under `data/dataset/current/` (gitignored, served, backed up by the media leg). `js/data/dataset-loader.js` fetches `data/dataset/current/manifest.json` plus the faction files and installs them as `window.BSData.loadAllFactions()` — so every downstream renderer keeps working unchanged. `?data=candidate:<id>` loads an unapproved candidate for review in the real UI. There is **no corrections layer**: no stat, text or points overrides; the one hand-maintained data file is `pipeline/aliases.json` (name joins only). Persists user data in `localStorage`. Optional username/password account with offline-first cloud sync of armies + a small KV bag (favorites, collection, crusade rosters, etc.) via the sibling `api/` backend.
+A client-only static site for building, sharing and playing Warhammer 40k **11th-edition** armies. Game data comes from the **v2 dataset pipeline** (`pipeline/`, contract `docs/DATASET.md`): **GDC** (GW's own app data via Game Datacards) and the official **MFM** site are the primary sources; a **pinned 40kdc snapshot** supplies only what GDC has no structured form of (wargear option structure, allied rules, force dispositions, game-mode flags). The pipeline builds one JSON file per faction in the exact renderer shape (the shape `docs/PARSER.md` documents) under `data/dataset/current/` (gitignored, served, backed up by the media leg). `js/data/dataset-loader.js` fetches `data/dataset/current/manifest.json` plus the faction files and installs them as `window.BSData.loadAllFactions()` — so every downstream renderer keeps working unchanged. `?data=candidate:<id>` loads an unapproved candidate for review in the real UI. There is **no corrections layer**: no stat, text or points overrides; the one hand-maintained data file is `pipeline/aliases.json` (name joins only). Persists user data in `localStorage`. Optional username/password account with offline-first cloud sync of armies + a small KV bag (favorites, crusade rosters, etc.) via the sibling `api/` backend.
 
 The **app's own JavaScript is still buildless** (plain `<script src>`, IIFEs, namespace globals, no framework/bundler/TS). Game data is **not built in the browser and not committed**: `app/pipeline/` (Node `.mjs` extractors run in Docker, `mfm.py` on the host, CLI `pipeline/yaab-data`) builds a **candidate** dataset daily; nothing goes live until approved. Workflow: `yaab-data build` → `validate <id>` → `report <id>` (diff vs current, mailed only when it differs) → `yaab-data approve <id>` (atomic swap into `data/dataset/current/`, last 5 kept in `previous/`) → `yaab-data rollback [<n>]` if needed; `list` and `preview <id>` (prints the `?data=candidate:<id>` URL) are read-only. Not approving **is** the pause — there is no freeze file. Caddy serves `/data/dataset/*` with `Cache-Control: no-cache`, so an approve is visible on the next load. Never hand-edit anything under `data/dataset/`: it is generated. Full contract, source ownership table and validator rules: `docs/DATASET.md`; the v1 scripts' retirement steps: `pipeline/retire-v1.md`; the v1 bundle path (40kdc `dc-bundle.js`, `dc-adapter.js`, overlays, `DATA-FREEZE`, weekly `yaab-pipeline.sh`) is gone or being removed and survives only as history in git.
 
@@ -89,9 +89,8 @@ Grouped by user intent. One module per row; module path is the search target.
 | Build | Comparator points filter in search bar (`<=200`, `>=100`, `=150`) | `js/app/points-filter.js` |
 | Build | Auto-save current army on every mutation (debounced) | `js/app/autosave.js` |
 | Build | Persist `<details>` open/closed state across reloads | `js/app/details-persist.js` |
-| Modes | Build / Collect / Play container switcher (top-level mode shell) | `js/app/mode-shell.js` |
+| Modes | Build / Waha / Play / Cards container switcher (top-level mode shell) | `js/app/mode-shell.js` |
 | Modes | Build mode page (hero + rules pinboard tab + roster polish) | `js/ui/build-mode.js` |
-| Modes | Collect mode page (Painting) | `js/ui/collect-mode.js` |
 | Modes | Waha mode — look anything up (any datasheet, detachment, stratagem, rule or enhancement, any faction) with no army and no builder writes; one search box, kind tabs, reader | `js/ui/waha-mode.js`, `css/waha-mode.css` |
 | Modes | Play mode — fast-switching game-day reference (unit switcher, stratagems/rules/enhancements tabs, CP counter + destroyed toggle; wounds are tracked on the board, not in the app) | `js/ui/play-mode.js`, `css/play-mode.css` |
 | Account & sync | Username/password auth | `js/app/auth.js`, `js/ui/auth-modal.js` |
@@ -103,7 +102,6 @@ Grouped by user intent. One module per row; module path is the search target.
 | Print & Export | URL-shareable armies (`?a=YAAB1:...`) | `js/app/url-share.js` |
 | Print & Export | QR share (mobile-to-mobile) | `js/app/qr-share.js` |
 | Print & Export | YAAB1 string export/import (compact deflate) | `js/storage.js` |
-| Collection | Owned/painted tracker (per unit) | `js/app/collection.js` |
 | Collection | Reserves: owned-units stockpile w/ quantity, default unit-pane view | `js/app/reserves.js` |
 | Collection | Requisition Requests: wishlist of units w/ quantity | `js/app/requisitions.js` |
 | Collection | Custom character/unit names (Reserves instances + per-army-entry names) | `js/app/custom-names.js` |
@@ -160,7 +158,6 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_recent_factions` | localStorage | `hero-state.js` | Recently-selected factions chip | User data |
 | `yaab_favorites` | localStorage | `favorites.js` | Starred unit ids | User data |
 | `yaab_recents` | localStorage | `favorites.js` | Recently-viewed unit ids | User data |
-| `yaab_collection` | localStorage | `collection.js` | Per-unit owned/painted status | User data |
 | `yaab_reserves` | localStorage | `reserves.js` | Per-unit owned quantity (`{unitId: qty}`); cloud-synced | User data |
 | `yaab_requisitions` | localStorage | `requisitions.js` | Per-unit wishlist quantity (`{unitId: qty}`); cloud-synced | User data |
 | `yaab_custom_names` | localStorage | `custom-names.js` | Named Reserves instances (`{instanceId: {u: unitId, n: name, t: createdAt}}`) — each one is a unique unit split off the `yaab_reserves` stack; cloud-synced. Custom names on ARMY entries are NOT here: they live on `entry.customName` inside `yaab_armies` | User data |
@@ -185,12 +182,10 @@ Every persistence key in the app. Wipe carefully — most contain user data.
 | `yaab_sync_parked` | localStorage | `sync.js` | Ops removed from the queue after a permanent 400/403/404/413, kept for inspection | Cleared on sign-out |
 | `yaab_sync_bag_meta` | localStorage | `sync.js` | Per-key timestamps for the synced state bag (`{key -> ts}`), used to merge the bag key by key before a push instead of whole-blob last-writer-wins (fix batch 2026-10-30, #114) | Cleared on sign-out |
 | `yaab_flash_toast` | sessionStorage | `sync.js`, `auth.js` | One toast to show after the reload that the owner-mismatch or Remove-data dialog triggers | Consumed on next load |
-| `yaab_mode` | localStorage | `mode-shell.js` | Active top-level mode. Written for every mode (`build`/`collect`/`cards`/`play`/`waha`) but only `build`/`collect`/`waha` are restored on launch (`RESUMABLE`); Cards and Play are transient and fall back to Build | User pref |
+| `yaab_mode` | localStorage | `mode-shell.js` | Active top-level mode. Written for every mode (`build`/`cards`/`play`/`waha`) but only `build`/`waha` are restored on launch (`RESUMABLE`); Cards and Play are transient and fall back to Build | User pref |
 | `yaab_details_state` | localStorage | `details-persist.js` | Open/closed state of `<details>` boxes (army setup, detachments, KOTC, army rules) | User pref |
 | `yaab_theme` | localStorage | `theme-boot.js`, `themes.js` | Chosen visual theme id (`grimdark` \| `brutalist` \| `brutalist-dark`); cloud-synced, so the choice follows the account | User pref |
 | `yaab_reduced_motion` | localStorage | `settings-drawer.js` | App-level reduced-motion override (in addition to OS pref) | User pref |
-| `yaab_show_collection_badges` | localStorage | `collection.js`, `settings-drawer.js` | Toggle for the painted-status badges on unit cards | User pref |
-| `yaab_collect_debug` | localStorage | `collect-mode.js` | Dev flag for verbose Collect-mode logging | Dev flag |
 | `yaab_waha_recent` | localStorage | `waha-mode.js` | Last 10 things opened in Waha (`[{kind,key,factionId,detName?}]`, newest first); device-local, NOT cloud-synced | User pref |
 | `yaab_play_tab`, `yaab_match_state` | localStorage | `play-mode.js` | `removeItem` only — legacy keys from the removed Match tab, deleted on first Play load | Legacy cleanup |
 | `yaab_play_view` | localStorage | `play-mode.js` | Play mode's active tab + last-viewed sheet per army; device-local | User pref |
@@ -345,7 +340,7 @@ Common questions and where to look first.
 | "Why isn't my new feature showing up?" | (1) Did you add the `<script>` tag to `index.html`? (2) Did the IIFE bail early (look for early returns guarding `App.hooks` or DOM nodes)? (3) Hard-refresh: Ctrl+Shift+R / ⌘⇧R — static-site caches stick. |
 | "Why does X re-render twice?" | `armyChange` fires on every mutation, with a `kind` of `render` (the army list re-rendered), `save`, `delete` or `rename` — those are the only four. If your renderer is also called by a button handler, the hook will refire it. Either gate the renderer with a `kind` check or use `selectionChange` instead. |
 | "Why is my data/field change not visible?" | Live data comes from `data/dataset/current/` via `js/data/dataset-loader.js` (no IndexedDB faction cache, no `DB_VERSION` bump). If a unit/field is wrong, the fix is in the source or the build (`pipeline/`), not the browser: GDC and MFM own the values, `pipeline/aliases.json` owns name joins, and there are no overrides. Rebuild a candidate, validate, preview with `?data=candidate:<id>`, approve. Never hand-edit `data/dataset/`. |
-| "How do I make my module aware of mode (Build / Collect / Play / Waha / Cards)?" | `App.hooks.modeChange.push(mode => { ... })` — one argument, the new mode; there is no previous-mode argument. Mode is also reflected as `body[data-mode]` for CSS. |
+| "How do I make my module aware of mode (Build / Play / Waha / Cards)?" | `App.hooks.modeChange.push(mode => { ... })` — one argument, the new mode; there is no previous-mode argument. Mode is also reflected as `body[data-mode]` for CSS. |
 | "Where do I add a changelog entry?" | `js/data/changelog-data.js`. Bump `version` + `lastUpdated`. EVERY user-visible change must add one (see editing guidance #6 below). |
 
 ## Editing guidance

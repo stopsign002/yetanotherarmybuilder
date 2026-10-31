@@ -302,16 +302,11 @@ async function run() {
       await settle(); await page.evaluate(() => { document.querySelectorAll('.modal-backdrop:not([hidden]) [data-close], .modal-backdrop:not([hidden]) .modal-close').forEach(b => b.click()); });
     }
     // modes + drawer (independent of 02 success)
-    for (const [mode, id, wait] of [['cards', '04-cards', 3500], ['play', '05-play', 1500], ['waha', '06-waha', 1500], ['collect', '07-collect', 1500]]) {
+    for (const [mode, id, wait] of [['cards', '04-cards', 3500], ['play', '05-play', 1500], ['waha', '06-waha', 1500]]) {
       await tryStep(theme, width, id, async () => {
         const ok = await page.evaluate((m) => { if (!App.setMode) return false; App.setMode(m); return true; }, mode);
         if (!ok) return false; await page.waitForTimeout(wait); await capture(page, theme, width, id); });
 
-      if (id === '07-collect') {
-        const Q2 = { force: true, timeout: 4000 };
-        await tryStep(theme, width, '37-collect-owned', async () => { await page.locator('.collection-status-unpainted').first().click(Q2); await page.waitForTimeout(300); await page.locator('.collect-filter-chip', { hasText: 'Owned' }).click(Q2); await page.waitForTimeout(500); await capture(page, theme, width, '37-collect-owned'); });
-        await tryStep(theme, width, '38-collect-painted', async () => { await page.locator('.collect-filter-chip', { hasText: 'All' }).first().click(Q2); await page.locator('.collection-status-done').first().click(Q2); await page.locator('.collect-filter-chip', { hasText: 'Painted' }).click(Q2); await page.waitForTimeout(500); await capture(page, theme, width, '38-collect-painted'); });
-      }
       if (id === '06-waha') {
         const Q2 = { force: true, timeout: 4000 };
         await tryStep(theme, width, '39-waha-unit', async () => { await page.locator('.waha-tile', { hasText: /Death Guard/ }).first().click(Q2); await page.waitForTimeout(1000); await page.locator('.waha-row').first().click(Q2); await page.waitForTimeout(700); await capture(page, theme, width, '39-waha-unit'); });

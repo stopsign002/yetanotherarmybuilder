@@ -10,7 +10,7 @@
     return false;
   }
 
-  // Shortcuts belong to the Build page only: in Collect / Cards / Play / Waha
+  // Shortcuts belong to the Build page only: in Cards / Play / Waha
   // #build-mode is hidden but its cards keep a non-'none' display, so without
   // this `a` silently added units and arrows moved a selection nobody can see.
   function buildModeActive() {
