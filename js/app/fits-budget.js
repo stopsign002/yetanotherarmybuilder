@@ -60,7 +60,7 @@
     label.title = left === null
       ? 'Set a points limit on the army to filter by what still fits'
       : 'Show only units whose cheapest size fits in the ' + left + ' pts you have left';
-    text.textContent = left === null ? '' : ' (≤ ' + left + ')';
+    text.textContent = left === null ? '' : left > 0 ? ' (≤ ' + left + ')' : ' (none left)';
     if (window.UI && typeof UI.syncChipClearVisibility === 'function') UI.syncChipClearVisibility();
   }
 
