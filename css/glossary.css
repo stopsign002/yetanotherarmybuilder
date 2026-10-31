@@ -1,6 +1,5 @@
 /* glossary.css — clickable rules terms + the popover / bottom sheet.
-   Contract: docs/GLOSSARY.md. Tokens only, so every theme is covered. */
-
+ * Contract: docs/GLOSSARY.md. Tokens only, so every theme is covered. */
 .glossary-term {
   display: inline;
   font: inherit;
@@ -16,11 +15,7 @@
   -webkit-appearance: none;
   appearance: none;
 }
-.glossary-term:hover,
-.glossary-term:focus-visible {
-  border-bottom-style: solid;
-  background: rgba(var(--accent-rgb), 0.12);
-}
+.glossary-term:hover, .glossary-term:focus-visible { border-bottom-style: solid; background: rgba(var(--accent-rgb), 0.12); }
 strong .glossary-term, .glossary-term strong { font-weight: inherit; }
 
 /* Chips that are now buttons keep today's look (zero-specificity reset). */
@@ -33,18 +28,10 @@ strong .glossary-term, .glossary-term strong { font-weight: inherit; }
   appearance: none;
 }
 .weapon-kw-tag, .core-ability-tag { cursor: pointer; }
-.weapon-kw-tag:focus-visible, .core-ability-tag:focus-visible,
-.glossary-term:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
+.weapon-kw-tag:focus-visible, .core-ability-tag:focus-visible, .glossary-term:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Printed cards must not change. */
-#cards-mode .glossary-term {
-  font: inherit; color: inherit; background: none; border: 0;
-  text-decoration: none; pointer-events: none; cursor: inherit;
-}
-
+#cards-mode .glossary-term { font: inherit; color: inherit; background: none; border: 0; text-decoration: none; pointer-events: none; cursor: inherit; }
 #glossary-pop {
   position: fixed;
   z-index: 1050;
@@ -61,13 +48,7 @@ strong .glossary-term, .glossary-term strong { font-weight: inherit; }
   outline: none;
 }
 #glossary-pop[hidden] { display: none; }
-.glossary-pop-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 10px 8px 6px 12px;
-  border-bottom: 1px solid var(--border);
-}
+.glossary-pop-head { display: flex; align-items: flex-start; gap: 8px; padding: 10px 8px 6px 12px; border-bottom: 1px solid var(--border); }
 .glossary-pop-title {
   flex: 1;
   font-family: var(--font-display);
@@ -89,27 +70,20 @@ strong .glossary-term, .glossary-term strong { font-weight: inherit; }
   border-radius: 4px;
   cursor: pointer;
 }
-.glossary-pop-close:hover, .glossary-pop-close:focus-visible {
-  color: var(--text);
-  border-color: var(--accent);
-}
-.glossary-pop-body {
-  padding: 10px 12px 12px;
-  font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-line;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
+.glossary-pop-close:hover, .glossary-pop-close:focus-visible { color: var(--text); border-color: var(--accent); }
+.glossary-pop-body { padding: 10px 12px 12px; font-size: 13px; line-height: 1.5; white-space: pre-line; overflow-y: auto; overscroll-behavior: contain; }
 .glossary-pop-body strong { color: var(--text); }
-
 @media (max-width: 820px) {
   #glossary-pop, #glossary-pop.is-sheet {
-    left: 0 !important; right: 0 !important; top: auto !important; bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
     width: 100%;
     max-width: none;
     max-height: 60vh;
-    z-index: 1250; /* above .mobile-tabbar (1200), below full-screen modals (1300) */
+    z-index: 1250;
+    /* above .mobile-tabbar (1200), below full-screen modals (1300) */
     border-radius: 12px 12px 0 0;
     border-bottom: 0;
     padding-bottom: env(safe-area-inset-bottom, 0);

@@ -1,26 +1,9 @@
 /* utilities.css — styles for the bug-report and qr-share modules. */
-
-/* ── points override ───────────────────────────────────────────────────── */
-
+/* ── points override */
 /* Banner injected into #panel-center .panel-controls */
-/* ── bug report ───────────────────────────────────────────────────────── */
-
-.bug-report-modal {
-  max-width: 720px;
-  width: 100%;
-}
-
-.bug-report-modal .modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.bug-report-help {
-  margin: 0;
-  line-height: 1.45;
-}
-
+/* ── bug report */
+.bug-report-modal { max-width: 720px; width: 100%; }
+.bug-report-modal .modal-body { display: flex; flex-direction: column; gap: 10px; }
 .bug-report-diag {
   width: 100%;
   min-height: 240px;
@@ -30,100 +13,34 @@
   line-height: 1.4;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-light, #333);
+  border: 1px solid var(--border-light);
   background: var(--panel-bg-2);
-  color: var(--text, #eee);
+  color: var(--text);
   outline: none;
   white-space: pre;
   word-break: normal;
 }
 .bug-report-diag:focus { border-color: var(--accent); }
+.bug-report-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 4px 0 4px; }
+.bug-report-summary, .bug-report-desc, .bug-report-kind, .bug-report-email, .bug-report-attach { width: 100%; }
 
-.bug-report-warn {
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid #c08a2a;
-  background: rgba(192, 138, 42, 0.12);
-  color: #e8c072;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.bug-report-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted, #aaa);
-  margin: 4px 0 4px;
-}
-.bug-report-summary,
-.bug-report-desc,
-.bug-report-kind,
-.bug-report-email,
-.bug-report-attach {
-  width: 100%;
-}
 /* Sits directly under the email field to explain why we're asking. Tighter
-   than .bug-report-label so it reads as a note on the field above, not a
-   heading for the field below. */
-.bug-report-hint {
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--text-muted, #aaa);
-  margin: 5px 0 4px;
-}
-.bug-report-desc {
-  resize: vertical;
-  min-height: 120px;
-  font-family: inherit;
-}
-.bug-report-attach {
-  padding: 4px 0;
-}
-.bug-report-attach-info {
-  font-size: 12px;
-  color: var(--text-muted, #aaa);
-  min-height: 16px;
-  margin: 2px 0 6px;
-}
-.bug-report-diag-wrap {
-  font-size: 12px;
-  color: var(--text-muted, #aaa);
-}
-.bug-report-diag-wrap > summary {
-  cursor: pointer;
-  user-select: none;
-  padding: 4px 0;
-}
-.bug-report-status {
-  font-size: 12px;
-  min-height: 18px;
-  padding: 2px 0;
-}
+ * than .bug-report-label so it reads as a note on the field above, not a
+ * heading for the field below. */
+.bug-report-hint { font-size: 12px; line-height: 1.45; color: var(--text-muted); margin: 5px 0 4px; }
+.bug-report-desc { resize: vertical; min-height: 120px; font-family: inherit; }
+.bug-report-attach { padding: 4px 0; }
+.bug-report-attach-info { font-size: 12px; color: var(--text-muted); min-height: 16px; margin: 2px 0 6px; }
+.bug-report-diag-wrap { font-size: 12px; color: var(--text-muted); }
+.bug-report-diag-wrap > summary { cursor: pointer; user-select: none; padding: 4px 0; }
+.bug-report-status { font-size: 12px; min-height: 18px; padding: 2px 0; }
 .bug-report-status-error { color: #e89090; }
-.bug-report-signin {
-  text-align: center;
-  padding: 16px 0;
-}
-.bug-report-signin p {
-  margin-bottom: 12px;
-  color: var(--text-muted, #aaa);
-}
+.bug-report-signin { text-align: center; padding: 16px 0; }
+.bug-report-signin p { margin-bottom: 12px; color: var(--text-muted); }
 
-/* ── qr share ─────────────────────────────────────────────────────────── */
-
-.qr-share-modal {
-  max-width: 440px;
-  width: 100%;
-}
-
-.qr-share-modal .modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: stretch;
-}
-
+/* ── qr share */
+.qr-share-modal { max-width: 440px; width: 100%; }
+.qr-share-modal .modal-body { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
 .qr-share-canvas {
   width: 320px;
   height: 320px;
@@ -133,29 +50,13 @@
   justify-content: center;
   background: #ffffff;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-light, #333);
+  border: 1px solid var(--border-light);
   padding: 8px;
   box-sizing: border-box;
 }
-.qr-share-canvas svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.qr-share-loading {
-  font-size: 12px;
-  color: #888;
-}
-
-.qr-share-url-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted, #999);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: -4px;
-}
-
+.qr-share-canvas svg { width: 100%; height: 100%; display: block; }
+.qr-share-loading { font-size: 12px; color: #888; }
+.qr-share-url-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: -4px; }
 .qr-share-url {
   width: 100%;
   resize: vertical;
@@ -164,14 +65,13 @@
   line-height: 1.4;
   padding: 8px 10px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-light, #333);
+  border: 1px solid var(--border-light);
   background: var(--panel-bg-2);
-  color: var(--text, #eee);
+  color: var(--text);
   outline: none;
   word-break: break-all;
 }
 .qr-share-url:focus { border-color: var(--accent); }
-
 .qr-share-warn {
   padding: 8px 12px;
   border-radius: var(--radius-sm);
@@ -182,13 +82,7 @@
   line-height: 1.4;
 }
 
-/* ── reduced motion respect ───────────────────────────────────────────── */
-
+/* ── reduced motion respect */
 @media (prefers-reduced-motion: reduce) {
-  .bug-report-modal,
-  .qr-share-modal,
-  .points-override-clear {
-    transition: none !important;
-    animation: none !important;
-  }
+  .bug-report-modal, .qr-share-modal { transition: none !important; animation: none !important; }
 }

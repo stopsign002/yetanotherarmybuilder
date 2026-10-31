@@ -1,37 +1,20 @@
 /* css/auth.css — auth button + auth modal styling. Keeps the visual
-   language of the rest of the app: dark surfaces, accent on primary CTA,
-   monospace for the recovery code. */
+ * language of the rest of the app: dark surfaces, accent on primary CTA,
+ * monospace for the recovery code. */
+/* ── Top-bar shelf for hook-registered icons */
+.topbar-icons-shelf { display: flex; align-items: center; gap: 6px; }
 
-/* ── Top-bar shelf for hook-registered icons ──────────────────────── */
-.topbar-icons-shelf {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* ── Auth icon button (signed out / signed in) ────────────────────── */
-.auth-btn-wrap {
-  position: relative;
-  display: inline-block;
-}
-
-.auth-btn {
-  white-space: nowrap;
-}
-
-.auth-btn-caret {
-  margin-left: 4px;
-  opacity: 0.7;
-  font-size: 0.85em;
-}
-
+/* ── Auth icon button (signed out / signed in) */
+.auth-btn-wrap { position: relative; display: inline-block; }
+.auth-btn { white-space: nowrap; }
+.auth-btn-caret { margin-left: 4px; opacity: 0.7; font-size: 0.85em; }
 .auth-menu {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
   min-width: 180px;
   background: var(--surface);
-  border: 1px solid var(--border, #3a2f20);
+  border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.45);
   padding: 4px 0;
@@ -40,38 +23,16 @@
   flex-direction: column;
 }
 .auth-menu[hidden] { display: none; }
-
-.auth-menu-item {
-  background: transparent;
-  border: 0;
-  color: inherit;
-  text-align: left;
-  padding: 8px 14px;
-  font: inherit;
-  cursor: pointer;
-}
-.auth-menu-item:hover,
-.auth-menu-item:focus-visible {
-  background: rgba(212, 163, 86, 0.12);
-}
+.auth-menu-item { background: transparent; border: 0; color: inherit; text-align: left; padding: 8px 14px; font: inherit; cursor: pointer; }
+.auth-menu-item:hover, .auth-menu-item:focus-visible { background: rgba(212, 163, 86, 0.12); }
 
 /* Visual divider between army actions and auth actions in the menu. */
-.auth-menu-divider {
-  border-top: 1px solid var(--border, #3a2f20);
-  margin: 4px 0;
-}
+.auth-menu-divider { border-top: 1px solid var(--border); margin: 4px 0; }
 
 /* Topbar Export button — same family as Settings/Help, with a caret +
-   absolutely-positioned dropdown menu reusing .auth-menu styling. */
-.topbar-export-wrap {
-  position: relative;
-  display: inline-block;
-}
-.topbar-export-caret {
-  margin-left: 4px;
-  opacity: 0.7;
-  font-size: 0.85em;
-}
+ * absolutely-positioned dropdown menu reusing .auth-menu styling. */
+.topbar-export-wrap { position: relative; display: inline-block; }
+.topbar-export-caret { margin-left: 4px; opacity: 0.7; font-size: 0.85em; }
 .topbar-export-menu {
   /* Pin to the right edge of the wrap so the menu doesn't overflow off-screen. */
   right: 0;
@@ -79,23 +40,13 @@
 }
 
 /* ── Auth modal body styling (slots into existing .modal pattern) ── */
-#modal-auth .modal {
-  width: min(420px, 92vw);
-}
-
-.auth-form .form-group {
-  margin-bottom: 12px;
-}
+#modal-auth .modal { width: min(420px, 92vw); }
+.auth-form .form-group { margin-bottom: 12px; }
 
 /* Submit button is rendered as the last child of the form (not in
-   .modal-footer) so it always sits with its inputs and can never be
-   pushed below the visible viewport on mobile. */
-.auth-form-submit {
-  display: block;
-  width: 100%;
-  margin-top: 14px;
-}
-
+ * .modal-footer) so it always sits with its inputs and can never be
+ * pushed below the visible viewport on mobile. */
+.auth-form-submit { display: block; width: 100%; margin-top: 14px; }
 .auth-error {
   background: rgba(180, 40, 40, 0.15);
   color: #ff8b8b;
@@ -105,13 +56,7 @@
   font-size: 0.92em;
   margin: 8px 0 4px;
 }
-
-.auth-notice {
-  font-size: 0.9em;
-  opacity: 0.8;
-  margin: 4px 0 8px;
-}
-
+.auth-notice { font-size: 0.9em; opacity: 0.8; margin: 4px 0 8px; }
 .auth-warning {
   background: rgba(212, 163, 86, 0.12);
   border: 1px solid rgba(212, 163, 86, 0.4);
@@ -120,103 +65,82 @@
   font-size: 0.95em;
   margin: 0 0 12px;
 }
-
-.auth-switch {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 10px;
-}
+.auth-switch { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
 
 /* "Create an account" and "Forgot password? Use recovery code" are real
-   actions sitting directly under a solid "Sign in" — they are BUTTONS, not
-   footnotes, and they wear the same box, height and padding as the primary
-   they sit beside, with a quieter fill so they do not compete for the press.
-   Every value is a token, so all three themes are covered by construction
-   (the brutalist sheet loads later and restates .btn's border + hard shadow
-   over the top, which is exactly what that theme's buttons should look like).
-
-   The `white-space: normal` is load-bearing: .btn is nowrap, and the recovery
-   label is wider than the modal, so it used to run straight out through the
-   right border (scrollWidth 386 vs clientWidth 366 on desktop). It wraps
-   inside the box now instead of overflowing it. */
+ * actions sitting directly under a solid "Sign in" — they are BUTTONS, not
+ * footnotes, and they wear the same box, height and padding as the primary
+ * they sit beside, with a quieter fill so they do not compete for the press.
+ * Every value is a token, so all three themes are covered by construction
+ * (the brutalist sheet loads later and restates .btn's border + hard shadow
+ * over the top, which is exactly what that theme's buttons should look like).
+ * The `white-space: normal` is load-bearing: .btn is nowrap, and the recovery
+ * label is wider than the modal, so it used to run straight out through the
+ * right border (scrollWidth 386 vs clientWidth 366 on desktop). It wraps
+ * inside the box now instead of overflowing it. */
 .btn-link {
-  background: var(--panel-alt, #28282f);
-  border: 1px solid var(--border-light, #4a4a54);
-  color: var(--text, #e0e0e0);
+  background: var(--panel-alt);
+  border: 1px solid var(--border-light);
+  color: var(--text);
   text-decoration: none;
   cursor: pointer;
   text-align: center;
   white-space: normal;
 }
-.btn-link:hover {
-  background: var(--card-hover, #34343c);
-  border-color: var(--accent, #d4a356);
-  color: var(--text, #e0e0e0);
-}
+.btn-link:hover { background: var(--card-hover); border-color: var(--accent); color: var(--text); }
 
-/* ── Recovery code display ───────────────────────────────────────── */
+/* ── Recovery code display */
 .auth-recovery-code {
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 1.15em;
   letter-spacing: 0.04em;
   user-select: all;
   background: #0e0c08;
-  border: 1px solid var(--border, #3a2f20);
+  border: 1px solid var(--border);
   padding: 12px 14px;
   border-radius: 4px;
   margin: 0 0 12px;
   word-break: break-all;
   white-space: pre-wrap;
 }
+.auth-recovery-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+.auth-saved-lbl { display: flex; align-items: flex-start; gap: 8px; font-size: 0.92em; cursor: pointer; }
+.auth-saved-lbl input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; }
 
-.auth-recovery-actions {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+/* ── Signed-out call to action (topbar)
+ * Tokens only, so every theme is covered: the 1px accent border + faint
+ * accent wash make "Sign in" read as an action next to the plain topbar
+ * buttons. brutalist.css overrides .topbar-action-btn's border/background at
+ * (0,1,0); the extra class here lifts this to (0,2,0) so it wins without
+ * !important. Signed-in is untouched. */
+.topbar-action-btn.auth-btn-signed-out { border: 1px solid var(--accent); background: rgba(var(--accent-rgb), 0.10); }
+.topbar-action-btn.auth-btn-signed-out:hover, .topbar-action-btn.auth-btn-signed-out:focus-visible { background: rgba(var(--accent-rgb), 0.22); }
+
+/* ── Signed-out banner (js/app/signed-out-banner.js)
+ * Fixed, not in flow: the app's panes are sized from 100vh / 100% of the
+ * body, so an in-flow strip would push the bottom of every pane off-screen.
+ * Instead the module sets --sob-h to the strip's measured height and the
+ * body class below makes room for it (padding on phones, mode-page height on
+ * desktop). Sits under the topbar (z 400) on desktop, at the very top on
+ * phones (the topbar is display:none there), and below the tab bar
+ * (z 950/1200) and modals. */
+:root {
+  --sob-h: 0px;
+  --yaab-card-radius: 8px;
+  --yaab-card-pad: 12px;
+  --yaab-card-pad-tight: 6px 8px;
+  --yaab-card-bg: var(--card-bg);
+  --yaab-card-bg-hover: var(--card-hover);
+  --yaab-card-border-soft: var(--border);
+  --yaab-card-accent: var(--accent);
+  --yaab-card-accent-rgb: var(--accent-rgb);
+  --yaab-card-shadow-h: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --yaab-card-shadow-a: 0 0 0 2px rgba(var(--yaab-card-accent-rgb), 0.28);
+  --yaab-card-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-
-.auth-saved-lbl {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 0.92em;
-  cursor: pointer;
-}
-
-.auth-saved-lbl input[type="checkbox"] {
-  margin-top: 3px;
-  flex-shrink: 0;
-}
-
-/* ── Signed-out call to action (topbar) ───────────────────────────────
-   Tokens only, so every theme is covered: the 1px accent border + faint
-   accent wash make "Sign in" read as an action next to the plain topbar
-   buttons. brutalist.css overrides .topbar-action-btn's border/background at
-   (0,1,0); the extra class here lifts this to (0,2,0) so it wins without
-   !important. Signed-in is untouched. */
-.topbar-action-btn.auth-btn-signed-out {
-  border: 1px solid var(--accent);
-  background: rgba(var(--accent-rgb), 0.10);
-}
-.topbar-action-btn.auth-btn-signed-out:hover,
-.topbar-action-btn.auth-btn-signed-out:focus-visible {
-  background: rgba(var(--accent-rgb), 0.22);
-}
-
-/* ── Signed-out banner (js/app/signed-out-banner.js) ──────────────────
-   Fixed, not in flow: the app's panes are sized from 100vh / 100% of the
-   body, so an in-flow strip would push the bottom of every pane off-screen.
-   Instead the module sets --sob-h to the strip's measured height and the
-   body class below makes room for it (padding on phones, mode-page height on
-   desktop). Sits under the topbar (z 400) on desktop, at the very top on
-   phones (the topbar is display:none there), and below the tab bar
-   (z 950/1200) and modals. */
-:root { --sob-h: 0px; }
-
 .signed-out-banner {
   position: fixed;
-  top: var(--topbar-h, 56px);
+  top: var(--topbar-h);
   left: 0;
   right: 0;
   z-index: 390;
@@ -233,8 +157,7 @@
 }
 .signed-out-banner[hidden] { display: none; }
 .signed-out-banner-text { flex: 1; min-width: 0; }
-.signed-out-banner-btn,
-.signed-out-banner-close {
+.signed-out-banner-btn, .signed-out-banner-close {
   flex: 0 0 auto;
   font: inherit;
   font-size: 12px;
@@ -247,39 +170,23 @@
   min-height: 30px;
   cursor: pointer;
 }
-.signed-out-banner-close {
-  border-color: var(--border);
-  background: transparent;
-  padding: 5px 10px;
-  font-size: 16px;
-  line-height: 1;
-}
-.signed-out-banner-btn:hover,
-.signed-out-banner-btn:focus-visible,
-.signed-out-banner-close:hover,
-.signed-out-banner-close:focus-visible {
+.signed-out-banner-close { border-color: var(--border); background: transparent; padding: 5px 10px; font-size: 16px; line-height: 1; }
+.signed-out-banner-btn:hover, .signed-out-banner-btn:focus-visible, .signed-out-banner-close:hover, .signed-out-banner-close:focus-visible {
   background: rgba(var(--accent-rgb), 0.22);
   border-color: var(--accent);
 }
 
 /* Room for it. Desktop: the mode pages are `100vh - topbar`; take the banner
-   off too. Phones: pane heights are percentages of the body content box, so
-   body padding alone shrinks them. */
+ * off too. Phones: pane heights are percentages of the body content box, so
+ * body padding alone shrinks them. */
 @media (min-width: 821px) {
-  body.has-signed-out-banner .mode-page {
-    height: calc(100vh - var(--topbar-h, 56px) - var(--sob-h));
-  }
-  body.has-signed-out-banner .cards-shell {
-    height: calc(100vh - 64px - var(--sob-h));
-  }
-  body.has-signed-out-banner { padding-top: calc(var(--topbar-h, 56px) + var(--sob-h)); }
+  body.has-signed-out-banner .mode-page { height: calc(100vh - var(--topbar-h) - var(--sob-h)); }
+  body.has-signed-out-banner .cards-shell { height: calc(100vh - 64px - var(--sob-h)); }
+  body.has-signed-out-banner { padding-top: calc(var(--topbar-h) + var(--sob-h)); }
 }
 @media (max-width: 820px) {
-  .signed-out-banner {
-    top: var(--m-safe-top, 0px);
-    padding-left: calc(14px + var(--m-safe-left, 0px));
-    padding-right: calc(14px + var(--m-safe-right, 0px));
-  }
+  .signed-out-banner { top: var(--m-safe-top, 0px); padding-left: calc(14px + var(--m-safe-left, 0px)); padding-right: calc(14px + var(--m-safe-right, 0px)); }
+
   /* !important: topbar.css:492 pins body padding-top with !important. */
   body.has-signed-out-banner { padding-top: calc(var(--m-safe-top, 0px) + var(--sob-h)) !important; }
 }

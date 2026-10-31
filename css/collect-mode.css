@@ -1,16 +1,6 @@
 /* collect-mode.css — Collect mode page (Painting / Crusade / Kill Team sub-tabs); inline replacement for toolbar modals. */
-
-/* ── root scaffold ────────────────────────────────────────────────── */
-#collect-mode .collect-root {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  background: var(--bg, #18181b);
-  color: var(--text, #e0e0e0);
-  overflow: hidden;
-}
-
+/* ── root scaffold */
+#collect-mode .collect-root { display: flex; flex-direction: column; height: 100%; width: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
 #collect-mode .collect-header {
   display: flex;
   flex-wrap: wrap;
@@ -18,32 +8,25 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 22px;
-  border-bottom: 1px solid var(--border, #3a3a44);
-  background: var(--panel-bg, #22222a);
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-bg);
 }
 #collect-mode .collect-title {
-  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 22px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text, #e0e0e0);
+  color: var(--text);
   margin: 0;
 }
 
-/* ── sub-tab nav ───────────────────────────────────────────────────── */
-#collect-mode .collect-subtabs {
-  display: flex;
-  gap: 4px;
-  background: var(--panel-alt, #28282f);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
-  padding: 3px;
-}
+/* ── sub-tab nav */
+#collect-mode .collect-subtabs { display: flex; gap: 4px; background: var(--panel-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px; }
 #collect-mode .collect-subtab {
   appearance: none;
   background: transparent;
-  color: var(--text-muted, #a8a8a8);
+  color: var(--text-muted);
   border: 1px solid transparent;
   border-radius: 4px;
   padding: 6px 14px;
@@ -53,24 +36,13 @@
   cursor: pointer;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
-#collect-mode .collect-subtab:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text, #e0e0e0);
-}
-#collect-mode .collect-subtab.active {
-  background: var(--accent, #fff);
-  color: var(--accent-on, #111);
-  border-color: var(--accent, #fff);
-}
+#collect-mode .collect-subtab:hover { background: rgba(255, 255, 255, 0.04); color: var(--text); }
+#collect-mode .collect-subtab.active { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
 
-/* ── body ──────────────────────────────────────────────────────────── */
-#collect-mode .collect-body {
-  flex: 1 1 auto;
-  overflow: auto;
-  padding: 18px 22px;
-}
+/* ── body */
+#collect-mode .collect-body { flex: 1 1 auto; overflow: auto; padding: 18px 22px; }
 
-/* ── empty / loading state ─────────────────────────────────────────── */
+/* ── empty / loading state */
 .collect-empty {
   display: flex;
   flex-direction: column;
@@ -78,7 +50,7 @@
   justify-content: center;
   gap: 12px;
   padding: 80px 16px;
-  color: var(--text-muted, #a8a8a8);
+  color: var(--text-muted);
   font-size: 14px;
   text-align: center;
 }
@@ -87,48 +59,40 @@
   height: 32px;
   border-radius: 50%;
   border: 3px solid rgba(255, 255, 255, 0.12);
-  border-top-color: var(--accent, #fff);
+  border-top-color: var(--accent);
   animation: collect-spin 0.9s linear infinite;
 }
-@keyframes collect-spin { to { transform: rotate(360deg); } }
-.collect-empty-text {
-  font-style: italic;
+@keyframes collect-spin {
+  to { transform: rotate(360deg); }
 }
+.collect-empty-text { font-style: italic; }
 @media (prefers-reduced-motion: reduce) {
-  .collect-empty-spinner {
-    animation: none;
-    border-top-color: rgba(255, 255, 255, 0.45);
-  }
+  .collect-empty-spinner { animation: none; border-top-color: rgba(255, 255, 255, 0.45); }
 }
 
 /* shared muted helper (inside collect-mode only — avoid leaking) */
-#collect-mode .muted { color: var(--text-muted, #a8a8a8); }
+#collect-mode .muted { color: var(--text-muted); }
 
-/* ── PAINTING TAB layout ───────────────────────────────────────────── */
-.collect-paint-layout {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 18px;
-  align-items: start;
-}
+/* ── PAINTING TAB layout */
+.collect-paint-layout { display: grid; grid-template-columns: 240px 1fr; gap: 18px; align-items: start; }
 
 /* Mobile dropdown picker; hidden on wide screens. */
 .collect-paint-mobile-picker {
   display: none;
   width: 100%;
-  background: var(--panel-bg, #22222a);
-  color: var(--text, #e0e0e0);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 8px 10px;
   font-size: 14px;
 }
 
 /* Faction sidebar */
 .collect-paint-sidebar {
-  background: var(--panel-bg, #22222a);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 10px 8px;
   position: sticky;
   top: 0;
@@ -136,21 +100,16 @@
   overflow-y: auto;
 }
 .collect-paint-sidebar-head {
-  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-family: var(--font-display);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: var(--text-muted, #a8a8a8);
+  color: var(--text-muted);
   padding: 4px 8px 8px;
-  border-bottom: 1px solid var(--border, #3a3a44);
+  border-bottom: 1px solid var(--border);
   margin-bottom: 6px;
 }
-
-.collect-paint-faction-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+.collect-paint-faction-list { list-style: none; padding: 0; margin: 0; }
 .collect-paint-faction-list li { margin-bottom: 2px; }
 .collect-faction-row {
   width: 100%;
@@ -163,238 +122,120 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: 4px;
-  color: var(--text, #e0e0e0);
+  color: var(--text);
   cursor: pointer;
   text-align: left;
   font-size: 12px;
   transition: background 0.12s, border-color 0.12s;
 }
-.collect-faction-row:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-.collect-faction-row.active {
-  background: rgba(var(--accent-rgb, 255, 255, 255), 0.12);
-  border-color: var(--accent, #fff);
-}
-.collect-faction-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--accent, #fff);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
-}
-.collect-faction-name {
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.collect-faction-count {
-  font-variant-numeric: tabular-nums;
-  font-size: 11px;
-  color: var(--text-muted, #a8a8a8);
-}
-.collect-faction-bar-wrap {
-  grid-column: 1 / -1;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 2px;
-}
-.collect-faction-bar {
-  display: block;
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #e6c7a8, #a8e6b7);
-}
+.collect-faction-row:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.08); }
+.collect-faction-row.active { background: rgba(var(--accent-rgb), 0.12); border-color: var(--accent); }
+.collect-faction-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35); }
+.collect-faction-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.collect-faction-count { font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-muted); }
+.collect-faction-bar-wrap { grid-column: 1 / -1; height: 3px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; overflow: hidden; margin-top: 2px; }
+.collect-faction-bar { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #e6c7a8, var(--coll-done)); }
 
-.collect-sidebar-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 4px 4px;
-  border-top: 1px solid var(--border, #3a3a44);
-  margin-top: 8px;
-}
-
-/* ── faction main pane (Painting) ──────────────────────────────────── */
+/* ── faction main pane (Painting) */
 .collect-paint-main {
-  min-width: 0; /* allow grid item to shrink, prevents overflow */
+  min-width: 0;
+  /* allow grid item to shrink, prevents overflow */
 }
-.collect-main-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-.collect-main-title {
-  font-family: var(--font-display, 'Cinzel', Georgia, serif);
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  margin: 0;
-  color: var(--text, #e0e0e0);
-}
-.collect-main-summary {
-  font-size: 13px;
-  color: var(--text, #e0e0e0);
-}
-.collect-main-summary strong {
-  color: var(--accent, #fff);
-}
-
+.collect-main-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 16px; margin-bottom: 12px; }
+.collect-main-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: 0.04em; margin: 0; color: var(--text); }
+.collect-main-summary { font-size: 13px; color: var(--text); }
+.collect-main-summary strong { color: var(--accent); }
 .collect-main-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: var(--panel-bg, #22222a);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   margin-bottom: 12px;
 }
 .collect-search {
   flex: 1 1 220px;
   min-width: 180px;
-  background: var(--panel-alt, #28282f);
-  color: var(--text, #e0e0e0);
-  border: 1px solid var(--border, #3a3a44);
+  background: var(--panel-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 6px 10px;
   font-size: 13px;
 }
-.collect-filter-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
+.collect-filter-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .collect-filter-chip {
   appearance: none;
   background: transparent;
-  color: var(--text-muted, #a8a8a8);
-  border: 1px solid var(--border, #3a3a44);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 4px 12px;
   font-size: 12px;
   cursor: pointer;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
-.collect-filter-chip:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text, #e0e0e0);
-}
-.collect-filter-chip.active {
-  background: var(--accent, #fff);
-  color: var(--accent-on, #111);
-  border-color: var(--accent, #fff);
-}
-.collect-bulk-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-left: auto;
-}
+.collect-filter-chip:hover { background: rgba(255, 255, 255, 0.04); color: var(--text); }
+.collect-filter-chip.active { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
+.collect-bulk-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+
 /* The three bulk buttons are .btn (nowrap, fixed 28px height, and in the
-   brutalist themes uppercase + 900 weight + wide tracking), so on a phone
-   their labels were wider than the box and clipped on both sides ("MARK
-   VISIBLE O"). Let them wrap and grow instead of clipping. */
+ * brutalist themes uppercase + 900 weight + wide tracking), so on a phone
+ * their labels were wider than the box and clipped on both sides ("MARK
+ * VISIBLE O"). Let them wrap and grow instead of clipping. */
 @media (max-width: 820px) {
-  .collect-bulk-actions .btn.btn-sm {
-    white-space: normal;
-    height: auto;
-    line-height: 1.2;
-    text-align: center;
-  }
+  .collect-bulk-actions .btn.btn-sm { white-space: normal; height: auto; line-height: 1.2; text-align: center; }
 }
+
 /* Phone width: one full-width button per row beats three cramped columns. */
 @media (max-width: 480px) {
   .collect-bulk-actions { flex-direction: column; align-items: stretch; }
   .collect-bulk-actions .btn.btn-sm { flex: 0 0 auto; width: 100%; }
 }
 
-/* ── unit grid (cards mirror .unit-card chassis) ───────────────────── */
-.collect-unit-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 10px;
-}
+/* ── unit grid (cards mirror .unit-card chassis) */
+.collect-unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
 .collect-unit-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 10px 12px;
-  background: var(--card-bg, #2c2c34);
-  border: 1px solid var(--border, #3a3a44);
-  border-radius: var(--radius, 6px);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   transition: border-color 0.12s, background 0.12s;
 }
-.collect-unit-card:hover {
-  border-color: var(--border-light, #4a4a54);
-  background: var(--card-hover, #34343c);
-}
-.collect-unit-card-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
+.collect-unit-card:hover { border-color: var(--border-light); background: var(--card-hover); }
+.collect-unit-card-head { display: flex; align-items: baseline; gap: 8px; }
 .collect-unit-name {
   flex: 1 1 auto;
   min-width: 0;
   font-weight: 500;
   font-size: 13px;
-  color: var(--text, #e0e0e0);
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* The points are the fixed half of this row and the name is the elastic one.
-   Without these two the pts box is shrinkable and "190 pts" breaks at its
-   space onto a second line next to a long name — which makes that one card
-   taller than the rest of its grid row. Ellipsising the NAME is the intended
-   behaviour (js/ui/collect-mode.js puts the full text in a title), but only
-   the name. */
-.collect-unit-pts {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  font-size: 12px;
-  color: var(--text-muted, #a8a8a8);
-}
-.collect-unit-status-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.collect-unit-status-row .collection-status-btn {
-  flex: 1 1 auto;
-  font-size: 11px;
-  padding: 4px 6px;
-}
 
-/* ── Mobile collapse (820 = the app-wide phone layout cutoff) ─────── */
+/* The points are the fixed half of this row and the name is the elastic one.
+ * Without these two the pts box is shrinkable and "190 pts" breaks at its
+ * space onto a second line next to a long name — which makes that one card
+ * taller than the rest of its grid row. Ellipsising the NAME is the intended
+ * behaviour (js/ui/collect-mode.js puts the full text in a title), but only
+ * the name. */
+.collect-unit-pts { flex: 0 0 auto; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-muted); }
+.collect-unit-status-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.collect-unit-status-row .collection-status-btn { flex: 1 1 auto; font-size: 11px; padding: 4px 6px; }
+
+/* ── Mobile collapse (820 = the app-wide phone layout cutoff) */
 @media (max-width: 820px) {
-  #collect-mode .collect-header {
-    padding: 12px 14px;
-  }
-  #collect-mode .collect-body {
-    padding: 12px 14px;
-  }
-  .collect-paint-layout {
-    grid-template-columns: 1fr;
-  }
-  .collect-paint-sidebar {
-    display: none;
-  }
-  .collect-paint-mobile-picker {
-    display: block;
-    margin-bottom: 12px;
-  }
-  .collect-bulk-actions {
-    margin-left: 0;
-    width: 100%;
-  }
+  #collect-mode .collect-header, #collect-mode .collect-body { padding: 12px 14px; }
+  .collect-paint-layout { grid-template-columns: 1fr; }
+  .collect-paint-sidebar { display: none; }
+  .collect-paint-mobile-picker { display: block; margin-bottom: 12px; }
+  .collect-bulk-actions { margin-left: 0; width: 100%; }
 }

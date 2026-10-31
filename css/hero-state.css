@@ -1,46 +1,26 @@
 /* hero-state.css — empty-army hero CTA, search Cmd+K hint, faction recents chip row, first-time tour. */
-
-/* ============================================================
-   1. Hero CTA — replaces the small "No units added yet" placeholder
-   ============================================================ */
+/* 1. Hero CTA — replaces the small "No units added yet" placeholder */
 .yaab-hero-cta {
   list-style: none;
   margin: 18px 0 8px;
   padding: 22px 18px 18px;
-  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.22);
+  border: 1px solid rgba(var(--accent-rgb), 0.22);
   border-radius: 12px;
-  background:
-    linear-gradient(180deg,
-      rgba(var(--accent-rgb, 200, 200, 200), 0.06) 0%,
-      rgba(var(--accent-rgb, 200, 200, 200), 0.02) 100%);
+  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.06) 0%, rgba(var(--accent-rgb), 0.02) 100%);
   text-align: left;
   position: relative;
 }
-
 .yaab-hero-headline {
-  font-family: var(--font-display, "Cinzel", "Trajan Pro", "Optima",
-    Georgia, "Times New Roman", serif);
+  font-family: var(--font-display);
   font-size: 26px;
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: var(--text, #f0f0f0);
+  color: var(--text);
   margin: 0 0 6px;
   line-height: 1.15;
 }
-
-.yaab-hero-sub {
-  font-size: 13px;
-  color: var(--text-muted, #aaa);
-  margin: 0 0 16px;
-  line-height: 1.4;
-}
-
-.yaab-hero-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
+.yaab-hero-sub { font-size: 13px; color: var(--text-muted); margin: 0 0 16px; line-height: 1.4; }
+.yaab-hero-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .yaab-hero-btn {
   display: flex;
   flex-direction: column;
@@ -48,7 +28,7 @@
   gap: 2px;
   padding: 12px 12px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.28);
+  border: 1px solid rgba(var(--accent-rgb), 0.28);
   border-radius: 8px;
   color: inherit;
   text-align: left;
@@ -56,57 +36,24 @@
   font: inherit;
   transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
 }
-.yaab-hero-btn:hover {
-  background: rgba(var(--accent-rgb, 200, 200, 200), 0.10);
-  border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.55);
-}
+.yaab-hero-btn:hover { background: rgba(var(--accent-rgb), 0.10); border-color: rgba(var(--accent-rgb), 0.55); }
 .yaab-hero-btn:active { transform: translateY(1px); }
-.yaab-hero-btn:focus-visible {
-  outline: 2px solid var(--accent, #c8c8c8);
-  outline-offset: 2px;
-}
-
-.yaab-hero-btn-title {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text, #f0f0f0);
-}
-.yaab-hero-btn-sub {
-  font-size: 11px;
-  color: var(--text-muted, #aaa);
-  line-height: 1.3;
-}
+.yaab-hero-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.yaab-hero-btn-title { font-weight: 600; font-size: 13px; color: var(--text); }
+.yaab-hero-btn-sub { font-size: 11px; color: var(--text-muted); line-height: 1.3; }
 
 /* Mini variant — when a faction is selected but army still empty */
-.yaab-hero-cta-mini {
-  padding: 14px 14px;
-}
-.yaab-hero-mini-headline {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--text, #f0f0f0);
-  margin-bottom: 4px;
-}
-.yaab-hero-mini-sub {
-  font-size: 12px;
-  color: var(--text-muted, #aaa);
-  line-height: 1.4;
-}
+.yaab-hero-cta-mini { padding: 14px 14px; }
+.yaab-hero-mini-headline { font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 4px; }
+.yaab-hero-mini-sub { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
 
-/* ============================================================
-   2. Cmd+K search hint badge
-   ============================================================ */
-.yaab-search-wrap {
-  position: relative;
-  display: block;
-  width: 100%;
-}
+/* 2. Cmd+K search hint badge */
+.yaab-search-wrap { position: relative; display: block; width: 100%; }
 .yaab-search-wrap > .search-input {
   width: 100%;
   /* leave room for the badge */
   padding-right: 56px;
 }
-
 .yaab-kbd-hint {
   position: absolute;
   right: 8px;
@@ -120,81 +67,19 @@
   padding: 0 6px;
   font: 600 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   letter-spacing: 0.02em;
-  color: var(--text-muted, #aaa);
-  background: rgba(var(--accent-rgb, 200, 200, 200), 0.12);
-  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.30);
+  color: var(--text-muted);
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.30);
   border-radius: 4px;
   pointer-events: auto;
   cursor: pointer;
   user-select: none;
   transition: opacity 120ms ease, transform 120ms ease;
 }
-.yaab-kbd-hint:hover {
-  background: rgba(var(--accent-rgb, 200, 200, 200), 0.22);
-  color: var(--text, #f0f0f0);
-}
-.yaab-kbd-hint-hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-50%) scale(0.92);
-}
+.yaab-kbd-hint:hover { background: rgba(var(--accent-rgb), 0.22); color: var(--text); }
+.yaab-kbd-hint-hidden { opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.92); }
 
-/* ============================================================
-   3. Faction switcher chip row (recents)
-   ============================================================ */
-.yaab-faction-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin: 0 0 8px;
-  padding: 0;
-}
-
-.yaab-faction-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px 3px 6px;
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.2;
-  color: var(--text, #f0f0f0);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(var(--accent-rgb, 200, 200, 200), 0.25);
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background 100ms ease, border-color 100ms ease;
-  font-family: inherit;
-  max-width: 160px;
-}
-.yaab-faction-chip:hover {
-  background: rgba(var(--accent-rgb, 200, 200, 200), 0.14);
-  border-color: rgba(var(--accent-rgb, 200, 200, 200), 0.55);
-}
-.yaab-faction-chip:focus-visible {
-  outline: 2px solid var(--accent, #c8c8c8);
-  outline-offset: 2px;
-}
-.yaab-faction-chip-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex: 0 0 8px;
-  display: inline-block;
-}
-.yaab-faction-chip-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ============================================================
-   Reduced motion
-   ============================================================ */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .yaab-hero-btn,
-  .yaab-faction-chip,
-  .yaab-kbd-hint {
-    transition: none !important;
-  }
+  .yaab-hero-btn, .yaab-kbd-hint { transition: none !important; }
 }

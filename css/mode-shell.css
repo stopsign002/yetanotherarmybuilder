@@ -1,19 +1,15 @@
 /* mode-shell.css — Build / Collect / Play mode page containers + transitions. */
-
 .mode-page {
   /* Each mode owns the entire viewport below the topbar. */
   display: block;
   width: 100%;
-  height: calc(100vh - var(--topbar-h, 56px));
+  height: calc(100vh - var(--topbar-h));
   overflow: hidden;
 }
-
 .mode-page[hidden] { display: none !important; }
 
 /* Build mode hosts the existing 3-panel app-main grid; preserve its height. */
-#build-mode .app-main {
-  height: 100%;
-}
+#build-mode .app-main { height: 100%; }
 
 /* Collect / Play placeholders shown until other agents fill them in. */
 .mode-placeholder {
@@ -27,37 +23,33 @@
   padding: 40px 24px;
   color: var(--text-muted);
 }
-.mode-placeholder h2 {
-  font-family: var(--font-display);
-  font-size: 28px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--text);
-  margin-bottom: 10px;
-}
+.mode-placeholder h2 { font-family: var(--font-display); font-size: 28px; letter-spacing: 4px; text-transform: uppercase; color: var(--text); margin-bottom: 10px; }
 .mode-placeholder p { font-size: 14px; }
 
-/* ── Mode enter animation (fade + slight slide) ─────────────
-   The @keyframes mode-enter-anim lives in animations-polish.css (it
-   replaced the original here, which was dead because the later
-   definition of the same name wins). */
-.mode-page.mode-enter {
-  animation: mode-enter-anim 200ms ease-out;
-}
+/* ── Mode enter animation (fade + slight slide)
+ * The @keyframes mode-enter-anim lives in animations-polish.css (it
+ * replaced the original here, which was dead because the later
+ * definition of the same name wins). */
+.mode-page.mode-enter { animation: mode-enter-anim 280ms cubic-bezier(0.34, 1.16, 0.64, 1) both !important; will-change: opacity, transform; }
 
 /* Mobile: topbar is hidden entirely (see css/topbar.css), so the mode
-   page consumes the full viewport (minus the bottom tab bar, which the
-   inner #app-main subtracts in css/mobile.css). */
+ * page consumes the full viewport (minus the bottom tab bar, which the
+ * inner #app-main subtracts in css/mobile.css). */
 @media (max-width: 820px) {
-  .mode-page {
-    height: 100%;
-    min-height: 0;
-  }
+  .mode-page { height: 100%; }
 }
 
 /* Reduced-motion overrides. */
-body.reduce-motion .mode-page,
-body.reduce-motion .mode-page.mode-enter { animation: none !important; }
-@media (prefers-reduced-motion: reduce) {
-  .mode-page.mode-enter { animation: none; }
+body.reduce-motion .mode-page, body.reduce-motion .mode-page.mode-enter { animation: none !important; }
+
+/* 10. Topbar mode-tab focus / active polish — quicker accent slide. */
+.topbar-mode-tab { transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease; }
+body.reduce-motion .mode-page.mode-enter,
+body.reduce-motion .unit-card,
+body.reduce-motion .toast,
+body.reduce-motion .unit-detail-content,
+body.reduce-motion .faction-glyph,
+body.reduce-motion .build-hero-bar::after {
+  animation: none !important;
+  transition: none !important;
 }

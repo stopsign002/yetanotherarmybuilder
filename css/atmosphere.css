@@ -1,47 +1,35 @@
 /* css/atmosphere.css — atmospheric polish: hex grid, accent stripe, scanline, save pulse, animated crest. */
-
-/* ──────────────────────────────────────────────────────────────────────
-   1. Hex-grid background — should be a *whisper* not a graphic.
-   Applied to .panel-body so panel headers stay clean. ~3.5% opacity
-   strokes against the existing panel backgrounds.
-   ────────────────────────────────────────────────────────────────────── */
+/* 1. Hex-grid background — should be a *whisper* not a graphic.
+ * Applied to .panel-body so panel headers stay clean. ~3.5% opacity
+ * strokes against the existing panel backgrounds. */
 .panel-body {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='49' viewBox='0 0 56 49'><g fill='none' stroke='%23ffffff' stroke-opacity='0.035' stroke-width='1'><path d='M14 0.5 L42 0.5 L56 24.5 L42 48.5 L14 48.5 L0 24.5 Z'/><path d='M42 0.5 L70 0.5 L84 24.5 L70 48.5 L42 48.5'/><path d='M-14 24.5 L0 24.5'/><path d='M56 24.5 L70 24.5'/></g></svg>");
   background-size: 56px 49px;
   background-repeat: repeat;
   background-attachment: local;
+  position: relative;
 }
 
-/* ──────────────────────────────────────────────────────────────────────
-   2. Panel-header accent — uniform 1px accent underline along the bottom
-   edge of every panel header. Previously this was an "active" stripe
-   gated by body.has-selected-faction / .has-selected-unit, which left
-   one panel visually mismatched once a unit was clicked. The underline
-   below now applies to every panel-header so the three columns share the
-   same visual language. The body-class gating + scaleX transition is
-   preserved as a brief flash on the panel that just received focus.
-   ────────────────────────────────────────────────────────────────────── */
+/* 2. Panel-header accent — uniform 1px accent underline along the bottom
+ * edge of every panel header. Previously this was an "active" stripe
+ * gated by body.has-selected-faction / .has-selected-unit, which left
+ * one panel visually mismatched once a unit was clicked. The underline
+ * below now applies to every panel-header so the three columns share the
+ * same visual language. The body-class gating + scaleX transition is
+ * preserved as a brief flash on the panel that just received focus. */
 .panel-header { position: relative; }
-
 .panel-header::before {
   content: "";
   position: absolute;
   inset: auto 0 -1px 0;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    rgba(var(--accent-rgb), 0.55) 0%,
-    rgba(var(--accent-rgb), 0.18) 60%,
-    rgba(var(--accent-rgb), 0.0) 100%
-  );
+  background: linear-gradient( 90deg, rgba(var(--accent-rgb), 0.55) 0%, rgba(var(--accent-rgb), 0.18) 60%, rgba(var(--accent-rgb), 0.0) 100% );
   opacity: 1;
   transform: none;
   pointer-events: none;
 }
 
-/* ──────────────────────────────────────────────────────────────────────
-   3. Faction-color scanline sweep
-   ────────────────────────────────────────────────────────────────────── */
+/* 3. Faction-color scanline sweep */
 .atmosphere-scanline {
   position: fixed;
   left: 0;
@@ -50,65 +38,31 @@
   height: 2px;
   z-index: 9999;
   pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgba(var(--accent-rgb), 0) 0%,
-    rgba(var(--accent-rgb), 0.35) 20%,
-    rgba(var(--accent-rgb), 0.55) 50%,
-    rgba(var(--accent-rgb), 0.35) 80%,
-    rgba(var(--accent-rgb), 0) 100%
-  );
+  background: linear-gradient( 90deg, rgba(var(--accent-rgb), 0) 0%, rgba(var(--accent-rgb), 0.35) 20%, rgba(var(--accent-rgb), 0.55) 50%, rgba(var(--accent-rgb), 0.35) 80%, rgba(var(--accent-rgb), 0) 100% );
   box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.45);
   will-change: transform, opacity;
   animation: atmosphere-scanline-sweep 700ms ease-out forwards;
 }
-
 @keyframes atmosphere-scanline-sweep {
-  0%   { transform: translate3d(0, -4px, 0);    opacity: 0; }
-  15%  {                                        opacity: 1; }
-  85%  {                                        opacity: 1; }
-  100% { transform: translate3d(0, 100vh, 0);   opacity: 0; }
+  0% { transform: translate3d(0, -4px, 0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translate3d(0, 100vh, 0); opacity: 0; }
 }
 
-/* ──────────────────────────────────────────────────────────────────────
-   4. Save-button pulse — accent shadow ring at 2-second intervals when
-   the army has unsaved mutations.
-   ────────────────────────────────────────────────────────────────────── */
-#btn-save-army.has-unsaved {
-  animation: atmosphere-save-pulse 2s ease-in-out infinite;
-  will-change: transform, box-shadow;
-}
-
+/* 4. Save-button pulse — accent shadow ring at 2-second intervals when
+ * the army has unsaved mutations. */
+#btn-save-army.has-unsaved { animation: atmosphere-save-pulse 2s ease-in-out infinite; will-change: transform, box-shadow; }
 @keyframes atmosphere-save-pulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.55);
-  }
-  35% {
-    transform: scale(1.04);
-    box-shadow: 0 0 0 6px rgba(var(--accent-rgb), 0.0);
-  }
-  60% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.0);
-  }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.55); }
+  35% { transform: scale(1.04); box-shadow: 0 0 0 6px rgba(var(--accent-rgb), 0.0); }
+  60% { transform: scale(1); box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.0); }
 }
 
-/* ──────────────────────────────────────────────────────────────────────
-   5. Animated crest — drops into the empty unit-detail panel when a
-   faction is selected. The SVG itself is injected by
-   js/ui/animated-crest.js; styling lives here.
-   ────────────────────────────────────────────────────────────────────── */
-.atmosphere-crest-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin: 18px auto 8px;
-  user-select: none;
-}
-
+/* 5. Animated crest — drops into the empty unit-detail panel when a
+ * faction is selected. The SVG itself is injected by
+ * js/ui/animated-crest.js; styling lives here. */
+.atmosphere-crest-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; margin: 18px auto 8px; user-select: none; }
 .atmosphere-crest {
   width: 80px;
   height: 80px;
@@ -117,43 +71,126 @@
   filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.35));
   will-change: transform, opacity;
 }
-
-.atmosphere-crest-rotor {
-  transform-origin: 50% 50%;
-  transform-box: fill-box;
-  animation: atmosphere-crest-spin 30s linear infinite;
-}
-
-.atmosphere-crest-pulse {
-  transform-origin: 50% 50%;
-  transform-box: fill-box;
-  animation: atmosphere-crest-pulse 4.5s ease-in-out infinite;
-}
-
-.atmosphere-crest-tagline {
-  font-size: 12px;
-  color: var(--text-muted);
-  letter-spacing: 0.6px;
-  text-align: center;
-}
-
+.atmosphere-crest-rotor { transform-origin: 50% 50%; transform-box: fill-box; animation: atmosphere-crest-spin 30s linear infinite; }
+.atmosphere-crest-pulse { transform-origin: 50% 50%; transform-box: fill-box; animation: atmosphere-crest-pulse 4.5s ease-in-out infinite; }
+.atmosphere-crest-tagline { font-size: 12px; color: var(--text-muted); letter-spacing: 0.6px; text-align: center; }
 @keyframes atmosphere-crest-spin {
-  0%   { transform: rotate(0deg); }
+  0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
 /* @keyframes atmosphere-crest-pulse is defined in animations-polish.css
-   (the later copy of the same name always won, so this one was dead). */
-
-/* ──────────────────────────────────────────────────────────────────────
-   Reduced-motion: kill animations across the board.
-   ────────────────────────────────────────────────────────────────────── */
+ * (the later copy of the same name always won, so this one was dead). */
+/* Reduced-motion: kill animations across the board. */
 @media (prefers-reduced-motion: reduce) {
-  .atmosphere-scanline,
-  #btn-save-army.has-unsaved,
-  .atmosphere-crest-rotor,
-  .atmosphere-crest-pulse {
-    animation: none !important;
-  }
+  .atmosphere-scanline, #btn-save-army.has-unsaved, .atmosphere-crest-rotor, .atmosphere-crest-pulse { animation: none !important; }
   .atmosphere-scanline { display: none; }
 }
+
+/* Common: every mode root gets relative positioning so its decoration
+ * pseudo-elements anchor correctly. We replaced the old ::after-driven
+ * moving overlays with a single fixed ::before holding the SVG stack. */
+body[data-mode="build"] #build-mode, body[data-mode="collect"] #collect-mode, body[data-mode="play"] #play-mode { position: relative; }
+
+/* Children always sit above the static decoration. */
+body[data-mode="build"] #build-mode > *, body[data-mode="collect"] #collect-mode > *, body[data-mode="play"] #play-mode > * { position: relative; z-index: 1; }
+
+/* 1. BUILD mode — workshop / forge tactical feel.
+ * Layers (top → bottom):
+ * a) faint accent radial bloom near the top (4-6%)
+ * b) hex grid (3% opacity)
+ * c) chevron rows (2% opacity)
+ * No movement. No drifting particles. No scan line. */
+body[data-mode="build"] #build-mode::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-color: transparent;
+  background-image: radial-gradient(60% 36% at 50% 0%, rgba(var(--accent-rgb), 0.05) 0%, rgba(var(--accent-rgb), 0.0) 75%), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='49' viewBox='0 0 56 49'><g fill='none' stroke='%23ffffff' stroke-opacity='0.03' stroke-width='1'><path d='M14 0.5 L42 0.5 L56 24.5 L42 48.5 L14 48.5 L0 24.5 Z'/></g></svg>"), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='48' viewBox='0 0 120 48'><g fill='none' stroke='%23ffffff' stroke-opacity='0.02' stroke-width='1'><path d='M0 18 L20 6 L40 18'/><path d='M40 18 L60 6 L80 18'/><path d='M80 18 L100 6 L120 18'/><path d='M0 42 L20 30 L40 42'/><path d='M40 42 L60 30 L80 42'/><path d='M80 42 L100 30 L120 42'/></g></svg>");
+  background-repeat: no-repeat, repeat, repeat;
+  background-size: 100% 320px, 56px 49px, 120px 48px;
+  background-position: top center, 0 0, 0 0;
+}
+
+/* The old per-panel scan-line is replaced with a static, far subtler
+ * diagonal hatch — held to 1.5% opacity and fixed (no scroll movement). */
+body[data-mode="build"] .panel-body { position: relative; }
+
+/* 2. COLLECT mode — armoury / library / parchment feel.
+ * Layers:
+ * a) warm parchment tint (very low)
+ * b) dotted scan grid (3%)
+ * c) tiny gothic-arch lattice (2%) */
+body[data-mode="collect"] #collect-mode::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: linear-gradient(180deg, rgba(220, 180, 120, 0.020) 0%, rgba(120, 90, 60, 0.012) 100%), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><g fill='%23e6c79a' fill-opacity='0.03'><circle cx='4' cy='4' r='1'/><circle cx='20' cy='12' r='1'/><circle cx='12' cy='24' r='1'/><circle cx='28' cy='28' r='1'/></g></svg>"), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='128' viewBox='0 0 96 128'><g fill='none' stroke='%23e6c79a' stroke-opacity='0.025' stroke-width='1'><path d='M16 120 L16 64 Q16 32 48 32 Q80 32 80 64 L80 120'/><path d='M28 120 L28 72 Q28 48 48 48 Q68 48 68 72 L68 120'/><path d='M48 120 L48 32'/></g></svg>");
+  background-repeat: no-repeat, repeat, repeat;
+  background-size: 100% 100%, 32px 32px, 96px 128px;
+  background-position: 0 0, 0 0, center top;
+}
+
+/* Make sure the actual content sits above the backgrounds. */
+body[data-mode="collect"] #collect-mode > .collect-root { position: relative; z-index: 1; }
+.faction-glyph .faction-glyph-svg { width: 100%; height: 100%; display: block; }
+.faction-glyph-hero { width: 32px !important; height: 32px !important; margin-right: 12px !important; filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.45)); }
+.build-hero-main .faction-glyph-hero { position: relative; top: 1px; }
+
+/* 5. Role icons — small Unicode glyph in the unit-card name.
+ * The DOM-injected <span class="role-icon"> is the primary path; the
+ * pseudo-element fallback covers cards rendered before role-icons.js is
+ * ready (e.g. SSR paint). */
+.unit-card .role-icon {
+  display: inline-block;
+  width: 1.1em;
+  margin-right: 6px;
+  font-size: 0.9em;
+  line-height: 1;
+  color: var(--accent);
+  text-shadow: 0 0 4px rgba(var(--accent-rgb), 0.45);
+  vertical-align: baseline;
+  letter-spacing: 0;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: opacity 180ms ease, color 240ms ease;
+}
+.unit-card:hover .role-icon { opacity: 1; }
+
+/* CSS-only fallback — only fires when no .role-icon span has been injected. */
+.unit-card.role-character .unit-card-name:not(:has(.role-icon))::before { content: "\25C6 "; }
+.unit-card.role-psyker .unit-card-name:not(:has(.role-icon))::before { content: "\2756 "; }
+.unit-card.role-monster .unit-card-name:not(:has(.role-icon))::before { content: "\2B22 "; }
+.unit-card.role-vehicle .unit-card-name:not(:has(.role-icon))::before { content: "\25B2 "; }
+.unit-card.role-battleline .unit-card-name:not(:has(.role-icon))::before { content: "\25A3 "; }
+.unit-card.role-infantry .unit-card-name:not(:has(.role-icon))::before { content: "\25CF "; }
+.unit-card[class*="role-"] .unit-card-name::before { color: var(--accent); font-size: 0.85em; margin-right: 6px; opacity: 0.8; letter-spacing: 0; }
+@media (prefers-reduced-motion: reduce) {
+  body[data-mode="build"] #build-mode::before,
+  body[data-mode="build"] #build-mode::after,
+  body[data-mode="collect"] #collect-mode::before,
+  body[data-mode="collect"] #collect-mode::after {
+    animation: none !important;
+  }
+}
+
+/* The scanline.js module runs the .atmosphere-scanline element on every
+ * accent change. We hook on it: when scanline appears, mark the panels for a
+ * one-shot pulse via animation-iteration-count: 1. */
+body:has(.atmosphere-scanline) .panel-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: faction-ripple-pulse 700ms ease-out forwards;
+  z-index: 0;
+}
+.toast-container .toast, .toast { animation: toast-bounce-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1); will-change: transform, opacity; }
+
+/* 6. Loading splash crest — speed up rotation + brighter pulse. */
+.atmosphere-crest-rotor { animation-duration: 8s !important; }
+.atmosphere-crest-pulse { animation-duration: 2.6s !important; }

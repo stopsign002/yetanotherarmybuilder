@@ -1,8 +1,7 @@
 /* css/detachments.css — inner styles for the multi-select Detachments box
-   (js/app/detachment-picker.js). The box chrome (section / summary / body) is
-   shared with Army setup via the .army-setup-section / .army-setup-summary /
-   .army-setup-body classes, so this file only styles the picker's own content. */
-
+ * (js/app/detachment-picker.js). The box chrome (section / summary / body) is
+ * shared with Army setup via the .army-setup-section / .army-setup-summary /
+ * .army-setup-body classes, so this file only styles the picker's own content. */
 /* Push the running-total badge to the right edge of the shared summary. */
 .detachments-summary { justify-content: flex-start; }
 .detachments-summary-label { flex: 0 0 auto; }
@@ -19,50 +18,26 @@
   padding: 1px 8px;
 }
 .detachments-total:empty { display: none; }
-
-.detachments-empty {
-  padding: 6px 2px;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  text-align: center;
-}
-
-.detachments-group-label {
-  margin: 2px 2px 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
+.detachments-empty { padding: 6px 2px; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
+.detachments-group-label { margin: 2px 2px 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
 .detachments-list { display: flex; flex-direction: column; gap: 4px; }
-
 .detachment-row {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 7px 10px;
   border: 1px solid var(--border);
-  border-radius: var(--radius, 6px);
-  background: var(--card-bg, rgba(255, 255, 255, 0.02));
+  border-radius: var(--radius);
+  background: var(--card-bg);
   cursor: pointer;
   transition: border-color 0.12s ease, background 0.12s ease;
 }
 .detachment-row:hover { border-color: rgba(var(--accent-rgb), 0.6); }
-.detachment-row:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-.detachment-row.selected {
-  border-color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.14);
-}
-/* Row currently open in the Details pane (read view) — distinct from selected. */
-.detachment-row.viewing {
-  box-shadow: inset 3px 0 0 0 var(--accent);
-}
+.detachment-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.detachment-row.selected { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.14); }
 
+/* Row currently open in the Details pane (read view) — distinct from selected. */
+.detachment-row.viewing { box-shadow: inset 3px 0 0 0 var(--accent); }
 .detachment-row-cb {
   flex: 0 0 auto;
   width: 18px;
@@ -73,7 +48,7 @@
   -webkit-appearance: none;
   border: 1px solid var(--border);
   border-radius: 4px;
-  background: var(--card-bg, rgba(255, 255, 255, 0.03));
+  background: var(--card-bg);
   display: inline-grid;
   place-content: center;
   transition: border-color 0.12s ease, background 0.12s ease;
@@ -90,20 +65,10 @@
 }
 .detachment-row-cb:hover { border-color: rgba(var(--accent-rgb), 0.6); }
 .detachment-row-cb:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.detachment-row-cb:checked {
-  border-color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.15);
-}
+.detachment-row-cb:checked { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.15); }
 .detachment-row-cb:checked::before { transform: scale(1); }
-
-.detachment-row-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  color: var(--text);
-  font-size: 0.9rem;
-}
+.detachment-row-name { flex: 1 1 auto; min-width: 0; color: var(--text); font-size: 0.9rem; }
 .detachment-row.selected .detachment-row-name { font-weight: 600; }
-
 .detachment-row-pts {
   flex: 0 0 auto;
   font-size: 0.75rem;
@@ -115,12 +80,7 @@
   padding: 1px 8px;
   white-space: nowrap;
 }
-.detachment-row.selected .detachment-row-pts {
-  color: var(--accent);
-  border-color: rgba(var(--accent-rgb), 0.45);
-  background: rgba(var(--accent-rgb), 0.10);
-}
-
+.detachment-row.selected .detachment-row-pts { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.45); background: rgba(var(--accent-rgb), 0.10); }
 .detachments-footer {
   display: flex;
   align-items: center;
@@ -133,35 +93,23 @@
 }
 .detachments-footer-pts { font-weight: 700; color: var(--text); }
 
-/* ── Detachment / rule detail header ──────────────────────────────────────
-   The kind label ("DETACHMENT", "STRATAGEM", …) sits ABOVE the name as a small
-   eyebrow. Previously it sat under the name at nearly the same size as the
-   other meta text, so the banner read as three undifferentiated stacked rows
-   with the points badge stranded below them. */
-.unit-detail-rule .detail-eyebrow {
-  display: block;
-  margin-bottom: 3px;
-  font-size: 10px;
-  line-height: 1.2;
-  opacity: 0.85;
-}
+/* ── Detachment / rule detail header
+ * The kind label ("DETACHMENT", "STRATAGEM", …) sits ABOVE the name as a small
+ * eyebrow. Previously it sat under the name at nearly the same size as the
+ * other meta text, so the banner read as three undifferentiated stacked rows
+ * with the points badge stranded below them. */
+.unit-detail-rule .detail-eyebrow { display: block; margin-bottom: 3px; font-size: 10px; line-height: 1.2; opacity: 0.85; }
+
 /* Match the datasheet header's engraved-serif name treatment — the rule and
-   detachment banners were the only headers still rendering in the body face. */
-.unit-detail-rule .detail-name {
-  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
-  letter-spacing: 0.04em;
-}
+ * detachment banners were the only headers still rendering in the body face. */
+.unit-detail-rule .detail-name { font-family: 'Cinzel', 'Trajan Pro', Georgia, serif; letter-spacing: 0.04em; }
+
 /* The banner's lower row: no top margin, since the name underline already
-   provides the separation. */
+ * provides the separation. */
 .unit-detail-rule .detail-banner-full { margin-top: 0; }
 
 /* Force Disposition chips. Hover shows the disposition's blurb (title attr). */
-.detail-dispositions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0;
-}
+.detail-dispositions { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
 .detail-disposition {
   display: inline-block;
   padding: 3px 9px;
@@ -178,83 +126,36 @@
 }
 .detail-detachment-block { margin: 0 0 14px; }
 .detail-detachment-block:last-child { margin-bottom: 0; }
+
 /* Boxed items (enhancements + stratagems) so each reads as a distinct card. */
-.detail-detachment-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius, 6px);
-  background: var(--card-bg, rgba(255, 255, 255, 0.02));
-  padding: 10px 12px;
-  margin-bottom: 10px;
-}
+.detail-detachment-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card-bg); padding: 10px 12px; margin-bottom: 10px; }
 .detail-detachment-card .strat-sections { margin-top: 4px; }
-.detail-detachment-subname {
-  font-weight: 600;
-  color: var(--text);
-  font-size: 13px;
-  margin-bottom: 3px;
-}
+.detail-detachment-subname { font-weight: 600; color: var(--text); font-size: 13px; margin-bottom: 3px; }
 .detail-detachment-text {
   margin: 0;
   font-size: 13px;
   line-height: 1.6;
   color: var(--text-muted);
-  white-space: pre-line;   /* preserve the blank-line paragraph breaks in rule text */
-}
-.detail-inline-pts {
-  font-weight: 600;
-  font-size: 11px;
-  color: var(--accent);
+  white-space: pre-line;
+  /* preserve the blank-line paragraph breaks in rule text */
 }
 
-/* ── Force Disposition ────────────────────────────────────────────────────
-   Each detachment row lists its dispositions under the name; the block under
-   the footer is where the army declares ONE (js/app/detachment-picker.js). */
-.detachment-row-dispo {
-  display: block;
-  margin-top: 1px;
-  font-size: 0.72rem;
-  font-weight: 400;
-  color: var(--text-muted);
-}
+/* ── Force Disposition
+ * Each detachment row lists its dispositions under the name; the block under
+ * the footer is where the army declares ONE (js/app/detachment-picker.js). */
+.detachment-row-dispo { display: block; margin-top: 1px; font-size: 0.72rem; font-weight: 400; color: var(--text-muted); }
 .detachment-row.selected .detachment-row-dispo { font-weight: 400; }
-
-.disposition-block {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.disposition-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.disposition-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.disposition-needed {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--danger);
-}
-.disposition-choices {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+.disposition-block { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 8px; }
+.disposition-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.disposition-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.disposition-needed { font-size: 0.72rem; font-weight: 700; color: var(--danger); }
+.disposition-choices { display: flex; flex-wrap: wrap; gap: 6px; }
 .disposition-choice {
   flex: 1 1 calc(50% - 6px);
   min-height: 34px;
   padding: 6px 10px;
   border: 1px solid var(--border);
-  border-radius: var(--radius, 6px);
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.03);
   color: var(--text);
   font: inherit;
@@ -265,12 +166,7 @@
 }
 .disposition-choice:hover { border-color: rgba(var(--accent-rgb), 0.55); background: rgba(var(--accent-rgb), 0.06); }
 .disposition-choice:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.disposition-choice.selected {
-  border-color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.14);
-  color: var(--accent);
-  font-weight: 700;
-}
+.disposition-choice.selected { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.14); color: var(--accent); font-weight: 700; }
 .disposition-fixed {
   display: flex;
   align-items: center;
@@ -278,7 +174,7 @@
   gap: 8px;
   padding: 7px 10px;
   border: 1px solid var(--accent);
-  border-radius: var(--radius, 6px);
+  border-radius: var(--radius);
   background: rgba(var(--accent-rgb), 0.10);
 }
 .disposition-fixed-name { font-weight: 700; color: var(--accent); font-size: 0.9rem; }

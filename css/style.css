@@ -1,233 +1,120 @@
-/* ============================================================
-   Yet Another Army Builder — Dark Warhammer Theme
-   ============================================================ */
-
-/* ── CSS Variables ─────────────────────────────────────────── */
+/* Yet Another Army Builder — Dark Warhammer Theme */
+/* ── CSS Variables */
 :root {
-  --bg:           #18181b;
-  --panel-bg:     #22222a;
-  --panel-alt:    #28282f;
-  --accent:       #ffffff;
+  --bg: #18181b;
+  --panel-bg: #22222a;
+  --panel-alt: #28282f;
+  --accent: #ffffff;
   --accent-hover: #cccccc;
-  --accent-dark:  #aaaaaa;
-  --accent-rgb:   255, 255, 255;
-  --accent-on:    #111111;
-  --text:         #e0e0e0;
-  --text-muted:   #a8a8a8;
-  --border:       #3a3a44;
+  --accent-dark: #aaaaaa;
+  --accent-rgb: 255, 255, 255;
+  --accent-on: #111111;
+  --text: #e0e0e0;
+  --text-muted: #a8a8a8;
+  --border: #3a3a44;
   --border-light: #4a4a54;
-  --success:      #2ecc71;
-  --warning:      #f39c12;
-  --danger:       #e74c3c;
-  --card-bg:      #2c2c34;
-  --card-hover:   #34343c;
-  --radius:       6px;
-  --radius-lg:    10px;
-  --shadow:       0 2px 8px rgba(0,0,0,0.5);
-  --shadow-lg:    0 8px 32px rgba(0,0,0,0.7);
-  --font:         -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
-  --font-mono:    'Consolas', 'Monaco', 'Courier New', monospace;
+  --success: #2ecc71;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+  --card-bg: #2c2c34;
+  --card-hover: #34343c;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.7);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
   --font-display: 'Cinzel', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  --font-body:    var(--font);
-
+  --font-body: var(--font);
   /* Tokens below were REFERENCED by ~50 rules across css/ but never defined
-     here — every call site silently took its own hardcoded fallback instead
-     (stopsign002/yetanotherarmybuilder#65). Harmless under this theme only
-     because the fallbacks happened to match this palette; under any other
-     theme (e.g. Neo-Brutalist before it patched around this with its own
-     "GHOST TOKENS" block) those same rules painted black boxes on a white
-     page. Mapped to the real token each one clearly meant; a couple with no
-     existing analogue (a translucent surface veil, a smaller radius) get a
-     literal value equal to what every call site's fallback already agreed on.
-     `css/themes/brutalist.css` still overrides the live subset of these with
-     its own nb-* values — same base+override pattern as --accent/--text/
-     --border above, not made redundant by this block existing. */
-  --surface:       var(--panel-bg);
-  --surface-2:     rgba(255, 255, 255, 0.05);
-  --surface2:      var(--surface-2); /* same concept as --surface-2, different name — alias rather than a second value */
-  --panel-bg-2:    var(--bg);
-  --bg-alt:        var(--bg);
-  --bg-input:      rgba(0, 0, 0, 0.25);
-  --hover-bg:      var(--card-hover);
+   * here — every call site silently took its own hardcoded fallback instead
+   * (stopsign002/yetanotherarmybuilder#65). Harmless under this theme only
+   * because the fallbacks happened to match this palette; under any other
+   * theme (e.g. Neo-Brutalist before it patched around this with its own
+   * "GHOST TOKENS" block) those same rules painted black boxes on a white
+   * page. Mapped to the real token each one clearly meant; a couple with no
+   * existing analogue (a translucent surface veil, a smaller radius) get a
+   * literal value equal to what every call site's fallback already agreed on.
+   * `css/themes/brutalist.css` still overrides the live subset of these with
+   * its own nb-* values — same base+override pattern as --accent/--text/
+   * --border above, not made redundant by this block existing. */
+  --surface: var(--panel-bg);
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface2: var(--surface-2);
+  /* same concept as --surface-2, different name — alias rather than a second value */
+  --panel-bg-2: var(--bg);
+  --bg-alt: var(--bg);
+  --bg-input: rgba(0, 0, 0, 0.25);
+  --hover-bg: var(--card-hover);
   --border-subtle: rgba(255, 255, 255, 0.14);
-  --radius-sm:     4px;
-  --radius-md:     var(--radius);
-  --ui-font:       var(--font);
+  --radius-sm: 4px;
+  --radius-md: var(--radius);
+  --ui-font: var(--font);
 }
 
-/* ── Reset / Base ─────────────────────────────────────────── */
+/* ── Reset / Base */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-  height: 100%;
-  font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.5;
-  font-feature-settings: 'tnum';
-  background: var(--bg);
-  color: var(--text);
-  overflow: hidden;
-}
-
+html, body { height: 100%; font-family: var(--font-body); font-size: 15px; line-height: 1.5; font-feature-settings: 'tnum'; background: var(--bg); color: var(--text); }
 a { color: var(--accent); text-decoration: none; }
 a:hover { color: var(--accent-hover); }
-
 ul { list-style: none; }
 
-/* ── Scrollbar ───────────────────────────────────────────── */
+/* ── Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--panel-bg); }
 ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #666; }
 
 /* ── Page-level loading progress strip (fixed, top of viewport) ─
-   The visual strip is hidden — load progress is communicated via
-   the load-status text in the panel header instead. progress.js
-   still toggles this element's `hidden` attribute, but the strip
-   never paints because of the !important display:none below. */
-.page-progress-wrap {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  z-index: 500;
-  background: rgba(var(--accent-rgb), 0.2);
-  display: none !important;
-}
+ * The visual strip is hidden — load progress is communicated via
+ * the load-status text in the panel header instead. progress.js
+ * still toggles this element's `hidden` attribute, but the strip
+ * never paints because of the !important display:none below. */
+.page-progress-wrap { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 500; background: rgba(var(--accent-rgb), 0.2); display: none !important; }
+
 /* Override [hidden] — CSS display: flex/block has higher specificity than
-   the browser's built-in [hidden]{display:none} rule, so we must be explicit */
-.page-progress-wrap[hidden],
-.load-status[hidden] {
-  display: none !important;
-}
-.page-progress-bar {
-  height: 100%;
-  background: var(--accent);
-  width: 0%;
-  transition: width 0.3s ease;
-  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
-}
+ * the browser's built-in [hidden]{display:none} rule, so we must be explicit */
+.page-progress-wrap[hidden], .load-status[hidden] { display: none !important; }
+.page-progress-bar { height: 100%; background: var(--accent); width: 0%; box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6); }
 
-/* ── Load status (in center panel header) ────────────────── */
-.load-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text-muted);
-  flex: 1;
-  justify-content: center;
-}
-.load-status-count {
-  color: var(--accent);
-  font-weight: 600;
-}
+/* ── Load status (in center panel header) */
+.load-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); flex: 1; justify-content: center; }
+.load-status-count { color: var(--accent); font-weight: 600; }
 
-/* ── Main Layout ─────────────────────────────────────────── */
+/* ── Main Layout */
 :root {
   /* Left pane (army list) widened ~10% from the original 300px so the
-     attached-unit cluster cards have room to breathe — Necron multi-
-     attach was the worst case but every leader+bodyguard cluster
-     benefits. Drag-to-resize (js/app/resize.js) still lets the user
-     widen further or tighten back down. */
-  --col-left:  330px;
+   * attached-unit cluster cards have room to breathe — Necron multi-
+   * attach was the worst case but every leader+bodyguard cluster
+   * benefits. Drag-to-resize (js/app/resize.js) still lets the user
+   * widen further or tighten back down. */
+  --col-left: 330px;
   --col-right: 420px;
 }
+.app-main { display: grid; grid-template-columns: var(--col-left) 4px 1fr 4px var(--col-right); grid-template-rows: 1fr; height: 100vh; gap: 0; overflow: hidden; }
 
-.app-main {
-  display: grid;
-  grid-template-columns: var(--col-left) 4px 1fr 4px var(--col-right);
-  grid-template-rows: 1fr;
-  height: 100vh;
-  gap: 0;
-  overflow: hidden;
-}
+/* ── Resize Handles */
+.resize-handle { background: var(--border); cursor: col-resize; transition: background 0.15s; z-index: 10; flex-shrink: 0; }
+.resize-handle:hover, .resize-handle.dragging { background: var(--accent); }
 
-/* ── Resize Handles ──────────────────────────────────────── */
-.resize-handle {
-  background: var(--border);
-  cursor: col-resize;
-  transition: background 0.15s;
-  z-index: 10;
-  flex-shrink: 0;
-}
-.resize-handle:hover,
-.resize-handle.dragging {
-  background: var(--accent);
-}
-
-/* ── Panels ──────────────────────────────────────────────── */
-.panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 180px;
-}
-
-.panel-left   { background: var(--panel-bg); border-right: none; }
+/* ── Panels */
+.panel { display: flex; flex-direction: column; overflow: hidden; min-width: 180px; }
+.panel-left { background: var(--panel-bg); border-right: none; }
 .panel-center { background: var(--bg); }
-.panel-right  { background: var(--panel-bg); border-left: none; }
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid var(--border);
-  background: var(--panel-alt);
-  flex-shrink: 0;
-}
-
-.panel-header h2 {
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--accent);
-}
-
-.panel-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 14px 12px;
-}
-
-.panel-footer {
-  padding: 10px 12px;
-  border-top: 1px solid var(--border);
-  background: var(--panel-alt);
-  flex-shrink: 0;
-}
-
-/* ── Army Selection (faction + detachment) ───────────────── */
-.army-selection-section {
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-.army-selection-section .form-group { margin-bottom: 8px; }
-.army-selection-section .form-group:last-child { margin-bottom: 0; }
-
-/* ── Army Rules Section ──────────────────────────────────── */
-.army-rules-section {
-  margin-bottom: 14px;
-}
+.panel-right { background: var(--panel-bg); border-left: none; }
+.panel-header { gap: 8px; background: var(--panel-alt); flex-shrink: 0; }
+.panel-header h2 { font-size: 14px; text-transform: uppercase; color: var(--text-muted); }
+.panel-body { flex: 1; overflow-y: auto; padding: 14px 12px; }
+.panel-footer { padding: 10px 12px; border-top: 1px solid var(--border); background: var(--panel-alt); flex-shrink: 0; }
 .army-rules-title {
   font-size: 10px;
-  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
   color: var(--text-muted);
   padding: 4px 0 6px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 6px;
 }
-.army-rules-list {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
+.army-rules-list { display: flex; flex-direction: column; gap: 3px; }
 .army-rule-item {
   display: flex;
   align-items: center;
@@ -242,25 +129,14 @@ ul { list-style: none; }
   transition: border-color 0.15s, background 0.15s;
   user-select: none;
 }
-.army-rule-item:hover {
-  border-color: var(--accent);
-  background: var(--card-hover);
-}
-.army-rule-item .rule-arrow {
-  color: var(--text-muted);
-  font-size: 11px;
-}
+.army-rule-item:hover { border-color: var(--accent); background: var(--card-hover); }
+.army-rule-item .rule-arrow { color: var(--text-muted); font-size: 11px; }
 
-/* ── Squad Size Select (in detail panel) ─────────────────── */
-.detail-squad-select {
-  flex: 1;
-  font-size: 13px;
-}
+/* ── Squad Size Select (in detail panel) */
+.detail-squad-select { flex: 1; font-size: 13px; }
 
-/* ── Weapons: Ranged / Melee split ───────────────────────── */
-.weapons-subsection {
-  margin-bottom: 14px;
-}
+/* ── Weapons: Ranged / Melee split */
+.weapons-subsection { margin-bottom: 14px; }
 .weapons-subsection-title {
   font-size: 11px;
   font-weight: 700;
@@ -271,59 +147,17 @@ ul { list-style: none; }
   margin-bottom: 6px;
   display: inline-block;
 }
-.weapons-subsection-title.ranged {
-  color: #5ab5e8;
-  background: rgba(90,181,232,0.1);
-  border: 1px solid rgba(90,181,232,0.25);
-}
-.weapons-subsection-title.melee {
-  color: #e8955a;
-  background: rgba(232,149,90,0.1);
-  border: 1px solid rgba(232,149,90,0.25);
-}
+.weapons-subsection-title.ranged { color: #5ab5e8; background: rgba(90,181,232,0.1); border: 1px solid rgba(90,181,232,0.25); }
+.weapons-subsection-title.melee { color: #e8955a; background: rgba(232,149,90,0.1); border: 1px solid rgba(232,149,90,0.25); }
 
-/* ── Load-complete status (green check, then fade) ───────── */
+/* ── Load-complete status (green check, then fade) */
 .load-status.load-complete #load-spinner { display: none; }
 .load-status.load-complete { color: var(--success); }
 
-/* ── Upload Area ─────────────────────────────────────────── */
-.upload-area {
-  border: 2px dashed var(--border-light);
-  border-radius: var(--radius);
-  padding: 20px 12px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-  margin-bottom: 14px;
-  background: rgba(255,255,255,0.02);
-}
-
-.upload-area:hover,
-.upload-area.dragover {
-  border-color: var(--accent);
-  background: rgba(var(--accent-rgb),0.08);
-}
-
-.upload-icon { font-size: 28px; margin-bottom: 6px; }
-.upload-text { font-size: 13px; color: var(--text); margin-bottom: 4px; }
-.upload-subtext { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
-
-/* ── Form Elements ───────────────────────────────────────── */
-.form-group {
-  margin-bottom: 12px;
-}
-
-.form-label {
-  display: block;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-muted);
-  margin-bottom: 5px;
-}
-
-.form-input,
-.form-select {
+/* ── Form Elements */
+.form-group { margin-bottom: 12px; }
+.form-label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 5px; }
+.form-input, .form-select {
   width: 100%;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -332,40 +166,14 @@ ul { list-style: none; }
   padding: 7px 10px;
   font-size: 13px;
   font-family: var(--font);
-  transition: border-color 0.2s;
   outline: none;
 }
-
-.form-input:focus,
-.form-select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.2);
-}
-
+.form-input:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.2); }
 .form-select option { background: var(--panel-bg); }
 
-/* ── Section Label ───────────────────────────────────────── */
-.section-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--border);
-}
-
-/* ── Faction List ────────────────────────────────────────── */
+/* ── Faction List */
 .faction-list { display: flex; flex-direction: column; gap: 6px; }
-
-.faction-list-empty {
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.6;
-  padding: 12px 0;
-}
-
+.faction-list-empty { color: var(--text-muted); font-size: 12px; line-height: 1.6; padding: 12px 0; }
 .faction-item {
   display: flex;
   align-items: center;
@@ -376,24 +184,9 @@ ul { list-style: none; }
   gap: 8px;
   transition: border-color 0.15s;
 }
-
 .faction-item:hover { border-color: var(--border-light); }
-
-.faction-item-info { flex: 1; min-width: 0; }
-
-.faction-item-name {
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.faction-item-count {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
+.faction-item-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.faction-item-count { font-size: 11px; color: var(--text-muted); }
 .faction-item-del {
   background: none;
   border: none;
@@ -406,10 +199,9 @@ ul { list-style: none; }
   transition: color 0.15s, background 0.15s;
   flex-shrink: 0;
 }
-
 .faction-item-del:hover { color: var(--danger); background: rgba(231,76,60,0.15); }
 
-/* ── Panel controls strip (search + filter) ─────────────── */
+/* ── Panel controls strip (search + filter) */
 .panel-controls {
   display: flex;
   flex-direction: column;
@@ -419,38 +211,11 @@ ul { list-style: none; }
   background: var(--panel-bg);
   flex-shrink: 0;
 }
-
 .faction-select { font-size: 12px; padding: 5px 8px; }
 
-/* ── Data footer (upload button) ────────────────────────── */
-.data-footer {
-  display: flex;
-  align-items: center;
-}
-.btn-upload-file { width: 100%; justify-content: center; }
-
-/* ── Panel header: unit count badge ─────────────────────── */
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+/* ── Panel header: unit count badge */
+.panel-header { display: flex; align-items: center; justify-content: space-between; }
 .panel-header h2 { flex: 1; }
-
-/* ── Left panel drag-over highlight ─────────────────────── */
-.panel-left.drag-over {
-  outline: 2px dashed var(--accent);
-  outline-offset: -4px;
-  background: rgba(var(--accent-rgb),0.05);
-}
-
-/* ── Roster Controls (legacy, keep for search-input ref) ── */
-.roster-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .search-input {
   flex: 1;
   background: var(--bg);
@@ -461,25 +226,20 @@ ul { list-style: none; }
   font-size: 13px;
   font-family: var(--font);
   outline: none;
-  transition: border-color 0.2s;
 }
-
 .search-input:focus { border-color: var(--accent); }
 .search-input::placeholder { color: var(--text-muted); }
 
 /* Clear (×) button on the unit-search box — added by
-   js/app/search-clear.js. Lives inside either hero-state.js's
-   `.yaab-search-wrap` (preferred — it already pads the input on the
-   right for the Ctrl-K badge, which is hidden whenever there's text)
-   or, if that's absent, a fallback `.search-input-wrap` we create. */
-.search-input-wrap {
-  flex: 1;
-  position: relative;
-  display: flex;
-}
+ * js/app/search-clear.js. Lives inside either hero-state.js's
+ * `.yaab-search-wrap` (preferred — it already pads the input on the
+ * right for the Ctrl-K badge, which is hidden whenever there's text)
+ * or, if that's absent, a fallback `.search-input-wrap` we create. */
+.search-input-wrap { flex: 1; position: relative; display: flex; }
 .search-input-wrap > .search-input {
   flex: 1;
-  padding-right: 28px; /* room for the × button */
+  padding-right: 28px;
+  /* room for the × button */
 }
 .search-clear {
   position: absolute;
@@ -488,7 +248,8 @@ ul { list-style: none; }
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
-  display: none; /* shown only when the field has text */
+  display: none;
+  /* shown only when the field has text */
   align-items: center;
   justify-content: center;
   padding: 0;
@@ -502,129 +263,33 @@ ul { list-style: none; }
   z-index: 2;
   transition: background 0.12s, color 0.12s;
 }
-.yaab-search-wrap.has-search-value .search-clear,
-.search-input-wrap.has-search-value .search-clear { display: inline-flex; }
-.search-clear:hover {
-  background: var(--accent);
-  color: var(--accent-on, #111);
-}
+.yaab-search-wrap.has-search-value .search-clear, .search-input-wrap.has-search-value .search-clear { display: inline-flex; }
+.search-clear:hover { background: var(--accent); color: var(--accent-on); }
+.unit-count-badge { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
 
-.unit-count-badge {
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-/* ── Unit Grid ───────────────────────────────────────────── */
-.unit-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 10px;
-}
-
-.roster-empty {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-muted);
-}
-
+/* ── Unit Grid */
+.unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.roster-empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); }
 .roster-empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
 .roster-empty p { margin-bottom: 6px; }
 .roster-empty .muted { font-size: 12px; }
 
-/* ── Unit Cards ──────────────────────────────────────────── */
-.unit-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, transform 0.1s, box-shadow 0.15s;
-  position: relative;
-  overflow: hidden;
-  user-select: none;
-}
-
-.unit-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 3px; height: 100%;
-  background: var(--accent);
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.unit-card:hover {
-  border-color: var(--accent);
-  background: var(--card-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow);
-}
-
-.unit-card:hover::before { opacity: 1; }
-.unit-card:active { transform: translateY(0); box-shadow: none; }
-
-.unit-card.selected {
-  border-color: var(--accent);
-  background: var(--card-hover);
-  box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.3);
-}
-.unit-card.selected::before { opacity: 1; }
-
-.unit-card-faction {
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/* ── Unit Cards */
+.unit-card { cursor: pointer; overflow: hidden; user-select: none; }
+.unit-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--accent); opacity: 0; }
+.unit-card:hover { background: var(--card-hover); }
+.unit-card:hover::before, .unit-card.selected::before { opacity: 1; }
+.unit-card-faction { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Chapter badge (SM parent roster units whose datasheet is really
-   chapter-locked — Venerable Dreadnought = Space Wolves, Death Company, …).
-   `.keyword-tag` is already accent-token driven, so this just nudges the
-   baseline to sit next to the plain faction text; no new colours. */
-.unit-card-chapter-badge {
-  vertical-align: 1px;
-  margin-left: 2px;
-}
-
-.unit-card-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 8px;
-  gap: 4px;
-  min-width: 0;
-}
-
-.unit-card-name {
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.3;
-  flex: 0 0 auto;
-  width: 100%;
-  min-width: 0;
-  overflow-wrap: break-word;
-}
-
-.unit-card-pts {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent);
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
-
-.unit-card-keywords {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  margin-bottom: 8px;
-}
-
+ * chapter-locked — Venerable Dreadnought = Space Wolves, Death Company, …).
+ * `.keyword-tag` is already accent-token driven, so this just nudges the
+ * baseline to sit next to the plain faction text; no new colours. */
+.unit-card-chapter-badge { vertical-align: 1px; margin-left: 2px; }
+.unit-card-header { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 8px; gap: 4px; min-width: 0; }
+.unit-card-name { font-size: 14px; line-height: 1.2; flex: 0 0 auto; width: 100%; min-width: 0; overflow-wrap: break-word; }
+.unit-card-pts { font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; flex: 0 0 auto; }
+.unit-card-keywords { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 8px; }
 .keyword-tag {
   font-size: 9px;
   text-transform: uppercase;
@@ -635,53 +300,25 @@ ul { list-style: none; }
   border-radius: 3px;
   padding: 1px 5px;
 }
+.unit-card-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; text-align: center; }
+.stat-cell { background: rgba(0,0,0,0.3); border-radius: 3px; padding: 3px 2px; }
+.stat-name { font-size: 8px; color: var(--text-muted); text-transform: uppercase; display: block; }
+.stat-value { font-size: 11px; color: var(--text); display: block; }
 
-.unit-card-stats {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 2px;
-  text-align: center;
-}
-
-.stat-cell {
-  background: rgba(0,0,0,0.3);
-  border-radius: 3px;
-  padding: 3px 2px;
-}
-
-.stat-name {
-  font-size: 8px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  display: block;
-}
-
-.stat-value {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text);
-  display: block;
-}
-
-/* ── Army List ───────────────────────────────────────────── */
-.army-meta {
-  display: grid;
-  grid-template-columns: 1fr 120px;
-  gap: 10px;
-  margin-bottom: 12px;
-}
+/* ── Army List */
+.army-meta { display: grid; grid-template-columns: 1fr 120px; gap: 10px; margin-bottom: 12px; }
 
 /* Collapsible "Army setup" group: army name, points limit, faction,
-   chapter, detachment. Closed once the user is past setup so the entry
-   list has more room. */
+ * chapter, detachment. Closed once the user is past setup so the entry
+ * list has more room. */
 .army-setup-section {
   margin-bottom: 12px;
-  border: 1px solid var(--border, #2a2a2a);
-  border-radius: var(--radius, 6px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   background: rgba(255,255,255,0.02);
   /* Same flex pin as .army-rules-collapsible — keep natural height
-     inside the mobile panel-body's flex column so siblings don't
-     squash it. */
+   * inside the mobile panel-body's flex column so siblings don't
+   * squash it. */
   flex-shrink: 0;
 }
 .army-setup-section[open] { background: rgba(255,255,255,0.03); }
@@ -694,30 +331,24 @@ ul { list-style: none; }
   font-weight: 600;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: var(--text-muted, #888);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 8px;
-  border-radius: var(--radius, 6px);
+  border-radius: var(--radius);
 }
 .army-setup-summary::-webkit-details-marker { display: none; }
 .army-setup-summary::before {
-  content: '\25B8'; /* ▸ */
+  content: '\25B8';
+  /* ▸ */
   font-size: 10px;
   transition: transform 0.15s ease;
   color: var(--accent);
 }
 .army-setup-section[open] > .army-setup-summary::before { transform: rotate(90deg); }
 .army-setup-summary:hover { color: var(--text); }
-.army-setup-body {
-  padding: 8px 12px 12px;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+.army-setup-body { padding: 8px 12px 12px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 10px; }
 .army-setup-body .form-group { margin: 0; }
-
 .points-summary {
   background: rgba(var(--accent-rgb),0.1);
   border: 1px solid rgba(var(--accent-rgb),0.3);
@@ -725,54 +356,13 @@ ul { list-style: none; }
   padding: 12px 14px;
   margin-bottom: 14px;
 }
-
-.points-display {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-
-.points-current {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--accent);
-  line-height: 1;
-}
-
-.points-separator { font-size: 20px; color: var(--text-muted); }
-
-.points-limit { font-size: 20px; font-weight: 600; color: var(--text); }
-
-.points-label { font-size: 13px; color: var(--text-muted); margin-left: 4px; }
-
-.points-bar-wrap {
-  height: 6px;
-  background: rgba(0,0,0,0.4);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 4px;
-}
-
-.points-bar {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 3px;
-  width: 0%;
-  transition: width 0.3s ease, background 0.3s;
-}
-
+.points-current { font-size: 28px; color: var(--accent); line-height: 1; }
+.points-limit { font-size: 20px; color: var(--text); }
+.points-bar { height: 100%; background: var(--accent); border-radius: 3px; width: 0%; }
 .points-bar.over-limit { background: var(--danger); }
 .points-bar.near-limit { background: var(--warning); }
 
-.points-bar-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-/* ── Army Entries ────────────────────────────────────────── */
+/* ── Army Entries */
 .army-entries-header {
   display: grid;
   grid-template-columns: 1fr 44px 50px 44px 28px;
@@ -785,50 +375,11 @@ ul { list-style: none; }
   border-bottom: 1px solid var(--border);
   margin-bottom: 4px;
 }
-
-.army-entry-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.army-list-empty {
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.7;
-  padding: 20px 8px;
-  text-align: center;
-}
-
-.army-entry {
-  display: grid;
-  grid-template-columns: 1fr 44px 50px 44px 28px;
-  align-items: center;
-  gap: 4px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 6px 8px;
-  font-size: 12px;
-  transition: border-color 0.15s;
-}
-
-.army-entry:hover { border-color: var(--border-light); }
-
-.army-entry-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-weight: 600;
-}
-
-.army-entry-pts {
-  text-align: right;
-  color: var(--text-muted);
-  font-size: 11px;
-}
-
+.army-entry-list { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.army-list-empty { color: var(--text-muted); font-size: 12px; line-height: 1.7; padding: 20px 8px; text-align: center; }
+.army-entry { display: grid; grid-template-columns: 1fr 44px 50px 44px 28px; align-items: center; gap: 4px; font-size: 12px; }
+.army-entry-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.army-entry-pts { text-align: right; color: var(--text-muted); font-size: 11px; }
 .army-entry-qty input {
   width: 42px;
   background: var(--bg);
@@ -840,16 +391,8 @@ ul { list-style: none; }
   text-align: center;
   outline: none;
 }
-
 .army-entry-qty input:focus { border-color: var(--accent); }
-
-.army-entry-total {
-  text-align: right;
-  font-weight: 700;
-  color: var(--accent);
-  font-size: 12px;
-}
-
+.army-entry-total { text-align: right; color: var(--accent); font-size: 12px; }
 .army-entry-remove {
   background: none;
   border: none;
@@ -862,40 +405,19 @@ ul { list-style: none; }
   transition: color 0.15s, background 0.15s;
   text-align: center;
 }
+.army-entry-remove:hover { color: var(--danger); background: rgba(231,76,60,0.15); }
+.army-entry-squad { font-size: 10px; font-weight: 400; color: var(--text-muted); }
+.detail-pts-label { font-size: 14px; font-weight: 700; color: var(--accent); padding: 0 4px; align-self: center; }
 
-.army-entry-remove:hover {
-  color: var(--danger);
-  background: rgba(231,76,60,0.15);
-}
+/* ── Army Toolbar */
+.army-toolbar { display: flex; flex-wrap: wrap; }
 
-.army-entry-squad {
-  font-size: 10px;
-  font-weight: 400;
-  color: var(--text-muted);
-}
-
-.detail-pts-label {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--accent);
-  padding: 0 4px;
-  align-self: center;
-}
-
-/* ── Army Toolbar ────────────────────────────────────────── */
-.army-toolbar {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-/* ── Buttons ─────────────────────────────────────────────── */
+/* ── Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 16px;
   border-radius: var(--radius);
   font-family: var(--font);
   font-size: 13px;
@@ -905,48 +427,21 @@ ul { list-style: none; }
   border: 1px solid transparent;
   white-space: nowrap;
   outline: none;
+  box-sizing: border-box;
+  height: 32px;
+  line-height: 1.15;
+  vertical-align: middle;
 }
-
 .btn:active { transform: scale(0.97); }
-
-.btn-accent {
-  background: var(--accent);
-  color: var(--accent-on);
-  border-color: var(--accent);
-}
-
-.btn-accent:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-}
-
-.btn-outline {
-  background: transparent;
-  color: var(--text);
-  border-color: var(--border-light);
-}
-
-.btn-outline:hover {
-  background: rgba(255,255,255,0.05);
-  border-color: var(--text-muted);
-}
-
-.btn-sm {
-  padding: 5px 10px;
-  font-size: 12px;
-  flex: 1;
-  min-width: 0;
-}
-
-.btn-danger {
-  background: var(--danger);
-  color: #fff;
-  border-color: var(--danger);
-}
-
+.btn-accent { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
+.btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-outline { background: transparent; color: var(--text); border-color: var(--border-light); }
+.btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--text-muted); }
+.btn-sm { padding: 5px 10px; font-size: 12px; flex: 1; min-width: 0; }
+.btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
 .btn-danger:hover { background: #c0392b; }
 
-/* ── Modals ──────────────────────────────────────────────── */
+/* ── Modals */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -958,9 +453,7 @@ ul { list-style: none; }
   padding: 20px;
   backdrop-filter: blur(2px);
 }
-
 .modal-backdrop[hidden] { display: none; }
-
 .modal {
   background: var(--panel-bg);
   border: 1px solid var(--border);
@@ -971,8 +464,8 @@ ul { list-style: none; }
   width: 100%;
   max-height: 80vh;
   /* dvh shrinks when the iOS Safari on-screen keyboard appears, so the
-     modal (and its submit button in .modal-footer) stays in the visible
-     area. Older browsers fall back to the vh value above. */
+   * modal (and its submit button in .modal-footer) stays in the visible
+   * area. Older browsers fall back to the vh value above. */
   max-height: 80dvh;
   display: flex;
   flex-direction: column;
@@ -980,39 +473,19 @@ ul { list-style: none; }
 }
 
 /* Narrow viewports: anchor to the top so the keyboard popping up doesn't
-   push the modal off-screen, and tighten padding to give the form room. */
+ * push the modal off-screen, and tighten padding to give the form room. */
 @media (max-width: 480px) {
-  .modal-backdrop {
-    align-items: flex-start;
-    padding: 12px;
-  }
+  .modal-backdrop { align-items: flex-start; padding: 12px; }
 }
-
-.modal-unit-detail { max-width: 640px; }
-
 @keyframes modal-in {
   from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.modal-header h3 {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-}
-
+.modal-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; min-width: 0; }
+.modal-header h3 { font-size: 17px; color: var(--text); }
 .modal-close {
   /* A real box: >= 32px hit area and a visible border, so the x reads as a
-     control rather than a stray glyph (mobile.css grows it to 44px). */
+   * control rather than a stray glyph (mobile.css grows it to 44px). */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1028,28 +501,13 @@ ul { list-style: none; }
   border-radius: var(--radius);
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-
 .modal-close:hover { color: var(--text); border-color: var(--border-light); background: rgba(255, 255, 255, 0.05); }
+.modal-body { overflow-y: auto; flex: 1; }
+.modal-footer { border-top: 1px solid var(--border); display: flex; align-items: center; flex-shrink: 0; }
 
-.modal-body {
-  padding: 16px 20px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.modal-footer {
-  padding: 12px 20px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-/* ── Saved Army List ─────────────────────────────────────── */
+/* ── Saved Army List */
 .saved-army-list { display: flex; flex-direction: column; gap: 8px; }
-
 .saved-army-empty { color: var(--text-muted); font-size: 13px; padding: 12px 0; }
-
 .saved-army-item {
   display: flex;
   align-items: center;
@@ -1058,27 +516,14 @@ ul { list-style: none; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 10px 12px;
+  min-width: 0;
 }
-
-.saved-army-info { flex: 1; min-width: 0; }
-
-.saved-army-name {
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.saved-army-meta {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
+.saved-army-info { min-width: 0; }
+.saved-army-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.saved-army-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .saved-army-actions { display: flex; gap: 6px; }
 
-/* ── Unit Detail Panel (right panel) ────────────────────── */
+/* ── Unit Detail Panel (right panel) */
 .unit-detail-empty {
   display: flex;
   flex-direction: column;
@@ -1093,9 +538,7 @@ ul { list-style: none; }
 .unit-detail-empty-icon { font-size: 48px; opacity: 0.3; margin-bottom: 8px; }
 .unit-detail-empty p { font-size: 14px; }
 .unit-detail-empty .muted { font-size: 12px; max-width: 220px; }
-
 .unit-detail-content { display: flex; flex-direction: column; gap: 0; }
-
 .detail-header {
   display: flex;
   justify-content: space-between;
@@ -1108,16 +551,9 @@ ul { list-style: none; }
 .detail-header-main { flex: 1; min-width: 0; }
 
 /* Right-side action stack (points + hook actions + Google button).
-   Centered flex row so children align on the same baseline as the
-   points readout. */
-.detail-header-actions,
-.detail-banner-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
+ * Centered flex row so children align on the same baseline as the
+ * points readout. */
+.detail-header-actions, .detail-banner-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .btn-google-search {
   flex-shrink: 0;
   background: none;
@@ -1132,19 +568,8 @@ ul { list-style: none; }
   transition: opacity 0.15s, border-color 0.15s;
 }
 .btn-google-search:hover { opacity: 1; border-color: var(--border-light); }
-.detail-name {
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.2;
-  margin-bottom: 6px;
-}
-.detail-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-  font-size: 12px;
-}
+.detail-name { font-size: 22px; line-height: 1.15; margin-bottom: 6px; }
+.detail-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; }
 .detail-faction {
   background: rgba(var(--accent-rgb),0.12);
   border: 1px solid rgba(var(--accent-rgb),0.25);
@@ -1155,24 +580,15 @@ ul { list-style: none; }
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.detail-type {
-  color: var(--text-muted);
-  font-style: italic;
-}
+.detail-type { color: var(--text-muted); font-style: italic; }
 .detail-pts {
   font-size: 18px;
   font-weight: 700;
   color: var(--accent);
   /* No margin-left:auto — the parent .detail-header-actions handles
-     spacing via flex-gap; auto-margin pushed siblings out of line. */
+   * spacing via flex-gap; auto-margin pushed siblings out of line. */
 }
-/* Points readout moved onto its own line directly under the unit name, so a
-   multi-tier cost string can't overflow the header's flex action row. */
-.detail-pts-line {
-  display: block;
-  margin: 0 0 6px;
-  line-height: 1.2;
-}
+
 /* 11e per-army-ordinal ("scaling") pricing tiers, under the points line. */
 .detail-ordinal {
   margin: 0 0 8px;
@@ -1184,16 +600,10 @@ ul { list-style: none; }
   font-size: 12px;
   max-width: max-content;
 }
-.detail-ordinal .ordinal-row {
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
-  align-items: baseline;
-}
+.detail-ordinal .ordinal-row { display: flex; gap: 12px; justify-content: space-between; align-items: baseline; }
 .detail-ordinal .ordinal-band { color: var(--text-muted); }
 .detail-ordinal .ordinal-cost { font-weight: 700; font-variant-numeric: tabular-nums; }
 .detail-ordinal .ordinal-up .ordinal-cost { color: var(--accent); }
-
 .detail-add-section {
   background: rgba(var(--accent-rgb),0.07);
   border: 1px solid rgba(var(--accent-rgb),0.2);
@@ -1201,23 +611,11 @@ ul { list-style: none; }
   padding: 10px 12px;
   margin-bottom: 14px;
 }
-.detail-add-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-top: 6px;
-}
-.detail-qty-input { width: 70px; flex-shrink: 0; }
+.detail-add-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
 .detail-add-btn { flex: 1; }
-
-.detail-section {
-  margin-bottom: 16px;
-}
 .detail-section-title {
   font-size: 10px;
-  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
   color: var(--text-muted);
   margin-bottom: 8px;
   padding-bottom: 4px;
@@ -1228,32 +626,16 @@ ul { list-style: none; }
  * El'Jonson, Magnus, etc.). Distinct gold-leaf treatment so it reads
  * as "pick two" rather than always-on rules. Mirrors the cards-mode
  * .dcc-section-head-primarch styling. */
-.detail-section-title-primarch {
-  color: #e7c87a;
-  border-bottom-color: #b89052;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.detail-primarch-hint {
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  color: var(--text-muted);
-  font-style: italic;
-}
+.detail-section-title-primarch { color: #e7c87a; border-bottom-color: #b89052; display: flex; align-items: baseline; gap: 8px; }
+.detail-primarch-hint { font-size: 10px; font-weight: 500; letter-spacing: 0.04em; text-transform: none; color: var(--text-muted); font-style: italic; }
 .detail-section-primarch {
   border: 1px solid rgba(184, 144, 82, 0.4);
   border-radius: 6px;
   padding: 8px 10px 6px;
-  background:
-    linear-gradient(180deg, rgba(184, 144, 82, 0.07) 0%, transparent 60%);
+  background: linear-gradient(180deg, rgba(184, 144, 82, 0.07) 0%, transparent 60%);
   margin-top: 12px;
 }
-.detail-section-primarch .detail-section-title-primarch {
-  border-bottom-color: rgba(184, 144, 82, 0.5);
-}
+.detail-section-primarch .detail-section-title-primarch { border-bottom-color: rgba(184, 144, 82, 0.5); }
 .detail-ability-primarch {
   /* Subtle inner stripe so each option reads as a card-back-style
    * pickable item. */
@@ -1261,23 +643,10 @@ ul { list-style: none; }
   padding-left: 10px;
   margin-left: 2px;
 }
-
-.detail-stats-row {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 4px;
-  text-align: center;
-}
-.detail-stat-cell {
-  background: rgba(0,0,0,0.4);
-  border-radius: 4px;
-  padding: 8px 4px;
-}
-.detail-stat-cell .stat-name  { font-size: 10px; }
+.detail-stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; text-align: center; }
+.detail-stat-cell { background: rgba(0,0,0,0.4); border-radius: 4px; padding: 8px 4px; }
+.detail-stat-cell .stat-name { font-size: 10px; }
 .detail-stat-cell .stat-value { font-size: 16px; }
-
-.detail-table-wrap { overflow-x: auto; }
-
 .detail-ability {
   font-size: 12px;
   margin-bottom: 6px;
@@ -1291,11 +660,7 @@ ul { list-style: none; }
 .detail-ability-desc { color: var(--text-muted); }
 
 /* Core abilities — system-wide rules displayed as name plaques */
-.core-abilities-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+.core-abilities-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .core-ability-tag {
   font-size: 11px;
   font-weight: 700;
@@ -1308,9 +673,6 @@ ul { list-style: none; }
   border: 1px solid rgba(168,216,168,0.25);
   display: inline-block;
 }
-
-/* Weapon keyword tags in weapons table */
-.weapon-keywords-cell { white-space: normal; }
 .weapon-kw-tag {
   display: inline-block;
   font-size: 10px;
@@ -1321,10 +683,7 @@ ul { list-style: none; }
   margin: 1px 2px;
   white-space: nowrap;
 }
-.weapon-kw-tag.has-tooltip {
-  cursor: help;
-  border-color: rgba(90,181,232,0.4);
-}
+.weapon-kw-tag.has-tooltip { cursor: help; border-color: rgba(90,181,232,0.4); }
 
 /* Global tooltip (JS-positioned, position: fixed — never clipped) */
 .global-tooltip {
@@ -1340,56 +699,6 @@ ul { list-style: none; }
   max-width: 300px;
   pointer-events: none;
   box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-  white-space: normal;
-}
-
-/* Wargear options bullet list */
-.wargear-option-list {
-  list-style: disc;
-  padding-left: 18px;
-  font-size: 12px;
-  line-height: 1.6;
-}
-.wargear-option-item {
-  margin-bottom: 6px;
-  color: var(--text);
-}
-.wargear-choice-list {
-  list-style: circle;
-  padding-left: 20px;
-  margin-top: 3px;
-  color: var(--text-muted);
-}
-.wargear-model-ctx {
-  list-style: none;
-  margin-bottom: 8px;
-}
-.wargear-model-name {
-  font-weight: 600;
-  color: var(--accent);
-}
-.wargear-suboption-list {
-  list-style: none;
-  padding-left: 14px;
-  margin-top: 4px;
-}
-.wargear-suboption-header {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  margin-top: 4px;
-  margin-bottom: 2px;
-}
-.wargear-choice-item {
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-.wargear-choice-item::before {
-  content: '• ';
-  color: var(--accent);
-  opacity: 0.6;
 }
 
 /* Redesigned Loadout section */
@@ -1403,111 +712,22 @@ ul { list-style: none; }
   border-radius: 4px;
   display: inline-block;
 }
-.wl-model-block {
-  margin-bottom: 12px;
-  padding: 8px 10px;
-  border-left: 2px solid var(--accent);
-  background: var(--surface2);
-  border-radius: 0 4px 4px 0;
-}
-.wl-model-header {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-.wl-model-name {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text);
-}
-.wl-model-count {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-.wl-defaults {
-  font-size: 12px;
-  margin-bottom: 6px;
-  line-height: 1.5;
-}
-.wl-defaults-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  margin-right: 4px;
-}
-.wl-defaults-weapons {
-  color: var(--text);
-}
-.wl-suboption {
-  margin-top: 6px;
-}
-.wl-suboption-title {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  margin-bottom: 3px;
-}
-.wl-choice-list {
-  list-style: none;
-  padding-left: 10px;
-  margin: 2px 0 0 0;
-}
-.wl-choice-list li {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
-.wl-choice-list li::before {
-  content: '• ';
-  color: var(--accent);
-  opacity: 0.6;
-}
-.wl-choice-group {
-  margin-bottom: 10px;
-}
-.wl-choice-group-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 3px;
-}
-.wl-max {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 400;
-  margin-left: 4px;
-}
-
-
-/* ── Unit Detail Modal (legacy — keep weapons-table styles) ─ */
-.unit-detail-meta {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 14px;
-}
-
-.unit-stats-table {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 4px;
-  margin-bottom: 16px;
-}
-
-.unit-stats-table .stat-cell {
-  text-align: center;
-  background: rgba(0,0,0,0.4);
-  border-radius: 4px;
-  padding: 8px 4px;
-}
-
-.unit-stats-table .stat-name { font-size: 10px; }
-.unit-stats-table .stat-value { font-size: 16px; }
-
+.wl-model-block { margin-bottom: 12px; padding: 8px 10px; border-left: 2px solid var(--accent); background: var(--surface2); border-radius: 0 4px 4px 0; }
+.wl-model-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.wl-model-name { font-weight: 600; font-size: 13px; color: var(--text); }
+.wl-model-count { font-size: 11px; color: var(--text-muted); }
+.wl-defaults { font-size: 12px; margin-bottom: 6px; line-height: 1.5; }
+.wl-defaults-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-right: 4px; }
+.wl-defaults-weapons { color: var(--text); }
+.wl-suboption { margin-top: 6px; }
+.wl-suboption-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 3px; }
+.wl-choice-list { list-style: none; padding-left: 10px; margin: 2px 0 0 0; }
+.wl-choice-list li { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+.wl-choice-list li::before { content: '• '; color: var(--accent); opacity: 0.6; }
+.wl-choice-group { margin-bottom: 10px; }
+.wl-choice-group-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.wl-max { font-size: 11px; color: var(--text-muted); font-weight: 400; margin-left: 4px; }
 .weapons-section { margin-top: 14px; }
-
 .weapons-section h4 {
   font-size: 11px;
   text-transform: uppercase;
@@ -1518,46 +738,8 @@ ul { list-style: none; }
   border-bottom: 1px solid var(--border);
 }
 
-.weapons-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-
-.weapons-table th {
-  text-align: left;
-  padding: 4px 6px;
-  color: var(--text-muted);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
-}
-
-.weapons-table td {
-  padding: 5px 6px;
-  border-bottom: 1px solid rgba(58,58,58,0.5);
-}
-
-.weapons-table tr:last-child td { border-bottom: none; }
-
-.weapons-table tr:hover td { background: rgba(255,255,255,0.03); }
-
-.weapon-type-ranged { color: #5ab5e8; }
-.weapon-type-melee  { color: #e8955a; }
-
-/* ── Toast ───────────────────────────────────────────────── */
-.toast-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 2000;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
-}
-
+/* ── Toast */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .toast {
   background: var(--panel-alt);
   border: 1px solid var(--border);
@@ -1567,64 +749,52 @@ ul { list-style: none; }
   font-size: 13px;
   color: var(--text);
   box-shadow: var(--shadow);
-  animation: toast-in 0.2s ease;
   max-width: 300px;
   pointer-events: none;
 }
-
 .toast.toast-success { border-left-color: var(--success); }
-.toast.toast-error   { border-left-color: var(--danger); }
+.toast.toast-error { border-left-color: var(--danger); }
 .toast.toast-warning { border-left-color: var(--warning); }
-
 @keyframes toast-in {
   from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
+  to { opacity: 1; transform: translateX(0); }
 }
-
 @keyframes toast-out {
   from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(20px); }
+  to { opacity: 0; transform: translateX(20px); }
 }
-
 .toast.fade-out { animation: toast-out 0.3s ease forwards; }
 
-/* ── Utility ─────────────────────────────────────────────── */
+/* ── Utility */
 .muted { color: var(--text-muted); }
-.text-accent { color: var(--accent); }
 .hidden { display: none !important; }
 
-/* ── Responsive ──────────────────────────────────────────── */
+/* ── Responsive */
 @media (max-width: 1200px) {
   :root { --col-left: 290px; --col-right: 360px; }
 }
 
 /* Stacked-panel layout for the narrow tablet band (822-860px) that is too
-   small for the 3-column grid but too wide for the tab-bar mobile layout in
-   mobile.css. Army, Units and Details stack top to bottom and the page
-   scrolls. Bounded to (821px, 860px) so the `height: auto` /
-   `max-height: 500px` here don't leak into <=820px and collapse the mobile
-   panel (which left the army-toolbar floating mid-screen instead of pinned
-   above the tab bar).
-
-   Why this is a flex column with !important and ids, not the old
-   `grid-template-columns: 1fr !important`: the panels carry
-   `grid-row: 2` (build-mode.css) so in a one-column grid they were forced
-   into row 2 and auto-placed across IMPLICIT columns - the Units and Details
-   columns took their content width (501 + 338 px) and the 1fr column that
-   held the Army panel was left with ~0px. Measured live at 840px:
-   `0px 0px 501px 0px 338px`, Army panel width 0, nothing else reached it.
-   A flex column has no grid tracks to land in, and the !important + id
-   selectors also beat expand-pane.css's `!important` column templates and
-   its opacity:0 / pointer-events:none collapsed state, so a pane that was
-   expanded at a wider width cannot hide the others here. */
+ * small for the 3-column grid but too wide for the tab-bar mobile layout in
+ * mobile.css. Army, Units and Details stack top to bottom and the page
+ * scrolls. Bounded to (821px, 860px) so the `height: auto` /
+ * `max-height: 500px` here don't leak into <=820px and collapse the mobile
+ * panel (which left the army-toolbar floating mid-screen instead of pinned
+ * above the tab bar).
+ * Why this is a flex column with !important and ids, not the old
+ * `grid-template-columns: 1fr !important`: the panels carry
+ * `grid-row: 2` (build-mode.css) so in a one-column grid they were forced
+ * into row 2 and auto-placed across IMPLICIT columns - the Units and Details
+ * columns took their content width (501 + 338 px) and the 1fr column that
+ * held the Army panel was left with ~0px. Measured live at 840px:
+ * `0px 0px 501px 0px 338px`, Army panel width 0, nothing else reached it.
+ * A flex column has no grid tracks to land in, and the !important + id
+ * selectors also beat expand-pane.css's `!important` column templates and
+ * its opacity:0 / pointer-events:none collapsed state, so a pane that was
+ * expanded at a wider width cannot hide the others here. */
 @media (min-width: 821px) and (max-width: 860px) {
   html, body { overflow: auto; }
-  body #build-mode,
-  body.build-mode-enhanced #build-mode {
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-  }
+  body #build-mode, body.build-mode-enhanced #build-mode { height: auto !important; min-height: 0 !important; overflow: visible !important; }
   body #app-main.app-main {
     display: flex !important;
     flex-direction: column;
@@ -1634,9 +804,9 @@ ul { list-style: none; }
     min-height: 0 !important;
     overflow: visible !important;
   }
+
   /* Drag-resizing and pane-expanding make no sense in a single column. */
-  body #app-main.app-main > .resize-handle { display: none !important; }
-  body #app-main.app-main .panel-expand-btn { display: none !important; }
+  body #app-main.app-main > .resize-handle, body #app-main.app-main .panel-expand-btn { display: none !important; }
   body #app-main.app-main .panel-header h2 { pointer-events: none; }
   body #app-main.app-main > .panel {
     flex: 0 0 auto !important;
@@ -1653,36 +823,37 @@ ul { list-style: none; }
   .panel-body { max-height: 500px; overflow-y: auto; }
 }
 
-/* ── Loading Spinner ─────────────────────────────────────── */
+/* ── Loading Spinner */
 .spinner {
   display: inline-block;
-  width: 16px; height: 16px;
+  width: 16px;
+  height: 16px;
   border: 2px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
   vertical-align: middle;
 }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Points Over Limit ───────────────────────────────────── */
+/* ── Points Over Limit */
 .points-over .points-current { color: var(--danger); }
 
 /* BSData browse modal styles removed — data now auto-loads */
-
-/* ── Army Rules: collapsible wrapper ─────────────────────── */
+/* ── Army Rules: collapsible wrapper */
 .army-rules-collapsible {
   margin-bottom: 12px;
-  border: 1px solid var(--border, #2a2a2a);
-  border-radius: var(--radius, 6px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   background: rgba(255,255,255,0.02);
   /* Pin to natural height. On mobile the panel-body is a flex column
-     and the army-entry-list claims `flex: 1 0 auto` (mobile.css). Without
-     this, the rules collapsible would default to flex-shrink: 1 and the
-     entry list would squeeze it below its content height — the strat
-     list (uncapped) then overflowed and rendered visually under the
-     army units. */
+   * and the army-entry-list claims `flex: 1 0 auto` (mobile.css). Without
+   * this, the rules collapsible would default to flex-shrink: 1 and the
+   * entry list would squeeze it below its content height — the strat
+   * list (uncapped) then overflowed and rendered visually under the
+   * army units. */
   flex-shrink: 0;
 }
 .army-rules-collapsible[open] { background: rgba(255,255,255,0.03); }
@@ -1695,65 +866,52 @@ ul { list-style: none; }
   font-weight: 600;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: var(--text-muted, #888);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 8px;
-  border-radius: var(--radius, 6px);
+  border-radius: var(--radius);
 }
 .army-rules-summary::-webkit-details-marker { display: none; }
 .army-rules-summary::before {
-  content: '\25B8'; /* ▸ */
+  content: '\25B8';
+  /* ▸ */
   font-size: 10px;
   transition: transform 0.15s ease;
   color: var(--accent);
 }
 .army-rules-collapsible[open] > .army-rules-summary::before { transform: rotate(90deg); }
 .army-rules-summary:hover { color: var(--text); }
-/* Explicit collapse: when <details> is closed, hide non-summary children.
-   The UA default does this but headless chromium can miss it; making it
-   explicit is also defensive against any inner-element rule that might
-   override the UA stylesheet. */
-.army-rules-collapsible:not([open]) > *:not(summary) {
-  display: none !important;
-}
-.army-rules-collapsible > .army-rules-section {
-  padding: 8px 12px 12px;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  margin-bottom: 0;
-}
 
-/* ── Army Rules: sub-sections ───────────────────────── */
-.army-rules-subsection { margin-bottom: 10px; }
+/* Explicit collapse: when <details> is closed, hide non-summary children.
+ * The UA default does this but headless chromium can miss it; making it
+ * explicit is also defensive against any inner-element rule that might
+ * override the UA stylesheet. */
+.army-rules-collapsible:not([open]) > *:not(summary) { display: none !important; }
+.army-rules-collapsible > .army-rules-section { padding: 8px 12px 12px; border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 0; }
 .army-rules-subsection:last-child { margin-bottom: 0; }
 
 /* Stratagems sections render at full height — no inner scroll cap. The
-   collapsible starts minimized, so when the user opens it they want to
-   see every strat at once and use the page's own scroll. The class is
-   kept on markup/JS as a no-op so existing call sites still work. */
-.army-rules-list-scroll {
-  padding-right: 4px;
-}
+ * collapsible starts minimized, so when the user opens it they want to
+ * see every strat at once and use the page's own scroll. The class is
+ * kept on markup/JS as a no-op so existing call sites still work. */
+.army-rules-list-scroll { padding-right: 4px; }
 
-/* ── Stratagem detail: WHEN / TARGET / EFFECT layout ─────────────────
-   GW datacards split a stratagem into labelled clauses (WHEN, TARGET,
-   EFFECT, RESTRICTIONS). renderRuleDetail parses the description and
-   emits one .strat-section per clause; the styling below puts the
-   label on its own line in the accent colour and indents the body
-   text so each clause reads as a self-contained block. */
-.strat-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+/* ── Stratagem detail: WHEN / TARGET / EFFECT layout
+ * GW datacards split a stratagem into labelled clauses (WHEN, TARGET,
+ * EFFECT, RESTRICTIONS). renderRuleDetail parses the description and
+ * emits one .strat-section per clause; the styling below puts the
+ * label on its own line in the accent colour and indents the body
+ * text so each clause reads as a self-contained block. */
+.strat-sections { display: flex; flex-direction: column; gap: 10px; }
 .strat-section {
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 8px 10px;
-  border-left: 2px solid var(--accent, #c8c8c8);
+  border-left: 2px solid var(--accent);
   background: rgba(255, 255, 255, 0.025);
-  border-radius: 0 var(--radius, 6px) var(--radius, 6px) 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
 }
 .strat-section-label {
   font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
@@ -1761,44 +919,24 @@ ul { list-style: none; }
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--accent, #c8c8c8);
+  color: var(--accent);
 }
-.strat-section-text {
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--text, #e6e6e6);
-}
-.strat-section-preface {
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--text-muted, #aaa);
-  font-style: italic;
-  margin: 0 0 4px 0;
-}
-.strat-section-empty {
-  font-size: 13px;
-  color: var(--text-muted, #888);
-}
+.strat-section-text { font-size: 13px; line-height: 1.55; color: var(--text); }
+.strat-section-preface { font-size: 13px; line-height: 1.55; color: var(--text-muted); font-style: italic; margin: 0 0 4px 0; }
+.strat-section-empty { font-size: 13px; color: var(--text-muted); }
 
 /* Placeholder shown inside the always-visible army-rules-section when no
-   faction/detachment is yet selected. Compact, muted, single line. */
-.army-rules-empty {
-  padding: 6px 8px;
-  font-size: 12px;
-  color: var(--text-muted, #888);
-  font-style: italic;
-}
+ * faction/detachment is yet selected. Compact, muted, single line. */
+.army-rules-empty { padding: 6px 8px; font-size: 12px; color: var(--text-muted); font-style: italic; }
 
 /* The panel-footer Army-toolbar (New/Save/Load/Import/Export buttons) was
-   moved into topbar menus. Buttons stay in the DOM so existing event
-   handlers, command-palette references, and activity-log click delegation
-   keep working untouched — but the visual footer is gone. */
-.panel-footer.army-toolbar {
-  display: none !important;
-}
+ * moved into topbar menus. Buttons stay in the DOM so existing event
+ * handlers, command-palette references, and activity-log click delegation
+ * keep working untouched — but the visual footer is gone. */
+.panel-footer.army-toolbar { display: none !important; }
 
 /* Inline stratagem CP badge (separate from the modal-internal
-   .stratagem-cp-badge so the styling can drift independently). */
+ * .stratagem-cp-badge so the styling can drift independently). */
 .cp-badge {
   font-size: 10px;
   font-weight: 700;
@@ -1821,27 +959,8 @@ ul { list-style: none; }
   padding: 1px 5px;
   margin-right: 4px;
 }
-
-.stratagem-cp-badge {
-  font-size: 10px;
-  font-weight: 700;
-  color: #f5c842;
-  background: rgba(245,200,66,0.12);
-  border: 1px solid rgba(245,200,66,0.3);
-  border-radius: 3px;
-  padding: 1px 5px;
-  margin-right: 4px;
-}
-
-.rule-item-right {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
+.rule-item-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .stratagem-item { border-left: 2px solid rgba(245,200,66,0.4); }
-
 .enhancement-pts-badge {
   font-size: 10px;
   font-weight: 700;
@@ -1852,23 +971,11 @@ ul { list-style: none; }
   padding: 1px 5px;
   margin-right: 4px;
 }
+.enhancement-item { border-left: 2px solid rgba(var(--accent-rgb), 0.35); }
 
-.enhancement-item { border-left: 2px solid rgba(var(--accent-rgb, 255,255,255), 0.35); }
-
-/* ── Enhancement checkboxes in unit detail panel ──────────── */
-.detail-enhancements-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.detail-enhancements-empty {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-style: italic;
-  padding: 6px 0;
-}
-
+/* ── Enhancement checkboxes in unit detail panel */
+.detail-enhancements-list { display: flex; flex-direction: column; gap: 6px; }
+.detail-enhancements-empty { font-size: 12px; color: var(--text-muted); font-style: italic; padding: 6px 0; }
 .enhancement-cb-item {
   display: flex;
   align-items: flex-start;
@@ -1880,37 +987,11 @@ ul { list-style: none; }
   background: var(--panel-bg);
   transition: background 0.15s;
 }
-
 .enhancement-cb-item:hover { background: var(--hover-bg); }
-
-.enhancement-cb-item input[type="checkbox"] {
-  margin-top: 3px;
-  flex-shrink: 0;
-  accent-color: var(--accent);
-  width: 14px;
-  height: 14px;
-  cursor: pointer;
-}
-
-.enh-cb-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.enh-cb-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.enh-cb-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-}
-
+.enhancement-cb-item input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+.enh-cb-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.enh-cb-header { display: flex; align-items: center; gap: 8px; }
+.enh-cb-name { font-size: 12px; font-weight: 600; color: var(--text); }
 .enh-cb-pts {
   font-size: 10px;
   font-weight: 700;
@@ -1921,122 +1002,37 @@ ul { list-style: none; }
   padding: 1px 5px;
   flex-shrink: 0;
 }
-
-.enh-cb-desc {
-  font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.45;
-  white-space: pre-wrap;
-}
+.enh-cb-desc { font-size: 11px; color: var(--text-muted); line-height: 1.45; white-space: pre-wrap; }
 
 /* Army entry enhancement badges */
-.army-enh-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  margin-top: 2px;
-}
-
+.army-enh-badges { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
 .army-enh-badge {
   font-size: 9px;
   padding: 1px 4px;
   border-radius: 3px;
-  background: rgba(var(--accent-rgb, 128,128,128), 0.15);
+  background: rgba(var(--accent-rgb), 0.15);
   color: var(--text-muted);
-  border: 1px solid rgba(var(--accent-rgb, 128,128,128), 0.2);
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
   cursor: default;
 }
+.army-enh-pts { font-size: 9px; color: var(--text-muted); margin-left: 2px; }
 
-.army-enh-pts {
-  font-size: 9px;
-  color: var(--text-muted);
-  margin-left: 2px;
-}
 /* "▲N" marker on an army entry total: extra pts from 11e per-army scaling. */
-.army-scaling-pts {
-  font-size: 9px;
-  color: var(--accent);
-  margin-left: 3px;
-  cursor: help;
-  font-variant-numeric: tabular-nums;
-}
+.army-scaling-pts { font-size: 9px; color: var(--accent); margin-left: 3px; cursor: help; font-variant-numeric: tabular-nums; }
 
-/* ── Stratagem detail view ───────────────────────────────── */
-.strat-detail-row {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-  font-size: 13px;
-}
-.strat-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-muted);
-  margin-bottom: 3px;
-}
-.strat-value { color: var(--text); line-height: 1.5; }
-.strat-cp { color: #f5c842; font-size: 14px; font-weight: 700; }
-.stratagem-cp-hero {
-  color: #f5c842;
-  font-size: 16px;
-  font-weight: 700;
-  margin-left: auto;
-}
-
-/* ── Leader section ──────────────────────────────────────── */
-.detail-section-title-leader {
-  color: #5ab5e8;
-  border-bottom-color: rgba(90,181,232,0.3);
-}
-.detail-section-title-ledbby {
-  color: #a8e88a;
-  border-bottom-color: rgba(168,232,138,0.3);
-}
-
+/* ── Leader section */
+.detail-section-title-leader { color: #5ab5e8; border-bottom-color: rgba(90,181,232,0.3); }
+.detail-section-title-ledbby { color: #a8e88a; border-bottom-color: rgba(168,232,138,0.3); }
 .detail-leader-units { margin-bottom: 8px; }
-.detail-leader-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 4px;
-}
-.leader-unit-tag {
-  font-size: 11px;
-  background: rgba(90,181,232,0.1);
-  border: 1px solid rgba(90,181,232,0.3);
-  color: #5ab5e8;
-  border-radius: 3px;
-  padding: 2px 7px;
-}
+.detail-leader-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.leader-unit-tag { font-size: 11px; background: rgba(90,181,232,0.1); border: 1px solid rgba(90,181,232,0.3); color: #5ab5e8; border-radius: 3px; padding: 2px 7px; }
+.detail-ledby-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.ledby-tag { font-size: 11px; background: rgba(168,232,138,0.08); border: 1px solid rgba(168,232,138,0.25); color: #a8e88a; border-radius: 3px; padding: 2px 7px; }
 
-.detail-ledby-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.ledby-tag {
-  font-size: 11px;
-  background: rgba(168,232,138,0.08);
-  border: 1px solid rgba(168,232,138,0.25);
-  color: #a8e88a;
-  border-radius: 3px;
-  padding: 2px 7px;
-}
-
-/* ── Wargear options (bullet list) ─────────────────────────── */
-
+/* ── Wargear options (bullet list) */
 /* === Phase-2 UX additions === */
-
 /* Filter chips row (rendered inside #panel-center .panel-controls, after search) */
-.filter-chips {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-  margin-top: 6px;
-}
+.filter-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 6px; }
 .filter-chip {
   font-size: 11px;
   line-height: 1;
@@ -2044,21 +1040,15 @@ ul { list-style: none; }
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.15);
   background: rgba(255,255,255,0.04);
-  color: var(--text-muted, #bbb);
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
-.filter-chip:hover {
-  background: rgba(255,255,255,0.08);
-  color: var(--text, #eee);
-}
-.filter-chip.active {
-  background: rgba(168,232,138,0.18);
-  border-color: rgba(168,232,138,0.55);
-  color: #d4f5bb;
-}
+.filter-chip:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+.filter-chip.active { background: rgba(168,232,138,0.18); border-color: rgba(168,232,138,0.55); color: #d4f5bb; }
+
 /* Tri-state: a second click on a chip excludes (red strike-through) any
-   units carrying that keyword. Third click clears it. */
+ * units carrying that keyword. Third click clears it. */
 .filter-chip.excluded {
   background: rgba(231, 76, 60, 0.18);
   border-color: rgba(231, 76, 60, 0.55);
@@ -2067,15 +1057,12 @@ ul { list-style: none; }
   text-decoration-color: rgba(231, 76, 60, 0.7);
   text-decoration-thickness: 1.5px;
 }
-.filter-chip.excluded:hover {
-  background: rgba(231, 76, 60, 0.28);
-  color: #ffd6cf;
-}
+.filter-chip.excluded:hover { background: rgba(231, 76, 60, 0.28); color: #ffd6cf; }
 .filter-chips-clear {
   font-size: 14px;
   line-height: 1;
   /* Was 18x18 with margin-left: 2px — under the WCAG 2.2 AA (2.5.8) 24x24
-     floor and effectively flush against the last role chip. */
+   * floor and effectively flush against the last role chip. */
   width: 24px;
   height: 24px;
   display: inline-flex;
@@ -2086,16 +1073,13 @@ ul { list-style: none; }
   border-radius: 50%;
   border: none;
   background: transparent;
-  color: var(--text-muted, #aaa);
+  color: var(--text-muted);
   cursor: pointer;
   opacity: 0.7;
-  position: relative;   /* anchors the touch-target overlay below */
+  position: relative;
+  /* anchors the touch-target overlay below */
 }
-.filter-chips-clear:hover {
-  opacity: 1;
-  background: rgba(255,255,255,0.08);
-  color: var(--text, #eee);
-}
+.filter-chips-clear:hover { opacity: 1; background: rgba(255,255,255,0.08); color: var(--text); }
 
 /* Touch: the Units panel is a primary mobile surface, so this needs a 44x44
  * target. Growing the painted box to 44px would drag the whole wrapping chip
@@ -2105,22 +1089,8 @@ ul { list-style: none; }
  * this button LAST inside .filter-chips — nothing follows it on its line, so
  * the 6px of bleed cannot swallow a chip's own target. */
 @media (max-width: 820px) {
-  .filter-chips-clear {
-    width: 32px;
-    height: 32px;
-    font-size: 17px;
-    margin-left: 10px;
-  }
-  .filter-chips-clear::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-  }
+  .filter-chips-clear { width: 32px; height: 32px; font-size: 17px; margin-left: 10px; }
+  .filter-chips-clear::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; }
 }
 
 /* Unit card: hide the faction line when a specific faction/chapter is selected. */
@@ -2128,197 +1098,96 @@ ul { list-style: none; }
 
 /* Led-By collapse: hide leaders past the 3rd when collapsed. */
 .detail-ledby-list.collapsed > *:nth-child(n+4) { display: none; }
-.detail-ledby-list.collapsed > .ledby-more-pill { display: inline-flex; }
-.detail-ledby-title { cursor: pointer; user-select: none; }
-.ledby-more-pill {
-  display: inline-flex;
-  align-items: center;
-  font-size: 11px;
-  padding: 2px 7px;
-  border-radius: 3px;
-  border: 1px dashed rgba(168,232,138,0.35);
-  background: rgba(168,232,138,0.04);
-  color: #a8e88a;
-  cursor: pointer;
-}
-.ledby-more-pill:hover {
-  background: rgba(168,232,138,0.12);
-  border-style: solid;
-}
 
 /* Enhancement ineligibility (unit lacks Character keyword). */
-.enhancement-cb-item.enhancement-ineligible {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-.enhancement-cb-item.enhancement-ineligible .enhancement-cb {
-  pointer-events: none;
-}
-.enh-cb-ineligible-note {
-  display: inline-block;
-  margin-top: 3px;
-  font-size: 10px;
-  font-style: italic;
-  color: #e2a04a;
-}
+.enhancement-cb-item.enhancement-ineligible { opacity: 0.55; cursor: not-allowed; }
+.enhancement-cb-item.enhancement-ineligible .enhancement-cb { pointer-events: none; }
+.enh-cb-ineligible-note { display: inline-block; margin-top: 3px; font-size: 10px; font-style: italic; color: #e2a04a; }
 
 /* Weapon keyword tag color coding. Background tints with readable text. */
-.weapon-kw-tag.weapon-kw-red {
-  background: rgba(220, 74, 74, 0.18);
-  border-color: rgba(220, 74, 74, 0.45);
-  color: #f2b2b2;
-}
-.weapon-kw-tag.weapon-kw-orange {
-  background: rgba(230, 150, 50, 0.18);
-  border-color: rgba(230, 150, 50, 0.45);
-  color: #f3cc93;
-}
-.weapon-kw-tag.weapon-kw-blue {
-  background: rgba(80, 150, 230, 0.18);
-  border-color: rgba(80, 150, 230, 0.45);
-  color: #b8d6f5;
-}
-.weapon-kw-tag.weapon-kw-purple {
-  background: rgba(170, 110, 220, 0.18);
-  border-color: rgba(170, 110, 220, 0.45);
-  color: #dcc1f2;
-}
+.weapon-kw-tag.weapon-kw-red { background: rgba(220, 74, 74, 0.18); border-color: rgba(220, 74, 74, 0.45); color: #f2b2b2; }
+.weapon-kw-tag.weapon-kw-orange { background: rgba(230, 150, 50, 0.18); border-color: rgba(230, 150, 50, 0.45); color: #f3cc93; }
+.weapon-kw-tag.weapon-kw-blue { background: rgba(80, 150, 230, 0.18); border-color: rgba(80, 150, 230, 0.45); color: #b8d6f5; }
+.weapon-kw-tag.weapon-kw-purple { background: rgba(170, 110, 220, 0.18); border-color: rgba(170, 110, 220, 0.45); color: #dcc1f2; }
 
 /* === Toolbar redesign (two rows + Export dropdown) === */
-.army-toolbar {
-  flex-direction: column;
-  gap: 6px;
-}
-.army-toolbar .toolbar-row {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  align-items: center;
-}
+.army-toolbar { flex-direction: column; }
+.army-toolbar .toolbar-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
 /* Undo our generic .btn-sm { flex:1 } inside the toolbar — we want buttons
-   to size to content so the layout doesn't stretch awkwardly. */
-.army-toolbar .btn-sm {
-  flex: 0 1 auto;
-}
-.army-toolbar .toolbar-spacer {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.army-toolbar .toolbar-icons {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-}
-.army-toolbar .toolbar-extras {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-}
-.army-toolbar .toolbar-extras:empty,
-.army-toolbar .toolbar-icons:empty {
-  display: none;
-}
+ * to size to content so the layout doesn't stretch awkwardly. */
+.army-toolbar .btn-sm { flex: 0 1 auto; }
+.army-toolbar .toolbar-spacer { flex: 1 1 auto; min-width: 0; }
+.army-toolbar .toolbar-icons { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; row-gap: 4px; }
+.army-toolbar .toolbar-extras { display: inline-flex; gap: 6px; align-items: center; }
+.army-toolbar .toolbar-extras:empty, .army-toolbar .toolbar-icons:empty { display: none; }
 
 /* Compact icon button: square-ish, larger glyph, no wide horizontal padding. */
-.btn.btn-icon {
-  padding: 4px 8px;
-  min-width: 30px;
-  font-size: 15px;
-  line-height: 1;
-  font-weight: 500;
-}
+.btn.btn-icon { font-weight: 500; width: 32px; }
 
 /* Dropdown menu — used by Export group in army toolbar. */
-.dropdown {
-  position: relative;
-  display: inline-block;
-  flex: 0 1 auto;
-}
-.dropdown-trigger .caret {
-  font-size: 10px;
-  margin-left: 3px;
-  opacity: 0.7;
-}
+.dropdown { position: relative; display: inline-block; flex: 0 1 auto; }
+.dropdown-trigger .caret { font-size: 10px; margin-left: 3px; opacity: 0.7; }
 .dropdown-menu {
   display: none;
   position: absolute;
   bottom: calc(100% + 6px);
   left: 0;
-  min-width: 180px;
   background: var(--surface);
-  border: 1px solid var(--border-light, rgba(255,255,255,0.12));
-  border-radius: var(--radius, 4px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   padding: 4px;
   z-index: 100;
 }
-.dropdown.open > .dropdown-menu {
-  display: block;
-}
+.dropdown.open > .dropdown-menu { display: block; }
 .dropdown-menu > button {
-  display: block;
   width: 100%;
   text-align: left;
   background: transparent;
   border: none;
-  color: var(--text, #e8e8e8);
+  color: var(--text);
   font: inherit;
   font-size: 12px;
   padding: 7px 10px;
-  border-radius: calc(var(--radius, 4px) - 1px);
+  border-radius: calc(var(--radius) - 1px);
   cursor: pointer;
   white-space: nowrap;
 }
-.dropdown-menu > button:hover,
-.dropdown-menu > button:focus {
-  background: rgba(255, 255, 255, 0.06);
-  outline: none;
-}
-.dropdown-menu .export-extras:empty {
-  display: none;
-}
+.dropdown-menu > button:hover, .dropdown-menu > button:focus { background: rgba(255, 255, 255, 0.06); outline: none; }
+.dropdown-menu .export-extras:empty { display: none; }
 .dropdown-menu .export-extras > button {
-  display: block;
   width: 100%;
   text-align: left;
   background: transparent;
   border: none;
-  color: var(--text, #e8e8e8);
+  color: var(--text);
   font: inherit;
   font-size: 12px;
   padding: 7px 10px;
-  border-radius: calc(var(--radius, 4px) - 1px);
+  border-radius: calc(var(--radius) - 1px);
   cursor: pointer;
   white-space: nowrap;
 }
-.dropdown-menu .export-extras > button:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
+.dropdown-menu .export-extras > button:hover { background: rgba(255, 255, 255, 0.06); }
 
 /* === Toolbar overflow guards (narrow panel widths) === */
 .panel-footer {
   min-width: 0;
   /* NO overflow:hidden — the Export dropdown menu is absolutely
-     positioned above the trigger (`bottom: calc(100% + 6px)`) and any
-     hidden overflow on an ancestor clips the upper menu items. Button
-     text is already clamped by max-width + ellipsis below, which is
-     what actually prevents toolbar overflow. */
+   * positioned above the trigger (`bottom: calc(100% + 6px)`) and any
+   * hidden overflow on an ancestor clips the upper menu items. Button
+   * text is already clamped by max-width + ellipsis below, which is
+   * what actually prevents toolbar overflow. */
+  overflow: visible;
 }
-.army-toolbar,
-.army-toolbar .toolbar-row {
-  min-width: 0;
-}
+.army-toolbar, .army-toolbar .toolbar-row { min-width: 0; }
+
 /* Ellipsize overly long labels instead of pushing off the panel. */
-.army-toolbar .btn-sm {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.army-toolbar .btn-sm { max-width: 100%; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; height: 28px; }
+
 /* Don't let the dropdown menu demand more than the panel width. */
-.dropdown-menu {
-  max-width: calc(var(--col-left, 330px) - 20px);
-  min-width: min(180px, calc(var(--col-left, 330px) - 20px));
-}
+.dropdown-menu { max-width: calc(var(--col-left) - 20px); min-width: min(180px, calc(var(--col-left) - 20px)); }
 
 /* Save As modal — duplicate the current army under a new name. */
 .modal-save-as { width: min(420px, 100%); }
@@ -2329,9 +1198,315 @@ ul { list-style: none; }
 .save-as-error[hidden] { display: none; }
 
 /* Enhancement limits hint above the list (js/ui/detail.js). */
-.detail-enhancements-rule {
-  margin: 0 0 8px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  line-height: 1.35;
+.detail-enhancements-rule { margin: 0 0 8px; font-size: 0.78rem; color: var(--text-muted); line-height: 1.35; }
+
+/* ── @font-face: vendored Cinzel woff2 (offline-safe) */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../js/vendor/fonts/cinzel-400.woff2') format('woff2');
 }
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../js/vendor/fonts/cinzel-600.woff2') format('woff2');
+}
+
+/* ── @font-face: vendored EB Garamond woff2 (offline-safe)
+ * Body serif for the "Industrial Stencil" datacard template
+ * (css/cards-mode.css). Variable woff2 (latin subset) — one roman file
+ * covers the 400–700 range, one italic file. Bundled like Cinzel so the
+ * card skin renders identically offline and through the print pipeline. */
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../js/vendor/fonts/ebgaramond.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../js/vendor/fonts/ebgaramond-italic.woff2') format('woff2');
+}
+
+/* ── Display-font headings & names */
+.panel-header h2, .detail-name, .unit-card-name, .ds-name, .detail-section-title, .modal-header h3, .army-rules-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+.panel-header h2 { letter-spacing: 0.08em; position: relative; padding-bottom: 1px; }
+.detail-name, .unit-card-name { letter-spacing: 0.01em; }
+.modal-header h3 { letter-spacing: 0.04em; min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Stat values: heavier, tabular numerals */
+.stat-value, .points-current, .points-limit, .detail-stat-cell .stat-value, .army-entry-pts, .army-entry-total {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  font-weight: 700;
+}
+.dropdown-menu .tools-menu > button:hover,
+.dropdown-menu .more-menu > button:hover,
+.dropdown-menu button.menu-item:hover,
+.dropdown-menu .tools-menu > button:focus,
+.dropdown-menu .more-menu > button:focus,
+.dropdown-menu button.menu-item:focus {
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+
+/* Disabled trigger (no actions registered). */
+.dropdown-trigger[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+/* Width-clamp dropdown menus to the panel column. */
+#tools-dropdown-menu, #more-dropdown-menu, #export-dropdown-menu { max-width: calc(var(--col-left) - 20px); }
+
+/* ── Panel header polish */
+.panel-header { padding: 12px 16px 9px; border-bottom: 1px solid var(--border); }
+
+/* ── Slim accent scrollbar for unit grid + dropdown menus */
+.unit-grid::-webkit-scrollbar, .panel-body::-webkit-scrollbar, .dropdown-menu::-webkit-scrollbar { width: 6px; height: 6px; }
+.unit-grid::-webkit-scrollbar-thumb, .panel-body::-webkit-scrollbar-thumb, .dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(var(--accent-rgb), 0.35);
+  border-radius: 3px;
+}
+.unit-grid::-webkit-scrollbar-thumb:hover, .panel-body::-webkit-scrollbar-thumb:hover, .dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb), 0.6);
+}
+.unit-grid::-webkit-scrollbar-track, .dropdown-menu::-webkit-scrollbar-track { background: transparent; }
+@media (max-width: 820px) {
+  /* Dropdown menus may be wider than the column on mobile; allow viewport
+   * width minus padding. */
+  #tools-dropdown-menu, #more-dropdown-menu, #export-dropdown-menu { max-width: calc(100vw - 32px); }
+}
+.yaab-flip-ghost, .yaab-flip-ghost * { cursor: default !important; user-select: none !important; }
+
+/* Glow-pulse on the freshly added army-entry. */
+@keyframes yaab-just-added-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(var(--yaab-card-accent-rgb), 0.65); background-color: rgba(var(--yaab-card-accent-rgb), 0.12); }
+  60% { box-shadow: 0 0 0 6px rgba(var(--yaab-card-accent-rgb), 0.00); background-color: rgba(var(--yaab-card-accent-rgb), 0.06); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--yaab-card-accent-rgb), 0.00); background-color: transparent; }
+}
+
+/* Fade-in fallback when no source rect is found (e.g. command palette adds). */
+@keyframes yaab-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+.army-entry.is-dragging .army-entry-handle { cursor: grabbing; }
+.unit-detail-content .detail-banner .detail-header-main { min-width: 0; }
+
+/* Left panel: panel-body must shrink so panel-footer (toolbar + status row)
+ * stays fully visible even when the army list is long. min-height:0 lets
+ * flex children shrink below their content size. */
+.panel-left .panel-body { min-height: 0; }
+
+/* Build mode: hero header in build-mode shouldn't be clipped vertically. */
+body.build-mode-enhanced #build-mode > .build-hero, body.build-mode-enhanced #app-main > .build-hero { overflow: visible !important; }
+@media (min-width: 821px) {
+  body.build-mode-enhanced #app-main {
+    height: 100% !important;
+    min-height: 0 !important;
+    /* #build-mode is a 2-row grid (`auto 1fr`) — that layout assumed
+     * the build-hero was a child of #build-mode (row 1) and #app-main
+     * was row 2. But the hero now lives in the topbar (#topbar-hero-slot),
+     * so #app-main is #build-mode's ONLY grid item and auto-placement
+     * drops it into the `auto` row — collapsing it to the panels'
+     * content height and leaving a dark void below (very visible when
+     * the Units pane is short, e.g. an empty Reserves view). Pin it to
+     * the `1fr` row so it fills the full mode-page height. */
+    grid-row: 2 !important;
+  }
+}
+
+/* === Army rules in left panel: render at natural height. The panel-body's
+ * own overflow-y: auto handles overflow; we don't want a second scrollbar
+ * inside the rules box. === */
+body.build-mode-enhanced #panel-left .army-rules-section { padding-right: 4px; }
+
+/* 1. Mode transitions — replace the old 200ms fade+slide with a 280ms
+ * fade + scale that uses an ease-out-back-style curve for a slight settle.
+ * The original mode-enter-anim is overridden by name. */
+@keyframes mode-enter-anim {
+  0% { opacity: 0; transform: translateY(8px) scale(0.985); }
+  60% { opacity: 1; transform: translateY(0) scale(1.004); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.unit-card:hover { transform: translateY(-2px) scale(1.005); }
+.unit-card:active { transform: translateY(0) scale(0.997); }
+
+/* 3. Faction-color morph ripple — when the body class flips faction, the
+ * panels briefly pulse with the new accent. Fired by the same body-class
+ * change scanline.js already triggers (it adds .has-selected-faction).
+ * The first .panel-body to mount (or change accent) gets a one-shot
+ * animation via a CSS animation key. */
+@keyframes faction-ripple-pulse {
+  0% { box-shadow: inset 0 0 0 0 rgba(var(--accent-rgb), 0.0); background-color: transparent; }
+  35% { box-shadow: inset 0 0 24px 0 rgba(var(--accent-rgb), 0.10); background-color: rgba(var(--accent-rgb), 0.025); }
+  100% { box-shadow: inset 0 0 0 0 rgba(var(--accent-rgb), 0.0); background-color: transparent; }
+}
+
+/* 4. Save success toast — bouncy entrance.
+ * Toast container animates with a subtle settle. Existing toast.js adds
+ * its toast-in class; we extend it. */
+@keyframes toast-bounce-in {
+  0% { opacity: 0; transform: translateY(20px) scale(0.92); }
+  55% { opacity: 1; transform: translateY(-3px) scale(1.02); }
+  78% { transform: translateY(1px) scale(0.997); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 5. Add-to-army FLIP landing — bigger glow pulse + settle bounce.
+ * flip-animations.js applies .flip-landed on the destination card; we
+ * amplify the visual. */
+@keyframes flip-landed-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.55), 0 0 18px 4px rgba(var(--accent-rgb), 0.45); transform: scale(1.04); }
+  40% { box-shadow: 0 0 0 6px rgba(var(--accent-rgb), 0.0), 0 0 0 rgba(var(--accent-rgb), 0.0); transform: scale(0.985); }
+  70% { transform: scale(1.012); }
+  100% { box-shadow: none; transform: scale(1); }
+}
+@keyframes atmosphere-crest-pulse {
+  0%, 100% { opacity: 0.82; filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.30)); }
+  50% { opacity: 1.0; filter: drop-shadow(0 0 14px rgba(var(--accent-rgb), 0.55)); }
+}
+
+/* Cold-start splash crest if present. */
+.cold-start-crest svg, .cold-start-crest { animation-duration: 8s !important; }
+
+/* Fade-in for the detail content when a unit is freshly selected. */
+@keyframes detail-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.unit-detail-content, .unit-detail-datasheet { animation: detail-fade-in 220ms ease-out; will-change: opacity, transform; }
+
+/* 8. Faction glyph: subtle entrance + accent-color ease. */
+@keyframes faction-glyph-in {
+  from { opacity: 0; transform: scale(0.6) rotate(-6deg); }
+  to { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+.build-hero-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.18) 50%, transparent 100%);
+  opacity: 0;
+  animation: build-hero-bar-glint 5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes build-hero-bar-glint {
+  0%, 100% { opacity: 0; transform: translateX(-30%); }
+  45% { opacity: 0.55; transform: translateX(20%); }
+  60% { opacity: 0; transform: translateX(50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .unit-card:hover, .unit-card:active { transform: none !important; }
+}
+body.reduce-motion .unit-card:hover { transform: none !important; }
+body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+/* Settings drawer rows that are buttons (action rows, danger). */
+.settings-drawer .settings-action-row { min-height: 40px; }
+
+/* 3. SECTION-HEADER ACCENT UNDERLINE — extend the panel-header treatment
+ * to every section header throughout the app. 24px accent bar, left-
+ * aligned. Sub-tab titles, modal headers, detail-section titles all
+ * inherit the same indicator. */
+.detail-section-title, .modal-header h3, .army-rules-title { position: relative; }
+
+/* Tab strip active state — accent underline. Matches the section-title
+ * indicator visual language. (build-mode.css already gives the build
+ * detail tabs an underline; we extend the same treatment to the collect
+ * sub-tabs so both modes share a consistent active-tab visual.) */
+.collect-subtab { position: relative; }
+
+/* 6. LOADING-STATE PLACEHOLDER — Cinzel-styled stub for tab-render
+ * delays. Modules opt in by emitting <div class="yaab-loading">Loading…</div>. */
+@keyframes yaab-loading-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1.00; transform: scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .army-entry-handle { transition: none !important; }
+}
+
+/* Keep the weapons banners typographically identical to the other bands in
+ * every context: expand-pane.css bumps .detail-section-title to 12px in the
+ * expanded pane and mobile.css adjusts its letter-spacing — mirror both so
+ * the headers never drift apart. */
+.panel-right.panel-expanded .unit-detail-content .weapons-section-banner { font-size: 12px; }
+
+/* Two-row banner: row 1 = name/flavor + points/actions stack; row 2 spans
+ * the FULL width (faction tag, type, ordinal-pricing box). Inside the old
+ * single flex row those lower elements were squeezed into the left column
+ * for the banner's whole height. */
+.unit-detail-content .detail-header.detail-banner { display: block; }
+.unit-detail-content .detail-banner-full .detail-meta { margin-top: 2px; }
+.unit-detail-content .detail-ordinal .ordinal-band { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+.unit-detail-content .detail-add-section .stockpile-detail-title { display: none; }
+.unit-detail-content .detail-add-section .stockpile-row { padding: 2px 0; }
+.unit-detail-content .detail-add-section .stockpile-detail-rows { gap: 2px; }
+
+/* Squad-size stepper in the add row (reuses the wargear-picker pill). */
+.detail-size-stepper { padding: 3px 4px; }
+.unit-detail-content .detail-section:not(.detail-section-primarch) .detail-ability:last-child { border-bottom: none; padding-bottom: 2px; }
+.unit-detail-content .detail-enhancements-list .enhancement-cb-item:last-child, .unit-detail-content .detail-section .detail-detachment-card:last-child {
+  border-bottom: none;
+}
+
+/* Uniform tight rhythm across the whole pane — the same gap the ranged /
+ * melee weapon blocks use. The band headers separate sections plenty on
+ * their own; the old 14px margins + build-mode's 12px margin-top read as
+ * disconnected islands. */
+.unit-detail-content .detail-header.detail-banner, .unit-detail-content .detail-add-section, .unit-detail-content .weapons-subsection { margin-bottom: 8px; }
+.unit-detail-content .weapons-subsection:last-child { margin-bottom: 0; }
+
+/* style.css's legacy .weapons-section { margin-top: 14px } rides the same
+ * elements and collapses through the unpadded wrapper — the gap the stats /
+ * ranged / melee blocks weren't respecting. */
+.unit-detail-content .weapons-section { margin-top: 0; }
+
+/* Banner doubles as the column-header row: label in the name column, RNG/A/
+ * BS|WS/S/AP/D over their stat columns, grid-aligned with the rows below.
+ * Horizontal padding is tuned so banner columns line up with row columns
+ * (banner 3px bar + 8px pad ≈ box 1px border + 2px pad + 8px row pad). */
+.unit-detail-content .weapons-section-banner.wg-banner {
+  display: grid;
+  grid-template-columns: 1fr 44px 30px 30px 30px 30px 30px;
+  gap: 2px;
+  align-items: center;
+  padding: 5px 10px 4px 8px;
+  margin-bottom: 0;
+  border-radius: 0 4px 0 0;
+}
+.unit-detail-content .enhancement-cb-item:has(input:checked) { border-color: rgba(var(--accent-rgb), 0.5); background: rgba(var(--accent-rgb), 0.06); }
+
+/* The body must fill the row or space-between has no space to distribute —
+ * without flex:1 the pts pill hugged the name instead of the right edge. */
+.unit-detail-content .enhancement-cb-item .enh-cb-body { flex: 1; min-width: 0; }
+
+/* 7. LEADER / LED BY chips (bands handled above; chips unchanged size) */
+.unit-detail-content .detail-leader-units .detail-ability-name {
+  display: inline;
+  /* "Can lead:" stays a run-in label, not a block */
+  font-size: 12px;
+  margin: 0;
+}
+.unit-detail-content .strat-section-preface, .unit-detail-content .strat-section-empty { grid-column: 1 / -1; }
+.unit-detail-content .strat-card-head .strat-phase-badge { margin-right: 0; }
+.unit-detail-content .strat-card-head .strat-cp-badge { margin-right: 0; font-size: 11px; padding: 2px 7px; }

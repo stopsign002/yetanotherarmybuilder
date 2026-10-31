@@ -1,117 +1,45 @@
 /* card-chassis.css — unified card visual language + FLIP animation styles. */
-
-/* ===========================================================================
-   Tunables. Override-friendly via :root.
-   ========================================================================= */
-:root {
-  --yaab-card-radius:     8px;
-  --yaab-card-pad:        12px;
-  --yaab-card-pad-tight:  6px 8px;
-  --yaab-card-bg:         var(--card-bg, #2c2c34);
-  --yaab-card-bg-hover:   var(--card-hover, #34343c);
-  --yaab-card-border-soft: var(--border, #3a3a44);
-  --yaab-card-accent:     var(--accent, #ffffff);
-  --yaab-card-accent-rgb: var(--accent-rgb, 255, 255, 255);
-  --yaab-card-shadow-h:   0 6px 18px rgba(0, 0, 0, 0.35);
-  --yaab-card-shadow-a:   0 0 0 2px rgba(var(--yaab-card-accent-rgb), 0.28);
-  --yaab-card-ease:       cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-/* ===========================================================================
-   Base chassis. Any element can opt-in by adding `.yaab-card`.
-   It is also applied additively to existing well-known card selectors.
-   We keep specificity low so component-specific rules win.
-   ========================================================================= */
-.yaab-card,
-.unit-card,
-.army-entry {
+/* Base chassis. Any element can opt-in by adding `.yaab-card`.
+ * It is also applied additively to existing well-known card selectors.
+ * We keep specificity low so component-specific rules win. */
+.unit-card, .army-entry {
   background: var(--yaab-card-bg);
   border: 1px solid var(--yaab-card-border-soft);
   border-radius: var(--yaab-card-radius);
   position: relative;
-  transition:
-    border-color 0.18s var(--yaab-card-ease),
-    background   0.18s var(--yaab-card-ease),
-    transform    0.16s var(--yaab-card-ease),
-    box-shadow   0.18s var(--yaab-card-ease);
+  transition: border-color 0.18s var(--yaab-card-ease), background 0.18s var(--yaab-card-ease), transform 0.16s var(--yaab-card-ease), box-shadow 0.18s var(--yaab-card-ease);
   will-change: transform;
 }
 
 /* Padding by default — tighter for the army-entry list rows. */
-.yaab-card,
-.unit-card {
-  padding: var(--yaab-card-pad);
-}
+.unit-card { padding: var(--yaab-card-pad); will-change: transform; }
 .army-entry { padding: var(--yaab-card-pad-tight); }
 
-/* Title / body type. Only nudge defaults — don't overrule component overrides. */
-.yaab-card-title {
-  font-family: var(--font-display);
-  color: var(--yaab-card-accent);
-  letter-spacing: 0.4px;
-  font-weight: 600;
-}
-.yaab-card-body {
-  font-family: var(--font-body);
-  color: var(--text);
-}
-.yaab-card-muted { color: var(--text-muted); }
-
-/* ===========================================================================
-   Hover lift. GPU-friendly transform only.
-   We avoid touching .army-entry's hover so the list doesn't jump 1px on
-   every cursor pass — the chassis still gives it border + shadow polish.
-   ========================================================================= */
-.yaab-card:hover,
-.unit-card:hover {
-  transform: translateY(-1px);
-  border-color: rgba(var(--yaab-card-accent-rgb), 0.55);
-  box-shadow: var(--yaab-card-shadow-h);
-}
+/* Hover lift. GPU-friendly transform only.
+ * We avoid touching .army-entry's hover so the list doesn't jump 1px on
+ * every cursor pass — the chassis still gives it border + shadow polish. */
+.unit-card:hover { border-color: rgba(var(--yaab-card-accent-rgb), 0.55); box-shadow: var(--yaab-card-shadow-h); }
 
 /* Subtle accent ring on the army-entry hover (no lift). */
-.army-entry:hover {
-  border-color: rgba(var(--yaab-card-accent-rgb), 0.40);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-}
+.army-entry:hover { border-color: rgba(var(--yaab-card-accent-rgb), 0.40); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
 
 /* Active squash. */
-.yaab-card:active,
-.unit-card:active {
-  transform: translateY(0) scale(0.985);
-  box-shadow: none;
-}
+.unit-card:active { box-shadow: none; transition-duration: 90ms; }
 
 /* Keyboard focus ring for accessibility. */
-.yaab-card:focus-visible,
-.unit-card:focus-visible,
-.army-entry:focus-visible {
-  outline: none;
-  box-shadow: var(--yaab-card-shadow-a);
-}
+.unit-card:focus-visible, .army-entry:focus-visible { outline: none; box-shadow: var(--yaab-card-shadow-a); }
 
-/* ===========================================================================
-   Selected / active state — accent border + tint.
-   The accent border + selection ring is the only "you picked this" cue;
-   a previous version of this file added a small ::after dot at the
-   top-right corner, but that conflicted with the Reserves "×N" badge
-   anchored to the same corner. Per design call, the ring is enough.
-   ========================================================================= */
-.yaab-card.is-selected,
-.yaab-card.selected,
+/* Selected / active state — accent border + tint.
+ * The accent border + selection ring is the only "you picked this" cue;
+ * a previous version of this file added a small ::after dot at the
+ * top-right corner, but that conflicted with the Reserves "×N" badge
+ * anchored to the same corner. Per design call, the ring is enough. */
 .unit-card.selected {
-  border-color: var(--yaab-card-accent);
-  background: linear-gradient(
-    180deg,
-    rgba(var(--yaab-card-accent-rgb), 0.06),
-    transparent 60%
-  ),
-  var(--yaab-card-bg-hover);
+  border-color: var(--accent) !important;
+  background: linear-gradient( 180deg, rgba(var(--yaab-card-accent-rgb), 0.06), transparent 60% ), var(--yaab-card-bg-hover);
 }
 
-/* ===========================================================================
-   FLIP add-to-army animation primitives.
-   ========================================================================= */
+/* FLIP add-to-army animation primitives. */
 .yaab-flip-ghost {
   position: fixed;
   top: 0;
@@ -122,88 +50,53 @@
   box-sizing: border-box;
   transform-origin: 0 0;
   will-change: transform, opacity;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55),
-              0 0 0 2px rgba(var(--yaab-card-accent-rgb), 0.35);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(var(--yaab-card-accent-rgb), 0.35);
   border-radius: var(--yaab-card-radius);
   overflow: hidden;
   /* Lock the cloned card's hover/transition behavior so it stays stable. */
   transition: none !important;
   filter: brightness(1.04) saturate(1.05);
 }
-.yaab-flip-ghost,
-.yaab-flip-ghost * {
-  cursor: default !important;
-  user-select: none !important;
-}
+.army-entry.just-added { animation: yaab-just-added-pulse 700ms var(--yaab-card-ease); border-color: var(--yaab-card-accent) !important; }
+.army-entry.just-added-fade { animation: yaab-fade-in 220ms var(--yaab-card-ease); }
 
-/* Glow-pulse on the freshly added army-entry. */
-@keyframes yaab-just-added-pulse {
-  0%   { box-shadow: 0 0 0 0    rgba(var(--yaab-card-accent-rgb), 0.65); background-color: rgba(var(--yaab-card-accent-rgb), 0.12); }
-  60%  { box-shadow: 0 0 0 6px  rgba(var(--yaab-card-accent-rgb), 0.00); background-color: rgba(var(--yaab-card-accent-rgb), 0.06); }
-  100% { box-shadow: 0 0 0 0    rgba(var(--yaab-card-accent-rgb), 0.00); background-color: transparent; }
-}
-.army-entry.just-added,
-.yaab-card.just-added {
-  animation: yaab-just-added-pulse 700ms var(--yaab-card-ease);
-  border-color: var(--yaab-card-accent) !important;
-}
-
-/* Fade-in fallback when no source rect is found (e.g. command palette adds). */
-@keyframes yaab-fade-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: none; }
-}
-.army-entry.just-added-fade {
-  animation: yaab-fade-in 220ms var(--yaab-card-ease);
-}
-
-/* ===========================================================================
-   Drag-to-reorder visuals.
-   ========================================================================= */
+/* Drag-to-reorder visuals. */
 .army-entry.is-dragging {
   opacity: 0.55;
   cursor: grabbing !important;
   z-index: 5;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55),
-              0 0 0 1px rgba(var(--yaab-card-accent-rgb), 0.55);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(var(--yaab-card-accent-rgb), 0.55);
 }
 .army-entry.is-dragging * { cursor: grabbing !important; }
-
-.army-entry.is-drop-target-before {
-  box-shadow: 0 -2px 0 0 var(--yaab-card-accent) inset;
-}
-.army-entry.is-drop-target-after {
-  box-shadow: 0 2px 0 0 var(--yaab-card-accent) inset;
-}
+.army-entry.is-drop-target-before { box-shadow: 0 -2px 0 0 var(--yaab-card-accent) inset; }
+.army-entry.is-drop-target-after { box-shadow: 0 2px 0 0 var(--yaab-card-accent) inset; }
 
 /* Drag-to-attach drop indicators.
-   `--ok` (green) fires when App.Attachments.canAttach returned true —
-   GDC data confirms the pairing. `--soft` (amber) fires when the data
-   doesn't list this pairing but the drop is still allowed (soft
-   enforcement). Both replace whatever reorder-band paint was in
-   progress on the same row. */
+ * `--ok` (green) fires when App.Attachments.canAttach returned true —
+ * GDC data confirms the pairing. `--soft` (amber) fires when the data
+ * doesn't list this pairing but the drop is still allowed (soft
+ * enforcement). Both replace whatever reorder-band paint was in
+ * progress on the same row. */
 .army-entry.is-attach-target--ok {
   outline: 2px solid #4caf50;
   outline-offset: -2px;
-  box-shadow: 0 0 12px rgba(76, 175, 80, 0.55) inset,
-              0 0 0 1px rgba(76, 175, 80, 0.7);
+  box-shadow: 0 0 12px rgba(76, 175, 80, 0.55) inset, 0 0 0 1px rgba(76, 175, 80, 0.7);
 }
 .army-entry.is-attach-target--soft {
   outline: 2px dashed #d8a838;
   outline-offset: -2px;
-  box-shadow: 0 0 10px rgba(216, 168, 56, 0.45) inset,
-              0 0 0 1px rgba(216, 168, 56, 0.65);
+  box-shadow: 0 0 10px rgba(216, 168, 56, 0.45) inset, 0 0 0 1px rgba(216, 168, 56, 0.65);
 }
 
 /* Nested attached children. Indented under the leader with a thin
-   tether line down the left edge in the faction accent colour so the
-   parent-child relationship reads at a glance. */
+ * tether line down the left edge in the faction accent colour so the
+ * parent-child relationship reads at a glance. */
 .army-entry-attachments {
   list-style: none;
   /* Tighter indent + thinner tether than the originally-shipped 18px / 2px:
-     reclaims ~10px of horizontal space per nesting level so the nested
-     cards have room for their name and stats row. The 1px line still
-     reads visually as an ownership tether. */
+   * reclaims ~10px of horizontal space per nesting level so the nested
+   * cards have room for their name and stats row. The 1px line still
+   * reads visually as an ownership tether. */
   margin: 8px 0 2px;
   padding: 0 0 0 10px;
   border-left: 1px solid rgba(var(--yaab-card-accent-rgb), 0.45);
@@ -215,53 +108,43 @@
   font-size: 0.92em;
   opacity: 0.96;
   /* The drag handle widget eats ~24px of chrome that attached cards
-     can't afford. Drag still activates from the card body (see
-     flip-animations.js:374–395 — the only exemptions are inputs and
-     the remove button), so hiding the handle is purely cosmetic. */
+   * can't afford. Drag still activates from the card body (see
+   * flip-animations.js:374–395 — the only exemptions are inputs and
+   * the remove button), so hiding the handle is purely cosmetic. */
   padding-left: 10px;
 }
 .army-entry-attached > .army-entry-handle { display: none; }
+
 /* Hide the big accent stripe on nested cards; the tether line on the
-   .army-entry-attachments container already conveys the ownership
-   relationship. */
+ * .army-entry-attachments container already conveys the ownership
+ * relationship. */
 .army-entry-attached > .army-entry-stripe { display: none; }
 
 /* Inline-row stats on attached cards: collapse the labelled 3-cell
-   grid (Pts / Qty / Total) into a single compact line. The values
-   stay legible, the "Pts / Qty / Total" labels go (the numbers are
-   self-explanatory in context). Saves ~50px and prevents stat-row
-   wrapping that pushed the card to 3+ lines on Necron stacks. */
-.army-entry-attached .army-entry-stats {
-  gap: 8px;
-  font-size: 10.5px;
-  flex-wrap: nowrap;
-}
+ * grid (Pts / Qty / Total) into a single compact line. The values
+ * stay legible, the "Pts / Qty / Total" labels go (the numbers are
+ * self-explanatory in context). Saves ~50px and prevents stat-row
+ * wrapping that pushed the card to 3+ lines on Necron stacks. */
+.army-entry-attached .army-entry-stats { gap: 8px; font-size: 10.5px; flex-wrap: nowrap; }
 .army-entry-attached .army-entry-stat-label { display: none; }
-.army-entry-attached .army-entry-qty input {
-  width: 30px;
-  padding: 0 3px;
-}
+.army-entry-attached .army-entry-qty input { width: 30px; padding: 0 3px; }
 
 /* Smaller remove (×) on attached cards. The button is still a hit
-   target — just less visually prominent — so deleting a nested
-   bodyguard from the leader's cluster stays one click away. */
-.army-entry-attached .army-entry-remove {
-  font-size: 13px;
-  padding: 2px 4px;
-  margin-left: 4px;
-}
+ * target — just less visually prominent — so deleting a nested
+ * bodyguard from the leader's cluster stays one click away. */
+.army-entry-attached .army-entry-remove { font-size: 13px; padding: 2px 4px; margin-left: 4px; }
 
 /* Sub-line row.
-   Hosts the squad-size label (e.g. "20 models") and / or the "+N
-   attached" cluster pill on a dedicated line beneath the unit title.
-   Keeping both pieces out of the title's flex row gives long names
-   (e.g. "Necron Warriors", "Canoptek Cryptothralls") the full header
-   width — otherwise the pill + label would compete for space and
-   force "NE…" / "TECHNOMANC…" truncation. The row is emitted only
-   when at least one piece exists, so unsized non-attached entries
-   look identical to pre-feature. Squad label leads, pill follows;
-   `align-items: center` keeps the pill's bordered chip vertically
-   centered on the muted-grey model count. */
+ * Hosts the squad-size label (e.g. "20 models") and / or the "+N
+ * attached" cluster pill on a dedicated line beneath the unit title.
+ * Keeping both pieces out of the title's flex row gives long names
+ * (e.g. "Necron Warriors", "Canoptek Cryptothralls") the full header
+ * width — otherwise the pill + label would compete for space and
+ * force "NE…" / "TECHNOMANC…" truncation. The row is emitted only
+ * when at least one piece exists, so unsized non-attached entries
+ * look identical to pre-feature. Squad label leads, pill follows;
+ * `align-items: center` keeps the pill's bordered chip vertically
+ * centered on the muted-grey model count. */
 .army-entry-subline {
   display: flex;
   align-items: center;
@@ -270,15 +153,15 @@
   margin: 1px 0 4px 0;
   font-family: var(--ui-font);
   font-size: 11px;
-  color: var(--text-muted, #888);
+  color: var(--text-muted);
   font-weight: 400;
   letter-spacing: 0;
 }
 .army-entry-subline .army-entry-squad {
   /* The squad label was previously inside the title flex row where
-     it inherited the Cinzel display font + larger size. Now that it
-     lives on its own UI row, restore the muted, plain-text styling
-     used for secondary metadata everywhere else in the build pane. */
+   * it inherited the Cinzel display font + larger size. Now that it
+   * lives on its own UI row, restore the muted, plain-text styling
+   * used for secondary metadata everywhere else in the build pane. */
   font-family: inherit;
   font-size: inherit;
   font-weight: inherit;
@@ -298,30 +181,8 @@
   white-space: nowrap;
 }
 
-.army-entry-handle {
-  cursor: grab;
-}
-.army-entry.is-dragging .army-entry-handle { cursor: grabbing; }
-
-/* ===========================================================================
-   Reduced-motion: kill animation, preserve final state.
-   ========================================================================= */
+/* Reduced-motion: kill animation, preserve final state. */
 @media (prefers-reduced-motion: reduce) {
-  .yaab-card,
-  .unit-card,
-  .army-entry,
-  .yaab-flip-ghost {
-    transition: none !important;
-    animation: none !important;
-  }
-  .yaab-card:hover,
-  .unit-card:hover {
-    transform: none;
-  }
-  .army-entry.just-added,
-  .army-entry.just-added-fade,
-  .yaab-card.just-added {
-    animation: none !important;
-    background-color: rgba(var(--yaab-card-accent-rgb), 0.10);
-  }
+  .unit-card, .army-entry, .yaab-flip-ghost { transition: none !important; animation: none !important; }
+  .army-entry.just-added, .army-entry.just-added-fade { animation: none !important; background-color: rgba(var(--yaab-card-accent-rgb), 0.10); }
 }
