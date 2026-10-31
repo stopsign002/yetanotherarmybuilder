@@ -196,19 +196,18 @@
       // ── GO ───────────────────────────────────────────────────────────
       // Mode switching. The only other switcher is .topbar-modes, which is
       // display:none globally AND sits inside the topbar that's removed at
-      // <=820px — so Collect and Play had no mobile entry point at all.
+      // <=820px. So none of these rows is mobile-gated: on desktop they were
+      // the only visible way into Collect bar the Ctrl/Cmd+K palette (#115).
       {
         id: 'go-build',
         label: mode === 'build' ? 'Build ✓' : 'Build',
         section: 'go',
-        visible: isMobileWidth,
         run() { goToMode('build'); },
       },
       {
         id: 'go-collect',
         label: mode === 'collect' ? 'Collect ✓' : 'Collect',
         section: 'go',
-        visible: isMobileWidth,
         run() { goToMode('collect'); },
       },
       // Waha (look anything up, builds nothing) — not mobile-gated either, for

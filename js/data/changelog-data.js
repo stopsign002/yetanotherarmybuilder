@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.31-2',
-    lastUpdated: '2026-10-31T05:30:00Z',
+    version:     '2026.10.31-3',
+    lastUpdated: '2026-10-31T06:45:00Z',
     entries: [
+      {
+        date: '2026-10-31',
+        kind: 'fix',
+        title: 'Collect is easy to find on desktop, and easy to leave',
+        description: 'The Settings drawer\u2019s Go section now lists Build and Collect on desktop too (before, Collect was reachable only from the Ctrl/Cmd+K palette), and Collect has a Back to Build button in its header.',
+      },
       {
         date: '2026-10-31',
         kind: 'change',

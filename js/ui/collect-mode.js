@@ -111,9 +111,16 @@
         +   '<nav class="collect-subtabs" role="tablist" aria-label="Collect sub-mode">'
         +     '<button type="button" class="collect-subtab" role="tab" data-tab="painting" aria-selected="true">Painting</button>'
         +   '</nav>'
+        +   '<button type="button" class="collect-exit" title="Back to Build" aria-label="Back to Build">Back to Build</button>'
         + '</header>'
         + '<div class="collect-body" id="collect-body" role="tabpanel"></div>';
       host.appendChild(root);
+
+      // Labelled way out. Before it the only exit on desktop was the
+      // unlabelled YAAB logo (#115); same control as Waha's .waha-exit.
+      root.querySelector('.collect-exit').addEventListener('click', () => {
+        if (typeof App.setMode === 'function') App.setMode('build');
+      });
 
       // Sub-tab clicks.
       root.querySelectorAll('.collect-subtab').forEach(btn => {

@@ -39,6 +39,23 @@
 #collect-mode .collect-subtab:hover { background: rgba(255, 255, 255, 0.04); color: var(--text); }
 #collect-mode .collect-subtab.active { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
 
+/* ── exit: same box as .waha-exit (waha-mode.css), tokens only so every theme is covered */
+#collect-mode .collect-exit {
+  flex: 0 0 auto;
+  margin-left: auto;
+  height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+#collect-mode .collect-exit:hover { background: var(--card-hover); border-color: var(--accent); }
+
 /* ── body */
 #collect-mode .collect-body { flex: 1 1 auto; overflow: auto; padding: 18px 22px; }
 
