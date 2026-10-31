@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.31-4',
-    lastUpdated: '2026-10-31T18:30:00Z',
+    version:     '2026.10.31-5',
+    lastUpdated: '2026-10-31T21:00:00Z',
     entries: [
+      {
+        date: '2026-10-31',
+        kind: 'change',
+        title: 'Collect mode removed',
+        description: 'The old Collect mode (the painting tracker reachable from Settings and the command palette) is gone. Reserves and Requisitions in the unit pane are the collection feature: Reserves is what you own, Requisitions is what you want. Painting status recorded in the old mode is no longer shown.',
+      },
       {
         date: '2026-10-31',
         kind: 'feature',
