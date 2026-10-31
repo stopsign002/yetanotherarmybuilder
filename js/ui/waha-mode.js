@@ -57,12 +57,7 @@
   }
 
   // ── helpers ───────────────────────────────────────────────────────────
-  function esc(s) {
-    if (window.UI && UI.escapeHtml) return UI.escapeHtml(s == null ? '' : String(s));
-    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-    }[c]));
-  }
+  const esc = (s) => UI.escapeHtml(s);
   function shortFaction(name) { return String(name || '').replace(/^(Imperium|Xenos|Chaos) - /, ''); }
   function isActive() {
     const host = document.getElementById('waha-mode');

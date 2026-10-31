@@ -45,12 +45,7 @@
   let _mql        = null;    // matchMedia('(min-width: 821px)'), bound once
 
   // ── helpers ───────────────────────────────────────────────────────────
-  function esc(s) {
-    if (window.UI && UI.escapeHtml) return UI.escapeHtml(s == null ? '' : String(s));
-    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
-    }[c]));
-  }
+  const esc = (s) => UI.escapeHtml(s);
   function CR() { return App.CardRenderers || null; }
   function getArmy() {
     const cr = CR();

@@ -34,16 +34,7 @@
   let _sidebarObs     = null;       // poll for late-arriving factions
 
   // ── helpers ───────────────────────────────────────────────────────────
-  function htmlEsc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
 
-  function shortFaction(name) {
-    if (!name) return '';
-    return name.includes(' - ') ? name.split(' - ').pop().trim() : name;
-  }
 
   // Read collection status — prefer App.collection if present, else direct LS.
   function readStatus(unitId) {
@@ -160,7 +151,7 @@
     body.innerHTML =
       '<div class="collect-empty">' +
         '<div class="collect-empty-spinner" aria-hidden="true"></div>' +
-        '<div class="collect-empty-text">' + htmlEsc(msg) + '</div>' +
+        '<div class="collect-empty-text">' + UI.escapeHtml(msg) + '</div>' +
       '</div>';
   }
 
@@ -229,13 +220,13 @@
       const s = stats[fn];
       const pct = s.total > 0 ? Math.round((s.owned / s.total) * 100) : 0;
       const isActive = fn === _activeFaction;
-      const sn = shortFaction(fn);
+      const sn = UI.factionShort(fn);
       html +=
         '<li>' +
           '<button type="button" class="collect-faction-row' + (isActive ? ' active' : '') +
-                  '" data-faction="' + htmlEsc(fn) + '">' +
-            '<span class="collect-faction-dot" data-faction-color="' + htmlEsc(sn) + '"></span>' +
-            '<span class="collect-faction-name" title="' + htmlEsc(fn) + '">' + htmlEsc(sn) + '</span>' +
+                  '" data-faction="' + UI.escapeHtml(fn) + '">' +
+            '<span class="collect-faction-dot" data-faction-color="' + UI.escapeHtml(sn) + '"></span>' +
+            '<span class="collect-faction-name" title="' + UI.escapeHtml(fn) + '">' + UI.escapeHtml(sn) + '</span>' +
             '<span class="collect-faction-count">' + s.owned + '/' + s.total + '</span>' +
             '<span class="collect-faction-bar-wrap"><span class="collect-faction-bar" style="width:' + pct + '%"></span></span>' +
           '</button>' +
@@ -269,9 +260,9 @@
     if (!sel) return;
     sel.innerHTML = factionNames.map(fn => {
       const s = stats[fn];
-      return '<option value="' + htmlEsc(fn) + '"' +
+      return '<option value="' + UI.escapeHtml(fn) + '"' +
         (fn === _activeFaction ? ' selected' : '') + '>' +
-        htmlEsc(shortFaction(fn)) + ' (' + s.owned + '/' + s.total + ')' +
+        UI.escapeHtml(UI.factionShort(fn)) + ' (' + s.owned + '/' + s.total + ')' +
         '</option>';
     }).join('');
     sel.addEventListener('change', () => {
@@ -316,7 +307,7 @@
     let html = '';
     html +=
       '<div class="collect-main-head">' +
-        '<h2 class="collect-main-title">' + htmlEsc(shortFaction(_activeFaction)) + '</h2>' +
+        '<h2 class="collect-main-title">' + UI.escapeHtml(UI.factionShort(_activeFaction)) + '</h2>' +
         '<div class="collect-main-summary">' +
           'Owned: <strong>' + owned + '</strong> of <strong>' + factionUnits.length + '</strong> units ' +
           '<span class="muted">(' + ownedPct + '%)</span>' +
@@ -327,7 +318,7 @@
     html +=
       '<div class="collect-main-toolbar">' +
         '<input type="search" class="collect-search" id="collect-paint-search" ' +
-          'placeholder="Search units…" value="' + htmlEsc(_searchTerm) + '" />' +
+          'placeholder="Search units…" value="' + UI.escapeHtml(_searchTerm) + '" />' +
         '<div class="collect-filter-chips" role="group" aria-label="Status filter">' +
           renderFilterChip('all',     'All') +
           renderFilterChip('owned',   'Owned') +
@@ -357,19 +348,19 @@
               ? (u.pointsOptions[0].pts + ' pts')
               : '—');
         html +=
-          '<div class="unit-card collect-unit-card collection-' + status + '" data-unit-id="' + htmlEsc(u.id) + '">' +
+          '<div class="unit-card collect-unit-card collection-' + status + '" data-unit-id="' + UI.escapeHtml(u.id) + '">' +
             '<div class="collect-unit-card-head">' +
-              '<span class="collect-unit-name" title="' + htmlEsc(u.name || 'Unit') + '">' +
-                htmlEsc(u.name || 'Unit') + '</span>' +
-              '<span class="collect-unit-pts">' + htmlEsc(pts) + '</span>' +
+              '<span class="collect-unit-name" title="' + UI.escapeHtml(u.name || 'Unit') + '">' +
+                UI.escapeHtml(u.name || 'Unit') + '</span>' +
+              '<span class="collect-unit-pts">' + UI.escapeHtml(pts) + '</span>' +
             '</div>' +
             '<div class="collect-unit-status-row">' +
               STATUSES.map(s =>
                 '<button type="button" class="collection-status-btn collection-status-' + s +
                   (status === s ? ' active' : '') +
-                  '" data-coll-set="' + s + '" data-unit-id="' + htmlEsc(u.id) +
-                  '" title="' + htmlEsc(STATUS_LABELS[s]) + '">' +
-                  htmlEsc(STATUS_LABELS[s]) +
+                  '" data-coll-set="' + s + '" data-unit-id="' + UI.escapeHtml(u.id) +
+                  '" title="' + UI.escapeHtml(STATUS_LABELS[s]) + '">' +
+                  UI.escapeHtml(STATUS_LABELS[s]) +
                 '</button>'
               ).join('') +
             '</div>' +
@@ -437,7 +428,7 @@
   function renderFilterChip(value, label) {
     const isActive = _statusFilter === value;
     return '<button type="button" class="collect-filter-chip' + (isActive ? ' active' : '') +
-      '" data-filter="' + value + '">' + htmlEsc(label) + '</button>';
+      '" data-filter="' + value + '">' + UI.escapeHtml(label) + '</button>';
   }
 
   // ── activation ───────────────────────────────────────────────────────

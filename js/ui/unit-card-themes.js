@@ -19,7 +19,7 @@
     if (!unit) return null;
     const fac = unit._factionName || '';
     if (!fac) return null;
-    const shortName = fac.includes(' - ') ? fac.split(' - ').pop().trim() : fac.trim();
+    const shortName = UI.factionShort(fac).trim();
     const slug = slugify(shortName);
     if (!slug) return null;
     return 'faction-' + slug;

@@ -34,16 +34,6 @@
     lastFilterSig: null,
   };
 
-  // Chips: label shown to the user -> keyword matched against unit.keywords.
-  const ROLE_CHIPS = [
-    { label: 'Battleline', kw: 'battleline' },
-    { label: 'Character',  kw: 'character'  },
-    { label: 'Infantry',   kw: 'infantry'   },
-    { label: 'Vehicle',    kw: 'vehicle'    },
-    { label: 'Monster',    kw: 'monster'    },
-    { label: 'Psyker',     kw: 'psyker'     },
-  ];
-
   UI.renderStatCell = function (label, value) {
     return `<div class="stat-cell"><span class="stat-name">${label}</span><span class="stat-value">${UI.escapeHtml(String(value))}</span></div>`;
   };
@@ -187,7 +177,8 @@
     bar = document.createElement('div');
     bar.id = 'roster-filter-chips';
     bar.className = 'filter-chips';
-    ROLE_CHIPS.forEach(c => {
+    // Role table lives in role-icons.js (UI.roles); chips use its `chip` order.
+    UI.roles.slice().sort((a, b) => a.chip - b.chip).forEach(c => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'filter-chip';

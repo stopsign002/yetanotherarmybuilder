@@ -131,15 +131,12 @@
   // back to the design's Necron green when the faction is unknown.
   const STENCIL_DEFAULT_ACCENT = '#74c043';
   function currentFactionName() {
-    const f = (typeof getFaction === 'function') ? getFaction() : null;
+    const f = getFaction();
     if (f && f.factionName) return f.factionName;
-    const a = (typeof getCurrentArmy === 'function') ? getCurrentArmy() : null;
+    const a = getCurrentArmy();
     return (a && a.factionName) ? a.factionName : '';
   }
-  function currentFactionShort() {
-    const fac = currentFactionName();
-    return fac.includes(' - ') ? fac.split(' - ').pop().trim() : fac.trim();
-  }
+  function currentFactionShort() { return UI.factionShort(currentFactionName()); }
   function currentAccent() {
     const fc = window.App && App.FACTION_COLORS;
     if (fc) {
@@ -214,9 +211,6 @@
     ].join('\n');
     style.textContent = css;
   }
-  // Backwards-compat shim: lots of call sites still reference the older
-  // name. Both write the same stylesheet now.
-  function applyTextureStyle() { applyDynamicStyle(); }
 
   // ── Pref persistence ────────────────────────────────────────────────────
   // All cards-mode prefs (display toggles, texture, border, radius, layout
@@ -254,7 +248,6 @@
         if (p.spilloverMode === 'continuation' || p.spilloverMode === 'fullCard') {
           spilloverMode = p.spilloverMode;
         }
-        if (typeof p.allowPartialSection === 'boolean') allowPartialSection = p.allowPartialSection;
         if (typeof p.activePresetId === 'string' || p.activePresetId === null) activePresetId = p.activePresetId;
         if (typeof p.activeLayoutId === 'string')   activeLayoutId   = p.activeLayoutId;
         if (p.layoutByKind && typeof p.layoutByKind === 'object') {
@@ -336,7 +329,6 @@
         cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,
         safeMarginMm, bleedToEdge,
         spilloverMode,
-        allowPartialSection,
         activePresetId,
         activeLayoutId,
         layoutByKind: Object.assign({}, layoutByKind),
@@ -399,7 +391,7 @@
       textureId, textureIntensity, templateId, borderColor,
       cornerRadiusMm, headerRadiusMm, statRadiusMm, sectionHeadRadiusMm,
       safeMarginMm, bleedToEdge,
-      spilloverMode, allowPartialSection,
+      spilloverMode,
       activeLayoutId,
       layoutByKind:        Object.assign({}, layoutByKind),
       typography:          Object.assign({}, typography),
@@ -435,7 +427,6 @@
     if (typeof s.safeMarginMm === 'number')      safeMarginMm      = s.safeMarginMm;
     if (typeof s.bleedToEdge === 'boolean')      bleedToEdge       = s.bleedToEdge;
     if (s.spilloverMode === 'continuation' || s.spilloverMode === 'fullCard') spilloverMode = s.spilloverMode;
-    if (typeof s.allowPartialSection === 'boolean') allowPartialSection = s.allowPartialSection;
     if (typeof s.activeLayoutId === 'string')    activeLayoutId    = s.activeLayoutId;
     if (s.layoutByKind && typeof s.layoutByKind === 'object') {
       ['unit','rule','strat'].forEach(k => {
@@ -638,7 +629,7 @@
   const DEFAULT_BORDER = '#0d0a07';
   let borderColor = DEFAULT_BORDER;
   // Active texture preset and intensity (0–100, %). Live-applied via the
-  // <style id="cards-texture-style"> element managed by applyTextureStyle().
+  // <style id="cards-texture-style"> element managed by applyDynamicStyle().
   let textureId        = DEFAULT_TEXTURE;
   let textureIntensity = DEFAULT_INTENSITY;
   // Active card skin (see TEMPLATES). Persisted in prefs + captured in
@@ -657,16 +648,6 @@
   //                    primary, just with the cloned header and the
   //                    overflowing sections.
   let spilloverMode = 'continuation';
-  // When false (default), spillover splits only at whole-section boundaries:
-  // a section either fits on the primary or moves entirely to the
-  // continuation, and the keyword footer stays pinned to page 1.
-  // When true, the splitter may break ANY overflowing section mid-content —
-  // a weapon table or ability list fills the page with the rows that fit and
-  // spills the remainder, and rule-card text splits paragraph-by-paragraph.
-  // Independent of this flag, a single section that is too tall to ever fit
-  // whole on a page (e.g. a Redemptor Dreadnought's ranged list) is always
-  // split mid-content so it doesn't leave the page half-empty.
-  let allowPartialSection = false;
   // Title-bar header corner radius in mm. Independent of the card-frame
   // radius so users can tune the dark-bar shape (square / softly
   // rounded / matching-the-card) without affecting the gilded frame.
@@ -885,12 +866,7 @@
   let display = Object.assign({}, DEFAULT_DISPLAY);
 
   // ── Helpers ──────────────────────────────────────────────────────────────
-  function esc(s) {
-    if (UI && UI.escapeHtml) return UI.escapeHtml(s == null ? '' : String(s));
-    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
-    }[c]));
-  }
+  const esc = UI.escapeHtml;
   function getCurrentArmy() {
     const s = App.state || {};
     return s.currentArmy || (s.armyManager && s.armyManager.current) || null;
@@ -1109,54 +1085,15 @@
     return s + '++';
   }
 
-  const STAT_ORDER = ['M', 'T', 'SV', 'W', 'LD', 'OC'];
+  // Card stat lookup: first non-empty alias (the detail pane's UI.ds.statsTable
+  // takes the first truthy one instead).
   function getStatVal(stats, key) {
-    const aliases = (UI && UI._STAT_ALIASES && UI._STAT_ALIASES[key]) || [key];
+    const aliases = UI._STAT_ALIASES[key] || [key];
     for (let i = 0; i < aliases.length; i++) {
       const v = stats[aliases[i]];
       if (v != null && v !== '') return v;
     }
     return '—';
-  }
-
-  function classifyWeapons(unit) {
-    const useGdc = Array.isArray(unit.gdcMeleeWeapons) || Array.isArray(unit.gdcRangedWeapons);
-    if (useGdc) {
-      return {
-        ranged: gdcProfilesToRows(unit.gdcRangedWeapons || [], 'ranged'),
-        melee:  gdcProfilesToRows(unit.gdcMeleeWeapons  || [], 'melee'),
-      };
-    }
-    const ws = unit.weapons || [];
-    const ranged = ws.filter(w => {
-      const tn = (w._typeName || '').toLowerCase();
-      return tn.includes('ranged') || (!tn.includes('melee') && w.Range !== 'Melee');
-    });
-    const melee = ws.filter(w => {
-      const tn = (w._typeName || '').toLowerCase();
-      return tn.includes('melee') || w.Range === 'Melee';
-    });
-    return { ranged, melee };
-  }
-  function gdcProfilesToRows(weapons, type) {
-    const out = [];
-    (weapons || []).forEach(w => {
-      if (!w || w.active === false || !Array.isArray(w.profiles)) return;
-      w.profiles.forEach(p => {
-        if (!p || p.active === false) return;
-        const row = {
-          name: p.name || w.name || '',
-          Range: p.range != null && p.range !== '' ? p.range : (type === 'melee' ? 'Melee' : '—'),
-          A: p.attacks, S: p.strength, AP: p.ap, D: p.damage,
-        };
-        if (type === 'ranged') row.BS = p.skill; else row.WS = p.skill;
-        if (Array.isArray(p.keywords) && p.keywords.length > 0) {
-          row.Keywords = p.keywords.join(', ');
-        }
-        out.push(row);
-      });
-    });
-    return out;
   }
 
   function renderWeaponsBlock(list, type, wgCounts) {
@@ -1253,10 +1190,9 @@
     const gdcComp = Array.isArray(unit.gdcComposition) ? unit.gdcComposition : null;
     if (gdcComp && gdcComp.length > 0) {
       lines.push(`<div class="dcc-wargear-line"><strong>Composition:</strong> ${esc(gdcComp.join(' · '))}</div>`);
-    } else if (Array.isArray(unit.squadOptions)) {
-      const models = [...new Set(unit.squadOptions.map(o => o.models).filter(m => m != null))].sort((a, b) => a - b);
-      if (models.length === 1) lines.push(`<div class="dcc-wargear-line"><strong>Composition:</strong> ${models[0]} model${models[0] !== 1 ? 's' : ''}</div>`);
-      else if (models.length > 1) lines.push(`<div class="dcc-wargear-line"><strong>Composition:</strong> ${models[0]}–${models[models.length - 1]} models</div>`);
+    } else {
+      const comp = UI.ds.compositionLabel(unit.squadOptions);
+      if (comp) lines.push(`<div class="dcc-wargear-line"><strong>Composition:</strong> ${comp}</div>`);
     }
     if (typeof unit.gdcLoadout === 'string' && unit.gdcLoadout.trim()) {
       lines.push(`<div class="dcc-wargear-line dcc-wargear-default"><strong>Default:</strong> ${esc(unit.gdcLoadout)}</div>`);
@@ -1265,9 +1201,7 @@
     const gdcWg = Array.isArray(unit.gdcWargear) ? unit.gdcWargear : null;
     if (gdcWg && gdcWg.length > 0) {
       gdcWg.forEach(line => {
-        const parts = String(line).split(/\s*◦\s*/);
-        const head = (parts[0] || '').replace(/:\s*$/, '').trim();
-        const subs = parts.slice(1).map(s => s.trim()).filter(Boolean);
+        const { head, subs } = UI.ds.wargearLine(line);
         let html = '<div class="dcc-wargear-line">';
         if (head) html += esc(head);
         if (subs.length > 0) html += `<ul class="dcc-wargear-sub">${subs.map(s => `<li>${esc(s)}</li>`).join('')}</ul>`;
@@ -1279,12 +1213,9 @@
       const modelTypeOpts = opts.filter(o => o && o.type === 'model');
       const choiceOpts    = opts.filter(o => o && o.type !== 'model');
       modelTypeOpts.forEach(opt => {
-        let count = '';
-        if (opt.modelMin != null && opt.modelMax != null) {
-          if (opt.modelMin === opt.modelMax)        count = `${opt.modelMin} model${opt.modelMin !== 1 ? 's' : ''}`;
-          else if (opt.modelMin === 0)              count = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
-          else                                      count = `${opt.modelMin}–${opt.modelMax} models`;
-        }
+        // Cards only label a fully bounded count (the detail pane also shows
+        // "up to N" / "N+" for half-bounded options).
+        const count = (opt.modelMin != null && opt.modelMax != null) ? UI.ds.modelCountLabel(opt) : '';
         let html = `<div class="dcc-wargear-line"><strong>${esc(opt.modelName || 'Model')}</strong>`;
         if (count) html += ` <span style="opacity:0.7">(${esc(count)})</span>`;
         if (opt.defaultWeapons && opt.defaultWeapons.length) {
@@ -1319,53 +1250,18 @@
     </div>`;
   }
 
-  // 10e BSData encodes "choose-one-of-N" hero toggles by giving each
-  // child profile a non-standard typeName matching (or related to) the
-  // parent ability's name. Examples:
-  //   Lion El'Jonson  → typeName="Primarch of the First Legion"
-  //   Angron          → typeName="Wrathful Presence"
-  //   Silent King     → typeName="Triarch Abilities"
-  // The parent always has typeName="Abilities" and stays in the regular
-  // ABILITIES section. Children get a dedicated section per typeName so
-  // the player sees at a glance that they're pickable toggles.
-  //
-  // Returns the section label for an ability if it's a sub-ability,
-  // null otherwise. "Primarch of <legion>" is normalised to "PRIMARCH"
-  // (per user preference); other special typeNames are uppercased
-  // verbatim.
-  const STD_ABILITY_TYPENAMES = new Set([
-    '', 'abilities', 'leader', 'invulnerable save', 'damaged',
-  ]);
-  function subAbilitySectionKey(a) {
-    if (!a || !a._typeName) return null;
-    const tn = String(a._typeName).trim();
-    if (STD_ABILITY_TYPENAMES.has(tn.toLowerCase())) return null;
-    // Match "Primarch" (the synthetic typeName from
-    // splitMultiParagraphChooseFromN — Guilliman shape) AND
-    // "Primarch of the First Legion" / "Primarch of the XIII" / etc.
-    // (the natural typeNames from Lion / Magnus / Mortarion shape).
-    if (/^primarch\b/i.test(tn)) return 'PRIMARCH';
-    return tn.toUpperCase();
-  }
-
   function renderAbilitiesBlock(unit) {
     if (!display.abilities) return '';
     const abil = (unit.abilities || []).filter(a => a && a.name);
     if (abil.length === 0) return '';
-    const core = [], named = [];
-    // Group sub-abilities by their section key — preserves first-seen
-    // order so each unit's special section renders in its natural order.
-    const subGroups = new Map();   // key (label) → [abilities]
-    abil.forEach(a => {
-      if (a.isCore) { core.push(a); return; }
-      const key = subAbilitySectionKey(a);
-      if (key) {
-        if (!subGroups.has(key)) subGroups.set(key, []);
-        subGroups.get(key).push(a);
-      } else {
-        named.push(a);
-      }
-    });
+    // Choose-from-N hero toggles (Lion's "Primarch of the First Legion",
+    // Angron's "Wrathful Presence", Silent King's "Triarch Abilities") carry a
+    // non-standard typeName; UI.ds.splitAbilities groups them by section label
+    // in first-seen order. Everything else non-core is a named ability here
+    // (leader prose included, unlike the detail pane).
+    const { core, subGroups } = UI.ds.splitAbilities(abil);
+    const inSub = new Set([].concat(...subGroups.values()));
+    const named = abil.filter(a => !a.isCore && !inSub.has(a));
     // Wargear-conferred abilities (storm shield, grav-chute, …) — a distinct
     // block, mirroring the official datasheet's "Wargear Abilities".
     const wargear = (unit.wargearAbilities || []).filter(a => a && a.name);
@@ -1471,8 +1367,7 @@
 
   // Dedicated TRANSPORT section: surfaces unit.transportCapacity in its
   // own card block instead of letting the prose mix with regular
-  // abilities or — worse — fall through subAbilitySectionKey() into a
-  // PRIMARCH-styled box (older Ork Trukk regression).
+  // abilities or — worse — fall into a PRIMARCH-styled sub-ability box (older Ork Trukk regression).
   function renderTransportBlock(unit) {
     if (!unit || !unit.transportCapacity) return '';
     if (display.abilities === false) return '';
@@ -1498,9 +1393,9 @@
     const statProfiles = (Array.isArray(unit.modelStats) && unit.modelStats.length > 0)
       ? unit.modelStats
       : [{ name: '', ...stats }];
-    const presentStats = STAT_ORDER.filter(k =>
+    const presentStats = UI._CARD_STAT_PREF.filter(k =>
       statProfiles.some(p => getStatVal(p, k) !== '—'));
-    const { ranged, melee } = classifyWeapons(unit);
+    const { ranged, melee } = UI.ds.unitWeapons(unit);
     // Wargear counts keyed by lowercased item name — weapon rows get a "×N"
     // chip for the squad's FULL effective loadout (defaults at the entry's
     // squad size, adjusted by picker swaps), not just the taken swaps.
@@ -1648,11 +1543,7 @@
       : '';
 
     // Stencil header carries a faction "kicker" (eyebrow) above the name.
-    const factionShort = (function () {
-      const f = unit._factionName || '';
-      if (!f) return '';
-      return f.includes(' - ') ? f.split(' - ').pop().trim() : f.trim();
-    })();
+    const factionShort = UI.factionShort(unit._factionName);
     const kickerHtml = (isStencil() && factionShort)
       ? `<div class="dcc-kicker">${esc(factionShort)}</div>` : '';
 
@@ -1856,19 +1747,14 @@
     return frame;
   }
 
-  // Build pages for the active selection, paginating each card kind by
-  // its own (possibly overridden) layout. Pages emit in unit → rule →
-  // strat order, with a back page interleaved after each front when card
-  // backs are enabled (1F, 1B, 2F, 2B, …). User prints odd pages, flips
-  // the stack in the printer, prints even pages.
   // ── Card spillover ──────────────────────────────────────────────────────
   // Some unit cards (primarchs, dense vehicles) carry more text than fits.
   // Rather than clipping, we measure each unit card off-screen at its
   // exact target size and — if it overflows — split section-on-boundary
   // into a primary card (header + fitting sections) and a continuation
   // card (continuation header + overflowing sections + footer keywords).
-  // The split is conservative: max 2 cards per unit, header always comes
-  // first on each card so the unit is identifiable. The continuation
+  // The header always comes first on each card so the unit is identifiable;
+  // a dense unit may cascade over several cards (depth-capped below). The continuation
   // card uses .dcc-card-cont, which lets the user-uploaded card-back
   // image (if set) bleed through beneath a height-auto parchment overlay
   // — the friend's "art continues underneath" idea.
@@ -2403,6 +2289,11 @@
     return out;
   }
 
+  // Build pages for the active selection, paginating each card kind by
+  // its own (possibly overridden) layout. Pages emit in unit → rule →
+  // strat order, with a back page interleaved after each front when card
+  // backs are enabled (1F, 1B, 2F, 2B, …). User prints odd pages, flips
+  // the stack in the printer, prints even pages.
   function buildPagesDOM() {
     const all = selectedCards();
 
@@ -2519,7 +2410,7 @@
         openSpillPanel(cardEl.dataset.cardId);
       });
     }
-    applyTextureStyle();
+    applyDynamicStyle();
     refreshSidebar();
     refreshPreview();
     refreshSummary();
@@ -2853,9 +2744,6 @@
           </span>
         </label>
       </div>`;
-    // (The "split sections mid-content" toggle was removed: overflowing
-    // army-rule text now always paginates — the alternative was clipping —
-    // and unit cards split at whole-section boundaries regardless.)
     // Defer setting the <select> values until after the HTML lands in the DOM.
     queueMicrotask(() => {
       const g = hostEl.querySelector('#cards-layout-global');
@@ -3075,7 +2963,7 @@
       if (!file) return;
       // `accept` is only a hint (drag/drop and "All files" bypass it).
       if (BACK_IMAGE_TYPES.indexOf(file.type) === -1) {
-        if (UI && UI.toast) UI.toast('Unsupported image type. Use a PNG, JPEG, WebP or GIF.', 'warning', 5000);
+        if (UI.toast) UI.toast('Unsupported image type. Use a PNG, JPEG, WebP or GIF.', 'warning', 5000);
         e.target.value = '';
         return;
       }
@@ -3095,7 +2983,7 @@
           cardBack.activeId = result.id;
           savedImages.unshift(result.image);
           savePrefs();
-        } else if (UI && UI.toast) {
+        } else if (UI.toast) {
           const notSaved = ' It is used for this print but not saved to the library.';
           if (result.reason === 'limit') {
             UI.toast(`Library is full (${result.limit} images). Delete one to save more.`, 'warning', 5000);
@@ -3207,7 +3095,7 @@
         activePresetId = p.id;
         savePresets();
         refreshSidebar();
-        if (UI && UI.toast) UI.toast('Saved preset “' + name + '”', 'success');
+        if (UI.toast) UI.toast('Saved preset “' + name + '”', 'success');
       });
       return;
     }
@@ -3226,7 +3114,7 @@
         cur.updatedAt = nowIso();
         savePresets();
         refreshSidebar();
-        if (UI && UI.toast) UI.toast('Updated preset “' + cur.name + '”', 'success');
+        if (UI.toast) UI.toast('Updated preset “' + cur.name + '”', 'success');
       });
       return;
     }
@@ -3298,7 +3186,7 @@
         b.classList.toggle('is-active', b.getAttribute('data-texture-id') === textureId);
         b.setAttribute('aria-selected', String(b.getAttribute('data-texture-id') === textureId));
       });
-      applyTextureStyle();
+      applyDynamicStyle();
       return;
     }
     // Border color preset swatch
@@ -3708,7 +3596,7 @@
   function onPrint() {
     const counts = selectedKindCounts();
     if (counts.unit + counts.rule + counts.strat === 0) {
-      if (UI && UI.toast) UI.toast('Nothing selected', 'warning');
+      if (UI.toast) UI.toast('Nothing selected', 'warning');
       return;
     }
     const cards = ['unit', 'rule', 'strat']
@@ -3867,11 +3755,7 @@
     }
   }
 
-  if (Array.isArray(App.hooks.bootstrap)) {
-    App.hooks.bootstrap.push(mount);
-  } else {
-    document.addEventListener('DOMContentLoaded', mount, { once: true });
-  }
+  App.hooks.bootstrap.push(mount);
 
   if (Array.isArray(App.hooks.modeChange)) {
     App.hooks.modeChange.push(mode => {
@@ -3937,18 +3821,8 @@
       refreshSidebar(); refreshPreview(); refreshSummary();
     }
   }
-  if (Array.isArray(App.hooks.armyChange)) {
-    App.hooks.armyChange.push(onArmyStateMaybeChanged);
-  }
-  if (Array.isArray(App.hooks.selectionChange)) {
-    App.hooks.selectionChange.push(onArmyStateMaybeChanged);
-  }
-
-  // Public API: external callers (Export menu, command palette) just flip
-  // the mode. The mode-change hook handles rendering.
-  App.openCardsMode = function () {
-    if (typeof App.setMode === 'function') App.setMode('cards');
-  };
+  App.hooks.armyChange.push(onArmyStateMaybeChanged);
+  App.hooks.selectionChange.push(onArmyStateMaybeChanged);
 
   // ── Shared data surface (Play mode) ─────────────────────────────────────
   // The gatherers are pure reads of App.state — the deduped multi-detachment
@@ -3960,4 +3834,9 @@
     gatherUnits, gatherRules, gatherStratagems,
     getSelectedDetachments, getFaction, getCurrentArmy,
   };
+  // Public entry point (docs/MODULE-REFERENCE.md; scripts/play-e2e.mjs uses it).
+  App.openCardsMode = function () {
+    if (typeof App.setMode === 'function') App.setMode('cards');
+  };
+
 })();

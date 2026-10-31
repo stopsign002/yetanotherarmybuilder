@@ -168,10 +168,6 @@
     }
   }
 
-  function errorBanner(msg) {
-    return el('div', { class: 'auth-error', role: 'alert', text: String(msg || '') });
-  }
-
   // opts.noClose: omit the × (locked / non-dismissible views).
   function header(title, opts) {
     if (opts && opts.noClose) {

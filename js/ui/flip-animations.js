@@ -43,46 +43,14 @@
   }
 
   // Emit faction-themed stinger + accent particle burst when a unit lands.
-  // Falls back to the generic thud if faction-fx hasn't loaded.
   function emitAddFx(entry) {
     const A = window.App || {};
-    if (A.factionFx && typeof A.factionFx.playAddStinger === 'function') {
-      try { A.factionFx.playAddStinger(); } catch (_) { safePlayThud(); }
-    } else {
-      safePlayThud();
-    }
     if (A.factionFx && typeof A.factionFx.particleBurst === 'function' && entry) {
       try {
         const r = entry.getBoundingClientRect();
         A.factionFx.particleBurst(r.left + r.width / 2, r.top + r.height / 2);
       } catch (_) {}
     }
-  }
-
-  function safePlayThud() {
-    try {
-      // The orphaned sound-fx module exposes App.isSoundEnabled / App.toggleSound
-      // but does not expose a "play arbitrary sound" hook. We synthesize a soft
-      // thud only if sound is on AND a WebAudio context is available.
-      const App = window.App || {};
-      if (typeof App.isSoundEnabled !== 'function' || !App.isSoundEnabled()) return;
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
-      const ctx = new AC();
-      const t0 = ctx.currentTime;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(140, t0);
-      o.frequency.exponentialRampToValueAtTime(60, t0 + 0.18);
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.exponentialRampToValueAtTime(0.07, t0 + 0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
-      o.connect(g).connect(ctx.destination);
-      o.start(t0);
-      o.stop(t0 + 0.26);
-      setTimeout(() => { try { ctx.close(); } catch (_) {} }, 400);
-    } catch (_) { /* swallow — audio is best-effort */ }
   }
 
   // ---------------------------------------------------------------------------

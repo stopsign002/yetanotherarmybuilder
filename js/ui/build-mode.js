@@ -74,12 +74,7 @@
     return Math.floor(h / 24) + 'd ago';
   }
 
-  function esc(s) {
-    if (window.UI && typeof UI.escapeHtml === 'function') return UI.escapeHtml(String(s == null ? '' : s));
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
+  const esc = (s) => UI.escapeHtml(s);
 
   // ── Hero header ────────────────────────────────────────────────────────
   function buildHero() {
@@ -249,9 +244,7 @@
     } else if (state.factionFilter && state.factionFilter !== 'all') {
       factionLabel = state.factionFilter;
     }
-    if (factionLabel && factionLabel.indexOf(' - ') !== -1) {
-      factionLabel = factionLabel.split(' - ').pop().trim();
-    }
+    if (factionLabel) factionLabel = UI.factionShort(factionLabel).trim();
     if (ui.factionEl) {
       if (factionLabel) {
         ui.factionEl.textContent = factionLabel;

@@ -4,17 +4,22 @@
   if (App._roleIconsInstalled) return;
   App._roleIconsInstalled = true;
 
-  // Order matters: first match wins. Character → Psyker → Vehicle → Monster → Battleline → Infantry → Other.
-  // Glyphs picked from the geometric Unicode block so they render consistently
-  // without needing webfonts. They're tinted via `currentColor` (CSS vars).
+  // THE role table (roster.js builds its filter chips from UI.roles too).
+  // Array order = classification priority, first match wins: Character →
+  // Psyker → Monster → Vehicle → Battleline → Infantry. `chip` is the order of
+  // the roster filter chips (kw = the keyword they match against unit.keywords).
+  // Glyphs are from the geometric Unicode block so they render without
+  // webfonts; tinted via `currentColor`.
   const ROLES = [
-    { id: 'character',  test: kw => /\bcharacter\b/i.test(kw),  glyph: '◆', label: 'Character'  }, // ◆
-    { id: 'psyker',     test: kw => /\bpsyker\b/i.test(kw),     glyph: '❖', label: 'Psyker'     }, // ❖
-    { id: 'monster',    test: kw => /\bmonster\b/i.test(kw),    glyph: '⬢', label: 'Monster'    }, // ⬢
-    { id: 'vehicle',    test: kw => /\bvehicle\b/i.test(kw),    glyph: '▲', label: 'Vehicle'    }, // ▲
-    { id: 'battleline', test: kw => /\bbattleline\b/i.test(kw), glyph: '▣', label: 'Battleline' }, // ▣
-    { id: 'infantry',   test: kw => /\binfantry\b/i.test(kw),   glyph: '●', label: 'Infantry'   }, // ●
+    { id: 'character',  kw: 'character',  chip: 1, glyph: '\u25C6', label: 'Character'  },
+    { id: 'psyker',     kw: 'psyker',     chip: 5, glyph: '\u2756', label: 'Psyker'     },
+    { id: 'monster',    kw: 'monster',    chip: 4, glyph: '\u2B22', label: 'Monster'    },
+    { id: 'vehicle',    kw: 'vehicle',    chip: 3, glyph: '\u25B2', label: 'Vehicle'    },
+    { id: 'battleline', kw: 'battleline', chip: 0, glyph: '\u25A3', label: 'Battleline' },
+    { id: 'infantry',   kw: 'infantry',   chip: 2, glyph: '\u25CF', label: 'Infantry'   },
   ];
+  ROLES.forEach(r => { const re = new RegExp('\\b' + r.kw + '\\b', 'i'); r.test = kw => re.test(kw); });
+  (window.UI = window.UI || {}).roles = ROLES;
 
   function classifyRole(unit) {
     if (!unit || !Array.isArray(unit.keywords)) return null;

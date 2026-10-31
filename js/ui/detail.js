@@ -2,25 +2,6 @@
 (function () {
   const UI = window.UI = window.UI || {};
 
-  // Weapon-keyword color class resolver. Matches by lowercase prefix or
-  // exact lowercase name. Falls through to default (no class = neutral gray).
-  function weaponKwClass(raw) {
-    const kw = (raw || '').trim().toLowerCase();
-    if (!kw) return '';
-    if (kw.startsWith('anti-'))       return 'weapon-kw-red';
-    if (kw === 'lethal hits')         return 'weapon-kw-red';
-    if (kw === 'devastating wounds')  return 'weapon-kw-red';
-    if (kw.startsWith('sustained hits')) return 'weapon-kw-orange';
-    if (kw === 'melta' || kw.startsWith('melta '))  return 'weapon-kw-orange';
-    if (kw === 'assault')             return 'weapon-kw-blue';
-    if (kw === 'pistol')              return 'weapon-kw-blue';
-    if (kw.startsWith('rapid fire'))  return 'weapon-kw-blue';
-    if (kw === 'heavy')               return 'weapon-kw-blue';
-    if (kw === 'twin-linked' || kw === 'twin linked') return 'weapon-kw-purple';
-    if (kw === 'torrent')             return 'weapon-kw-purple';
-    return '';
-  }
-
   // "Led By" lookup is delegated to `App.Attachments.candidateLeadersFor`
   // (js/app/attachments.js). That module owns the reverse-index — both
   // GDC-structured `gdcLeadBy` reads AND the prose-scan fallback — so
@@ -96,7 +77,7 @@
   // Convert GDC's pre-bucketed weapon shape (meleeWeapons[]/rangedWeapons[],
   // each with profiles[]) into the flat row shape the existing weapon-table
   // renderer consumes (one row per profile, fields named Range/A/BS|WS/S/AP/D/
-  // Keywords). GDC pre-disambiguates same-name dual-profile weapons (e.g.
+  // Keywords) that UI.ds.weaponRows consumes. GDC pre-disambiguates same-name dual-profile weapons (e.g.
   // "Plasmic lance – Melee" / "Plasmic lance – Ranged") and structurally
   // separates ranged vs melee, so this avoids the BSData heuristic-bucketing
   // that loses one of two same-named profiles on units like the Plasmancer.
@@ -122,8 +103,8 @@
         if (Array.isArray(p.keywords) && p.keywords.length > 0) {
           row.Keywords = p.keywords.join(', ');
           // Attach per-keyword rule text from the BSData-harvested glossary so
-          // the existing tooltip path (renderWeaponTable reads w._keywordDefs)
-          // lights up for GDC-rendered rows too.
+          // the tooltip path (UI.ds.weaponRows reads w._keywordDefs) lights up
+          // for GDC-rendered rows too.
           const defs = {};
           p.keywords.forEach(k => {
             const def = lookupWeaponKwDef(k);
@@ -136,6 +117,67 @@
     });
     return out;
   }
+
+  // ── Shared data shaping (UI.ds) ──────────────────────────────────────────
+  // Pure helpers both datasheet renderers (this file and cards-mode.js) use;
+  // the markup around them differs and stays local to each. They live here
+  // because unitWeapons needs the weapon-keyword glossary above.
+  const ds = UI.ds = UI.ds || {};
+
+  // { ranged, melee } flat weapon rows. Prefers GDC weapons — pre-bucketed,
+  // multi-profile weapons explicitly modelled, same-name dual-mode weapons
+  // (Plasmancer's Plasmic lance) pre-disambiguated — and falls back to the
+  // _typeName/Range heuristic for units with no GDC entry.
+  ds.unitWeapons = function (unit) {
+    if (Array.isArray(unit.gdcMeleeWeapons) || Array.isArray(unit.gdcRangedWeapons)) {
+      return {
+        ranged: gdcProfilesToRows(unit.gdcRangedWeapons || [], 'ranged'),
+        melee:  gdcProfilesToRows(unit.gdcMeleeWeapons  || [], 'melee'),
+      };
+    }
+    const weapons = unit.weapons || [];
+    return {
+      ranged: weapons.filter(w => {
+        const tn = (w._typeName || '').toLowerCase();
+        return tn.includes('ranged') || (!tn.includes('melee') && w.Range !== 'Melee');
+      }),
+      melee: weapons.filter(w => {
+        const tn = (w._typeName || '').toLowerCase();
+        return tn.includes('melee') || w.Range === 'Melee';
+      }),
+    };
+  };
+
+  // GDC encodes "X can be replaced with one of the following: ◦ A ◦ B …" by
+  // separating the heading from each option with a ◦.
+  ds.wargearLine = function (line) {
+    const parts = String(line).split(/\s*◦\s*/);
+    return {
+      head: (parts[0] || '').replace(/:\s*$/, '').trim(),
+      subs: parts.slice(1).map(x => x.trim()).filter(Boolean),
+    };
+  };
+
+  // "5 models" / "5–10 models" from squadOptions' model counts; null when none.
+  ds.compositionLabel = function (squadOptions) {
+    const n = [...new Set((Array.isArray(squadOptions) ? squadOptions : [])
+      .map(o => o.models).filter(m => m != null))].sort((a, b) => a - b);
+    if (n.length === 0) return null;
+    return n.length === 1 ? `${n[0]} model${n[0] !== 1 ? 's' : ''}` : `${n[0]}–${n[n.length - 1]} models`;
+  };
+
+  // Model-count label for a BSData "model" wargear option ('' when unbounded).
+  ds.modelCountLabel = function (opt) {
+    const lo = opt.modelMin, hi = opt.modelMax;
+    const pl = (n) => `${n} model${n !== 1 ? 's' : ''}`;
+    if (lo != null && hi != null) {
+      if (lo === hi) return pl(lo);
+      return lo === 0 ? `up to ${pl(hi)}` : `${lo}–${hi} models`;
+    }
+    if (hi != null) return `up to ${pl(hi)}`;
+    if (lo != null) return `${lo}+ models`;
+    return '';
+  };
 
   // English ordinal: 1 -> "1st", 2 -> "2nd", 3 -> "3rd", 4 -> "4th".
   function ordSuffix(n) {
@@ -162,14 +204,6 @@
     </div>`;
   }
 
-  // opts (all optional):
-  //   host     — element to render into instead of #unit-detail-panel. Lets
-  //              other surfaces (Play mode) show the same datasheet without
-  //              stealing the build-mode Details pane.
-  //   gameView — game-day rendering: drop the builder chrome (Add to Army,
-  //              squad-size stepper, wargear picker, enhancement checkboxes,
-  //              hook action buttons) and render selectedEnhancements as a
-  //              read-only section instead.
   // Every keyword (and datasheet name) any loaded unit carries, upper-cased.
   // Lets the enhancement gate tell "this unit lacks RAVENWING" from "nothing
   // anywhere is called DNU". Rebuilt only when the unit set changes.
@@ -189,9 +223,40 @@
     return set;
   };
 
+  // Resolve the render target (opts.host, else the Details pane), hide the
+  // pane's empty state and drop the previous render. null when no target.
+  function takePanel(opts) {
+    const panel = opts.host || document.getElementById('unit-detail-panel');
+    if (!panel) return null;
+    const empty = opts.host ? null : document.getElementById('unit-detail-empty');
+    if (empty) empty.style.display = 'none';
+    const existing = panel.querySelector('.unit-detail-content');
+    if (existing) existing.remove();
+    return panel;
+  }
+
+  // Right-aligned value + caption stack (points / CP) in a rule-family banner.
+  function ptsStack(value, caption) {
+    const esc = UI.escapeHtml;
+    return `<div class="detail-header-actions detail-banner-actions">
+      <div class="detail-pts-stack">
+        <div class="detail-pts detail-banner-pts detail-pts-value">${esc(String(value))}</div>
+        <div class="detail-pts-caption">${esc(caption)}</div>
+      </div>
+    </div>`;
+  }
+
+  // opts (all optional):
+  //   host     — element to render into instead of #unit-detail-panel. Lets
+  //              other surfaces (Play mode) show the same datasheet without
+  //              stealing the build-mode Details pane.
+  //   gameView — game-day rendering: drop the builder chrome (Add to Army,
+  //              squad-size stepper, wargear picker, enhancement checkboxes,
+  //              hook action buttons) and render selectedEnhancements as a
+  //              read-only section instead.
   UI.renderUnitDetail = function (unit, detachmentEnhancements = [], selectedEnhancements = [], opts = {}) {
     const esc = UI.escapeHtml;
-    const panel = opts.host || document.getElementById('unit-detail-panel');
+    const panel = takePanel(opts);
     if (!panel) return;
     const gameView = !!opts.gameView;
     // browseView (Waha mode): a read-only datasheet with the banner and every
@@ -199,17 +264,13 @@
     // stepper, no detailActions buttons, no wargear picker, no enhancement
     // eligibility / taken-by logic (the only code here that reads the army).
     const browseView = !!opts.browseView;
-    const empty = opts.host ? null : document.getElementById('unit-detail-empty');
-    if (empty) empty.style.display = 'none';
 
     const stats        = unit.stats        || {};
-    const weapons      = unit.weapons      || [];
     const abilities    = unit.abilities    || [];
     const keywords     = unit.keywords     || [];
     const wargearOpts  = unit.wargearOptions || [];
     const squadOptions = unit.squadOptions || (unit.points ? [{ pts: unit.points, models: null }] : []);
 
-    const getStatVal = key => (UI._STAT_ALIASES[key] || [key]).map(a => stats[a]).find(v => v) || '—';
 
     let html = `<div class="unit-detail-content unit-detail-datasheet" data-detail-kind="unit">`;
 
@@ -348,139 +409,16 @@
       html += `</div>`;
     }
 
-    const STAT_ORDER = ['M', 'T', 'SV', 'W', 'LD', 'OC'];
+    // Multi-statline units (Marneus Calgar + Victrix Honour Guard, Terminator
+    // Assault Squad TH/SS vs LC) render one stat row per modelStats profile;
+    // the single `stats` dict is the fallback.
+    html += UI.ds.statsTable(unit.modelStats, { stats, invulnSave: unit.invulnSave, invulnNote: unit.invulnNote });
 
-    // Multi-statline units (Marneus Calgar + Victrix Honour Guard,
-    // Wardens of Ultramar, Terminator Assault Squad TH/SS vs LC) carry
-    // an array of distinct stat profiles. Render one row per profile;
-    // fall back to the legacy single `stats` dict when modelStats is
-    // absent (older cached factions, units that genuinely have one
-    // statline).
-    const profilesToRender = (Array.isArray(unit.modelStats) && unit.modelStats.length > 0)
-      ? unit.modelStats
-      : [{ name: '', ...stats }];
-
-    const presentStats = STAT_ORDER.filter(k =>
-      profilesToRender.some(p => {
-        const aliases = UI._STAT_ALIASES[k] || [k];
-        return aliases.some(a => p[a]);
-      })
-    );
-
-    if (presentStats.length > 0) {
-      const renderPillar = (k, prof) => {
-        const aliases = UI._STAT_ALIASES[k] || [k];
-        const v = aliases.map(a => prof[a]).find(x => x) || '—';
-        if (k === 'SV' && unit.invulnSave && v !== '—') {
-          return `<div class="detail-stat-cell detail-stat-pillar detail-stat-pillar-sv">
-            <span class="stat-name detail-stat-pillar-label">SV</span>
-            <span class="stat-value detail-stat-pillar-value">${esc(String(v))}</span>
-            <span class="detail-stat-pillar-invuln">${esc(String(unit.invulnSave))}${unit.invulnNote ? '*' : ''} INV</span>
-          </div>`;
-        }
-        return `<div class="detail-stat-cell detail-stat-pillar">
-          <span class="stat-name detail-stat-pillar-label">${esc(k)}</span>
-          <span class="stat-value detail-stat-pillar-value">${esc(String(v))}</span>
-        </div>`;
-      };
-
-      html += `<div class="detail-section detail-stats-section">`;
-      profilesToRender.forEach(prof => {
-        const label = profilesToRender.length > 1 && prof.name
-          ? `<div class="detail-stat-rowlabel" style="font-size:11px;color:var(--text-muted);margin:4px 0 2px">${esc(prof.name)}</div>`
-          : '';
-        html += label;
-        html += `<div class="detail-stats-row detail-stat-strip" style="grid-template-columns:repeat(${presentStats.length},1fr)">
-            ${presentStats.map(k => renderPillar(k, prof)).join('')}
-          </div>`;
-      });
-      // Conditional-invuln footnote (matches the `*` on the SV pillar).
-      if (unit.invulnSave && unit.invulnNote) {
-        html += `<div class="detail-invuln-note" style="font-size:11px;color:var(--text-muted);margin-top:2px">* ${esc(String(unit.invulnNote))}</div>`;
-      }
-      html += `</div>`;
-    }
-
-    // Prefer GDC weapons when available — they're pre-bucketed into ranged
-    // vs melee, multi-profile weapons are explicitly modeled, and same-name
-    // dual-mode weapons (e.g. Plasmancer's Plasmic lance) are pre-disambiguated.
-    // Falls back to the BSData _typeName/Range heuristic for units with no
-    // GDC entry.
-    const useGdcWeapons = Array.isArray(unit.gdcMeleeWeapons) || Array.isArray(unit.gdcRangedWeapons);
-    let ranged, melee;
-    if (useGdcWeapons) {
-      ranged = gdcProfilesToRows(unit.gdcRangedWeapons || [], 'ranged');
-      melee  = gdcProfilesToRows(unit.gdcMeleeWeapons  || [], 'melee');
-    } else {
-      ranged = weapons.filter(w => {
-        const tn = (w._typeName || '').toLowerCase();
-        return tn.includes('ranged') || (!tn.includes('melee') && w.Range !== 'Melee');
-      });
-      melee = weapons.filter(w => {
-        const tn = (w._typeName || '').toLowerCase();
-        return tn.includes('melee') || w.Range === 'Melee';
-      });
-    }
-
+    const { ranged, melee } = UI.ds.unitWeapons(unit);
     if (ranged.length > 0 || melee.length > 0) {
-      // Two-line grid rows: line 1 is the aligned stat grid
-      // (name | Rng | A | BS/WS | S | AP | D), line 2 the wrap of keyword
-      // tags (tooltip wiring preserved). Replaces the squeezed 8-column
-      // <table> where Keywords fought the numeric columns for width.
-      const renderWeaponTable = (list, type) => {
-        if (list.length === 0) return '';
-        const skill = type === 'ranged' ? 'BS' : 'WS';
-        const STATS = ['Range', 'A', skill, 'S', 'AP', 'D'];
-        const HDR   = ['Rng', 'A', skill, 'S', 'AP', 'D'];
-        const label = type === 'ranged' ? 'Ranged Weapons' : 'Melee Weapons';
-
-        const rows = list.map((w, i) => {
-          const cells = STATS.map(c => {
-            let v = w[c];
-            v = (v != null && v !== '') ? String(v) : '—';
-            const melee = c === 'Range' && v.toLowerCase() === 'melee';
-            return `<span class="wg-cell${melee ? ' wg-cell-melee' : ''}">${esc(v)}</span>`;
-          }).join('');
-          const kws = w.Keywords
-            ? String(w.Keywords).split(',').map(k => k.trim()).filter(Boolean)
-            : [];
-          const kwHtml = kws.length
-            ? `<div class="wg-kw-row">${kws.map(k => {
-                const d = w._keywordDefs && w._keywordDefs[k];
-                const colorClass = weaponKwClass(k);
-                const classes = 'weapon-kw-tag'
-                  + (d ? ' has-tooltip' : '')
-                  + (colorClass ? ' ' + colorClass : '');
-                const gl = UI.glossary && UI.glossary.lookup(k);
-                return `<button type="button" class="${classes}"${d ? ` data-tooltip="${esc(d)}"` : ''}${gl ? ` data-glossary="${gl.id}"` : ''}>${esc(k)}</button>`;
-              }).join('')}</div>`
-            : '';
-          return `<div class="wg-weapon${i % 2 === 1 ? ' wg-weapon-alt' : ''}">
-            <div class="wg-line">
-              <span class="wg-name">${esc(w.name)}</span>
-              ${cells}
-            </div>
-            ${kwHtml}
-          </div>`;
-        }).join('');
-
-        // The banner carries the stat column headers (aligned to the row
-        // grid below) and the box attaches flush underneath it.
-        return `
-          <div class="weapons-subsection weapons-section wg-section">
-            <div class="weapons-subsection-title weapons-section-banner weapons-section-banner-${type} ${type} wg-banner">
-              <span class="wg-banner-label">${label}</span>
-              ${HDR.map(h => `<span class="wg-cell wg-banner-col">${esc(h)}</span>`).join('')}
-            </div>
-            <div class="wg-box wg-box-attached">
-              <div class="wg-rows">${rows}</div>
-            </div>
-          </div>`;
-      };
-
       html += `<div class="detail-section detail-weapons-section">
-        ${renderWeaponTable(ranged, 'ranged')}
-        ${renderWeaponTable(melee, 'melee')}
+        ${UI.ds.weaponRows(ranged, { type: 'ranged' })}
+        ${UI.ds.weaponRows(melee, { type: 'melee' })}
       </div>`;
     }
 
@@ -490,49 +428,7 @@
     // wargear-picker.js at mount time).
     html += wargearSection();
 
-    const coreAbilities    = abilities.filter(a => a.isCore);
-    // Sub-ability detection — same logic as cards-mode.js
-    // subAbilitySectionKey(). Children of choose-from-N hero toggles
-    // have a non-standard BSData typeName matching (or related to) the
-    // parent ability's name:
-    //   Lion El'Jonson  → typeName="Primarch of the First Legion"
-    //   Angron          → typeName="Wrathful Presence"
-    //   Silent King     → typeName="Triarch Abilities"
-    // The parent ability has typeName="Abilities" and stays in the
-    // regular Abilities section, where it reads as the always-on rule
-    // explaining the choose mechanic.
-    const STD_AB_TN = new Set(['', 'abilities', 'leader', 'invulnerable save', 'damaged']);
-    const subAbilityKey = (a) => {
-      if (!a || !a._typeName) return null;
-      const tn = String(a._typeName).trim();
-      if (STD_AB_TN.has(tn.toLowerCase())) return null;
-      // Match "Primarch" (synthetic typeName from Guilliman's split)
-      // AND "Primarch of <legion>" (natural typeName for Lion / Magnus
-      // / Mortarion shapes). Both route to the PRIMARCH section.
-      if (/^primarch\b/i.test(tn)) return 'PRIMARCH';
-      return tn.toUpperCase();
-    };
-    // Group sub-abilities by section key, preserving first-seen order.
-    const subGroups = new Map();
-    abilities.forEach(a => {
-      if (a.isCore) return;
-      const key = subAbilityKey(a);
-      if (!key) return;
-      if (!subGroups.has(key)) subGroups.set(key, []);
-      subGroups.get(key).push(a);
-    });
-    const isSub = (a) => !!subAbilityKey(a);
-    const leaderAbilities  = abilities.filter(a => !a.isCore && !isSub(a) && /can be attached to/i.test(a.description));
-    const regularAbilities = abilities.filter(a => !a.isCore && !isSub(a) && !/can be attached to/i.test(a.description));
-
-    if (coreAbilities.length > 0) {
-      html += `<div class="detail-section">
-        <div class="detail-section-title">Core Abilities</div>
-        <div class="core-abilities-list">
-          ${coreAbilities.map(a => { const gl = UI.glossary && UI.glossary.lookup(a.name); return `<button type="button" class="core-ability-tag"${a.description ? ` data-tooltip="${UI.mdPlain(a.description)}"` : ''}${gl ? ` data-glossary="${gl.id}"` : ''}>${esc(a.name)}</button>`; }).join('')}
-        </div>
-      </div>`;
-    }
+    html += UI.ds.abilityList(abilities, { kind: 'core' });
 
     if (unit.transportCapacity) {
       html += `<div class="detail-section detail-transport-section">
@@ -545,7 +441,7 @@
     // the adapter (its text was a single shared, wrong entry — see
     // dc-adapter.js), so the authoritative source is now the GDC overlay
     // (App.Attachments.candidateTargetsFor → unit.gdcLeadBy). We still merge any
-    // genuine "can be attached to" ability prose (leaderAbilities) as a backup.
+    // genuine "can be attached to" ability prose (the `leader` bucket) as a backup.
     const canLead = [];
     const seenLead = new Set();
     const pushLead = (nm) => {
@@ -556,50 +452,22 @@
     if (App.Attachments && typeof App.Attachments.candidateTargetsFor === 'function') {
       App.Attachments.candidateTargetsFor(unit).forEach(t => pushLead(t && t.name));
     }
-    leaderAbilities.forEach(ab => {
+    UI.ds.splitAbilities(abilities).leader.forEach(ab => {
       ab.description.replace(/^.*?can be attached to.*?:/i, '')
         .split(/[■\n●•]+/).forEach(pushLead);
     });
-    if (regularAbilities.length > 0) {
-      html += `<div class="detail-section">
-        <div class="detail-section-title">Abilities</div>`;
-      regularAbilities.forEach(ab => {
-        html += `<div class="detail-ability">
-          <span class="detail-ability-name">${esc(ab.name)}</span>
-          <span class="detail-ability-desc">${UI.mdBold(ab.description || '—')}</span>
-        </div>`;
-      });
-      html += `</div>`;
-    }
-
-    // One special section per choose-from-N typeName group:
-    //   "PRIMARCH" for Lion / Magnus / Angron-the-primarch / etc.
-    //   "WRATHFUL PRESENCE" for Angron's toggles
-    //   "TRIARCH ABILITIES" for Silent King
-    // Hint text is generic — the parent ability (above) has the
+    html += UI.ds.abilityList(abilities, { kind: 'regular' });
+    // One section per choose-from-N typeName group (PRIMARCH, WRATHFUL
+    // PRESENCE, TRIARCH ABILITIES); the parent ability above carries the
     // specific "select one/two" wording.
-    subGroups.forEach((rows, label) => {
-      const friendlyLabel = label.charAt(0) + label.slice(1).toLowerCase();
-      html += `<div class="detail-section detail-section-primarch">
-        <div class="detail-section-title detail-section-title-primarch">${esc(friendlyLabel)} <span class="detail-primarch-hint">pick from these each turn</span></div>`;
-      rows.forEach(ab => {
-        html += `<div class="detail-ability detail-ability-primarch">
-          <span class="detail-ability-name">${esc(ab.name)}</span>
-          <span class="detail-ability-desc">${UI.mdBold(ab.description || '—')}</span>
-        </div>`;
-      });
-      html += `</div>`;
-    });
+    html += UI.ds.abilityList(abilities, { kind: 'sub' });
 
     // Build the combined Wargear section (called right after the weapon tables
     // above). ONE section: the official datasheet wording, then a mount for the
     // point-costing option picker that wargear-picker.js fills. Hoisted so the
     // call site can sit under the weapons block.
     function wargearSection() {
-      const modelNums = [...new Set(squadOptions.map(o => o.models).filter(m => m != null))].sort((a, b) => a - b);
-      const compLabel = modelNums.length === 0 ? null
-        : modelNums.length === 1 ? `${modelNums[0]} model${modelNums[0] !== 1 ? 's' : ''}`
-        : `${modelNums[0]}–${modelNums[modelNums.length - 1]} models`;
+      const compLabel = UI.ds.compositionLabel(squadOptions);
       const modelTypeOpts = wargearOpts.filter(o => o.type === 'model');
       const choiceOpts    = wargearOpts.filter(o => o.type !== 'model');
 
@@ -627,11 +495,7 @@
         }
         if (gdcWargear && gdcWargear.length > 0) {
           gdcWargear.forEach(line => {
-            // GDC encodes "X can be replaced with one of the following: ◦ A ◦ B …"
-            // by separating the heading from each option with a ◦.
-            const parts = String(line).split(/\s*◦\s*/);
-            const head = (parts[0] || '').replace(/:\s*$/, '').trim();
-            const subs = parts.slice(1).map(s => s.trim()).filter(Boolean);
+            const { head, subs } = UI.ds.wargearLine(line);
             wg += `<div class="wl-choice-group">`;
             if (head) wg += `<div class="wl-choice-group-title">${esc(head)}</div>`;
             if (subs.length > 0) {
@@ -673,20 +537,7 @@
       } else if (compLabel || wargearOpts.length > 0) {
         if (compLabel) wg += `<div class="wl-composition">${esc(compLabel)}</div>`;
         modelTypeOpts.forEach(opt => {
-          let countStr = '';
-          if (opt.modelMin != null && opt.modelMax != null) {
-            if (opt.modelMin === opt.modelMax) {
-              countStr = `${opt.modelMin} model${opt.modelMin !== 1 ? 's' : ''}`;
-            } else if (opt.modelMin === 0) {
-              countStr = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
-            } else {
-              countStr = `${opt.modelMin}–${opt.modelMax} models`;
-            }
-          } else if (opt.modelMax != null) {
-            countStr = `up to ${opt.modelMax} model${opt.modelMax !== 1 ? 's' : ''}`;
-          } else if (opt.modelMin != null) {
-            countStr = `${opt.modelMin}+ models`;
-          }
+          const countStr = UI.ds.modelCountLabel(opt);
           wg += `<div class="wl-model-block"><div class="wl-model-header">
             <span class="wl-model-name">${esc(opt.modelName)}</span>`;
           if (countStr) wg += `<span class="wl-model-count">${esc(countStr)}</span>`;
@@ -807,14 +658,7 @@
       </div>`;
     }
 
-    if (keywords.length > 0) {
-      html += `<div class="detail-section">
-        <div class="detail-section-title">Keywords</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px">
-          ${keywords.map(k => `<span class="keyword-tag">${esc(k)}</span>`).join('')}
-        </div>
-      </div>`;
-    }
+    html += UI.ds.keywordChips(keywords);
 
     // Character enhancements require the Character keyword AND the unit
     // must NOT be an Epic Hero (named special characters can't take
@@ -882,7 +726,7 @@
     // a detachment name) is ignored rather than allowed to block everyone.
     const st0 = App.state || {};
     [st0.selectedChapter, st0.factionFilter].forEach((f) => {
-      if (f && f !== 'all') unitHay.add(String(f).split(' - ').pop().toUpperCase());
+      if (f && f !== 'all') unitHay.add(UI.factionShort(String(f)).toUpperCase());
     });
     const knownKeywords = UI._knownUnitKeywords ? UI._knownUnitKeywords() : null;
     const restrictionKeywords = (enh) => {
@@ -997,9 +841,6 @@
     }
 
     html += `</div>`;
-
-    const existing = panel.querySelector('.unit-detail-content');
-    if (existing) existing.remove();
     panel.insertAdjacentHTML('beforeend', html);
 
     // Squad-size stepper: walk squadOptions, mirror the index into the hidden
@@ -1015,9 +856,7 @@
         const idx = Math.max(0, Math.min(opts.length - 1, i));
         if (String(idx) === sizeHidden.value) return;
         sizeHidden.value = String(idx);
-        if (label) label.textContent = opts[idx]
-          ? (opts[idx].models ? `${opts[idx].models} models — ${opts[idx].pts} pts` : `${opts[idx].pts} pts`)
-          : '—';
+        if (label) label.textContent = sizeLabel(opts[idx]);
         sizeHidden.dispatchEvent(new Event('change'));
       };
       if (minus) minus.addEventListener('click', () => setIdx(parseInt(sizeHidden.value, 10) - 1));
@@ -1047,8 +886,6 @@
         btn.addEventListener('click', () => action.onClick(unit));
       }
     });
-
-    // (Led-By collapse wiring removed — the list always shows every leader.)
   };
 
   // Stratagem descriptions follow GW's "WHEN: … TARGET: … EFFECT: …
@@ -1109,14 +946,9 @@
   // optionally overrides the eyebrow (e.g. "Detachment Rule").
   UI.renderRuleDetail = function (data, opts = {}) {
     const esc = UI.escapeHtml;
-    const panel = opts.host || document.getElementById('unit-detail-panel');
+    const panel = takePanel(opts);
     if (!panel) return;
     const gameView = !!opts.gameView;
-    const empty = opts.host ? null : document.getElementById('unit-detail-empty');
-    if (empty) empty.style.display = 'none';
-
-    const existing = panel.querySelector('.unit-detail-content');
-    if (existing) existing.remove();
 
     const isEnhancement = data.type === 'enhancement';
     const isStratagem   = data.type === 'stratagem';
@@ -1141,14 +973,8 @@
 
     // Points / CP as a right-aligned stack with caption, matching unit header.
     let headerActions = '';
-    const stack = (value, caption) => `<div class="detail-header-actions detail-banner-actions">
-      <div class="detail-pts-stack">
-        <div class="detail-pts detail-banner-pts detail-pts-value">${esc(String(value))}</div>
-        <div class="detail-pts-caption">${esc(caption)}</div>
-      </div>
-    </div>`;
-    if (isEnhancement && data.pts && !gameView) headerActions = stack(data.pts, 'pts');
-    else if (isStratagem && data.cp != null) headerActions = stack(data.cp, 'CP');
+    if (isEnhancement && data.pts && !gameView) headerActions = ptsStack(data.pts, 'pts');
+    else if (isStratagem && data.cp != null) headerActions = ptsStack(data.cp, 'CP');
 
     // The phase used to trail the kind label on one line ("STRATAGEM · Shooting"),
     // so it carried a leading middot. The kind label is now an eyebrow above the
@@ -1191,12 +1017,9 @@
   // Details pane and leaves #unit-detail-empty alone — same as renderRuleDetail.
   UI.renderDetachmentDetail = function (det, opts = {}) {
     const esc = UI.escapeHtml;
-    const panel = (opts && opts.host) || document.getElementById('unit-detail-panel');
-    if (!panel || !det) return;
-    const empty = (opts && opts.host) ? null : document.getElementById('unit-detail-empty');
-    if (empty) empty.style.display = 'none';
-    const existing = panel.querySelector('.unit-detail-content');
-    if (existing) existing.remove();
+    if (!det) return;
+    const panel = takePanel(opts || {});
+    if (!panel) return;
 
     const mdBold = UI.mdBold;   // shared: js/ui/helpers.js
     const rules = det.rules || [];
@@ -1214,14 +1037,7 @@
     // Points as the same right-aligned value+caption stack the stratagem and
     // enhancement headers use, so the whole rule family reads alike. "pts"
     // matches the wording in the detachment picker rows.
-    const ptsBadge = (det.points != null)
-      ? `<div class="detail-header-actions detail-banner-actions">
-           <div class="detail-pts-stack">
-             <div class="detail-pts detail-banner-pts detail-pts-value">${esc(String(det.points))}</div>
-             <div class="detail-pts-caption">pt${det.points === 1 ? '' : 's'}</div>
-           </div>
-         </div>`
-      : '';
+    const ptsBadge = (det.points != null) ? ptsStack(det.points, det.points === 1 ? 'pt' : 'pts') : '';
 
     // 11e Force Disposition(s), from 40kdc via dc-adapter. Full-width row under
     // the name — a matched-play list must have one, so it's a thing players pick

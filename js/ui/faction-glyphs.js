@@ -65,9 +65,7 @@
   // long catalogue names. Returns the trimmed short name.
   function shortName(name) {
     if (!name) return '';
-    let s = String(name).trim();
-    if (s.indexOf(' - ') !== -1) s = s.split(' - ').pop().trim();
-    return s;
+    return UI.factionShort(String(name).trim());
   }
 
   // Public API.
@@ -75,16 +73,6 @@
     const sn = shortName(factionName);
     const d = (sn && PATHS[sn]) || (factionName && PATHS[factionName]) || FALLBACK;
     return svgFor(d);
-  };
-
-  App.factionGlyphPath = function (factionName) {
-    const sn = shortName(factionName);
-    return (sn && PATHS[sn]) || (factionName && PATHS[factionName]) || FALLBACK;
-  };
-
-  App.hasFactionGlyph = function (factionName) {
-    const sn = shortName(factionName);
-    return !!(sn && PATHS[sn]) || !!(factionName && PATHS[factionName]);
   };
 
   // ── DOM injection ──────────────────────────────────────────────────────
