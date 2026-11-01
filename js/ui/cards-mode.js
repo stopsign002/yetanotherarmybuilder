@@ -1250,18 +1250,6 @@
     </div>`;
   }
 
-  // Lower-cased names of every loaded faction's army rules. Rebuilt per
-  // render pass (cheap: ~35 factions, one or two rules each).
-  function armyRuleNames() {
-    const out = new Set();
-    const facs = (window.App && App.state && App.state.factions) || {};
-    Object.keys(facs).forEach(k => {
-      const rules = facs[k] && facs[k].armyRules;
-      if (Array.isArray(rules)) rules.forEach(r => { if (r && r.name) out.add(String(r.name).toLowerCase()); });
-    });
-    return out;
-  }
-
   function renderAbilitiesBlock(unit) {
     if (!display.abilities) return '';
     const abil = (unit.abilities || []).filter(a => a && a.name);
@@ -1271,15 +1259,13 @@
     // non-standard typeName; UI.ds.splitAbilities groups them by section label
     // in first-seen order. Everything else non-core is a named ability here
     // (leader prose included, unlike the detail pane).
-    const { core, subGroups } = UI.ds.splitAbilities(abil);
-    const inSub = new Set([].concat(...subGroups.values()));
-    // Army rules (Reanimation Protocols, Oath of Moment, Synapse, …) arrive
-    // on every unit as a full-text ability. The official card prints them by
-    // NAME only under FACTION; the text lives on the army-rule card. Owner
-    // decision 2026-11-01: same here — never print army-rule text on a unit.
-    const ruleNames = armyRuleNames();
-    const factionRules = abil.filter(a => !a.isCore && !inSub.has(a) && ruleNames.has(a.name.toLowerCase()));
-    const named = abil.filter(a => !a.isCore && !inSub.has(a) && !ruleNames.has(a.name.toLowerCase()));
+    // `faction` = army rules (Reanimation Protocols, Oath of Moment, …):
+    // printed by NAME only under FACTION, like the official card; the text
+    // lives on the army-rule card (UI.ds.splitAbilities, owner decision
+    // 2026-11-01).
+    const { core, faction: factionRules, subGroups } = UI.ds.splitAbilities(abil);
+    const inSub = new Set([].concat(...subGroups.values(), factionRules));
+    const named = abil.filter(a => !a.isCore && !inSub.has(a));
     // Wargear-conferred abilities (storm shield, grav-chute, …) — a distinct
     // block, mirroring the official datasheet's "Wargear Abilities".
     const wargear = (unit.wargearAbilities || []).filter(a => a && a.name);

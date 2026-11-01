@@ -12,7 +12,7 @@
 //       _keywordDefs}). opts: { type: 'ranged'|'melee' } -> one banner + rows
 //       sub-section ('' for an empty list). Keyword chips get weapon-kw colour
 //       classes, tooltips (_keywordDefs) and glossary hooks.
-//   UI.ds.abilityList(abilities, opts)
+//   UI.ds.abilityList(abilities, opts)   opts.kind: core | faction | regular | sub
 //     abilities: [{name, description, isCore, _typeName}]. opts.kind:
 //       'core'    -> Core Abilities tag section
 //       'regular' -> "Abilities" section (core/sub/leader-prose rows excluded)
@@ -159,21 +159,40 @@
     return tn.toUpperCase();
   }
 
+  // Lower-cased names of every loaded faction's army rules (Reanimation
+  // Protocols, Oath of Moment, Synapse, …). They reach each unit as a
+  // full-text ability; every datasheet view lists them by NAME only, like the
+  // official datacard's FACTION line (owner decision 2026-11-01). The text
+  // stays on the army-rule card and in the Army Rules section.
+  ds.armyRuleNames = function () {
+    const out = new Set();
+    const facs = (window.App && App.state && App.state.factions) || {};
+    Object.keys(facs).forEach(k => {
+      const rules = facs[k] && facs[k].armyRules;
+      if (Array.isArray(rules)) rules.forEach(r => { if (r && r.name) out.add(String(r.name).toLowerCase()); });
+    });
+    return out;
+  };
+
   ds.splitAbilities = function (abilities) {
     abilities = abilities || [];
     const subGroups = new Map();
+    const ruleNames = ds.armyRuleNames();
+    const isFaction = (a) => !a.isCore && ruleNames.has(String(a.name || '').toLowerCase());
     abilities.forEach(a => {
-      if (a.isCore) return;
+      if (a.isCore || isFaction(a)) return;
       const key = subAbilityKey(a);
       if (!key) return;
       if (!subGroups.has(key)) subGroups.set(key, []);
       subGroups.get(key).push(a);
     });
     const isSub = (a) => !!subAbilityKey(a);
+    const plain = (a) => !a.isCore && !isFaction(a) && !isSub(a);
     return {
       core:    abilities.filter(a => a.isCore),
-      leader:  abilities.filter(a => !a.isCore && !isSub(a) && /can be attached to/i.test(a.description)),
-      regular: abilities.filter(a => !a.isCore && !isSub(a) && !/can be attached to/i.test(a.description)),
+      faction: abilities.filter(isFaction),
+      leader:  abilities.filter(a => plain(a) && /can be attached to/i.test(a.description)),
+      regular: abilities.filter(a => plain(a) && !/can be attached to/i.test(a.description)),
       subGroups,
     };
   };
@@ -190,6 +209,15 @@
         <div class="detail-section-title">Core Abilities</div>
         <div class="core-abilities-list">
           ${parts.core.map(a => { const gl = UI.glossary && UI.glossary.lookup(a.name); return `<button type="button" class="core-ability-tag"${a.description ? ` data-tooltip="${UI.mdPlain(a.description)}"` : ''}${gl ? ` data-glossary="${gl.id}"` : ''}>${esc(a.name)}</button>`; }).join('')}
+        </div>
+      </div>`;
+    }
+    if (kind === 'faction') {
+      if (parts.faction.length === 0) return '';
+      return `<div class="detail-section">
+        <div class="detail-section-title">Faction Abilities</div>
+        <div class="core-abilities-list">
+          ${parts.faction.map(a => { const gl = UI.glossary && UI.glossary.lookup(a.name); return `<button type="button" class="core-ability-tag"${a.description ? ` data-tooltip="${UI.mdPlain(a.description)}"` : ''}${gl ? ` data-glossary="${gl.id}"` : ''}>${esc(a.name)}</button>`; }).join('')}
         </div>
       </div>`;
     }
