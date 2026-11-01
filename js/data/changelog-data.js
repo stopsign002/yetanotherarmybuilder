@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.01-1',
-    lastUpdated: '2026-11-01T08:00:00Z',
+    version:     '2026.11.01-2',
+    lastUpdated: '2026-11-01T13:30:00Z',
     entries: [
+      {
+        date: '2026-11-01',
+        kind: 'fix',
+        title: 'Cards: weapon columns no longer cut off in 9-card and 6-card sheets',
+        description: 'In the 9-card and 6-card sheet layouts the RANGED WEAPONS / MELEE WEAPONS label pushed the column letters past the edge of the card, so the D column was cut off. The label now wraps onto two lines instead. Continuation cards in those layouts also print at the same size they were measured at, so they no longer run off the bottom of the card, and Industrial Stencil headers no longer run past the card edge.',
+      },
       {
         date: '2026-11-01',
         kind: 'fix',

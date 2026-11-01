@@ -373,8 +373,12 @@
 }
 
 /* Tighten card padding for many-up grids. The measure stage carries
- * data-dense for the same layouts, so splits are measured at this size (#120). */
-.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-card, .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-card, .dcc-measure-stage[data-dense] .dcc-card { padding: 1.2mm; gap: 0.9mm; }
+ * data-dense for the same layouts, so splits are measured at this size (#120).
+ * A continuation card keeps padding 0 and its overlay takes the tight padding
+ * instead, so its content box is the same size as the front it was measured
+ * as; before, it got both paddings and printed 4mm narrower and taller (#121). */
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-card:not(.dcc-card-cont), .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-card:not(.dcc-card-cont), .dcc-measure-stage[data-dense] .dcc-card:not(.dcc-card-cont),
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-card-cont .dcc-cont-overlay, .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-card-cont .dcc-cont-overlay { padding: 1.2mm; gap: 0.9mm; }
 .dcc-card.dcc-tpl-grimdark::before {
   content: '';
   position: absolute;
@@ -705,6 +709,12 @@
   border-bottom: 0.7mm solid var(--st-accent);
   box-shadow: none;
 }
+/* Many-up grids pad the card 1.2mm all round (see the dense rule above), so
+ * the bleed has to match or the bar runs 0.8mm past each card edge (#121). */
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-tpl-stencil .dcc-head, .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-tpl-stencil .dcc-head, .dcc-measure-stage[data-dense] .dcc-tpl-stencil .dcc-head {
+  margin: -1.2mm -1.2mm 1.4mm;
+  padding: 1.6mm 1.2mm;
+}
 .dcc-stat-cell {
   background: linear-gradient(180deg, #1a1308 0%, #2a1f0e 100%);
   color: #f4ead2;
@@ -794,6 +804,7 @@
   grid-template-columns: 7mm 7.5mm 5mm 4.5mm 4.5mm 7.5mm;
   gap: 0;
   width: 36mm;
+  flex: 0 0 auto;
   text-align: center;
   /* Same base size as `.dcc-section-head` (2.47mm) and same multiplier
    * (--dcc-heading-mul) so the title and column-abbreviation halves
@@ -804,7 +815,11 @@
   opacity: 0.95;
 }
 .dcc-section-label {
-  flex: 0 0 auto;
+  /* Shrinks (and wraps onto two lines) rather than pushing the column letters
+   * past the card edge: in a 3-column cell the 36mm letter block leaves too
+   * little room for RANGED WEAPONS on one line (#121). */
+  flex: 0 1 auto;
+  min-width: 0;
   /* The section labels (RANGED WEAPONS / MELEE WEAPONS / …) print light-on-dark
    * in every template — a bronze bar in the default look, a solid ink block in
    * the stencil look. Cinzel only ships up to a 600 weight, so font-weight:700
