@@ -372,8 +372,9 @@
   overflow: hidden;
 }
 
-/* Tighten card padding for many-up grids */
-.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-card, .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-card { padding: 1.2mm; gap: 0.9mm; }
+/* Tighten card padding for many-up grids. The measure stage carries
+ * data-dense for the same layouts, so splits are measured at this size (#120). */
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-card, .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-card, .dcc-measure-stage[data-dense] .dcc-card { padding: 1.2mm; gap: 0.9mm; }
 .dcc-card.dcc-tpl-grimdark::before {
   content: '';
   position: absolute;
@@ -574,7 +575,7 @@
   paint-order: stroke fill;
 }
 .dcc-head-strat .dcc-name-line { padding-right: 15mm; }
-.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-name, .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-name { font-size: 3mm; }
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-name, .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-name, .dcc-measure-stage[data-dense] .dcc-name { font-size: 3mm; }
 
 /* Wide tracking + a cut shadow reads as stamped, engraved lettering. */
 .dcc-tpl-grimdark .dcc-name { letter-spacing: 0.1em; text-shadow: 0 0.12mm 0.2mm rgba(0,0,0,0.75); }
@@ -731,7 +732,7 @@
  * than a standalone "2+", so we shrink the value font and tighten letter
  * spacing to keep it inside the cell. */
 .dcc-stat-val-combo { font-size: calc(3.6mm * var(--dcc-stat-mul, 1)) !important; letter-spacing: -0.02em; white-space: nowrap; font-weight: 700; margin-top: 0.4mm; }
-.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-stat-val, .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-stat-val { font-size: 3.0mm; }
+.dcc-page[style*="grid-template-columns: repeat(3"] .dcc-stat-val, .dcc-page[style*="grid-template-rows: repeat(3"] .dcc-stat-val, .dcc-measure-stage[data-dense] .dcc-stat-val { font-size: 3.0mm; }
 
 /* Stat pillars — chamfered armour plates with a bronze top bevel (the gold
  * shows through the ::before sandwich) and bone numerals. */

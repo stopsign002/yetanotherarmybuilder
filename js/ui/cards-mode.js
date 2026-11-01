@@ -1943,14 +1943,25 @@
     return spill;
   }
 
-  function splitOverflowingUnitCards(unitCards, layout) {
-    if (unitCards.length === 0) return unitCards;
-    const { w: cardW, h: cardH } = cardSizeFor(layout);
+  // Off-screen stage the split passes measure cards in. The many-up
+  // tightening in cards-mode.css (smaller padding, name and stat type) keys on
+  // the printed page's 3-column / 3-row grid; the stage is not a page, so
+  // without `data-dense` cards were measured at full size and split for a
+  // card that never prints (#120). Mirror the same condition here.
+  function newMeasureStage(layout) {
     const stage = document.createElement('div');
     stage.style.cssText =
       'position:fixed;top:-99999px;left:0;width:auto;height:auto;visibility:hidden;z-index:-9999;pointer-events:none;';
     stage.className = 'dcc-measure-stage';
+    if (layout && (layout.cols === 3 || layout.rows === 3)) stage.setAttribute('data-dense', '');
     document.body.appendChild(stage);
+    return stage;
+  }
+
+  function splitOverflowingUnitCards(unitCards, layout) {
+    if (unitCards.length === 0) return unitCards;
+    const { w: cardW, h: cardH } = cardSizeFor(layout);
+    const stage = newMeasureStage(layout);
     try {
       const out = [];
       const backsOn = !!(cardBack.enabled && cardBack.src);
@@ -2045,15 +2056,9 @@
   // Measure a card offscreen at its target size and return the auto spill set.
   // Wraps autoSpillKeysFor with the offscreen-stage plumbing so it can be
   // called both from the split path and from the panel (to seed checkboxes).
-  function autoSpillKeysForCard(card, cardW, cardH, stage) {
+  function autoSpillKeysForCard(card, cardW, cardH, stage, layout) {
     const ownStage = !stage;
-    if (ownStage) {
-      stage = document.createElement('div');
-      stage.style.cssText =
-        'position:fixed;top:-99999px;left:0;width:auto;height:auto;visibility:hidden;z-index:-9999;pointer-events:none;';
-      stage.className = 'dcc-measure-stage';
-      document.body.appendChild(stage);
-    }
+    if (ownStage) stage = newMeasureStage(layout);
     const host = document.createElement('div');
     host.style.cssText = 'width:' + cardW + 'mm; height:' + cardH + 'mm;';
     const cardEl = document.createElement('article');
@@ -2124,11 +2129,7 @@
   function splitOverflowingRuleCards(ruleCards, layout) {
     if (ruleCards.length === 0) return ruleCards;
     const { w: cardW, h: cardH } = cardSizeFor(layout);
-    const stage = document.createElement('div');
-    stage.style.cssText =
-      'position:fixed;top:-99999px;left:0;width:auto;height:auto;visibility:hidden;z-index:-9999;pointer-events:none;';
-    stage.className = 'dcc-measure-stage';
-    document.body.appendChild(stage);
+    const stage = newMeasureStage(layout);
     try {
       const out = [];
       const backsOn = !!(cardBack.enabled && cardBack.src);
@@ -3367,9 +3368,26 @@
     });
   }
 
+  // Faces the cards print in. Until one has loaded, the split pass measures
+  // the fallback serif and decides page splits for metrics the printed card
+  // does not have (#118: Industrial Stencil's EB Garamond is only fetched the
+  // first time a stencil card renders). Render now, then re-render once when
+  // the faces arrive; a no-op when they are already loaded.
+  const CARD_FACES = ['1em "EB Garamond"', 'italic 1em "EB Garamond"', '1em "Cinzel"', '600 1em "Cinzel"'];
+  let cardFacesPending = null;
+  function remeasureWhenFacesLoad() {
+    const fonts = document.fonts;
+    if (cardFacesPending || !fonts || typeof fonts.load !== 'function') return;
+    if (CARD_FACES.every(f => fonts.check(f))) return;
+    cardFacesPending = Promise.all(CARD_FACES.map(f => fonts.load(f)))
+      .catch(() => {})
+      .then(() => refreshPreview());
+  }
+
   function refreshPreview() {
     const out = hostEl && hostEl.querySelector('#cards-preview');
     if (!out) return;
+    remeasureWhenFacesLoad();
     // Preserve scroll position across the rebuild. refreshPreview() fires on
     // virtually every sidebar interaction (toggles, sliders, colour swatches,
     // layout tweaks); since a styling change doesn't alter which cards are
@@ -3408,7 +3426,7 @@
     if (Array.isArray(spillOverrides[card.id])) return new Set(spillOverrides[card.id]);
     const layout = getLayoutFor('unit');
     const { w, h } = cardSizeFor(layout);
-    return autoSpillKeysForCard(card, w, h, null);
+    return autoSpillKeysForCard(card, w, h, null, layout);
   }
 
   let spillPanelId = null;   // id of the unit card the panel is currently editing
