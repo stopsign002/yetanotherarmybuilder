@@ -1250,6 +1250,18 @@
     </div>`;
   }
 
+  // Lower-cased names of every loaded faction's army rules. Rebuilt per
+  // render pass (cheap: ~35 factions, one or two rules each).
+  function armyRuleNames() {
+    const out = new Set();
+    const facs = (window.App && App.state && App.state.factions) || {};
+    Object.keys(facs).forEach(k => {
+      const rules = facs[k] && facs[k].armyRules;
+      if (Array.isArray(rules)) rules.forEach(r => { if (r && r.name) out.add(String(r.name).toLowerCase()); });
+    });
+    return out;
+  }
+
   function renderAbilitiesBlock(unit) {
     if (!display.abilities) return '';
     const abil = (unit.abilities || []).filter(a => a && a.name);
@@ -1261,12 +1273,18 @@
     // (leader prose included, unlike the detail pane).
     const { core, subGroups } = UI.ds.splitAbilities(abil);
     const inSub = new Set([].concat(...subGroups.values()));
-    const named = abil.filter(a => !a.isCore && !inSub.has(a));
+    // Army rules (Reanimation Protocols, Oath of Moment, Synapse, …) arrive
+    // on every unit as a full-text ability. The official card prints them by
+    // NAME only under FACTION; the text lives on the army-rule card. Owner
+    // decision 2026-11-01: same here — never print army-rule text on a unit.
+    const ruleNames = armyRuleNames();
+    const factionRules = abil.filter(a => !a.isCore && !inSub.has(a) && ruleNames.has(a.name.toLowerCase()));
+    const named = abil.filter(a => !a.isCore && !inSub.has(a) && !ruleNames.has(a.name.toLowerCase()));
     // Wargear-conferred abilities (storm shield, grav-chute, …) — a distinct
     // block, mirroring the official datasheet's "Wargear Abilities".
     const wargear = (unit.wargearAbilities || []).filter(a => a && a.name);
     const coreVisible = display.coreAbil && core.length > 0;
-    if (!coreVisible && named.length === 0 && subGroups.size === 0 && wargear.length === 0) return '';
+    if (!coreVisible && factionRules.length === 0 && named.length === 0 && subGroups.size === 0 && wargear.length === 0) return '';
 
     // Stencil template: the design renders each ability as a block — a
     // category type-pill + name on one line, paragraph below — under a
@@ -1278,6 +1296,10 @@
       if (coreVisible) {
         body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">Core</span></div>`
               + `<div class="dcc-ab-text">${core.map(a => esc(a.name)).join(', ')}</div></div>`;
+      }
+      if (factionRules.length) {
+        body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">Faction</span></div>`
+              + `<div class="dcc-ab-text">${factionRules.map(a => esc(a.name)).join(', ')}</div></div>`;
       }
       named.forEach(a => {
         body += `<div class="dcc-ab-block"><div class="dcc-ab-head"><span class="dcc-type-pill">Ability</span>`
@@ -1321,13 +1343,18 @@
     // "Voice of the Triarch" / "Primarch of the First Legion" live here
     // because they have typeName="Abilities" and explain the choose
     // mechanic for the special section below.
-    if (coreVisible || named.length > 0) {
+    if (coreVisible || factionRules.length > 0 || named.length > 0) {
       html += `<div class="dcc-section dcc-abilities" data-sec="abilities" data-sec-label="Abilities">
         <div class="dcc-section-head"><span class="dcc-section-label">ABILITIES</span></div>
         <div class="dcc-abilities-body">`;
       if (coreVisible) {
         html += `<div class="dcc-ability-row dcc-core-row"><strong>CORE:</strong> ${
           core.map(a => esc(a.name)).join(', ')
+        }</div>`;
+      }
+      if (factionRules.length) {
+        html += `<div class="dcc-ability-row dcc-core-row"><strong>FACTION:</strong> ${
+          factionRules.map(a => esc(a.name)).join(', ')
         }</div>`;
       }
       named.forEach(a => {
