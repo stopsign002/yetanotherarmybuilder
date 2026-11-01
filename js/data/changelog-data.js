@@ -26,9 +26,33 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.10.31-5',
-    lastUpdated: '2026-10-31T21:00:00Z',
+    version:     '2026.11.01-2',
+    lastUpdated: '2026-11-01T13:30:00Z',
     entries: [
+      {
+        date: '2026-11-01',
+        kind: 'fix',
+        title: 'Cards: weapon columns no longer cut off in 9-card and 6-card sheets',
+        description: 'In the 9-card and 6-card sheet layouts the RANGED WEAPONS / MELEE WEAPONS label pushed the column letters past the edge of the card, so the D column was cut off. The label now wraps onto two lines instead. Continuation cards in those layouts also print at the same size they were measured at, so they no longer run off the bottom of the card, and Industrial Stencil headers no longer run past the card edge.',
+      },
+      {
+        date: '2026-11-01',
+        kind: 'fix',
+        title: 'Enhancement ticked right after Add now applies',
+        description: 'Ticking an enhancement on a datasheet you had just added used to leave the box checked while the points stayed the same. The tick now goes on the unit you just added, and adding another copy no longer hands it an enhancement that is already taken.',
+      },
+      {
+        date: '2026-11-01',
+        kind: 'fix',
+        title: 'Old chapter share links open as that chapter',
+        description: 'A share link from before every Space Marine chapter had its own faction entry (for example a Blood Angels list saved as \u201cSpace Marines, chapter Blood Angels\u201d) now opens as Blood Angels, so its army rules, detachments and cards are the chapter\u2019s rather than the generic Space Marines ones.',
+      },
+      {
+        date: '2026-11-01',
+        kind: 'fix',
+        title: 'Cards: page splits measured the way cards print',
+        description: 'In 9-card and 6-card sheet layouts, cards were measured at full type size before the smaller print size was applied, so some cards were split onto an extra card they did not need. Industrial Stencil cards are also re-measured once their EB Garamond typeface has loaded, instead of being split using the stand-in font\u2019s sizes.',
+      },
       {
         date: '2026-10-31',
         kind: 'change',

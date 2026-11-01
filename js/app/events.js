@@ -95,8 +95,19 @@
     document.getElementById('unit-detail-panel').addEventListener('change', e => {
       const cb = e.target.closest('.enhancement-cb');
       if (!cb) return;
-      if (state.selectedArmyEntryIndex == null) return;
-      const entry = state.currentArmy.entries[state.selectedArmyEntryIndex];
+      // Which army entry the tick applies to: the one opened from the army
+      // list, or else the entry this roster datasheet was just added as. Before
+      // #117 a tick after Add was silently ignored — the box stayed checked and
+      // the points never moved. With neither, the tick is a pre-selection that
+      // the Add handler below reads.
+      let idx = state.selectedArmyEntryIndex;
+      if (idx == null && state.lastAddedEntry && state.selectedUnit &&
+          state.lastAddedEntry.unitData === state.selectedUnit) {
+        const i = state.currentArmy.entries.indexOf(state.lastAddedEntry);
+        if (i >= 0) idx = i;
+      }
+      if (idx == null) return;
+      const entry = state.currentArmy.entries[idx];
       if (!entry) return;
       const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
       const enh = detEnhs.find(e => e.name === cb.value);
@@ -105,7 +116,7 @@
       if (cb.checked) {
         // Once per army (upgrades excepted) — the UI greys these out, this is
         // the backstop.
-        const taken = App.enhancementTakenBy && App.enhancementTakenBy(enh, state.selectedArmyEntryIndex);
+        const taken = App.enhancementTakenBy && App.enhancementTakenBy(enh, idx);
         if (taken) {
           cb.checked = false;
           UI.toast(`${enh.name} is already taken by ${taken.customName || taken.unitName}`, 'error');
@@ -119,14 +130,14 @@
         const i = enhs.findIndex(e => e.name === enh.name);
         if (i >= 0) enhs.splice(i, 1);
       }
-      state.currentArmy.setEnhancements(state.selectedArmyEntryIndex, enhs);
+      state.currentArmy.setEnhancements(idx, enhs);
       // Persist immediately. Without saveArmy the change only lives in
       // memory — reload would drop it and sync would never push it. The
       // saveArmy path also writes localStorage and notifies sync.
       state.armyManager.saveArmy(state.currentArmy);
       UI.renderArmyList(state.currentArmy);
       // Re-render the open detail so the other checkboxes reflect the swap.
-      const fresh = state.currentArmy.entries[state.selectedArmyEntryIndex];
+      const fresh = state.currentArmy.entries[idx];
       if (fresh) UI.renderUnitDetail(fresh.unitData, detEnhs, fresh.enhancements || []);
     });
 
@@ -148,15 +159,26 @@
       }
 
       const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
-      const selectedEnhancements = Array.from(
+      let selectedEnhancements = Array.from(
         document.querySelectorAll('#detail-enhancements-section .enhancement-cb:checked')
       ).map(cb => detEnhs.find(e => e.name === cb.value)).filter(Boolean);
+      // A box left checked from the previous Add (or ticked onto it, #117)
+      // must not hand a once-per-army enhancement to a second copy.
+      const dupes = selectedEnhancements.filter(enh => App.enhancementTakenBy && App.enhancementTakenBy(enh, null));
+      if (dupes.length) {
+        selectedEnhancements = selectedEnhancements.filter(enh => !dupes.includes(enh));
+        // The pane now speaks for the new copy, which does not carry them.
+        document.querySelectorAll('#detail-enhancements-section .enhancement-cb:checked').forEach(cb => {
+          if (dupes.some(enh => enh.name === cb.value)) cb.checked = false;
+        });
+        UI.toast(`${dupes.map(e => e.name).join(', ')} is already taken — added without it`, 'info');
+      }
 
       // Wargear picker: snapshot the configured loadout onto the new entry.
       const wargearSel = (App.WargearPicker && App.WargearPicker.takeSelections)
         ? App.WargearPicker.takeSelections(state.selectedUnit) : [];
 
-      state.currentArmy.addUnit(state.selectedUnit, qty, squadOption, selectedEnhancements, wargearSel);
+      state.lastAddedEntry = state.currentArmy.addUnit(state.selectedUnit, qty, squadOption, selectedEnhancements, wargearSel);
       UI.renderArmyList(state.currentArmy);
       const label = squadOption && squadOption.models
         ? `${qty}× ${state.selectedUnit.name} (${squadOption.models} models)`

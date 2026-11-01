@@ -429,6 +429,7 @@
     html += wargearSection();
 
     html += UI.ds.abilityList(abilities, { kind: 'core' });
+    html += UI.ds.abilityList(abilities, { kind: 'faction' });
 
     if (unit.transportCapacity) {
       html += `<div class="detail-section detail-transport-section">

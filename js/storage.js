@@ -166,8 +166,13 @@ window.Storage = (() => {
   }
 
   function _fromCompact(data, { factions = [] } = {}) {
-    const factionName = data.f || '';
     const chapter     = data.c || '';
+    // Every Space Marine chapter is now a top-level faction, and nothing reads
+    // a separate chapter any more (applyImportedSelections ignores it). A code
+    // from the sub-dropdown era carries `f` = Space Marines + `c` = the chapter;
+    // taken as-is it opened as plain Space Marines in every mode, so a Blood
+    // Angels list got the generic army rules (#119). Promote a loaded chapter.
+    const factionName = (chapter && factions.some(f => f.factionName === chapter)) ? chapter : (data.f || '');
     const lookupOrder = [chapter, factionName];
     const displayFaction = chapter || factionName || '(unknown)';
     // Rebuild wargear-picker selections from compact [optionId, choiceIdx,

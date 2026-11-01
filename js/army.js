@@ -77,10 +77,11 @@ window.Army = class Army {
         && !e.customName
         && !(e.enhancements && e.enhancements.length) && !(e.wargear && e.wargear.length)
     );
+    let entry = existing;
     if (existing) {
       existing.count += count;
     } else {
-      this.entries.push({
+      entry = {
         unitId: unitData.id,
         unitName: unitData.name,
         unitData,
@@ -98,9 +99,13 @@ window.Army = class Army {
         customName: customName || undefined,
         entryId: _mintEntryId(),
         attachedToEntryId: null,
-      });
+      };
+      this.entries.push(entry);
     }
     this.updatedAt = new Date().toISOString();
+    // The entry the unit landed in (new, or the stack it merged into), so the
+    // Add button can remember it for a follow-up enhancement tick (#117).
+    return entry;
   }
 
   // Mark the army as edited. Every mutator above stamps `updatedAt` itself,
