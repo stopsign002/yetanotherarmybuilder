@@ -4,7 +4,7 @@
 // READ-ONLY server-wise: everything it creates lives in the browser's own
 // localStorage (a throwaway context), signed out, so sync never fires.
 // No waitForFunction anywhere — yaab's CSP has no 'unsafe-eval'.
-import { OUT, BASE, launch, newPage, until, makeChecker } from './_lib.mjs';
+import { OUT, BASE, launch, newPage, until, makeChecker, login } from './_lib.mjs';
 
 const C = makeChecker();
 const { check } = C;
@@ -61,6 +61,7 @@ async function seedArmy(page) {
 }
 
 async function bootAndSeed(page) {
+  await login(page);
   await page.goto(BASE, { waitUntil: 'load' });
   // Wait for the async GDC merge too (armyRules / gdcStratagems land after
   // the factions themselves), by polling for a faction that satisfies the

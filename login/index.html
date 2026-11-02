@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sign in · YAAB</title>
+<link rel="preload" href="/js/vendor/fonts/cinzel-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/login/login.css">
+<script src="/login/login.js" defer></script>
+</head>
+<body>
+<main class="card">
+  <h1>YAAB</h1>
+  <p class="sub">Yet Another Army Builder</p>
+
+  <form id="pane-signin" class="pane" autocomplete="on" novalidate>
+    <label>Username <input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+    <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+    <p role="alert" class="err"></p>
+    <button type="submit" class="btn primary">Sign in</button>
+    <div class="alt">
+      <button type="button" class="btn quiet" data-go="register">Create account</button>
+      <button type="button" class="btn quiet" data-go="recover">Forgot password?</button>
+    </div>
+  </form>
+
+  <form id="pane-register" class="pane" hidden autocomplete="on" novalidate>
+    <label>Username <input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      <small>3-32 characters: letters, digits, _ . - only.</small></label>
+    <label>Password <input name="password" type="password" autocomplete="new-password" required>
+      <small>8-256 characters.</small></label>
+    <label>Confirm password <input name="confirm" type="password" autocomplete="new-password" required></label>
+    <p role="alert" class="err"></p>
+    <button type="submit" class="btn primary">Create account</button>
+    <div class="alt"><button type="button" class="btn quiet" data-go="signin">Back to sign in</button></div>
+  </form>
+
+  <form id="pane-recover" class="pane" hidden autocomplete="off" novalidate>
+    <label>Username <input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+    <label>Recovery code <input name="code" autocomplete="off" autocapitalize="none" spellcheck="false" required></label>
+    <label>New password <input name="password" type="password" autocomplete="new-password" required>
+      <small>8-256 characters.</small></label>
+    <p role="alert" class="err"></p>
+    <button type="submit" class="btn primary">Reset password and sign in</button>
+    <div class="alt"><button type="button" class="btn quiet" data-go="signin">Back to sign in</button></div>
+  </form>
+
+  <section id="pane-code" class="pane" hidden>
+    <p id="code-msg"></p>
+    <div id="code-box" class="code" aria-label="Recovery code"></div>
+    <button type="button" id="code-copy" class="btn quiet">Copy</button>
+    <p class="note">Write this down: it is the only way back in if you forget your password. It will not be shown again.</p>
+    <p class="note" id="code-after"></p>
+    <button type="button" id="code-continue" class="btn primary" hidden>Continue</button>
+    <button type="button" id="code-back" class="btn primary" hidden>Back to sign in</button>
+  </section>
+</main>
+</body>
+</html>

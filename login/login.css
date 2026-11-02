@@ -1,0 +1,41 @@
+/* Sign-in page. Dark grimdark tokens from /css/tokens.css; nothing else shared. */
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--bg); color: var(--text); font-family: var(--font); font-size: var(--fs-lg);
+  display: flex; align-items: center; justify-content: center; padding: 24px 16px;
+}
+[hidden] { display: none !important; }
+.card {
+  width: 100%; max-width: 380px; background: var(--panel-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 24px 20px;
+}
+h1 { font-family: var(--font-display); font-weight: 600; letter-spacing: var(--tr-widest); margin: 0; text-align: center; font-size: var(--fs-3xl); }
+.sub { margin: 4px 0 20px; text-align: center; color: var(--text-muted); font-size: var(--fs-md); }
+.pane { display: flex; flex-direction: column; gap: 14px; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-md); color: var(--text-muted); }
+small { color: var(--text-muted); font-size: var(--fs-sm); }
+input {
+  font: inherit; font-size: 16px; color: var(--text); background: var(--bg); min-height: 44px;
+  border: 1px solid var(--border-light); border-radius: var(--radius); padding: 0 12px;
+}
+input:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn {
+  font: inherit; font-size: var(--fs-lg); min-height: 44px; padding: 0 16px; cursor: pointer;
+  border-radius: var(--radius); border: 1px solid var(--border-light); color: var(--text);
+  background: var(--card-bg); transition: background .12s;
+}
+.btn:hover:not(:disabled) { background: var(--card-hover); }
+.btn.primary { background: var(--accent); color: var(--accent-on); border-color: var(--accent); font-weight: 600; }
+.btn.primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn:disabled { opacity: .5; cursor: default; }
+.alt { display: flex; gap: 10px; }
+.alt .btn { flex: 1; font-size: var(--fs-base); padding: 0 8px; }
+.err { margin: 0; min-height: 0; color: var(--danger); font-size: var(--fs-md); }
+.err:empty { display: none; }
+.code {
+  font-family: var(--font-mono); font-size: var(--fs-xl); word-break: break-all; text-align: center; user-select: all;
+  background: var(--bg); border: 1px dashed var(--border-light); border-radius: var(--radius); padding: 16px 12px; margin-bottom: 10px;
+}
+.note, #code-msg { margin: 0; font-size: var(--fs-md); color: var(--text-muted); line-height: 1.45; }
+#code-msg { color: var(--text); }

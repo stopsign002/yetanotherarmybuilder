@@ -67,9 +67,26 @@ export function makeChecker({ strict = false } = {}) {
   return { check, results, fails, summary, get pass() { return pass; }, get fail() { return fail; } };
 }
 
+// The site is behind a login gate (docs/AUTH-GATE.md). With FIXTURE_USER and
+// FIXTURE_PASS set (an owner-approved yaab account), sign in through the page's
+// own request context so the browser context holds the yaab_sid cookie.
+// Returns true if it logged in (or there are no credentials to use).
+export async function login(page) {
+  const username = process.env.FIXTURE_USER, password = process.env.FIXTURE_PASS;
+  if (!username || !password) return true;
+  const r = await page.request.post(SITE + '/api/auth/login', { data: { username, password } });
+  if (!r.ok()) { console.log(`FAIL login: HTTP ${r.status()} for FIXTURE_USER`); return false; }
+  return true;
+}
+
 // goto + wait for the roster + short settle. Returns false if it never booted.
 export async function boot(page, { state = 'attached', url = SITE, timeout = 240000, settle = 300 } = {}) {
+  if (!(await login(page))) return false;
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 });
+  if (new URL(page.url()).pathname.startsWith('/login')) {
+    console.log('FAIL boot: redirected to /login (set FIXTURE_USER/FIXTURE_PASS)');
+    return false;
+  }
   try { await page.waitForSelector('#unit-grid .unit-card', { state, timeout }); }
   catch (_) { return false; }
   await page.waitForTimeout(settle);

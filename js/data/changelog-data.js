@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.02-1',
-    lastUpdated: '2026-11-02T03:00:00Z',
+    version:     '2026.11.02-2',
+    lastUpdated: '2026-11-02T14:30:00Z',
     entries: [
+      {
+        date: '2026-11-02',
+        kind: 'change',
+        title: 'Sign-in required',
+        description: 'YAAB is no longer open to the public: every page now needs a signed-in, approved account. Signing out or an expired session takes you to the new sign-in page, which also handles creating an account (then awaiting approval) and recovering a password with your recovery code. Weapon and core rule chips now carry the 11th edition wording (Indirect Fire, Hazardous, Fire Overwatch and Blast had the old text).',
+      },
       {
         date: '2026-11-02',
         kind: 'change',

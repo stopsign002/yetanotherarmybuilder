@@ -69,6 +69,20 @@
     }
   }
 
+  // Login gate (docs/AUTH-GATE.md): Caddy refuses every path to a signed-out
+  // visitor, so a signed-out app has nowhere to render. Go to the sign-in page
+  // and come back to this exact place afterwards.
+  function gotoLogin(withNext) {
+    try {
+      if (withNext) {
+        window.location.replace('/login?next=' + encodeURIComponent(
+          window.location.pathname + window.location.search + window.location.hash));
+      } else {
+        window.location.replace('/login');
+      }
+    } catch (_) {}
+  }
+
   async function jsonFetch(path, opts) {
     const init = Object.assign({
       method: 'GET',
@@ -125,7 +139,9 @@
     try {
       if (flashMsg) sessionStorage.setItem(FLASH_KEY, JSON.stringify(flashMsg));
     } catch (_) {}
-    try { window.location.reload(); } catch (_) {}
+    // Gated site: after the wipe there is nothing to reload into, so land on
+    // the sign-in page (a fresh load there also drops every in-memory copy).
+    gotoLogin(false);
   }
 
   function showFlash() {
@@ -173,13 +189,12 @@
           setUser({ username: me.username, is_admin: !!me.is_admin });
         } else {
           setUser(null);
+          gotoLogin(true);
         }
       } catch (err) {
         if (err.status === 401) {
-          // Only a device that THOUGHT it was signed in (a hint was present)
-          // has an expired session to report; an anonymous visitor gets no
-          // notification, as before.
           setUser(null, primed ? { reason: 'expired' } : undefined);
+          gotoLogin(true);
         } else {
           // Network error / server down — keep the hint so the UI doesn't
           // flap. Sync will treat us as offline.
@@ -227,10 +242,13 @@
     // 400'd: the server session was never deleted and the cookie never
     // cleared, so the next reload's /me signed the browser straight back in
     // (seen in the Caddy access log, 2026-10-30).
-    async logout() {
+    // `opts.redirect === false` is for signOut()'s "remove local data" path,
+    // which wipes first and then redirects itself.
+    async logout(opts) {
       try { await jsonFetch('/logout', { method: 'POST', body: {} }); }
       catch (_) {}
       setUser(null, { reason: 'logout' });
+      if (!opts || opts.redirect !== false) gotoLogin(false);
     },
 
     // The ONE sign-out flow. Two entry points call it: the topbar auth-button
@@ -291,7 +309,7 @@
           try { drained = await App.Sync.drainNow(8000); } catch (_) { drained = false; }
         }
         const left = (App.Sync && typeof App.Sync.queueLength === 'function') ? App.Sync.queueLength() : 0;
-        try { await Auth.logout(); } catch (_) {}
+        try { await Auth.logout({ redirect: false }); } catch (_) {}
         forgetAccountData({
           text: (!drained && left)
             ? `Signed out and removed local data. ${left} unsynced change${left === 1 ? '' : 's'} could not be uploaded first.`
@@ -363,6 +381,7 @@
         if (window.UI && typeof UI.toast === 'function') {
           UI.toast('Your session expired — sign in again to keep syncing.', 'warning', 5000);
         }
+        gotoLogin(true);
       }
     },
   };

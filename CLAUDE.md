@@ -6,6 +6,10 @@ A client-only static site for building, sharing and playing Warhammer 40k **11th
 
 The **app's own JavaScript is still buildless** (plain `<script src>`, IIFEs, namespace globals, no framework/bundler/TS). Game data is **not built in the browser and not committed**: `app/pipeline/` (Node `.mjs` extractors run in Docker, `mfm.py` on the host, CLI `pipeline/yaab-data`) builds a **candidate** dataset daily; nothing goes live until approved. Workflow: `yaab-data build` → `validate <id>` → `report <id>` (diff vs current, mailed only when it differs) → `yaab-data approve <id>` (atomic swap into `data/dataset/current/`, last 5 kept in `previous/`) → `yaab-data rollback [<n>]` if needed; `list` and `preview <id>` (prints the `?data=candidate:<id>` URL) are read-only. Not approving **is** the pause — there is no freeze file. Caddy serves `/data/dataset/*` with `Cache-Control: no-cache`, so an approve is visible on the next load. Never hand-edit anything under `data/dataset/`: it is generated. Full contract, source ownership table and validator rules: `docs/DATASET.md`; the v1 scripts' retirement steps: `pipeline/retire-v1.md`; the v1 bundle path (40kdc `dc-bundle.js`, `dc-adapter.js`, overlays, `DATA-FREEZE`, weekly `yaab-pipeline.sh`) is gone or being removed and survives only as history in git.
 
+## Login gate
+
+Since 2026-11-02 the whole site sits behind Caddy `forward_auth`: signed-out requests get a 302 to `/login` (sign-in page in `login/`, contract `docs/AUTH-GATE.md`, notes in `docs/AUTH.md` section 12). Consequence: `browse.sh shot <url>` now screenshots the sign-in page unless a `run` script logs in first (`FIXTURE_USER` / `FIXTURE_PASS` with `BROWSE_ENV`, via `login(page)` in `scripts/verify/_lib.mjs`). `python3 -m http.server` (below) has no gate.
+
 ## Running it
 
 ```

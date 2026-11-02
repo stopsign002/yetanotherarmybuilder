@@ -40,6 +40,11 @@
 //      first load), plus 37 MB of dormant BSData XML. Caching either would
 //      store a second copy of something the app already owns.
 //
+// LOGIN GATE (2026-11-02, docs/AUTH-GATE.md): Caddy gates the shell, so a
+// signed-out navigation is a 302 to /login. Rule 2 (network-first, never
+// cache-first) is what keeps a signed-out device from showing a stale cached
+// shell forever; a genuine network failure still falls back to the shell.
+//
 // If you find yourself wanting cache-first for JS to shave another round trip:
 // don't. The round trip is already off the critical path, and the failure mode
 // you would be reintroducing costs hours of confusion to save milliseconds.
@@ -56,7 +61,7 @@
 // Nothing in SHELL below is a js/css file, and stamp-assets.mjs only stamps
 // those — so no SHELL entry needs a ?v= suffix appended here to match what the
 // page will request.
-const VERSION = 'yaab-shell-2026.11.02-1';
+const VERSION = 'yaab-shell-2026.11.02-2';
 
 // Precached on install: ONLY what a cold OFFLINE navigation needs before the
 // page can start asking for things itself.

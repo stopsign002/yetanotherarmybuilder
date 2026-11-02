@@ -190,3 +190,27 @@ One-liners worth keeping in your head when touching this surface:
 - Every POST through `jsonFetch` carries a body (`{}` at minimum). See §4.
 - The recovery-code view stays locked until acknowledged. Don't add a × or an Escape path to it.
 - Sign-out goes through `App.Auth.signOut()` and its dialog. Never reintroduce `confirm()`, and keep Cancel non-destructive.
+
+## 12. Login gate (2026-11-02)
+
+Contract: `docs/AUTH-GATE.md`. yaab is no longer publicly visible: Caddy answers
+every request without a signed-in, approved yaab session with a 302 to
+`/login?next=<uri>` (`forward_auth` to `yaab-api` `/auth/me`).
+
+- **Public** (no session needed): `/login/`, `/css/tokens.css`,
+  `/js/vendor/fonts/*`, `/img/*`, and the API routes the sign-in page calls
+  (`/api/auth/login|register|recover|logout|me`). Everything else, including
+  `/sw.js`, `/data/dataset/*`, `index.html`, all JS/CSS, is gated.
+- **Sign-in page**: `login/index.html`, `login/login.js`, `login/login.css`
+  (sign in, create account, recover; `next` is accepted only as a same-origin
+  path, never `//`, never `/login`).
+- **App side**: `App.Auth.init()` on a 401 / empty `/me` redirects to
+  `/login?next=<here>`; a network error keeps the offline path. A mid-session 401
+  (`handleSessionExpired`) and sign-out (`logout()`, and "Remove local data" after
+  its wipe) also land on `/login`.
+- **Suites**: scripts run through `browse.sh` hit the gate. Give them an
+  owner-approved fixture account via `FIXTURE_USER` / `FIXTURE_PASS` (pass with
+  `BROWSE_ENV="FIXTURE_USER FIXTURE_PASS"`); `scripts/verify/_lib.mjs` `login(page)`
+  / `boot()` POST `/api/auth/login` before navigating, and `boot()` prints
+  `FAIL boot: redirected to /login` if the gate still wins. Never create or
+  approve an account from a script.
