@@ -221,40 +221,41 @@
       return;
     }
 
-    let html = '';
-    // What the squad actually carries right now: defaults at this size with
-    // the picked swaps applied. This is the line the owner reads to confirm a
-    // swap "counted"; the export sends exactly this allocation.
-    try {
-      const eff = App.WargearPicker.effectiveCounts(unit, models, App.WargearPicker.takeSelections(unit));
-      if (eff && eff.size) {
-        const parts = [];
-        eff.forEach((v) => { if (v && v.count > 0) parts.push(`${v.count}× ${esc(v.name)}`); });
-        if (parts.length) html += `<div class="wgp-note wgp-loadout"><strong>Loadout:</strong> ${parts.join(' · ')}</div>`;
-      }
-    } catch (_) {}
-    groups.forEach((rows, model) => {
-      html += `<div class="wgp-group"><div class="wgp-group-title">${esc(model)}</div>`;
-      rows.forEach((r) => {
-        const n = counts.get(r.key) || 0;
-        const repl = (r.opt.replaces && r.opt.replaces.length)
-          ? ` <span class="wgp-chip">replaces ${esc(names(r.opt.replaces))}</span>` : '';
-        // The option name goes IN the button label: a unit can render a dozen
-        // priced rows, and a bare "Add one" ×12 is unusable in a screen
-        // reader's controls rotor. The .wgp-item text alongside is decorative
-        // for that purpose — it names no control.
-        const label = cap(names(r.grp));
-        html += `<div class="wgp-row">
-          <span class="wgp-item">${esc(label)}${ptsChip(r.cost)}${repl}</span>
-          <span class="wgp-stepper" data-key="${esc(r.key)}">
+    // INVENTORY view (owner 2026-11-03): the section reads as "what guns do
+    // I have", not as a replacement system. Default items are listed with
+    // the number the squad still carries (derived: default count minus the
+    // swaps that remove it), option items with a stepper. The option model
+    // (replaces / choices / counts) underneath is unchanged, so saved armies,
+    // points and the TTS export all keep working.
+    let html = '<div class="wgp-inv">';
+    const row = (label, n, r, hint, fixed) => {
+      const hintChip = hint ? ` <span class="wgp-chip">${esc(hint)}</span>` : '';
+      const pts = r ? ptsChip(r.cost) : '';
+      const stepper = fixed
+        ? `<span class="wgp-stepper wgp-stepper-fixed"><span class="wgp-count">${n}</span></span>`
+        : `<span class="wgp-stepper" data-key="${esc(r.key)}">
             <button type="button" class="wgp-btn wgp-minus" aria-label="Remove one ${esc(label)}">&minus;</button>
             <span class="wgp-count">${n}</span>
             <button type="button" class="wgp-btn wgp-plus" aria-label="Add one ${esc(label)}">+</button>
-          </span>
-        </div>`;
-      });
-      html += `</div>`;
+          </span>`;
+      return `<div class="wgp-row${fixed ? ' wgp-row-default' : ''}"><span class="wgp-item">${esc(label)}${pts}${hintChip}</span>${stepper}</div>`;
+    };
+    // Default items at this size, minus whatever the picked swaps removed.
+    const removedBy = new Map();
+    groups.forEach((rows) => rows.forEach((r) => {
+      const n = counts.get(r.key) || 0; if (!n) return;
+      effReplaces(r.opt, r.grp).forEach((x) => removedBy.set(x.id, (removedBy.get(x.id) || 0) + n));
+    }));
+    defaultsFor(profile, models).forEach((d) => {
+      const left = Math.max(0, (d.count || 0) - (removedBy.get(d.id) || 0));
+      html += row(cap(d.name), left, null, 'default', true);
     });
+    // Everything the datasheet lets you take instead of / on top of that.
+    groups.forEach((rows, model) => rows.forEach((r) => {
+      const hint = (r.opt.constraint && r.opt.constraint.model_name) ? model : '';
+      html += row(cap(names(r.grp)), counts.get(r.key) || 0, r, hint, false);
+    }));
+    html += '</div>';
     if (anyPriced || wgLive) html += `<div class="wgp-note wgp-total">Wargear points: +${wgLive} pts</div>`;
     host.innerHTML = html;
     restoreStepperFocus(host, refocus);

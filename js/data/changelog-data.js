@@ -26,14 +26,14 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.03-1',
-    lastUpdated: '2026-11-03T00:20:00Z',
+    version:     '2026.11.03-2',
+    lastUpdated: '2026-11-03T00:50:00Z',
     entries: [
       {
         date: '2026-11-03',
         kind: 'change',
-        title: 'Wargear swaps shown where you can see them',
-        description: 'The Wargear picker now opens with a Loadout line (\u201c7\u00d7 Gauss flayer \u00b7 3\u00d7 Gauss reaper\u201d) that updates as you press \u2212 and +, and each army entry shows its swaps as badges next to enhancements, free or priced.',
+        title: 'Wargear reads as an inventory',
+        description: 'The Wargear section now lists what the squad carries, like a gun locker: the default items with the number still carried, and every option the datasheet allows with a \u2212 / + counter. Press + on a gauss reaper and the gauss flayer count drops by one. Each army entry also shows its swaps as badges next to enhancements, free or priced.',
       },
       {
         date: '2026-11-02',
