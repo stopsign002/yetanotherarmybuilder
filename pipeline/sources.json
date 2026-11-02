@@ -48,7 +48,7 @@
   "coreRules": {
     "_comment": "Core-rule glossary (Deep Strike, Deadly Demise X, Lethal Hits, ...). GDC prints core abilities and weapon keywords by NAME only, so their rule text has no GDC source. Pinned file built 2026-11-02 from the 11th edition Core Rules (June 2026) as transcribed on wahapedia.ru/wh40k11ed (section 24 abilities + the shooting types, hazard roll, benefit of cover and core stratagems they reference); replaced the 2026-10-31 v1 snapshot, whose Indirect Fire / Hazardous / Fire Overwatch text was 10th edition. Regenerate with the session's scratchpad rules11/compose.py or by hand; bump the md5.",
     "path": "/work/core-rules.json",
-    "md5": "cb9c7c7362dfd05df1ea5d942ac79fe2"
+    "md5": "b0e0ee7460ce310c0dd21969c4cdd1c6"
   },
   "work": "/work/work",
   "golden": "/work/golden",
