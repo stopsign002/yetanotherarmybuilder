@@ -35,7 +35,14 @@
       ? `<span class="army-entry-squad">${esc(entry.squadLabel)}</span>` : '';
     const enhBadges = (entry.enhancements || []).map(e =>
       `<span class="army-enh-badge" title="${UI.mdPlain(e.description || '')}">${esc(e.name)}</span>`
-    ).join('');
+    ).join('')
+    // Wargear swaps ride the same badge row ("3× Gauss reaper"), priced or
+    // free, so a loadout is visible without opening the entry (owner 2026-11-02).
+    + (entry.wargear || []).filter(w => w && w.count > 0 && (w.label || (w.items && w.items.length))).map(w => {
+      const label = w.label || w.items.join(' + ');
+      const pts = (w.pts || 0) * (w.count || 0);
+      return `<span class="army-enh-badge army-wg-badge" title="Wargear swap">${w.count}× ${esc(label)}${pts ? ` <span class="army-enh-pts">${pts > 0 ? '+' : '−'}${Math.abs(pts)}</span>` : ''}</span>`;
+    }).join('');
     // The squad-label (e.g. "20 models") and the "+N attached" pill
     // share a SUB-ROW immediately below the unit name. Keeping them
     // on a dedicated line means:

@@ -1200,3 +1200,6 @@ body.build-mode-enhanced .army-entry-remove {
 @media (prefers-reduced-motion: reduce) {
   .army-entry-action:active { transform: none; }
 }
+
+/* Wargear-swap badges share the enhancement badge chrome, quieter fill. */
+.army-wg-badge { background: var(--ov-1); }

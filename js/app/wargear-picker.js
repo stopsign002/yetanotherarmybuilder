@@ -222,6 +222,17 @@
     }
 
     let html = '';
+    // What the squad actually carries right now: defaults at this size with
+    // the picked swaps applied. This is the line the owner reads to confirm a
+    // swap "counted"; the export sends exactly this allocation.
+    try {
+      const eff = App.WargearPicker.effectiveCounts(unit, models, App.WargearPicker.takeSelections(unit));
+      if (eff && eff.size) {
+        const parts = [];
+        eff.forEach((v) => { if (v && v.count > 0) parts.push(`${v.count}× ${esc(v.name)}`); });
+        if (parts.length) html += `<div class="wgp-note wgp-loadout"><strong>Loadout:</strong> ${parts.join(' · ')}</div>`;
+      }
+    } catch (_) {}
     groups.forEach((rows, model) => {
       html += `<div class="wgp-group"><div class="wgp-group-title">${esc(model)}</div>`;
       rows.forEach((r) => {

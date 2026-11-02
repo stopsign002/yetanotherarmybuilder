@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.02-4',
-    lastUpdated: '2026-11-02T23:50:00Z',
+    version:     '2026.11.03-1',
+    lastUpdated: '2026-11-03T00:20:00Z',
     entries: [
+      {
+        date: '2026-11-03',
+        kind: 'change',
+        title: 'Wargear swaps shown where you can see them',
+        description: 'The Wargear picker now opens with a Loadout line (\u201c7\u00d7 Gauss flayer \u00b7 3\u00d7 Gauss reaper\u201d) that updates as you press \u2212 and +, and each army entry shows its swaps as badges next to enhancements, free or priced.',
+      },
       {
         date: '2026-11-02',
         kind: 'change',

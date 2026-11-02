@@ -1388,3 +1388,7 @@ strong .glossary-term, .glossary-term strong { font-weight: inherit; }
 
 /* order: lives here, not in settings-drawer.css: must follow `.modal-header h3` {font-family} above (equal specificity, same element, font-family). */
 .settings-about-card h3 { font-family: var(--font-display); font-size: var(--fs-md); font-weight: 600; letter-spacing: var(--tr-widest); text-transform: uppercase; margin-bottom: var(--sp-4); }
+
+/* Live loadout line at the top of the wargear picker (wargear-picker.js). */
+.wgp-loadout { color: var(--text-muted); font-size: var(--fs-xs); margin: 0 0 var(--sp-3); line-height: 1.5; }
+.wgp-loadout strong { color: var(--text); }
