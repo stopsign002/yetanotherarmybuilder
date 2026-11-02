@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.01-2',
-    lastUpdated: '2026-11-01T13:30:00Z',
+    version:     '2026.11.02-1',
+    lastUpdated: '2026-11-02T03:00:00Z',
     entries: [
+      {
+        date: '2026-11-02',
+        kind: 'change',
+        title: 'Tidier spacing and type, army rules by name',
+        description: 'Every size, spacing, corner radius, shadow and letter-spacing now comes from one small scale, so things that were a pixel apart line up: 13px text is 12 or 14, odd paddings are even. Datasheets and printed cards list army rules such as Reanimation Protocols by name under Faction Abilities instead of repeating the full text on every unit.',
+      },
       {
         date: '2026-11-01',
         kind: 'fix',
