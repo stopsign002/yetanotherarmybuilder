@@ -240,6 +240,14 @@ Cross-cutting docs:
 - **DOM:** `modal-qr-share`.
 - **Notes:** Vendor lib is `defer`-loaded.
 
+### `js/app/tts-export.js`
+- **Purpose:** Export ▾ → Send to Tabletop Simulator. Turns the current army into a Rosterizer `.regiztry` (one-entry STORED zip around the registry JSON Yellowscribe's `rosterizerParser.js` reads), posts it to `POST /api/export/tts` (yaab-api forwards to yellowscribe.link, which sends no CORS headers) and shows the 8-character code for the Yellowscribe v2 TTS mod.
+- **Exports:** `App.TtsExport.{buildRegistry(army, {unitsById?, factionName?}), buildZip(obj, name?), send(army), open(army)}`. `buildRegistry` is pure (no DOM, no fetch).
+- **Depends on:** entry `unitData` (`gdcComposition`, `gdcLoadout`, `wargearProfile.{modelsBySize, defaultsBySize, options}`, `weapons`, `modelStats`, `abilities`, `wargearAbilities`), `UI.toast`; the click handler for `#btn-export-tts` is in `events.js`, mirrored by `topbar-export.js`, the Settings drawer and the command palette.
+- **Storage:** none.
+- **DOM:** `modal-tts` (states `#tts-sending` / `#tts-result` / `#tts-failed`, buttons `#btn-tts-copy` / `#btn-tts-download` / `#btn-tts-done`).
+- **Notes:** Contract `docs/TTS-EXPORT.md`. Loadout → models: model types from `modelsBySize` (else composition count lines), defaults from "… is equipped with:" lines (else `defaultsBySize`, else every weapon), picker swaps applied per copy to the constrained model type (unconstrained: the most numerous type), preferring models that still carry the replaced item and are untouched; a split group is named "<type> w/ <gained>". Names that match no weapon row become Wargear abilities on the model. Verify with `scripts/verify/tts-export.mjs` (node, posts to Yellowscribe's parser; `PARSED=` re-asserts a saved response).
+
 ### `js/app/pwa-install.js`
 - **Purpose:** `beforeinstallprompt` handler + iOS manual-install sheet (Safari never fires that event) + mobile tab-bar wiring.
 - **Exports:** `App.pwaInstall` (click handler), `App.pwaInstallAvailable()` (true when the button would actually do something — captured `beforeinstallprompt` OR `isIOS()`, and not standalone/dismissed), `App.setMobilePanel(panelName)`.

@@ -49,6 +49,7 @@
     { label: 'Export (copy code)', shortcut: null,         btn: 'btn-export-string' },
     { label: 'Copy as text',       shortcut: null,         btn: 'btn-export-text' },
     { label: 'Download CSV',       shortcut: null,         btn: 'btn-export-csv' },
+    { label: 'Send to Tabletop Simulator', shortcut: null, btn: 'btn-export-tts' },
     { label: 'Share link',         shortcut: null,         btn: 'yaab-btn-share' },
     { label: 'Data cards',         shortcut: null,         btn: 'btn-data-cards' },
     { label: 'Undo',               shortcut: 'Cmd/Ctrl+Z', btn: 'yaab-btn-undo' },

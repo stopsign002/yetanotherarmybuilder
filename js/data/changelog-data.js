@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.02-2',
-    lastUpdated: '2026-11-02T14:30:00Z',
+    version:     '2026.11.02-3',
+    lastUpdated: '2026-11-02T20:30:00Z',
     entries: [
+      {
+        date: '2026-11-02',
+        kind: 'feature',
+        title: 'Send to Tabletop Simulator',
+        description: 'Export \u2192 Send to Tabletop Simulator turns your army into a Yellowscribe code for the Yellowscribe v2 mod in TTS, the same way NewRecruit\u2019s export does: every model with its datasheet, weapons (including your wargear swaps, allocated to the right models) and abilities. Codes last about 10 minutes; if Yellowscribe is unreachable you can download the .regiztry file and upload it there yourself.',
+      },
       {
         date: '2026-11-02',
         kind: 'change',

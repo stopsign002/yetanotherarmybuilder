@@ -128,3 +128,28 @@
 }
 .modal-footer { padding: var(--sp-6) var(--sp-9); gap: var(--sp-4); }
 /* 8. REDUCED-MOTION RESPECT — kill any new animations / transforms. */
+
+/* Send to Tabletop Simulator — js/app/tts-export.js. Reuses the .modal chrome
+ * and .btn styles above; only the code readout and the state toggles are new.
+ * .btn is display:inline-flex, which beats the UA [hidden] rule, so the
+ * footer buttons tts-export.js hides need the explicit override. */
+.tts-export-modal { width: min(460px, 100%); }
+.tts-export-modal .modal-body { display: flex; flex-direction: column; gap: var(--sp-5); }
+.tts-export-modal [hidden] { display: none !important; }
+.tts-result { display: flex; flex-direction: column; gap: var(--sp-5); }
+.tts-code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-align: center;
+  color: var(--text);
+  background: var(--ov-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-6) var(--sp-4);
+  user-select: all;
+  word-break: break-all;
+}
+.tts-credit { font-size: var(--fs-sm); }
+.tts-credit a { color: var(--accent); }

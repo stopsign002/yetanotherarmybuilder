@@ -469,6 +469,12 @@
       }
     });
 
+    // Send to Tabletop Simulator: builds a .regiztry, posts it through
+    // /api/export/tts to Yellowscribe and shows the code (js/app/tts-export.js).
+    document.getElementById('btn-export-tts').addEventListener('click', () => {
+      if (App.TtsExport && App.TtsExport.open) App.TtsExport.open(state.currentArmy);
+    });
+
     document.getElementById('btn-export-csv').addEventListener('click', () => {
       const csv  = Storage.exportArmyToCSV(state.currentArmy);
       const name = (state.currentArmy.name || 'army').replace(/[^a-z0-9_-]/gi, '_');

@@ -21,6 +21,8 @@ All requests are same-origin to `/api/auth/*` from [App.Auth](../js/app/auth.js#
 
 Routes are mounted under `/auth/*` server-side ([api/auth.js](../../api/auth.js#L26)) and reached as `/api/auth/*` from the client because Caddy strips the `/api` prefix (see `~/sites/CLAUDE.md` routing).
 
+Other session-gated routes outside `/auth/*`: `POST /export/tts` ([api/export.js](../../api/export.js)), the Tabletop Simulator export proxy. It takes `application/octet-stream` rather than JSON; the CSRF defense still holds because that type and its `X-Roster-Name` header are non-simple, so a cross-site request needs a preflight.
+
 ## 3. Frontend surfaces
 
 ### `App.Auth` — [app/js/app/auth.js](../js/app/auth.js)

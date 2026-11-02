@@ -347,6 +347,12 @@
         run() { close(); clickToolbarBtn('btn-export-csv'); },
       },
       {
+        id: 'export-tts',
+        label: 'Send to Tabletop Simulator',
+        section: 'export',
+        run() { close(); clickToolbarBtn('btn-export-tts'); },
+      },
+      {
         id: 'data-cards',
         label: 'Data cards…',
         section: 'export',

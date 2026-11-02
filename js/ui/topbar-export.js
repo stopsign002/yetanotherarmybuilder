@@ -97,6 +97,7 @@
     menu.appendChild(mkItem('Copy army code',  'btn-export-string'));
     menu.appendChild(mkItem('Copy as text',    'btn-export-text'));
     menu.appendChild(mkItem('Download CSV',    'btn-export-csv'));
+    menu.appendChild(mkItem('Send to Tabletop Simulator', 'btn-export-tts'));
     menu.appendChild(mkItem('Data cards…','btn-data-cards'));
 
     wrap.appendChild(btn);

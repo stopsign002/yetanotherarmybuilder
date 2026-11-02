@@ -64,6 +64,7 @@ Each attaches methods onto `window.App` or registers via `App.hooks`.
 | `history.js` | Undo/redo snapshot stack, debounced 500ms, max 50. |
 | `url-share.js` | `?a=YAAB1:...` encode/decode + Share Link button. |
 | `qr-share.js` | QR code modal for the current share URL. |
+| `tts-export.js` | Export ▾ → **Send to Tabletop Simulator**: builds a Rosterizer `.regiztry` from the army, posts it via `/api/export/tts` to Yellowscribe and shows the code in `#modal-tts` (Download .regiztry on failure). Contract `docs/TTS-EXPORT.md`. |
 | `pwa-install.js` | `beforeinstallprompt` handler + mobile tab-bar wiring. |
 | `flavor.js` | Per-faction quote on empty army + save toast. |
 | `nickname.js` | Auto-suggested army nickname placeholder. |
