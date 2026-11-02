@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.02-3',
-    lastUpdated: '2026-11-02T20:30:00Z',
+    version:     '2026.11.02-4',
+    lastUpdated: '2026-11-02T23:50:00Z',
     entries: [
+      {
+        date: '2026-11-02',
+        kind: 'change',
+        title: 'Free wargear swaps are now pickable',
+        description: 'The Wargear section in Details now lists every option a datasheet allows, not only the ones that cost points, so a Necron Warrior\u2019s gauss reaper or a Sergeant\u2019s free weapon swap can be recorded. Counts are capped at the number of eligible models. Free swaps change no points; they show on the unit and travel with the Tabletop Simulator export.',
+      },
       {
         date: '2026-11-02',
         kind: 'feature',

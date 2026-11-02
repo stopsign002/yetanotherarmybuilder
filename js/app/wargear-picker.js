@@ -125,6 +125,27 @@
     effReplaces(opt, grp).forEach((x) => { d -= ic[x.id] || 0; });
     return d;
   };
+  // How many models may take an option at the current squad size: a named
+  // model (the Sergeant) → 1, "for every N models" → floor(models / N),
+  // "any number" → every model, otherwise 1. Counts were unbounded before.
+  function maxFor(unit, key) {
+    const profile = unit.wargearProfile || {};
+    const optId = key.slice(0, key.lastIndexOf(':'));
+    const opt = (profile.options || []).find((o) => o.id === optId);
+    if (!opt) return Infinity;
+    const c = opt.constraint || {};
+    const models = currentModels(unit) || 1;
+    if (c.model_name) {
+      // Named model type (the Sergeant): as many as there are of that type,
+      // whether or not the option also says "any number".
+      const bySize = profile.modelsBySize || {};
+      const row = bySize[models] || bySize[Object.keys(bySize)[0]] || {};
+      return Math.max(1, row[c.model_name] || 1);
+    }
+    if (c.per_n_models) return Math.max(1, Math.floor(models / c.per_n_models));
+    if (c.any_number) return models;
+    return 1;
+  }
   const ptsChip = (d) => (d ? ` <span class="wgp-pts">${d > 0 ? '+' : '−'}${Math.abs(d)} pts</span>` : '');
 
   // render() rebuilds the whole host with innerHTML, which destroys the very
@@ -169,18 +190,22 @@
     // Point-costing choice groups (positive = upgrade; negative = shedding a
     // priced default), grouped by the model the option is for. Preserves
     // first-seen model order.
+    // Every option is offered, free ones too (owner 2026-11-02): until then
+    // only priced swaps were pickable and free ones (a Necron Warrior's
+    // gauss reaper) were left to the datasheet prose, which is fine for
+    // points but leaves nothing for the Tabletop Simulator export to put on
+    // the models. Free rows just carry no points chip.
     const groups = new Map();   // modelName -> [{ key, opt, grp, cost }]
-    if (profile.itemCosts) {
-      profile.options.forEach((opt) => {
-        const model = (opt.constraint && opt.constraint.model_name) || unit.name || 'Any model';
-        opt.choices.forEach((grp, ci) => {
-          const cost = groupCost(profile, opt, grp);
-          if (!cost) return;
-          if (!groups.has(model)) groups.set(model, []);
-          groups.get(model).push({ key: opt.id + ':' + ci, opt, grp, cost });
-        });
+    let anyPriced = false;
+    (profile.options || []).forEach((opt) => {
+      const model = (opt.constraint && opt.constraint.model_name) || unit.name || 'Any model';
+      opt.choices.forEach((grp, ci) => {
+        const cost = groupCost(profile, opt, grp);
+        if (cost) anyPriced = true;
+        if (!groups.has(model)) groups.set(model, []);
+        groups.get(model).push({ key: opt.id + ':' + ci, opt, grp, cost });
       });
-    }
+    });
 
     // Live wargear points = priced default loadout at this size + selected
     // deltas, floored at 0 — mirrors army.js getEntryPoints so the banner
@@ -190,8 +215,7 @@
     wgLive = Math.max(0, wgLive);
 
     if (!groups.size) {
-      // No priced options to pick — the official prose covers the free ones.
-      // Leave the section empty but keep the banner accurate for the default.
+      // Nothing to pick — the datasheet has no wargear options.
       host.innerHTML = '';
       updateBannerPts(unit, wgLive);
       return;
@@ -220,7 +244,7 @@
       });
       html += `</div>`;
     });
-    html += `<div class="wgp-note wgp-total">Wargear points: +${wgLive} pts</div>`;
+    if (anyPriced || wgLive) html += `<div class="wgp-note wgp-total">Wargear points: +${wgLive} pts</div>`;
     host.innerHTML = html;
     restoreStepperFocus(host, refocus);
     updateBannerPts(unit, wgLive);
@@ -292,7 +316,8 @@
         if (!btn) return;
         const key = btn.closest('.wgp-stepper').dataset.key;
         const cur = counts.get(key) || 0;
-        counts.set(key, Math.max(0, cur + (btn.classList.contains('wgp-plus') ? 1 : -1)));
+        const next = Math.max(0, cur + (btn.classList.contains('wgp-plus') ? 1 : -1));
+        counts.set(key, Math.min(next, maxFor(unit, key)));
         render(unit, host);
         syncEntry(unit);   // no-op unless this pane edits an army entry
       });
