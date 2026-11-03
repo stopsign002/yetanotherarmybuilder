@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.03-5',
-    lastUpdated: '2026-11-03T05:00:00Z',
+    version:     '2026.11.03-6',
+    lastUpdated: '2026-11-03T12:45:00Z',
     entries: [
+      {
+        date: '2026-11-03',
+        kind: 'fix',
+        title: 'Undo refreshes the Details pane',
+        description: 'Undo and redo now redraw the open unit\'s Details pane as well as the army list, so an undone enhancement no longer stays ticked and the wargear picker always edits the right unit. If the undo removes the unit you had open, the pane closes.',
+      },
       {
         date: '2026-11-03',
         kind: 'fix',

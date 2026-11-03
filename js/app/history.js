@@ -103,11 +103,35 @@
       // and pulls the cloud copy back down, silently undoing the undo.
       // Reverting a snapshot follows the same path.
       army.updatedAt = new Date().toISOString();
+      // The open army entry, by entryId — the snapshot may have a different
+      // entry at the same index (an undone add or remove shifts them).
+      const state = App.state;
+      const oldArmy = state.currentArmy;
+      const sel = state.selectedArmyEntryIndex;
+      const selEntry = (sel != null && oldArmy && oldArmy.entries) ? oldArmy.entries[sel] : null;
       suppress = true;
-      App.state.currentArmy = army;
-      if (App.state.armyManager) App.state.armyManager.currentArmy = army;
+      state.currentArmy = army;
+      if (state.armyManager) state.armyManager.currentArmy = army;
       if (window.UI && typeof UI.renderArmyList === 'function') {
         UI.renderArmyList(army);
+      }
+      // Re-render the detail pane against the restored entry: otherwise it
+      // keeps showing the pre-undo enhancement tick / loadout, and the
+      // wargear picker's cached index (#71 class) can address the wrong
+      // entry. If the entry no longer exists, close the pane (issue #124).
+      if (selEntry) {
+        const idx = selEntry.entryId ? army.entries.findIndex(e => e && e.entryId === selEntry.entryId) : -1;
+        try {
+          if (idx >= 0 && window.UI && typeof UI.renderUnitDetail === 'function') {
+            state.selectedArmyEntryIndex = idx;
+            const e = army.entries[idx];
+            const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
+            UI.renderUnitDetail(e.unitData, detEnhs, e.enhancements || []);
+          } else if (idx < 0) {
+            state.selectedArmyEntryIndex = null;
+            if (window.UI && typeof UI.clearUnitDetail === 'function') UI.clearUnitDetail();
+          }
+        } catch (err) { console.warn('[history] detail re-render', err); }
       }
       lastUpdatedAt = army.updatedAt;
       suppress = false;
