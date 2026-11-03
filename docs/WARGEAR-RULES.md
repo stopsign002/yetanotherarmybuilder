@@ -149,3 +149,63 @@ At 7 models every "per 5" cap is 1 (floor(7/5) = 1), heavies 2.
 - **W-P (Opus)**: `pipeline/wargear-rules.mjs`, the `wargearProfile()` changes in `pipeline/build.mjs`, `pipeline/tests/wargear-rules.test.mjs`, `pipeline/validate.mjs` category, `pipeline/schema/faction.schema.json` (rules/unparsed; options removed), `docs/DATASET.md` §wargearProfile. Nothing in `js/`.
 - **W-C (Opus)**: `js/app/wargear-picker.js`, `js/app/entry-rehydrate.js`, `js/app/tts-export.js`, `js/army.js` (only if it reads options), `js/ui/cards-mode.js` effective-loadout call, `scripts/verify/wargear-rules.mjs`, `docs/UI.md` picker section. Works against a hand-written fixture profile for Plague Marines (write it from §1 and the rules table into the test script's `FIXTURE`) until the dataset carries rules. Nothing in `pipeline/`.
 - Session: dataset rebuild/approve, signed-in browser runs, release.
+
+## 5. Inventory v2 — counts, not swaps (owner decision 2026-11-03, supersedes §3's hard caps)
+
+"Set the weapon pick to not limit the weapon selections but warn if they
+appear over the limit. People will need to manually lower their amount of
+default guns. Truly a full inventory of guns."
+
+- **Every row has − N +**, default items included. Nothing is ever disabled
+  or capped (floor at 0 only). Rows: default items first (in default order),
+  then every item any rule offers (deduplicated; an item that is both a
+  default and an option appears once, in the defaults block). Chips: model
+  type when all rules offering the item name the same model; the cap text
+  ("up to 2 per 5", "1 per 5", "1 only", "any") stays on option rows as
+  information.
+- **Storage**: `entry.loadout = [{ id, name, count }]`, the complete
+  inventory (defaults with their counts, extras, zeros omitted). `army.js`
+  gets `setLoadout(index, loadout)`; `entry.wargear` is no longer written.
+  Migration on read (`entry-rehydrate.js`): `loadout` missing and `wargear`
+  present → loadout = defaults at the entry's size − replaced + added, then
+  the entry is saved with `loadout`. A brand-new pick starts from the
+  defaults at the chosen size; changing size on an unsaved pick resets to
+  that size's defaults; changing size on a saved entry keeps the counts.
+- **Points**: `getEntryCopyWargearPts` = `max(0, Σ itemCosts[id] × count)`
+  over the loadout (`alwaysCost` added as today). For an untouched default
+  loadout this equals today's priced-default base, so no army total moves.
+- **Warnings** (rendered under the list in the composition-warning style,
+  `.wgp-warnings`, and a small "wargear" warning badge on the army entry):
+  1. *Slot*: for each default item D with rules that replace it, let R(D) =
+     items whose rule `replaces` includes D; if count(D) + Σ count(R(D)) ≠
+     default(D): "Boltgun: 13 weapons for 10 models — lower the boltgun count
+     when you add swaps" (or "… only 8 for 10 models").
+  2. *Cap*: for each non-default item X, extras(X) = count(X) − default(X);
+     allowed(X) = Σ cap(rule) over rules whose choices include X
+     (per_n → floor(size/n)×max, fixed → max or the model count, any → the
+     model count), minus what other items sharing those rules already used
+     (split fairly: a rule's cap is shared across its choices, so compute
+     per rule: Σ extras of its choice items ≤ cap, attributing an item to
+     the first rule that offers it). Message: "Heavy plague weapon: 5 taken,
+     the datasheet allows up to 4 (up to 2 per 5 models)".
+  3. *Requires / locks*: count(icon) > count(boltgun) → "Icon of despair
+     needs a model that still carries a boltgun".
+  4. *Exclusive*: Σ counts of items in an `exclusiveWith` group > model
+     count → "Only one of these per model".
+  5. *Size*: no warning for the Champion's single swap beyond its block
+     (covered by cap with the model count 1).
+  None → no warnings block.
+- **Export** (`tts-export.js`): allocate the loadout to models: for each
+  model-type block, items any of its rules offer (or that are defaults only
+  of that type) go to that type; remaining default items are spread over the
+  remaining models; the Champion/Sergeant block is filled first. Over-limit
+  inventories still export (extra items go on extra models in order).
+- **Verify** (`scripts/verify/wargear-rules.mjs`, signed in, NO_FIXTURE when
+  the dataset carries rules): steppers are never disabled; adding 3 reapers
+  without touching flayers shows the slot warning, lowering flayers to 7
+  clears it; Plague Marines at 10: 5 heavies shows the cap warning, 4 does
+  not; icon 1 with boltgun 0 shows the requires warning; points unchanged
+  for defaults and correct for a priced swap (Intercessor Sergeant power
+  fist if priced, else any priced item on another sheet); Add to Army saves
+  `loadout`; an old-format entry migrates to the same loadout; TTS export
+  NO_POST run allocates 7 flayers + 3 reapers over 10 Warriors.
