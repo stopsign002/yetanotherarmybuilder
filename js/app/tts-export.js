@@ -18,8 +18,8 @@
 //     gdcLoadout) → else wargearProfile.defaultsBySize → else every weapon on
 //     every model (a few datasheets carry no loadout at all). A loadout name
 //     that matches no weapon row becomes a Wargear ability on that model;
-//   - swaps: entry.wargear against wargearProfile.options, applied per copy to
-//     `count` models of the constrained type (or the most numerous type when
+//   - swaps: entry.wargear against wargearProfile.rules (legacy: .options),
+//     applied per copy to `count` models of the rule's model type (or the most numerous type when
 //     unconstrained), preferring models that still carry what is replaced and
 //     have not been touched yet — so a Sergeant's two swaps stack on the one
 //     Sergeant while three gauss reapers land on three different Warriors.
@@ -235,13 +235,36 @@
     else group.items.push({ key: item.key, label: item.label, rows: item.rows, qty });
   }
 
-  // Same disambiguation as wargear-picker.js effReplaces.
+  // Same disambiguation as wargear-picker.js effReplaces (legacy options only).
   function effReplaces(opt, grp) {
     const r = opt.replaces || [];
     if (r.length <= 1) return r;
     if (opt.andSwap) return r;
     if (grp && grp.length > 1) return r;
     return [r[0]];
+  }
+
+  // Picker selections name a rule id (wargearProfile.rules, docs/WARGEAR-
+  // RULES.md) or, on an older dataset, a 40kdc option id. Both resolve to
+  // { model, choices, removes(ci) }: parsed rules remove exactly `replaces`
+  // (nothing for kind "add"); legacy options go through effReplaces. Kept
+  // local (not App.WargearPicker) so buildRegistry stays runnable under node.
+  function ruleIndex(wp) {
+    const m = new Map();
+    if (Array.isArray(wp.rules)) {
+      wp.rules.forEach((r) => {
+        if (!r || r.id == null) return;
+        m.set(r.id, { model: r.model || null, choices: r.choices || [],
+          removes: () => (r.kind === 'add' ? [] : (r.replaces || [])) });
+      });
+    } else {
+      (wp.options || []).forEach((o) => {
+        if (!o || o.id == null) return;
+        m.set(o.id, { model: (o.constraint && o.constraint.model_name) || null, choices: o.choices || [],
+          removes: (ci) => effReplaces(o, (o.choices || [])[ci]) });
+      });
+    }
+    return m;
   }
 
   function applySwap(groups, typeMatch, replKeys, adds, n) {
@@ -312,11 +335,11 @@
     }
 
     // Swaps from the picker.
-    const optsById = new Map((wp.options || []).map((o) => [o.id, o]));
+    const rulesById = ruleIndex(wp);
     (entry.wargear || []).forEach((sel) => {
       const n = Math.max(0, parseInt(sel && sel.count, 10) || 0);
       if (!n) return;
-      const opt = optsById.get(sel.optionId);
+      const opt = rulesById.get(sel.optionId);
       const grp = opt && Array.isArray(opt.choices) ? opt.choices[sel.choice] : null;
       const addObjs = grp && grp.length ? grp : (sel.items || []).map((nm) => ({ name: nm }));
       const adds = [];
@@ -325,8 +348,8 @@
         const have = adds.find((a) => a.item.key === r.key);
         if (have) have.qty += 1; else adds.push({ item: r, qty: 1 });
       });
-      const repl = opt ? effReplaces(opt, grp).map((x) => resolve(x.name, x.id).key) : [];
-      const mn = opt && opt.constraint && opt.constraint.model_name;
+      const repl = opt ? opt.removes(sel.choice).map((x) => resolve(x.name, x.id).key) : [];
+      const mn = opt && opt.model;
       let typeMatch;
       if (mn) {
         const hits = typesForSubject('The ' + mn, groups).map((g) => g.type);
@@ -350,7 +373,7 @@
     // unit-level unless it is an option nobody took.
     const wgAbilities = (unit.wargearAbilities || []).filter((a) => a && a.name);
     const optionItemKeys = new Set();
-    (wp.options || []).forEach((o) => (o.choices || []).forEach((g) => (g || []).forEach((x) => optionItemKeys.add(norm(x.name)))));
+    rulesById.forEach((o) => (o.choices || []).forEach((g) => (g || []).forEach((x) => optionItemKeys.add(norm(x.name)))));
     const usedWg = new Set();
 
     const typeCount = new Map();

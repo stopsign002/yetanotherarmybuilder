@@ -67,9 +67,10 @@
   // both. Enhancements: by name, from the selected detachments first, then
   // from every detachment of the unit's faction (and its chapter parent) —
   // the latter only when all same-named enhancements there agree on a price.
-  // Wargear: the stored selection names its option id + choice index, so the
-  // NET delta is recomputed against the fresh wargearProfile exactly as the
-  // picker would. Anything that no longer resolves is left alone.
+  // Wargear: the stored selection names its rule (or legacy option) id +
+  // choice index, so the NET delta is recomputed against the fresh
+  // wargearProfile exactly as the picker would. Anything that no longer
+  // resolves is left alone.
   function enhancementPrice(name, facName) {
     const key = String(name || '').toLowerCase();
     if (!key) return null;
@@ -90,18 +91,25 @@
     return fromDets(dets);
   }
 
-  // Mirror of wargear-picker.js's private groupCost/effReplaces (prefer an
-  // exported App.WargearPicker.groupCost if that module ever offers one). Keep
-  // the two in step: this is what the entry is billed.
-  function groupCost(profile, opt, grp) {
-    if (App.WargearPicker && typeof App.WargearPicker.groupCost === 'function') {
-      return App.WargearPicker.groupCost(profile, opt, grp);
-    }
-    const ic = profile.itemCosts;
-    let d = opt.cost || 0;
+  // Wargear prices go through wargear-picker.js (rulesOf + costOf), which
+  // reads `wargearProfile.rules` and falls back to the legacy `options[]`.
+  // The local fallback below only runs if that module is missing, and only
+  // understands the legacy shape. Keep the two in step: this is what the
+  // entry is billed.
+  function ruleFor(prof, id) {
+    const W = App.WargearPicker;
+    if (W && typeof W.rulesOf === 'function') return W.rulesOf(prof).find((r) => r && r.id === id) || null;
+    return (prof.options || []).find((o) => o && o.id === id) || null;
+  }
+  function priceOf(prof, rule, ci) {
+    const W = App.WargearPicker;
+    if (W && typeof W.costOf === 'function') return W.costOf(prof, rule, ci);
+    const grp = (rule.choices || [])[ci];
+    const ic = prof.itemCosts;
+    let d = rule.cost || 0;
     if (!ic) return d;
-    const reps = opt.replaces || [];
-    const eff = (reps.length <= 1 || opt.andSwap || (grp && grp.length > 1)) ? reps : [reps[0]];
+    const reps = rule.replaces || [];
+    const eff = (reps.length <= 1 || rule.andSwap || (grp && grp.length > 1)) ? reps : [reps[0]];
     (grp || []).forEach((x) => { d += ic[x.id] || 0; });
     eff.forEach((x) => { d -= ic[x.id] || 0; });
     return d;
@@ -116,15 +124,81 @@
       if (pts != null && pts !== x.pts) { x.pts = pts; changed = true; }
     });
     const prof = fresh && fresh.wargearProfile;
-    if (prof && Array.isArray(prof.options)) {
+    if (prof && (Array.isArray(prof.rules) || Array.isArray(prof.options))) {
       (entry.wargear || []).forEach((w) => {
         if (!w || w.optionId == null || w.choice == null) return;
-        const opt = prof.options.find((o) => o && o.id === w.optionId);
-        const grp = opt && opt.choices && opt.choices[w.choice];
-        if (!grp) return;
-        const pts = groupCost(prof, opt, grp);
+        const rule = ruleFor(prof, w.optionId);
+        if (!rule || !rule.choices || !rule.choices[w.choice]) return;
+        const pts = priceOf(prof, rule, w.choice);
         if (Number.isFinite(pts) && pts !== w.pts) { w.pts = pts; changed = true; }
       });
+    }
+    return changed;
+  }
+
+  // Saved wargear rows name 40kdc option ids ("plague-marines-wgo-mfm-4");
+  // a dataset that carries parsed `rules` names rule ids ("plague-marines-
+  // wr-3"). Re-point each old row (contract docs/WARGEAR-RULES.md §3): the
+  // rule choice whose item names equal the row's `items`, preferring the one
+  // whose `replaces` names equal the old option's (when the pre-refresh
+  // snapshot still has it) and then the same model type. Rows that match
+  // nothing stay exactly as they are — they still bill and still export —
+  // and are reported once per session. Rows that land on the same rule
+  // choice are merged.
+  const foldItem = (s) => String(s || '').toLowerCase().replace(/\s*\([^)]*\)/g, '')
+    .replace(/[‘’']/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  const bag = (list) => (list || []).map((x) => foldItem(x && typeof x === 'object' ? x.name : x)).sort().join('|');
+  const sameModel = (a, b) => {
+    const f = (s) => foldItem(s).replace(/\s+models?$/, '').replace(/s$/, '');
+    return !!a && !!b && f(a) === f(b);
+  };
+  const warnedRows = new Set();
+  function migrateWargear(entry, prevUnit, fresh) {
+    const prof = fresh && fresh.wargearProfile;
+    if (!prof || !Array.isArray(prof.rules) || !prof.rules.length) return false;
+    if (!Array.isArray(entry.wargear) || !entry.wargear.length) return false;
+    const rules = prof.rules.filter(Boolean);
+    const ids = new Set(rules.map((r) => r.id));
+    const oldOpts = (prevUnit && prevUnit.wargearProfile && prevUnit.wargearProfile.options) || [];
+    let changed = false;
+    entry.wargear.forEach((w) => {
+      if (!w || w.optionId == null || ids.has(w.optionId)) return;
+      const want = bag(w.items);
+      let best = null, bestScore = 0;
+      if (want) {
+        const old = oldOpts.find((o) => o && o.id === w.optionId) || null;
+        const oldRep = old ? bag(old.replaces) : null;
+        const oldModel = old && old.constraint ? old.constraint.model_name : null;
+        rules.forEach((r) => (r.choices || []).forEach((g, c) => {
+          if (bag(g) !== want) return;
+          let score = 1;
+          if (oldRep != null && bag(r.replaces) === oldRep) score += 2;
+          if (oldModel && sameModel(r.model, oldModel)) score += 1;
+          if (score > bestScore) { best = { r, c }; bestScore = score; }
+        }));
+      }
+      if (!best) {
+        const tag = (entry.unitId || '') + ':' + w.optionId;
+        if (!warnedRows.has(tag)) {
+          warnedRows.add(tag);
+          console.warn('[rehydrate] wargear row matches no datasheet rule, kept as saved:', entry.unitName || entry.unitId, w.optionId, w.items);
+        }
+        return;
+      }
+      w.optionId = best.r.id;
+      w.choice = best.c;
+      changed = true;
+    });
+    if (changed) {
+      const merged = [];
+      const at = new Map();
+      entry.wargear.forEach((w) => {
+        const k = w && w.optionId != null ? w.optionId + ':' + (w.choice == null ? 0 : w.choice) : null;
+        if (k && at.has(k)) { merged[at.get(k)].count = (merged[at.get(k)].count || 0) + (w.count || 0); return; }
+        if (k) at.set(k, merged.length);
+        merged.push(w);
+      });
+      entry.wargear = merged;
     }
     return changed;
   }
@@ -164,9 +238,10 @@
   }
 
   function rehydrateArmy(army) {
-    if (!army || !Array.isArray(army.entries)) return { swapped: 0, repriced: 0, remapped: 0 };
-    if (typeof App.findUnit !== 'function') return { swapped: 0, repriced: 0, remapped: 0 };
-    let swapped = 0, repriced = 0, remapped = 0;
+    const none = { swapped: 0, repriced: 0, remapped: 0, migrated: 0 };
+    if (!army || !Array.isArray(army.entries)) return none;
+    if (typeof App.findUnit !== 'function') return none;
+    let swapped = 0, repriced = 0, remapped = 0, migrated = 0;
     army.entries.forEach((e) => {
       if (!e || !e.unitId) return;
       const facName = (e.unitData && e.unitData._factionName) || '';
@@ -187,10 +262,11 @@
         swapped++;
       }
       const a = repairSelectedPts(e, prevUnit, fresh);
+      if (migrateWargear(e, prevUnit, fresh)) migrated++;
       const b = repairAddOnPts(e, fresh);
       if (a || b) repriced++;
     });
-    return { swapped, repriced, remapped };
+    return { swapped, repriced, remapped, migrated };
   }
 
   // Returns the number of entries whose price was corrected, so callers can
@@ -199,7 +275,8 @@
     const s = App.state;
     if (!s || !s.currentArmy) return 0;
     if (!Array.isArray(s.allUnits) || s.allUnits.length === 0) return 0; // factions not ready
-    const { swapped, repriced, remapped } = rehydrateArmy(s.currentArmy);
+    const { swapped, repriced, remapped, migrated } = rehydrateArmy(s.currentArmy);
+    if (migrated > 0) console.info('[rehydrate] re-pointed wargear rows to datasheet rules on', migrated, 'army entries');
     if (remapped > 0) console.info('[rehydrate] re-pointed', remapped, 'army entries from retired unit ids');
     if (swapped > 0) console.info('[rehydrate] refreshed unitData on', swapped, 'army entries');
     if (repriced > 0) console.info('[rehydrate] re-read current points on', repriced, 'army entries');

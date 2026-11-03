@@ -1394,3 +1394,6 @@ strong .glossary-term, .glossary-term strong { font-weight: inherit; }
 .wgp-row-default .wgp-item { color: var(--text-muted); }
 .wgp-stepper-fixed { justify-content: center; }
 .wgp-stepper-fixed .wgp-count { color: var(--text-muted); }
+
+/* Rule engine (wargear-picker.js): + is disabled at a datasheet cap, with the reason in its title. */
+.wgp-btn:disabled { opacity: 0.35; cursor: not-allowed; }

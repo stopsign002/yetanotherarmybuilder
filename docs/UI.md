@@ -318,6 +318,48 @@ hex.
   roster when the chip is on include.
 - No new page errors; both themes, both widths.
 
+## Wargear picker (`js/app/wargear-picker.js`)
+
+Inventory view under the datasheet's Wargear prose: default items with the
+count the squad still carries (derived, no stepper), every option with a
+`− n +` stepper and a chip naming the model type and the cap ("Plague Marine ·
+up to 2 per 5", "1 per 5", "1 only", "any"). The row label's `title` is the
+datasheet line. Since 2026-11-03 the steppers enforce the datasheet
+(contract `docs/WARGEAR-RULES.md` §3); `+` is **disabled, never hidden**, at a
+limit and its `title` says which one:
+
+| Rule | Check |
+|---|---|
+| Rule cap | Σ of a rule's choices ≤ `per_n`: floor(size/n)·max, `fixed`: max (null = every model of that type), `any`: every model of that type (or the unit). `condition.minModels` unmet → rule hidden. |
+| Availability | per item, per model type and unit-wide: default − removed − locked + gained ≥ 0 ("No Plague Marine still carries a boltgun"). Items that match no default and nothing gains are not checked. `add` rules only conflict through items they require/lock. |
+| Exclusivity | rules joined by `exclusiveWith`: Σ ≤ models of that type ("Only one of these per model"). |
+| Requires | a take needs a carrier of each `requires` item that is still present; a required item the rule also `locks` is consumed (the icon bearer's boltgun). |
+
+A `+` is allowed when it adds no new violation and worsens none (so an
+over-limit saved entry can still be edited down). Changing squad size while
+configuring a new unit re-fits the pending loadout to the new caps; an entry
+being edited keeps its rows and shows an "Over a datasheet limit" note.
+`profile.unparsed` lines are listed as "Not checked by the picker".
+
+**Two profile shapes.** `rulesOf(profile)` returns `wargearProfile.rules`
+when present, else maps the legacy 40kdc `options[]` onto the rule shape
+(model_name → model; per_n_models → 1 per N; any_number → every model;
+otherwise 1; removals via the old `effReplaces` OR/AND heuristic). Caps now
+apply per rule (Σ of choices), not per choice. `App.WargearPicker` exports
+`rulesOf`, `removesOf`, `costOf` and `groupCost` for `entry-rehydrate.js`;
+`tts-export.js` keeps its own copy so it stays runnable under node.
+
+**Saved shape is unchanged**: `entry.wargear[] = {optionId, choice, count,
+items, label, pts}`, `optionId` = rule id. `entry-rehydrate.js` re-points rows
+saved against old 40kdc option ids to the rule choice with the same item names
+(preferring equal `replaces`, then the same model type), merges duplicates,
+and leaves unmatched rows untouched (they still bill and export; one console
+warning each).
+
+Check: `scripts/verify/wargear-rules.mjs` (signed in; Plague Marines from an
+injected fixture at 10 and 7 models, migration, and Intercessor Squad /
+Necron Warriors / Leman Russ on the live profile).
+
 ## Testing checklist
 
 1. `python3 -m http.server 8000` from repo root. NOT `file://`.
