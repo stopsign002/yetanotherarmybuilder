@@ -209,3 +209,44 @@ default guns. Truly a full inventory of guns."
   fist if priced, else any priced item on another sheet); Add to Army saves
   `loadout`; an old-format entry migrates to the same loadout; TTS export
   NO_POST run allocates 7 flayers + 3 reapers over 10 Warriors.
+
+## 6. Per-model-type blocks (owner 2026-11-03)
+
+"There needs to be options for all the different types of models in a
+unit. There's only one entry for plasma gun, so there's no way to say I want
+it on the champion but not on the plague marine."
+
+- **One inventory block per model type** (from `modelsBySize[size]`, in
+  composition order; single-type units show one block with no heading).
+  Block heading: the model type name and its count ("Plague Champion · 1",
+  "Plague Marines · 9"). Each block lists that type's default items
+  (`defaultsByModel[type]` × count of that type at this size) and every
+  item any rule with `model === type` offers (rules with `model === null`
+  offer their items in every block). An item offered to two types appears
+  in both blocks as separate rows (Plasma gun under the Champion AND under
+  the Plague Marines).
+- **Storage**: `entry.loadout = [{ id, name, count, model }]` where `model`
+  is the model type name (omitted/null for single-type units). Points: Σ
+  over all rows, unchanged. **Migration** of rows without `model` (today's
+  saved loadouts and old `wargear` rows): defaults go to each type up to
+  that type's default count (Champion first), extras go to the type whose
+  rules offer the item; an item both types' rules offer goes to the larger
+  type; anything left over goes to the largest type. Saved once, then the
+  entry carries `model`.
+- **Warnings** are computed per block with that block's counts: slot
+  ("Plague Champion: Boltgun 0 and swaps 2 for 1 model"), cap (per_n uses
+  the unit size, fixed-per-type uses the block count), requires/locks and
+  exclusives per block. Messages name the block.
+- **Export** reads `model` directly (no allocation heuristic when every
+  row carries one; fall back to today's heuristic when it does not).
+- **Army entry badges**: differences from the default, prefixed with the
+  type when the unit has several ("Champion: plasma gun", "3× gauss reaper").
+- **Verify** (`scripts/verify/wargear-rules.mjs`, NO_FIXTURE on live):
+  Plague Marines at 10 shows two blocks; +1 Plasma gun in the Champion
+  block leaves the Plague Marines' Plasma gun at 0 and vice versa; a
+  Champion plasma gun with Champion boltgun still 1 warns in the Champion
+  block only; the Plague Marines block's heavy cap still 4; Add to Army
+  saves `model` on every row; TTS export puts the plasma gun on the
+  Champion model (NO_POST run, inspect the registry JSON); an old entry
+  without `model` migrates (Champion keeps 1 boltgun + 1 knives, marines
+  the rest); Necron Warriors (single type) look exactly as before.
