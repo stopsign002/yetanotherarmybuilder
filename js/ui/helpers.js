@@ -79,6 +79,37 @@
     return UI.escapeHtml(str).replace(BOLD_RE, '<strong>$1</strong>').replace(/\*\*/g, '');
   };
 
+  // Block-level markdown-ish for rule text (army/detachment rules, abilities,
+  // enhancements). The dataset carries real structure — '\n' between
+  // paragraphs, lines that are only **Heading**, and ■/◦/• bullets — which
+  // HTML whitespace collapsing flattened into one brick (owner, 2026-11-03:
+  // Combat Doctrines). Every line still goes through UI.mdBold (which
+  // glossary.js wraps, so core-rule links keep working). Output is spans with
+  // display:block classes so it is valid inside the existing <span> hosts.
+  UI.mdRich = function (str) {
+    const text = String(str == null ? '' : str).replace(/\r/g, '');
+    // Inline bullets GW sometimes runs together: "… ■ a ■ b" → one per line.
+    const lines = text.replace(/\s*([■◦•◆◾●])\s+/g, '\n$1 ').split('\n');
+    let out = '', inList = false;
+    const closeList = () => { if (inList) { out += '</span>'; inList = false; } };
+    lines.forEach((raw) => {
+      const line = raw.trim();
+      if (!line) { closeList(); return; }
+      const bullet = /^[■◦•◆◾●]\s*/.test(line);
+      if (bullet) {
+        if (!inList) { out += '<span class="md-list">'; inList = true; }
+        out += `<span class="md-li">${UI.mdBold(line.replace(/^[■◦•◆◾●]\s*/, ''))}</span>`;
+        return;
+      }
+      closeList();
+      const head = /^\*\*([^*]+)\*\*:?$/.exec(line);
+      if (head) out += `<span class="md-sub">${UI.escapeHtml(head[1])}</span>`;
+      else out += `<span class="md-p">${UI.mdBold(line)}</span>`;
+    });
+    closeList();
+    return out;
+  };
+
   UI.mdPlain = function (str) {
     return UI.escapeHtml(String(str == null ? '' : str).replace(/\*\*/g, ''));
   };

@@ -1397,3 +1397,11 @@ strong .glossary-term, .glossary-term strong { font-weight: inherit; }
 
 /* Rule engine (wargear-picker.js): + is disabled at a datasheet cap, with the reason in its title. */
 .wgp-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* UI.mdRich blocks (helpers.js): rule text keeps its paragraphs, sub-headings and bullets. */
+.md-p, .md-sub, .md-list, .md-li { display: block; }
+.md-p + .md-p, .md-list + .md-p, .md-p + .md-list { margin-top: var(--sp-2); }
+.md-sub { margin-top: var(--sp-3); font-weight: 700; color: var(--text); }
+.md-sub:first-child { margin-top: 0; }
+.md-li { padding-left: 1.1em; text-indent: -1.1em; margin-top: var(--sp-1); }
+.md-li::before { content: '■ '; color: var(--text-muted); font-size: 0.7em; vertical-align: 0.15em; }

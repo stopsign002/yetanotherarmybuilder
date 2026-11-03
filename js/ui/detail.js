@@ -403,7 +403,7 @@
       selectedEnhancements.forEach(e => {
         html += `<div class="detail-ability">
           <span class="detail-ability-name">${esc(e.name)}</span>
-          <span class="detail-ability-desc">${UI.mdBold(e.description || '—')}</span>
+          <span class="detail-ability-desc">${UI.mdRich(e.description || '—')}</span>
         </div>`;
       });
       html += `</div>`;
@@ -583,7 +583,7 @@
       (unit.wargearAbilities || []).forEach(wa => {
         waHtml += `<div class="detail-ability detail-ability-wargear">
           <span class="detail-ability-name">${esc(wa.name)}</span>
-          <span class="detail-ability-desc">${UI.mdBold(wa.description || '—')}</span>
+          <span class="detail-ability-desc">${UI.mdRich(wa.description || '—')}</span>
         </div>`;
       });
 
@@ -835,7 +835,7 @@
       detachmentEnhancements.forEach(enh => {
         html += `<div class="detail-ability detail-enhancement-browse-item">
           <span class="detail-ability-name">${esc(enh.name)}${enh.pts ? ` <span class="enh-cb-pts">${esc(String(enh.pts))} pts</span>` : ''}</span>
-          <span class="detail-ability-desc">${UI.mdBold(enh.description || '—')}</span>
+          <span class="detail-ability-desc">${UI.mdRich(enh.description || '—')}</span>
         </div>`;
       });
       html += `</div>`;
@@ -935,7 +935,7 @@
       const rest = /^restrict/i.test(s.label) ? ' strat-section-label-restrict' : '';
       return `<div class="strat-section">
         <div class="strat-section-label${rest}">${esc(s.label)}</div>
-        <div class="strat-section-text">${UI.mdBold(s.text)}</div>
+        <div class="strat-section-text">${UI.mdRich(s.text)}</div>
       </div>`;
     }).join('') + '</div>';
   }
@@ -958,7 +958,7 @@
     if (isStratagem) {
       body = stratSectionsHtml(data.description, esc);
     } else {
-      body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${UI.mdBold(data.description || 'No description available.')}</p>`;
+      body = `<p style="font-size:13px;line-height:1.6;color:var(--text-muted)">${UI.mdRich(data.description || 'No description available.')}</p>`;
     }
 
     let kindLabel = 'Army Rule';
@@ -1075,7 +1075,7 @@
       rules.forEach(r => {
         html += `<div class="detail-detachment-block detail-detachment-card">${
           r.name && r.name !== det.name ? `<div class="detail-detachment-subname">${esc(r.name)}</div>` : ''
-        }<p class="detail-detachment-text">${mdBold(r.description || '')}</p></div>`;
+        }<p class="detail-detachment-text">${UI.mdRich(r.description || '')}</p></div>`;
       });
       html += `</div>`;
     }
@@ -1088,7 +1088,7 @@
             <span class="enh-card-name">${esc(e.name)}</span>
             ${e.pts ? `<span class="enh-card-pts">+${esc(String(e.pts))} pts</span>` : ''}
           </div>
-          <p class="detail-detachment-text">${mdBold(e.description || '')}</p>
+          <p class="detail-detachment-text">${UI.mdRich(e.description || '')}</p>
         </div>`;
       });
       html += `</div>`;

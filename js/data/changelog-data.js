@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.03-4',
-    lastUpdated: '2026-11-03T04:00:00Z',
+    version:     '2026.11.03-5',
+    lastUpdated: '2026-11-03T05:00:00Z',
     entries: [
+      {
+        date: '2026-11-03',
+        kind: 'fix',
+        title: 'Rule text keeps its shape',
+        description: 'Army rules, detachment rules, abilities, enhancements and stratagems in the Details pane now keep their paragraphs, sub-headings and bullet points instead of running together as one block (Combat Doctrines reads as three doctrines again). About 2,600 rule texts across every faction had their structure flattened this way.',
+      },
       {
         date: '2026-11-03',
         kind: 'change',

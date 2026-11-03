@@ -228,7 +228,7 @@
       parts.regular.forEach(ab => {
         html += `<div class="detail-ability">
           <span class="detail-ability-name">${esc(ab.name)}</span>
-          <span class="detail-ability-desc">${UI.mdBold(ab.description || '—')}</span>
+          <span class="detail-ability-desc">${UI.mdRich(ab.description || '—')}</span>
         </div>`;
       });
       return html + `</div>`;
@@ -240,7 +240,7 @@
       rows.forEach(ab => {
         html += `<div class="detail-ability detail-ability-primarch">
           <span class="detail-ability-name">${esc(ab.name)}</span>
-          <span class="detail-ability-desc">${UI.mdBold(ab.description || '—')}</span>
+          <span class="detail-ability-desc">${UI.mdRich(ab.description || '—')}</span>
         </div>`;
       });
       html += `</div>`;
