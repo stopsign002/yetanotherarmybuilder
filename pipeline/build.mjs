@@ -15,6 +15,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync, rmSync,
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseWargearRules, parseWargearGroups, parseLoadout, ctxFromUnit, isDefaultGroup } from './wargear-rules.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const SOURCES = JSON.parse(readFileSync(join(HERE, 'sources.json'), 'utf8'));
@@ -267,7 +268,7 @@ export function build() {
   const core = loadCore();
   const abilityIndex = loadAbilityIndex();
   const log = { unpricedUnits: [], provisionalUnits: [], noDcJoin: [], mfmRowsUsed: {}, mfmItemsUnmatched: [],
-    aliasesUnresolved: [], mfmUnitKey: {}, idsFromCurrent: [], factionAbilityUnresolved: [], legendsFrom40kdc: [], dupDatasheets: [], unbilledItems: [], coreRules: core, abilityIndex, droppedWargearOptions: [], keptWargearOptionsKnownGap: [], factionAbilityEmpty: [], warnings: [] };
+    aliasesUnresolved: [], mfmUnitKey: {}, idsFromCurrent: [], factionAbilityUnresolved: [], legendsFrom40kdc: [], dupDatasheets: [], unbilledItems: [], coreRules: core, abilityIndex, wargearUnparsed: [], wargearItemUnmatched: [], wargearFromProse: [], wargearFrom40kdc: [], wargearRegressed: [], wargearProseOnly: [], wargearCostFromGdc: [], wargearCostDisagree: [], factionAbilityEmpty: [], warnings: [] };
   const aliasUnits = aliases.units || {};
   const aliasItems = aliases.items || {};
   const usedAlias = new Set();
@@ -762,7 +763,7 @@ function buildUnit(ds, ctx) {
     gdcMeleeWeapons: normalizeWeapons(ds.meleeWeapons),
     gdcRangedWeapons: normalizeWeapons(ds.rangedWeapons),
   };
-  unit.wargearProfile = wargearProfile(unit, ctx);
+  unit.wargearProfile = wargearProfile(unit, { ...ctx, wargearGroups: ds.wargearOptions });
   return unit;
 }
 
@@ -863,69 +864,59 @@ export function sheetCarries(u, itemName) {
   return prose.includes(k);
 }
 
-// Structured wargear (40kdc) + item costs (MFM).
+// Wargear: rules parsed from the datasheet prose (GDC, docs/WARGEAR-RULES.md),
+// composition from 40kdc, default loadouts from the GDC "equipped with" lines
+// (40kdc only as fallback), item costs from MFM.
 function wargearProfile(unit, ctx) {
   const { fid, slug, dcu, mrow, aliasItems, log } = ctx;
   const names = (dcu && dcu.itemNames) || {};
   const itemName = (id) => names[id] || String(id).replace(/-/g, ' ');
-  // MFM item costs → 40kdc item ids
+  // 40kdc ids by printed name. Several ids can share one name (meltagun /
+  // meltagun-dominion-squad): prefer the ids the unit can actually field.
+  const reach = new Set();
+  ((dcu && dcu.wargear_options) || []).forEach((r) => { (r.replaces || []).forEach((x) => reach.add(x)); (r.replacement || []).forEach((x) => reach.add(x)); (r.replacement_choice || []).forEach((g) => (g || []).forEach((x) => reach.add(x))); });
+  ((dcu && dcu.composition && dcu.composition.models) || []).forEach((m) => (m.default_weapon_ids || []).forEach((x) => reach.add(x)));
+  ((dcu && dcu.wargear_budgets) || []).forEach((b) => (b.items || []).forEach((x) => reach.add(x)));
+  const byNk = new Map();
+  Object.entries(names).forEach(([id, n]) => { const k = nk(n); const cur = byNk.get(k); if (!cur || (!reach.has(cur) && reach.has(id))) byNk.set(k, id); });
+  const aliased = {};
+  for (const [k, v] of Object.entries(aliasItems)) if (k.startsWith(`${fid}/${slug}/`)) aliased[nk(v)] = k.slice(`${fid}/${slug}/`.length);
+  // MFM item costs → 40kdc item ids (or kebab of the MFM name)
   let itemCosts = null;
+  const costIdByNk = new Map(); const mfmIds = new Set();
   const mItems = (mrow && mrow.row.items) || {};
   if (Object.keys(mItems).length) {
     itemCosts = {};
-    // Several 40kdc ids can share one printed name (meltagun / meltagun-dominion-squad):
-    // prefer the ids the unit can actually field (options or default loadout).
-    const reach = new Set();
-    ((dcu && dcu.wargear_options) || []).forEach((r) => { (r.replaces || []).forEach((x) => reach.add(x)); (r.replacement || []).forEach((x) => reach.add(x)); (r.replacement_choice || []).forEach((g) => (g || []).forEach((x) => reach.add(x))); });
-    ((dcu && dcu.composition && dcu.composition.models) || []).forEach((m) => (m.default_weapon_ids || []).forEach((x) => reach.add(x)));
-    ((dcu && dcu.wargear_budgets) || []).forEach((b) => (b.items || []).forEach((x) => reach.add(x)));
-    const byNk = new Map();
-    Object.entries(names).forEach(([id, n]) => { const k = nk(n); const cur = byNk.get(k); if (!cur || (!reach.has(cur) && reach.has(id))) byNk.set(k, id); });
-    const aliased = {};
-    for (const [k, v] of Object.entries(aliasItems)) if (k.startsWith(`${fid}/${slug}/`)) aliased[nk(v)] = k.slice(`${fid}/${slug}/`.length);
     for (const [iname, pts] of Object.entries(mItems)) {
       const id = aliased[nk(iname)] || byNk.get(nk(iname)) || null;
       if (id) itemCosts[id] = pts;
       else { itemCosts[kebab(iname)] = pts; log.mfmItemsUnmatched.push(`${fid}/${slug}: ${iname}=${pts}`); }
+      costIdByNk.set(nk(iname), id || kebab(iname));
+      mfmIds.add(id || kebab(iname));
     }
   }
   const costOf = (id) => (itemCosts && itemCosts[id]) || 0;
-  const options = ((dcu && dcu.wargear_options) || []).map((r) => {
-    const groups = Array.isArray(r.replacement_choice) ? r.replacement_choice : (Array.isArray(r.replacement) ? [r.replacement] : []);
-    return { id: r.id, replaces: (r.replaces || []).map((id) => ({ id, name: itemName(id) })),
-      choices: groups.map((g) => (g || []).map((id) => ({ id, name: itemName(id) }))),
-      constraint: r.model_constraint || {}, cost: 0 };
-  }).filter((o) => o.id && o.choices.length)
-    .filter((o) => {
-      const missing = [o.replaces, ...o.choices].flat().filter((it) => !sheetCarries(unit, it.name));
-      if (!missing.length) return true;
-      // Owner ruling: drop only where this build introduces the gap. If the
-      // approved dataset still offers this option on a sheet that lacked the
-      // same items, it was already live that way and stays (a known naming
-      // difference). An option the approved dataset already dropped stays dropped.
-      const ref = (CUR_UNITS.get(fid) || new Map()).get(unit.id);
-      const refHasOption = !!(ref && ref.wargearProfile && (ref.wargearProfile.options || []).some((x) => x.id === o.id));
-      if (refHasOption && missing.every((it) => !sheetCarries(ref, it.name))) { log.keptWargearOptionsKnownGap.push(`${fid}/${unit.id}: ${o.id}`); return true; }
-      log.droppedWargearOptions.push(`${fid}/${unit.id}: ${o.id} (sheet lacks ${[...new Set(missing.map((x) => x.name))].join(', ')})`);
-      return false;
-    });
-  const budgets = ((dcu && dcu.wargear_budgets) || []).map((b) => ({ items: (b && b.items || []).map((id) => ({ id, name: itemName(id) })),
-    count: (b && b.count) || 0, perModels: (b && b.per_models) || 0 })).filter((b) => b.items.length && b.count > 0);
-  let modelsBySize = null, defaultsBySize = null;
+  // A printed name → the id its MFM cost sits under, else the 40kdc id, else null (kebab).
+  const resolveItem = (name) => {
+    const k = nk(name); const ks = k.replace(/s$/, '');
+    return costIdByNk.get(k) || aliased[k] || byNk.get(k) || costIdByNk.get(ks) || byNk.get(ks) || null;
+  };
+
+  // composition (40kdc): modelsBySize, and the 40kdc default loadout per model
+  let modelsBySize = null;
   const comp = dcu && dcu.composition;
+  const defByModel = {};
   if (comp) {
-    const defByModel = {};
     (comp.models || []).forEach((m) => { if (m && m.name && Array.isArray(m.default_weapon_ids)) defByModel[m.name] = m.default_weapon_ids; });
     const tiers = (Array.isArray(comp.tiers) && comp.tiers.length) ? comp.tiers : (comp.models ? [{ models: comp.models }] : []);
-    modelsBySize = {}; defaultsBySize = {};
+    modelsBySize = {};
     tiers.forEach((t) => {
-      let total = 0; const byName = {}; const items = new Map();
+      let total = 0; const byName = {};
       (t && t.models || []).forEach((m) => {
         const n = (m && (m.max != null ? m.max : m.min)) || 0; total += n;
-        if (!m || !m.name) return; byName[m.name] = n;
-        (defByModel[m.name] || []).forEach((id) => items.set(id, (items.get(id) || 0) + n));
+        if (m && m.name) byName[m.name] = n;
       });
-      if (total > 0) { modelsBySize[total] = byName; defaultsBySize[total] = [...items.entries()].map(([id, count]) => ({ id, name: itemName(id), count })); }
+      if (total > 0) modelsBySize[total] = byName;
     });
     const distribute = (models, size) => {
       if (!Array.isArray(models) || !models.length) return null;
@@ -937,20 +928,112 @@ function wargearProfile(unit, ctx) {
       return rem === 0 ? byName : null;
     };
     (unit.squadOptions || []).forEach((so) => {
-      const size = so && so.models; if (!size || defaultsBySize[size]) return;
-      const byName = distribute(comp.models, size); if (!byName) return;
-      const items = new Map();
-      Object.keys(byName).forEach((nm) => (defByModel[nm] || []).forEach((id) => items.set(id, (items.get(id) || 0) + byName[nm])));
-      modelsBySize[size] = byName; defaultsBySize[size] = [...items.entries()].map(([id, count]) => ({ id, name: itemName(id), count }));
+      const size = so && so.models; if (!size || modelsBySize[size]) return;
+      const byName = distribute(comp.models, size); if (byName) modelsBySize[size] = byName;
     });
-    if (!Object.keys(modelsBySize).length) { modelsBySize = null; defaultsBySize = null; }
+    if (!Object.keys(modelsBySize).length) modelsBySize = null;
   }
+  const modelNames = [...new Set(Object.values(modelsBySize || {}).flatMap((m) => Object.keys(m)))];
+  const singleModel = modelsBySize ? Object.keys(modelsBySize).every((s) => Number(s) === 1) : undefined;
+  const pctx = ctxFromUnit(unit, { extraModels: modelNames, extraItems: Object.values(names), resolveItem, singleModel });
+
+  // rules: the raw GDC wargearOptions groups (primary); the flattened prose
+  // lines (unit.gdcWargear) only where a sheet has no groups
+  const groups = Array.isArray(ctx.wargearGroups) ? ctx.wargearGroups : [];
+  let parsed = { rules: [], unparsed: [], unmatchedItems: [], defaultsByBlock: [], costs: [], defaultBlocksMatchComposition: false };
+  if (groups.some((g) => !isDefaultGroup(g))) {
+    parsed = parseWargearGroups(groups, { ...pctx, proseLines: unit.gdcWargear || [] });
+    // cross-check: a prose line no group carries (GDC's two fields disagree)
+    const blob = groups.map((g) => alnum((g && g.instruction && (g.instruction.en || g.instruction)) || '')).join('|');
+    for (const l of unit.gdcWargear || []) if (!/^\*/.test(l.trim()) && !blob.includes(alnum(l.split(/[◦▫]/)[0]))) log.wargearProseOnly.push(`${fid}/${unit.id}: ${l}`);
+  } else if ((unit.gdcWargear || []).length) {
+    parsed = { ...parsed, ...parseWargearRules(unit.gdcWargear, pctx) };
+    log.wargearFromProse.push(`${fid}/${unit.id}`);
+  }
+  // no GDC text at all (40kdc-only Legends sheets): the pinned 40kdc options
+  if (!parsed.rules.length && !parsed.unparsed.length && ((dcu && dcu.wargear_options) || []).length) {
+    let k = 0;
+    for (const o of dcu.wargear_options) {
+      const groups2 = Array.isArray(o.replacement_choice) ? o.replacement_choice : (Array.isArray(o.replacement) ? [o.replacement] : []);
+      const choices = groups2.map((g) => (g || []).map((id) => ({ id, name: itemName(id) }))).filter((g) => g.length);
+      if (!choices.length) continue;
+      const mc = o.model_constraint || {}; const replaces = (o.replaces || []).map((id) => ({ id, name: itemName(id) }));
+      const r = { id: `${unit.id}-wr-dc${++k}`, text: `40kdc option ${o.id}`, kind: replaces.length ? 'replace' : 'add',
+        model: singleModel || !mc.model_name ? null : mc.model_name, scope: 'fixed', n: null, max: 1,
+        replaces, choices, requires: [], locks: [], exclusiveWith: [], condition: null };
+      if (mc.per_n_models) { r.scope = 'per_n'; r.n = mc.per_n_models; r.max = mc.max_count || 1; }
+      else if (mc.max_count) r.max = mc.max_count;
+      else if (mc.any_number) { r.scope = 'any'; r.max = null; }
+      parsed.rules.push(r);
+    }
+    if (k) log.wargearFrom40kdc.push(`${fid}/${unit.id}: ${k}`);
+  }
+  // never silently lose options a sheet had in the approved dataset
+  const ref = (CUR_UNITS.get(fid) || new Map()).get(unit.id);
+  if (!parsed.rules.length && ref && ref.wargearProfile && ((ref.wargearProfile.options || ref.wargearProfile.rules || []).length))
+    log.wargearRegressed.push(`${fid}/${unit.id}: had ${(ref.wargearProfile.options || ref.wargearProfile.rules).length} options, now none`);
+  const { rules, unparsed } = parsed;
+  unparsed.forEach((l) => log.wargearUnparsed.push(`${fid}/${unit.id}: ${String(l).replace(/\s+/g, ' ')}`));
+  // every rule item the sheet does not print (weapon row or wargear ability) is
+  // logged — validate.mjs join check accepts exactly these
+  const printedOnly = { ...unit, gdcLoadout: null, gdcWargear: [], gdcComposition: [] };
+  const logged = new Set();
+  for (const r of rules) for (const x of [r.replaces, ...r.choices].flat()) {
+    if (logged.has(x.name) || sheetCarries(printedOnly, x.name)) continue;
+    logged.add(x.name); log.wargearItemUnmatched.push(`${fid}/${unit.id}: ${x.name}`);
+  }
+  // GDC option costs fill items MFM does not price; MFM wins where both do
+  const gdcCost = new Map();
+  for (const o of parsed.costs || []) { const id = resolveItem(o.name) || kebab(o.name); gdcCost.set(id, Math.max(gdcCost.get(id) || 0, o.cost)); }
+  for (const [id, pts] of gdcCost) {
+    if (mfmIds.has(id)) { if (itemCosts[id] !== pts) log.wargearCostDisagree.push(`${fid}/${unit.id}: ${id} mfm=${itemCosts[id]} gdc=${pts}`); continue; }
+    if (!itemCosts) itemCosts = {};
+    itemCosts[id] = pts; log.wargearCostFromGdc.push(`${fid}/${unit.id}: ${id}=${pts}`);
+  }
+
+  // default loadout per model: GDC "equipped with" lines (composition first,
+  // then the loadout field), else GDC's Default Wargear blocks, else 40kdc,
+  // so defaults and rules share names
+  const compLines = (unit.gdcComposition || []).filter((l) => /equipped with/i.test(l));
+  const loadLines = compLines.length ? compLines : String(unit.gdcLoadout || '').split('\n');
+  const prose = parseLoadout(loadLines, pctx).byModel;
+  const proseItems = (list) => list.map((x) => ({ id: resolveItem(x.name) || kebab(x.name), name: x.name, count: x.count }));
+  let defaultsByModel = null;
+  const modelList = modelNames.length ? modelNames : (Object.keys(prose).length ? [unit.name] : []);
+  if (modelList.length) {
+    defaultsByModel = {};
+    for (const nm of modelList) {
+      const p = prose[nm] || prose['*'] || (modelList.length === 1 ? Object.values(prose)[0] : null);
+      const bi = parsed.defaultBlocksMatchComposition ? (pctx.blockModels || []).indexOf(nm) : -1;
+      const blk = bi >= 0 ? parsed.defaultsByBlock[bi] : null;
+      if (p && p.length) defaultsByModel[nm] = proseItems(p);
+      else if (blk && blk.length) defaultsByModel[nm] = proseItems(blk.map((name) => ({ name, count: 1 })));
+      else if (defByModel[nm]) {
+        const cnt = new Map(); defByModel[nm].forEach((id) => cnt.set(id, (cnt.get(id) || 0) + 1));
+        defaultsByModel[nm] = [...cnt.entries()].map(([id, count]) => ({ id, name: itemName(id), count }));
+      }
+    }
+    if (!Object.keys(defaultsByModel).length) defaultsByModel = null;
+  }
+  let defaultsBySize = null;
+  if (modelsBySize && defaultsByModel) {
+    defaultsBySize = {};
+    for (const [size, byName] of Object.entries(modelsBySize)) {
+      const items = new Map();
+      for (const [nm, n] of Object.entries(byName)) for (const d of defaultsByModel[nm] || []) {
+        const cur = items.get(d.id) || { id: d.id, name: d.name, count: 0 }; cur.count += d.count * n; items.set(d.id, cur);
+      }
+      defaultsBySize[size] = [...items.values()];
+    }
+  }
+
   let defaultCostBySize = null; let alwaysCost = 0;
   if (itemCosts) {
     if (defaultsBySize) { defaultCostBySize = {}; for (const s of Object.keys(defaultsBySize)) defaultCostBySize[s] = defaultsBySize[s].reduce((t, d) => t + costOf(d.id) * d.count, 0); }
     const reachable = new Set();
     if (defaultsBySize) Object.values(defaultsBySize).forEach((l) => l.forEach((d) => reachable.add(d.id)));
-    options.forEach((o) => { o.replaces.forEach((x) => reachable.add(x.id)); o.choices.forEach((g) => g.forEach((x) => reachable.add(x.id))); });
+    if (defaultsByModel) Object.values(defaultsByModel).forEach((l) => l.forEach((d) => reachable.add(d.id)));
+    rules.forEach((r) => { r.replaces.forEach((x) => reachable.add(x.id)); r.choices.forEach((g) => g.forEach((x) => reachable.add(x.id))); });
     const allow = new Set(ALWAYS_COST_ALLOWLIST[`${fid}/${unit.id}`] || []);
     for (const id of Object.keys(itemCosts)) {
       if (reachable.has(id)) continue;
@@ -958,8 +1041,8 @@ function wargearProfile(unit, ctx) {
       else log.unbilledItems.push(`${fid}/${unit.id}: ${id}=${itemCosts[id]}`);
     }
   }
-  if (!options.length && !itemCosts && !budgets.length) return null;
-  return { options, budgets, modelsBySize, defaultsBySize, itemCosts, defaultCostBySize, alwaysCost };
+  if (!rules.length && !unparsed.length && !itemCosts) return null;
+  return { rules, unparsed, modelsBySize, defaultsBySize, defaultsByModel, itemCosts, defaultCostBySize, alwaysCost };
 }
 
 // ── write the candidate ──────────────────────────────────────────────────────

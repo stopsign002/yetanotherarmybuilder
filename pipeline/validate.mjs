@@ -99,14 +99,20 @@ function leaderJoins(factions) {
   }
   return out;
 }
-// Option items must be things the datasheet prints (same test the builder
-// uses to drop such options, so a FAIL here means the builder regressed).
-function optionJoins(factions) {
+// Rule items (docs/WARGEAR-RULES.md) must be things the datasheet prints — a
+// weapon row or wargear ability — unless the builder already logged them in
+// log.wargearItemUnmatched (named in the prose but printed nowhere).
+function optionJoins(factions, unmatched = new Set()) {
   const out = []; const seen = new Set();
+  const base = (n) => nk(String(n || '').replace(/\s+[–-]\s+.*$/, '').replace(/\s*\([^)]*\)\s*$/, ''));
   for (const [fid, f] of factions) for (const u of f.units) {
     if (u._allyOf || !u.wargearProfile) continue;
-    for (const o of u.wargearProfile.options || []) for (const it of [o.replaces || [], ...(o.choices || [])].flat()) {
-      if (sheetCarries(u, it.name)) continue;
+    const have = new Set([...(u.weapons || []).map((w) => base(w.name)), ...(u.wargearAbilities || []).map((a) => base(a.name))]);
+    const list = u.wargearProfile.rules || u.wargearProfile.options || [];
+    const printedOnly = { ...u, gdcLoadout: null, gdcWargear: [], gdcComposition: [] };   // weapons + abilities, no prose
+    for (const o of list) for (const it of [o.replaces || [], ...(o.choices || [])].flat()) {
+      const k0 = base(it.name);
+      if (have.has(k0) || have.has(k0.replace(/s$/, '')) || unmatched.has(`${fid}/${u.id}: ${it.name}`) || sheetCarries(printedOnly, it.name)) continue;
       const key = `${nk(u.name)}: ${it.id}`;
       if (seen.has(fid + key)) continue; seen.add(fid + key);
       out.push({ check: 'wargear-option-item-not-on-datasheet', faction: fid, key, unit: u.name, item: it.name });
@@ -202,9 +208,17 @@ export function validate(id, opts = {}) {
   for (const s of blog.aliasesUnresolved || []) F('alias-unresolved', s);
   const lj = splitKnown(leaderJoins(cand), leaderJoins(ref));
   lj.fail.forEach((x) => F('join-leadby', x)); lj.known.forEach((x) => L('join-leadby-known-gap', x));
-  const oj = splitKnown(optionJoins(cand), optionJoins(ref));
+  const oj = splitKnown(optionJoins(cand, new Set(blog.wargearItemUnmatched || [])), optionJoins(ref));
   oj.fail.forEach((x) => F('join-wargear-option', x)); oj.known.forEach((x) => L('join-wargear-option-known-gap', x));
   for (const s of blog.noDcJoin || []) L('no-40kdc-unit (no structured wargear)', s);
+  // wargear rules (docs/WARGEAR-RULES.md): prose the parser could not turn into
+  // a rule is shown as text and not enforced — listed, never a FAIL
+  for (const x of blog.wargearUnparsed || []) L('wargear-unparsed', x);
+  for (const x of blog.wargearProseOnly || []) L('wargear-prose-not-in-gdc-groups', x);
+  for (const x of blog.wargearFromProse || []) L('wargear-rules-from-prose-fallback', x);
+  for (const x of blog.wargearFrom40kdc || []) L('wargear-rules-from-40kdc (no GDC text)', x);
+  for (const x of blog.wargearRegressed || []) L('wargear-options-lost-vs-current', x);
+  for (const x of blog.wargearCostDisagree || []) L('wargear-cost-mfm-vs-gdc (MFM used)', x);
 
   // 5. parity (W4's harness)
   const mfmOpt = {};

@@ -29,8 +29,9 @@ Key sets (from the golden dump; keep every key, even when empty):
   stratagemIds, gdcStratagems`
 - weapon: `name, _typeName, Range, A, S, AP, D, WS|BS` plus `_keywordDefs`
   where present; ability: `name, description, isCore, id`;
-  wargearProfile: `options, budgets, modelsBySize, defaultsBySize, itemCosts,
-  defaultCostBySize, alwaysCost`; stratagem: `name, cp, phase, phases, turn,
+  wargearProfile: `rules, unparsed, modelsBySize, defaultsBySize,
+  defaultsByModel, itemCosts, defaultCostBySize, alwaysCost` (see
+  §wargearProfile below; `options`/`budgets` are gone since 2026-11-03); stratagem: `name, cp, phase, phases, turn,
   timing, type, description, source`; enhancement: `name, pts, description,
   keywords` (+ `id`).
 
@@ -84,12 +85,66 @@ Host has no node: every `.mjs` runs as
 | `gdcLoadout`, `gdcWargear`, `gdcComposition` | GDC prose fields | — |
 | `points`, `pointsOptions`, `squadOptions`, `ordinal`, `_mfmPoints`, `_unpriced`, `wargearProfile.itemCosts/defaultCostBySize/alwaysCost` | **MFM** (`work/mfm.json`) | GDC `points` only when MFM has no row; then `_provisional: true` |
 | `detachments[].name/id/points/dispositions`, `rules`, `enhancements`, `gdcStratagems`, `armyRules` | GDC `detachments`, `rules`, `enhancements`, `stratagems` | — |
-| `wargearProfile.options/budgets/modelsBySize/defaultsBySize`, `wargearOptions` | 40kdc pinned (`work/dc.json`) joined by alias | GDC `wargearOptions` text (kept in `gdcWargear`) |
+| `wargearProfile.rules/unparsed` | GDC datasheet `wargearOptions` groups, parsed by `pipeline/wargear-rules.mjs` | GDC `wargear` prose (`gdcWargear`) only for a sheet with no groups |
+| `wargearProfile.defaultsByModel/defaultsBySize` | GDC "equipped with" lines (`gdcComposition`, then `gdcLoadout`) | GDC "Default Wargear" groups, then 40kdc defaults |
+| `wargearProfile.modelsBySize`, `wargearOptions` | 40kdc pinned (`work/dc.json`) joined by alias | — |
 | `alliedRules`, allied unit rows, `dispositions` text, game-mode filtering | 40kdc pinned | — |
 | `stratagemIds` | 40kdc ids when a join exists, else synthesised `gdc:<slug>` | — |
 | `chapterBadge`, SM chapter factions | as today: chapter factions are separate GDC files; the builder emits the same 34 faction ids as the golden set | — |
 
 No overlays, no hand text, no stat fixes. `aliases.json` may only map names.
+
+### wargearProfile
+
+Contract: `docs/WARGEAR-RULES.md` (§1 rule shape). Built in `build.mjs`
+`wargearProfile()`:
+
+- **rules[]** come from the raw GDC datasheet's `wargearOptions` (carried
+  untouched in `work/gdc.json`): ordered groups `{instruction: {en}, options:
+  [{name: {en}, cost}]}`. A "Default Wargear" group is a model type's default
+  loadout; every other group's instruction is parsed into one rule (several for
+  "■" clauses, a second "If this unit contains…" paragraph, or a compound bullet
+  header, ids `-wr-<g>.<k>`). Rule id `<unit>-wr-<g>`, g = 1-based index of the
+  non-default group after dropping exact duplicate instructions. Choices come
+  from the instruction's own list when it prints one (that is the only place
+  bundles like "1 autopistol and 1 chainfist" and counts like "2 heavy
+  bolters" exist); otherwise from the group's options. Item names are
+  canonicalised against the group's option names, then the sheet's weapons and
+  wargear abilities. **The rule's model comes from its prose, not from the
+  Default Wargear block it sits under** — GDC files Nob, Gun Servitor and
+  Troupe options under another model's block. `unit.gdcWargear` (GDC's
+  flattened `wargear` field) is the fallback for a sheet with no groups
+  (`log.wargearFromProse`) and a cross-check (`log.wargearProseOnly`: a prose
+  line no group carries); a footnote only the prose carries (Inquisitorial
+  Agents, Catachan Command Squad) is still applied.
+- Optional rule fields beyond §1, emitted only when set: `forbids` (model must
+  NOT carry any of these; also linked into `exclusiveWith` when another rule
+  hands that item out), `nModel` (per_n counts only this model type: "For every
+  5 Inquisitorial Agents"), `picks` (choices each taking model may make: "up to
+  two of the following"; cap × picks), `distinct` (no duplicate choice on one
+  model), `choiceMax` (+ `choiceMaxN`): unit-wide limit per choice, ×
+  floor(size / choiceMaxN) when set ("once per unit unless it contains 20
+  models, in which case twice" = `choiceMax 1, choiceMaxN 10`). `condition` may
+  carry `maxModels` as well as `minModels` ("9 or fewer", "contains 10
+  models" = both). An item may carry `count` (> 1) for "2 heavy bolters".
+- **unparsed[]**: instructions the grammar cannot represent (an OR between
+  replaced items, "three of the following", "For each Helbrute fist", "You can
+  select one of the following options" with whole sentences as options).
+  Listed per unit in `log.wargearUnparsed`; never dropped.
+- **defaultsByModel** `{ "<model>": [{id, name, count}] }` (per one model) and
+  **defaultsBySize** (summed over `modelsBySize`) come from the GDC "equipped
+  with" lines so defaults and rules share names; Default Wargear groups (when
+  there is one per composition entry) and 40kdc defaults are fallbacks.
+- **itemCosts**: MFM; a GDC option `cost > 0` fills an item MFM does not price
+  (`log.wargearCostFromGdc`), MFM wins where both do (`log.wargearCostDisagree`).
+- Item ids: the id MFM's cost sits under, else the 40kdc id for that printed
+  name, else `kebab(name)`. Names matching no weapon or wargear ability are
+  still emitted and logged (`log.wargearItemUnmatched`).
+- Tests: `node --test 'pipeline/tests/*.test.mjs'` (fixtures frozen from real
+  sheets). Coverage report: `node pipeline/tests/wargear-coverage.mjs [--list]`
+  (groups turned into rules, needs `/work/work/gdc.json`; `--prose` measures
+  the fallback). Both run in `node:22-slim` with the app at `/w` and
+  `~/sites/base/yaab-data` at `/work`.
 
 ## 4. Intermediate formats
 
@@ -132,8 +187,10 @@ unresolved.
    `_unpriced` units are listed; `alwaysCost > 0` only for ids in
    `ALWAYS_COST_ALLOWLIST` (today: Victrix Honour Guard banner).
 4. Joins: every alias resolves; every `gdcLeadBy` target names a unit in the
-   faction (or an ally); every wargearProfile option id refers to a weapon or
-   item the unit carries.
+   faction (or an ally). Wargear prose the rule parser could not read is
+   LISTED as `wargear-unparsed` (shown as text in the picker, not enforced),
+   never a FAIL; so are `wargear-prose-not-in-gdc-groups`,
+   `wargear-rules-from-prose-fallback` and `wargear-cost-mfm-vs-gdc`.
 5. Parity vs golden (or vs `current/` once one exists): per-faction unit
    counts, per-unit `points`/`squadOptions`/`ordinal`, `modelStats` rows,
    weapon names, ability names, keyword sets, detachment names, stratagem and
