@@ -184,3 +184,6 @@ body.admin-modal-open { overflow: hidden; }
 /* Bug-report attachment preview (js/app/admin.js renderBugAttachment). */
 .admin-pill.is-feature { background: #1f2f4a; color: #b9cff0; }
 .admin-pending-banner-close:hover { opacity: 1; }
+
+/* Operator banner buttons are shown per queue (accounts / bugs); honour [hidden]. */
+.admin-pending-banner-btn[hidden] { display: none !important; }

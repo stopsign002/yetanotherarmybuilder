@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.03-7',
-    lastUpdated: '2026-11-03T06:00:00Z',
+    version:     '2026.11.03-8',
+    lastUpdated: '2026-11-03T07:30:00Z',
     entries: [
+      {
+        date: '2026-11-03',
+        kind: 'change',
+        title: 'Operator banner shows open bug reports',
+        description: 'The banner that tells the operator about accounts waiting for approval now also says how many bug reports are waiting, with a Review bugs button that opens the admin panel on the Bugs tab.',
+      },
       {
         date: '2026-11-03',
         kind: 'fix',

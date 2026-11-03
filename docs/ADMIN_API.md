@@ -192,6 +192,14 @@ Delete any user's image (moderation override).
 - **Response 200** or 204 on success.
 - **Response 404** if the id doesn't exist.
 
+### `GET /api/admin/bugs/open-count`
+
+Admin only. Returns `{ "count": <int> }` — bug reports with `fixed = FALSE`
+(escalated ones included). Polled by the operator banner in
+[js/app/pending-approval-banner.js](../js/app/pending-approval-banner.js)
+alongside the pending-approval count; the banner shows "N bug reports are
+waiting" with a "Review bugs" button that opens the Bugs tab.
+
 ### `GET /api/admin/users/pending-count`
 
 Lightweight summary used by the admin-only "pending approvals" banner

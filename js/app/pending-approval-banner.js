@@ -1,6 +1,7 @@
 // app/pending-approval-banner.js — admin-only banner that fires when
-// one or more accounts are waiting for approval. Click → opens the
-// admin panel directly to the Pending tab.
+// one or more accounts are waiting for approval OR bug reports are open
+// (`/api/admin/bugs/open-count`, 2026-11-03). Buttons open the admin
+// panel on the Pending or Bugs tab.
 //
 // Polls `/api/admin/users/pending-count` (lightweight endpoint that
 // returns `{ count }`); falls back to fetching the full `/users` list
@@ -40,7 +41,8 @@
     bannerEl.setAttribute('role', 'status');
     bannerEl.innerHTML =
       '<span class="admin-pending-banner-text" id="admin-pending-banner-text"></span>' +
-      '<button type="button" class="admin-pending-banner-btn" id="admin-pending-banner-btn">Review</button>' +
+      '<button type="button" class="admin-pending-banner-btn" id="admin-pending-banner-btn">Review accounts</button>' +
+      '<button type="button" class="admin-pending-banner-btn" id="admin-pending-banner-bugs-btn">Review bugs</button>' +
       '<button type="button" class="admin-pending-banner-close" id="admin-pending-banner-close" aria-label="Hide">&times;</button>';
     // Insert above the topbar so it pushes content down rather than overlapping.
     const topbar = document.getElementById('topbar');
@@ -52,6 +54,9 @@
     bannerEl.querySelector('#admin-pending-banner-btn').addEventListener('click', () => {
       if (App.Admin && typeof App.Admin.open === 'function') App.Admin.open('pending');
     });
+    bannerEl.querySelector('#admin-pending-banner-bugs-btn').addEventListener('click', () => {
+      if (App.Admin && typeof App.Admin.open === 'function') App.Admin.open('bugs');
+    });
     bannerEl.querySelector('#admin-pending-banner-close').addEventListener('click', () => {
       bannerEl.hidden = true;
     });
@@ -62,12 +67,30 @@
     if (bannerEl) bannerEl.hidden = true;
   }
 
-  function show(count) {
+  // One banner for both queues (owner, 2026-11-03: "a banner when bugs are
+  // submitted so I realize it, just like accounts waiting for approval").
+  function show(count, bugs) {
     ensureBanner();
     const txt = bannerEl.querySelector('#admin-pending-banner-text');
-    const noun = count === 1 ? 'account is' : 'accounts are';
-    txt.textContent = count + ' ' + noun + ' waiting for approval.';
+    const parts = [];
+    if (count > 0) parts.push(count + ' ' + (count === 1 ? 'account is' : 'accounts are') + ' waiting for approval.');
+    if (bugs > 0) parts.push(bugs + ' bug ' + (bugs === 1 ? 'report is' : 'reports are') + ' waiting.');
+    txt.textContent = parts.join(' ');
+    bannerEl.querySelector('#admin-pending-banner-btn').hidden = !(count > 0);
+    bannerEl.querySelector('#admin-pending-banner-bugs-btn').hidden = !(bugs > 0);
     bannerEl.hidden = false;
+  }
+
+  async function fetchOpenBugCount() {
+    try {
+      const resp = await fetch('/api/admin/bugs/open-count', {
+        credentials: 'same-origin', headers: { 'Accept': 'application/json' },
+      });
+      if (resp.status === 401 || resp.status === 403) { onDenied(resp.status); return null; }
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      return (data && typeof data.count === 'number') ? data.count : null;
+    } catch (_) { return null; }
   }
 
   // 401 = the session is gone: tell Auth (it flips to signed out and
@@ -116,8 +139,9 @@
     if (document.hidden) return;   // the visibilitychange handler re-checks
     const count = await fetchPendingCount();
     if (count == null) return; // network blip — leave previous state
+    const bugs = (await fetchOpenBugCount()) || 0;   // an older API answers 404 → treated as 0
     lastCount = count;
-    if (count > 0) show(count);
+    if (count > 0 || bugs > 0) show(count, bugs);
     else hide();
   }
 
