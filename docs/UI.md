@@ -320,45 +320,57 @@ hex.
 
 ## Wargear picker (`js/app/wargear-picker.js`)
 
-Inventory view under the datasheet's Wargear prose: default items with the
-count the squad still carries (derived, no stepper), every option with a
-`− n +` stepper and a chip naming the model type and the cap ("Plague Marine ·
-up to 2 per 5", "1 per 5", "1 only", "any"). The row label's `title` is the
-datasheet line. Since 2026-11-03 the steppers enforce the datasheet
-(contract `docs/WARGEAR-RULES.md` §3); `+` is **disabled, never hidden**, at a
-limit and its `title` says which one:
+**Inventory v2** (contract `docs/WARGEAR-RULES.md` §5, owner decision
+2026-11-03): a full inventory of the squad's guns. Rows are the default items
+(default order), then every item any rule offers (deduplicated), then anything
+else the saved loadout holds. **Every row has `− N +`; nothing is ever
+disabled or capped** (floor 0). Option rows carry a chip with the model type
+(when every rule offering the item names the same one) and the cap text ("up
+to 2 per 5", "1 per 5", "1 only", "any"); the row `title` is the datasheet
+line.
 
-| Rule | Check |
+The datasheet rules only produce **warnings**, listed under the inventory
+(`.validation-banner.wgp-warnings`, "Wargear check") and as a `⚠ wargear`
+badge on the army entry (title = the messages):
+
+| Warning | Rule |
 |---|---|
-| Rule cap | Σ of a rule's choices ≤ `per_n`: floor(size/n)·max, `fixed`: max (null = every model of that type), `any`: every model of that type (or the unit). `condition.minModels` unmet → rule hidden. |
-| Availability | per item, per model type and unit-wide: default − removed − locked + gained ≥ 0 ("No Plague Marine still carries a boltgun"). Items that match no default and nothing gains are not checked. `add` rules only conflict through items they require/lock. |
-| Exclusivity | rules joined by `exclusiveWith`: Σ ≤ models of that type ("Only one of these per model"). |
-| Requires | a take needs a carrier of each `requires` item that is still present; a required item the rule also `locks` is consumed (the icon bearer's boltgun). |
+| Slot | per default item D: count(D) + extras of items that can only replace D must not exceed default(D); count(D) + those + flexible extras (items with several targets, also offered by an add rule, or in a bundle / with an item count) must reach it. Also fires for a default changed with nothing that replaces it. |
+| Cap | an item's extras (count − default) fill the rules that offer it in order, each rule's cap (`per_n` floor(size or nModel count / n)·max, `fixed` max or the model count, `any` the model count, × `picks`; 0 when `condition` min/maxModels is unmet) shared across its choices; overflow warns. `choiceMax`(+`choiceMaxN`) adds a per-unit limit per choice. |
+| Requires / locks | extras of an item handed out by a rule with `requires`/`locks` > count of that item. |
+| Exclusive | Σ extras over an `exclusiveWith` set > model count. |
 
-A `+` is allowed when it adds no new violation and worsens none (so an
-over-limit saved entry can still be edited down). Changing squad size while
-configuring a new unit re-fits the pending loadout to the new caps; an entry
-being edited keeps its rows and shows an "Over a datasheet limit" note.
-`profile.unparsed` lines are listed as "Not checked by the picker".
+**Storage**: `entry.loadout = [{id, name, count}]` (the whole inventory, zeros
+omitted) via `army.setLoadout()`; `entry.wargear` is no longer written. The
+picker's `takeSelections()` returns the loadout and `Army.addUnit` recognises
+that shape in its old `wargear` slot; entries stack only when loadouts match
+(a missing loadout = the defaults). A new pick starts from the defaults at the
+chosen size; a size change on an unsaved pick resets to that size's defaults;
+on a saved entry the counts are kept. `entry-rehydrate.js` converts an entry
+with `wargear` rows and no `loadout` (defaults at its size − replaced + added,
+after re-pointing old 40kdc option ids to rule ids; unmatched rows still add
+their items), saves the army, and leaves `wargear` in place untouched.
 
-**Two profile shapes.** `rulesOf(profile)` returns `wargearProfile.rules`
-when present, else maps the legacy 40kdc `options[]` onto the rule shape
-(model_name → model; per_n_models → 1 per N; any_number → every model;
-otherwise 1; removals via the old `effReplaces` OR/AND heuristic). Caps now
-apply per rule (Σ of choices), not per choice. `App.WargearPicker` exports
-`rulesOf`, `removesOf`, `costOf` and `groupCost` for `entry-rehydrate.js`;
-`tts-export.js` keeps its own copy so it stays runnable under node.
+**Points**: `Army.loadoutPts` = max(0, alwaysCost + Σ itemCosts × count),
+which equals `defaultCostBySize` for an untouched default loadout (checked
+over all 122 priced tiers). **Army list** badges show only the gains against
+the default ("3× Gauss reaper"). **Cards** ×N chips read the loadout.
+**TTS** (`tts-export.js` `allocateLoadout`) keeps the default allocation and
+places the difference per model block: an extra goes to its rule's model type,
+swapping out a surplus item that rule replaces; single-model blocks first;
+add-ons and over-limit extras onto further models; lowered defaults with
+nothing replacing them are taken off last.
 
-**Saved shape is unchanged**: `entry.wargear[] = {optionId, choice, count,
-items, label, pts}`, `optionId` = rule id. `entry-rehydrate.js` re-points rows
-saved against old 40kdc option ids to the rule choice with the same item names
-(preferring equal `replaces`, then the same model type), merges duplicates,
-and leaves unmatched rows untouched (they still bill and export; one console
-warning each).
+**Two profile shapes.** `rulesOf(profile)` returns `wargearProfile.rules`, or
+maps the live dataset's legacy 40kdc `options[]` onto the rule shape. Optional
+rule fields (`forbids`, `distinct`, …) that the engine does not use are
+ignored. Statics on `Army` (`entryModels`, `defaultLoadout`, `cleanLoadout`,
+`loadoutKey`, `itemPrice`, `loadoutPts`) are shared by every reader.
 
-Check: `scripts/verify/wargear-rules.mjs` (signed in; Plague Marines from an
-injected fixture at 10 and 7 models, migration, and Intercessor Squad /
-Necron Warriors / Leman Russ on the live profile).
+Check: `scripts/verify/wargear-rules.mjs` (signed in; Necron Warriors slot
+warning + army badge + entry write-back + TTS allocation, Plague Marines from
+an injected fixture — `NO_FIXTURE=1` once the dataset carries rules — cap and
+requires warnings, migration of old entries, Leman Russ points).
 
 ## Testing checklist
 

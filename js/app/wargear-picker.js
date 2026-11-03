@@ -1,49 +1,38 @@
 // app/wargear-picker.js — the Wargear inventory in the unit details pane.
 //
-// Renders under the official-wording Wargear section (detail.js) for any unit
-// with a structured `wargearProfile`. Inventory view: the default loadout is
-// listed with the number the squad still carries (derived), every option
-// with a stepper. Since 2026-11-03 the steppers ENFORCE the datasheet rules
-// (contract docs/WARGEAR-RULES.md §3):
+// Inventory v2 (owner decision 2026-11-03, contract docs/WARGEAR-RULES.md §5):
+// a FULL inventory of the squad's guns. Every row — default items included —
+// has a − N + stepper; nothing is ever capped or disabled (floor at 0). The
+// datasheet rules (`wargearProfile.rules`, or the legacy 40kdc `options[]`
+// mapped onto the same shape by rulesOf()) only produce WARNINGS, listed
+// under the inventory and as a "wargear" badge on the army entry:
 //
-//   1. rule cap      — Σ over a rule's choices ≤ cap(rule, squad size)
-//   2. availability  — a swap needs a model that still carries what it gives
-//                      up (default − removed − locked + gained ≥ 0, per model
-//                      type and unit-wide)
-//   3. exclusivity   — rules in one exclusiveWith set: one per model
-//   4. requires      — a take needs a model still carrying the required items
-//   5. "+" is disabled (not hidden) at a limit, its title says why; "−" never
-//      is above 0.
+//   slot      a default item plus the swaps that replace it ≠ the models
+//             that carry it ("Boltgun: 13 weapons for 10 models …")
+//   cap       more of an option than its rules allow at this size
+//   requires  an add-on that needs (or locks) an item more models lack
+//   exclusive rules joined by exclusiveWith taken more than once per model
 //
-// The rules come from `wargearProfile.rules[]` (the pipeline parses GDC's
-// datasheet prose). A profile that still has only the old 40kdc `options[]`
-// is mapped onto the same rule shape by rulesOf() with best-effort caps, so
-// armies built on an older dataset keep working.
-//
-// Configure-then-add: the picker holds a pending config for the currently-
-// viewed unit; "Add to Army" (events.js) snapshots it onto the new entry via
-// App.WargearPicker.takeSelections(). Editing an existing army entry writes
-// back live via syncEntry(). Saved shape is unchanged:
-//   entry.wargear[] = { optionId (= rule id), choice, count, items, label, pts }
-//
-// Costs: 11e prices SOME wargear per item taken (MFM → wargearProfile
-// .itemCosts). Priced DEFAULTS cost points before any selection (army.js
-// getEntryWargearBasePts / wargearProfile.defaultCostBySize); each row's
-// chip is the NET delta per take (negative when it sheds a priced default).
+// Storage: entry.loadout = [{ id, name, count }] (defaults with their counts,
+// extras, zeros omitted) via army.setLoadout(); entry.wargear is no longer
+// written. A new pick starts from the defaults at the chosen size; changing
+// size on an unsaved pick resets to that size's defaults; changing size on a
+// saved entry keeps the counts. Points: Army.loadoutPts (alwaysCost +
+// Σ itemCosts × count), which equals the old priced-default base when the
+// loadout is untouched.
 (function () {
   const App = window.App = window.App || {};
 
-  // Pending config for the viewed unit: 'ruleId:choiceIdx' -> count.
+  // Pending inventory for the viewed unit: item key -> { id, name, count }.
   let unitId = null;
-  let counts = new Map();
-  let panelEl = null;   // details pane root (set at mount) — banner pts live here
-  // Army entry being EDITED (pane opened by clicking an army-list entry), or
-  // null when configuring a not-yet-added roster unit.
+  let inv = null;
+  let invSize = null;   // squad size the pending inventory was built for
+  let panelEl = null;
+  // Army entry being EDITED, or null when configuring a not-yet-added unit.
   let entryIndex = null;
 
-  // `entryIndex` is only refreshed inside mount(), so it can go stale when an
-  // EARLIER army entry is removed (#71). Resolve the live index from state at
-  // read/write time; entryIndex itself only gates entry-bound mode.
+  // `entryIndex` can go stale when an EARLIER entry is removed (#71): resolve
+  // the live index from state; entryIndex only gates entry-bound mode.
   function liveEntryIndex() {
     return (entryIndex != null) ? (App.state || {}).selectedArmyEntryIndex : null;
   }
@@ -58,7 +47,8 @@
   function syncEntry(unit) {
     const s = App.state || {};
     if (!currentEntry()) return;
-    s.currentArmy.setWargear(liveEntryIndex(), App.WargearPicker.takeSelections(unit));
+    const lo = App.WargearPicker.takeSelections(unit);
+    if (typeof s.currentArmy.setLoadout === 'function') s.currentArmy.setLoadout(liveEntryIndex(), lo);
     if (s.armyManager) s.armyManager.saveArmy(s.currentArmy);
     if (window.UI && UI.renderArmyList) UI.renderArmyList(s.currentArmy);
   }
@@ -211,11 +201,29 @@
     }
     const defaultCount = (k) => (k.startsWith('d:') ? (defaults[+k.slice(2)].count || 0) : 0);
 
-    const visible = (r) => !(r.condition && r.condition.minModels) || size >= r.condition.minModels;
+    // Optional schema fields (docs/DATASET.md §wargearProfile) are read
+    // defensively: anything missing or malformed means "no such limit".
+    const num = (v) => (Number.isFinite(v) && v > 0 ? v : null);
+    const visible = (r) => {
+      const c = r.condition || {};
+      if (num(c.minModels) && size < c.minModels) return false;
+      if (num(c.maxModels) && size > c.maxModels) return false;
+      return true;
+    };
     function capOf(r) {
-      if (r.scope === 'per_n') return Math.floor(size / (r.n || 1)) * (r.max == null ? 1 : r.max);
-      if (r.scope === 'any') return countOf(r.model);
-      return r.max == null ? countOf(r.model) : r.max;
+      let c;
+      if (r.scope === 'per_n') {
+        const base = r.nModel ? countOf(r.nModel) : size;   // "For every 5 Inquisitorial Agents"
+        c = Math.floor(base / (num(r.n) || 1)) * (r.max == null ? 1 : r.max);
+      } else if (r.scope === 'any') c = countOf(r.model);
+      else c = r.max == null ? countOf(r.model) : r.max;
+      return c * (num(r.picks) || 1);                        // "up to two of the following"
+    }
+    // Unit-wide limit on one choice ("once per unit unless it contains 20
+    // models, in which case twice"), or null.
+    function choiceCapOf(r) {
+      if (!num(r.choiceMax)) return null;
+      return r.choiceMax * (num(r.choiceMaxN) ? Math.floor(size / r.choiceMaxN) || 1 : 1);
     }
 
     // exclusiveWith → connected sets (union-find over rule ids).
@@ -234,139 +242,201 @@
       exclSets.get(root).push(r);
     });
 
-    return { unit, profile, rules, size, countOf, defaults, keyOf, defaultCount, itemName, visible, capOf, exclSets };
+    return { unit, profile, rules, size, countOf, defaults, keyOf, defaultCount, itemName, visible, capOf, choiceCapOf, exclSets };
   }
 
-  // ── constraint check ─────────────────────────────────────────────────────
+
+  // ── inventory helpers ────────────────────────────────────────────────────
+  const A = () => window.Army;
+  const priceOf = (unit, it) => ((A() && A().itemPrice) ? A().itemPrice(unit, it) : 0);
+
+  function defaultInv(ctx) {
+    const m = new Map();
+    ctx.defaults.forEach((d, i) => {
+      if ((d.count || 0) > 0) m.set('d:' + i, { id: String(d.id || ''), name: d.name, count: d.count });
+    });
+    return m;
+  }
+  function invFromLoadout(ctx, loadout) {
+    const m = new Map();
+    (loadout || []).forEach((x) => {
+      if (!x || !x.count) return;
+      const k = ctx.keyOf(x);
+      const have = m.get(k);
+      if (have) have.count += x.count;
+      else m.set(k, { id: String(x.id || ''), name: x.name, count: x.count });
+    });
+    return m;
+  }
+  const invToLoadout = (m) => Array.from(m.values()).filter((x) => x.count > 0)
+    .map((x) => ({ id: x.id, name: x.name, count: x.count }));
+
+  // Old selection rows (entry.wargear, rule or 40kdc option ids) → the full
+  // inventory: defaults at this size − replaced + added. A row whose id no
+  // longer resolves still adds its items, so nothing silently disappears.
+  function loadoutFromWargear(unit, models, wargear) {
+    const ctx = makeCtx(unit, models);
+    const m = defaultInv(ctx);
+    const bump = (x, n) => {
+      const k = ctx.keyOf(x);
+      const have = m.get(k);
+      if (have) have.count += n;
+      else m.set(k, { id: String(x.id || ''), name: x.name, count: n });
+    };
+    (wargear || []).forEach((w) => {
+      if (!w || !w.count) return;
+      const rule = ctx.rules.find((r) => r.id === w.optionId);
+      const ci = w.choice == null ? 0 : w.choice;
+      const grp = rule && (rule.choices || [])[ci];
+      if (grp) {
+        removesOf(rule, ci).forEach((x) => bump(x, -w.count));
+        grp.forEach((x) => bump(x, w.count * (Number.isFinite(x.count) && x.count > 1 ? x.count : 1)));
+      } else {
+        (w.items || []).forEach((nm) => bump({ id: '', name: nm }, w.count));
+      }
+    });
+    m.forEach((x) => { if (x.count < 0) x.count = 0; if (!x.id) x.id = (A() ? A()._kebab(x.name) : x.name); });
+    return invToLoadout(m);
+  }
+
+  // Rows: defaults first (default order), then every item any rule offers
+  // (deduplicated; one that is also a default stays in the defaults block),
+  // then anything else the inventory holds. Each option row carries the
+  // rules that offer it, for its chip.
+  function rowsFor(ctx, m) {
+    const rows = [], seen = new Map();
+    ctx.defaults.forEach((d, i) => {
+      const r = { key: 'd:' + i, id: String(d.id || ''), name: d.name, def: d.count || 0, rules: [] };
+      rows.push(r); seen.set(r.key, r);
+    });
+    ctx.rules.forEach((rule) => (rule.choices || []).forEach((grp) => (grp || []).forEach((x) => {
+      const k = ctx.keyOf(x);
+      let r = seen.get(k);
+      if (!r) { r = { key: k, id: String(x.id || ''), name: x.name, def: 0, rules: [] }; rows.push(r); seen.set(k, r); }
+      if (r.rules.indexOf(rule) === -1) r.rules.push(rule);
+    })));
+    m.forEach((x, k) => {
+      if (seen.has(k)) return;
+      const r = { key: k, id: x.id, name: x.name, def: 0, rules: [] };
+      rows.push(r); seen.set(k, r);
+    });
+    return rows;
+  }
+
+  function capText(ctx, r) {
+    const c = ctx.capOf(r);
+    if (r.scope === 'per_n') return (r.max == null || r.max === 1) ? `1 per ${r.n}` : `up to ${r.max} per ${r.n}`;
+    if (r.scope === 'any') return c <= 1 ? '1 only' : 'any';
+    if (r.max == null) return c <= 1 ? '1 only' : `up to ${c}`;
+    return r.max === 1 ? '1 only' : `up to ${r.max}`;
+  }
+  function capPhrase(ctx, r) {
+    if (r.scope === 'per_n') return (r.max == null || r.max === 1) ? `1 per ${r.n} models` : `up to ${r.max} per ${r.n} models`;
+    if (r.scope === 'any') return r.model ? `one per ${r.model}` : 'one per model';
+    if (r.max == null) return r.model ? `one per ${r.model}` : 'one per model';
+    return r.max === 1 ? '1 only' : `up to ${r.max}`;
+  }
   const article = (name) => {
     const n = String(name || '').toLowerCase();
     if (/s$/.test(n)) return n;
     return (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n;
   };
-  const plural = (m) => (/s$/i.test(m) ? m : m + 's');
-  function capReason(ctx, r) {
-    const c = ctx.capOf(r);
-    if (r.scope === 'per_n') {
-      const per = (r.max == null || r.max === 1) ? '1' : 'Up to ' + r.max;
-      return `${per} per ${r.n} models (${c} at ${ctx.size})`;
-    }
-    if (r.scope === 'any' || r.max == null) {
-      if (c <= 1) return r.model ? `Only 1 ${r.model} can take this` : 'Only one of these';
-      return `Only ${c} ${r.model ? plural(r.model) : 'models'} in the unit`;
-    }
-    if (c === 1) return r.model ? `Only 1 ${r.model} can take this` : 'Only one of these';
-    return `Up to ${c} of these`;
-  }
-  function capText(ctx, r) {
-    if (r.scope === 'per_n') return (r.max == null || r.max === 1) ? `1 per ${r.n}` : `up to ${r.max} per ${r.n}`;
-    const c = ctx.capOf(r);
-    if (r.scope === 'any') return c <= 1 ? '1 only' : 'any';
-    if (r.max == null) return c <= 1 ? '1 only' : `up to ${c}`;
-    return r.max === 1 ? '1 only' : `up to ${r.max}`;
-  }
 
-  // Every constraint the counts break, as id -> { msg, over }. A "+" is
-  // allowed when it introduces no new violation and worsens none.
-  function violations(ctx, cnt) {
-    const v = new Map();
-    const put = (id, msg, over) => { if (over > 0) v.set(id, { msg, over }); };
-    const totals = new Map();
-    const unitL = new Map();     // key -> {rm, lk, gn}
-    const scopeL = new Map();    // model -> Map(key -> {rm, lk, gn})
-    const led = (m, k) => {
-      let L = unitL;
-      if (m) { if (!scopeL.has(m)) scopeL.set(m, new Map()); L = scopeL.get(m); }
-      if (!L.has(k)) L.set(k, { rm: 0, lk: 0, gn: 0 });
-      return L.get(k);
-    };
-    const bump = (m, k, f, n) => { led(null, k)[f] += n; if (m) led(m, k)[f] += n; };
+  // ── warnings (§5) ────────────────────────────────────────────────────────
+  // Counts by item key. Returns an array of messages; [] = clean.
+  function warnings(ctx, m) {
+    const out = [];
+    const cnt = (k) => ((m.get(k) || {}).count || 0);
+    const nameOf = (k) => (m.get(k) || {}).name || ctx.itemName.get(k) || k.replace(/^x:/, '');
+    const extras = (k) => Math.max(0, cnt(k) - ctx.defaultCount(k));
 
-    ctx.rules.forEach((r) => {
-      let total = 0;
-      (r.choices || []).forEach((grp, ci) => {
-        const n = cnt.get(r.id + ':' + ci) || 0;
-        if (!n) return;
-        total += n;
-        removesOf(r, ci).forEach((x) => bump(r.model, ctx.keyOf(x), 'rm', n));
-        (grp || []).forEach((x) => bump(r.model, ctx.keyOf(x), 'gn', n));
-      });
-      (r.locks || []).forEach((x) => { if (total) bump(r.model, ctx.keyOf(x), 'lk', total); });
-      totals.set(r.id, total);
-      if (!total) return;
-      if (!ctx.visible(r)) put('cond:' + r.id, `Needs ${r.condition.minModels}+ models`, total);
-      put('cap:' + r.id, capReason(ctx, r), total - ctx.capOf(r));
-    });
-
-    const known = (k, L) => k.startsWith('d:') || (L.get(k) || {}).gn > 0;
-    const avail = (m, k) => {
-      const L = m ? (scopeL.get(m) || new Map()) : unitL;
-      const e = L.get(k) || { rm: 0, lk: 0, gn: 0 };
-      const base = m ? Math.min(ctx.countOf(m), ctx.defaultCount(k)) : ctx.defaultCount(k);
-      return base + e.gn - e.rm - e.lk;
-    };
-    scopeL.forEach((L, m) => L.forEach((e, k) => {
-      if (!known(k, L) && !known(k, unitL)) return;
-      put('avail:' + m + ':' + k, `No ${m} still carries ${article(ctx.itemName.get(k))}`, -avail(m, k));
-    }));
-    unitL.forEach((e, k) => {
-      if (!known(k, unitL)) return;
-      put('avail::' + k, `No model still carries ${article(ctx.itemName.get(k))}`, -avail(null, k));
-    });
-
-    // Requires (not locked by the same rule): each take needs a carrier.
-    ctx.rules.forEach((r) => {
-      const total = totals.get(r.id) || 0;
-      if (!total || !(r.requires || []).length) return;
-      const locked = new Set((r.locks || []).map((x) => ctx.keyOf(x)));
-      (r.requires || []).forEach((x) => {
+    // 1. Slot. For each default D: extras of items that can only replace D
+    //    (single-item choices of replace rules, offered by nothing else) must
+    //    fit D's freed slots; flexible items (several targets, also offered
+    //    by an add rule, or part of a bundle) may fill them but are not
+    //    forced to.
+    const targets = new Map(), flexible = new Set();
+    ctx.rules.forEach((rule) => (rule.choices || []).forEach((grp, ci) => {
+      const rm = removesOf(rule, ci).map((x) => ctx.keyOf(x)).filter((k) => k.startsWith('d:'));
+      (grp || []).forEach((x) => {
         const k = ctx.keyOf(x);
-        if (!k.startsWith('d:') && !((unitL.get(k) || {}).gn > 0)) return;
-        if (locked.has(k)) {
-          // The take keeps the item and locks it: availability (≥ 0) covers
-          // it, but it must also exist on that model type at all.
-          const base = r.model ? Math.min(ctx.countOf(r.model), ctx.defaultCount(k)) : ctx.defaultCount(k);
-          put('req:' + r.id + ':' + k, `No ${r.model || 'model'} still carries ${article(ctx.itemName.get(k))}`, total - base - ((led(r.model, k).gn) || 0));
-          return;
-        }
-        put('req:' + r.id + ':' + k, `No ${r.model || 'model'} still carries ${article(ctx.itemName.get(k))}`, total - avail(r.model, k));
+        if (!targets.has(k)) targets.set(k, new Set());
+        if (rule.kind === 'add' || !rm.length) { flexible.add(k); return; }
+        if ((grp || []).length > 1 || (Number.isFinite(x.count) && x.count > 1)) flexible.add(k);
+        rm.forEach((d) => targets.get(k).add(d));
+      });
+    }));
+    targets.forEach((set, k) => { if (set.size > 1) flexible.add(k); });
+    ctx.defaults.forEach((d, i) => {
+      const D = 'd:' + i, def = d.count || 0;
+      let excl = 0, shared = 0;
+      targets.forEach((set, k) => {
+        if (!set.has(D) || k === D) return;
+        if (flexible.has(k)) shared += extras(k); else excl += extras(k);
+      });
+      const lo = cnt(D) + excl, hi = lo + shared;
+      const dn = String(d.name || '').toLowerCase();
+      if (lo > def) out.push(`${cap(d.name)}: ${lo} weapons for ${def} models — lower the ${dn} count when you add swaps`);
+      else if (hi < def) out.push(`${cap(d.name)}: only ${hi} for ${def} models`);
+    });
+
+    // 2. Cap. Each item's extras fill the rules that offer it in order; a
+    //    rule's cap is shared across its choices.
+    const left = new Map(ctx.rules.map((r) => [r.id, ctx.visible(r) ? ctx.capOf(r) : 0]));
+    rowsFor(ctx, m).forEach((row) => {
+      if (!row.rules.length) return;
+      const taken = extras(row.key);
+      if (!taken) return;
+      let rest = taken;
+      row.rules.forEach((r) => {
+        const grp = (r.choices || []).find((g) => (g || []).some((x) => ctx.keyOf(x) === row.key)) || [];
+        const mult = Math.max(1, grp.filter((x) => ctx.keyOf(x) === row.key)
+          .reduce((n, x) => n + (Number.isFinite(x.count) && x.count > 1 ? x.count : 1), 0));
+        const can = Math.min(rest, (left.get(r.id) || 0) * mult);
+        const takes = Math.ceil(can / mult);
+        left.set(r.id, (left.get(r.id) || 0) - takes);
+        rest -= can;
+      });
+      if (rest > 0) {
+        const r0 = row.rules[0];
+        out.push(`${cap(row.name)}: ${taken} taken, the datasheet allows up to ${taken - rest} (${capPhrase(ctx, r0)})`);
+        return;
+      }
+      // Per-choice unit-wide limit (choiceMax), summed over the rules that
+      // set one for this item.
+      let lim = null;
+      row.rules.forEach((r) => { const c = ctx.choiceCapOf(r); if (c != null) lim = (lim || 0) + c; });
+      if (lim != null && taken > lim) out.push(`${cap(row.name)}: ${taken} taken, the datasheet allows ${lim} per unit`);
+    });
+
+    // 3. Requires / locks: an add-on needs a model still carrying the item.
+    ctx.rules.forEach((rule) => {
+      const need = new Map();
+      (rule.requires || []).concat(rule.locks || []).forEach((x) => need.set(ctx.keyOf(x), x));
+      if (!need.size) return;
+      const gained = new Set();
+      (rule.choices || []).forEach((g) => (g || []).forEach((x) => gained.add(ctx.keyOf(x))));
+      gained.forEach((g) => {
+        const n = extras(g);
+        if (!n) return;
+        need.forEach((x, k) => {
+          if (n > cnt(k)) out.push(`${cap(nameOf(g))} needs a model that still carries ${article(nameOf(k))}`);
+        });
       });
     });
 
-    // Exclusivity: one rule of the set per model.
-    ctx.exclSets.forEach((set, root) => {
+    // 4. Exclusive: one rule of an exclusiveWith set per model.
+    ctx.exclSets.forEach((set) => {
       if (set.length < 2) return;
-      const sum = set.reduce((s, r) => s + (totals.get(r.id) || 0), 0);
-      put('excl:' + root, 'Only one of these per model', sum - ctx.countOf(set[0].model));
-    });
-    return v;
-  }
-
-  // Why "+" on `key` is refused (string), or null when it is allowed.
-  function refusal(ctx, cnt, key) {
-    const next = new Map(cnt);
-    next.set(key, (next.get(key) || 0) + 1);
-    const cur = violations(ctx, cnt), nx = violations(ctx, next);
-    for (const [id, e] of nx) {
-      const was = cur.get(id);
-      if (!was || e.over > was.over) return e.msg;
-    }
-    return null;
-  }
-
-  // Re-fit counts to the limits at the current size (size change while
-  // configuring): re-add one at a time in rule order, dropping what no
-  // longer fits.
-  function normalize(ctx, cnt) {
-    const out = new Map();
-    ctx.rules.forEach((r) => (r.choices || []).forEach((g, ci) => {
-      const k = r.id + ':' + ci;
-      const want = cnt.get(k) || 0;
-      for (let i = 0; i < want; i++) {
-        if (refusal(ctx, out, k)) break;
-        out.set(k, (out.get(k) || 0) + 1);
+      const keys = new Set();
+      set.forEach((r) => (r.choices || []).forEach((g) => (g || []).forEach((x) => keys.add(ctx.keyOf(x)))));
+      let sum = 0;
+      keys.forEach((k) => { sum += extras(k); });
+      if (sum > ctx.countOf(set[0].model)) {
+        out.push(`${Array.from(keys).map((k) => cap(nameOf(k))).join(', ')}: only one of these per model`);
       }
-    }));
-    return out;
+    });
+    return Array.from(new Set(out));
   }
 
   const ptsChip = (d) => (d ? ` <span class="wgp-pts">${d > 0 ? '+' : '−'}${Math.abs(d)} pts</span>` : '');
@@ -380,94 +450,63 @@
     if (!stepper) return null;
     return { key: stepper.dataset.key, plus: btn.classList.contains('wgp-plus') };
   }
-
   function restoreStepperFocus(host, ref) {
     if (!ref) return;
     let stepper = null;
     host.querySelectorAll('.wgp-stepper').forEach((s) => {
       if (!stepper && s.dataset.key === ref.key) stepper = s;
     });
-    let btn = stepper && stepper.querySelector(ref.plus ? '.wgp-plus' : '.wgp-minus');
-    // A just-disabled "+" cannot hold focus; hand it to its "−".
-    if (btn && btn.disabled) btn = stepper.querySelector(ref.plus ? '.wgp-minus' : '.wgp-plus');
-    if (btn && !btn.disabled) btn.focus();
+    const btn = stepper && stepper.querySelector(ref.plus ? '.wgp-plus' : '.wgp-minus');
+    if (btn) btn.focus();
   }
-
-  // Disabled steppers: the stylesheet has no :disabled rule for .wgp-btn yet,
-  // so dim it inline (CSP allows inline styles on this vhost).
-  const DIS = ' disabled style="opacity:.35;cursor:not-allowed"';
 
   function render(unit, host) {
     const profile = unit.wargearProfile;
     const models = currentModels(unit);
     const ctx = makeCtx(unit, models);
     const refocus = focusedStepperBtn(host);
+    const rows = rowsFor(ctx, inv);
 
-    const groups = new Map();   // modelName -> [{ key, rule, ci, grp, cost }]
-    let anyPriced = false;
-    ctx.rules.forEach((rule) => {
-      const model = rule.model || '';
-      (rule.choices || []).forEach((grp, ci) => {
-        const cost = costOf(profile, rule, ci);
-        if (cost) anyPriced = true;
-        if (!ctx.visible(rule)) return;
-        if (!groups.has(model)) groups.set(model, []);
-        groups.get(model).push({ key: rule.id + ':' + ci, rule, ci, grp, cost });
-      });
-    });
+    const loadout = invToLoadout(inv);
+    const wgLive = A() && A().loadoutPts ? A().loadoutPts(unit, loadout) : 0;
+    const anyPriced = rows.some((r) => priceOf(unit, r));
 
-    // Live wargear points = priced defaults at this size + selected deltas,
-    // floored at 0 — mirrors army.js getEntryPoints.
-    let wgLive = (profile.alwaysCost || 0) + defaultBasePts(profile, models);
-    ctx.rules.forEach((rule) => (rule.choices || []).forEach((g, ci) => {
-      wgLive += (counts.get(rule.id + ':' + ci) || 0) * costOf(profile, rule, ci);
-    }));
-    wgLive = Math.max(0, wgLive);
-
-    const unparsed = Array.isArray(profile.unparsed) ? profile.unparsed.filter(Boolean) : [];
-    if (!groups.size && !unparsed.length) {
+    if (!rows.length) {
       host.innerHTML = '';
       updateBannerPts(unit, wgLive);
       return;
     }
 
     let html = '<div class="wgp-inv">';
-    const row = (label, n, r, hint, fixed, why, title) => {
+    rows.forEach((r) => {
+      const n = (inv.get(r.key) || {}).count || 0;
+      let hint = '';
+      if (r.def) hint = 'default';
+      else if (r.rules.length) {
+        const ms = Array.from(new Set(r.rules.map((x) => x.model || '')));
+        hint = ((ms.length === 1 && ms[0]) ? ms[0] + ' · ' : '') + capText(ctx, r.rules[0]);
+      }
       const hintChip = hint ? ` <span class="wgp-chip">${esc(hint)}</span>` : '';
-      const pts = r ? ptsChip(r.cost) : '';
-      const stepper = fixed
-        ? `<span class="wgp-stepper wgp-stepper-fixed"><span class="wgp-count">${n}</span></span>`
-        : `<span class="wgp-stepper" data-key="${esc(r.key)}">
-            <button type="button" class="wgp-btn wgp-minus" aria-label="Remove one ${esc(label)}"${n > 0 ? '' : DIS}>&minus;</button>
-            <span class="wgp-count">${n}</span>
-            <button type="button" class="wgp-btn wgp-plus" aria-label="Add one ${esc(label)}"${why ? DIS + ` title="${esc(why)}"` : ''}>+</button>
-          </span>`;
+      const title = r.rules.map((x) => x.text).filter(Boolean).join('\n');
       const t = title ? ` title="${esc(title)}"` : '';
-      return `<div class="wgp-row${fixed ? ' wgp-row-default' : ''}"><span class="wgp-item"${t}>${esc(label)}${pts}${hintChip}</span>${stepper}</div>`;
-    };
-    // Default items at this size, minus whatever the picked swaps removed.
-    const removedBy = new Map();
-    ctx.rules.forEach((rule) => (rule.choices || []).forEach((g, ci) => {
-      const n = counts.get(rule.id + ':' + ci) || 0; if (!n) return;
-      removesOf(rule, ci).forEach((x) => { const k = ctx.keyOf(x); removedBy.set(k, (removedBy.get(k) || 0) + n); });
-    }));
-    ctx.defaults.forEach((d, i) => {
-      const left = Math.max(0, (d.count || 0) - (removedBy.get('d:' + i) || 0));
-      html += row(cap(d.name), left, null, 'default', true);
+      html += `<div class="wgp-row${r.def ? ' wgp-row-default' : ''}"><span class="wgp-item"${t}>${esc(cap(r.name))}${ptsChip(priceOf(unit, r))}${hintChip}</span>`
+        + `<span class="wgp-stepper" data-key="${esc(r.key)}">
+            <button type="button" class="wgp-btn wgp-minus" aria-label="Remove one ${esc(r.name)}">&minus;</button>
+            <span class="wgp-count">${n}</span>
+            <button type="button" class="wgp-btn wgp-plus" aria-label="Add one ${esc(r.name)}">+</button>
+          </span></div>`;
     });
-    // Everything the datasheet lets you take instead of / on top of that.
-    groups.forEach((rows) => rows.forEach((r) => {
-      const hint = (r.rule.model ? r.rule.model + ' · ' : '') + capText(ctx, r.rule);
-      const why = refusal(ctx, counts, r.key);
-      html += row(cap(names(r.grp)), counts.get(r.key) || 0, r, hint, false, why, r.rule.text || '');
-    }));
     html += '</div>';
-    // A saved loadout that no longer fits (squad shrunk, data changed).
-    const broken = Array.from(violations(ctx, counts).values()).map((e) => e.msg);
-    if (broken.length) html += `<div class="wgp-note wgp-over">Over a datasheet limit: ${esc(Array.from(new Set(broken)).join('; '))}</div>`;
+    const warn = warnings(ctx, inv);
+    if (warn.length) {
+      html += '<div class="validation-banner wgp-warnings" role="status" style="margin:var(--sp-3) 0 0">'
+        + '<div class="validation-banner-title">Wargear check</div><ul class="validation-banner-list">'
+        + warn.map((w) => `<li>${esc(w)}</li>`).join('') + '</ul></div>';
+    }
+    const unparsed = Array.isArray(profile.unparsed) ? profile.unparsed.filter(Boolean) : [];
     if (unparsed.length) {
       html += '<div class="wgp-unparsed" style="margin-top:var(--sp-2);font-size:var(--fs-2xs);color:var(--text-muted)">'
-        + 'Not checked by the picker: ' + unparsed.map((l) => esc(l)).join(' · ') + '</div>';
+        + 'Not checked: ' + unparsed.map((l) => esc(l)).join(' · ') + '</div>';
     }
     if (anyPriced || wgLive) html += `<div class="wgp-note wgp-total">Wargear points: +${wgLive} pts</div>`;
     host.innerHTML = html;
@@ -476,7 +515,6 @@
   }
 
   // Banner points track the LIVE cost: selected size's base + wargear points.
-  // Only the leading number is replaced; the dimmed subs stay.
   function updateBannerPts(unit, wgLive) {
     if (!panelEl) return;
     const el = panelEl.querySelector('.detail-banner-pts.detail-pts-value');
@@ -490,6 +528,15 @@
       el.firstChild.nodeValue.replace(/^\d+/, String(base + wgLive));
   }
 
+  // The inventory an entry holds: its loadout, else its old selection rows
+  // converted, else the defaults at its size.
+  function entryLoadout(unit, entry) {
+    const models = A() && A().entryModels ? A().entryModels(entry) : null;
+    if (Array.isArray(entry.loadout)) return entry.loadout;
+    if (Array.isArray(entry.wargear) && entry.wargear.length) return loadoutFromWargear(unit, models, entry.wargear);
+    return invToLoadout(defaultInv(makeCtx(unit, models)));
+  }
+
   App.WargearPicker = {
     mount(unit, panel) {
       const host = panel.querySelector('#detail-wargear-picker');
@@ -499,26 +546,12 @@
       const selEntry = (s.selectedArmyEntryIndex != null && s.currentArmy)
         ? s.currentArmy.entries[s.selectedArmyEntryIndex] : null;
       const ei = (selEntry && selEntry.unitId === unit.id) ? s.selectedArmyEntryIndex : null;
-      if (unit.id !== unitId || ei !== entryIndex) {
-        unitId = unit.id;
-        entryIndex = ei;
-        counts = new Map();
-        // Seed from the entry's saved selections (summed: a migration can
-        // map two old rows onto one rule choice).
-        const entry = currentEntry();
-        ((entry && entry.wargear) || []).forEach((w) => {
-          if (w && w.optionId && w.count) {
-            const k = w.optionId + ':' + (w.choice == null ? 0 : w.choice);
-            counts.set(k, (counts.get(k) || 0) + w.count);
-          }
-        });
-      }
-      // Editing an existing entry: preselect ITS squad size.
-      const entry = currentEntry();
-      if (entry) {
+      // Editing an existing entry: preselect ITS squad size first.
+      const entry0 = (ei != null) ? selEntry : null;
+      if (entry0) {
         const sel = panel.querySelector('#detail-squad-select');
         const opts = unit.squadOptions || [];
-        const idx = opts.findIndex((o) => o.pts === entry.selectedPts);
+        const idx = opts.findIndex((o) => o.pts === entry0.selectedPts);
         if (sel && idx >= 0 && String(idx) !== sel.value) {
           sel.value = String(idx);
           const label = panel.querySelector('#detail-size-label');
@@ -528,108 +561,117 @@
           }
         }
       }
+      const models = currentModels(unit);
+      if (unit.id !== unitId || ei !== entryIndex || !inv) {
+        unitId = unit.id;
+        entryIndex = ei;
+        const ctx = makeCtx(unit, models);
+        inv = entry0 ? invFromLoadout(ctx, entryLoadout(unit, entry0)) : defaultInv(ctx);
+        invSize = models;
+      } else if (!entry0 && models !== invSize) {
+        inv = defaultInv(makeCtx(unit, models));
+        invSize = models;
+      }
       render(unit, host);
 
       host.addEventListener('click', (e) => {
         const btn = e.target.closest('.wgp-btn');
-        if (!btn || btn.disabled) return;
+        if (!btn) return;
         const stepper = btn.closest('.wgp-stepper');
         if (!stepper || !stepper.dataset.key) return;
         const key = stepper.dataset.key;
-        const cur = counts.get(key) || 0;
-        if (btn.classList.contains('wgp-plus')) {
-          if (refusal(makeCtx(unit, currentModels(unit)), counts, key)) return;
-          counts.set(key, cur + 1);
-        } else {
-          if (cur <= 0) return;
-          counts.set(key, cur - 1);
+        const ctx = makeCtx(unit, currentModels(unit));
+        let item = inv.get(key);
+        if (!item) {
+          const row = rowsFor(ctx, inv).find((r) => r.key === key);
+          if (!row) return;
+          item = { id: row.id || (A() ? A()._kebab(row.name) : row.name), name: row.name, count: 0 };
+          inv.set(key, item);
         }
+        if (btn.classList.contains('wgp-plus')) item.count += 1;
+        else if (item.count > 0) item.count -= 1;
+        else return;
         render(unit, host);
         syncEntry(unit);   // no-op unless this pane edits an army entry
       });
-      // Squad-size change → limits recompute. While configuring a new unit
-      // the pending loadout is re-fitted to the new size; an entry being
-      // edited keeps its saved rows (the over-limit note says what broke).
+      // Size change: an unsaved pick resets to that size's defaults; a saved
+      // entry keeps its counts (the warnings say what no longer fits).
       const sizeSel = panel.querySelector('#detail-squad-select');
       if (sizeSel && !sizeSel._wgpWired) {
         sizeSel._wgpWired = true;
         sizeSel.addEventListener('change', () => {
-          if (!currentEntry()) counts = normalize(makeCtx(unit, currentModels(unit)), counts);
+          if (unitId !== unit.id) return;
+          if (!currentEntry()) {
+            invSize = currentModels(unit);
+            inv = defaultInv(makeCtx(unit, invSize));
+          }
           render(unit, host);
         });
       }
     },
 
-    // Full effective loadout for a squad: defaults at `models` adjusted by
-    // the saved selections (adds − removed), plus taken non-default items.
-    // Map lowercased item name -> { name, count }, or null without a profile.
-    // Used by the card exporter for the ×N chips.
-    effectiveCounts(unit, models, selections) {
-      const profile = unit && unit.wargearProfile;
-      if (!profile) return null;
-      const ctx = makeCtx(unit, models);
-      const added = new Map(), removed = new Map(), label = new Map();
-      (selections || []).forEach((sel) => {
-        if (!sel || !sel.optionId || !sel.count) return;
-        const rule = ctx.rules.find((r) => r.id === sel.optionId);
-        if (!rule) return;
-        const ci = sel.choice == null ? 0 : sel.choice;
-        ((rule.choices || [])[ci] || []).forEach((x) => {
-          const k = ctx.keyOf(x);
-          added.set(k, (added.get(k) || 0) + sel.count);
-          if (!label.has(k)) label.set(k, x.name);
-        });
-        removesOf(rule, ci).forEach((x) => { const k = ctx.keyOf(x); removed.set(k, (removed.get(k) || 0) + sel.count); });
-      });
+    // Effective loadout as Map lowercased item name -> { name, count }, or
+    // null without a profile. Accepts a loadout ([{id,name,count}]) or old
+    // selection rows. Used by the card exporter for the ×N chips.
+    effectiveCounts(unit, models, list, asLoadout) {
+      if (!unit || !unit.wargearProfile) return null;
+      const isLoadout = asLoadout === true
+        || (Array.isArray(list) && list.length > 0 && list.every((x) => x && !x.optionId && typeof x.name === 'string'));
+      const lo = isLoadout ? list : loadoutFromWargear(unit, models, list || []);
       const out = new Map();
-      const put = (name, count) => { out.set(String(name).toLowerCase(), { name, count }); };
-      ctx.defaults.forEach((d, i) => {
-        const k = 'd:' + i;
-        put(d.name, Math.max(0, (d.count || 0) + (added.get(k) || 0) - (removed.get(k) || 0)));
+      lo.forEach((x) => {
+        const k = String(x.name).toLowerCase();
+        const have = out.get(k);
+        out.set(k, { name: x.name, count: (have ? have.count : 0) + (x.count || 0) });
       });
-      added.forEach((n, k) => { if (!k.startsWith('d:') && n) put(label.get(k), n); });
+      // Defaults that were lowered to 0 still get a row (×0).
+      makeCtx(unit, models).defaults.forEach((d) => {
+        const k = String(d.name).toLowerCase();
+        if (!out.has(k)) out.set(k, { name: d.name, count: 0 });
+      });
       return out;
     },
 
-    // Snapshot the pending config for addUnit(); keeps state so adding a
-    // second copy of the squad reuses the same loadout.
+    // The pending inventory as a loadout for addUnit() (events.js passes it
+    // in the old `wargear` slot; Army.addUnit recognises the shape). State
+    // is kept so a second copy reuses the same loadout.
     takeSelections(unit) {
-      if (!unit || unit.id !== unitId || !unit.wargearProfile) return [];
+      if (!unit || unit.id !== unitId || !unit.wargearProfile || !inv) return [];
+      return invToLoadout(inv);
+    },
+    takeLoadout(unit) { return this.takeSelections(unit); },
+
+    // Warnings for a loadout at a squad size (army-list badge).
+    warnings(unit, models, loadout) {
+      if (!unit || !unit.wargearProfile) return [];
+      const ctx = makeCtx(unit, models);
+      return warnings(ctx, invFromLoadout(ctx, loadout || []));
+    },
+    // Items whose count differs from the default at that size, as
+    // [{ id, name, count, def }] (army-list badges show the gains).
+    diff(unit, models, loadout) {
+      if (!unit || !unit.wargearProfile) return [];
+      const ctx = makeCtx(unit, models);
+      const m = invFromLoadout(ctx, loadout || []);
       const out = [];
-      rulesOf(unit.wargearProfile).forEach((rule) => {
-        (rule.choices || []).forEach((grp, ci) => {
-          const n = counts.get(rule.id + ':' + ci) || 0;
-          if (!n) return;
-          out.push({
-            optionId: rule.id,
-            choice: ci,
-            count: n,
-            label: cap(names(grp)),
-            items: grp.map((x) => x.name),
-            // NET delta per take (may be negative; army.js floors at 0).
-            pts: costOf(unit.wargearProfile, rule, ci),
-          });
-        });
+      rowsFor(ctx, m).forEach((r) => {
+        const n = (m.get(r.key) || {}).count || 0;
+        if (n !== r.def) out.push({ id: r.id || (m.get(r.key) || {}).id, name: r.name, count: n, def: r.def });
       });
       return out;
     },
+    defaultLoadout(unit, models) { return invToLoadout(defaultInv(makeCtx(unit, models))); },
+    entryLoadout,
+    loadoutFromWargear,
 
-    // Shared with entry-rehydrate.js (pricing + migration) and the verify
-    // script. groupCost keeps its old (profile, option, group) signature.
+    // Shared with entry-rehydrate.js and tts-export-style readers.
     rulesOf,
     removesOf,
     costOf,
     groupCost(profile, opt, grp) {
-      // A raw legacy option resolves to its adapted rule (same choices array).
       const rule = (opt && !opt.kind && rulesOf(profile).find((r) => r.id === opt.id)) || opt;
       const ci = Math.max(0, (rule && rule.choices ? rule.choices.indexOf(grp) : 0));
       return costOf(profile, rule, ci);
-    },
-    // Engine probe for tests: why "+" on `key` is refused at `models`, given
-    // `cnt` (object or Map of 'ruleId:ci' -> n); null = allowed.
-    _refusal(unit, models, cnt, key) {
-      const m = cnt instanceof Map ? cnt : new Map(Object.entries(cnt || {}));
-      return refusal(makeCtx(unit, models), m, key);
     },
   };
 })();

@@ -237,11 +237,25 @@
     return ids.size === 1 ? sameName[0] : null;
   }
 
+  // Inventory v2 (docs/WARGEAR-RULES.md §5): an entry with old selection
+  // rows and no `loadout` gets one — defaults at its size − replaced + added
+  // (rows first re-pointed to rule ids above). `wargear` itself is left in
+  // place untouched (a rollback still finds it); nothing writes it any more.
+  function migrateLoadout(entry, fresh) {
+    if (Array.isArray(entry.loadout)) return false;
+    if (!Array.isArray(entry.wargear) || !entry.wargear.length) return false;
+    const W = App.WargearPicker;
+    if (!fresh || !fresh.wargearProfile || !W || typeof W.loadoutFromWargear !== 'function') return false;
+    const models = (window.Army && Army.entryModels) ? Army.entryModels(entry) : null;
+    entry.loadout = W.loadoutFromWargear(fresh, models, entry.wargear);
+    return true;
+  }
+
   function rehydrateArmy(army) {
-    const none = { swapped: 0, repriced: 0, remapped: 0, migrated: 0 };
+    const none = { swapped: 0, repriced: 0, remapped: 0, migrated: 0, loadouts: 0 };
     if (!army || !Array.isArray(army.entries)) return none;
     if (typeof App.findUnit !== 'function') return none;
-    let swapped = 0, repriced = 0, remapped = 0, migrated = 0;
+    let swapped = 0, repriced = 0, remapped = 0, migrated = 0, loadouts = 0;
     army.entries.forEach((e) => {
       if (!e || !e.unitId) return;
       const facName = (e.unitData && e.unitData._factionName) || '';
@@ -264,9 +278,10 @@
       const a = repairSelectedPts(e, prevUnit, fresh);
       if (migrateWargear(e, prevUnit, fresh)) migrated++;
       const b = repairAddOnPts(e, fresh);
+      if (migrateLoadout(e, fresh)) loadouts++;
       if (a || b) repriced++;
     });
-    return { swapped, repriced, remapped, migrated };
+    return { swapped, repriced, remapped, migrated, loadouts };
   }
 
   // Returns the number of entries whose price was corrected, so callers can
@@ -275,12 +290,19 @@
     const s = App.state;
     if (!s || !s.currentArmy) return 0;
     if (!Array.isArray(s.allUnits) || s.allUnits.length === 0) return 0; // factions not ready
-    const { swapped, repriced, remapped, migrated } = rehydrateArmy(s.currentArmy);
+    const { swapped, repriced, remapped, migrated, loadouts } = rehydrateArmy(s.currentArmy);
+    if (loadouts > 0) {
+      console.info('[rehydrate] converted wargear selections to inventories on', loadouts, 'army entries');
+      // Persist the converted entries (§5: "then the entry is saved").
+      if (s.armyManager && typeof s.armyManager.saveArmy === 'function') {
+        try { s.armyManager.saveArmy(s.currentArmy); } catch (_) {}
+      }
+    }
     if (migrated > 0) console.info('[rehydrate] re-pointed wargear rows to datasheet rules on', migrated, 'army entries');
     if (remapped > 0) console.info('[rehydrate] re-pointed', remapped, 'army entries from retired unit ids');
     if (swapped > 0) console.info('[rehydrate] refreshed unitData on', swapped, 'army entries');
     if (repriced > 0) console.info('[rehydrate] re-read current points on', repriced, 'army entries');
-    return repriced;
+    return repriced + loadouts;   // either one changes what the army list shows
   };
 
   // Any army landing in state carries whatever snapshots it was saved with —

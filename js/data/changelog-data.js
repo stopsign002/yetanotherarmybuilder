@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.03-2',
-    lastUpdated: '2026-11-03T00:50:00Z',
+    version:     '2026.11.03-3',
+    lastUpdated: '2026-11-03T02:30:00Z',
     entries: [
+      {
+        date: '2026-11-03',
+        kind: 'feature',
+        title: 'Wargear is a full inventory, checked against the datasheet',
+        description: 'Every weapon and piece of wargear a unit can carry now has its own counter, defaults included, and nothing is blocked: you set exactly what the squad holds. Underneath, a Wargear check reads the datasheet rules (now parsed for 987 units straight from the GW app text, Plague Marines and all) and warns when something is over the limit, when the counts do not add up to the models, or when an item needs a weapon nobody still carries. Army entries show a \u26a0 badge while a warning stands. Existing armies and army codes convert automatically.',
+      },
       {
         date: '2026-11-03',
         kind: 'change',

@@ -1,5 +1,6 @@
-// scripts/verify/wargear-rules.mjs — the Wargear picker enforces the datasheet
-// rules (contract docs/WARGEAR-RULES.md §3). Signed in, desktop width.
+// scripts/verify/wargear-rules.mjs — the Wargear inventory (contract
+// docs/WARGEAR-RULES.md §5 "Inventory v2"): every row has − N +, nothing is
+// ever disabled, the datasheet rules are WARNINGS. Signed in, desktop width.
 //
 //   set -a; . ~/sites/base/yaab-fixture.env; set +a
 //   BROWSE_ENV="FIXTURE_USER FIXTURE_PASS" ~/sites/base/browser/browse.sh run \
@@ -13,8 +14,8 @@
 // today — with `rules` that is the parsed data, without it the legacy adapter.
 // Set NO_FIXTURE=1 once the dataset carries rules to run Plague Marines live.
 //
-// Every "+" is pressed through the real button until it is disabled. Writes
-// only the fixture account's current army, emptied at the start and the end.
+// Every stepper is pressed through the real button. Writes only the fixture
+// account's current army, emptied at the start and the end.
 // No page.waitForFunction (CSP) — waitForSelector and page.evaluate only.
 import { launch, newPage, boot, wire, makeChecker, OUT } from './_lib.mjs';
 
@@ -66,15 +67,11 @@ async function emptyArmy() {
   });
 }
 
-// Open a unit's details pane (optionally with the fixture rules injected).
 async function openUnit(name, fixture) {
   const ok = await page.evaluate(({ name, fixture }) => {
     const u = (App.state.allUnits || []).find((x) => x && x.name === name && x.wargearProfile);
     if (!u) return false;
-    if (fixture) {
-      // Keep options[] beside rules: the migration check maps from them.
-      u.wargearProfile = Object.assign({}, u.wargearProfile, { rules: fixture, unparsed: [] });
-    }
+    if (fixture) u.wargearProfile = Object.assign({}, u.wargearProfile, { rules: fixture, unparsed: [] });
     if (App.getMode && App.setMode && App.getMode() !== 'build') App.setMode('build');
     App.state.selectedUnit = u;
     App.state.selectedArmyEntryIndex = null;
@@ -84,6 +81,16 @@ async function openUnit(name, fixture) {
   if (!ok) return false;
   await page.waitForSelector('#detail-wargear-picker .wgp-row', { timeout: 15000 });
   return true;
+}
+// Open an army entry's pane the way an army-list click does (entry-bound).
+async function openEntry(idx) {
+  await page.evaluate((idx) => {
+    const s = App.state, e = s.currentArmy.entries[idx];
+    s.selectedUnit = e.unitData;
+    s.selectedArmyEntryIndex = idx;
+    UI.renderUnitDetail(e.unitData, App.getActiveEnhancements ? App.getActiveEnhancements() : [], e.enhancements || []);
+  }, idx);
+  await page.waitForSelector('#detail-wargear-picker .wgp-row', { timeout: 15000 });
 }
 
 async function setSize(models) {
@@ -100,7 +107,7 @@ async function setSize(models) {
   return false;
 }
 
-// Row = exact label + a chip containing `chip`. Returns its nth index.
+// Row by exact label (+ optional chip text). Returns its index or -1.
 async function rowIndex(label, chip) {
   return page.evaluate(({ label, chip }) => {
     const rows = Array.from(document.querySelectorAll('#detail-wargear-picker .wgp-row'));
@@ -108,196 +115,168 @@ async function rowIndex(label, chip) {
       const item = r.querySelector('.wgp-item');
       const first = item && item.firstChild ? item.firstChild.textContent.trim() : '';
       const c = r.querySelector('.wgp-chip');
-      return first === label && (!chip || (c && c.textContent.includes(chip)));
+      return first.toLowerCase() === label.toLowerCase() && (!chip || (c && c.textContent.includes(chip)));
     });
   }, { label, chip: chip || '' });
 }
 const rowLoc = (i) => page.locator('#detail-wargear-picker .wgp-row').nth(i);
-
-async function rowState(label, chip) {
+async function count(label, chip) {
   const i = await rowIndex(label, chip);
-  if (i < 0) return null;
-  const r = rowLoc(i);
-  const plus = r.locator('.wgp-plus');
-  return {
-    count: parseInt(await r.locator('.wgp-count').textContent(), 10),
-    plusDisabled: (await plus.count()) ? await plus.isDisabled() : null,
-    title: (await plus.count()) ? (await plus.getAttribute('title')) || '' : '',
-  };
+  return i < 0 ? null : parseInt(await rowLoc(i).locator('.wgp-count').textContent(), 10);
 }
-
-// Press "+" until it disables (or `limit` presses). Returns the final state.
-async function fill(label, chip, limit = 25) {
-  for (let n = 0; n < limit; n++) {
+async function press(label, n, minus, chip) {
+  for (let k = 0; k < n; k++) {
     const i = await rowIndex(label, chip);
-    if (i < 0) return null;
-    const plus = rowLoc(i).locator('.wgp-plus');
-    if (await plus.isDisabled()) break;
-    await plus.click();
+    if (i < 0) return false;
+    await rowLoc(i).locator(minus ? '.wgp-minus' : '.wgp-plus').click();
   }
-  return rowState(label, chip);
-}
-async function press(label, chip, minus) {
-  const i = await rowIndex(label, chip);
-  if (i < 0) return false;
-  await rowLoc(i).locator(minus ? '.wgp-minus' : '.wgp-plus').click();
   return true;
 }
-async function zero() {
-  for (let n = 0; n < 80; n++) {
-    const m = page.locator('#detail-wargear-picker .wgp-minus:not([disabled])');
-    if (!(await m.count())) return true;
-    await m.first().click();
-  }
-  return false;
-}
-const defaultCount = (label) => page.evaluate((label) => {
-  const r = Array.from(document.querySelectorAll('#detail-wargear-picker .wgp-row-default'))
-    .find((x) => x.querySelector('.wgp-item').firstChild.textContent.trim() === label);
-  return r ? parseInt(r.querySelector('.wgp-count').textContent, 10) : null;
-}, label);
-
-const capCheck = async (tag, label, chip, want, why) => {
-  const s = await fill(label, chip);
-  check(`${tag}: ${label}${chip ? ' (' + chip + ')' : ''} stops at ${want}`,
-    s && s.count === want && s.plusDisabled && (!why || why.test(s.title)), s ? `${s.count}, "${s.title}"` : 'row missing');
+const setCount = async (label, want, chip) => {
+  const c = await count(label, chip);
+  if (c == null) return false;
+  return press(label, Math.abs(want - c), want < c, chip);
 };
-const blocked = async (tag, label, chip, why) => {
-  const s = await rowState(label, chip);
-  check(`${tag}: ${label}${chip ? ' (' + chip + ')' : ''} + disabled`,
-    s && s.count === 0 && s.plusDisabled && (!why || why.test(s.title)), s ? `${s.count}, "${s.title}"` : 'row missing');
-};
+const warnText = () => page.evaluate(() => {
+  const w = document.querySelector('#detail-wargear-picker .wgp-warnings');
+  return w ? w.textContent.replace(/\s+/g, ' ').trim() : '';
+});
+const anyDisabled = () => page.evaluate(() =>
+  Array.from(document.querySelectorAll('#detail-wargear-picker .wgp-btn')).filter((b) => b.disabled).length);
+// No eval in the page (CSP): select the entry by datasheet name.
+const loadoutOf = (unitName) => page.evaluate((unitName) => {
+  const e = App.state.currentArmy.entries.find((x) => x.unitName === unitName);
+  if (!e) return null;
+  return { lo: (e.loadout || []).map((x) => `${x.name}:${x.count}`).sort().join(' '), wargear: (e.wargear || []).length, idx: App.state.currentArmy.entries.indexOf(e) };
+}, unitName);
 
-// ── start clean ────────────────────────────────────────────────────────────
 check('army emptied at start', (await emptyArmy()) === 0);
 
-// ── Plague Marines, 10 models ──────────────────────────────────────────────
-const fixture = process.env.NO_FIXTURE ? null : FIXTURE_RULES;
-check('Plague Marines detail opens', await openUnit('Plague Marines', fixture));
-check('size 10', await setSize(10));
-const PM = 'Plague Marine ·', CH = 'Plague Champion';
-
-await capCheck('PM10', 'Plasma gun', CH, 1, /Plague Champion/);
-await blocked('PM10', 'Plasma pistol', CH, /Plague Champion|one of these/);
-await blocked('PM10', 'Bolt pistol', CH);
-await capCheck('PM10', 'Power fist', CH, 1);
-await blocked('PM10', 'Bubotic weapons', CH);
-await capCheck('PM10', 'Icon of despair', PM, 1);
-await capCheck('PM10', 'Heavy plague weapon', PM, 4, /2 per 5/);
-await capCheck('PM10', 'Bubotic weapons', PM, 4, /2 per 5/);
-await zero();
-// Meltagun / plague belcher / plasma gun are ONE rule: 1 per 5 → 2 across the set.
-await capCheck('PM10', 'Meltagun', PM, 2, /1 per 5/);
-await blocked('PM10 2 meltaguns', 'Plague belcher', PM, /1 per 5/);
-await press('Meltagun', PM, true);
-await capCheck('PM10 1 meltagun', 'Plague belcher', PM, 1, /1 per 5/);
-await blocked('PM10 meltagun+belcher', 'Plasma gun', PM, /1 per 5/);
-await capCheck('PM10', 'Plague spewer', PM, 2, /1 per 5/);
-await capCheck('PM10', 'Blight launcher', PM, 2, /1 per 5/);
-await zero();
-// All Plague Marine boltgun swaps + the icon share the 9 Plague Marines.
-await fill('Icon of despair', PM); await fill('Heavy plague weapon', PM); await fill('Bubotic weapons', PM);
-await blocked('PM10 icon+4+4', 'Plague spewer', PM, /No Plague Marine still carries a boltgun/);
-await blocked('PM10 icon+4+4', 'Meltagun', PM, /boltgun/);
-check('PM10 icon+4+4: default Boltgun row shows 2 left', (await defaultCount('Boltgun')) === 2, await defaultCount('Boltgun'));
-await press('Heavy plague weapon', PM, true);
-const sp = await rowState('Plague spewer', PM);
-check('PM10: freeing one boltgun re-enables Plague spewer', sp && !sp.plusDisabled, sp && sp.title);
-const minusOk = await page.evaluate(() => Array.from(document.querySelectorAll('#detail-wargear-picker .wgp-stepper'))
-  .every((st) => { const c = parseInt(st.querySelector('.wgp-count').textContent, 10); const m = st.querySelector('.wgp-minus'); return !m || c === 0 || !m.disabled; }));
-check('"−" never disabled above 0', minusOk);
-await page.screenshot({ path: `${OUT}/wargear-pm10.png`, fullPage: false });
-const panelShot = page.locator('#detail-wargear-picker');
-if (await panelShot.count()) await panelShot.screenshot({ path: `${OUT}/wargear-pm10-picker.png` }).catch(() => {});
-
-// ── shrink to 7: the pending loadout is re-fitted, per-5 caps drop to 1 ───
-await zero();
-await fill('Heavy plague weapon', PM);
-check('size 7', await setSize(7));
-const hv = await rowState('Heavy plague weapon', PM);
-check('PM10→7: 4 heavy plague weapons re-fitted to 2', hv && hv.count === 2 && hv.plusDisabled, hv && `${hv.count}, "${hv.title}"`);
-await zero();
-await capCheck('PM7', 'Heavy plague weapon', PM, 2, /2 at 7/);
-await capCheck('PM7', 'Bubotic weapons', PM, 2);
-await zero();
-await capCheck('PM7', 'Meltagun', PM, 1, /1 at 7/);
-await blocked('PM7', 'Plague belcher', PM);
-await capCheck('PM7', 'Plague spewer', PM, 1);
-await capCheck('PM7', 'Blight launcher', PM, 1);
-await capCheck('PM7', 'Icon of despair', PM, 1);
-await zero();
-
-// ── add to army: saved rows carry rule ids ─────────────────────────────────
+// ── 1. Necron Warriors: slot warning, never disabled, size reset ──────────
+check('Necron Warriors opens', await openUnit('Necron Warriors'));
+check('Warriors size 10', await setSize(10));
+check('Warriors: defaults have steppers (Gauss flayer 10)', (await count('Gauss flayer')) === 10);
+check('Warriors: no warnings on the default loadout', (await warnText()) === '', await warnText());
+await press('Gauss reaper', 3);
+let w = await warnText();
+check('Warriors: 3 reapers, flayers untouched → slot warning', /Gauss flayer: 13 weapons for 10 models/.test(w), w);
+check('steppers never disabled (over the limit)', (await anyDisabled()) === 0);
+await press('Gauss flayer', 3, true);
+check('Warriors: flayers lowered to 7 → warning clears', (await warnText()) === '', await warnText());
+await press('Gauss reaper', 30);
+check('Warriors: "+" keeps going past every limit (33 reapers)', (await count('Gauss reaper')) === 33 && (await anyDisabled()) === 0, await count('Gauss reaper'));
+check('Warriors: over-cap reapers warn', /Gauss reaper: 33 taken, the datasheet allows up to 10/.test(await warnText()), await warnText());
+await setSize(20);
+check('Warriors 10→20 (unsaved pick) resets to defaults', (await count('Gauss flayer')) === 20 && (await count('Gauss reaper')) === 0,
+  `${await count('Gauss flayer')} / ${await count('Gauss reaper')}`);
 await setSize(10);
-await press('Icon of despair', PM); await press('Heavy plague weapon', PM); await press('Heavy plague weapon', PM);
-await press('Plasma gun', CH);
+await setCount('Gauss flayer', 7); await setCount('Gauss reaper', 3);
 await page.click('#btn-detail-add');
 await page.waitForTimeout(300);
-const added = await page.evaluate(() => {
-  const e = App.state.currentArmy.entries.find((x) => x.unitName === 'Plague Marines');
-  return e ? e.wargear.map((w) => `${w.optionId}:${w.choice}x${w.count}`).sort().join(' ') : null;
+let nw = await loadoutOf('Necron Warriors');
+check('Add to Army saves loadout (and no wargear rows)',
+  nw && nw.lo === 'Close combat weapon:10 Gauss flayer:7 Gauss reaper:3' && nw.wargear === 0, nw && JSON.stringify(nw));
+
+// Army-list badge: gains only.
+const badges = await page.evaluate(() => Array.from(document.querySelectorAll('#army-entry-list .army-entry'))
+  .filter((li) => /Necron Warriors/.test(li.textContent))
+  .map((li) => Array.from(li.querySelectorAll('.army-wg-badge')).map((b) => b.textContent.trim()).join(' | ')));
+check('army badge shows only the gain ("3× Gauss reaper")', badges.length && badges[0] === '3× Gauss reaper', JSON.stringify(badges));
+
+// Entry-bound edit writes back and keeps counts across a size change.
+await openEntry(nw.idx);
+check('entry pane shows the saved counts', (await count('Gauss reaper')) === 3 && (await count('Gauss flayer')) === 7);
+await press('Gauss reaper', 1);
+nw = await loadoutOf('Necron Warriors');
+check('entry pane "+" writes entry.loadout', nw && /Gauss reaper:4/.test(nw.lo), nw && nw.lo);
+const warnBadge = await page.evaluate(() => Array.from(document.querySelectorAll('#army-entry-list .army-entry'))
+  .filter((li) => /Necron Warriors/.test(li.textContent))
+  .map((li) => { const b = li.querySelector('.army-wg-warn'); return b ? b.textContent.trim() + ' — ' + b.title : ''; })[0] || '');
+check('army entry gets a ⚠ wargear badge when the loadout warns', /wargear/.test(warnBadge) && /Gauss flayer/.test(warnBadge), warnBadge);
+await press('Gauss reaper', 1, true);
+
+// TTS allocation of the inventory (pure buildRegistry, nothing is sent).
+const tts = await page.evaluate(() => {
+  const a = App.state.currentArmy;
+  const e = a.entries.find((x) => x.unitName === 'Necron Warriors');
+  const reg = App.TtsExport.buildRegistry({ name: 'v', factionName: a.factionName, entries: [e] }, {});
+  const out = [];
+  const walk = (o) => { if (o && typeof o === 'object') { if (o.classification === 'Model') out.push(o); Object.values(o).forEach(walk); } };
+  walk(reg);
+  return out.map((m) => `${m.quantity}:${m.assets.traits.map((t) => t.designation).filter((d) => /gauss/i.test(d)).join('+')}`).sort().join(' ');
 });
-const wantAdded = fixture
-  ? 'plague-marines-wr-1:0x1 plague-marines-wr-2:0x2 plague-marines-wr-8:1x1' : null;
-check('Add to Army snapshots the loadout by rule id', wantAdded ? added === wantAdded : !!added, added);
+check('TTS export allocates 7 flayers + 3 reapers over 10 Warriors', tts === '3:Gauss reaper 7:Gauss flayer', tts);
 
-// ── migration of rows saved against the old 40kdc option ids ──────────────
-if (fixture) {
-  const mig = await page.evaluate(() => {
-    const s = App.state, a = s.currentArmy;
-    const u = s.allUnits.find((x) => x.name === 'Plague Marines' && x.wargearProfile);
-    const so = u.squadOptions.find((o) => o.models === 10);
-    const e = a.addUnit(u, 1, so, [], [
-      { optionId: 'plague-marines-wgo-mfm-4', choice: 1, count: 2, items: ['Bubotic weapons'], label: 'Bubotic weapons', pts: 0 },
-      { optionId: 'plague-marines-wgo-mfm-1', choice: 0, count: 1, items: ['Plasma gun'], label: 'Plasma gun', pts: 0 },
-      { optionId: 'plague-marines-wgo-mfm-6', choice: 0, count: 1, items: ['Icon of Despair (Aura)'], label: 'Icon of Despair (Aura)', pts: 0 },
-      { optionId: 'plague-marines-wgo-mfm-2', choice: 0, count: 1, items: ['Power fist'], label: 'Power fist', pts: 0 },
-      { optionId: 'not-a-real-option', choice: 0, count: 1, items: ['Lascannon'], label: 'Lascannon', pts: 0 },
-    ]);
-    App.rehydrateEntryUnitData();
-    return e.wargear.map((w) => `${w.optionId}:${w.choice}x${w.count}`).join(' ');
-  });
-  check('migration: old option rows re-pointed to rules, unmatched row kept',
-    mig === 'plague-marines-wr-3:0x2 plague-marines-wr-8:1x1 plague-marines-wr-1:0x1 plague-marines-wr-7:1x1 not-a-real-option:0x1', mig);
-}
+// ── 2. Plague Marines (fixture rules): cap + requires warnings ────────────
+const fixture = process.env.NO_FIXTURE ? null : FIXTURE_RULES;
+check('Plague Marines opens', await openUnit('Plague Marines', fixture));
+check('PM size 10', await setSize(10));
+await press('Heavy plague weapon', 5);
+w = await warnText();
+check('PM10: 5 heavies → cap warning', /Heavy plague weapon: 5 taken, the datasheet allows up to 4 \(up to 2 per 5 models\)/.test(w), w);
+await press('Heavy plague weapon', 1, true);
+w = await warnText();
+check('PM10: 4 heavies → no cap warning', !/Heavy plague weapon: \d+ taken/.test(w), w);
+await setCount('Boltgun', 6);
+check('PM10: 4 heavies with boltguns lowered to 6 → clean', (await warnText()) === '', await warnText());
+await setCount('Heavy plague weapon', 0); await setCount('Boltgun', 0); await press('Icon of despair', 1);
+w = await warnText();
+check('PM10: icon 1 with boltgun 0 → requires warning', /Icon of despair needs a model that still carries a boltgun/i.test(w), w);
+check('steppers never disabled (PM)', (await anyDisabled()) === 0);
+await page.screenshot({ path: `${OUT}/wargear-pm10.png`, fullPage: false });
+const panel = page.locator('#detail-wargear-picker');
+if (await panel.count()) await panel.screenshot({ path: `${OUT}/wargear-pm10-picker.png` }).catch(() => {});
 
-// ── legacy profiles (live dataset: options[] or rules, whichever it has) ──
-check('Intercessor Squad opens', await openUnit('Intercessor Squad'));
-await setSize(10);
-const live = await page.evaluate(() => !!(App.state.selectedUnit.wargearProfile || {}).rules);
-console.log(`(live dataset ${live ? 'carries rules' : 'has options[] only — legacy adapter'})`);
-await capCheck('Intercessors10', 'Astartes grenade launcher', '', 2, /1 per 5/);
-const sgt = live ? 'Intercessor Sergeant' : 'Intercessor Sergeant';
-await capCheck('Intercessors10', 'Hand Flamer', sgt, 1);
-await blocked('Intercessors10', 'Plasma pistol', sgt);
-await capCheck('Intercessors10', 'Thunder hammer', sgt, 1);   // the other weapon: both swaps on one Sergeant
-await blocked('Intercessors10', 'Power Fist', sgt);
-await zero();
-await setSize(5);
-await capCheck('Intercessors5', 'Astartes grenade launcher', '', 1, /1 at 5/);
-await zero();
+// Old-format entries migrate to the same loadout as the picker would build.
+const mig = await page.evaluate((fx) => {
+  const s = App.state, a = s.currentArmy;
+  const nwU = s.allUnits.find((x) => x.name === 'Necron Warriors' && x.wargearProfile);
+  const pmU = s.allUnits.find((x) => x.name === 'Plague Marines' && x.wargearProfile);
+  const e1 = a.addUnit(nwU, 1, nwU.squadOptions.find((o) => o.models === 10), [],
+    [{ optionId: 'necron-warriors-wgo-mfm-1', choice: 0, count: 3, items: ['Gauss reaper'], label: 'Gauss reaper', pts: 0 }]);
+  const rows = [
+    { optionId: 'plague-marines-wgo-mfm-4', choice: 2, count: 2, items: ['Heavy plague weapon'], label: 'Heavy plague weapon', pts: 0 },
+    { optionId: 'plague-marines-wgo-mfm-1', choice: 0, count: 1, items: ['Plasma gun'], label: 'Plasma gun', pts: 0 },
+    { optionId: 'plague-marines-wgo-mfm-6', choice: 0, count: 1, items: ['Icon of Despair (Aura)'], label: 'Icon', pts: 0 },
+    { optionId: 'not-a-real-option', choice: 0, count: 1, items: ['Lascannon'], label: 'Lascannon', pts: 0 },
+  ];
+  const e2 = a.addUnit(pmU, 1, pmU.squadOptions.find((o) => o.models === 10), [], rows);
+  const before = [e1.loadout === undefined, e2.loadout === undefined];
+  App.rehydrateEntryUnitData();
+  const f = (e) => (e.loadout || []).map((x) => `${x.name}:${x.count}`).sort().join(' ');
+  return { before, nw: f(e1), pm: f(e2), kept: e2.wargear.length, fx: !!fx };
+}, fixture);
+check('old entries start without loadout', mig.before[0] && mig.before[1], JSON.stringify(mig.before));
+check('old Warriors entry migrates to flayer 7 + reaper 3', mig.nw === 'Close combat weapon:10 Gauss flayer:7 Gauss reaper:3', mig.nw);
+check('old Plague Marines entry migrates (defaults − replaced + added, unmatched row still counted)',
+  mig.pm === 'Boltgun:7 Heavy plague weapon:2 Icon of despair:1 Lascannon:1 Plague knives:10 Plasma gun:1'
+  || (!fixture && /Heavy plague weapon:2/.test(mig.pm)), mig.pm);
 
-check('Necron Warriors opens', await openUnit('Necron Warriors'));
-await setSize(10);
-await capCheck('Warriors10', 'Gauss reaper', '', 10);
-await zero();
-
-check('Leman Russ Battle Tank opens', await openUnit('Leman Russ Battle Tank'));
-await capCheck('Russ', 'Hunter-killer missile', '', 1);
-await capCheck('Russ', 'Heavy bolter + Heavy bolter', '', 1);
-await blocked('Russ', 'Heavy flamer + Heavy flamer', '');
-await capCheck('Russ', 'Storm bolter', '', 1);
-await blocked('Russ', 'Heavy stubber', '');
-const russAdds = await rowState('Hunter-killer missile', '');
-check('Russ: add-ons stack (missile kept with sponsons + pintle)', russAdds && russAdds.count === 1, russAdds && russAdds.count);
-await capCheck('Russ', 'Heavy flamer', '', 1);   // lascannon → heavy flamer
-await blocked('Russ', 'Heavy bolter', '');
-check('Russ: lascannon row reads 0 after the swap', (await defaultCount('Lascannon')) === 0, await defaultCount('Lascannon'));
-await zero();
+// ── 3. points: defaults unchanged, a priced swap adds up ──────────────────
+check('Leman Russ opens', await openUnit('Leman Russ Battle Tank'));
+const totalNote = () => page.evaluate(() => { const n = document.querySelector('#detail-wargear-picker .wgp-total'); return n ? n.textContent.trim() : ''; });
+const base = await page.evaluate(() => { const u = App.state.selectedUnit; return (u.wargearProfile.defaultCostBySize || {})['1'] || 0; });
+check('Russ: default loadout costs the old priced base', (await totalNote()) === `Wargear points: +${base} pts` && base > 0, `${await totalNote()} vs base ${base}`);
+await press('Multi-melta', 2);
+check('Russ: 2 multi-meltas (5 pts each) → +10', (await totalNote()) === `Wargear points: +${base + 10} pts`, await totalNote());
+await page.click('#btn-detail-add');
+await page.waitForTimeout(300);
+const russ = await page.evaluate(() => {
+  const a = App.state.currentArmy, i = a.entries.findIndex((x) => x.unitName === 'Leman Russ Battle Tank');
+  return { copy: a.getEntryCopyWargearPts(i), total: a.getEntryPoints(i), sel: a.entries[i].selectedPts };
+});
+check('Russ entry: wargear pts and total agree with the pane', russ.copy === base + 10 && russ.total === russ.sel + base + 10, JSON.stringify(russ));
+const defEntry = await page.evaluate(() => {
+  const s = App.state, a = s.currentArmy, u = s.allUnits.find((x) => x.name === 'Leman Russ Battle Tank');
+  const e = a.addUnit(u, 1, u.squadOptions[0], [], []);   // double-click path: no loadout stored
+  const i = a.entries.indexOf(e);
+  return { copy: a.getEntryCopyWargearPts(i), base: a.getEntryWargearBasePts(i), lo: e.loadout === undefined };
+});
+check('a default entry bills exactly the old base', defEntry.copy === defEntry.base && defEntry.base === base, JSON.stringify(defEntry));
 
 // ── clean up ───────────────────────────────────────────────────────────────
 check('army emptied at end', (await emptyArmy()) === 0);
-await page.waitForTimeout(1500);   // let autosave / sync push the empty army
+await page.waitForTimeout(1500);
 check('no page errors', errors.length === 0, errors.join(' | '));
 const fails = summary({ list: true });
 await browser.close();

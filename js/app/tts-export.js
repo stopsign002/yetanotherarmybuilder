@@ -298,6 +298,92 @@
     }
   }
 
+  // Which model types a rule's take may land on: its named model, else the
+  // types that carry what it replaces, else the most numerous type.
+  function typeMatcher(groups, model, replKeys) {
+    if (model) {
+      const hits = typesForSubject('The ' + model, groups).map((g) => g.type);
+      return (t) => hits.includes(t);
+    }
+    const carriers = groups.filter((g) => replKeys.length && replKeys.some((k) => g.items.some((i) => i.key === k)));
+    const pool = carriers.length ? carriers : groups;
+    const byType = new Map();
+    pool.forEach((g) => byType.set(g.type, (byType.get(g.type) || 0) + g.qty));
+    let top = null;
+    byType.forEach((q, t) => { if (!top || q > top[1]) top = [t, q]; });
+    const types2 = carriers.length ? Array.from(byType.keys()) : (top ? [top[0]] : []);
+    return (t) => types2.includes(t);
+  }
+
+  // Inventory v2 (docs/WARGEAR-RULES.md §5): entry.loadout is the squad's
+  // whole inventory. The default allocation is already on the models; the
+  // difference (items above / below default) is placed per model block:
+  // an extra goes to the model type its rule names, swapping out one of the
+  // items that rule replaces while any is still surplus to the loadout; the
+  // single-model blocks (Champion, Sergeant) are served first; extras with
+  // no slot to fill (add-ons, over-limit picks) go onto further models in
+  // order; defaults lowered with nothing replacing them are taken off last.
+  function allocateLoadout(groups, loadout, rulesById, resolve) {
+    const have = new Map();
+    groups.forEach((g) => g.items.forEach((i) => have.set(i.key, (have.get(i.key) || 0) + i.qty * g.qty)));
+    const want = new Map();
+    loadout.forEach((x) => {
+      if (!x || !x.count) return;
+      const r = resolve(x.name, x.id);
+      const w = want.get(r.key);
+      if (w) w.qty += x.count; else want.set(r.key, { item: r, qty: x.count });
+    });
+    const surplus = new Map();   // default key -> how many to take off
+    have.forEach((q, k) => { const w = want.get(k); const d = q - (w ? w.qty : 0); if (d > 0) surplus.set(k, d); });
+    const extras = [];
+    want.forEach((w, k) => { const d = w.qty - (have.get(k) || 0); if (d > 0) extras.push({ key: k, item: w.item, qty: d }); });
+    // Rules offering each extra (by resolved key), in rule order.
+    const offers = (key) => {
+      const out = [];
+      rulesById.forEach((r) => (r.choices || []).forEach((g, ci) => {
+        if ((g || []).some((x) => resolve(x.name, x.id).key === key)) out.push({ r, ci });
+      }));
+      return out;
+    };
+    const typeQty = (model) => {
+      if (!model) return Infinity;
+      const hits = typesForSubject('The ' + model, groups).map((g) => g.type);
+      return groups.filter((g) => hits.includes(g.type)).reduce((s, g) => s + g.qty, 0);
+    };
+    extras.forEach((e) => {
+      e.offers = offers(e.key);
+      e.order = e.offers.length ? Math.min.apply(null, e.offers.map((o) => typeQty(o.r.model))) : Infinity;
+    });
+    extras.sort((a, b) => a.order - b.order);
+    extras.forEach((e) => {
+      let left = e.qty;
+      e.offers.forEach((o) => {
+        if (left <= 0) return;
+        o.r.removes(o.ci).map((x) => resolve(x.name, x.id).key).forEach((rk) => {
+          const k = Math.min(left, surplus.get(rk) || 0);
+          if (k <= 0) return;
+          applySwap(groups, typeMatcher(groups, o.r.model, [rk]), [rk], [{ item: e.item, qty: 1 }], k);
+          surplus.set(rk, surplus.get(rk) - k);
+          left -= k;
+        });
+      });
+      if (left > 0) {
+        const model = e.offers.length ? e.offers[0].r.model : null;
+        applySwap(groups, typeMatcher(groups, model, []), [], [{ item: e.item, qty: 1 }], left);
+      }
+    });
+    surplus.forEach((k, rk) => {
+      if (k > 0) applySwap(groups, typeMatcher(groups, null, [rk]), [rk], [], k);
+    });
+    // Merge identical blocks that one-at-a-time placement split apart.
+    for (let i = 0; i < groups.length; i++) {
+      const sig = (g) => g.type + '|' + g.items.map((x) => x.key + 'x' + x.qty).sort().join(',');
+      for (let j = groups.length - 1; j > i; j--) {
+        if (sig(groups[j]) === sig(groups[i])) { groups[i].qty += groups[j].qty; groups.splice(j, 1); }
+      }
+    }
+  }
+
   // ── one army entry → one unitAsset (per copy) ────────────────────────────
   function buildUnitAsset(unit, entry, factionName) {
     const resolve = makeResolver(unit);
@@ -334,9 +420,10 @@
       });
     }
 
-    // Swaps from the picker.
     const rulesById = ruleIndex(wp);
-    (entry.wargear || []).forEach((sel) => {
+    if (Array.isArray(entry.loadout)) allocateLoadout(groups, entry.loadout, rulesById, resolve);
+    // Swaps from the picker (entries saved before inventory v2).
+    else (entry.wargear || []).forEach((sel) => {
       const n = Math.max(0, parseInt(sel && sel.count, 10) || 0);
       if (!n) return;
       const opt = rulesById.get(sel.optionId);

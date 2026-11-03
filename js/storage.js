@@ -119,6 +119,14 @@ window.Storage = (() => {
     // named entry needs a stable identity across an export/import round-trip.
     // Old clients destructure only 6 slots and silently ignore the name.
     const hasCustomNames = (army.entries || []).some(e => e && e.customName);
+    // 8th slot: the wargear INVENTORY (entry.loadout, docs/WARGEAR-RULES.md
+    // §5) as [id, count(, name)] — the name only when it is not just the
+    // kebab of the id. `null` = no loadout stored (= the defaults); `[]` is
+    // a real, empty inventory. Same army-wide flag pattern, so armies with no
+    // loadouts encode exactly as before; old clients destructure seven slots
+    // and ignore it.
+    const kebab = s => String(s || '').toLowerCase().replace(/[‘’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const hasLoadout = (army.entries || []).some(e => e && Array.isArray(e.loadout));
     data.e = (army.entries || []).map(entry => {
       const tuple = [entry.unitId, entry.count];
       const enhs = (entry.enhancements || []).map(e => [e.name, e.pts || 0]);
@@ -131,13 +139,20 @@ window.Storage = (() => {
       // emit selectedPts + enhPairs as placeholders even when empty so
       // the 5th slot lands at index 4. Same domino when the wargear slot
       // (index 5) is in play.
-      if (hasAttachments || hasWargear || hasCustomNames || hasPts || hasEnh) tuple.push(hasPts ? entry.selectedPts : null);
-      if (hasAttachments || hasWargear || hasCustomNames || hasEnh)           tuple.push(hasEnh ? enhs : null);
-      if (hasAttachments || hasWargear || hasCustomNames) {
+      const later = hasLoadout;   // a slot after the name forces every earlier one
+      if (hasAttachments || hasWargear || hasCustomNames || later || hasPts || hasEnh) tuple.push(hasPts ? entry.selectedPts : null);
+      if (hasAttachments || hasWargear || hasCustomNames || later || hasEnh)           tuple.push(hasEnh ? enhs : null);
+      if (hasAttachments || hasWargear || hasCustomNames || later) {
         tuple.push([entry.entryId || null, entry.attachedToEntryId || 0]);
       }
-      if (hasWargear || hasCustomNames) tuple.push(hasWg ? wgs : null);
-      if (hasCustomNames)               tuple.push(entry.customName || null);
+      if (hasWargear || hasCustomNames || later) tuple.push(hasWg ? wgs : null);
+      if (hasCustomNames || later)               tuple.push(entry.customName || null);
+      if (later) {
+        tuple.push(Array.isArray(entry.loadout)
+          ? entry.loadout.filter(x => x && x.count > 0)
+              .map(x => (kebab(x.name) === x.id ? [x.id, x.count] : [x.id, x.count, x.name]))
+          : null);
+      }
       return tuple;
     });
     return data;
@@ -181,13 +196,20 @@ window.Storage = (() => {
     // bare selection with the optionId as label, so nothing is silently lost.
     const wargearFromTriples = (triples, unitData) => {
       if (!Array.isArray(triples)) return [];
-      const opts = (unitData && unitData.wargearProfile && unitData.wargearProfile.options) || [];
+      // Rule ids (current datasets) and 40kdc option ids (older codes) both
+      // resolve through the picker's rulesOf(); a code whose option ids the
+      // current dataset no longer has decodes to a bare row, which the
+      // saved-entry migration (entry-rehydrate.js) then handles like any
+      // other old row.
+      const prof = unitData && unitData.wargearProfile;
+      const W = window.App && window.App.WargearPicker;
+      const opts = prof ? ((W && typeof W.rulesOf === 'function') ? W.rulesOf(prof) : (prof.options || [])) : [];
       return triples.map(t => {
         if (!Array.isArray(t)) return null;
         const [optionId, choice = null, count = 0, pts = 0] = t;
         if (!optionId || !count) return null;
-        const opt = opts.find(o => o.id === optionId) || null;
-        const grp = (opt && opt.choices[(choice == null ? 0 : choice)]) || null;
+        const opt = opts.find(o => o && o.id === optionId) || null;
+        const grp = (opt && opt.choices && opt.choices[(choice == null ? 0 : choice)]) || null;
         const items = grp ? grp.map(x => x.name) : [];
         return {
           optionId,
@@ -199,8 +221,24 @@ window.Storage = (() => {
         };
       }).filter(Boolean);
     };
+    // [id, count(, name)] pairs → entry.loadout; the name falls back to the
+    // unit's default / rule item with that id, else the id itself.
+    const loadoutFromPairs = (pairs, unitData) => {
+      if (!Array.isArray(pairs)) return undefined;
+      const prof = unitData && unitData.wargearProfile;
+      const known = new Map();
+      if (prof) {
+        Object.values(prof.defaultsBySize || {}).forEach(list => (list || []).forEach(d => { if (d && d.id) known.set(d.id, d.name); }));
+        (prof.rules || prof.options || []).forEach(r => (r && r.choices || []).forEach(g => (g || []).forEach(x => {
+          if (x && x.id && !known.has(x.id)) known.set(x.id, x.name);
+        })));
+      }
+      const list = pairs.filter(p => Array.isArray(p) && typeof p[0] === 'string' && p[0])
+        .map(p => ({ id: p[0], count: p[1], name: (typeof p[2] === 'string' && p[2]) ? p[2] : (known.get(p[0]) || p[0]) }));
+      return Army.cleanLoadout(list) || [];
+    };
     const entries = (data.e || []).map(tuple => {
-      const [unitId, count = 1, selectedPts = null, enhPairs = null, attachPair = null, wgTriples = null, customName = null] = tuple;
+      const [unitId, count = 1, selectedPts = null, enhPairs = null, attachPair = null, wgTriples = null, customName = null, loadoutPairs = null] = tuple;
       const unitData = _findUnit(factions, lookupOrder, unitId);
       if (!unitData) {
         throw new Error(`Unit "${unitId}" from "${displayFaction}" is not loaded yet. Wait for background loading to finish, then try again.`);
@@ -229,6 +267,7 @@ window.Storage = (() => {
         squadLabel,
         enhancements,
         wargear: wargearFromTriples(wgTriples, unitData),
+        loadout: loadoutFromPairs(loadoutPairs, unitData),
         // This path builds `new Army({entries})` directly and bypasses
         // Army.fromJSON's whitelist, so clamp the untrusted name here too.
         customName: (typeof customName === 'string' && customName.trim())

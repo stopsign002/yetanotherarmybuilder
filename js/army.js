@@ -13,6 +13,77 @@ function _mintEntryId() {
 }
 
 window.Army = class Army {
+  // ── Wargear inventory (docs/WARGEAR-RULES.md §5) ─────────────────────────
+  // entry.loadout = [{ id, name, count }] is the squad's COMPLETE wargear
+  // inventory (defaults included, zeros omitted). These statics are shared by
+  // the picker, entry-rehydrate.js and the army list so all of them agree on
+  // squad size, defaults and price.
+  static _kebab(s) {
+    return String(s || '').toLowerCase().replace(/[‘’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+  // Squad size of an entry: "N models" label, else the squad option whose
+  // price matches, else null (callers fall back to the smallest tier).
+  static entryModels(entry) {
+    if (!entry) return null;
+    const m = /^(\d+)\s+model/.exec(entry.squadLabel || '');
+    if (m) return parseInt(m[1], 10);
+    const so = entry.unitData && Array.isArray(entry.unitData.squadOptions)
+      ? entry.unitData.squadOptions.find(o => o && o.pts === entry.selectedPts) : null;
+    return so && so.models ? so.models : null;
+  }
+  // Exact tier, else nearest below, else the smallest.
+  static _tier(bySize, models) {
+    if (!bySize) return null;
+    if (models != null && bySize[models]) return bySize[models];
+    const sizes = Object.keys(bySize).map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b);
+    if (!sizes.length) return null;
+    let pick = sizes[0];
+    sizes.forEach(n => { if (models != null && n <= models) pick = n; });
+    return bySize[pick] || null;
+  }
+  static defaultLoadout(unitData, models) {
+    const prof = unitData && unitData.wargearProfile;
+    const tier = prof ? (Army._tier(prof.defaultsBySize, models) || []) : [];
+    return tier.filter(d => d && (d.count || 0) > 0)
+      .map(d => ({ id: String(d.id || Army._kebab(d.name)), name: String(d.name || d.id || ''), count: d.count }));
+  }
+  // Untrusted-input gate for a loadout (also used by fromJSON).
+  static cleanLoadout(list) {
+    if (!Array.isArray(list)) return null;
+    return list.filter(x => x && typeof x === 'object' && (typeof x.id === 'string' || typeof x.name === 'string'))
+      .map(x => ({
+        id: String(typeof x.id === 'string' && x.id ? x.id : Army._kebab(x.name)).slice(0, 120),
+        name: String(typeof x.name === 'string' && x.name ? x.name : x.id).slice(0, 120),
+        count: Number.isFinite(x.count) ? Math.max(0, Math.floor(x.count)) : 0,
+      }))
+      .filter(x => x.id && x.count > 0);
+  }
+  // Order-free identity of a loadout (stacking compares these).
+  static loadoutKey(list) {
+    const m = new Map();
+    (list || []).forEach(x => {
+      if (!x || !x.count) return;
+      const k = x.id || Army._kebab(x.name);
+      m.set(k, (m.get(k) || 0) + x.count);
+    });
+    return Array.from(m.entries()).sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(e => e[0] + ':' + e[1]).join('|');
+  }
+  static itemPrice(unitData, item) {
+    const ic = unitData && unitData.wargearProfile && unitData.wargearProfile.itemCosts;
+    if (!ic || !item) return 0;
+    if (item.id != null && ic[item.id] != null) return ic[item.id] || 0;
+    return ic[Army._kebab(item.name)] || 0;
+  }
+  // Per-copy wargear points of a loadout: alwaysCost + Σ itemCosts × count,
+  // floored at 0. For an untouched default loadout this equals the priced
+  // default base (defaultCostBySize) — checked over every tier in the dataset.
+  static loadoutPts(unitData, loadout) {
+    const prof = unitData && unitData.wargearProfile;
+    let pts = (prof && prof.alwaysCost) || 0;
+    (loadout || []).forEach(x => { pts += Army.itemPrice(unitData, x) * (x.count || 0); });
+    return Math.max(0, pts);
+  }
+
   constructor({ id, name, factionName, chapter, detachmentName, detachmentNames, disposition, pointsLimit, entries, createdAt, updatedAt } = {}) {
     this.id = id || Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     this.name = name || 'New Army';
@@ -70,12 +141,25 @@ window.Army = class Army {
     const customName = (opts && typeof opts.customName === 'string' && opts.customName.trim())
       ? opts.customName.trim().slice(0, 60)
       : null;
-    // Entries with enhancements, wargear selections, or a custom name are
-    // always separate; plain entries can stack.
+    // The picker now hands over a full inventory ([{id, name, count}],
+    // docs/WARGEAR-RULES.md §5) in the old `wargear` slot; legacy selection
+    // rows ({optionId, …}) are still accepted and stored as before.
+    let loadout = null;
+    if (Array.isArray(wargear) && wargear.length && wargear.every(w => w && !w.optionId && typeof w.name === 'string')) {
+      loadout = Army.cleanLoadout(wargear);
+      wargear = [];
+    }
+    const models = squadOption && squadOption.models ? squadOption.models : null;
+    const keyOf = (e, lo) => Army.loadoutKey(lo || Army.defaultLoadout(e.unitData || unitData, Army.entryModels(e) || models));
+    const newKey = Army.loadoutKey(loadout || Army.defaultLoadout(unitData, models));
+    // Entries with enhancements, legacy wargear selections, or a custom name
+    // are always separate; plain entries stack when their loadouts match
+    // (an untouched default loadout matches an entry with none stored).
     const existing = !customName && !enhancements.length && !(wargear && wargear.length) && this.entries.find(
       e => e.unitId === unitData.id && e.selectedPts === selectedPts
         && !e.customName
         && !(e.enhancements && e.enhancements.length) && !(e.wargear && e.wargear.length)
+        && keyOf(e, e.loadout) === newKey
     );
     let entry = existing;
     if (existing) {
@@ -93,6 +177,9 @@ window.Army = class Army {
         // label, items:[names], pts }] — pts per item, 0 until upstream
         // 40kdc ships 11e wargear costs.
         wargear: wargear || [],
+        // Full wargear inventory (docs/WARGEAR-RULES.md §5); absent = the
+        // default loadout at this size.
+        loadout: loadout || undefined,
         // User-given name for this specific unit. Undefined (not null) when
         // absent so it drops out of JSON.stringify entirely and saved armies
         // without the feature stay byte-identical.
@@ -139,6 +226,14 @@ window.Army = class Army {
   setDisposition(id, opts) {
     this.disposition = (typeof id === 'string' && id) ? id : null;
     if (!opts || opts.touch !== false) this.updatedAt = new Date().toISOString();
+  }
+
+  // Replace an entry's wargear inventory (the picker's live write-back).
+  setLoadout(index, loadout) {
+    if (this.entries[index]) {
+      this.entries[index].loadout = Army.cleanLoadout(loadout) || [];
+      this.updatedAt = new Date().toISOString();
+    }
   }
 
   setWargear(index, wargear) {
@@ -234,6 +329,7 @@ window.Army = class Army {
       enhancements: [],
       // Deep-copied so a later setWargear on one entry cannot mutate the array
       // the other is still reading.
+      loadout: Array.isArray(src.loadout) ? src.loadout.map(x => ({ id: x.id, name: x.name, count: x.count })) : undefined,
       wargear: (src.wargear || []).map(w => ({
         optionId: w.optionId,
         choice:   w.choice,
@@ -293,9 +389,14 @@ window.Army = class Army {
   // NET delta (w.pts from the picker — negative when a swap sheds a priced
   // default, e.g. thunder hammer → free lightning claws). Floored at 0: a
   // loadout can't refund more than its priced defaults.
+  //
+  // With an inventory (entry.loadout, §5) it is simply alwaysCost +
+  // Σ itemCosts × count, floored at 0; the delta formula below only serves
+  // entries not yet migrated from `wargear`.
   getEntryCopyWargearPts(index) {
     const entry = this.entries[index];
     if (!entry) return 0;
+    if (Array.isArray(entry.loadout)) return Army.loadoutPts(entry.unitData, entry.loadout);
     const wgSel = (entry.wargear || []).reduce((s, w) => s + (w.pts || 0) * (w.count || 0), 0);
     return Math.max(0, this.getEntryWargearBasePts(index) + wgSel);
   }
@@ -405,6 +506,8 @@ window.Army = class Army {
                   }))
                   .filter(w => w.optionId && w.count > 0)
               : [],
+            // Full wargear inventory (§5). Absent stays absent (= defaults).
+            loadout: Array.isArray(e.loadout) ? Army.cleanLoadout(e.loadout) : undefined,
             // entryId / attachedToEntryId carry the attachment graph.
             // Missing entryId on a legacy entry is fine — the Army
             // constructor mints one on rehydration. attachedToEntryId

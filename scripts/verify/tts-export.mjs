@@ -28,6 +28,13 @@ const window = { App: {}, UI: {
 } };
 new Function('window', readFileSync(path.join(APP, 'js/app/tts-export.js'), 'utf8'))(window);
 const T = window.App.TtsExport;
+// army.js (Army statics) + the picker's rule engine, to build each synthetic
+// entry's inventory (entry.loadout, docs/WARGEAR-RULES.md §5) the way the app
+// does: defaults at the size − replaced + added.
+new Function('window', readFileSync(path.join(APP, 'js/army.js'), 'utf8'))(window);
+globalThis.Army = window.Army;
+new Function('window', 'document', readFileSync(path.join(APP, 'js/app/wargear-picker.js'), 'utf8'))(window, { getElementById: () => null });
+const W = window.App.WargearPicker;
 
 // ── synthetic army ─────────────────────────────────────────────────────────
 const fac = (id) => JSON.parse(readFileSync(path.join(APP, 'data/dataset/current', id + '.json'), 'utf8'));
@@ -37,8 +44,9 @@ const unit = (f, name) => {
   if (!u) throw new Error(`no unit "${name}" in ${f.factionName}`);
   return Object.assign({}, u, { _factionName: f.factionName });
 };
+// A rule (wargearProfile.rules, or legacy options via rulesOf) offering a match.
 const optId = (u, test) => {
-  const o = (u.wargearProfile.options || []).find(test);
+  const o = W.rulesOf(u.wargearProfile).find(test);
   if (!o) throw new Error(`no matching wargear option on ${u.name}`);
   return o;
 };
@@ -57,15 +65,17 @@ const sel = (o, re, count) => {
   const ci = choiceOf(o, re);
   return { optionId: o.id, choice: ci, count, items: o.choices[ci].map((x) => x.name), label: '' };
 };
+const lo = (u, models, sels) => W.loadoutFromWargear(u, models, sels);
 const army = { name: 'TTS verify', entries: [
   { unitId: isq.id, unitData: isq, count: 1, squadLabel: '10 models', selectedPts: 170, enhancements: [],
-    wargear: [sel(hammerOpt, /thunder hammer/i, 1), sel(glOpt, /grenade launcher/i, 2)] },
+    loadout: lo(isq, 10, [sel(hammerOpt, /thunder hammer/i, 1), sel(glOpt, /grenade launcher/i, 2)]) },
   { unitId: cap.id, unitData: cap, count: 1, squadLabel: '1 models', selectedPts: cap.points,
-    enhancements: [{ name: enh.name, pts: enh.pts, description: enh.description }], wargear: [] },
+    enhancements: [{ name: enh.name, pts: enh.pts, description: enh.description }], loadout: lo(cap, 1, []) },
   { unitId: nw.id, unitData: nw, count: 1, squadLabel: '10 models', selectedPts: 85, enhancements: [],
-    wargear: [sel(reaperOpt, /gauss reaper/i, 3)] },
-  { unitId: lr.id, unitData: lr, count: 1, squadLabel: null, selectedPts: lr.points, enhancements: [], wargear: [] },
+    loadout: lo(nw, 10, [sel(reaperOpt, /gauss reaper/i, 3)]) },
+  { unitId: lr.id, unitData: lr, count: 1, squadLabel: null, selectedPts: lr.points, enhancements: [], loadout: lo(lr, 1, []) },
 ] };
+army.entries.forEach((e) => console.log(`  loadout ${e.unitData.name}: ${e.loadout.map((x) => x.count + 'x ' + x.name).join(', ')}`));
 
 const reg = T.buildRegistry(army);
 writeFileSync(path.join(OUT, 'roster.regiztry.json'), JSON.stringify(reg, null, 2));

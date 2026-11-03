@@ -1420,7 +1420,7 @@
         const models = (unit.squadOptions || []).reduce((m, o) =>
           (m == null && o.pts === entry.selectedPts) ? o.models : m, null)
           || parseInt(String(entry.squadLabel || '').replace(/[^\d]/g, ''), 10) || null;
-        try { effMap = App.WargearPicker.effectiveCounts(unit, models, entry.wargear || []); } catch (_) {}
+        try { effMap = App.WargearPicker.effectiveCounts(unit, models, Array.isArray(entry.loadout) ? entry.loadout : (entry.wargear || []), Array.isArray(entry.loadout)); } catch (_) {}
       }
       if (effMap) {
         effMap.forEach((v, k) => wgCounts.set(k, v.count));

@@ -6,6 +6,36 @@
   // every child attached to this entry (rendered as a small "+N
   // attached" pill on the leader's body). `isAttached` flips on the
   // mini-card styling for nested children.
+  function wargearBadges(entry, esc) {
+    const W = window.App && App.WargearPicker;
+    const unit = entry.unitData;
+    if (W && typeof W.diff === 'function' && unit && unit.wargearProfile
+        && (Array.isArray(entry.loadout) || (entry.wargear && entry.wargear.length))) {
+      const models = (window.Army && Army.entryModels) ? Army.entryModels(entry) : null;
+      let lo, gains, warns;
+      try {
+        lo = W.entryLoadout(unit, entry);
+        gains = W.diff(unit, models, lo).filter(d => d.count > d.def);
+        warns = W.warnings(unit, models, lo);
+      } catch (_) { lo = null; }
+      if (lo) {
+        return gains.map(d => {
+          const n = d.count - d.def;
+          const pts = (window.Army && Army.itemPrice) ? Army.itemPrice(unit, d) * n : 0;
+          return `<span class="army-enh-badge army-wg-badge" title="Wargear">${n}× ${esc(d.name)}${pts ? ` <span class="army-enh-pts">+${pts}</span>` : ''}</span>`;
+        }).join('')
+        + (warns.length
+          ? `<span class="army-enh-badge army-wg-badge army-wg-warn" title="${esc(warns.join('\n'))}" style="color:var(--warning);border-color:var(--warning)">⚠ wargear</span>`
+          : '');
+      }
+    }
+    // No profile to compare against: the saved selection rows as they are.
+    return (entry.wargear || []).filter(w => w && w.count > 0 && (w.label || (w.items && w.items.length))).map(w => {
+      const label = w.label || w.items.join(' + ');
+      return `<span class="army-enh-badge army-wg-badge" title="Wargear swap">${w.count}× ${esc(label)}</span>`;
+    }).join('');
+  }
+
   UI.createArmyEntryEl = function (entry, index, opts) {
     opts = opts || {};
     const isAttached       = !!opts.isAttached;
@@ -24,11 +54,9 @@
     // Ordinal-aware per-entry total (matches the army total). `surcharge` is the
     // extra this entry pays for copies past the datasheet's per-army threshold.
     const army      = opts.army;
-    // 11e wargear points, per squad copy (priced defaults + selection net
-    // deltas, floored at 0 — mirrors army.getEntryPoints).
-    const wgSel  = (entry.wargear || []).reduce((s, w) => s + (w.pts || 0) * (w.count || 0), 0);
-    const wgBase = (army && typeof army.getEntryWargearBasePts === 'function') ? army.getEntryWargearBasePts(index) : 0;
-    const wgPts  = Math.max(0, wgBase + wgSel);
+    // 11e wargear points, per squad copy (army.getEntryCopyWargearPts: the
+    // loadout's priced items, or the legacy default base + selection deltas).
+    const wgPts  = (army && typeof army.getEntryCopyWargearPts === 'function') ? army.getEntryCopyWargearPts(index) : 0;
     const surcharge = (army && typeof army.getEntryOrdinalSurcharge === 'function') ? army.getEntryOrdinalSurcharge(index) : 0;
     const total     = (army && typeof army.getEntryPoints === 'function') ? army.getEntryPoints(index) : (pts * entry.count + enhPts);
     const squadHtml = entry.squadLabel
@@ -36,13 +64,13 @@
     const enhBadges = (entry.enhancements || []).map(e =>
       `<span class="army-enh-badge" title="${UI.mdPlain(e.description || '')}">${esc(e.name)}</span>`
     ).join('')
-    // Wargear swaps ride the same badge row ("3× Gauss reaper"), priced or
-    // free, so a loadout is visible without opening the entry (owner 2026-11-02).
-    + (entry.wargear || []).filter(w => w && w.count > 0 && (w.label || (w.items && w.items.length))).map(w => {
-      const label = w.label || w.items.join(' + ');
-      const pts = (w.pts || 0) * (w.count || 0);
-      return `<span class="army-enh-badge army-wg-badge" title="Wargear swap">${w.count}× ${esc(label)}${pts ? ` <span class="army-enh-pts">${pts > 0 ? '+' : '−'}${Math.abs(pts)}</span>` : ''}</span>`;
-    }).join('');
+    // Wargear rides the same badge row (owner 2026-11-02): only items whose
+    // count differs from the default at this size, and only the gains
+    // ("3× Gauss reaper", not "7× Gauss flayer" as well — the lowered default
+    // is implied). A ⚠ "wargear" badge appears when the loadout breaks a
+    // datasheet rule; its title lists the warnings (docs/WARGEAR-RULES.md §5).
+    + wargearBadges(entry, esc);
+
     // The squad-label (e.g. "20 models") and the "+N attached" pill
     // share a SUB-ROW immediately below the unit name. Keeping them
     // on a dedicated line means:
