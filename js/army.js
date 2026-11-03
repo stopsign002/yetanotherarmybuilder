@@ -41,21 +41,70 @@ window.Army = class Army {
     sizes.forEach(n => { if (models != null && n <= models) pick = n; });
     return bySize[pick] || null;
   }
+  // Model types at a size, in composition order: [{ name, count }]. One
+  // entry (name null) for a single-type unit or one with no modelsBySize.
+  static modelTypes(unitData, models) {
+    const prof = unitData && unitData.wargearProfile;
+    const row = prof ? (Army._tier(prof.modelsBySize, models) || {}) : {};
+    const types = Object.keys(row).filter(k => (row[k] || 0) > 0).map(k => ({ name: k, count: row[k] }));
+    if (types.length > 1) return types;
+    const size = types.length ? types[0].count : (models || 1);
+    return [{ name: null, count: models || size }];
+  }
+  // Default inventory at a size (docs/WARGEAR-RULES.md §6). Multi-type
+  // units get one row per (model type, item) carrying `model`, from
+  // defaultsByModel × that type's count; without defaultsByModel the unit
+  // defaults are dealt out smallest type first (the Champion/Sergeant), each
+  // type taking up to its model count. Single-type units: no `model`.
   static defaultLoadout(unitData, models) {
     const prof = unitData && unitData.wargearProfile;
-    const tier = prof ? (Army._tier(prof.defaultsBySize, models) || []) : [];
-    return tier.filter(d => d && (d.count || 0) > 0)
-      .map(d => ({ id: String(d.id || Army._kebab(d.name)), name: String(d.name || d.id || ''), count: d.count }));
+    if (!prof) return [];
+    const row = (d, count, model) => {
+      const r = { id: String(d.id || Army._kebab(d.name)), name: String(d.name || d.id || ''), count };
+      if (model) r.model = model;
+      return r;
+    };
+    const tier = (Army._tier(prof.defaultsBySize, models) || []).filter(d => d && (d.count || 0) > 0);
+    const types = Army.modelTypes(unitData, models);
+    if (types.length < 2) return tier.map(d => row(d, d.count));
+    const fold = t => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/ models?$/, '').replace(/s$/, '');
+    const dbm = prof.defaultsByModel && typeof prof.defaultsByModel === 'object' ? prof.defaultsByModel : null;
+    const out = [];
+    if (dbm && types.some(t => Object.keys(dbm).some(k => fold(k) === fold(t.name)))) {
+      types.forEach(t => {
+        const k = Object.keys(dbm).find(x => fold(x) === fold(t.name));
+        (k && Array.isArray(dbm[k]) ? dbm[k] : []).forEach(d => {
+          if (d && (d.count || 0) > 0) out.push(row(d, d.count * t.count, t.name));
+        });
+      });
+      return out;
+    }
+    const order = types.slice().sort((a, b) => a.count - b.count);
+    tier.forEach(d => {
+      let left = d.count;
+      order.forEach(t => {
+        const n = Math.min(left, t.count);
+        if (n > 0) { out.push(row(d, n, t.name)); left -= n; }
+      });
+      if (left > 0) out.push(row(d, left, order[order.length - 1].name));
+    });
+    // Back into composition order.
+    return types.flatMap(t => out.filter(r => r.model === t.name));
   }
   // Untrusted-input gate for a loadout (also used by fromJSON).
   static cleanLoadout(list) {
     if (!Array.isArray(list)) return null;
     return list.filter(x => x && typeof x === 'object' && (typeof x.id === 'string' || typeof x.name === 'string'))
-      .map(x => ({
-        id: String(typeof x.id === 'string' && x.id ? x.id : Army._kebab(x.name)).slice(0, 120),
-        name: String(typeof x.name === 'string' && x.name ? x.name : x.id).slice(0, 120),
-        count: Number.isFinite(x.count) ? Math.max(0, Math.floor(x.count)) : 0,
-      }))
+      .map(x => {
+        const r = {
+          id: String(typeof x.id === 'string' && x.id ? x.id : Army._kebab(x.name)).slice(0, 120),
+          name: String(typeof x.name === 'string' && x.name ? x.name : x.id).slice(0, 120),
+          count: Number.isFinite(x.count) ? Math.max(0, Math.floor(x.count)) : 0,
+        };
+        // Model type the row belongs to (§6); absent for single-type units.
+        if (typeof x.model === 'string' && x.model.trim()) r.model = x.model.trim().slice(0, 80);
+        return r;
+      })
       .filter(x => x.id && x.count > 0);
   }
   // Order-free identity of a loadout (stacking compares these).
@@ -63,7 +112,7 @@ window.Army = class Army {
     const m = new Map();
     (list || []).forEach(x => {
       if (!x || !x.count) return;
-      const k = x.id || Army._kebab(x.name);
+      const k = (x.model ? x.model + '>' : '') + (x.id || Army._kebab(x.name));
       m.set(k, (m.get(k) || 0) + x.count);
     });
     return Array.from(m.entries()).sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(e => e[0] + ':' + e[1]).join('|');
@@ -329,7 +378,7 @@ window.Army = class Army {
       enhancements: [],
       // Deep-copied so a later setWargear on one entry cannot mutate the array
       // the other is still reading.
-      loadout: Array.isArray(src.loadout) ? src.loadout.map(x => ({ id: x.id, name: x.name, count: x.count })) : undefined,
+      loadout: Array.isArray(src.loadout) ? src.loadout.map(x => Object.assign({}, x)) : undefined,
       wargear: (src.wargear || []).map(w => ({
         optionId: w.optionId,
         choice:   w.choice,

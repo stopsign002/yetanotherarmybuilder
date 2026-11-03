@@ -13,7 +13,13 @@
 //   requires  an add-on that needs (or locks) an item more models lack
 //   exclusive rules joined by exclusiveWith taken more than once per model
 //
-// Storage: entry.loadout = [{ id, name, count }] (defaults with their counts,
+// Per-model-type blocks (§6): one block per model type at this size
+// (modelsBySize order, heading "Plague Champion · 1"); each lists that
+// type's defaults (defaultsByModel × count) and the items its rules offer
+// (model-less rules offer in every block). Rows and warnings are per block;
+// loadout rows carry `model` on multi-type units.
+//
+// Storage: entry.loadout = [{ id, name, count, model? }] (defaults with their counts,
 // extras, zeros omitted) via army.setLoadout(); entry.wargear is no longer
 // written. A new pick starts from the defaults at the chosen size; changing
 // size on an unsaved pick resets to that size's defaults; changing size on a
@@ -247,80 +253,179 @@
 
 
   // ── inventory helpers ────────────────────────────────────────────────────
+  // Per-model-type blocks (docs/WARGEAR-RULES.md §6): the inventory is keyed
+  // by (model type, item). Single-type units have one block with model null
+  // and their rows carry no `model`, exactly as before.
   const A = () => window.Army;
   const priceOf = (unit, it) => ((A() && A().itemPrice) ? A().itemPrice(unit, it) : 0);
+  const kebab = (s) => (A() ? A()._kebab(s) : String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+  const foldType = (t) => sing(norm(t));
+  const plural = (m, n) => (n > 1 && !/s$/i.test(m) ? m + 's' : m);
+  const ik = (model, key) => (model || '') + '|' + key;
+
+  // Blocks at the context's size: [{ model, label, count, defaults:[{key,id,name,count}] }]
+  function blocksOf(ctx) {
+    if (ctx._blocks) return ctx._blocks;
+    const types = A() ? A().modelTypes(ctx.unit, ctx.size) : [{ name: null, count: ctx.size }];
+    const multi = types.length > 1;
+    const defs = A() ? A().defaultLoadout(ctx.unit, ctx.size) : ctx.defaults;
+    ctx._blocks = types.map((t) => ({
+      model: multi ? t.name : null,
+      label: t.name || '',
+      count: t.count,
+      defaults: defs.filter((d) => (multi ? d.model === t.name : true))
+        .map((d) => ({ key: ctx.keyOf(d), id: String(d.id || ''), name: d.name, count: d.count || 0 })),
+    }));
+    // Shared words dropped for badges: "Plague Champion" → "Champion".
+    if (multi) {
+      const words = ctx._blocks.map((b) => b.label.split(/\s+/));
+      let k = 0;
+      while (words.every((w) => w.length > k + 1 && w[k] === words[0][k])) k++;
+      ctx._blocks.forEach((b, i) => { b.short = words[i].slice(k).join(' '); });
+    }
+    return ctx._blocks;
+  }
+  const multiOf = (ctx) => blocksOf(ctx).length > 1;
+  // The block a rule names (null-model rules offer in every block). A model
+  // name that matches no block goes to the largest one.
+  function ruleBlock(ctx, r) {
+    const blocks = blocksOf(ctx);
+    if (blocks.length < 2 || !r.model) return null;
+    const f = foldType(r.model);
+    const hit = blocks.find((b) => foldType(b.label) === f)
+      || blocks.find((b) => foldType(b.label).startsWith(f) || f.startsWith(foldType(b.label)));
+    if (hit) return hit.model;
+    return blocks.slice().sort((a, b) => b.count - a.count)[0].model;
+  }
+  const inBlock = (ctx, r, blk) => { const m = ruleBlock(ctx, r); return m == null || m === blk.model; };
+  function blockByName(ctx, name) {
+    const f = foldType(name);
+    return blocksOf(ctx).find((b) => foldType(b.label) === f) || null;
+  }
 
   function defaultInv(ctx) {
     const m = new Map();
-    ctx.defaults.forEach((d, i) => {
-      if ((d.count || 0) > 0) m.set('d:' + i, { id: String(d.id || ''), name: d.name, count: d.count });
+    blocksOf(ctx).forEach((b) => b.defaults.forEach((d) => {
+      if (d.count > 0) m.set(ik(b.model, d.key), { id: d.id || kebab(d.name), name: d.name, count: d.count, model: b.model });
+    }));
+    return m;
+  }
+  function bumpInv(ctx, m, model, x, n) {
+    const k = ik(model, ctx.keyOf(x));
+    const have = m.get(k);
+    if (have) have.count += n;
+    else m.set(k, { id: String(x.id || '') || kebab(x.name), name: x.name, count: n, model });
+  }
+
+  // A loadout whose rows lack `model` on a multi-type unit (saved before §6)
+  // → per-block rows: defaults go to each type up to its default count,
+  // smallest type first; extras go to the type whose rules offer the item
+  // (the larger type when several do); anything else to the largest type.
+  function migrateFlat(ctx, flat) {
+    const blocks = blocksOf(ctx);
+    const m = new Map();
+    const pool = new Map();   // item key -> { x, n }
+    (flat || []).forEach((x) => {
+      if (!x || !x.count) return;
+      const k = ctx.keyOf(x);
+      const p = pool.get(k);
+      if (p) p.n += x.count; else pool.set(k, { x, n: x.count });
+    });
+    const asc = blocks.slice().sort((a, b) => a.count - b.count);
+    asc.forEach((b) => b.defaults.forEach((d) => {
+      const p = pool.get(d.key);
+      if (!p || !p.n) return;
+      const n = Math.min(p.n, d.count);
+      bumpInv(ctx, m, b.model, p.x, n);
+      p.n -= n;
+    }));
+    const largest = blocks.slice().sort((a, b) => b.count - a.count)[0];
+    pool.forEach((p, k) => {
+      if (!p.n) return;
+      const offering = blocks.filter((b) => ctx.rules.some((r) => inBlock(ctx, r, b)
+        && (r.choices || []).some((g) => (g || []).some((x) => ctx.keyOf(x) === k))));
+      const to = offering.length ? offering.sort((a, b) => b.count - a.count)[0] : largest;
+      bumpInv(ctx, m, to.model, p.x, p.n);
     });
     return m;
   }
+
   function invFromLoadout(ctx, loadout) {
+    const multi = multiOf(ctx);
+    const rows = (loadout || []).filter((x) => x && x.count);
+    if (multi && rows.some((x) => !x.model || !blockByName(ctx, x.model))) {
+      // Mixed: rows that name a block keep it, the rest are migrated.
+      const keep = rows.filter((x) => x.model && blockByName(ctx, x.model));
+      if (!keep.length) return migrateFlat(ctx, rows);
+      const m = migrateFlat(ctx, rows.filter((x) => !(x.model && blockByName(ctx, x.model))));
+      keep.forEach((x) => bumpInv(ctx, m, blockByName(ctx, x.model).model, x, x.count));
+      return m;
+    }
     const m = new Map();
-    (loadout || []).forEach((x) => {
-      if (!x || !x.count) return;
-      const k = ctx.keyOf(x);
-      const have = m.get(k);
-      if (have) have.count += x.count;
-      else m.set(k, { id: String(x.id || ''), name: x.name, count: x.count });
-    });
+    rows.forEach((x) => bumpInv(ctx, m, multi ? blockByName(ctx, x.model).model : null, x, x.count));
     return m;
   }
   const invToLoadout = (m) => Array.from(m.values()).filter((x) => x.count > 0)
-    .map((x) => ({ id: x.id, name: x.name, count: x.count }));
+    .map((x) => { const r = { id: x.id, name: x.name, count: x.count }; if (x.model) r.model = x.model; return r; });
 
   // Old selection rows (entry.wargear, rule or 40kdc option ids) → the full
-  // inventory: defaults at this size − replaced + added. A row whose id no
-  // longer resolves still adds its items, so nothing silently disappears.
+  // inventory: defaults − replaced + added, each take in the block its rule
+  // names (a model-less rule: the largest block still carrying what it
+  // replaces). A row whose id no longer resolves still adds its items.
   function loadoutFromWargear(unit, models, wargear) {
     const ctx = makeCtx(unit, models);
+    const blocks = blocksOf(ctx);
     const m = defaultInv(ctx);
-    const bump = (x, n) => {
-      const k = ctx.keyOf(x);
-      const have = m.get(k);
-      if (have) have.count += n;
-      else m.set(k, { id: String(x.id || ''), name: x.name, count: n });
-    };
+    const largest = blocks.slice().sort((a, b) => b.count - a.count)[0];
     (wargear || []).forEach((w) => {
       if (!w || !w.count) return;
       const rule = ctx.rules.find((r) => r.id === w.optionId);
       const ci = w.choice == null ? 0 : w.choice;
       const grp = rule && (rule.choices || [])[ci];
       if (grp) {
-        removesOf(rule, ci).forEach((x) => bump(x, -w.count));
-        grp.forEach((x) => bump(x, w.count * (Number.isFinite(x.count) && x.count > 1 ? x.count : 1)));
+        let model = ruleBlock(ctx, rule);
+        if (model == null && blocks.length > 1) {
+          const rm = removesOf(rule, ci).map((x) => ctx.keyOf(x));
+          const carry = blocks.filter((b) => rm.some((k) => ((m.get(ik(b.model, k)) || {}).count || 0) > 0));
+          model = (carry.length ? carry.sort((a, b) => b.count - a.count)[0] : largest).model;
+        }
+        removesOf(rule, ci).forEach((x) => bumpInv(ctx, m, model, x, -w.count));
+        grp.forEach((x) => bumpInv(ctx, m, model, x, w.count * (Number.isFinite(x.count) && x.count > 1 ? x.count : 1)));
       } else {
-        (w.items || []).forEach((nm) => bump({ id: '', name: nm }, w.count));
+        (w.items || []).forEach((nm) => bumpInv(ctx, m, largest.model, { id: '', name: nm }, w.count));
       }
     });
-    m.forEach((x) => { if (x.count < 0) x.count = 0; if (!x.id) x.id = (A() ? A()._kebab(x.name) : x.name); });
+    m.forEach((x) => { if (x.count < 0) x.count = 0; });
     return invToLoadout(m);
   }
 
-  // Rows: defaults first (default order), then every item any rule offers
-  // (deduplicated; one that is also a default stays in the defaults block),
-  // then anything else the inventory holds. Each option row carries the
-  // rules that offer it, for its chip.
+  // Rows per block: the block's defaults, then every item a rule offering in
+  // this block hands out (deduplicated), then anything else the block holds.
   function rowsFor(ctx, m) {
-    const rows = [], seen = new Map();
-    ctx.defaults.forEach((d, i) => {
-      const r = { key: 'd:' + i, id: String(d.id || ''), name: d.name, def: d.count || 0, rules: [] };
-      rows.push(r); seen.set(r.key, r);
+    return blocksOf(ctx).map((b) => {
+      const rows = [], seen = new Map();
+      b.defaults.forEach((d) => {
+        const r = { key: ik(b.model, d.key), item: d.key, id: d.id, name: d.name, def: d.count, rules: [], block: b };
+        rows.push(r); seen.set(d.key, r);
+      });
+      ctx.rules.forEach((rule) => {
+        if (!inBlock(ctx, rule, b)) return;
+        (rule.choices || []).forEach((grp) => (grp || []).forEach((x) => {
+          const k = ctx.keyOf(x);
+          let r = seen.get(k);
+          if (!r) { r = { key: ik(b.model, k), item: k, id: String(x.id || ''), name: x.name, def: 0, rules: [], block: b }; rows.push(r); seen.set(k, r); }
+          if (r.rules.indexOf(rule) === -1) r.rules.push(rule);
+        }));
+      });
+      m.forEach((x, key) => {
+        if ((x.model || null) !== b.model) return;
+        const k = key.slice(key.indexOf('|') + 1);
+        if (seen.has(k)) return;
+        const r = { key, item: k, id: x.id, name: x.name, def: 0, rules: [], block: b };
+        rows.push(r); seen.set(k, r);
+      });
+      return { block: b, rows };
     });
-    ctx.rules.forEach((rule) => (rule.choices || []).forEach((grp) => (grp || []).forEach((x) => {
-      const k = ctx.keyOf(x);
-      let r = seen.get(k);
-      if (!r) { r = { key: k, id: String(x.id || ''), name: x.name, def: 0, rules: [] }; rows.push(r); seen.set(k, r); }
-      if (r.rules.indexOf(rule) === -1) r.rules.push(rule);
-    })));
-    m.forEach((x, k) => {
-      if (seen.has(k)) return;
-      const r = { key: k, id: x.id, name: x.name, def: 0, rules: [] };
-      rows.push(r); seen.set(k, r);
-    });
-    return rows;
   }
 
   function capText(ctx, r) {
@@ -332,8 +437,7 @@
   }
   function capPhrase(ctx, r) {
     if (r.scope === 'per_n') return (r.max == null || r.max === 1) ? `1 per ${r.n} models` : `up to ${r.max} per ${r.n} models`;
-    if (r.scope === 'any') return r.model ? `one per ${r.model}` : 'one per model';
-    if (r.max == null) return r.model ? `one per ${r.model}` : 'one per model';
+    if (r.scope === 'any' || r.max == null) return r.model ? `one per ${r.model}` : 'one per model';
     return r.max === 1 ? '1 only' : `up to ${r.max}`;
   }
   const article = (name) => {
@@ -341,108 +445,112 @@
     if (/s$/.test(n)) return n;
     return (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n;
   };
+  const itemCount = (x) => (Number.isFinite(x.count) && x.count > 1 ? x.count : 1);
 
-  // ── warnings (§5) ────────────────────────────────────────────────────────
-  // Counts by item key. Returns an array of messages; [] = clean.
+  // ── warnings (§5, per block §6) ──────────────────────────────────────────
   function warnings(ctx, m) {
     const out = [];
-    const cnt = (k) => ((m.get(k) || {}).count || 0);
-    const nameOf = (k) => (m.get(k) || {}).name || ctx.itemName.get(k) || k.replace(/^x:/, '');
-    const extras = (k) => Math.max(0, cnt(k) - ctx.defaultCount(k));
-
-    // 1. Slot. For each default D: extras of items that can only replace D
-    //    (single-item choices of replace rules, offered by nothing else) must
-    //    fit D's freed slots; flexible items (several targets, also offered
-    //    by an add rule, or part of a bundle) may fill them but are not
-    //    forced to.
-    const targets = new Map(), flexible = new Set();
-    ctx.rules.forEach((rule) => (rule.choices || []).forEach((grp, ci) => {
-      const rm = removesOf(rule, ci).map((x) => ctx.keyOf(x)).filter((k) => k.startsWith('d:'));
-      (grp || []).forEach((x) => {
-        const k = ctx.keyOf(x);
-        if (!targets.has(k)) targets.set(k, new Set());
-        if (rule.kind === 'add' || !rm.length) { flexible.add(k); return; }
-        if ((grp || []).length > 1 || (Number.isFinite(x.count) && x.count > 1)) flexible.add(k);
-        rm.forEach((d) => targets.get(k).add(d));
-      });
-    }));
-    targets.forEach((set, k) => { if (set.size > 1) flexible.add(k); });
-    ctx.defaults.forEach((d, i) => {
-      const D = 'd:' + i, def = d.count || 0;
-      let excl = 0, shared = 0;
-      targets.forEach((set, k) => {
-        if (!set.has(D) || k === D) return;
-        if (flexible.has(k)) shared += extras(k); else excl += extras(k);
-      });
-      const lo = cnt(D) + excl, hi = lo + shared;
-      const dn = String(d.name || '').toLowerCase();
-      if (lo > def) out.push(`${cap(d.name)}: ${lo} weapons for ${def} models — lower the ${dn} count when you add swaps`);
-      else if (hi < def) out.push(`${cap(d.name)}: only ${hi} for ${def} models`);
-    });
-
-    // 2. Cap. Each item's extras fill the rules that offer it in order; a
-    //    rule's cap is shared across its choices.
+    const multi = multiOf(ctx);
+    const blockRows = rowsFor(ctx, m);
+    // A rule's cap is unit-wide (per_n reads the unit size; a named type
+    // reads that type's count; a model-less "any" reads the unit), shared
+    // over every block that offers it.
     const left = new Map(ctx.rules.map((r) => [r.id, ctx.visible(r) ? ctx.capOf(r) : 0]));
-    rowsFor(ctx, m).forEach((row) => {
-      if (!row.rules.length) return;
-      const taken = extras(row.key);
-      if (!taken) return;
-      let rest = taken;
-      row.rules.forEach((r) => {
-        const grp = (r.choices || []).find((g) => (g || []).some((x) => ctx.keyOf(x) === row.key)) || [];
-        const mult = Math.max(1, grp.filter((x) => ctx.keyOf(x) === row.key)
-          .reduce((n, x) => n + (Number.isFinite(x.count) && x.count > 1 ? x.count : 1), 0));
-        const can = Math.min(rest, (left.get(r.id) || 0) * mult);
-        const takes = Math.ceil(can / mult);
-        left.set(r.id, (left.get(r.id) || 0) - takes);
-        rest -= can;
-      });
-      if (rest > 0) {
-        const r0 = row.rules[0];
-        out.push(`${cap(row.name)}: ${taken} taken, the datasheet allows up to ${taken - rest} (${capPhrase(ctx, r0)})`);
-        return;
-      }
-      // Per-choice unit-wide limit (choiceMax), summed over the rules that
-      // set one for this item.
-      let lim = null;
-      row.rules.forEach((r) => { const c = ctx.choiceCapOf(r); if (c != null) lim = (lim || 0) + c; });
-      if (lim != null && taken > lim) out.push(`${cap(row.name)}: ${taken} taken, the datasheet allows ${lim} per unit`);
-    });
 
-    // 3. Requires / locks: an add-on needs a model still carrying the item.
-    ctx.rules.forEach((rule) => {
-      const need = new Map();
-      (rule.requires || []).concat(rule.locks || []).forEach((x) => need.set(ctx.keyOf(x), x));
-      if (!need.size) return;
-      const gained = new Set();
-      (rule.choices || []).forEach((g) => (g || []).forEach((x) => gained.add(ctx.keyOf(x))));
-      gained.forEach((g) => {
-        const n = extras(g);
-        if (!n) return;
-        need.forEach((x, k) => {
-          if (n > cnt(k)) out.push(`${cap(nameOf(g))} needs a model that still carries ${article(nameOf(k))}`);
+    blockRows.forEach(({ block: b, rows }) => {
+      const pre = multi ? `${plural(b.label, b.count)}: ` : '';
+      const cnt = (k) => ((m.get(ik(b.model, k)) || {}).count || 0);
+      const defOf = (k) => { const d = b.defaults.find((x) => x.key === k); return d ? d.count : 0; };
+      const extras = (k) => Math.max(0, cnt(k) - defOf(k));
+      const nameOf = (k) => { const r = rows.find((x) => x.item === k); return r ? r.name : (ctx.itemName.get(k) || k.replace(/^x:/, '')); };
+      const rules = ctx.rules.filter((r) => inBlock(ctx, r, b));
+
+      // 1. Slot.
+      const targets = new Map(), flexible = new Set();
+      rules.forEach((rule) => (rule.choices || []).forEach((grp, ci) => {
+        const rm = removesOf(rule, ci).map((x) => ctx.keyOf(x)).filter((k) => defOf(k) > 0);
+        (grp || []).forEach((x) => {
+          const k = ctx.keyOf(x);
+          if (!targets.has(k)) targets.set(k, new Set());
+          if (rule.kind === 'add' || !rm.length) { flexible.add(k); return; }
+          if ((grp || []).length > 1 || itemCount(x) > 1) flexible.add(k);
+          rm.forEach((d) => targets.get(k).add(d));
+        });
+      }));
+      targets.forEach((set, k) => { if (set.size > 1) flexible.add(k); });
+      b.defaults.forEach((d) => {
+        let excl = 0, shared = 0;
+        targets.forEach((set, k) => {
+          if (!set.has(d.key) || k === d.key) return;
+          if (flexible.has(k)) shared += extras(k); else excl += extras(k);
+        });
+        const have = cnt(d.key), lo = have + excl, hi = lo + shared;
+        if (lo <= d.count && hi >= d.count) return;
+        const swaps = lo > d.count ? excl : excl + shared;
+        if (multi) {
+          out.push(`${pre}${cap(d.name)} ${have} and swaps ${swaps} for ${d.count} model${d.count === 1 ? '' : 's'}`);
+        } else if (lo > d.count) {
+          out.push(`${cap(d.name)}: ${lo} weapons for ${d.count} models — lower the ${String(d.name).toLowerCase()} count when you add swaps`);
+        } else {
+          out.push(`${cap(d.name)}: only ${hi} for ${d.count} models`);
+        }
+      });
+
+      // 2. Cap.
+      rows.forEach((row) => {
+        if (!row.rules.length) return;
+        const taken = extras(row.item);
+        if (!taken) return;
+        let rest = taken;
+        row.rules.forEach((r) => {
+          const grp = (r.choices || []).find((g) => (g || []).some((x) => ctx.keyOf(x) === row.item)) || [];
+          const mult = Math.max(1, grp.filter((x) => ctx.keyOf(x) === row.item).reduce((n, x) => n + itemCount(x), 0));
+          const can = Math.min(rest, (left.get(r.id) || 0) * mult);
+          left.set(r.id, (left.get(r.id) || 0) - Math.ceil(can / mult));
+          rest -= can;
+        });
+        const sep = multi ? ' ' : ': ';
+        if (rest > 0) {
+          out.push(`${pre}${cap(row.name)}${sep}${taken} taken, the datasheet allows up to ${taken - rest} (${capPhrase(ctx, row.rules[0])})`);
+          return;
+        }
+        let lim = null;
+        row.rules.forEach((r) => { const c = ctx.choiceCapOf(r); if (c != null) lim = (lim || 0) + c; });
+        if (lim != null && taken > lim) out.push(`${pre}${cap(row.name)}${sep}${taken} taken, the datasheet allows ${lim} per unit`);
+      });
+
+      // 3. Requires / locks, within the block.
+      rules.forEach((rule) => {
+        const need = new Map();
+        (rule.requires || []).concat(rule.locks || []).forEach((x) => need.set(ctx.keyOf(x), x));
+        if (!need.size) return;
+        const gained = new Set();
+        (rule.choices || []).forEach((g) => (g || []).forEach((x) => gained.add(ctx.keyOf(x))));
+        gained.forEach((g) => {
+          const n = extras(g);
+          if (!n) return;
+          need.forEach((x, k) => {
+            if (n > cnt(k)) out.push(`${pre}${cap(nameOf(g))} needs a model that still carries ${article(nameOf(k) || x.name)}`);
+          });
         });
       });
-    });
 
-    // 4. Exclusive: one rule of an exclusiveWith set per model.
-    ctx.exclSets.forEach((set) => {
-      if (set.length < 2) return;
-      const keys = new Set();
-      set.forEach((r) => (r.choices || []).forEach((g) => (g || []).forEach((x) => keys.add(ctx.keyOf(x)))));
-      let sum = 0;
-      keys.forEach((k) => { sum += extras(k); });
-      if (sum > ctx.countOf(set[0].model)) {
-        out.push(`${Array.from(keys).map((k) => cap(nameOf(k))).join(', ')}: only one of these per model`);
-      }
+      // 4. Exclusive: one rule of an exclusiveWith set per model of the block.
+      ctx.exclSets.forEach((set) => {
+        const inb = set.filter((r) => inBlock(ctx, r, b));
+        if (inb.length < 2) return;
+        const keys = new Set();
+        inb.forEach((r) => (r.choices || []).forEach((g) => (g || []).forEach((x) => keys.add(ctx.keyOf(x)))));
+        let sum = 0;
+        keys.forEach((k) => { sum += extras(k); });
+        if (sum > b.count) out.push(`${pre}${Array.from(keys).map((k) => cap(nameOf(k))).join(', ')}: only one of these per model`);
+      });
     });
     return Array.from(new Set(out));
   }
 
   const ptsChip = (d) => (d ? ` <span class="wgp-pts">${d > 0 ? '+' : '−'}${Math.abs(d)} pts</span>` : '');
 
-  // render() rebuilds the host with innerHTML, destroying the pressed button;
-  // remember the focused stepper by data-key + direction and restore it.
   function focusedStepperBtn(host) {
     const btn = document.activeElement;
     if (!btn || !host.contains(btn) || !btn.classList || !btn.classList.contains('wgp-btn')) return null;
@@ -465,36 +573,38 @@
     const models = currentModels(unit);
     const ctx = makeCtx(unit, models);
     const refocus = focusedStepperBtn(host);
-    const rows = rowsFor(ctx, inv);
+    const blocks = rowsFor(ctx, inv);
+    const multi = blocks.length > 1;
 
-    const loadout = invToLoadout(inv);
-    const wgLive = A() && A().loadoutPts ? A().loadoutPts(unit, loadout) : 0;
-    const anyPriced = rows.some((r) => priceOf(unit, r));
-
-    if (!rows.length) {
+    const wgLive = A() && A().loadoutPts ? A().loadoutPts(unit, invToLoadout(inv)) : 0;
+    const anyRows = blocks.some((b) => b.rows.length);
+    const anyPriced = blocks.some((b) => b.rows.some((r) => priceOf(unit, r)));
+    if (!anyRows) {
       host.innerHTML = '';
       updateBannerPts(unit, wgLive);
       return;
     }
 
-    let html = '<div class="wgp-inv">';
-    rows.forEach((r) => {
+    const rowHtml = (r) => {
       const n = (inv.get(r.key) || {}).count || 0;
-      let hint = '';
-      if (r.def) hint = 'default';
-      else if (r.rules.length) {
-        const ms = Array.from(new Set(r.rules.map((x) => x.model || '')));
-        hint = ((ms.length === 1 && ms[0]) ? ms[0] + ' · ' : '') + capText(ctx, r.rules[0]);
-      }
+      const hint = r.def ? 'default' : (r.rules.length ? capText(ctx, r.rules[0]) : '');
       const hintChip = hint ? ` <span class="wgp-chip">${esc(hint)}</span>` : '';
       const title = r.rules.map((x) => x.text).filter(Boolean).join('\n');
       const t = title ? ` title="${esc(title)}"` : '';
-      html += `<div class="wgp-row${r.def ? ' wgp-row-default' : ''}"><span class="wgp-item"${t}>${esc(cap(r.name))}${ptsChip(priceOf(unit, r))}${hintChip}</span>`
+      const who = multi ? ` (${r.block.label})` : '';
+      return `<div class="wgp-row${r.def ? ' wgp-row-default' : ''}"><span class="wgp-item"${t}>${esc(cap(r.name))}${ptsChip(priceOf(unit, r))}${hintChip}</span>`
         + `<span class="wgp-stepper" data-key="${esc(r.key)}">
-            <button type="button" class="wgp-btn wgp-minus" aria-label="Remove one ${esc(r.name)}">&minus;</button>
+            <button type="button" class="wgp-btn wgp-minus" aria-label="Remove one ${esc(r.name)}${esc(who)}">&minus;</button>
             <span class="wgp-count">${n}</span>
-            <button type="button" class="wgp-btn wgp-plus" aria-label="Add one ${esc(r.name)}">+</button>
+            <button type="button" class="wgp-btn wgp-plus" aria-label="Add one ${esc(r.name)}${esc(who)}">+</button>
           </span></div>`;
+    };
+    let html = '<div class="wgp-inv">';
+    blocks.forEach(({ block: b, rows }) => {
+      if (!multi) { html += rows.map(rowHtml).join(''); return; }
+      html += `<div class="wgp-group wgp-block" data-model="${esc(b.label)}">`
+        + `<div class="wgp-group-title">${esc(plural(b.label, b.count))} · ${b.count}</div>`
+        + rows.map(rowHtml).join('') + '</div>';
     });
     html += '</div>';
     const warn = warnings(ctx, inv);
@@ -514,7 +624,6 @@
     updateBannerPts(unit, wgLive);
   }
 
-  // Banner points track the LIVE cost: selected size's base + wargear points.
   function updateBannerPts(unit, wgLive) {
     if (!panelEl) return;
     const el = panelEl.querySelector('.detail-banner-pts.detail-pts-value');
@@ -528,13 +637,20 @@
       el.firstChild.nodeValue.replace(/^\d+/, String(base + wgLive));
   }
 
-  // The inventory an entry holds: its loadout, else its old selection rows
-  // converted, else the defaults at its size.
+  // The inventory an entry holds, as per-block rows: its loadout (migrated
+  // when rows lack `model`), else its old selection rows, else defaults.
   function entryLoadout(unit, entry) {
     const models = A() && A().entryModels ? A().entryModels(entry) : null;
-    if (Array.isArray(entry.loadout)) return entry.loadout;
+    if (Array.isArray(entry.loadout)) return invToLoadout(invFromLoadout(makeCtx(unit, models), entry.loadout));
     if (Array.isArray(entry.wargear) && entry.wargear.length) return loadoutFromWargear(unit, models, entry.wargear);
     return invToLoadout(defaultInv(makeCtx(unit, models)));
+  }
+  // True when a saved loadout needs the §6 migration (multi-type unit, a row
+  // without a usable `model`).
+  function needsModel(unit, models, loadout) {
+    if (!Array.isArray(loadout) || !loadout.length) return false;
+    const ctx = makeCtx(unit, models);
+    return multiOf(ctx) && loadout.some((x) => x && x.count && !(x.model && blockByName(ctx, x.model)));
   }
 
   App.WargearPicker = {
@@ -546,7 +662,6 @@
       const selEntry = (s.selectedArmyEntryIndex != null && s.currentArmy)
         ? s.currentArmy.entries[s.selectedArmyEntryIndex] : null;
       const ei = (selEntry && selEntry.unitId === unit.id) ? s.selectedArmyEntryIndex : null;
-      // Editing an existing entry: preselect ITS squad size first.
       const entry0 = (ei != null) ? selEntry : null;
       if (entry0) {
         const sel = panel.querySelector('#detail-squad-select');
@@ -580,22 +695,21 @@
         const stepper = btn.closest('.wgp-stepper');
         if (!stepper || !stepper.dataset.key) return;
         const key = stepper.dataset.key;
-        const ctx = makeCtx(unit, currentModels(unit));
         let item = inv.get(key);
         if (!item) {
-          const row = rowsFor(ctx, inv).find((r) => r.key === key);
+          const ctx = makeCtx(unit, currentModels(unit));
+          let row = null;
+          rowsFor(ctx, inv).forEach((b) => b.rows.forEach((r) => { if (r.key === key) row = r; }));
           if (!row) return;
-          item = { id: row.id || (A() ? A()._kebab(row.name) : row.name), name: row.name, count: 0 };
+          item = { id: row.id || kebab(row.name), name: row.name, count: 0, model: row.block.model };
           inv.set(key, item);
         }
         if (btn.classList.contains('wgp-plus')) item.count += 1;
         else if (item.count > 0) item.count -= 1;
         else return;
         render(unit, host);
-        syncEntry(unit);   // no-op unless this pane edits an army entry
+        syncEntry(unit);
       });
-      // Size change: an unsaved pick resets to that size's defaults; a saved
-      // entry keeps its counts (the warnings say what no longer fits).
       const sizeSel = panel.querySelector('#detail-squad-select');
       if (sizeSel && !sizeSel._wgpWired) {
         sizeSel._wgpWired = true;
@@ -610,9 +724,8 @@
       }
     },
 
-    // Effective loadout as Map lowercased item name -> { name, count }, or
-    // null without a profile. Accepts a loadout ([{id,name,count}]) or old
-    // selection rows. Used by the card exporter for the ×N chips.
+    // Map lowercased item name -> { name, count } summed over blocks (cards
+    // ×N chips). Accepts a loadout or old selection rows.
     effectiveCounts(unit, models, list, asLoadout) {
       if (!unit || !unit.wargearProfile) return null;
       const isLoadout = asLoadout === true
@@ -624,7 +737,6 @@
         const have = out.get(k);
         out.set(k, { name: x.name, count: (have ? have.count : 0) + (x.count || 0) });
       });
-      // Defaults that were lowered to 0 still get a row (×0).
       makeCtx(unit, models).defaults.forEach((d) => {
         const k = String(d.name).toLowerCase();
         if (!out.has(k)) out.set(k, { name: d.name, count: 0 });
@@ -632,39 +744,37 @@
       return out;
     },
 
-    // The pending inventory as a loadout for addUnit() (events.js passes it
-    // in the old `wargear` slot; Army.addUnit recognises the shape). State
-    // is kept so a second copy reuses the same loadout.
     takeSelections(unit) {
       if (!unit || unit.id !== unitId || !unit.wargearProfile || !inv) return [];
       return invToLoadout(inv);
     },
     takeLoadout(unit) { return this.takeSelections(unit); },
 
-    // Warnings for a loadout at a squad size (army-list badge).
     warnings(unit, models, loadout) {
       if (!unit || !unit.wargearProfile) return [];
       const ctx = makeCtx(unit, models);
       return warnings(ctx, invFromLoadout(ctx, loadout || []));
     },
-    // Items whose count differs from the default at that size, as
-    // [{ id, name, count, def }] (army-list badges show the gains).
+    // Rows whose count differs from the default, [{ id, name, count, def,
+    // model, short }] (short = type name without the words all types share).
     diff(unit, models, loadout) {
       if (!unit || !unit.wargearProfile) return [];
       const ctx = makeCtx(unit, models);
       const m = invFromLoadout(ctx, loadout || []);
       const out = [];
-      rowsFor(ctx, m).forEach((r) => {
+      rowsFor(ctx, m).forEach(({ block: b, rows }) => rows.forEach((r) => {
         const n = (m.get(r.key) || {}).count || 0;
-        if (n !== r.def) out.push({ id: r.id || (m.get(r.key) || {}).id, name: r.name, count: n, def: r.def });
-      });
+        if (n !== r.def) out.push({ id: r.id || (m.get(r.key) || {}).id, name: r.name, count: n, def: r.def, model: b.model, short: b.short || b.label });
+      }));
       return out;
     },
     defaultLoadout(unit, models) { return invToLoadout(defaultInv(makeCtx(unit, models))); },
     entryLoadout,
     loadoutFromWargear,
+    needsModel,
+    // Per-block rows for a loadout (the §6 migration of rows without model).
+    blockLoadout(unit, models, loadout) { return invToLoadout(invFromLoadout(makeCtx(unit, models), loadout || [])); },
 
-    // Shared with entry-rehydrate.js and tts-export-style readers.
     rulesOf,
     removesOf,
     costOf,

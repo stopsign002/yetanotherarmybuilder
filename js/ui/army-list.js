@@ -22,7 +22,10 @@
         return gains.map(d => {
           const n = d.count - d.def;
           const pts = (window.Army && Army.itemPrice) ? Army.itemPrice(unit, d) * n : 0;
-          return `<span class="army-enh-badge army-wg-badge" title="Wargear">${n}× ${esc(d.name)}${pts ? ` <span class="army-enh-pts">+${pts}</span>` : ''}</span>`;
+          // Several model types: say whose ("Champion: Plasma gun").
+          const who = d.model ? `${esc(d.short || d.model)}: ` : '';
+          const qty = (d.model && n === 1) ? '' : `${n}× `;
+          return `<span class="army-enh-badge army-wg-badge" title="Wargear${d.model ? ' — ' + esc(d.model) : ''}">${who}${qty}${esc(d.name)}${pts ? ` <span class="army-enh-pts">+${pts}</span>` : ''}</span>`;
         }).join('')
         + (warns.length
           ? `<span class="army-enh-badge army-wg-badge army-wg-warn" title="${esc(warns.join('\n'))}" style="color:var(--warning);border-color:var(--warning)">⚠ wargear</span>`

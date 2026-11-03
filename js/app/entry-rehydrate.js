@@ -160,6 +160,13 @@
     const rules = prof.rules.filter(Boolean);
     const ids = new Set(rules.map((r) => r.id));
     const oldOpts = (prevUnit && prevUnit.wargearProfile && prevUnit.wargearProfile.options) || [];
+    const mbs = prof.modelsBySize || {};
+    const tierRow = mbs[Object.keys(mbs).sort((a, b) => b - a)[0]] || {};
+    const typeSize = (m) => {
+      if (!m) return Infinity;   // a model-less rule fits every block
+      const k = Object.keys(tierRow).find((t) => sameModel(t, m));
+      return k ? tierRow[k] : 0;
+    };
     let changed = false;
     entry.wargear.forEach((w) => {
       if (!w || w.optionId == null || ids.has(w.optionId)) return;
@@ -174,7 +181,11 @@
           let score = 1;
           if (oldRep != null && bag(r.replaces) === oldRep) score += 2;
           if (oldModel && sameModel(r.model, oldModel)) score += 1;
-          if (score > bestScore) { best = { r, c }; bestScore = score; }
+          // A tie (no old option to tell the model apart) goes to the larger
+          // model type — the same rule §6 uses for loadouts without `model`.
+          if (score > bestScore || (score === bestScore && best && typeSize(r.model) > typeSize(best.r.model))) {
+            best = { r, c }; bestScore = score;
+          }
         }));
       }
       if (!best) {
@@ -241,12 +252,20 @@
   // rows and no `loadout` gets one — defaults at its size − replaced + added
   // (rows first re-pointed to rule ids above). `wargear` itself is left in
   // place untouched (a rollback still finds it); nothing writes it any more.
+  // Per-model-type blocks (§6): a saved loadout whose rows lack `model` on a
+  // multi-type unit is re-dealt per type (defaults to each type up to its
+  // default count, smallest type first; extras to the type whose rules offer
+  // them, the larger type when both do; the rest to the largest type).
   function migrateLoadout(entry, fresh) {
-    if (Array.isArray(entry.loadout)) return false;
-    if (!Array.isArray(entry.wargear) || !entry.wargear.length) return false;
     const W = App.WargearPicker;
     if (!fresh || !fresh.wargearProfile || !W || typeof W.loadoutFromWargear !== 'function') return false;
     const models = (window.Army && Army.entryModels) ? Army.entryModels(entry) : null;
+    if (Array.isArray(entry.loadout)) {
+      if (typeof W.needsModel !== 'function' || !W.needsModel(fresh, models, entry.loadout)) return false;
+      entry.loadout = W.blockLoadout(fresh, models, entry.loadout);
+      return true;
+    }
+    if (!Array.isArray(entry.wargear) || !entry.wargear.length) return false;
     entry.loadout = W.loadoutFromWargear(fresh, models, entry.wargear);
     return true;
   }

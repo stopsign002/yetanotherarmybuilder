@@ -329,6 +329,23 @@ disabled or capped** (floor 0). Option rows carry a chip with the model type
 to 2 per 5", "1 per 5", "1 only", "any"); the row `title` is the datasheet
 line.
 
+**Per-model-type blocks** (§6): a multi-type unit shows one
+`.wgp-group.wgp-block[data-model]` per model type at the current size
+(modelsBySize order, heading "Plague Champion · 1" / "Plague Marines · 9"),
+listing that type's defaults (`defaultsByModel` × count; without it the unit
+defaults are dealt smallest type first) and every item a rule naming that
+type offers — model-less rules offer in every block, so an item two types may
+take has a row in each. Loadout rows carry `model` (omitted for single-type
+units, which look exactly as before). Warnings are computed per block and
+prefixed with it ("Plague Champion: Boltgun 1 and swaps 1 for 1 model",
+"Plague Marines: Heavy plague weapon 5 taken, …"); a rule's cap stays
+unit-wide. Badges are prefixed with the type minus the words all types share
+("Champion: Plasma gun"). Migration of rows without `model`: defaults to each
+type up to its default count (smallest first), extras to the type whose rules
+offer them (larger type on a tie), the rest to the largest type; old `wargear`
+rows go to their rule's block. Army codes carry `model` as a 4th pair element;
+TTS export places each block's rows on that type's models.
+
 The datasheet rules only produce **warnings**, listed under the inventory
 (`.validation-banner.wgp-warnings`, "Wargear check") and as a `⚠ wargear`
 badge on the army entry (title = the messages):

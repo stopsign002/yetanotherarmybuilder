@@ -107,35 +107,36 @@ async function setSize(models) {
   return false;
 }
 
-// Row by exact label (+ optional chip text). Returns its index or -1.
-async function rowIndex(label, chip) {
-  return page.evaluate(({ label, chip }) => {
+// Row by exact label, optionally inside one model-type block (§6: the block
+// is `.wgp-block[data-model="<type>"]`). Returns its index or -1.
+async function rowIndex(label, blk) {
+  return page.evaluate(({ label, blk }) => {
     const rows = Array.from(document.querySelectorAll('#detail-wargear-picker .wgp-row'));
     return rows.findIndex((r) => {
       const item = r.querySelector('.wgp-item');
       const first = item && item.firstChild ? item.firstChild.textContent.trim() : '';
-      const c = r.querySelector('.wgp-chip');
-      return first.toLowerCase() === label.toLowerCase() && (!chip || (c && c.textContent.includes(chip)));
+      const b = r.closest('.wgp-block');
+      return first.toLowerCase() === label.toLowerCase() && (!blk || (b && b.dataset.model === blk));
     });
-  }, { label, chip: chip || '' });
+  }, { label, blk: blk || '' });
 }
 const rowLoc = (i) => page.locator('#detail-wargear-picker .wgp-row').nth(i);
-async function count(label, chip) {
-  const i = await rowIndex(label, chip);
+async function count(label, blk) {
+  const i = await rowIndex(label, blk);
   return i < 0 ? null : parseInt(await rowLoc(i).locator('.wgp-count').textContent(), 10);
 }
-async function press(label, n, minus, chip) {
+async function press(label, n, minus, blk) {
   for (let k = 0; k < n; k++) {
-    const i = await rowIndex(label, chip);
+    const i = await rowIndex(label, blk);
     if (i < 0) return false;
     await rowLoc(i).locator(minus ? '.wgp-minus' : '.wgp-plus').click();
   }
   return true;
 }
-const setCount = async (label, want, chip) => {
-  const c = await count(label, chip);
+const setCount = async (label, want, blk) => {
+  const c = await count(label, blk);
   if (c == null) return false;
-  return press(label, Math.abs(want - c), want < c, chip);
+  return press(label, Math.abs(want - c), want < c, blk);
 };
 const warnText = () => page.evaluate(() => {
   const w = document.querySelector('#detail-wargear-picker .wgp-warnings');
@@ -156,6 +157,7 @@ check('army emptied at start', (await emptyArmy()) === 0);
 check('Necron Warriors opens', await openUnit('Necron Warriors'));
 check('Warriors size 10', await setSize(10));
 check('Warriors: defaults have steppers (Gauss flayer 10)', (await count('Gauss flayer')) === 10);
+check('Warriors (single type): no blocks, no headings', (await page.locator('#detail-wargear-picker .wgp-block, #detail-wargear-picker .wgp-group-title').count()) === 0);
 check('Warriors: no warnings on the default loadout', (await warnText()) === '', await warnText());
 await press('Gauss reaper', 3);
 let w = await warnText();
@@ -207,50 +209,99 @@ const tts = await page.evaluate(() => {
 });
 check('TTS export allocates 7 flayers + 3 reapers over 10 Warriors', tts === '3:Gauss reaper 7:Gauss flayer', tts);
 
-// ── 2. Plague Marines (fixture rules): cap + requires warnings ────────────
+// ── 2. Plague Marines: per-model-type blocks (§6) ─────────────────────────
 const fixture = process.env.NO_FIXTURE ? null : FIXTURE_RULES;
+const CH = 'Plague Champion', PMB = 'Plague Marine';
 check('Plague Marines opens', await openUnit('Plague Marines', fixture));
 check('PM size 10', await setSize(10));
-await press('Heavy plague weapon', 5);
+const heads = await page.evaluate(() => Array.from(document.querySelectorAll('#detail-wargear-picker .wgp-block .wgp-group-title')).map((h) => h.textContent.trim()));
+check('PM10: two blocks, "Plague Champion · 1" and "Plague Marines · 9"', heads.join(' / ') === 'Plague Champion · 1 / Plague Marines · 9', heads.join(' / '));
+check('PM10: Champion block holds 1 boltgun + 1 knives, Marines 9 + 9',
+  (await count('Boltgun', CH)) === 1 && (await count('Plague knives', CH)) === 1 && (await count('Boltgun', PMB)) === 9 && (await count('Plague knives', PMB)) === 9);
+check('PM10: no warnings on the defaults', (await warnText()) === '', await warnText());
+await press('Plasma gun', 1, false, CH);
+check('PM10: +1 Plasma gun in the Champion block leaves the Marines at 0', (await count('Plasma gun', CH)) === 1 && (await count('Plasma gun', PMB)) === 0,
+  `${await count('Plasma gun', CH)} / ${await count('Plasma gun', PMB)}`);
 w = await warnText();
-check('PM10: 5 heavies → cap warning', /Heavy plague weapon: 5 taken, the datasheet allows up to 4 \(up to 2 per 5 models\)/.test(w), w);
-await press('Heavy plague weapon', 1, true);
+check('PM10: Champion plasma gun with boltgun still 1 warns in the Champion block only',
+  /Plague Champion: Boltgun 1 and swaps 1 for 1 model/.test(w) && !/Plague Marines:/.test(w), w);
+await press('Boltgun', 1, true, CH);
+check('PM10: Champion boltgun lowered → clean', (await warnText()) === '', await warnText());
+await press('Plasma gun', 1, true, CH); await press('Boltgun', 1, false, CH);
+await press('Plasma gun', 1, false, PMB);
+check('PM10: +1 Plasma gun in the Marines block leaves the Champion at 0', (await count('Plasma gun', PMB)) === 1 && (await count('Plasma gun', CH)) === 0);
 w = await warnText();
-check('PM10: 4 heavies → no cap warning', !/Heavy plague weapon: \d+ taken/.test(w), w);
-await setCount('Boltgun', 6);
-check('PM10: 4 heavies with boltguns lowered to 6 → clean', (await warnText()) === '', await warnText());
-await setCount('Heavy plague weapon', 0); await setCount('Boltgun', 0); await press('Icon of despair', 1);
+check('PM10: that one warns in the Marines block only', /Plague Marines: Boltgun 9 and swaps 1 for 9 models/.test(w) && !/Plague Champion:/.test(w), w);
+await press('Plasma gun', 1, true, PMB);
+await press('Heavy plague weapon', 5, false, PMB); await setCount('Boltgun', 4, PMB);
 w = await warnText();
-check('PM10: icon 1 with boltgun 0 → requires warning', /Icon of despair needs a model that still carries a boltgun/i.test(w), w);
+check('PM10: Marines block heavy cap still 4 (5 warns)', /Plague Marines: Heavy plague weapon 5 taken, the datasheet allows up to 4 \(up to 2 per 5 models\)/.test(w), w);
+await press('Heavy plague weapon', 1, true, PMB); await setCount('Boltgun', 5, PMB);
+check('PM10: 4 heavies, boltguns 5 → clean', (await warnText()) === '', await warnText());
+await setCount('Heavy plague weapon', 0, PMB); await setCount('Boltgun', 0, PMB); await press('Icon of despair', 1, false, PMB);
+w = await warnText();
+check('PM10: icon with the Marines\' boltguns at 0 → requires warning in that block', /Plague Marines: Icon of despair needs a model that still carries a boltgun/i.test(w), w);
 check('steppers never disabled (PM)', (await anyDisabled()) === 0);
 await page.screenshot({ path: `${OUT}/wargear-pm10.png`, fullPage: false });
 const panel = page.locator('#detail-wargear-picker');
 if (await panel.count()) await panel.screenshot({ path: `${OUT}/wargear-pm10-picker.png` }).catch(() => {});
+// Configure: Champion plasma gun instead of boltgun; Add to Army.
+await setCount('Icon of despair', 0, PMB); await setCount('Boltgun', 9, PMB);
+await press('Plasma gun', 1, false, CH); await press('Boltgun', 1, true, CH);
+await page.click('#btn-detail-add');
+await page.waitForTimeout(300);
+const pmAdded = await page.evaluate(() => {
+  const e = App.state.currentArmy.entries.find((x) => x.unitName === 'Plague Marines');
+  return e ? e.loadout.map((x) => `${x.model || '-'}>${x.name}:${x.count}`).sort() : null;
+});
+check('Add to Army saves `model` on every row', pmAdded && pmAdded.length && pmAdded.every((r) => !r.startsWith('->'))
+  && pmAdded.includes('Plague Champion>Plasma gun:1') && !pmAdded.some((r) => r.startsWith('Plague Champion>Boltgun')), JSON.stringify(pmAdded));
+const pmBadges = await page.evaluate(() => Array.from(document.querySelectorAll('#army-entry-list .army-entry'))
+  .filter((li) => /Plague Marines/.test(li.textContent))
+  .map((li) => Array.from(li.querySelectorAll('.army-wg-badge')).map((b) => b.textContent.trim()).join(' | '))[0] || '');
+check('army badge is prefixed with the type ("Champion: Plasma gun")', pmBadges === 'Champion: Plasma gun', pmBadges);
+const pmTts = await page.evaluate(() => {
+  const a = App.state.currentArmy;
+  const e = a.entries.find((x) => x.unitName === 'Plague Marines');
+  const reg = App.TtsExport.buildRegistry({ name: 'v', factionName: a.factionName, entries: [e] }, {});
+  const out = [];
+  const walk = (o) => { if (o && typeof o === 'object') { if (o.classification === 'Model') out.push(o); Object.values(o).forEach(walk); } };
+  walk(reg);
+  return out.map((m) => `${m.quantity} ${m.designation}: ${m.assets.traits.map((t) => t.designation).filter((d) => /plasma|boltgun/i.test(d)).join('+')}`);
+});
+check('TTS export puts the plasma gun on the Champion model',
+  pmTts.some((l) => /^1 Plague Champion: Plasma gun/.test(l) && !/Boltgun/.test(l)) && pmTts.some((l) => /^9 Plague Marine: Boltgun$/.test(l)), JSON.stringify(pmTts));
 
-// Old-format entries migrate to the same loadout as the picker would build.
+// Old entries: wargear rows, and a §5 loadout saved without `model`.
 const mig = await page.evaluate((fx) => {
   const s = App.state, a = s.currentArmy;
   const nwU = s.allUnits.find((x) => x.name === 'Necron Warriors' && x.wargearProfile);
   const pmU = s.allUnits.find((x) => x.name === 'Plague Marines' && x.wargearProfile);
+  const so10 = pmU.squadOptions.find((o) => o.models === 10);
   const e1 = a.addUnit(nwU, 1, nwU.squadOptions.find((o) => o.models === 10), [],
     [{ optionId: 'necron-warriors-wgo-mfm-1', choice: 0, count: 3, items: ['Gauss reaper'], label: 'Gauss reaper', pts: 0 }]);
-  const rows = [
+  const e2 = a.addUnit(pmU, 1, so10, [], [
     { optionId: 'plague-marines-wgo-mfm-4', choice: 2, count: 2, items: ['Heavy plague weapon'], label: 'Heavy plague weapon', pts: 0 },
     { optionId: 'plague-marines-wgo-mfm-1', choice: 0, count: 1, items: ['Plasma gun'], label: 'Plasma gun', pts: 0 },
-    { optionId: 'plague-marines-wgo-mfm-6', choice: 0, count: 1, items: ['Icon of Despair (Aura)'], label: 'Icon', pts: 0 },
     { optionId: 'not-a-real-option', choice: 0, count: 1, items: ['Lascannon'], label: 'Lascannon', pts: 0 },
-  ];
-  const e2 = a.addUnit(pmU, 1, pmU.squadOptions.find((o) => o.models === 10), [], rows);
-  const before = [e1.loadout === undefined, e2.loadout === undefined];
+  ]);
+  const e3 = a.addUnit(pmU, 1, so10, [], [
+    { id: 'boltgun', name: 'Boltgun', count: 8 }, { id: 'plague-knives-plague-marines', name: 'Plague knives', count: 10 },
+    { id: 'heavy-plague-weapon', name: 'Heavy plague weapon', count: 2 },
+  ]);
+  const before = [e1.loadout === undefined, e2.loadout === undefined, e3.loadout.every((x) => !x.model)];
   App.rehydrateEntryUnitData();
-  const f = (e) => (e.loadout || []).map((x) => `${x.name}:${x.count}`).sort().join(' ');
-  return { before, nw: f(e1), pm: f(e2), kept: e2.wargear.length, fx: !!fx };
+  const f = (e) => (e.loadout || []).map((x) => `${x.model ? x.model + '>' : ''}${x.name}:${x.count}`).sort().join(' ');
+  return { before, nw: f(e1), pm: f(e2), flat: f(e3) };
 }, fixture);
-check('old entries start without loadout', mig.before[0] && mig.before[1], JSON.stringify(mig.before));
-check('old Warriors entry migrates to flayer 7 + reaper 3', mig.nw === 'Close combat weapon:10 Gauss flayer:7 Gauss reaper:3', mig.nw);
-check('old Plague Marines entry migrates (defaults − replaced + added, unmatched row still counted)',
-  mig.pm === 'Boltgun:7 Heavy plague weapon:2 Icon of despair:1 Lascannon:1 Plague knives:10 Plasma gun:1'
-  || (!fixture && /Heavy plague weapon:2/.test(mig.pm)), mig.pm);
+check('old entries start without loadout / without model', mig.before.every(Boolean), JSON.stringify(mig.before));
+check('old Warriors entry migrates to flayer 7 + reaper 3 (no model)', mig.nw === 'Close combat weapon:10 Gauss flayer:7 Gauss reaper:3', mig.nw);
+// The old rows carry no model and the dataset no longer has the 40kdc
+// options, so the plasma gun (offered to both types) goes to the larger type.
+check('old Plague Marines wargear rows migrate into blocks (shared item → larger type)',
+  mig.pm === 'Plague Champion>Boltgun:1 Plague Champion>Plague knives:1 Plague Marine>Boltgun:6 Plague Marine>Heavy plague weapon:2 Plague Marine>Lascannon:1 Plague Marine>Plague knives:9 Plague Marine>Plasma gun:1', mig.pm);
+check('loadout without model migrates (Champion keeps 1 boltgun + 1 knives, Marines the rest)',
+  mig.flat === 'Plague Champion>Boltgun:1 Plague Champion>Plague knives:1 Plague Marine>Boltgun:7 Plague Marine>Heavy plague weapon:2 Plague Marine>Plague knives:9', mig.flat);
 
 // ── 3. points: defaults unchanged, a priced swap adds up ──────────────────
 check('Leman Russ opens', await openUnit('Leman Russ Battle Tank'));

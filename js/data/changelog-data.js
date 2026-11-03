@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.03-3',
-    lastUpdated: '2026-11-03T02:30:00Z',
+    version:     '2026.11.03-4',
+    lastUpdated: '2026-11-03T04:00:00Z',
     entries: [
+      {
+        date: '2026-11-03',
+        kind: 'change',
+        title: 'Wargear per model type',
+        description: 'Units with more than one kind of model (a Plague Champion and his Plague Marines, a Sergeant and the squad) now get one wargear locker per model type, so a plasma gun on the Champion and a plasma gun on a Marine are different rows. Warnings name the locker they concern, and the Tabletop Simulator export puts each item on the right model. Existing armies are converted automatically.',
+      },
       {
         date: '2026-11-03',
         kind: 'feature',

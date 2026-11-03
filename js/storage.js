@@ -150,7 +150,9 @@ window.Storage = (() => {
       if (later) {
         tuple.push(Array.isArray(entry.loadout)
           ? entry.loadout.filter(x => x && x.count > 0)
-              .map(x => (kebab(x.name) === x.id ? [x.id, x.count] : [x.id, x.count, x.name]))
+              // [id, count, name|null, model] — model (§6) only on multi-type units.
+              .map(x => (x.model ? [x.id, x.count, kebab(x.name) === x.id ? null : x.name, x.model]
+                : (kebab(x.name) === x.id ? [x.id, x.count] : [x.id, x.count, x.name])))
           : null);
       }
       return tuple;
@@ -234,7 +236,11 @@ window.Storage = (() => {
         })));
       }
       const list = pairs.filter(p => Array.isArray(p) && typeof p[0] === 'string' && p[0])
-        .map(p => ({ id: p[0], count: p[1], name: (typeof p[2] === 'string' && p[2]) ? p[2] : (known.get(p[0]) || p[0]) }));
+        .map(p => {
+          const r = { id: p[0], count: p[1], name: (typeof p[2] === 'string' && p[2]) ? p[2] : (known.get(p[0]) || p[0]) };
+          if (typeof p[3] === 'string' && p[3]) r.model = p[3];
+          return r;
+        });
       return Army.cleanLoadout(list) || [];
     };
     const entries = (data.e || []).map(tuple => {

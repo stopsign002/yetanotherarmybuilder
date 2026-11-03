@@ -421,7 +421,29 @@
     }
 
     const rulesById = ruleIndex(wp);
-    if (Array.isArray(entry.loadout)) allocateLoadout(groups, entry.loadout, rulesById, resolve);
+    if (Array.isArray(entry.loadout) && entry.loadout.length && groups.length > 1
+        && entry.loadout.every((x) => !x || !x.count || x.model)) {
+      // §6: every row names its model type — place each block's rows on that
+      // type's models only (the allocation runs within the block).
+      const parts = [];
+      const byType = new Map();
+      groups.forEach((g) => { if (!byType.has(g.type)) byType.set(g.type, []); byType.get(g.type).push(g); });
+      const fold = (t) => norm(t).replace(/ models?$/, '').replace(/s$/, '');
+      byType.forEach((sub, type) => {
+        const rows = entry.loadout.filter((x) => x && x.count && fold(x.model) === fold(type));
+        allocateLoadout(sub, rows, rulesById, resolve);
+        parts.push(...sub);
+      });
+      // Rows naming a type the composition does not have: onto the largest.
+      const known = new Set(Array.from(byType.keys()).map(fold));
+      const stray = entry.loadout.filter((x) => x && x.count && !known.has(fold(x.model)));
+      groups.length = 0;
+      parts.forEach((g) => groups.push(g));
+      if (stray.length) {
+        const top = groups.slice().sort((a, b) => b.qty - a.qty)[0];
+        stray.forEach((x) => { if (top) addItem(top, resolve(x.name, x.id), x.count); });
+      }
+    } else if (Array.isArray(entry.loadout)) allocateLoadout(groups, entry.loadout, rulesById, resolve);
     // Swaps from the picker (entries saved before inventory v2).
     else (entry.wargear || []).forEach((sel) => {
       const n = Math.max(0, parseInt(sel && sel.count, 10) || 0);
