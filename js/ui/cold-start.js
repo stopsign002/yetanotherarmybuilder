@@ -56,6 +56,11 @@
     '</svg>';
 
   function buildSplash() {
+    // index.html carries this exact markup statically (see the BOOT SPLASH
+    // comment there) so the first paint already shows it; adopt it rather
+    // than building a second overlay and swapping.
+    const existing = document.getElementById('cold-start-root');
+    if (existing && existing.dataset.static) return existing;
     const root = document.createElement('div');
     root.className = 'cold-start-root';
     root.id = 'cold-start-root';
@@ -107,7 +112,7 @@
   // ── Controller ────────────────────────────────────────────────────────
   function start() {
     const root = buildSplash();
-    document.body.appendChild(root);
+    if (!root.parentNode) document.body.appendChild(root);
 
     const barEl     = root.querySelector('#cold-start-bar');
     const nameEl    = root.querySelector('#cold-start-status-name');
@@ -314,7 +319,12 @@
     const hasFilelistCache =
       (() => { try { return !!sessionStorage.getItem('yaab_bsdata_filelist_10e_v1'); } catch (_) { return false; } })();
 
-    if (!hasFilelistCache) {
+    // The static splash in index.html (data-static) is already painted, so
+    // there is nothing to pre-show: leave it exactly as it is and let
+    // detect() either adopt it (cold) or fade it out (warm). The pre-paint
+    // guard below is only for a page that somehow lacks the static markup.
+    const staticRoot = document.getElementById('cold-start-root');
+    if (!staticRoot && !hasFilelistCache) {
       preRoot = buildSplash();
       // Hide the inner controls until we confirm cold-start; show only crest
       // + title to avoid showing "0 / 32" if it turns out to be warm.
@@ -339,6 +349,12 @@
 
       if (preRoot && preRoot.parentNode) {
         preRoot.parentNode.removeChild(preRoot);
+      }
+      if (staticRoot && !isCold && staticRoot.parentNode) {
+        // Warm start: nothing to load, so the static splash just fades away
+        // (same exit as a finished cold start, so the two never look different).
+        staticRoot.classList.add('is-fading');
+        setTimeout(() => { if (staticRoot.parentNode) staticRoot.parentNode.removeChild(staticRoot); }, FADE_DURATION_MS + 60);
       }
 
       if (isCold) start();

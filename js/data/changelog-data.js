@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.03-6',
-    lastUpdated: '2026-11-03T12:45:00Z',
+    version:     '2026.11.03-7',
+    lastUpdated: '2026-11-03T06:00:00Z',
     entries: [
+      {
+        date: '2026-11-03',
+        kind: 'fix',
+        title: 'One loading screen, not two',
+        description: 'The plain loading page that showed for a moment before the animated one is gone: the animated splash is now in the page from the first paint and the loader simply takes it over, so nothing swaps or jumps while the game data loads.',
+      },
       {
         date: '2026-11-03',
         kind: 'fix',

@@ -212,3 +212,6 @@
   .cold-start-crest-rotor, .cold-start-crest-pulse, .cold-start-bar-fill::after, .cold-start-recent-item { animation: none !important; }
   .cold-start-root, .cold-start-skip, .cold-start-bar-fill, .cold-start-status-name { transition: none !important; }
 }
+
+/* Build id line (static splash in index.html, stamped by scripts/stamp-assets.mjs). */
+.cold-start-build { position: fixed; left: 0; right: 0; bottom: var(--sp-9); text-align: center; font-size: var(--fs-2xs); letter-spacing: var(--tr-wider); color: rgba(241, 241, 243, 0.35); font-variant-numeric: tabular-nums; }
