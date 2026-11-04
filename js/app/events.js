@@ -143,12 +143,34 @@
 
     document.getElementById('unit-detail-panel').addEventListener('click', e => {
       if (!e.target.closest('#btn-detail-add')) return;
+      // UPDATE path: the pane is showing an entry from the army list, so the
+      // button reads "Update Unit" and applies the squad size in place
+      // (owner, 2026-11-04). Enhancements and wargear already write through
+      // live; only the size needed a commit step.
+      let squadOption = null;
+      const upIdx = state.selectedArmyEntryIndex;
+      const upEntry = (upIdx != null && state.currentArmy) ? state.currentArmy.entries[upIdx] : null;
+      if (upEntry && (!state.selectedUnit || upEntry.unitData === state.selectedUnit)) {
+        const squadSelectU = document.getElementById('detail-squad-select');
+        const optsU = upEntry.unitData.squadOptions || [];
+        squadOption = squadSelectU ? (optsU[parseInt(squadSelectU.value, 10)] || null) : (optsU[0] || null);
+        const changed = typeof state.currentArmy.setSquadSize === 'function'
+          && state.currentArmy.setSquadSize(upIdx, squadOption);
+        state.armyManager.saveArmy(state.currentArmy);
+        UI.renderArmyList(state.currentArmy);
+        const detEnhsU = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
+        UI.renderUnitDetail(upEntry.unitData, detEnhsU, upEntry.enhancements || []);
+        UI.toast(changed
+          ? `Updated ${upEntry.customName || upEntry.unitName}${squadOption && squadOption.models ? ` — ${squadOption.models} models` : ''}`
+          : `${upEntry.customName || upEntry.unitName} is already at that size`, changed ? 'success' : 'info');
+        return;
+      }
       if (!state.selectedUnit) return;
 
       // Quantity box removed — Add always adds one; click again for more.
       const qty = 1;
       const squadSelect = document.getElementById('detail-squad-select');
-      let squadOption = null;
+      squadOption = null;
       if (squadSelect) {
         const idx = parseInt(squadSelect.value, 10);
         const opts = state.selectedUnit.squadOptions || [];
@@ -157,6 +179,7 @@
         const opts = state.selectedUnit.squadOptions || [];
         squadOption = opts[0] || null;
       }
+
 
       const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
       let selectedEnhancements = Array.from(

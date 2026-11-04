@@ -270,6 +270,18 @@
     const keywords     = unit.keywords     || [];
     const wargearOpts  = unit.wargearOptions || [];
     const squadOptions = unit.squadOptions || (unit.points ? [{ pts: unit.points, models: null }] : []);
+    // An army entry open in the pane (clicked in the Army list) → the add box
+    // becomes "Update Unit" and starts on that entry's squad size.
+    const _st = (window.App && App.state) || {};
+    const openEntry = (!gameView && !browseView && _st.selectedArmyEntryIndex != null && _st.currentArmy
+      && _st.currentArmy.entries[_st.selectedArmyEntryIndex]
+      && _st.currentArmy.entries[_st.selectedArmyEntryIndex].unitData === unit)
+      ? _st.currentArmy.entries[_st.selectedArmyEntryIndex] : null;
+    let startSizeIdx = 0;
+    if (openEntry) {
+      const i = squadOptions.findIndex(o => o && o.pts === openEntry.selectedPts);
+      if (i >= 0) startSizeIdx = i;
+    }
 
 
     let html = `<div class="unit-detail-content unit-detail-datasheet" data-detail-kind="unit">`;
@@ -384,12 +396,12 @@
           ${hasSquadChoice ? `
             <span class="wgp-stepper detail-size-stepper">
               <button type="button" class="wgp-btn" id="detail-size-minus" aria-label="Smaller squad">&minus;</button>
-              <span class="detail-size-label" id="detail-size-label">${esc(sizeLabel(squadOptions[0]))}</span>
+              <span class="detail-size-label" id="detail-size-label">${esc(sizeLabel(squadOptions[startSizeIdx]))}</span>
               <button type="button" class="wgp-btn" id="detail-size-plus" aria-label="Larger squad">+</button>
             </span>
-            <input type="hidden" id="detail-squad-select" value="0" />
+            <input type="hidden" id="detail-squad-select" value="${startSizeIdx}" />
           ` : `<span class="detail-pts-label">${squadOptions[0] ? squadOptions[0].pts + ' pts' : '—'}</span>`}
-          <button class="btn btn-accent detail-add-btn" id="btn-detail-add">Add to Army</button>
+          <button class="btn btn-accent detail-add-btn" id="btn-detail-add"${openEntry ? ' data-update="1" title="Apply the squad size above to this unit in your army"' : ''}>${openEntry ? 'Update Unit' : 'Add to Army'}</button>
         </div>
       </div>
     `;

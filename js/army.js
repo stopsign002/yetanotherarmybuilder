@@ -285,6 +285,32 @@ window.Army = class Army {
     }
   }
 
+  // Change an existing entry's squad size in place (owner, 2026-11-04:
+  // "Add to Army should become Update Unit so I can change model count
+  // without removing and re-adding"). Points follow the new tier; the
+  // loadout is refitted: the new size's defaults plus whatever extras the
+  // old loadout carried beyond the old size's defaults (swaps survive).
+  setSquadSize(index, squadOption) {
+    const e = this.entries[index];
+    if (!e || !squadOption) return false;
+    const oldModels = Army.entryModels(e);
+    const newPts    = squadOption.pts;
+    const newLabel  = squadOption.models ? `${squadOption.models} models` : null;
+    if (e.selectedPts === newPts && (e.squadLabel || null) === newLabel) return false;
+    const key = x => (x.model ? x.model + '>' : '') + String(x.id || Army._kebab(x.name)).toLowerCase();
+    const sum = (list) => { const m = new Map(); (list || []).forEach(x => { if (x && x.count > 0) m.set(key(x), { ...x, count: (m.get(key(x)) || { count: 0 }).count + x.count }); }); return m; };
+    const have    = sum(e.loadout);
+    const oldDefs = sum(Army.defaultLoadout(e.unitData, oldModels));
+    const extras  = [];
+    have.forEach((x, k) => { const d = oldDefs.get(k); const n = x.count - (d ? d.count : 0); if (n > 0) extras.push({ ...x, count: n }); });
+    const next = sum([...Army.defaultLoadout(e.unitData, squadOption.models || null), ...extras]);
+    e.selectedPts = newPts;
+    e.squadLabel  = newLabel;
+    if (e.loadout || extras.length) e.loadout = Army.cleanLoadout([...next.values()]) || [];
+    this.updatedAt = new Date().toISOString();
+    return true;
+  }
+
   setWargear(index, wargear) {
     if (this.entries[index]) {
       this.entries[index].wargear = wargear || [];

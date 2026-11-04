@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.03-8',
-    lastUpdated: '2026-11-03T07:30:00Z',
+    version:     '2026.11.04-1',
+    lastUpdated: '2026-11-04T01:00:00Z',
     entries: [
+      {
+        date: '2026-11-04',
+        kind: 'feature',
+        title: 'Update a unit in place',
+        description: 'Click a unit in your army and the Details pane now opens on that unit\u2019s own squad size with an Update Unit button instead of Add to Army. Change the size with \u2212 / + and press Update: points follow, the default loadout refits to the new size and your wargear swaps are kept. No more removing and re-adding.',
+      },
       {
         date: '2026-11-03',
         kind: 'change',
