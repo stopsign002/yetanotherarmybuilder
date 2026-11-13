@@ -1,0 +1,12 @@
+[
+ {
+  "match": { "faction": "adeptus-astartes", "path": "detachments[gdc:450c972e-7e20-4dcd-b3e5-09908b51319a].enhancements[3].description" },
+  "verdict": "gdc-hand-edit",
+  "reason": "Forgefather's Seekers / War Tempered Artifice. The dump (data 995, enhancement bdda8f20-6654-4119-96e1-8d075e2c77d4, localisations.en.rules) prints '+1<b>S</s>.' — GW's typo closes the bold with </s>. GDC's snapshot has '+1<b>S</b>.', a hand repair no transform rule produces (every other enhancement text is the dump's bytes after entity/CRLF/trim cleaning). We follow the dump: the builder's markup cleaner then renders '+1**S.\\n+1D**.' instead of '+1**S**.\\n+1**D**.'. Goes away when GW fixes the tag."
+ },
+ {
+  "match": { "faction": "salamanders", "path": "detachments[gdc:450c972e-7e20-4dcd-b3e5-09908b51319a].enhancements[3].description" },
+  "verdict": "gdc-hand-edit",
+  "reason": "The same War Tempered Artifice text as the adeptus-astartes entry above, on the Salamanders faction file (chapter factions carry the Space Marines detachments). Dump: '+1<b>S</s>.'; GDC: '+1<b>S</b>.'."
+ }
+]

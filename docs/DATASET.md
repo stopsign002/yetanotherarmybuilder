@@ -45,13 +45,15 @@ wins; note the discrepancy in your report.
 app/pipeline/                      (in git, hidden by Caddy under /pipeline/*)
   sources.json                     pinned inputs: gdc repo+ref, 40kdc sha, MFM base URL
   aliases.json                     the only hand file: name joins (see §5)
-  extract/gdc.mjs                  28 GDC files → work/gdc.json
+  extract/gdc.mjs                  28 GDC files → work/gdc.json  (the frozen fallback source, §11)
+  extract/app-fetch.py             GW's app package → app-dumps/ (host python3; §11.3)
+  extract/app.mjs                  stored app dump → work/gdc.json, same GDC record shape (§11.4)
   extract/mfm.py                   MFM site → work/mfm.json (name-keyed, no 40kdc)
   extract/dc.mjs                   pinned 40kdc checkout → work/dc.json
   build.mjs                        work/*.json + aliases → candidate
   validate.mjs                     schema + invariants + parity → report.json
   report.mjs                       human diff vs current → report.md (+ mail body)
-  yaab-data                        bash CLI: build | validate | report | approve | rollback | list | preview
+  yaab-data                        bash CLI: build | fetch-app | validate | report | approve | rollback | list | preview
   schema/faction.schema.json       JSON Schema for one faction file
 app/data/dataset/                  gitignored, served, backed up by the media leg
   current/<factionId>.json         what the live app loads
@@ -62,6 +64,7 @@ app/data/dataset/                  gitignored, served, backed up by the media le
   work/                            extractor outputs, scratch
   golden/                          the reference dump (above)
   checkouts/40kdc-data             the pinned 40kdc checkout (reuse ~/sites/base/40kdc-build/40kdc-data at 709ecd9f)
+  app-dumps/, bin/apkeep           stored app data dumps + the pinned downloader (§11.2)
 ```
 
 Candidate id: `YYYYMMDD-HHMM-<gdcDataVersion>-<md5 of the dataset, 8>`.
@@ -74,6 +77,10 @@ Host has no node: every `.mjs` runs as
 `mfm.py` runs with the host `python3` (stdlib only, like today's scraper).
 
 ## 3. Source ownership (the builder's only rule)
+
+In this table "GDC" means the **GDC-shaped records** in `work/gdc.json`. Since §11 they come from
+`extract/app.mjs` (our own extraction of GW's app data, `sources.json` `primary: "app"`) or, with
+`yaab-data build --source gdc`, from the frozen GDC snapshot; the builder cannot tell which.
 
 | Field group | Owner | Fallback / cross-check |
 |---|---|---|
@@ -217,7 +224,7 @@ with `no-cache`, so an approve is visible on the next load.
 
 ## 8. CLI (`app/pipeline/yaab-data`)
 
-`build` (extract all → build → candidate dir, prints id) · `validate <id>` ·
+`build [--source app|gdc]` (extract all → build → candidate dir, prints id; `--source` defaults to `sources.json` `primary`; `app` first runs `fetch-app`, §11.7) · `fetch-app [--check] [--version X.Y.Z] [--import PATH [--app-version V]]` (download/store the app data dump, §11.3) · `validate <id>` ·
 `report <id>` (writes report.md; `--mail` sends via the mailer when the
 candidate differs from current) · `approve <id> [--app <path>]` (copies
 current → previous/, candidate → current atomically, prunes previous to 5) ·
@@ -320,10 +327,12 @@ app-fetch.py --store DIR [--bin DIR] [--check] [--version X.Y.Z] [--import PATH 
    `app: stored data N (app V, sha XXXXXXXX)`.
 6. `--import PATH` takes an `.xapk`, `.apk` or bare `dump.json` from disk
    (the hand route when the download source is down: `adb pull` from a phone)
-   through the same validation; `source: "import"`.
+   through the same validation; `source: "import"`. An import, good or bad,
+   leaves `last-check.json` alone: it says nothing about the download source.
 7. Every run rewrites `last-check.json`. `failingSince` is the time of the
    first failure of the current streak, `null` when `ok`. Network or
-   download-source failure: exit 3. Stdout carries the one summary line;
+   download-source failure: exit 3; a failed apkeep sha256 pin or a store that
+   belongs to another package: exit 5. Stdout carries the one summary line;
    everything else goes to stderr.
 
 ### 11.4 `extract/app.mjs`  (W1)
