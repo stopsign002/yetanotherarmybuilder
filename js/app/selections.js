@@ -99,6 +99,18 @@
     let topLevel = factionName || 'all';
     const topLevelExists = topLevel === 'all'
       || state.factions.some(f => f.factionName === topLevel);
+
+    // The army's faction has not loaded YET (boot, with the cloud pull ahead
+    // of the game data). Falling back to "all" here would dispatch the change
+    // below, which blanks the army's faction and detachments (events.js) —
+    // and nothing put them back on a device with no local copy (bug #37).
+    // Leave the army alone; the boot restore in bsdata-load.js applies its
+    // selections once the data is in.
+    if (!topLevelExists && !state.factionsLoaded) {
+      document.getElementById('army-name-input').value    = state.currentArmy.name || '';
+      document.getElementById('points-limit-input').value = state.currentArmy.pointsLimit || '';
+      return;
+    }
     if (!topLevelExists) topLevel = 'all';
 
     // Dispatching 'change' on the faction/chapter selects resets the detachment

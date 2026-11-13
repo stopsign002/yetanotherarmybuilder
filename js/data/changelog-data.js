@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.04-1',
-    lastUpdated: '2026-11-04T01:00:00Z',
+    version:     '2026.11.13-1',
+    lastUpdated: '2026-11-13T01:00:00Z',
     entries: [
+      {
+        date: '2026-11-13',
+        kind: 'fix',
+        title: 'Detachments no longer reset when you sign in',
+        description: 'Signing in on a new device or browser (or reloading on a slow connection) could open your army with no faction and no detachments ticked, and re-ticking one then removed the enhancements that belonged to the others. Your saved detachments and enhancements now come back exactly as you left them. If an army already lost its detachments this way, tick them again once and they will stay.',
+      },
       {
         date: '2026-11-04',
         kind: 'feature',

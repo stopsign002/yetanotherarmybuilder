@@ -224,7 +224,14 @@
     if (state.currentArmy && typeof state.currentArmy.setDetachments === 'function') {
       // Only advance updatedAt on a genuine user toggle (persist), never on a
       // programmatic load/restore — otherwise every load looks newer than cloud.
-      state.currentArmy.setDetachments(clean, { touch: persist });
+      //
+      // While the game data is still loading, `available` is empty or partial,
+      // so `clean` says nothing about which names are real. A restore in that
+      // window keeps the army's names as given; the boot restore re-applies
+      // them once everything has loaded. Filtering here emptied the saved
+      // detachments whenever the cloud pull beat the data load (bug #37).
+      const warmingUp = !persist && !state.factionsLoaded;
+      state.currentArmy.setDetachments(warmingUp ? (Array.isArray(names) ? names : []) : clean, { touch: persist });
     }
 
     // Enhancements belong to a detachment. When the user changes the set,

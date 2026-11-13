@@ -5,19 +5,25 @@
   App.autoLoadFromBSData = async function () {
     const state = App.state;
 
-    // Snapshot the saved army's selections UP FRONT. applyImportedSelections
-    // dispatches a 'change' on the faction <select>, whose handler WIPES
-    // currentArmy.chapter + detachmentName (events.js). So the first restore
-    // attempt destroys the very values we still need — if the detachment
-    // options weren't populated yet at that moment, reading currentArmy
-    // afterwards returns null and the picks are lost forever. Restore from
-    // this immutable snapshot instead of from the (mutated) currentArmy.
-    const cur0 = state.currentArmy;
-    const want = cur0 ? {
-      factionName:     cur0.factionName || '',
-      chapter:         cur0.chapter || null,
-      detachmentNames: Array.isArray(cur0.detachmentNames) ? cur0.detachmentNames.slice() : [],
-    } : null;
+    // The selections to restore, read from the army that is open NOW.
+    // applyImportedSelections dispatches a 'change' on the faction <select>,
+    // whose handler WIPES currentArmy.chapter + detachments (events.js), so
+    // the values are copied out before each call rather than read afterwards.
+    //
+    // This used to be one snapshot taken before the load started. But the
+    // cloud pull (sync.js) can swap or replace the open army while the data
+    // is still loading — a fresh device opens on an empty placeholder and the
+    // pull promotes a real army into its place — and the stale snapshot then
+    // restored nothing, or restored this device's older detachments over the
+    // newer cloud copy (bug #37).
+    const wanted = () => {
+      const cur = state.currentArmy;
+      return cur ? {
+        factionName:     cur.factionName || '',
+        chapter:         cur.chapter || null,
+        detachmentNames: Array.isArray(cur.detachmentNames) ? cur.detachmentNames.slice() : [],
+      } : null;
+    };
 
     let restoredSelections = false;
     try {
@@ -38,14 +44,12 @@
             App.scheduleRosterRender();
           }
 
-          // Snappy first paint: restore the faction (and chapter/detachment if
-          // their options happen to be ready) as soon as the army's faction
-          // lands. This is best-effort — the authoritative restore below runs
-          // once EVERYTHING is loaded and the detachment list is guaranteed
-          // populated. Restoring here from `want` (not currentArmy) keeps the
-          // snapshot intact even though this dispatch wipes currentArmy.
-          if (!restoredSelections && want) {
-            const wantTop = want.factionName || '';
+          // Snappy first paint: restore the faction (and detachments if they
+          // are ready) as soon as the army's faction lands. Best-effort — the
+          // authoritative restore below runs once EVERYTHING is loaded.
+          if (!restoredSelections) {
+            const want = wanted();
+            const wantTop = (want && want.factionName) || '';
             if (wantTop && state.factions.some(f => f.factionName === wantTop)) {
               try {
                 App.applyImportedSelections(want.factionName, want.chapter, want.detachmentNames);
@@ -56,20 +60,17 @@
         }
       );
 
-      // Authoritative restore: once every faction (and its detachments) is
-      // loaded, re-apply the snapshot so the detachment dropdown — which may
-      // not have been populated during the mid-load attempt — gets set. Skip
-      // only if the user actively switched to a DIFFERENT faction while the
-      // load was in flight, so we don't clobber a deliberate choice.
+      // Authoritative restore: every faction (and its detachments) is loaded,
+      // so the names can finally be checked against the real list. From here
+      // on restores filter normally (state.factionsLoaded). If the user picked
+      // a different faction while the load was in flight, the change handler
+      // already wrote that choice onto the army, so this re-applies it as is.
+      state.factionsLoaded = true;
+      const want = wanted();
       if (want && want.factionName) {
-        const facSel  = document.getElementById('army-faction-select');
-        const wantTop = want.factionName || '';
-        const userSwitched = facSel && facSel.value && facSel.value !== 'all' && facSel.value !== wantTop;
-        if (!userSwitched) {
-          try {
-            App.applyImportedSelections(want.factionName, want.chapter, want.detachmentNames);
-          } catch (_) {}
-        }
+        try {
+          App.applyImportedSelections(want.factionName, want.chapter, want.detachmentNames);
+        } catch (_) {}
       }
       // All factions loaded — refresh the current army's entry snapshots so
       // cards/details render current datasheet data, not add-time copies.
