@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # yaab-data — yaab game-data pipeline v2 CLI (docs/DATASET.md section 8).
-#   yaab-data build [--app P]            extract all -> build -> candidate; prints the candidate id
+#   yaab-data build [--source app|gdc] [--app P]
+#                                        fetch app dump (app only) -> extract -> build -> candidate; prints the candidate id
+#                                        --source defaults to sources.json "primary"; gdc = the frozen GDC path
+#   yaab-data fetch-app [--check] [--version X.Y.Z] [--import PATH [--app-version V]]
+#                                        download/store GW's app data dump into $YAAB_DATA_DIR/app-dumps (DATASET.md section 11);
+#                                        --check lists only; --import takes an .xapk/.apk/dump.json from disk
 #   yaab-data validate <id> [--app P]    schema + invariants + parity; exit 1 on any failure
 #   yaab-data report <id> [--mail] [--app P]
 #                                        write candidate/<id>/report.md; --mail sends it only if it differs from current
@@ -27,16 +32,22 @@ KEEP_PREVIOUS=5
 NODE_IMAGE="node:22-slim"
 
 die(){ echo "yaab-data: $*" >&2; exit 1; }
-usage(){ sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-2}"; }
+usage(){ sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-2}"; }
 
 [ $# -ge 1 ] || usage
 CMD="$1"; shift
 APP=""; ID=""; MAIL=0; FORCE=0; N=""
+SOURCE=""; FETCH_ARGS=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --app) [ $# -ge 2 ] || die "--app needs a path"; APP="$2"; shift 2;;
     --mail) MAIL=1; shift;;
     --force) FORCE=1; shift;;
+    --source) [ $# -ge 2 ] || die "--source needs app|gdc"; SOURCE="$2"; shift 2;;
+    --check) FETCH_ARGS+=(--check); shift;;
+    --version) [ $# -ge 2 ] || die "--version needs X.Y.Z"; FETCH_ARGS+=(--version "$2"); shift 2;;
+    --import) [ $# -ge 2 ] || die "--import needs a path"; FETCH_ARGS+=(--import "$(realpath -m "$2")"); shift 2;;
+    --app-version) [ $# -ge 2 ] || die "--app-version needs a version"; FETCH_ARGS+=(--app-version "$2"); shift 2;;
     -h|--help) usage 0;;
     -*) die "unknown option $1";;
     *) if [ -z "$ID" ]; then ID="$1"; else die "unexpected argument $1"; fi; shift;;
@@ -59,6 +70,16 @@ node_run(){ # node_run <script relative to pipeline/> [args...]
     -w /app/pipeline "$NODE_IMAGE" node "$@"
 }
 
+fetch_app(){ # fetch_app [app-fetch.py args...]: stdout = the one summary line, exit 3 net / 4 rejected / 5 integrity
+  PYTHONDONTWRITEBYTECODE=1 python3 -I "$HERE/extract/app-fetch.py" --store "$YAAB_DATA_DIR/app-dumps" "$@"
+}
+have_dump(){ python3 -c 'import json,os,sys
+try:
+    d = json.load(open(os.path.join(sys.argv[1], "index.json")))
+    sys.exit(0 if any(os.path.isfile(os.path.join(sys.argv[1], e["file"])) for e in d["dumps"]) else 1)
+except Exception:
+    sys.exit(1)' "$YAAB_DATA_DIR/app-dumps"; }
+
 need_id(){ [ -n "$ID" ] || die "$CMD needs a candidate id (see: yaab-data list)"; }
 cand_dir(){ echo "$DS/candidate/$ID"; }
 need_cand(){ need_id; [ -f "$(cand_dir)/manifest.json" ] || die "no candidate $ID in $DS/candidate/ (see: yaab-data list)"; }
@@ -75,9 +96,32 @@ stamp(){ date -u +%Y%m%dT%H%M%SZ; }
 lock(){ mkdir -p "$DS"; exec 9>"$DS/.lock"; flock -w 60 9 || die "another yaab-data approve/rollback holds $DS/.lock"; }
 
 case "$CMD" in
+  fetch-app)
+    [ -z "$ID" ] || die "fetch-app takes no positional argument ($ID)"
+    mkdir -p "$YAAB_DATA_DIR"
+    fetch_app "${FETCH_ARGS[@]}";;
   build)
-    echo "== extract gdc" >&2
-    if [ -f "$HERE/extract/gdc.mjs" ]; then node_run extract/gdc.mjs >&2; else echo "(extract/gdc.mjs missing - skipped)" >&2; fi
+    if [ -z "$SOURCE" ]; then
+      SOURCE="$(python3 -c 'import json,sys
+try: print(json.load(open(sys.argv[1])).get("primary","gdc"))
+except Exception: print("gdc")' "$HERE/sources.json")"
+    fi
+    case "$SOURCE" in app|gdc) ;; *) die "--source must be app or gdc (got $SOURCE)";; esac
+    if [ "$SOURCE" = app ]; then
+      [ -f "$HERE/extract/app.mjs" ] || die "--source app needs pipeline/extract/app.mjs, which is not present in $HERE (use --source gdc)"
+      echo "== fetch app" >&2
+      mkdir -p "$YAAB_DATA_DIR"
+      FRC=0; fetch_app >&2 || FRC=$?
+      if [ "$FRC" -ne 0 ]; then
+        have_dump || die "app fetch failed (exit $FRC) and no dump is stored in $YAAB_DATA_DIR/app-dumps"
+        echo "WARN: app fetch failed (exit $FRC) - building from the newest stored dump" >&2
+      fi
+      echo "== extract app" >&2
+      node_run extract/app.mjs --store /work/app-dumps --out /work/work/gdc.json >&2
+    else
+      echo "== extract gdc" >&2
+      if [ -f "$HERE/extract/gdc.mjs" ]; then node_run extract/gdc.mjs >&2; else echo "(extract/gdc.mjs missing - skipped)" >&2; fi
+    fi
     echo "== extract mfm" >&2
     mkdir -p "$YAAB_DATA_DIR/work" "$YAAB_DATA_DIR/cache/mfm"
     PYTHONDONTWRITEBYTECODE=1 python3 -I "$HERE/extract/mfm.py" --out "$YAAB_DATA_DIR/work/mfm.json" --cache-dir "$YAAB_DATA_DIR/cache/mfm" >&2

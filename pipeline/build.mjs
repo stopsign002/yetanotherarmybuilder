@@ -21,6 +21,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 export const SOURCES = JSON.parse(readFileSync(join(HERE, 'sources.json'), 'utf8'));
 const WORK = process.env.WORK_DIR ? join(process.env.WORK_DIR, 'work') : SOURCES.work;
 const DATASET = process.env.YAAB_DATASET_DIR || SOURCES.datasetDir;
+// GDC_JSON: read the GDC-shaped records from here instead of WORK/gdc.json
+// (extract/app.mjs output, or the parity harness's two variants; §11.4).
+const GDC_JSON = process.env.GDC_JSON || join(WORK, 'gdc.json');
 
 // Flat per-squad wargear points (alwaysCost) may only come from these items.
 // The validator enforces the same list (§6.3).
@@ -261,7 +264,7 @@ function readJson(p, what) {
 }
 
 export function build() {
-  const gdc = readJson(join(WORK, 'gdc.json'), 'work/gdc.json (run extract/gdc.mjs)');
+  const gdc = readJson(GDC_JSON, 'work/gdc.json (run extract/gdc.mjs or extract/app.mjs)');
   const mfm = readJson(join(WORK, 'mfm.json'), 'work/mfm.json (run extract/mfm.py)');
   const dc = readJson(join(WORK, 'dc.json'), 'work/dc.json (run extract/dc.mjs)');
   const aliases = readJson(join(HERE, 'aliases.json'), 'pipeline/aliases.json');
@@ -1097,6 +1100,7 @@ export function writeCandidate(result, opts = {}) {
       dc: { sha: dc.sha || null }, coreRules: { md5: log.coreRules.md5 || null } },
     factions: factions.map((f) => ({ id: f._factionId, name: f.factionName, units: f.units.length, detachments: f.detachments.length })),
     md5 };
+  if (gdc.app) manifest.sources.app = gdc.app;   // records extracted from GW's app dump (§11.4)
   writeFileSync(join(tmp, 'manifest.json'), JSON.stringify(manifest, null, 1));
   writeFileSync(join(tmp, '_build-log.json'), JSON.stringify(log, null, 1));
   // The loader's glossary reads core-rule text from the dataset, not from code.

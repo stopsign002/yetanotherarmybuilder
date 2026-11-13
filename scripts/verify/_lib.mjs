@@ -74,7 +74,14 @@ export function makeChecker({ strict = false } = {}) {
 export async function login(page) {
   const username = process.env.FIXTURE_USER, password = process.env.FIXTURE_PASS;
   if (!username || !password) return true;
-  const r = await page.request.post(SITE + '/api/auth/login', { data: { username, password } });
+  // /auth/login allows 5 a minute; a driver that opens a context per check
+  // (dataset-parity.mjs: 12) waits the window out instead of failing.
+  let r;
+  for (let i = 0; i < 8; i++) {
+    r = await page.request.post(SITE + '/api/auth/login', { data: { username, password } });
+    if (r.status() !== 429) break;
+    await page.waitForTimeout(15000);
+  }
   if (!r.ok()) { console.log(`FAIL login: HTTP ${r.status()} for FIXTURE_USER`); return false; }
   return true;
 }

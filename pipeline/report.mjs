@@ -71,10 +71,16 @@ const sec = (title, items, max = 40) => items.length
 
 const differs = !curManifest || curManifest.md5 !== manifest.md5;
 const verdict = report.ok === false || fails.length ? 'FAIL' : (report.ok === true ? 'PASS' : 'UNVALIDATED');
-let md = `# yaab dataset candidate ${id}\n\n`;
+const appSrc = manifest.sources?.app;   // DATASET.md 11.4/11.7; absent (gdc-sourced build) -> nothing extra is printed
+const day = (t) => (t ? String(t).slice(0, 10) : '?');
+const lc = appSrc?.lastCheck;
+const unreachable = lc?.failingSince && Date.parse(manifest.builtAt) - Date.parse(lc.failingSince) > 3 * 864e5;
+let md = unreachable ? `**APP SOURCE UNREACHABLE since ${day(lc.failingSince)}**\n\n` : '';
+md += `# yaab dataset candidate ${id}\n\n`;
 md += `- verdict: **${verdict}**${fails.length ? ` (${fails.length} FAIL items)` : ''}\n`;
 md += `- differs from current: **${differs ? 'yes' : 'no'}** (candidate md5 ${manifest.md5}, current ${curManifest ? curManifest.md5 : 'none'})\n`;
 md += `- built ${manifest.builtAt}; units ${unitsCand}; GDC ${manifest.sources?.gdc?.version ?? '?'} (${manifest.sources?.gdc?.updated ?? '?'}); MFM priced ${manifest.sources?.mfm?.unitsPriced ?? '?'}/${curManifest?.sources?.mfm?.unitsPriced ?? '?'} units, wargear ${manifest.sources?.mfm?.wargearPriced ?? '?'}/${curManifest?.sources?.mfm?.wargearPriced ?? '?'}; 40kdc ${String(manifest.sources?.dc?.sha ?? '?').slice(0, 8)}\n\n`;
+if (appSrc) md += `App source: app ${appSrc.appVersion ?? '?'}, data ${appSrc.dataVersion ?? '?'}, fetched ${day(appSrc.fetchedAt)}; last check ${lc ? `${day(lc.checkedAt)} ${lc.ok === false ? `FAILED: ${lc.error ?? 'unknown error'}` : 'ok'}` : 'unknown'}\n\n`;
 md += sec('FAIL list', fails);
 if (moved.length) {
   md += `## Points moved (${moved.length})\n\n| Faction | Unit | Was | Now |\n|---|---|---|---|\n`;
