@@ -109,6 +109,13 @@
       const oldArmy = state.currentArmy;
       const sel = state.selectedArmyEntryIndex;
       const selEntry = (sel != null && oldArmy && oldArmy.entries) ? oldArmy.entries[sel] : null;
+      // Or the pane is the roster datasheet just added, whose ticks write to
+      // that entry (#117). The snapshot's entry is a new object with a JSON
+      // copy of unitData, so that link has to be re-made by entryId too.
+      const lastAdded = state.lastAddedEntry;
+      const viaLastAdded = !selEntry && lastAdded && state.selectedUnit &&
+        lastAdded.unitData === state.selectedUnit &&
+        !!(oldArmy && oldArmy.entries && oldArmy.entries.indexOf(lastAdded) >= 0);
       suppress = true;
       state.currentArmy = army;
       if (state.armyManager) state.armyManager.currentArmy = army;
@@ -130,6 +137,18 @@
           } else if (idx < 0) {
             state.selectedArmyEntryIndex = null;
             if (window.UI && typeof UI.clearUnitDetail === 'function') UI.clearUnitDetail();
+          }
+        } catch (err) { console.warn('[history] detail re-render', err); }
+      } else if (viaLastAdded) {
+        const e = lastAdded.entryId ? army.findByEntryId(lastAdded.entryId) : null;
+        // Same datasheet object as before the undo, so the tick handler's
+        // identity check keeps matching; null if the undo removed the add.
+        if (e) e.unitData = state.selectedUnit;
+        state.lastAddedEntry = e;
+        try {
+          if (window.UI && typeof UI.renderUnitDetail === 'function') {
+            const detEnhs = App.getActiveEnhancements ? App.getActiveEnhancements() : [];
+            UI.renderUnitDetail(state.selectedUnit, detEnhs, e ? (e.enhancements || []) : []);
           }
         } catch (err) { console.warn('[history] detail re-render', err); }
       }

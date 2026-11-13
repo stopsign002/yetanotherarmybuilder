@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.13-1',
-    lastUpdated: '2026-11-13T01:00:00Z',
+    version:     '2026.11.13-2',
+    lastUpdated: '2026-11-13T08:00:00Z',
     entries: [
+      {
+        date: '2026-11-13',
+        kind: 'fix',
+        title: 'Undo now clears an enhancement tick on the Details pane',
+        description: 'After adding a unit and ticking an enhancement on its datasheet, Undo took the enhancement and its points off the army but left the box ticked, and ticking it again did nothing. The pane now follows Undo and Redo, and the box works again straight away.',
+      },
       {
         date: '2026-11-13',
         kind: 'fix',

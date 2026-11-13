@@ -8,16 +8,21 @@
 // palette command, the SM chapter sub-dropdown, the hidden topbar mode tabs)
 // were deleted, and four checks that failed on script bugs rather than site
 // bugs were fixed (splash-removal timing, native-undo focus, the New-army confirm(), the
-// comparator's "85 / 170 pts" parse). One check is a KNOWN FAIL as of
-// 2026-10-30 — see 'enhancement adds its own points' below.
+// comparator's "85 / 170 pts" parse).
 //
 //   ~/sites/base/browser/browse.sh run \
 //     ~/sites/sites/yetanotherarmybuilder/app/scripts/verify/interact.mjs \
 //     ~/sites/base/browser/out/yaab-interact
 //
-// READ-ONLY: localStorage in a throwaway profile. No account, no server writes.
+// WRITES to the live DB: it runs signed in as the fixture account (login
+// gate), so the army it builds is autosaved and synced. Every army id this
+// run created is deleted at the end and the deletion is confirmed via
+// GET /api/armies (issue #126) — a leftover army changes what the next run
+// boots onto. Needs FIXTURE_USER/FIXTURE_PASS (see _lib.mjs login()).
 import { writeFileSync } from 'node:fs';
-import { OUT, launch, newPage, until, wire, makeChecker, boot } from './_lib.mjs';
+import { OUT, SITE, launch, newPage, until, wire, makeChecker, boot } from './_lib.mjs';
+
+const ARMY_NAME = 'zz_test VERIFY SWEEP ARMY';
 
 const THEME = process.env.THEME || 'grimdark';
 
@@ -40,6 +45,11 @@ const shot = n => page.screenshot({ path: `${OUT}/ix-${n}.png` }).catch(() => {}
 // ── 1-3. boot ─────────────────────────────────────────────────────────────
 const t0 = Date.now();
 const booted = await boot(page);
+const serverArmyIds = async () => {
+  const r = await ctx.request.get(SITE + '/api/armies').catch(() => null);
+  return r && r.ok() ? (await r.json()).map(a => a.id) : null;
+};
+const armiesAtStart = new Set((await serverArmyIds()) || []);
 check('boot: roster renders unit cards', !!booted, `${((Date.now() - t0) / 1000).toFixed(1)}s`);
 // The static #boot-splash fades out (400 ms) after boot; poll rather than
 // sampling the instant the first card appears.
@@ -125,10 +135,9 @@ if (qtyOk) {
 }
 
 // ── 8. enhancement checkbox ───────────────────────────────────────────────
-// KNOWN FAIL as of 2026-10-30 (180 + 15 -> 180), almost certainly a TEST
-// problem: the unit under test is the first roster card (an Aggressor Squad,
-// not a Character), so the enhancement is not applicable to it.
-// verify-claims.mjs re-tests this with a real Character; trust that one.
+// The tick lands on the entry just added (#117). Passes on a fixture account
+// with no saved armies; it used to flip with whatever army a previous run
+// had left behind (#126), which the cleanup at the end now prevents.
 const enh = await page.evaluate(() => {
   const cb = document.querySelector('.enhancement-cb:not(:disabled)');
   if (!cb) return null;
@@ -153,8 +162,17 @@ const preUndo = await page.evaluate(() => document.querySelectorAll('#army-entry
 await page.keyboard.press('Control+z');
 await page.waitForTimeout(1200);
 const postUndo = await page.evaluate(() => document.querySelectorAll('#army-entry-list li.army-entry').length);
-const undoChanged = postUndo !== preUndo || await page.evaluate(() => !!document.querySelector('.enhancement-cb:checked') === false);
-check('Ctrl+Z mutates state', !!undoChanged, `entries ${preUndo} -> ${postUndo}`);
+if (enh) {
+  // Undoing the tick must take its points off AND untick the open pane
+  // (#127: the roster-opened pane kept the stale tick).
+  const u = await page.evaluate(() => ({
+    pts: parseInt((document.getElementById('points-current') || {}).textContent || '0', 10) || 0,
+    ticked: !!document.querySelector('.enhancement-cb:checked'),
+  }));
+  check('Ctrl+Z undoes the enhancement tick', u.pts === enh.p0 && !u.ticked, `pts ${enh.p0 + enh.pts} -> ${u.pts}, pane ticked ${u.ticked}`);
+} else {
+  check('Ctrl+Z mutates state', postUndo !== preUndo, `entries ${preUndo} -> ${postUndo}`);
+}
 await page.keyboard.press('Control+Shift+z');
 await page.waitForTimeout(1200);
 const postRedo = await page.evaluate(() => document.querySelectorAll('#army-entry-list li.army-entry').length);
@@ -208,7 +226,7 @@ if (chip) {
 }
 
 // ── 9-10. save / load / export / import round-trip ────────────────────────
-await page.evaluate(() => { const i = document.getElementById('army-name-input'); if (i) { i.value = 'VERIFY SWEEP ARMY'; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); } });
+await page.evaluate(n => { const i = document.getElementById('army-name-input'); if (i) { i.value = n; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); } }, ARMY_NAME);
 await page.waitForTimeout(600);
 const ptsBeforeSave = await page.evaluate(() => parseInt((document.getElementById('points-current') || {}).textContent || '0', 10) || 0);
 await page.evaluate(() => { const b = document.getElementById('btn-save-army'); if (b) b.click(); });
@@ -216,7 +234,7 @@ await page.waitForTimeout(1500);
 await page.evaluate(() => { const b = document.getElementById('btn-load-army'); if (b) b.click(); });
 await page.waitForTimeout(1200);
 const saved = await page.evaluate(() => Array.from(document.querySelectorAll('#saved-army-list li')).map(li => li.textContent.trim().slice(0, 80)));
-check('saved army appears in Load modal', saved.some(s => /VERIFY SWEEP ARMY/i.test(s)), saved.slice(0, 3).join(' | '));
+check('saved army appears in Load modal', saved.some(s => s.includes(ARMY_NAME)), saved.slice(0, 3).join(' | '));
 await shot('03-load-modal');
 await page.evaluate(() => { const b = document.getElementById('modal-load-close'); if (b) b.click(); });
 await page.waitForTimeout(700);
@@ -281,6 +299,17 @@ if (rz) {
   const w1 = await page.evaluate(() => document.getElementById('panel-left').getBoundingClientRect().width);
   check('left resize handle drags the panel wider', w1 > rz.w0 + 20, `${rz.w0.toFixed(0)} -> ${w1.toFixed(0)}`);
 }
+
+// ── cleanup (#126) ────────────────────────────────────────────────────────
+// Delete only ids this page holds locally that were not on the server at
+// start, after the sync queue has drained so nothing re-pushes them.
+await until(page, () => { try { return (JSON.parse(localStorage.getItem('yaab_sync_queue') || '[]')).length === 0; } catch (_) { return true; } }, { timeout: 20000 });
+const localIds = await page.evaluate(() => ((App.state.armyManager || {}).armies || []).map(a => a && a.id).filter(Boolean));
+await page.close();
+const created = ((await serverArmyIds()) || []).filter(id => !armiesAtStart.has(id) && localIds.includes(id));
+for (const id of created) await ctx.request.delete(`${SITE}/api/armies/${id}`).catch(() => {});
+const left = ((await serverArmyIds()) || []).filter(id => created.includes(id));
+check('cleanup: armies this run created are deleted', left.length === 0, `${created.length} created, ${left.length} left`);
 
 writeFileSync(`${OUT}/interact.json`, JSON.stringify({ theme: THEME, pass: C.pass, fail: C.fail, results, errors }, null, 2));
 console.log(`\npassed ${C.pass}, failed ${C.fail}`);
