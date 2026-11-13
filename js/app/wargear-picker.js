@@ -67,6 +67,7 @@
     .replace(/\s*\([^)]*\)/g, '').replace(/[‘’']/g, '')
     .replace(/[^a-z0-9]+/g, ' ').trim();
   const sing = (s) => s.replace(/\s+models?$/, '').replace(/s$/, '');
+  const itemCountOf = (x) => (x && Number.isFinite(x.count) && x.count > 1 ? x.count : 1);
 
   // ── squad size / tiers ───────────────────────────────────────────────────
   function currentModels(unit) {
@@ -216,12 +217,37 @@
       if (num(c.maxModels) && size > c.maxModels) return false;
       return true;
     };
+    // How many of the replaced item ONE model may swap under an "any" rule:
+    // a model carrying k of it ("2 shuriken cannons", "3 dark lances") may
+    // swap each of them ("each shuriken cannon it is equipped with", "any
+    // number of this model's dark lances can each be replaced") — so k —
+    // unless the text says "one of their/its …" (Talos macro-scalpels). Only
+    // 1-for-1 swaps: a "their 2 heavy bolters → 2 flamers" group already
+    // carries its own count.
+    const perModelCache = new Map();
+    function perModelOf(r) {
+      if (!r || r.kind !== 'replace' || r.scope !== 'any' || (r.replaces || []).length !== 1) return 1;
+      if (perModelCache.has(r.id)) return perModelCache.get(r.id);
+      let k = 1;
+      const single = (r.choices || []).every((g) => (g || []).length === 1 && itemCountOf(g[0]) === 1);
+      if (single && !/\bone of (?:their|its|this model|the model)/i.test(r.text || '')) {
+        const want = norm(r.replaces[0].name), ws = sing(want);
+        const byModel = profile.defaultsByModel || {};
+        const types = Object.keys(byModel).filter((t) => !r.model || norm(t) === norm(r.model) || sing(norm(t)) === sing(norm(r.model)));
+        types.forEach((t) => (byModel[t] || []).forEach((d) => {
+          const dn = norm(d.name);
+          if ((dn === want || sing(dn) === ws) && Number.isFinite(d.count) && d.count > k) k = d.count;
+        }));
+      }
+      perModelCache.set(r.id, k);
+      return k;
+    }
     function capOf(r) {
       let c;
       if (r.scope === 'per_n') {
         const base = r.nModel ? countOf(r.nModel) : size;   // "For every 5 Inquisitorial Agents"
         c = Math.floor(base / (num(r.n) || 1)) * (r.max == null ? 1 : r.max);
-      } else if (r.scope === 'any') c = countOf(r.model);
+      } else if (r.scope === 'any') c = countOf(r.model) * perModelOf(r);
       else c = r.max == null ? countOf(r.model) : r.max;
       return c * (num(r.picks) || 1);                        // "up to two of the following"
     }
@@ -248,7 +274,7 @@
       exclSets.get(root).push(r);
     });
 
-    return { unit, profile, rules, size, countOf, defaults, keyOf, defaultCount, itemName, visible, capOf, choiceCapOf, exclSets };
+    return { unit, profile, rules, size, countOf, defaults, keyOf, defaultCount, itemName, visible, capOf, choiceCapOf, perModelOf, exclSets };
   }
 
 
@@ -413,6 +439,10 @@
         (rule.choices || []).forEach((grp) => (grp || []).forEach((x) => {
           const k = ctx.keyOf(x);
           let r = seen.get(k);
+          // A rule whose condition is unmet at this size ("If this unit
+          // contains 10 models") offers no new row; an item already held
+          // keeps its row and its rule, so the cap warning still names it.
+          if (!r && !ctx.visible(rule) && !((m.get(ik(b.model, k)) || {}).count)) return;
           if (!r) { r = { key: ik(b.model, k), item: k, id: String(x.id || ''), name: x.name, def: 0, rules: [], block: b }; rows.push(r); seen.set(k, r); }
           if (r.rules.indexOf(rule) === -1) r.rules.push(rule);
         }));
@@ -428,15 +458,28 @@
     });
   }
 
+  // "only at 10 models" / "10+ models" for a rule whose size condition is unmet.
+  function condPhrase(r) {
+    const c = r.condition || {};
+    const lo = Number.isFinite(c.minModels) ? c.minModels : null, hi = Number.isFinite(c.maxModels) ? c.maxModels : null;
+    if (lo != null && lo === hi) return `only with ${lo} models`;
+    if (lo != null && hi != null) return `only with ${lo}–${hi} models`;
+    if (lo != null) return `only with ${lo}+ models`;
+    if (hi != null) return `only with up to ${hi} models`;
+    return 'not at this size';
+  }
   function capText(ctx, r) {
     const c = ctx.capOf(r);
     if (r.scope === 'per_n') return (r.max == null || r.max === 1) ? `1 per ${r.n}` : `up to ${r.max} per ${r.n}`;
-    if (r.scope === 'any') return c <= 1 ? '1 only' : 'any';
+    if (r.scope === 'any') return (c <= 1 && ctx.perModelOf(r) <= 1) ? '1 only' : 'any';
     if (r.max == null) return c <= 1 ? '1 only' : `up to ${c}`;
     return r.max === 1 ? '1 only' : `up to ${r.max}`;
   }
   function capPhrase(ctx, r) {
+    if (!ctx.visible(r)) return condPhrase(r);
     if (r.scope === 'per_n') return (r.max == null || r.max === 1) ? `1 per ${r.n} models` : `up to ${r.max} per ${r.n} models`;
+    const k = ctx.perModelOf(r);
+    if (k > 1) return r.model ? `up to ${k} per ${r.model}` : `up to ${k} per model`;
     if (r.scope === 'any' || r.max == null) return r.model ? `one per ${r.model}` : 'one per model';
     return r.max === 1 ? '1 only' : `up to ${r.max}`;
   }
@@ -445,7 +488,7 @@
     if (/s$/.test(n)) return n;
     return (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n;
   };
-  const itemCount = (x) => (Number.isFinite(x.count) && x.count > 1 ? x.count : 1);
+  const itemCount = itemCountOf;
 
   // ── warnings (§5, per block §6) ──────────────────────────────────────────
   function warnings(ctx, m) {
@@ -484,11 +527,18 @@
           if (!set.has(d.key) || k === d.key) return;
           if (flexible.has(k)) shared += extras(k); else excl += extras(k);
         });
-        const have = cnt(d.key), lo = have + excl, hi = lo + shared;
+        // A default that is ALSO what another default swaps into (Crisis
+        // Fireknife: plasma rifle ⇄ missile pod, so 2 plasma rifles a model
+        // is legal; Baneblade: twin heavy flamers → twin heavy bolters next
+        // to its own) — its extras sit in that other default's slot and are
+        // counted there, so its own slot holds at most its default count.
+        const swappedIn = Array.from((targets.get(d.key) || [])).some((o) => o !== d.key);
+        const have = cnt(d.key), own = swappedIn ? Math.min(have, d.count) : have;
+        const lo = own + excl, hi = lo + shared;
         if (lo <= d.count && hi >= d.count) return;
         const swaps = lo > d.count ? excl : excl + shared;
         if (multi) {
-          out.push(`${pre}${cap(d.name)} ${have} and swaps ${swaps} for ${d.count} model${d.count === 1 ? '' : 's'}`);
+          out.push(`${pre}${cap(d.name)} ${own} and swaps ${swaps} for ${d.count} model${d.count === 1 ? '' : 's'}`);
         } else if (lo > d.count) {
           out.push(`${cap(d.name)}: ${lo} weapons for ${d.count} models — lower the ${String(d.name).toLowerCase()} count when you add swaps`);
         } else {
@@ -496,17 +546,24 @@
         }
       });
 
-      // 2. Cap.
+      // 2. Cap. One take of a multi-item choice ("2 synaptic obliterators and
+      // 2 transdimensional projectors") gains every item in it, so the takes
+      // charged to a choice group by one of its items cover the others.
+      const grpUsed = new Map();
       rows.forEach((row) => {
         if (!row.rules.length) return;
         const taken = extras(row.item);
         if (!taken) return;
         let rest = taken;
         row.rules.forEach((r) => {
-          const grp = (r.choices || []).find((g) => (g || []).some((x) => ctx.keyOf(x) === row.item)) || [];
+          const gi = (r.choices || []).findIndex((g) => (g || []).some((x) => ctx.keyOf(x) === row.item));
+          const grp = (r.choices || [])[gi] || [];
           const mult = Math.max(1, grp.filter((x) => ctx.keyOf(x) === row.item).reduce((n, x) => n + itemCount(x), 0));
-          const can = Math.min(rest, (left.get(r.id) || 0) * mult);
-          left.set(r.id, (left.get(r.id) || 0) - Math.ceil(can / mult));
+          const gk = r.id + '#' + gi, prior = grpUsed.get(gk) || 0;
+          const can = Math.min(rest, ((left.get(r.id) || 0) + prior) * mult);
+          const takes = Math.ceil(can / mult);
+          left.set(r.id, (left.get(r.id) || 0) - Math.max(0, takes - prior));
+          grpUsed.set(gk, Math.max(prior, takes));
           rest -= can;
         });
         const sep = multi ? ' ' : ': ';
@@ -514,8 +571,11 @@
           out.push(`${pre}${cap(row.name)}${sep}${taken} taken, the datasheet allows up to ${taken - rest} (${capPhrase(ctx, row.rules[0])})`);
           return;
         }
-        let lim = null;
-        row.rules.forEach((r) => { const c = ctx.choiceCapOf(r); if (c != null) lim = (lim || 0) + c; });
+        // A per-unit limit on one choice binds only when every rule offering
+        // the item has one: Legionaries' "any number … Astartes chainsword"
+        // is unlimited even though the 1-per-5 special list caps it there.
+        let lim = 0;
+        row.rules.forEach((r) => { const c = ctx.choiceCapOf(r); lim = (c == null || lim == null) ? null : lim + c; });
         if (lim != null && taken > lim) out.push(`${pre}${cap(row.name)}${sep}${taken} taken, the datasheet allows ${lim} per unit`);
       });
 

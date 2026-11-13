@@ -179,11 +179,17 @@ default guns. Truly a full inventory of guns."
   1. *Slot*: for each default item D with rules that replace it, let R(D) =
      items whose rule `replaces` includes D; if count(D) + Σ count(R(D)) ≠
      default(D): "Boltgun: 13 weapons for 10 models — lower the boltgun count
-     when you add swaps" (or "… only 8 for 10 models").
+     when you add swaps" (or "… only 8 for 10 models"). When D is itself
+     what another default swaps into (Crisis Fireknife: plasma rifle ⇄
+     missile pod, so 2 plasma rifles a model is legal), D's extras sit in
+     the other default's slot, so D's own slot counts min(count(D),
+     default(D)) — otherwise one extra is charged to both slots (2026-11-13).
   2. *Cap*: for each non-default item X, extras(X) = count(X) − default(X);
      allowed(X) = Σ cap(rule) over rules whose choices include X
      (per_n → floor(size/n)×max, fixed → max or the model count, any → the
-     model count), minus what other items sharing those rules already used
+     model count × k, where k is how many of the replaced item one model
+     carries — "each of its shuriken cannons" — unless the text says "one
+     of their/its …"), minus what other items sharing those rules already used
      (split fairly: a rule's cap is shared across its choices, so compute
      per rule: Σ extras of its choice items ≤ cap, attributing an item to
      the first rule that offers it). Message: "Heavy plague weapon: 5 taken,
@@ -192,7 +198,9 @@ default guns. Truly a full inventory of guns."
      needs a model that still carries a boltgun".
   4. *Exclusive*: Σ counts of items in an `exclusiveWith` group > model
      count → "Only one of these per model".
-  5. *Size*: no warning for the Champion's single swap beyond its block
+  5. *Size*: a rule whose size condition is unmet ("If this unit contains
+     10 models") offers no row at that size; an item already held keeps its
+     row and warns "only with 10 models". No warning for the Champion's single swap beyond its block
      (covered by cap with the model count 1).
   None → no warnings block.
 - **Export** (`tts-export.js`): allocate the loadout to models: for each

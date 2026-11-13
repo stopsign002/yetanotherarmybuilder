@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.13-2',
-    lastUpdated: '2026-11-13T08:00:00Z',
+    version:     '2026.11.13-3',
+    lastUpdated: '2026-11-13T13:00:00Z',
     entries: [
+      {
+        date: '2026-11-13',
+        kind: 'fix',
+        title: 'Crisis battlesuits and Vespid wargear no longer flag legal loadouts',
+        description: 'Giving a Crisis Fireknife (or Starscythe) two of the same gun, such as two plasma rifles, is legal but showed a Wargear check warning. That warning is gone; a third gun on one model still warns. Vespid Stingwings now offer the flamer, neutron grenade launcher, neutron rail rifle and Oversight Drone only at 10 models, as the datasheet says. Some units whose models carry two of a weapon (War Walkers, Wraithlords, Ravagers) now correctly allow both to be swapped.',
+      },
       {
         date: '2026-11-13',
         kind: 'fix',

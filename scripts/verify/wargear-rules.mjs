@@ -49,7 +49,7 @@ const FIXTURE_RULES = [
 
 const { check, summary } = makeChecker({ strict: true });
 const browser = await launch();
-const { page } = await newPage(browser);
+const { page } = await newPage(browser, { theme: process.env.THEME });
 const errors = wire(page, '', { responses: false });
 
 if (!(await boot(page))) { console.log('FAIL boot'); await browser.close(); process.exit(1); }
@@ -324,6 +324,34 @@ const defEntry = await page.evaluate(() => {
   return { copy: a.getEntryCopyWargearPts(i), base: a.getEntryWargearBasePts(i), lo: e.loadout === undefined };
 });
 check('a default entry bills exactly the old base', defEntry.copy === defEntry.base && defEntry.base === base, JSON.stringify(defEntry));
+
+// ── 4. two guns per model (Crisis Fireknife: plasma rifle ⇄ missile pod) ──
+// "Every model is equipped with: plasma rifle; missile pod; battlesuit
+// fists" + either can be replaced with the other, so 2 of one gun is legal.
+// The engine-level matrix (every faction) is wargear-rules-unit.mjs.
+const FV = 'Crisis Fireknife Shas’vre', FU = 'Crisis Fireknife Shas’ui';
+check('Crisis Fireknife opens', await openUnit('Crisis Fireknife Battlesuits'));
+check('Fireknife: no warnings on the defaults', (await warnText()) === '', await warnText());
+await setCount('Missile pod', 0, FV); await setCount('Plasma rifle', 2, FV);
+await setCount('Missile pod', 0, FU); await setCount('Plasma rifle', 4, FU);
+await setCount('Gun Drone', 2, FU); await setCount('Shield Drone', 2, FU);
+check('Fireknife: 2 plasma rifles a model (+ drones) is clean', (await warnText()) === '', await warnText());
+if (await panel.count()) await panel.screenshot({ path: `${OUT}/wargear-fireknife-picker.png` }).catch(() => {});
+await setCount('Missile pod', 1, FV);
+w = await warnText();
+check('Fireknife: a third gun on the Shas’vre warns', /Shas’vre: Missile pod 1 and swaps 1 for 1 model/.test(w), w);
+await setCount('Missile pod', 0, FV);
+
+// ── 5. size-conditioned options (Vespid: "If this unit contains 10 models") ──
+const VW = 'Vespid Stingwing';
+check('Vespid Stingwings opens', await openUnit('Vespid Stingwings'));
+check('Vespid size 5', await setSize(5));
+check('Vespid @5: the 10-model specials are not offered', (await rowIndex('T’au flamer', VW)) === -1 && (await rowIndex('Oversight Drone')) === -1);
+check('Vespid size 10', await setSize(10));
+check('Vespid @10: the specials are offered', (await rowIndex('T’au flamer', VW)) >= 0 && (await rowIndex('Neutron rail rifle', VW)) >= 0);
+await press('T’au flamer', 1, false, VW); await press('Neutron rail rifle', 1, false, VW); await press('Neutron blaster', 2, true, VW);
+check('Vespid @10: flamer + rail rifle for 2 blasters is clean', (await warnText()) === '', await warnText());
+if (await panel.count()) await panel.screenshot({ path: `${OUT}/wargear-vespid10-picker.png` }).catch(() => {});
 
 // ── clean up ───────────────────────────────────────────────────────────────
 check('army emptied at end', (await emptyArmy()) === 0);
