@@ -15,7 +15,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync, rmSync,
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseWargearRules, parseWargearGroups, parseLoadout, ctxFromUnit, isDefaultGroup } from './wargear-rules.mjs';
+import { parseWargearRules, parseWargearGroups, parseLoadout, ctxFromUnit, isDefaultGroup, compositionCounts, wkey } from './wargear-rules.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const SOURCES = JSON.parse(readFileSync(join(HERE, 'sources.json'), 'utf8'));
@@ -268,7 +268,7 @@ export function build() {
   const core = loadCore();
   const abilityIndex = loadAbilityIndex();
   const log = { unpricedUnits: [], provisionalUnits: [], noDcJoin: [], mfmRowsUsed: {}, mfmItemsUnmatched: [],
-    aliasesUnresolved: [], mfmUnitKey: {}, idsFromCurrent: [], factionAbilityUnresolved: [], legendsFrom40kdc: [], dupDatasheets: [], unbilledItems: [], coreRules: core, abilityIndex, wargearUnparsed: [], wargearItemUnmatched: [], wargearFromProse: [], wargearFrom40kdc: [], wargearRegressed: [], wargearProseOnly: [], wargearCostFromGdc: [], wargearCostDisagree: [], factionAbilityEmpty: [], warnings: [] };
+    aliasesUnresolved: [], mfmUnitKey: {}, idsFromCurrent: [], factionAbilityUnresolved: [], legendsFrom40kdc: [], dupDatasheets: [], unbilledItems: [], coreRules: core, abilityIndex, wargearUnparsed: [], wargearItemUnmatched: [], wargearFromProse: [], wargearFrom40kdc: [], wargearRegressed: [], wargearProseOnly: [], wargearCostFromGdc: [], wargearCostDisagree: [], compositionTierDropped: [], compositionSizeUnresolved: [], factionAbilityEmpty: [], warnings: [] };
   const aliasUnits = aliases.units || {};
   const aliasItems = aliases.items || {};
   const usedAlias = new Set();
@@ -905,6 +905,7 @@ function wargearProfile(unit, ctx) {
   // composition (40kdc): modelsBySize, and the 40kdc default loadout per model
   let modelsBySize = null;
   const comp = dcu && dcu.composition;
+  let tierModelNames = [], tierSizes = [];   // every 40kdc model type / tier size, kept even when a tier is dropped below
   const defByModel = {};
   if (comp) {
     (comp.models || []).forEach((m) => { if (m && m.name && Array.isArray(m.default_weapon_ids)) defByModel[m.name] = m.default_weapon_ids; });
@@ -927,14 +928,43 @@ function wargearProfile(unit, ctx) {
         const capN = ((m.max != null ? m.max : m.min) || 0) - byName[m.name]; const add = Math.max(0, Math.min(capN, rem)); byName[m.name] += add; rem -= add; }
       return rem === 0 ? byName : null;
     };
-    (unit.squadOptions || []).forEach((so) => {
-      const size = so && so.models; if (!size || modelsBySize[size]) return;
-      const byName = distribute(comp.models, size); if (byName) modelsBySize[size] = byName;
-    });
+    // Sizes are owned by the primary sources (MFM squadOptions, GDC composition),
+    // not by the pinned 40kdc snapshot: its tiers can be stale (Custodian Wardens
+    // carried a pre-launch 4-5 while GDC and MFM say 2-3, issue #130). A 40kdc
+    // tier the unit cannot be bought at is dropped; a purchasable size with no
+    // tier is distributed over the GDC per-model ranges (mapped onto the 40kdc
+    // model names), falling back to the 40kdc min/max.
+    tierModelNames = [...new Set(Object.values(modelsBySize).flatMap((m) => Object.keys(m)))];
+    tierSizes = Object.keys(modelsBySize).map(Number);
+    const sizes = [...new Set((unit.squadOptions || []).map((so) => so && so.models).filter((n) => n > 0))];
+    if (sizes.length) for (const s of Object.keys(modelsBySize)) if (!sizes.includes(Number(s))) {
+      delete modelsBySize[s]; log.compositionTierDropped.push(`${fid}/${unit.id}: 40kdc tier ${s} (sizes ${sizes.join('/')})`);
+    }
+    let gdcModels = null;
+    const gc = compositionCounts(unit.gdcComposition || []);
+    const dcm = (comp.models || []).filter((m) => m && m.name);
+    if (gc.length && dcm.length) {
+      const ranges = new Map();
+      for (const g of gc) {
+        const k = wkey(g.name);
+        let hit = dcm.filter((m) => wkey(m.name) === k);
+        if (!hit.length) hit = dcm.filter((m) => { const mk = wkey(m.name); return mk.endsWith(' ' + k) || k.endsWith(' ' + mk); });
+        if (!hit.length && gc.length === 1 && dcm.length === 1) hit = dcm;
+        if (hit.length !== 1 || ranges.has(hit[0].name)) { ranges.clear(); break; }
+        ranges.set(hit[0].name, g);
+      }
+      if (ranges.size === gc.length && ranges.size === dcm.length) gdcModels = dcm.map((m) => ({ name: m.name, min: ranges.get(m.name).min, max: ranges.get(m.name).max }));
+    }
+    for (const size of sizes) {
+      if (modelsBySize[size]) continue;
+      const byName = (gdcModels && distribute(gdcModels, size)) || distribute(comp.models, size);
+      if (byName) modelsBySize[size] = byName;
+      else log.compositionSizeUnresolved.push(`${fid}/${unit.id}: size ${size} fits neither GDC nor 40kdc composition`);
+    }
     if (!Object.keys(modelsBySize).length) modelsBySize = null;
   }
-  const modelNames = [...new Set(Object.values(modelsBySize || {}).flatMap((m) => Object.keys(m)))];
-  const singleModel = modelsBySize ? Object.keys(modelsBySize).every((s) => Number(s) === 1) : undefined;
+  const modelNames = [...new Set([...tierModelNames, ...Object.values(modelsBySize || {}).flatMap((m) => Object.keys(m))])];
+  const singleModel = modelsBySize ? [...tierSizes, ...Object.keys(modelsBySize).map(Number)].every((s) => s === 1) : undefined;
   const pctx = ctxFromUnit(unit, { extraModels: modelNames, extraItems: Object.values(names), resolveItem, singleModel });
 
   // rules: the raw GDC wargearOptions groups (primary); the flattened prose

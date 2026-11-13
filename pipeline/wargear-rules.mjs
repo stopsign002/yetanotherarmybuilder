@@ -587,6 +587,26 @@ export function compositionModelNames(lines) {
   return out;
 }
 
+// Model counts printed in the composition lines: "2‑3 Custodian Warden models"
+// → { name: 'Custodian Warden', min: 2, max: 3 }; "1 Shock Trooper Sergeant and
+// 9 Shock Troopers" → two entries. Lines that are not a count are skipped; a
+// caller that needs every model type covered must check names itself.
+export function compositionCounts(lines) {
+  const out = [];
+  for (const raw of Array.isArray(lines) ? lines : []) {
+    const line = normLine(raw).replace(/^[◦•]\s*/, '');
+    if (/equipped with|^or$|^\*/i.test(line)) continue;
+    for (const part of line.split(/\s+and\s+(?=\d)/i)) {
+      const m = /^(\d+)(?:\s*-\s*(\d+))?\s+(.+?)\s*\*?$/.exec(part.trim());
+      if (!m) continue;
+      const name = m[3].replace(/\s+models?$/i, '').trim();
+      const min = parseInt(m[1], 10); const max = m[2] != null ? parseInt(m[2], 10) : min;
+      if (name && max >= min) out.push({ name, min, max });
+    }
+  }
+  return out;
+}
+
 // ctx for parseWargearRules/parseLoadout from a built unit. `extraModels` are
 // canonical names that win over the prose spellings (wargearProfile.modelsBySize keys).
 export function ctxFromUnit(unit, opts = {}) {

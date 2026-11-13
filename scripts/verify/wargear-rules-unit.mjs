@@ -113,7 +113,7 @@ check('necrons', 'Necron Warriors', 10, ['Gauss flayer:10', 'Gauss reaper:3', 'C
 check('necrons', 'Necron Warriors', 10, ['Gauss flayer:7', 'Gauss reaper:3', 'Close combat weapon:10'], true, '7 flayers + 3 reapers is legal');
 
 // ── every unit's default loadout at every size is clean (known data faults listed)
-const KNOWN = new Set(['Krieg Command Squad']);   // composition names fold together; not a picker fault
+const KNOWN = new Set([]);   // known data faults (none)
 let swept = 0; const dirty = [];
 for (const f of fs.readdirSync(DS).filter((x) => x.endsWith('.json') && x !== 'manifest.json')) {
   const d = JSON.parse(fs.readFileSync(path.join(DS, f), 'utf8'));
@@ -128,6 +128,24 @@ for (const f of fs.readdirSync(DS).filter((x) => x.endsWith('.json') && x !== 'm
 n++;
 if (dirty.length) fails++;
 console.log(`${dirty.length ? 'FAIL' : 'ok  '} default loadouts clean across ${swept} unit sizes${dirty.length ? ': ' + dirty.slice(0, 10).join(', ') : ''}`);
+
+{ // Krieg Command Squad: five model types differing only in a "(...)" suffix
+  const ds = JSON.parse(fs.readFileSync(path.join(DS, 'astra-militarum.json'), 'utf8'));
+  const u = (ds.units || []).find((x) => x.name === 'Krieg Command Squad');
+  const sizes = u ? (u.squadOptions && u.squadOptions.length ? u.squadOptions.map((o) => o.models) : [null]) : [];
+  const bad = [];
+  for (const sz of sizes) {
+    const w = WP.warnings(u, sz, WP.defaultLoadout(u, sz));
+    if (w.length) bad.push(`${sz}: ${w.length} warnings`);
+    const lo = WP.defaultLoadout(u, sz);
+    if (new Set(lo.map((x) => x.model)).size < 5) bad.push(`${sz}: <5 distinct model types`);
+    if (WP.needsModel(u, sz, lo)) bad.push(`${sz}: rows not mapped to blocks`);
+  }
+  n++;
+  const ok = u && sizes.length && !bad.length;
+  if (!ok) fails++;
+  console.log(`${ok ? 'ok  ' : 'FAIL'} Krieg Command Squad default loadout clean at every size${bad.length ? ': ' + bad.join(', ') : ''}`);
+}
 
 console.log(`\n${n - fails}/${n} passed`);
 process.exit(fails ? 1 : 0);

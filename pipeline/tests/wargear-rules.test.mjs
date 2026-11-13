@@ -1,4 +1,4 @@
-// node --test pipeline/tests/  (docker: see docs/DATASET.md §wargearProfile)
+// node --test pipeline/tests/*.test.mjs  (a bare directory arg fails on node 22) (docker: see docs/DATASET.md §wargearProfile)
 // Contract: docs/WARGEAR-RULES.md §1-2. Fixtures (tests/fixtures/wargear-sheets.json)
 // are the raw GDC wargearOptions groups + parser ctx of real datasheets, frozen
 // from work/gdc.json on 2026-11-03; the expectations below were reviewed by hand
@@ -21,7 +21,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseWargearGroups, parseWargearRules, parseLoadout, compositionModelNames, ctxFromUnit, wkey } from '../wargear-rules.mjs';
+import { parseWargearGroups, parseWargearRules, parseLoadout, compositionModelNames, compositionCounts, ctxFromUnit, wkey } from '../wargear-rules.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FX = JSON.parse(readFileSync(join(HERE, 'fixtures', 'wargear-sheets.json'), 'utf8'));
@@ -289,4 +289,17 @@ test('loadout lines and composition names', () => {
   assert.equal(wkey('Atalan Jackals’'), wkey('Atalan Jackal'));
   const ctx = ctxFromUnit({ id: 'boyz', name: 'Boyz', gdcComposition: ['1‑2 Nob models', '9‑18 Boy models'] }, { extraModels: ['Boss Nob', 'Boy'] });
   assert.deepEqual(ctx.modelAliases, { Nob: 'Boss Nob' }); assert.deepEqual(ctx.blockModels, ['Boss Nob', 'Boy']);
+});
+
+// issue #130: GDC composition ranges are what sizes are checked against when a
+// 40kdc tier is stale (Custodian Wardens: GDC 2-3, 40kdc pre-launch 4-5).
+test('compositionCounts: ranges, non-ASCII hyphens, "and" lines, loadout lines skipped', () => {
+  assert.deepEqual(compositionCounts(['2‑3 Custodian Warden models', 'Every model is equipped with: 1 Guardian Spear.']),
+    [{ name: 'Custodian Warden', min: 2, max: 3 }]);
+  assert.deepEqual(compositionCounts(['5‐10 Inquisitorial Agents']), [{ name: 'Inquisitorial Agents', min: 5, max: 10 }]);
+  assert.deepEqual(compositionCounts(['1 Shock Trooper Sergeant and 9 Shock Troopers']),
+    [{ name: 'Shock Trooper Sergeant', min: 1, max: 1 }, { name: 'Shock Troopers', min: 9, max: 9 }]);
+  assert.deepEqual(compositionCounts(['1-2 Neurogaunt Nodebeasts*', '10-20 Neurogaunts']),
+    [{ name: 'Neurogaunt Nodebeasts', min: 1, max: 2 }, { name: 'Neurogaunts', min: 10, max: 20 }]);
+  assert.deepEqual(compositionCounts(['This unit can contain a maximum of 10 models.']), []);
 });

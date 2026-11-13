@@ -26,9 +26,15 @@
   const App = window.App = window.App || {};
 
   App.CHANGELOG = {
-    version:     '2026.11.13-3',
-    lastUpdated: '2026-11-13T13:00:00Z',
+    version:     '2026.11.13-4',
+    lastUpdated: '2026-11-13T14:00:00Z',
     entries: [
+      {
+        date: '2026-11-13',
+        kind: 'fix',
+        title: 'Krieg Command Squad and Custodian Wardens wargear fixed',
+        description: 'Krieg Command Squad showed a Wargear check warning on its untouched default loadout, because its five Veteran Guardsmen were all lumped into one list. Each one now has its own list and the defaults are clean. Custodian Wardens now start at the right size (2 or 3 models) with one Guardian Spear each, so swapping every spear for a Castellan Axe no longer warns.',
+      },
       {
         date: '2026-11-13',
         kind: 'fix',

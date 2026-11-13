@@ -120,6 +120,23 @@ function optionJoins(factions, unmatched = new Set()) {
   }
   return out;
 }
+// A purchasable size (squadOptions, MFM) must have a model breakdown
+// (wargearProfile.modelsBySize), and every breakdown must be a purchasable
+// size: the wargear picker and army.js fall back to the smallest tier on a
+// miss, so a 2-model unit silently got a 4-model loadout (issue #130).
+function compositionSizes(factions) {
+  const out = [];
+  for (const [fid, f] of factions) for (const u of f.units) {
+    if (u._allyOf) continue;
+    const mbs = u.wargearProfile && u.wargearProfile.modelsBySize;
+    const sizes = [...new Set((u.squadOptions || []).map((o) => o && o.models).filter((n) => n > 0))];
+    if (!mbs || !sizes.length) continue;
+    const have = Object.keys(mbs).map(Number);
+    for (const s of sizes) if (!have.includes(s)) out.push({ check: 'squad-size-without-model-breakdown', faction: fid, key: `${u.id}: ${s}`, unit: u.name, sizes, modelsBySize: have });
+    for (const s of have) if (!sizes.includes(s)) out.push({ check: 'model-breakdown-not-purchasable', faction: fid, key: `${u.id}: ${s}`, unit: u.name, sizes, modelsBySize: have });
+  }
+  return out;
+}
 function splitKnown(cand, ref) {
   const refKeys = new Set(ref.map((x) => `${x.check}|${x.faction}|${x.key}`));
   const fail = [], known = [];
@@ -210,6 +227,10 @@ export function validate(id, opts = {}) {
   lj.fail.forEach((x) => F('join-leadby', x)); lj.known.forEach((x) => L('join-leadby-known-gap', x));
   const oj = splitKnown(optionJoins(cand, new Set(blog.wargearItemUnmatched || [])), optionJoins(ref));
   oj.fail.forEach((x) => F('join-wargear-option', x)); oj.known.forEach((x) => L('join-wargear-option-known-gap', x));
+  const cs = splitKnown(compositionSizes(cand), compositionSizes(ref));
+  cs.fail.forEach((x) => F('composition-size', x)); cs.known.forEach((x) => L('composition-size-known-gap', x));
+  for (const x of blog.compositionTierDropped || []) L('composition-40kdc-tier-dropped (not a purchasable size)', x);
+  for (const x of blog.compositionSizeUnresolved || []) L('composition-size-unresolved', x);
   for (const s of blog.noDcJoin || []) L('no-40kdc-unit (no structured wargear)', s);
   // wargear rules (docs/WARGEAR-RULES.md): prose the parser could not turn into
   // a rule is shown as text and not enforced — listed, never a FAIL

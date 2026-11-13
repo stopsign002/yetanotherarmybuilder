@@ -285,7 +285,10 @@
   const A = () => window.Army;
   const priceOf = (unit, it) => ((A() && A().itemPrice) ? A().itemPrice(unit, it) : 0);
   const kebab = (s) => (A() ? A()._kebab(s) : String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'));
-  const foldType = (t) => sing(norm(t));
+  // Block identity keeps a parenthesised suffix ("Veteran Guardsman (Boltgun)"
+  // is its own type); foldBare drops it, for bare rule.model names.
+  const foldType = (t) => sing(String(t == null ? '' : t).toLowerCase().replace(/[‘’']/g, '').replace(/[^a-z0-9]+/g, ' ').trim());
+  const foldBare = (t) => sing(norm(t));
   const plural = (m, n) => (n > 1 && !/s$/i.test(m) ? m + 's' : m);
   const ik = (model, key) => (model || '') + '|' + key;
 
@@ -314,19 +317,29 @@
   const multiOf = (ctx) => blocksOf(ctx).length > 1;
   // The block a rule names (null-model rules offer in every block). A model
   // name that matches no block goes to the largest one.
-  function ruleBlock(ctx, r) {
+  function ruleBlocks(ctx, r) {
     const blocks = blocksOf(ctx);
     if (blocks.length < 2 || !r.model) return null;
-    const f = foldType(r.model);
-    const hit = blocks.find((b) => foldType(b.label) === f)
-      || blocks.find((b) => foldType(b.label).startsWith(f) || f.startsWith(foldType(b.label)));
-    if (hit) return hit.model;
-    return blocks.slice().sort((a, b) => b.count - a.count)[0].model;
+    const f = foldType(r.model), fb = foldBare(r.model);
+    let hit = blocks.filter((b) => foldType(b.label) === f);
+    if (!hit.length) hit = blocks.filter((b) => foldBare(b.label) === fb);
+    if (!hit.length) {
+      const h = blocks.find((b) => foldBare(b.label).startsWith(fb) || fb.startsWith(foldBare(b.label)));
+      if (h) hit = [h];
+    }
+    if (hit.length) return hit.map((b) => b.model);
+    return [blocks.slice().sort((a, b) => b.count - a.count)[0].model];
   }
-  const inBlock = (ctx, r, blk) => { const m = ruleBlock(ctx, r); return m == null || m === blk.model; };
+  // Single block a rule names, or null (offers in every block / several).
+  function ruleBlock(ctx, r) {
+    const l = ruleBlocks(ctx, r);
+    return l && l.length === 1 ? l[0] : null;
+  }
+  const inBlock = (ctx, r, blk) => { const l = ruleBlocks(ctx, r); return l == null || l.includes(blk.model); };
   function blockByName(ctx, name) {
-    const f = foldType(name);
-    return blocksOf(ctx).find((b) => foldType(b.label) === f) || null;
+    const f = foldType(name), bl = blocksOf(ctx);
+    return bl.find((b) => foldType(b.label) === f)
+      || (bl.filter((b) => foldBare(b.label) === foldBare(name)).length === 1 ? bl.find((b) => foldBare(b.label) === foldBare(name)) : null);
   }
 
   function defaultInv(ctx) {
