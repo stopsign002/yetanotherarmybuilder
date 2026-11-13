@@ -1,5 +1,17 @@
 {
   "_comment": "Pinned inputs for the v2 dataset pipeline (docs/DATASET.md \u00a72). Paths are as seen inside the build container (/app = the app tree, /work = ~/sites/base/yaab-data).",
+  "primary": "app",
+  "app": {
+    "_comment": "GW's own app data, extracted by us (docs/DATASET.md \u00a711). app-fetch.py downloads the release package and stores assets/dump.json; extract/app.mjs turns the newest stored dump into work/gdc.json in the GDC record shape, so build.mjs is unchanged. `primary` picks the datasheet source for `yaab-data build` (app | gdc); the gdc block below is the frozen fallback and the parity oracle.",
+    "package": "com.gamesworkshop.w40k",
+    "downloadSource": "apk-pure",
+    "store": "/work/app-dumps",
+    "apkeep": {
+      "version": "1.1.0",
+      "url": "https://github.com/EFForg/apkeep/releases/download/1.1.0/apkeep-x86_64-unknown-linux-gnu",
+      "sha256": "badd7ad9fa7d2f32abe01eaf33b7ff086361a95bbc000a33bf44b630d4bf2140"
+    }
+  },
   "gdc": {
     "repo": "game-datacards/datasources",
     "ref": "main",

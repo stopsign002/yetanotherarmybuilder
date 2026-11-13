@@ -248,3 +248,182 @@ set of armies before approving into the live tree.
   banner, `docs/ARCHITECTURE.md`, `build/README.md` → retired note,
   `pipeline/retire-v1.md` (the exact host commands to remove the old scripts,
   cron lines and files, mirrored to server-cron).
+
+## 11. App extraction — our own source for the GDC-shaped records (2026-11-13)
+
+BSData is gone (the whole GitHub org 404s since 2026-11) and GDC is one
+maintainer's unpublished converter. Since this section the pipeline reads GW's
+app data itself. **Phase 1 is a drop-in:** nothing downstream of
+`work/gdc.json` changes, and the proof is that the dataset built from our
+extraction equals the dataset built from the GDC snapshot of the same data
+version.
+
+### 11.1 What the app ships
+
+The release package of `com.gamesworkshop.w40k` (an `.xapk`: a zip of split
+APKs; the base APK is `<package>.apk`) carries `assets/dump.json` in plain
+JSON, ~36 MB: `{ metadata: { data_version }, data: { <table>: [rows] } }`, a
+relational dump of 131 tables (datasheet, miniature, wargear_item_profile,
+datasheet_ability, detachment, stratagem, enhancement, unit_composition,
+wargear_option_group, loadout_choice_set, datasheet_bodyguard_group,
+allied_faction, …). Text sits in each row's `localisations: { en: {...}, de:
+… }`. No decompiling: two nested unzips. App releases map 1:1 to data versions
+(2.6.0=946, 2.7.0=963, 2.7.1=972, 2.8.0=981, 2.8.1=995); the pinned GDC
+snapshot `app/data/gdc/11th/gdc/` says `compatibleDataVersion` 995.
+
+The package is **untrusted input**: it is never installed, never executed,
+never unpacked to disk beyond `dump.json`, and the downloaded file is deleted
+after extraction.
+
+### 11.2 Layout added
+
+```
+app/pipeline/
+  extract/app-fetch.py             host python3 (stdlib, run with -I): download + store the dump   [W2]
+  extract/app.mjs                  stored dump → work/gdc.json, GDC record shape                   [W1]
+  tests/app-parity.mjs             the parity harness (11.6)                                        [W1]
+  app-parity-accepted.json         reviewed, reasoned differences (11.6)                            [W1]
+~/sites/base/yaab-data/
+  bin/apkeep                       pinned binary (sources.json app.apkeep: url + sha256)
+  app-dumps/index.json             { package, dumps: [entry] }
+  app-dumps/dump-<dataVersion>-<sha256[:8]>.json.gz
+  app-dumps/last-check.json        { checkedAt, ok, newestListed, error, failingSince }
+```
+
+Index entry: `{ appVersion, versionCode, dataVersion, file, sha256, bytes,
+fetchedAt, source }` — `sha256`/`bytes` are of the **uncompressed** dump;
+`source` is `apk-pure` or `import`. Dumps are kept forever (10 MB each; the
+history is our change feed). Identical content under two app versions is one
+file and two entries.
+
+### 11.3 `extract/app-fetch.py`  (W2)
+
+```
+app-fetch.py --store DIR [--bin DIR] [--check] [--version X.Y.Z] [--import PATH [--app-version V]]
+```
+
+1. Ensure `<bin>/apkeep` (default bin: `<store>/../bin`): download
+   `sources.json app.apkeep.url` when missing, verify `sha256`, chmod. A
+   mismatch is fatal and leaves nothing behind.
+2. `apkeep -l -a <package> -d apk-pure` → newest version (numeric sort on the
+   dotted parts). `--version` overrides.
+3. Newest already in the index → `app: up to date (app V, data N)`, exit 0.
+   `--check` stops here either way and prints what it would fetch.
+4. Otherwise download into a fresh temp dir (`-o acknowledge_dangers=true`;
+   the danger is a tampered package, which is why nothing in it is ever run),
+   read the outer zip → base APK → `assets/dump.json` **in memory** (also
+   accept a plain `.apk`). Reject unless: it parses, `metadata.data_version` is
+   an int, `data` has ≥ 100 tables, `data.datasheet` ≥ 900 rows, size ≥ 20 MB.
+   A rejected dump is never stored (exit 4).
+5. Write the `.json.gz` (gzip mtime 0) and `index.json` atomically (tmp +
+   rename), delete the package, print one line:
+   `app: stored data N (app V, sha XXXXXXXX)`.
+6. `--import PATH` takes an `.xapk`, `.apk` or bare `dump.json` from disk
+   (the hand route when the download source is down: `adb pull` from a phone)
+   through the same validation; `source: "import"`.
+7. Every run rewrites `last-check.json`. `failingSince` is the time of the
+   first failure of the current streak, `null` when `ok`. Network or
+   download-source failure: exit 3. Stdout carries the one summary line;
+   everything else goes to stderr.
+
+### 11.4 `extract/app.mjs`  (W1)
+
+```
+node extract/app.mjs [--dump PATH(.json|.json.gz)] [--store /work/app-dumps] [--out /work/work/gdc.json]
+```
+
+Default dump: the index entry with the highest `dataVersion` (ties: newest
+`fetchedAt`). Output is **exactly** the `work/gdc.json` of §4 as `gdc.mjs`
+writes it: same top-level keys, the same 28 file ids from
+`sources.json gdc.files`, each faction `{ file, id, name, parent_name,
+compatibleDataVersion, updated, datasheets, stratagems, enhancements,
+detachments, rules: { army, detachment } }`, every record in the GDC record
+shape with `_slug`. Differences allowed at the top level only:
+`from: "app"`, `ref: null`, `version` = the dump's `data_version`, `updated`
+= the index entry's `fetchedAt`, and one new key
+
+```
+app: { package, appVersion, dataVersion, sha256, fetchedAt, source, lastCheck }
+```
+
+(`lastCheck` = the contents of `last-check.json`, or null.)
+
+- English only is required (`{ en: … }`); other locales may be emitted when
+  free, never at the cost of time.
+- The dump has more datasheets than GDC publishes (1174 vs 1031 at 995).
+  Every dump datasheet that is not emitted is counted under a **named rule**
+  in `files.<file>.excluded` / top-level `excluded: { <rule>: n }`. No silent
+  drops; no rule of the form "not in the GDC snapshot".
+- The transform reads only the dump. It must not read `data/gdc/`, the golden
+  set or a previous dataset — those are the oracle, and a transform that
+  consults its oracle proves nothing. Name aliases go in `aliases.json` as
+  today; there is no new hand file other than the accepted list in 11.6.
+- GDC's converter is not published; the mapping is recovered from the pairs
+  (dump N → GDC N). Where GDC evidently hand-edited or mis-converted, follow
+  the **dump** and record the difference in the accepted list with the reason.
+
+`build.mjs` gains only: `GDC_JSON=<path>` (env) to read a `gdc.json` from
+somewhere other than `WORK/gdc.json`, and `manifest.sources.app` = the `app`
+object above when present. `manifest.sources.gdc` keeps its shape (the
+validator's freshness rule §6.6 reads `sources.gdc.version`).
+
+### 11.5 Hard invariant: ids do not move
+
+Saved armies, cloud sync and the cards site key on the dataset's ids. For the
+same data version the app-derived dataset must carry **byte-identical**
+`unit.id`, `detachment.id`, enhancement `id`, `stratagemIds` and
+`_factionId` values, and the same 34 faction files. An id that cannot be
+reproduced is a blocker to report, never something to put on the accepted
+list.
+
+### 11.6 Parity (the acceptance test)  (W1)
+
+```
+node tests/app-parity.mjs [--dump PATH] [--snapshot /app/data/gdc/11th/gdc] [--out DIR]
+```
+
+- **Level 1, records:** `work/gdc.json` from `gdc.mjs --from snapshot` vs from
+  `app.mjs` for the same data version: per file, the datasheet / stratagem /
+  enhancement / detachment / rule name sets, then every field `build.mjs`
+  reads, deep-equal on the English value. Reports counts per field path.
+- **Level 2, dataset:** `build.mjs` run twice with identical `mfm.json`,
+  `dc.json`, `core-rules.json` and aliases, once per `gdc.json`; the 34 faction
+  files compared deep. This is the level that decides.
+- Writes `parity-report.json` + `parity-report.md` (per category: count, 10
+  examples with faction/unit/path/baseline/ours). Exit 0 only when Level 2 has
+  no difference outside `pipeline/app-parity-accepted.json`.
+- Accepted list: `[{ match: { faction, unit?, path }, reason, verdict:
+  "gdc-hand-edit" | "gdc-converter-bug" | "dump-newer" }]`. Each entry is one
+  concrete difference (or one path pattern with a stated count), with evidence
+  in `reason` a reader can check against the dump. It is reviewed line by
+  line at sign-off; a broad pattern that swallows unexplained differences is
+  a defect.
+
+### 11.7 CLI and cron  (W2)
+
+- `yaab-data fetch-app [--check] [--import PATH [--app-version V]]` runs
+  11.3 against `$YAAB_DATA_DIR/app-dumps`.
+- `yaab-data build [--source app|gdc]`, default `sources.json primary`.
+  `app`: `== fetch app` (a failed fetch is a WARN and the build continues from
+  the newest stored dump; fatal only when no dump is stored), then
+  `== extract app` (`extract/app.mjs`), then mfm / 40kdc / build as today.
+  `gdc`: today's path, untouched.
+- `report.mjs` prints one source line from `manifest.sources.app` when
+  present: `App source: app V, data N, fetched <date>; last check <date> ok`
+  (or `FAILED: <error>`), and a first line `**APP SOURCE UNREACHABLE since
+  <date>**` when `lastCheck.failingSince` is more than 3 days before
+  `builtAt`.
+- `~/sites/base/yaab-data-daily.sh`: a candidate identical to current is
+  discarded without mail, so a download source that dies would be silent.
+  After the build, read `app-dumps/last-check.json`; when `failingSince` is
+  ≥ 3 days old, mail `[yaab data] APP SOURCE UNREACHABLE since <date>` on day
+  3 and every 7th day after (never daily), honouring `YAAB_DATA_NO_MAIL`.
+  Missing file → nothing.
+
+### 11.8 Not in phase 1
+
+Building natively from the relational tables (structured wargear choices,
+unit compositions, attachments, allies and dispositions, which would retire
+the prose parser and the 40kdc pin), core-rule text from the dump's
+`rule_container` tables, package signature verification and a second
+download source. Each has an issue in `stopsign002/yetanotherarmybuilder`.
