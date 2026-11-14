@@ -2,7 +2,11 @@
 //   ~/sites/base/browser/browse.sh run \
 //     ~/sites/sites/yaab-test/app/scripts/verify/dataset-parity.mjs <outdir>
 // LIVE=https://... TEST=https://... override the sites (BROWSE_ENV="LIVE TEST").
-// READ-ONLY: anonymous throwaway contexts; armies live in localStorage only.
+// READ-ONLY: every context signs in as the one fixture account (login gate,
+// docs/AUTH-GATE.md), so cloud sync is cut off per context — /api/armies* and
+// /api/state* are aborted. Each army is then built from an empty roster, lives
+// in that context's localStorage only, and live and test cannot race on the
+// shared account (#134). One sign-in per origin; later contexts reuse its cookie.
 // Part 1: BSData.loadAllFactions() on both, diffed per unit/detachment with the
 //         parity.mjs categories. Part 2: five fixed armies built through the UI,
 //         #points-current compared. No page.waitForFunction (CSP) — polling via evaluate.
@@ -23,10 +27,26 @@ const ARMIES = [
 
 
 const browser = await launch();
+const SYNC = /\/api\/(armies|state)(\/|\?|$)/;
+const syncHits = [];
+const jars = new Map(); // origin -> cookies from that origin's one sign-in
 async function open(url) {
   const { ctx, page } = await newPage(browser, { reducedMotion: 'reduce' });
   page.on('dialog', d => d.dismiss().catch(() => {}));
-  if (!(await boot(page, { url }))) throw new Error('roster never rendered: ' + url);
+  await ctx.route(SYNC, r => { syncHits.push(`${r.request().method()} ${new URL(r.request().url()).pathname}`); return r.abort(); });
+  const origin = new URL(url).origin;
+  if (!jars.has(origin)) {
+    if (!(await boot(page, { url }))) throw new Error('roster never rendered: ' + url);
+    jars.set(origin, await ctx.cookies());
+    return { ctx, page };
+  }
+  // boot() signs in every time; /auth/login allows 5 a minute and this opens 12.
+  await ctx.addCookies(jars.get(origin));
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 });
+  if (new URL(page.url()).pathname.startsWith('/login')) throw new Error('reused cookie bounced to /login: ' + url);
+  try { await page.waitForSelector('#unit-grid .unit-card', { state: 'attached', timeout: 240000 }); }
+  catch (_) { throw new Error('roster never rendered: ' + url); }
+  await page.waitForTimeout(300);
   return { ctx, page };
 }
 
@@ -143,7 +163,7 @@ async function buildArmy(url, army) {
     }
   }
   const total = await page.evaluate(() => (document.getElementById('points-current') || {}).textContent);
-  await page.screenshot({ path: `${OUT}/army-${army.name.replace(/\W+/g, '_')}-${url.includes('-test') ? 'test' : 'live'}.png` }).catch(() => {});
+  await page.screenshot({ path: `${OUT}/army-${army.name.replace(/\W+/g, '_')}-${url === TEST ? 'test' : 'live'}.png` }).catch(() => {});
   await ctx.close();
   return { total: total == null ? null : String(total).trim(), log };
 }
@@ -156,7 +176,9 @@ for (const army of ARMIES) {
   console.log(`army ${army.name.padEnd(24)} live=${a.total} test=${b.total} ${same ? 'SAME' : 'DIFF'}${[...a.log, ...b.log].length ? '  notes: ' + [...a.log, ...b.log].join('; ') : ''}`);
 }
 
-writeFileSync(`${OUT}/dataset-parity.json`, J({ counts, unitsCompared, items, armies }, null, 1));
+const writes = syncHits.filter(h => !h.startsWith('GET ')).length;
+console.log(`sync blocked: ${syncHits.length} requests (${writes} writes), none reached the server`);
+writeFileSync(`${OUT}/dataset-parity.json`, J({ counts, unitsCompared, items, armies, syncBlocked: syncHits }, null, 1));
 await browser.close();
 const armyDiffs = armies.filter(a => !a.same).length;
 console.log(`RESULT dataset items=${items.length} armyDiffs=${armyDiffs}`);
