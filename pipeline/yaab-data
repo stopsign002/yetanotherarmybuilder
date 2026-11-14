@@ -164,7 +164,6 @@ r=json.load(open(sys.argv[1])); print({True:"pass",False:"FAIL"}.get(r.get("ok")
     else echo "  (none)"; fi;;
   preview)
     need_cand
-    case "$APP" in *yaab-test*) HOST="yaab-test.thewheeliebois.com";; *) HOST="yaab.thewheeliebois.com";; esac
-    echo "https://$HOST/?data=candidate:$ID";;
+    echo "https://yaab.thewheeliebois.com/?data=candidate:$ID";;
   *) usage;;
 esac

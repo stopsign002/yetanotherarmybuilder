@@ -1,7 +1,9 @@
 // dataset-parity.mjs — LIVE vs TEST, in the browser (DATASET.md §9).
+//   CANDIDATE=<id> BROWSE_ENV="CANDIDATE FIXTURE_USER FIXTURE_PASS" \
 //   ~/sites/base/browser/browse.sh run \
-//     ~/sites/sites/yaab-test/app/scripts/verify/dataset-parity.mjs <outdir>
-// LIVE=https://... TEST=https://... override the sites (BROWSE_ENV="LIVE TEST").
+//     ~/sites/sites/yetanotherarmybuilder/app/scripts/verify/dataset-parity.mjs <outdir>
+// TEST defaults to live with ?data=candidate:$CANDIDATE (the yaab-test vhost is
+// gone). LIVE=https://... TEST=https://... override either side.
 // READ-ONLY: every context signs in as the one fixture account (login gate,
 // docs/AUTH-GATE.md), so cloud sync is cut off per context — /api/armies* and
 // /api/state* are aborted. Each army is then built from an empty roster, lives
@@ -14,7 +16,9 @@ import { writeFileSync } from 'node:fs';
 import { OUT, launch, newPage, until, boot } from './_lib.mjs';
 
 const LIVE = process.env.LIVE || 'https://yaab.thewheeliebois.com/';
-const TEST = process.env.TEST || 'https://yaab-test.thewheeliebois.com/';
+const TEST = process.env.TEST
+  || (process.env.CANDIDATE && `https://yaab.thewheeliebois.com/?data=candidate:${encodeURIComponent(process.env.CANDIDATE)}`);
+if (!TEST) { console.error('dataset-parity: set CANDIDATE=<id> (or TEST=<url>)'); process.exit(2); }
 
 // Fixed armies: faction option matcher + [unit name, count].
 const ARMIES = [

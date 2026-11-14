@@ -1,8 +1,8 @@
 # DATASET.md — yaab game-data pipeline v2 (contract)
 
-Status: build contract for the 2026-10-31 rewrite. Branch `data-v2`, worktree
-`~/sites/sites/yaab-test/app`, test vhost `https://yaab-test.thewheeliebois.com`
-(same Caddy, no API, served from the worktree). Retiring the v1 scripts after cutover: `pipeline/retire-v1.md`. Decisions behind it:
+Status: build contract for the 2026-10-31 rewrite, built on branch `data-v2`
+in a `yaab-test` worktree and vhost that have since been removed. A candidate
+is now reviewed on live with `?data=candidate:<id>` (§9). Retiring the v1 scripts after cutover: `pipeline/retire-v1.md`. Decisions behind it:
 `~/sites/base/reviews/yaab-2026-10-30/DATA-PIPELINE-V2-PLAN.md`.
 
 ## 1. The one output: faction files in the renderer shape
@@ -222,17 +222,20 @@ with `no-cache`, so an approve is visible on the next load.
 candidate differs from current) · `approve <id> [--app <path>]` (copies
 current → previous/, candidate → current atomically, prunes previous to 5) ·
 `rollback [<n>]` · `list` · `preview <id>` (prints the URL). `--app` defaults
-to `~/sites/sites/yetanotherarmybuilder/app`; the test site uses
-`--app ~/sites/sites/yaab-test/app`.
+to `~/sites/sites/yetanotherarmybuilder/app` (the only tree; the old
+`yaab-test` worktree is gone).
 
 ## 9. Parity acceptance (the cutover rule)
 
 The first candidate is compared with the golden set. "Nothing regressed" means
 zero items in the FAIL categories of §6.5 and every PASS-but-LISTED item
 reviewed and attributed to GDC or MFM being the owner (a dropped hand
-correction, a GDC wording). Then it is loaded on yaab-test, the browser suites
-pass there, and the session compares live vs test in the browser on a fixed
-set of armies before approving into the live tree.
+correction, a GDC wording). Then it is loaded on live with
+`?data=candidate:<id>` (`yaab-data preview <id>` prints the URL), and the
+session compares current vs candidate in the browser on a fixed set of armies
+(`scripts/verify/dataset-parity.mjs`, `CANDIDATE=<id>`) before approving.
+The `yaab-test` worktree and vhost this section originally named no longer
+exist.
 
 ## 10. Ownership for the build night
 
