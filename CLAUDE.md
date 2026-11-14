@@ -18,18 +18,16 @@ python3 -m http.server 8000
 
 Then open `http://localhost:8000/`. Cannot be opened via `file://` — the dataset loader fetches `data/dataset/*` over http(s), and the dataset is gitignored, so a fresh clone needs `pipeline/yaab-data build` + `approve` (or a copy of `data/dataset/`) before it shows any units.
 
-**No automated CI suite** (the old `mirror-bsdata.yml` workflow is scheduled for removal in `pipeline/retire-v1.md`). Verify changes by exercising the running site. The
+**No automated CI suite** (there is no `.github/workflows/`; the old `mirror-bsdata.yml` was removed with v1). Verify changes by exercising the running site. The
 Node tooling is: `node scripts/stamp-assets.mjs` (cache-bust stamper; `--check`
 fails on a stale stamp — run it by hand, nothing runs it in CI — see "HTTP
-caching" below), the analysis reports `scripts/parser-coverage.mjs` +
-`scripts/gap-report.mjs` (data-coverage diagnostics, not tests), and
+caching" below), and
 hand-run headless-browser checks driven with
 `~/sites/base/browser/browse.sh run`: `scripts/play-e2e.mjs`,
 `scripts/pwa-check.mjs`, and `scripts/verify/*` (`split-entry.mjs`,
 `widths.mjs`, `signedin.mjs`, `interact.mjs`, `sweep.mjs`, ...). The app itself
 needs no `npm install` — vendored deps are committed. Note `app/.gitignore`
-ignores `package.json` / `package-lock.json` at any depth; `build/package.json`
-is tracked on purpose (until retire-v1 deletes `build/`) and survived the rule, but a new one elsewhere under
+ignores `package.json` / `package-lock.json` at any depth, so a new one anywhere under
 `app/` would be silently ignored.
 
 ## File map
@@ -377,8 +375,8 @@ Common questions and where to look first.
 - `releaseSharedIndex()` was called once in `bsdata.js` after Phase 2 (now dormant, scheduled for removal). If you ever revive the XML parser path, don't hold DOM refs alive past that point — it leaks tens of MB.
 - The changelog-entry rule (editing guidance #6). Shipping a user-visible change without an entry is a regression — the user can't find out about the fix, can't tell whether their report was addressed, and will reasonably assume nothing happened. Every commit that touches user-facing behaviour stages `js/data/changelog-data.js` too.
 
-## Not yet wired (pending until M4 lands)
+## Pipeline wiring on the host
 
-- **Daily candidate cron.** Nothing builds candidates on a schedule yet; run `pipeline/yaab-data build` by hand. Planned: a daily host cron that builds, validates, reports and mails only when the candidate differs from current.
-- **Monitor check** "days since the last approved candidate vs GDC `updated`" on monitor.thewheeliebois.com (`monitor/ops/api`, Prometheus). Not added.
-- **Caddy `no-cache` on `/data/dataset/*`** and the **backup leg** (`data/dataset` in `MEDIA_GLOBS`) are host changes made at cutover; see `pipeline/retire-v1.md`.
+- **Daily candidate cron — live.** `~/sites/base/yaab-data-daily.sh` (`25 5 * * *`, log `~/sites/base/yaab-data.log`) builds, validates and reports a candidate every day and mails only when it differs from current. It never approves; `pipeline/yaab-data approve <id>` stays a human step.
+- **Caddy `no-cache` on `/data/dataset/*`** (`~/sites/base/conf.d/yetanotherarmybuilder.caddy`) and the **backup leg** (`data/dataset/current` in `MEDIA_GLOBS`, `~/sites/base/backup.env`) — live since cutover.
+- **Not yet wired:** the monitor check "days since the last approved candidate vs GDC `updated`" on monitor.thewheeliebois.com (`monitor/ops/api`, Prometheus); see `pipeline/retire-v1.md` section 8.
